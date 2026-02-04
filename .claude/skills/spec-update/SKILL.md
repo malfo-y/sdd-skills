@@ -12,9 +12,9 @@ Update existing spec documents with new features, requirements, and planned impr
 
 This skill processes user requirements and feature requests to update spec documents. Input can come from:
 1. **User conversation**: Direct discussion about new features
-2. **Input file**: `.sdd/spec/user_input.md` containing structured requirements
+2. **Input file**: `.sdd/spec/user_spec.md` containing structured requirements
 
-After processing `user_input.md`, rename it to `_processed_user_input.md` to mark it as processed inputs.
+After processing `user_spec.md`, rename it to `_processed_user_spec.md` to mark it as processed inputs.
 
 ## When to Use This Skill
 
@@ -34,9 +34,12 @@ Direct input from the current conversation:
 - Enhancement requests
 - Bug reports to document
 
-### 2. Input File (`.sdd/spec/user_input.md`)
+### 2. Input File (`.sdd/spec/user_spec.md`)
 
-Structured file format for batched updates:
+User input file for spec update.
+Recommended format is a structured file format for batched updates, but any free-form text are accepted.
+
+Example structured file format:
 
 ```markdown
 # Spec Update Input
@@ -73,7 +76,7 @@ Structured file format for batched updates:
 
 ```
 1. Check if user provided requirements in conversation
-2. Check if `.sdd/spec/user_input.md` exists
+2. Check if `.sdd/spec/user_spec.md` exists
 3. If both exist, process both (conversation first, then file)
 4. If neither, ask user for input
 ```
@@ -124,7 +127,7 @@ Before modifying, present update plan:
 ## Spec Update Plan
 
 **Spec File**: `.sdd/spec/apify_ig.md`
-**Input Source**: [conversation / user_input.md / both]
+**Input Source**: [conversation / user_spec.md / both]
 
 ### Changes to Apply
 
@@ -155,11 +158,11 @@ Update spec document:
 
 ### Step 7: Process Input File
 
-If `.sdd/spec/user_input.md` was used:
+If `.sdd/spec/user_spec.md` was used:
 
 ```bash
 # Rename to mark as processed
-mv .sdd/spec/user_input.md .sdd/spec/_processed_user_input.md
+mv .sdd/spec/user_spec.md .sdd/spec/_processed_user_spec.md
 ```
 
 Add processing metadata:
@@ -255,7 +258,7 @@ After updating, provide summary:
 | 컴포넌트 | ADD | 새 컴포넌트 |
 
 ### Input File Status
-- [x] `.sdd/spec/user_input.md` → `_processed_user_input.md`
+- [x] `.sdd/spec/user_spec.md` → `_processed_user_spec.md`
 
 ### Next Steps
 - Run `/spec-review` after implementation to sync spec with code
@@ -319,5 +322,5 @@ spec-create → spec-update → implementation-plan → implementation → spec-
 - **`references/section-mapping.md`** - How to map inputs to spec sections
 
 ### Example Files
-- **`examples/user_input.md`** - Sample input file
+- **`examples/user_spec.md`** - Sample input file
 - **`examples/update-summary.md`** - Sample update summary

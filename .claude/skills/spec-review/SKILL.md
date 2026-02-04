@@ -34,7 +34,7 @@ This skill analyzes multiple sources of truth to identify spec drift and generat
 | `IMPLEMENTATION_PROGRESS.md` | Task completion status |
 | `IMPLEMENTATION_REVIEW.md` | Review findings and issues |
 | `TEST_SUMMARY.md` | Test results and coverage |
-| `user_input.md` | User requirements and feedback |
+| `user_spec.md` | User requirements and feedback |
 | `PREV_*.md` | Historical versions for context |
 
 ### 2. Code Changes

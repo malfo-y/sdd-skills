@@ -24,11 +24,10 @@ Spec documents are stored in the `.sdd/spec/` directory within the project root.
 ```
 .sdd/
 ├── spec/
-│   ├── main.md           # Main spec document (or <project-name>.md)
-│   ├── <component>.md    # Component-specific specs (for large projects)
-│   └── template.md       # Template reference (optional)
-├── USER_SPEC.md          # User requirements (if exists)
-└── IMPLEMENTATION_PLAN.md # Implementation plan (if exists)
+│   ├── main.md             # Main spec document (or <project-name>.md)
+│   ├── <component>.md      # Component-specific specs (for large projects)
+│   └── user_spec.md        # User requirements (if exists)
+└── IMPLEMENTATION_PLAN.md  # Implementation plan (if exists)
 ```
 
 ## Spec Document Creation Process
@@ -41,6 +40,8 @@ Before creating a spec document, collect:
 2. **From Existing Code**: Analyze codebase structure and patterns
 3. **From Documentation**: Read existing README, comments, configs
 4. **Clarification**: Use AskUserQuestion for ambiguous requirements
+
+User input includes user conversation and user-specified files (defaults to `.sdd/spec/user_spec.md`).
 
 ### Step 2: Analyze the Project
 

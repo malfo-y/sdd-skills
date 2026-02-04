@@ -9,7 +9,7 @@ This is an example of the summary generated after applying spec updates.
 **File**: `.sdd/spec/apify_ig.md`
 **Version**: 1.0.0 → 1.1.0
 **Date**: 2026-02-04
-**Input Source**: `.sdd/spec/user_input.md`
+**Input Source**: `.sdd/spec/user_spec.md`
 
 ---
 
@@ -181,7 +181,7 @@ pyarrow              # Parquet 지원 📋 추가 예정
 
 | File | Action | New Name |
 |------|--------|----------|
-| `.sdd/spec/user_input.md` | Renamed | `_processed_user_input.md` |
+| `.sdd/spec/user_spec.md` | Renamed | `_processed_user_spec.md` |
 
 **Processing metadata added:**
 ```markdown

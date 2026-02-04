@@ -52,10 +52,9 @@ Claude와 함께하는 소프트웨어 개발을 위한 SDD 스킬 종합 가이
 project/
 ├── .sdd/
 │   ├── spec/
-│   │   ├── main.md                    # 메인 스펙 문서
-│   │   ├── user_input.md              # 새 기능 요청 (입력)
-│   │   ├── draft_spec.md              # 사용자 제공 초안 (선택적)
-│   │   └── _processed_user_input.md   # 처리된 요청 (아카이브)
+│   │   ├── main.md                   # 메인 스펙 문서
+│   │   ├── user_spec.md              # 새 기능 요청 (입력)
+│   │   └── _processed_user_spec.md   # 처리된 요청 (아카이브)
 │   │
 │   ├── implementation/
 │   │   ├── IMPLEMENTATION_PLAN.md     # 현재 구현 계획
@@ -125,7 +124,7 @@ project/
 
 ```bash
 # 1. 초안 파일 생성
-.sdd/spec/draft_spec.md 또는 .sdd/spec/user_input.md
+.sdd/spec/user_spec.md 또는 사용자 지정 파일
 
 # 2. 스펙 생성 요청
 "이 초안을 기반으로 스펙을 생성해줘"
@@ -242,8 +241,8 @@ project/
 #### 시나리오 2: 기획서 기반 새 프로젝트
 
 ```bash
-# 1. 기획서/초안을 user_input.md에 작성
-vim .sdd/spec/user_input.md
+# 1. 기획서/초안을 user_spec.md에 작성
+vim .sdd/spec/user_spec.md
 
 # 2. 스펙 생성
 /spec-create
@@ -260,7 +259,7 @@ vim .sdd/spec/user_input.md
 ```bash
 # 1. 스펙에 기능 추가
 /spec-update
-# 또는 user_input.md에 작성 후 /spec-update
+# 또는 user_spec.md에 작성 후 /spec-update
 
 # 2. 구현 계획 수립
 /implementation-plan
@@ -358,8 +357,7 @@ implementation 스킬은 테스트 주도 개발(TDD)을 사용합니다:
 
 | 파일 | 용도 | 처리 후 |
 |------|------|---------|
-| `.sdd/spec/user_input.md` | 새 기능/요구사항 | → `_processed_user_input.md` |
-| `.sdd/spec/draft_spec.md` | 사용자 제공 초안 | → 스펙에 통합 |
+| `.sdd/spec/user_spec.md` | 사용자 입력 (드래프트 스펙, 새 기능/요구사항 등) | → `_processed_user_spec.md` |
 | `.sdd/implementation/user_input.md` | 구현 요청 | → `_processed_user_input.md` |
 
 #### 버전 히스토리
@@ -504,8 +502,7 @@ implementation 스킬은 테스트 주도 개발(TDD)을 사용합니다:
 | 용도 | 기본 경로 |
 |------|----------|
 | 메인 스펙 | `.sdd/spec/main.md` 또는 `.sdd/spec/<프로젝트>.md` |
-| 스펙 입력 | `.sdd/spec/user_input.md` |
-| 사용자 초안 | `.sdd/spec/draft_spec.md` |
+| 스펙 입력 | `.sdd/spec/user_spec.md` |
 | 구현 계획 | `.sdd/implementation/IMPLEMENTATION_PLAN.md` |
 | 진행 추적 | `.sdd/implementation/IMPLEMENTATION_PROGRESS.md` |
 | 리뷰 결과 | `.sdd/implementation/IMPLEMENTATION_REVIEW.md` |

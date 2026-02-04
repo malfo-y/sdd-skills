@@ -86,8 +86,7 @@
 .sdd/
 ├── spec/
 │   ├── apify_ig.md              # 메인 스펙
-│   ├── user_input.md            # 새 기능 요청 (입력)
-│   └── draft_spec.md            # 사용자 초안 (선택적)
+│   └── user_spec.md             # 사용자 입력
 │
 ├── implementation/
 │   ├── IMPLEMENTATION_PLAN.md   # 구현 계획
@@ -125,4 +124,4 @@
 
 ## 자세한 내용
 
-전체 워크플로우 가이드: `~/.claude/skills/spec/SDD_WORKFLOW.md`
+전체 워크플로우 가이드: `SDD_WORKFLOW.md`

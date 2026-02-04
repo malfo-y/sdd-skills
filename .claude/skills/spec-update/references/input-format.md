@@ -1,6 +1,6 @@
 # User Input File Format Guide
 
-Detailed specification for the `.sdd/spec/user_input.md` file format.
+Detailed specification for the `.sdd/spec/user_spec.md` file format.
 
 ---
 
@@ -10,8 +10,8 @@ Detailed specification for the `.sdd/spec/user_input.md` file format.
 .sdd/
 └── spec/
     ├── apify_ig.md           # Main spec document
-    ├── user_input.md         # Input file (to be processed)
-    └── _processed_user_input.md  # Processed input (archived)
+    ├── user_spec.md         # Input file (to be processed)
+    └── _processed_user_spec.md  # Processed input (archived)
 ```
 
 ---
@@ -359,8 +359,8 @@ Apify Actor 타임아웃 후 재시도 시 세션이 복구되지 않음.
 
 When processed, the file is renamed and metadata is added:
 
-**Before**: `.sdd/spec/user_input.md`
-**After**: `.sdd/spec/_processed_user_input.md`
+**Before**: `.sdd/spec/user_spec.md`
+**After**: `.sdd/spec/_processed_user_spec.md`
 
 Added metadata:
 ```markdown
