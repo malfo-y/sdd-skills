@@ -1,6 +1,6 @@
 # User Input File Format Guide
 
-Detailed specification for the `.sdd/spec/user_spec.md` file format.
+Detailed specification for spec update input files.
 
 ---
 
@@ -9,10 +9,21 @@ Detailed specification for the `.sdd/spec/user_spec.md` file format.
 ```
 .sdd/
 └── spec/
-    ├── apify_ig.md           # Main spec document
-    ├── user_spec.md         # Input file (to be processed)
-    └── _processed_user_spec.md  # Processed input (archived)
+    ├── apify_ig.md              # Main spec document
+    ├── user_spec.md             # User-written input (to be processed)
+    ├── user_draft.md            # Draft from /spec-draft (to be processed)
+    ├── _processed_user_spec.md  # Processed user_spec (archived)
+    └── _processed_user_draft.md # Processed user_draft (archived)
 ```
+
+## Input File Types
+
+| File | Source | Description |
+|------|--------|-------------|
+| `user_spec.md` | 사용자 직접 작성 | User-written specification input |
+| `user_draft.md` | `/spec-draft` 스킬 | Draft created via conversation |
+
+Both files use the same "Spec Update Input" format.
 
 ---
 
@@ -357,10 +368,12 @@ Apify Actor 타임아웃 후 재시도 시 세션이 복구되지 않음.
 
 ## After Processing
 
-When processed, the file is renamed and metadata is added:
+When processed, files are renamed and metadata is added:
 
-**Before**: `.sdd/spec/user_spec.md`
-**After**: `.sdd/spec/_processed_user_spec.md`
+| Before | After |
+|--------|-------|
+| `.sdd/spec/user_spec.md` | `.sdd/spec/_processed_user_spec.md` |
+| `.sdd/spec/user_draft.md` | `.sdd/spec/_processed_user_draft.md` |
 
 Added metadata:
 ```markdown

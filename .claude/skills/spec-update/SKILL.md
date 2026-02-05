@@ -12,9 +12,11 @@ Update existing spec documents with new features, requirements, and planned impr
 
 This skill processes user requirements and feature requests to update spec documents. Input can come from:
 1. **User conversation**: Direct discussion about new features
-2. **Input file**: `.sdd/spec/user_spec.md` containing structured requirements
+2. **Input file**: `.sdd/spec/user_spec.md` or `.sdd/spec/user_draft.md` containing structured requirements
 
-After processing `user_spec.md`, rename it to `_processed_user_spec.md` to mark it as processed inputs.
+After processing input files, rename them to mark as processed:
+- `user_spec.md` → `_processed_user_spec.md`
+- `user_draft.md` → `_processed_user_draft.md`
 
 ## When to Use This Skill
 
@@ -34,9 +36,14 @@ Direct input from the current conversation:
 - Enhancement requests
 - Bug reports to document
 
-### 2. Input File (`.sdd/spec/user_spec.md`)
+### 2. Input File (`.sdd/spec/user_spec.md` or `user_draft.md`)
 
-User input file for spec update.
+User input file for spec update. Two file types are supported:
+- **`user_spec.md`**: User-written specification input
+- **`user_draft.md`**: Draft created via `/spec-draft` conversation
+
+If there are both `.sdd/spec/user_spec.md` or `.sdd/spec/user_draft.md` existing, ask user what to choose.
+
 Recommended format is a structured file format for batched updates, but any free-form text are accepted.
 
 Example structured file format:
@@ -76,9 +83,11 @@ Example structured file format:
 
 ```
 1. Check if user provided requirements in conversation
-2. Check if `.sdd/spec/user_spec.md` exists
-3. If both exist, process both (conversation first, then file)
-4. If neither, ask user for input
+2. Check if input files exist (in order of priority):
+   - `.sdd/spec/user_draft.md` (from /spec-draft)
+   - `.sdd/spec/user_spec.md` (user-written)
+3. If multiple sources exist, process all (conversation first, then files)
+4. If no sources found, ask user for input
 ```
 
 ### Step 2: Load Current Spec
@@ -156,16 +165,19 @@ Update spec document:
 4. **Version**: Increment patch version (X.Y.Z → X.Y.Z+1)
 5. **Date**: Update "최종 수정일" / "Last Updated"
 
-### Step 7: Process Input File
+### Step 7: Process Input Files
 
-If `.sdd/spec/user_spec.md` was used:
+Rename processed input files to mark as completed:
 
 ```bash
-# Rename to mark as processed
+# If user_draft.md was used (from /spec-draft)
+mv .sdd/spec/user_draft.md .sdd/spec/_processed_user_draft.md
+
+# If user_spec.md was used (user-written)
 mv .sdd/spec/user_spec.md .sdd/spec/_processed_user_spec.md
 ```
 
-Add processing metadata:
+Add processing metadata to each processed file:
 ```markdown
 <!-- Processed: 2026-02-04 -->
 <!-- Applied to: apify_ig.md v1.0.1 -->
@@ -258,7 +270,8 @@ After updating, provide summary:
 | 컴포넌트 | ADD | 새 컴포넌트 |
 
 ### Input File Status
-- [x] `.sdd/spec/user_spec.md` → `_processed_user_spec.md`
+- [x] `.sdd/spec/user_draft.md` → `_processed_user_draft.md` (if used)
+- [x] `.sdd/spec/user_spec.md` → `_processed_user_spec.md` (if used)
 
 ### Next Steps
 - Run `/spec-review` after implementation to sync spec with code
@@ -307,9 +320,14 @@ After updating, provide summary:
 ```
 spec-create → spec-update → implementation-plan → implementation → spec-review
                    ↑                                                    │
+                   │                                                    │
+              spec-draft                                                │
+              (user_draft.md)                                           │
+                   ↑                                                    │
                    └────────────────────────────────────────────────────┘
 ```
 
+- **spec-draft**: Collect requirements via conversation, outputs `user_draft.md`
 - **spec-create**: Create initial spec (run first if no spec exists)
 - **implementation-plan**: Plan implementation of new features
 - **implementation**: Implement the planned features
