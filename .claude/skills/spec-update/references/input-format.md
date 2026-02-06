@@ -7,7 +7,7 @@ Detailed specification for spec update input files.
 ## File Location
 
 ```
-.sdd/
+_sdd/
 └── spec/
     ├── apify_ig.md              # Main spec document
     ├── user_spec.md             # User-written input (to be processed)
@@ -372,8 +372,8 @@ When processed, files are renamed and metadata is added:
 
 | Before | After |
 |--------|-------|
-| `.sdd/spec/user_spec.md` | `.sdd/spec/_processed_user_spec.md` |
-| `.sdd/spec/user_draft.md` | `.sdd/spec/_processed_user_draft.md` |
+| `_sdd/spec/user_spec.md` | `_sdd/spec/_processed_user_spec.md` |
+| `_sdd/spec/user_draft.md` | `_sdd/spec/_processed_user_draft.md` |
 
 Added metadata:
 ```markdown

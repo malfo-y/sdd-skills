@@ -1,6 +1,6 @@
 ---
 name: spec-create
-description: This skill should be used when the user asks to "create a spec", "write a spec document", "generate SDD", "create software design document", "document the project", "create spec for project", or mentions ".sdd" directory, specification documents, or project documentation needs.
+description: This skill should be used when the user asks to "create a spec", "write a spec document", "generate SDD", "create software design document", "document the project", "create spec for project", or mentions "_sdd" directory, specification documents, or project documentation needs.
 version: 1.0.0
 ---
 
@@ -11,7 +11,7 @@ Use Korean (한국어) for the spec document.
 
 ## Overview
 
-Spec documents are stored in the `.sdd/spec/` directory within the project root. They follow a standardized structure to ensure consistency and completeness across different projects.
+Spec documents are stored in the `_sdd/spec/` directory within the project root. They follow a standardized structure to ensure consistency and completeness across different projects.
 
 ## When to Use This Skill
 
@@ -22,7 +22,7 @@ Spec documents are stored in the `.sdd/spec/` directory within the project root.
 ## Directory Structure
 
 ```
-.sdd/
+_sdd/
 ├── spec/
 │   ├── main.md             # Main spec document (or <project-name>.md)
 │   ├── <component>.md      # Component-specific specs (for large projects)
@@ -41,7 +41,7 @@ Before creating a spec document, collect:
 3. **From Documentation**: Read existing README, comments, configs
 4. **Clarification**: Use AskUserQuestion for ambiguous requirements
 
-User input includes user conversation and user-specified files (defaults to `.sdd/spec/user_draft.md`).
+User input includes user conversation and user-specified files (defaults to `_sdd/spec/user_draft.md`).
 
 ### Step 2: Analyze the Project
 
@@ -155,7 +155,7 @@ project/
 
 ### Creating a New Spec
 
-1. Create `.sdd/spec/` directory if not exists
+1. Create `_sdd/spec/` directory if not exists
 2. Analyze project using explore agent or direct reading
 3. Write spec following template structure
 4. Save as `<project-name>.md` or `main.md`
@@ -165,7 +165,7 @@ project/
 For large projects, split into multiple files:
 
 ```
-.sdd/spec/
+_sdd/spec/
 ├── main.md              # Overview and cross-references
 ├── api-spec.md          # API component spec
 ├── database-spec.md     # Database component spec
@@ -212,9 +212,9 @@ Follow user's language preference for spec content:
 ## Output Location
 
 Save spec documents to:
-- **Default**: `.sdd/spec/<project-name>.md` or `.sdd/spec/main.md`
+- **Default**: `_sdd/spec/<project-name>.md` or `_sdd/spec/main.md`
 - **User Specified**: Any path the user requests
-- **Create directories**: Automatically create `.sdd/spec/` if needed
+- **Create directories**: Automatically create `_sdd/spec/` if needed
 
 ## Additional Resources
 

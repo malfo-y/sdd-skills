@@ -30,7 +30,7 @@ Report the model used at the beginning of the reviewing.
 
 1. **Locate the Implementation Plan and Progress**: Check for plan at:
    - User-specified paths
-   - `<project_root>/.sdd/implementation/IMPLEMENTATION_{PLAN|PROGRESS}.md`
+   - `<project_root>/_sdd/implementation/IMPLEMENTATION_{PLAN|PROGRESS}.md`
    - Recent conversation context
 
 2. **No Plan Found**: If no plan exists, inform user and suggest:
@@ -39,7 +39,7 @@ Report the model used at the beginning of the reviewing.
 
 3. **Locate the environment variables**: Check for env at:
    - User-specified path
-   - `<project_root>/.sdd/env.md`
+   - `<project_root>/_sdd/env.md`
    - Recent conversation context
 
 ## Review Process Overview
@@ -444,6 +444,6 @@ Use AskUserQuestion when:
 
 ## Saving report
 
-Save the report under a user-specified file (default: `<project-root>/.sdd/implementation/IMPLEMENTATION_REVIEW.md`).
+Save the report under a user-specified file (default: `<project-root>/_sdd/implementation/IMPLEMENTATION_REVIEW.md`).
     - If the file already exists, rename it to `PREV_IMPLEMENTATION_REVIEW_<timestamp>.md` and create a new one.
 Also update implementation plan (TODOs, status, acceptance criteria) document based on the review.

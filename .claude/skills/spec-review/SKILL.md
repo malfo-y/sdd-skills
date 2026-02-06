@@ -11,8 +11,8 @@ Review and update Software Design Description (SDD) spec documents based on code
 ## Overview
 
 This skill analyzes multiple sources of truth to identify spec drift and generate updates:
-- Current spec documents in `.sdd/spec/`
-- Implementation logs in `.sdd/implementation/`
+- Current spec documents in `_sdd/spec/`
+- Implementation logs in `_sdd/implementation/`
 - Code diffs (git diff, recent commits)
 - User conversation and feedback
 
@@ -26,7 +26,7 @@ This skill analyzes multiple sources of truth to identify spec drift and generat
 
 ## Input Sources
 
-### 1. Implementation Logs (`.sdd/implementation/`)
+### 1. Implementation Logs (`_sdd/implementation/`)
 
 | File | Purpose |
 |------|---------|
@@ -45,7 +45,7 @@ This skill analyzes multiple sources of truth to identify spec drift and generat
 
 ### 3. Current Spec Documents
 
-- `.sdd/spec/main.md` or `<project-name>.md`
+- `_sdd/spec/main.md` or `<project-name>.md`
 - Component-specific specs
 - Any referenced sub-specs
 

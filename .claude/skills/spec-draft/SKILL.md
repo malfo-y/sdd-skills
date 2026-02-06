@@ -10,7 +10,7 @@ version: 1.0.0
 
 ## Overview
 
-이 스킬은 사용자와 대화하며 기능 요청, 개선 사항, 버그 리포트 등을 수집하여 `.sdd/spec/user_draft.md` 파일에 구조화된 형식으로 저장합니다. 출력 형식은 `spec-update` 스킬의 입력 형식("Spec Update Input")을 따르므로, 작성된 초안은 바로 `spec-update` 스킬로 메인 스펙에 반영할 수 있습니다.
+이 스킬은 사용자와 대화하며 기능 요청, 개선 사항, 버그 리포트 등을 수집하여 `_sdd/spec/user_draft.md` 파일에 구조화된 형식으로 저장합니다. 출력 형식은 `spec-update` 스킬의 입력 형식("Spec Update Input")을 따르므로, 작성된 초안은 바로 `spec-update` 스킬로 메인 스펙에 반영할 수 있습니다.
 
 ## When to Use This Skill
 
@@ -22,12 +22,12 @@ version: 1.0.0
 ## Input Sources
 
 1. **사용자 대화 (현재 세션)**: 실시간으로 요구사항 수집
-2. **기존 초안 파일 (`.sdd/spec/user_draft.md`)**: 이전에 작성된 내용 로드 및 추가
+2. **기존 초안 파일 (`_sdd/spec/user_draft.md`)**: 이전에 작성된 내용 로드 및 추가
 3. **사용자가 지정한 다른 파일**: 참조 문서나 메모
 
 ## Output
 
-**파일 위치**: `.sdd/spec/user_draft.md`
+**파일 위치**: `_sdd/spec/user_draft.md`
 
 **형식**: "Spec Update Input" 포맷 (spec-update 스킬과 호환)
 
@@ -36,10 +36,10 @@ version: 1.0.0
 ### Step 1: 기존 초안 확인
 
 ```
-1. `.sdd/spec/user_draft.md` 존재 여부 확인
+1. `_sdd/spec/user_draft.md` 존재 여부 확인
 2. 존재하면: 내용 로드, 사용자에게 추가/수정 여부 확인
 3. 없으면: 새로 생성 모드로 진행
-4. `.sdd/spec/` 디렉토리가 없으면 생성
+4. `_sdd/spec/` 디렉토리가 없으면 생성
 ```
 
 ### Step 2: 요구사항 유형 확인
@@ -277,7 +277,7 @@ spec-draft → spec-update → implementation-plan → implementation
 
 | 상황 | 대응 |
 |------|------|
-| `.sdd/spec/` 디렉토리 없음 | 자동 생성 |
+| `_sdd/spec/` 디렉토리 없음 | 자동 생성 |
 | 기존 `user_draft.md` 존재 | 추가/덮어쓰기 확인 |
 | 불완전한 정보 | 필수 항목 재질문 |
 | 사용자가 중단 | 현재까지 내용 저장 |

@@ -4,7 +4,7 @@ This example shows how the implementation skill executes tasks using Test-Driven
 
 ## Initial State
 
-User has an implementation plan at `.sdd/IMPLEMENTATION_PLAN.md` for a User Authentication System.
+User has an implementation plan at `_sdd/IMPLEMENTATION_PLAN.md` for a User Authentication System.
 
 ## Session Flow
 
@@ -13,7 +13,7 @@ User has an implementation plan at `.sdd/IMPLEMENTATION_PLAN.md` for a User Auth
 ```
 User: implement the plan
 
-Claude: Found implementation plan at .sdd/IMPLEMENTATION_PLAN.md
+Claude: Found implementation plan at _sdd/IMPLEMENTATION_PLAN.md
 
 ## Implementation Plan: User Authentication System
 

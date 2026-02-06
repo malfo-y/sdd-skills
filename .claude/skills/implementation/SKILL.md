@@ -8,14 +8,6 @@ version: 1.1.0
 
 Execute implementation plans systematically using Test-Driven Development (TDD), working through tasks phase by phase while tracking progress and maintaining code quality.
 
-## LLM Model to use
-
-Try to estimate the size and complexity of the implementation otherwise mentioned by the user.
-- If the plan is large and complex, use a capable model (e.g. Sonnet 4.5).
-- If the plan is small and simple, use the cheapest model (e.g. Haiku 4.5).
-
-Report the model used at the beginning of the planning.
-
 ## Core Principle: Test-Driven Development
 
 All implementation follows the **Red-Green-Refactor** cycle:
@@ -38,7 +30,7 @@ Before starting implementation:
 
 1. **Locate the Implementation Plan**: Check for plan at:
    - User-specified path
-   - `<project_root>/.sdd/implementation/IMPLEMENTATION_PLAN.md`
+   - `<project_root>/_sdd/implementation/IMPLEMENTATION_PLAN.md`
    - Recent conversation context
 
 2. **Verify Plan Exists**: If no plan is found, suggest using the `implementation-plan` skill first.
@@ -50,7 +42,7 @@ Before starting implementation:
 
 4. **Locate the environment variables**: Check for env at:
    - User-specified path
-   - `<project_root>/.sdd/env.md`
+   - `<project_root>/_sdd/env.md`
    - Recent conversation context
 
 ## Process Overview
@@ -241,7 +233,7 @@ When all criteria have passing tests → Task is complete
 
 ### Testing environment
 
-For testing enviroment, refer `.sdd/env.md` if the file exists.
+For testing enviroment, refer `_sdd/env.md` if the file exists.
 Otherwise, infer from the user input.
 
 ### What to Test
@@ -294,7 +286,7 @@ For these cases, still write tests, but the order may vary.
 
 ## Step 5: Verify & Report
 
-After completing a phase or all phases, save the report under a user-specified file (default: `<project-root>/.sdd/implementation/IMPLEMENTATION_PROGRESS.md`).  
+After completing a phase or all phases, save the report under a user-specified file (default: `<project-root>/_sdd/implementation/IMPLEMENTATION_PROGRESS.md`).  
 - If the file already exists, rename it to `PREV_IMPLEMENTATION_PROGRESS_<timestamp>.md` and create a new one.
 
 The report should include:
@@ -477,7 +469,7 @@ Use AskUserQuestion when:
 When user says "implement the plan":
 
 1. Acquire implementation plan by running `implementation-plan` skill if not exists
-2. Look for implementation plan at `.sdd/implementation/IMPLEMENTATION_PLAN.md`
+2. Look for implementation plan at `_sdd/implementation/IMPLEMENTATION_PLAN.md`
 3. If user input severly conflicts with the plan, abort and ask user to resolve the conflict
 4. Parse the plan and create task tracking
 5. **Identify testing framework** used in the project

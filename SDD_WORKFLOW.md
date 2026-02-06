@@ -52,7 +52,7 @@ Claude와 함께하는 소프트웨어 개발을 위한 SDD 스킬 종합 가이
 
 ```
 project/
-├── .sdd/
+├── _sdd/
 │   ├── spec/
 │   │   ├── main.md                   # 메인 스펙 문서
 │   │   ├── user_spec.md              # 새 기능 요청 (입력)
@@ -98,7 +98,7 @@ project/
 │              ▼                               ▼                       │
 │   ┌─────────────────────────────────────────────────────┐           │
 │   │                    spec-create                       │           │
-│   │              → .sdd/spec/main.md 생성                │           │
+│   │              → _sdd/spec/main.md 생성                │           │
 │   └─────────────────────────────────────────────────────┘           │
 │                                                                      │
 └─────────────────────────────────────────────────────────────────────┘
@@ -130,7 +130,7 @@ project/
 
 ```bash
 # 1. 초안 파일 생성
-.sdd/spec/user_spec.md 또는 사용자 지정 파일
+_sdd/spec/user_spec.md 또는 사용자 지정 파일
 
 # 2. 스펙 생성 요청
 "이 초안을 기반으로 스펙을 생성해줘"
@@ -248,7 +248,7 @@ project/
 
 ```bash
 # 1. 기획서/초안을 user_spec.md에 작성
-vim .sdd/spec/user_spec.md
+vim _sdd/spec/user_spec.md
 
 # 2. 스펙 생성
 /spec-create
@@ -365,16 +365,16 @@ implementation 스킬은 테스트 주도 개발(TDD)을 사용합니다:
 
 | 파일 | 용도 | 처리 후 |
 |------|------|---------|
-| `.sdd/spec/user_spec.md` | 사용자 입력 (드래프트 스펙, 새 기능/요구사항 등) | → `_processed_user_spec.md` |
-| `.sdd/pr/spec_patch_draft.md` | PR 기반 스펙 패치 초안 | 확정 후 `/spec-update`로 반영 |
-| `.sdd/implementation/user_input.md` | 구현 요청 | → `_processed_user_input.md` |
+| `_sdd/spec/user_spec.md` | 사용자 입력 (드래프트 스펙, 새 기능/요구사항 등) | → `_processed_user_spec.md` |
+| `_sdd/pr/spec_patch_draft.md` | PR 기반 스펙 패치 초안 | 확정 후 `/spec-update`로 반영 |
+| `_sdd/implementation/user_input.md` | 구현 요청 | → `_processed_user_input.md` |
 
 #### 버전 히스토리
 
 이전 버전은 자동으로 아카이브됩니다:
 
 ```
-.sdd/implementation/
+_sdd/implementation/
 ├── IMPLEMENTATION_PLAN.md                      # 현재
 ├── PREV_IMPLEMENTATION_PLAN_20260204_150502.md # 이전
 ├── PREV_IMPLEMENTATION_PLAN_20260204_194934.md # 더 이전
@@ -420,7 +420,7 @@ implementation 스킬은 테스트 주도 개발(TDD)을 사용합니다:
 4. **이슈**: 문제점과 갭 식별
 5. **요약**: 다음 단계 제시
 
-**출력 위치**: `.sdd/implementation/IMPLEMENTATION_REVIEW.md`
+**출력 위치**: `_sdd/implementation/IMPLEMENTATION_REVIEW.md`
 
 ### 스펙 리뷰 (Spec Review)
 
@@ -512,14 +512,14 @@ implementation 스킬은 테스트 주도 개발(TDD)을 사용합니다:
 
 | 용도 | 기본 경로 |
 |------|----------|
-| 메인 스펙 | `.sdd/spec/main.md` 또는 `.sdd/spec/<프로젝트>.md` |
-| 스펙 입력 | `.sdd/spec/user_spec.md` |
-| PR 패치 초안 | `.sdd/pr/spec_patch_draft.md` |
-| PR 리뷰 리포트 | `.sdd/pr/PR_REVIEW.md` |
-| 구현 계획 | `.sdd/implementation/IMPLEMENTATION_PLAN.md` |
-| 진행 추적 | `.sdd/implementation/IMPLEMENTATION_PROGRESS.md` |
-| 리뷰 결과 | `.sdd/implementation/IMPLEMENTATION_REVIEW.md` |
-| 환경 설정 | `.sdd/env.md` |
+| 메인 스펙 | `_sdd/spec/main.md` 또는 `_sdd/spec/<프로젝트>.md` |
+| 스펙 입력 | `_sdd/spec/user_spec.md` |
+| PR 패치 초안 | `_sdd/pr/spec_patch_draft.md` |
+| PR 리뷰 리포트 | `_sdd/pr/PR_REVIEW.md` |
+| 구현 계획 | `_sdd/implementation/IMPLEMENTATION_PLAN.md` |
+| 진행 추적 | `_sdd/implementation/IMPLEMENTATION_PROGRESS.md` |
+| 리뷰 결과 | `_sdd/implementation/IMPLEMENTATION_REVIEW.md` |
+| 환경 설정 | `_sdd/env.md` |
 
 ### 전체 워크플로우 다이어그램
 

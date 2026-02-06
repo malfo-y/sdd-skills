@@ -91,7 +91,7 @@
 ## 디렉토리 구조
 
 ```
-.sdd/
+_sdd/
 ├── spec/
 │   ├── apify_ig.md              # 메인 스펙
 │   └── user_spec.md             # 사용자 입력

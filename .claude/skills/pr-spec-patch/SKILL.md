@@ -10,7 +10,7 @@ PR(Pull Request)과 현재 스펙을 비교하여 구조화된 스펙 패치 초
 
 ## Overview
 
-이 스킬은 PR의 변경사항을 분석하여 현재 스펙 문서와 비교하고, 스펙에 반영해야 할 변경사항을 구조화된 패치 초안(`.sdd/pr/spec_patch_draft.md`)으로 생성합니다. 출력의 "스펙 패치 내용" 섹션은 `spec-update` 스킬의 입력 형식("Spec Update Input")과 호환되므로, 확정된 패치는 `spec-update`로 바로 반영할 수 있습니다.
+이 스킬은 PR의 변경사항을 분석하여 현재 스펙 문서와 비교하고, 스펙에 반영해야 할 변경사항을 구조화된 패치 초안(`_sdd/pr/spec_patch_draft.md`)으로 생성합니다. 출력의 "스펙 패치 내용" 섹션은 `spec-update` 스킬의 입력 형식("Spec Update Input")과 호환되므로, 확정된 패치는 `spec-update`로 바로 반영할 수 있습니다.
 
 ## When to Use This Skill
 
@@ -22,19 +22,19 @@ PR(Pull Request)과 현재 스펙을 비교하여 구조화된 스펙 패치 초
 ## Prerequisites
 
 - `gh` CLI 인증 완료 (`gh auth status`로 확인)
-- `.sdd/spec/` 디렉토리에 스펙 문서 존재 (권장, 필수는 아님)
+- `_sdd/spec/` 디렉토리에 스펙 문서 존재 (권장, 필수는 아님)
 - PR이 존재하는 GitHub 저장소
 
 ## Input Sources
 
-1. **현재 스펙 (`.sdd/spec/`)**: 비교 기준이 되는 메인 스펙 문서
+1. **현재 스펙 (`_sdd/spec/`)**: 비교 기준이 되는 메인 스펙 문서
 2. **PR 데이터 (`gh` CLI)**: PR 메타데이터, 변경 파일, diff
 3. **사용자 대화 (현재 세션)**: 패치 초안 정제 및 확정
-4. **기존 초안 (`.sdd/pr/spec_patch_draft.md`)**: 이전 초안이 있으면 업데이트 모드
+4. **기존 초안 (`_sdd/pr/spec_patch_draft.md`)**: 이전 초안이 있으면 업데이트 모드
 
 ## Output
 
-**파일 위치**: `.sdd/pr/spec_patch_draft.md`
+**파일 위치**: `_sdd/pr/spec_patch_draft.md`
 
 **형식**: PR 요약 + "Spec Update Input" 호환 패치 내용 + 질문 및 제안
 
@@ -46,8 +46,8 @@ PR(Pull Request)과 현재 스펙을 비교하여 구조화된 스펙 패치 초
 
 ```
 1. `gh auth status` 실행하여 인증 상태 확인
-2. `.sdd/spec/` 디렉토리에서 스펙 파일 탐색
-3. `.sdd/pr/` 디렉토리 없으면 생성
+2. `_sdd/spec/` 디렉토리에서 스펙 파일 탐색
+3. `_sdd/pr/` 디렉토리 없으면 생성
 ```
 
 **스펙 파일이 없는 경우:**
@@ -57,7 +57,7 @@ PR(Pull Request)과 현재 스펙을 비교하여 구조화된 스펙 패치 초
 #### Step 2: 현재 스펙 읽기
 
 ```
-1. `.sdd/spec/` 내 메인 스펙 파일 로드
+1. `_sdd/spec/` 내 메인 스펙 파일 로드
 2. 여러 스펙 파일이 있으면 AskUserQuestion으로 선택 요청
 3. 스펙의 컴포넌트, 기능, 섹션 구조 파악
 ```
@@ -99,7 +99,7 @@ PR의 파일 변경사항을 스펙 컴포넌트에 매핑:
 
 #### Step 5: 패치 초안 생성
 
-수집/분석된 정보를 `.sdd/pr/spec_patch_draft.md`에 구조화하여 저장합니다.
+수집/분석된 정보를 `_sdd/pr/spec_patch_draft.md`에 구조화하여 저장합니다.
 
 출력 형식은 아래 [Output Format](#output-format) 섹션을 참조하세요.
 
@@ -116,7 +116,7 @@ PR의 파일 변경사항을 스펙 컴포넌트에 매핑:
 #### Step 1: 기존 초안 로드
 
 ```
-1. `.sdd/pr/spec_patch_draft.md` 내용 읽기
+1. `_sdd/pr/spec_patch_draft.md` 내용 읽기
 2. 초안의 PR 번호와 현재 요청 비교
 3. 다른 PR의 초안인 경우: AskUserQuestion으로 처리 방법 확인
    - 기존 초안 아카이브 후 새로 생성
@@ -321,7 +321,7 @@ AskUserQuestion을 사용하여 작업 유형 확인:
 implementation → PR → pr-spec-patch → (사용자 정제) → spec-update
                           ↑                              │
                      현재 스펙                        메인 스펙 업데이트
-                  (.sdd/spec/)                     (.sdd/spec/)
+                  (_sdd/spec/)                     (_sdd/spec/)
 ```
 
 1. **pr-spec-patch** (이 스킬): PR과 스펙을 비교하여 패치 초안 생성
@@ -365,7 +365,7 @@ implementation → PR → pr-spec-patch → (사용자 정제) → spec-update
 | PR 번호 잘못됨 | 오류 메시지 표시, 올바른 PR 번호 요청 |
 | 네트워크 오류 | 재시도 안내 |
 | 스펙 파일 파싱 실패 | 오류 위치 표시, 수동 확인 요청 |
-| `.sdd/pr/` 디렉토리 없음 | 자동 생성 |
+| `_sdd/pr/` 디렉토리 없음 | 자동 생성 |
 
 ## Additional Resources
 

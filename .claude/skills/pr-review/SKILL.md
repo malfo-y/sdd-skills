@@ -6,11 +6,11 @@ version: 1.0.0
 
 # PR Review - 스펙 기반 PR 검증 및 판정
 
-PR 구현을 원본 스펙과 스펙 패치 초안 대비 검증하여 구조화된 리뷰 리포트(`.sdd/pr/PR_REVIEW.md`)를 생성합니다.
+PR 구현을 원본 스펙과 스펙 패치 초안 대비 검증하여 구조화된 리뷰 리포트(`_sdd/pr/PR_REVIEW.md`)를 생성합니다.
 
 ## Overview
 
-이 스킬은 PR의 구현 내용을 현재 스펙 문서(`.sdd/spec/`)와 스펙 패치 초안(`.sdd/pr/spec_patch_draft.md`)을 기준으로 검증하여, 수용 기준 충족 여부, 스펙 준수 상태, 갭 분석 결과를 포함한 구조화된 리뷰 리포트를 생성합니다. 최종 판정(Approve / Request Changes / Needs Discussion)을 제공합니다.
+이 스킬은 PR의 구현 내용을 현재 스펙 문서(`_sdd/spec/`)와 스펙 패치 초안(`_sdd/pr/spec_patch_draft.md`)을 기준으로 검증하여, 수용 기준 충족 여부, 스펙 준수 상태, 갭 분석 결과를 포함한 구조화된 리뷰 리포트를 생성합니다. 최종 판정(Approve / Request Changes / Needs Discussion)을 제공합니다.
 
 ## Workflow Position
 
@@ -18,7 +18,7 @@ PR 구현을 원본 스펙과 스펙 패치 초안 대비 검증하여 구조화
 implementation → PR → pr-spec-patch → pr-review → 승인/수정 → spec-update
                           ↑              ↑↓
                      현재 스펙       검증 및 판정
-                  (.sdd/spec/)     (.sdd/pr/PR_REVIEW.md)
+                  (_sdd/spec/)     (_sdd/pr/PR_REVIEW.md)
 ```
 
 ## Language
@@ -42,20 +42,20 @@ Report the model used at the beginning of the review.
 ## Prerequisites
 
 - `gh` CLI 인증 완료 (`gh auth status`로 확인)
-- `.sdd/spec/` 디렉토리에 스펙 문서 존재 (권장)
-- `.sdd/pr/spec_patch_draft.md` 존재 (권장, 필수 아님)
+- `_sdd/spec/` 디렉토리에 스펙 문서 존재 (권장)
+- `_sdd/pr/spec_patch_draft.md` 존재 (권장, 필수 아님)
 - PR이 존재하는 GitHub 저장소
 
 ## Input Sources
 
-1. **현재 스펙 (`.sdd/spec/`)**: 기존 스펙 요구사항 및 아키텍처 기준
-2. **스펙 패치 초안 (`.sdd/pr/spec_patch_draft.md`)**: PR에서 클레임한 변경사항 및 수용 기준
+1. **현재 스펙 (`_sdd/spec/`)**: 기존 스펙 요구사항 및 아키텍처 기준
+2. **스펙 패치 초안 (`_sdd/pr/spec_patch_draft.md`)**: PR에서 클레임한 변경사항 및 수용 기준
 3. **PR 데이터 (`gh` CLI)**: PR 메타데이터, diff, 커밋 정보
 4. **테스트 결과**: CI 상태 또는 로컬 테스트 실행 결과
 
 ## Output
 
-**파일 위치**: `.sdd/pr/PR_REVIEW.md`
+**파일 위치**: `_sdd/pr/PR_REVIEW.md`
 
 **형식**: 판정(Verdict) + 메트릭 요약 + 수용 기준 검증 + 스펙 준수 검증 + 갭 분석 + 권장 사항
 
@@ -67,10 +67,10 @@ Report the model used at the beginning of the review.
 
 ```
 1. `gh auth status` 실행하여 인증 상태 확인
-2. `.sdd/spec/` 디렉토리에서 스펙 파일 탐색
-3. `.sdd/pr/spec_patch_draft.md` 존재 확인
+2. `_sdd/spec/` 디렉토리에서 스펙 파일 탐색
+3. `_sdd/pr/spec_patch_draft.md` 존재 확인
 4. PR 번호 확인 (자동 감지 또는 사용자 입력)
-5. `.sdd/pr/` 디렉토리 없으면 생성
+5. `_sdd/pr/` 디렉토리 없으면 생성
 ```
 
 **패치 초안의 PR 번호 불일치 시:**
@@ -153,7 +153,7 @@ gh pr diff [PR_NUMBER] --name-only
 #### Step 7: 리포트 생성
 
 1. 기존 `PR_REVIEW.md`가 있으면 `PREV_PR_REVIEW_<timestamp>.md`로 아카이브
-2. 아래 [Output Format](#output-format) 형식으로 `.sdd/pr/PR_REVIEW.md` 생성
+2. 아래 [Output Format](#output-format) 형식으로 `_sdd/pr/PR_REVIEW.md` 생성
 3. 사용자에게 요약 제시 및 다음 단계 안내
 
 ### Mode 2: Degraded (패치 초안 없음)
@@ -358,7 +358,7 @@ gh pr diff [PR_NUMBER] --name-only
 | PR 번호 잘못됨 | 오류 메시지 표시, 올바른 PR 번호 요청 |
 | 네트워크 오류 | 재시도 안내 |
 | 스펙 파일 파싱 실패 | 오류 위치 표시, 수동 확인 요청 |
-| `.sdd/pr/` 디렉토리 없음 | 자동 생성 |
+| `_sdd/pr/` 디렉토리 없음 | 자동 생성 |
 
 ## Additional Resources
 

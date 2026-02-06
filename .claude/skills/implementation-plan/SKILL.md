@@ -11,15 +11,10 @@ Create structured, actionable implementation plans from user specifications. Fol
 ## Implementation spec
 
 1. Refer to the user input.
-2. If the user input is not clear, refer to `.sdd/implementation/user_input.md` for the user specification.
+2. If the user input is not clear, refer to `_sdd/implementation/user_input.md` for the user specification.
 3. If the user input is not clear and there is no user specification, ask the user for clarification.
 
 After processing `user_input.md`, rename it to `_processed_user_input.md` to mark it as processed inputs.
-
-## LLM Model to use
-
-Use the default, most capable model (e.g. Opus 4.5) to plan the implementation otherwise mentioned by the user.
-Report the model used at the beginning of the planning.
 
 ## Language
 
@@ -162,12 +157,17 @@ Use AskUserQuestion when encountering:
 - Unknown integration requirements
 - Incomplete success criteria
 
+## LLM Model to use
+
+Try to estimate the size and complexity of the implementation.
+Inform user which model would fit for the implemenation by referring "Model aliases" under https://code.claude.com/docs/en/model-config.
+
 ## Output Location
 
 After creating the plan, offer to:
 
 1. Display in conversation (for review/discussion)
-2. Save to a file to the user provided path, or default to `<project_root>/.sdd/implementation/IMPLEMENATION_PLAN.md`
+2. Save to a file to the user provided path, or default to `<project_root>/_sdd/implementation/IMPLEMENATION_PLAN.md`
     - If the file already exists, rename it to `PREV_IMPLEMENTATION_PLAN_<timestamp>.md` and create a new one.
 3. Create tasks using TaskCreate tool for tracking
 

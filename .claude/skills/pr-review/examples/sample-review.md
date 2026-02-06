@@ -16,8 +16,8 @@ Claude: PR 리뷰를 시작합니다.
 ## 사전 조건 확인
 
 ✓ gh auth status: 인증됨 (github.com)
-✓ 스펙 파일: .sdd/spec/project-api.md (v1.2.0)
-✓ 패치 초안: .sdd/pr/spec_patch_draft.md (PR #42)
+✓ 스펙 파일: _sdd/spec/project-api.md (v1.2.0)
+✓ 패치 초안: _sdd/pr/spec_patch_draft.md (PR #42)
 ✓ PR: #42 - 사용자 인증 시스템 구현 및 세션 관리 버그 수정
 
 ## 컨텍스트 로드 중...
@@ -130,7 +130,7 @@ Claude:
 
 ```
 Claude:
-리뷰를 완료했습니다. 리포트를 .sdd/pr/PR_REVIEW.md에 저장합니다.
+리뷰를 완료했습니다. 리포트를 _sdd/pr/PR_REVIEW.md에 저장합니다.
 ```
 
 아래는 생성된 리포트 내용입니다:
@@ -328,8 +328,8 @@ Claude:
 
 **리뷰 버전**: 1
 **PR 커밋 SHA**: abc1234
-**스펙 파일**: .sdd/spec/project-api.md
-**패치 초안 파일**: .sdd/pr/spec_patch_draft.md
+**스펙 파일**: _sdd/spec/project-api.md
+**패치 초안 파일**: _sdd/pr/spec_patch_draft.md
 **생성 시각**: 2026-02-06 15:30:00
 
 ---
@@ -417,8 +417,8 @@ Claude: PR 리뷰를 시작합니다.
 
 **리뷰 버전**: 2
 **PR 커밋 SHA**: def5678
-**스펙 파일**: .sdd/spec/project-api.md
-**패치 초안 파일**: .sdd/pr/spec_patch_draft.md
+**스펙 파일**: _sdd/spec/project-api.md
+**패치 초안 파일**: _sdd/pr/spec_patch_draft.md
 **생성 시각**: 2026-02-06 16:15:00
 
 ---
