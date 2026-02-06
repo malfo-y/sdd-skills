@@ -11,6 +11,8 @@
 | `/spec-create` | "스펙 생성" | 코드 분석 또는 초안에서 스펙 생성 |
 | `/spec-update` | "스펙에 기능 추가" | 새 기능/요구사항을 스펙에 추가 |
 | `/spec-review` | "스펙 동기화" | 구현 후 스펙과 코드 동기화 |
+| `/pr-spec-patch` | "PR 스펙 패치" | PR과 스펙 비교하여 패치 초안 생성 |
+| `/pr-review` | "PR 리뷰" | PR 구현을 스펙/패치 초안 대비 검증 및 판정 |
 | `/implementation-plan` | "구현 계획 생성" | 스펙에서 실행 가능한 작업 생성 |
 | `/implementation` | "구현 시작" | TDD로 작업 실행 |
 | `/implementation-review` | "진행 상황 확인" | 계획 대비 구현 검증 |
@@ -78,6 +80,12 @@
 "이 버그를 고쳐줘" → (선택적) /implementation-review
 ```
 
+### 6. PR 기반 스펙 패치 및 리뷰
+
+```bash
+/pr-spec-patch → (대화로 정제) → /pr-review → (수정 후 재리뷰) → 머지 → /spec-update
+```
+
 ---
 
 ## 디렉토리 구조
@@ -87,6 +95,10 @@
 ├── spec/
 │   ├── apify_ig.md              # 메인 스펙
 │   └── user_spec.md             # 사용자 입력
+│
+├── pr/
+│   ├── spec_patch_draft.md      # PR 기반 스펙 패치 초안
+│   └── PR_REVIEW.md             # PR 리뷰 리포트
 │
 ├── implementation/
 │   ├── IMPLEMENTATION_PLAN.md   # 구현 계획

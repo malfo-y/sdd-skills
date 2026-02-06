@@ -1,7 +1,7 @@
 # 스펙 기반 개발 (SDD) 워크플로우 가이드
 
-**버전**: 1.1.0
-**날짜**: 2026-02-04
+**버전**: 1.2.0
+**날짜**: 2026-02-06
 
 Claude와 함께하는 소프트웨어 개발을 위한 SDD 스킬 종합 가이드
 
@@ -35,13 +35,15 @@ Claude와 함께하는 소프트웨어 개발을 위한 SDD 스킬 종합 가이
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
-### 6가지 SDD 스킬
+### 8가지 SDD 스킬
 
 | 스킬 | 트리거 | 목적 |
 |------|--------|------|
 | **spec-create** | "스펙 생성", "프로젝트 문서화" | 코드 분석 또는 초안에서 스펙 생성 |
 | **spec-update** | "스펙에 기능 추가", "스펙 업데이트" | 스펙에 새 요구사항 추가 |
 | **spec-review** | "스펙 리뷰", "스펙 동기화" | 구현 변경사항과 스펙 동기화 |
+| **pr-spec-patch** | "PR 스펙 패치", "PR 리뷰 준비" | PR과 스펙 비교하여 패치 초안 생성 |
+| **pr-review** | "PR 리뷰", "PR 검증" | PR 구현을 스펙 대비 검증 및 판정 |
 | **implementation-plan** | "구현 계획 생성" | 스펙에서 실행 가능한 작업 생성 |
 | **implementation** | "계획 구현", "구현 시작" | TDD 방식으로 작업 실행 |
 | **implementation-review** | "구현 리뷰", "진행 상황 확인" | 계획 대비 구현 검증 |
@@ -55,6 +57,10 @@ project/
 │   │   ├── main.md                   # 메인 스펙 문서
 │   │   ├── user_spec.md              # 새 기능 요청 (입력)
 │   │   └── _processed_user_spec.md   # 처리된 요청 (아카이브)
+│   │
+│   ├── pr/
+│   │   ├── spec_patch_draft.md       # PR 기반 스펙 패치 초안
+│   │   └── PR_REVIEW.md              # PR 리뷰 리포트
 │   │
 │   ├── implementation/
 │   │   ├── IMPLEMENTATION_PLAN.md     # 현재 구현 계획
@@ -337,6 +343,8 @@ implementation 스킬은 테스트 주도 개발(TDD)을 사용합니다:
 | 새 요구사항 발견 | `/spec-update`로 스펙에 추가 |
 | 계획된 기능 제거 | `/spec-review`로 스펙 업데이트 |
 | API 변경 | 스펙의 컴포넌트 상세 업데이트 |
+| PR 생성 후 스펙 반영 | `/pr-spec-patch`로 패치 초안 생성 후 `/spec-update` |
+| PR 머지 전 스펙 기반 검증 | `/pr-spec-patch` → `/pr-review`로 검증 후 머지 |
 
 #### 구현 페이즈 완료 후
 
@@ -358,6 +366,7 @@ implementation 스킬은 테스트 주도 개발(TDD)을 사용합니다:
 | 파일 | 용도 | 처리 후 |
 |------|------|---------|
 | `.sdd/spec/user_spec.md` | 사용자 입력 (드래프트 스펙, 새 기능/요구사항 등) | → `_processed_user_spec.md` |
+| `.sdd/pr/spec_patch_draft.md` | PR 기반 스펙 패치 초안 | 확정 후 `/spec-update`로 반영 |
 | `.sdd/implementation/user_input.md` | 구현 요청 | → `_processed_user_input.md` |
 
 #### 버전 히스토리
@@ -473,6 +482,8 @@ implementation 스킬은 테스트 주도 개발(TDD)을 사용합니다:
 | `/spec-create` | 새 프로젝트 시작 또는 기존 코드 문서화 |
 | `/spec-update` | 스펙에 새 기능/요구사항 추가 |
 | `/spec-review` | 구현 변경사항과 스펙 동기화 |
+| `/pr-spec-patch` | PR과 스펙 비교하여 패치 초안 생성 |
+| `/pr-review` | PR 구현을 스펙/패치 초안 대비 검증 및 판정 |
 | `/implementation-plan` | 스펙에서 작업 생성 |
 | `/implementation` | TDD로 작업 실행 |
 | `/implementation-review` | 진행 상황 확인 및 기준 검증 |
@@ -503,6 +514,8 @@ implementation 스킬은 테스트 주도 개발(TDD)을 사용합니다:
 |------|----------|
 | 메인 스펙 | `.sdd/spec/main.md` 또는 `.sdd/spec/<프로젝트>.md` |
 | 스펙 입력 | `.sdd/spec/user_spec.md` |
+| PR 패치 초안 | `.sdd/pr/spec_patch_draft.md` |
+| PR 리뷰 리포트 | `.sdd/pr/PR_REVIEW.md` |
 | 구현 계획 | `.sdd/implementation/IMPLEMENTATION_PLAN.md` |
 | 진행 추적 | `.sdd/implementation/IMPLEMENTATION_PROGRESS.md` |
 | 리뷰 결과 | `.sdd/implementation/IMPLEMENTATION_REVIEW.md` |
@@ -601,6 +614,20 @@ implementation 스킬은 테스트 주도 개발(TDD)을 사용합니다:
 - "스펙 동기화"
 - "스펙 드리프트 확인"
 - "review spec", "sync spec with code"
+
+### pr-spec-patch
+- "PR 스펙 패치"
+- "PR 리뷰 준비"
+- "스펙 패치 생성"
+- "PR 변경사항 스펙 반영"
+- "create spec patch from PR", "compare PR with spec"
+
+### pr-review
+- "PR 리뷰"
+- "PR 검증"
+- "스펙 기반 PR 리뷰"
+- "PR 승인 검토"
+- "review PR", "review PR against spec", "PR review"
 
 ### implementation-plan
 - "구현 계획 생성"
