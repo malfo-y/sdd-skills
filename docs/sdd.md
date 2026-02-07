@@ -344,6 +344,64 @@ AI가 스펙을 과하게 디테일하게 만들지 않게 하려면, “잘 쓰
 - **도구 선택**: 팀 언어/프레임워크에 맞는 툴(Spec Kit, Kiro 등)과 사양 언어(TypeSpec 등) 검토
 - **문화/교육**: “사양 작성이 곧 코딩”이라는 인식 + 리뷰 초점을 구문→의도/아키텍처로 이동
 
+아래는 **이 레포에서** 위 루프를 Claude Skills로 그대로 굴리는 “실전 가이드”입니다.
+
+### (malfo_ssd_skills) Claude Skills로 SDD 루프를 “그대로” 실행하기
+
+이 레포의 `.claude/skills/*`는 위 루프를 **운영 가능한 체크리스트 + 산출물 경로 규칙**으로 구현해 둔 것입니다.
+
+#### 표준 디렉토리/산출물(관례)
+
+- Spec(사양): `_sdd/spec/`
+  - 메인 스펙: `_sdd/spec/<project>.md` (또는 `main.md`)
+  - 요구사항 초안(대화 수집): `_sdd/spec/user_draft.md` (`/spec-draft`)
+  - 사용자 입력(배치): `_sdd/spec/user_spec.md`
+  - 요약: `_sdd/spec/SUMMARY.md` (`/spec-summary`)
+- Implementation(계획/진행/리뷰): `_sdd/implementation/`
+  - 계획: `_sdd/implementation/IMPLEMENTATION_PLAN.md` (`/implementation-plan`)
+  - 진행 리포트: `_sdd/implementation/IMPLEMENTATION_PROGRESS.md` (`/implementation`)
+  - 구현 리뷰: `_sdd/implementation/IMPLEMENTATION_REVIEW.md` (`/implementation-review`)
+- PR 기반 워크플로: `_sdd/pr/`
+  - 스펙 패치 초안: `_sdd/pr/spec_patch_draft.md` (`/pr-spec-patch`)
+  - PR 리뷰 리포트: `_sdd/pr/PR_REVIEW.md` (`/pr-review`)
+
+> 백업 규칙: 스펙/계획/리포트를 덮어쓰기 전에 `PREV_<파일명>_<timestamp>.md`를 같은 폴더에 저장하는 관례를 사용합니다.
+
+#### 단계 ↔ 스킬 매핑(추천)
+
+| SDD 단계 | 이 레포에서의 스킬 | 산출물(대표) |
+| --- | --- | --- |
+| Constitution | (수동 작성 권장) | (예) `_sdd/CONSTITUTION.md` |
+| Specify/Clarify | `/spec-create`, `/spec-draft`, `/spec-update` | `_sdd/spec/*.md`, `user_draft.md`, `user_spec.md` |
+| Plan/Tasks | `/implementation-plan` | `_sdd/implementation/IMPLEMENTATION_PLAN.md` |
+| Implement | `/implementation` | 코드 + 테스트 + `_sdd/implementation/IMPLEMENTATION_PROGRESS.md` |
+| Review | `/implementation-review`, `/spec-review` | `_sdd/implementation/IMPLEMENTATION_REVIEW.md` + 스펙 갱신 |
+| 공유/현황 | `/spec-summary` | `_sdd/spec/SUMMARY.md` |
+
+#### 예시 1) “요구사항 대화 → 스펙 → 계획 → 구현 → 동기화” (일반 루프)
+
+1. (초기화) 스펙이 없다면: `/spec-create`
+2. (요구사항 수집/명확화) 대화로 초안 만들기: `/spec-draft` → `_sdd/spec/user_draft.md`
+3. (메인 스펙 갱신) `/spec-update` (필요시 PREV 백업 + 버전/날짜 갱신)
+4. (현황/다음 액션) `/spec-summary` → `_sdd/spec/SUMMARY.md`
+5. (구현 계획) `/implementation-plan` → `_sdd/implementation/IMPLEMENTATION_PLAN.md`
+6. (구현/TDD) `/implementation` → 코드+테스트 + `_sdd/implementation/IMPLEMENTATION_PROGRESS.md`
+7. (구현 품질/수용 기준 점검) `/implementation-review`
+8. (스펙↔코드 드리프트 정리) `/spec-review` → 스펙 업데이트 후 `/spec-summary` 재생성
+
+#### 예시 2) “PR이 먼저 생긴 경우” (PR → 스펙 동기화 루프)
+
+1. (PR 변경사항을 스펙 관점으로 정리) `/pr-spec-patch` → `_sdd/pr/spec_patch_draft.md`
+2. (스펙 준수로 PR 검증/판정) `/pr-review` → `_sdd/pr/PR_REVIEW.md`
+3. (확정된 패치를 스펙에 반영) `/spec-update`
+
+#### Clarify/Constitution을 어디에 남길까?
+
+- Clarify의 “질문/결정”은 스펙 본문에 장황하게 쓰기보다, **L2(Decision log/Rationale)** 로 분리하거나 `_sdd/spec/`에 별도 파일로 두는 것을 권장합니다.
+- Constitution은 자동화 스킬이 따로 없으므로, 프로젝트 초기에 **짧게(금지/원칙 위주)** 만들어두고 PR/리뷰 때 준수 여부를 체크하는 방식이 현실적입니다.
+
+---
+
 ## 7. Q&A 치트시트 (10분)
 
 발표자가 바로 답할 수 있도록 “한 줄 답 + 보조 포인트”로 구성합니다.

@@ -9,7 +9,7 @@ This example shows how the implementation-review skill audits an authentication 
 ```
 User: review implementation
 
-Claude: Found implementation plan at _sdd/IMPLEMENTATION_PLAN.md
+Claude: Found implementation plan at _sdd/implementation/IMPLEMENTATION_PLAN.md
 
 Starting implementation review for: User Authentication System
 
@@ -273,7 +273,7 @@ Claude:
 # Implementation Review: User Authentication System
 
 **Review Date**: 2024-01-15
-**Plan**: _sdd/IMPLEMENTATION_PLAN.md
+**Plan**: _sdd/implementation/IMPLEMENTATION_PLAN.md
 **Reviewer**: Claude
 
 ---

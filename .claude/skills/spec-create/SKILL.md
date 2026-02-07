@@ -27,7 +27,8 @@ _sdd/
 │   ├── main.md             # Main spec document (or <project-name>.md)
 │   ├── <component>.md      # Component-specific specs (for large projects)
 │   └── user_draft.md        # User requirements (if exists)
-└── IMPLEMENTATION_PLAN.md  # Implementation plan (if exists)
+└── implementation/
+    └── IMPLEMENTATION_PLAN.md  # Implementation plan (if exists)
 ```
 
 ## Spec Document Creation Process
