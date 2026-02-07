@@ -7,6 +7,8 @@
 **Target Spec**: project-api.md
 **Status**: 초안
 
+> **중요**: `pr-spec-patch`는 `_sdd/spec/` 스펙을 직접 수정하지 않습니다. 이 파일(`_sdd/pr/spec_patch_draft.md`)은 **초안**만 생성하며, 스펙 반영은 `/spec-update`로 진행합니다.
+
 ---
 
 ## PR 요약

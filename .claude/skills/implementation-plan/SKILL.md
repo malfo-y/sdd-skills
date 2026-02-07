@@ -8,6 +8,11 @@ version: 1.0.0
 
 Create structured, actionable implementation plans from user specifications. Follow this systematic approach to transform requirements into executable development tasks.
 
+## Hard Rule: Spec Documents Are Read-Only
+
+- This skill may **read** the spec as input, but it **MUST NOT** modify any files under `_sdd/spec/`.
+- If you think the spec should change, capture it as **Open Questions / Spec gaps** in the plan and direct the user to `spec-update`.
+
 ## Implementation spec
 
 1. Refer to the user input.

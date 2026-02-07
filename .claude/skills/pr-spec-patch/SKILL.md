@@ -12,6 +12,12 @@ PR(Pull Request)과 현재 스펙을 비교하여 구조화된 스펙 패치 초
 
 이 스킬은 PR의 변경사항을 분석하여 현재 스펙 문서와 비교하고, 스펙에 반영해야 할 변경사항을 구조화된 패치 초안(`_sdd/pr/spec_patch_draft.md`)으로 생성합니다. 출력의 "스펙 패치 내용" 섹션은 `spec-update` 스킬의 입력 형식("Spec Update Input")과 호환되므로, 확정된 패치는 `spec-update`로 바로 반영할 수 있습니다.
 
+## 하드 룰: 이 스킬은 스펙을 직접 수정하지 않습니다 (중요)
+
+- `_sdd/spec/` 아래의 스펙 파일은 **절대** 생성/수정/삭제하지 않습니다.
+- 이 스킬의 산출물은 오직 `_sdd/pr/spec_patch_draft.md` 입니다.
+- 스펙 반영은 **반드시** `/spec-update`로 진행합니다.
+
 ## When to Use This Skill
 
 - PR을 기반으로 스펙 패치 초안을 생성할 때

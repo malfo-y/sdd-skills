@@ -2,6 +2,8 @@
 
 This example shows how the implementation-review skill audits an authentication system implementation against its plan.
 
+> **Important**: The `implementation-review` skill must **never** create/edit/delete spec documents under `_sdd/spec/`. If spec changes are needed, record them as “spec update needed” and direct the user to `spec-update` (or `spec-review`).
+
 ## Session Flow
 
 ### 1. Starting the Review

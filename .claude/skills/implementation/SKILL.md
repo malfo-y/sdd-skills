@@ -8,6 +8,13 @@ version: 1.1.0
 
 Execute implementation plans systematically using Test-Driven Development (TDD), working through tasks phase by phase while tracking progress and maintaining code quality.
 
+## Hard Rule: Never Modify Spec Files
+
+- This skill **MUST NOT** create/edit/delete any spec documents under `<project_root>/_sdd/spec/`.
+- If implementation reveals spec drift, ambiguity, or missing requirements:
+  - Report it in the progress report / chat, and
+  - Ask the user to update the spec via `spec-update` (or run a spec audit via `spec-review`).
+
 ## Core Principle: Test-Driven Development
 
 All implementation follows the **Red-Green-Refactor** cycle:
