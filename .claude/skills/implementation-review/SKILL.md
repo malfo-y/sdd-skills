@@ -33,6 +33,8 @@ Report the model used at the beginning of the reviewing.
    - `<project_root>/_sdd/implementation/IMPLEMENTATION_{PLAN|PROGRESS}.md`
    - Recent conversation context
 
+If there are multiple phase plan/progress files (e.g. `IMPLEMENTATION_PLAN_PHASE_1.md`, `IMPLEMENTATION_PROGRESS_PHASE_1.md`) and the user does not specify scope, ask whether to review the latest phase only (default) or all phases.
+
 2. **No Plan Found**: If no plan exists, inform user and suggest:
    - Creating a plan with `implementation-plan` skill
    - Doing a general code review instead

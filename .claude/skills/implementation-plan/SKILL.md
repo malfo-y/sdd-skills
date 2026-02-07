@@ -160,15 +160,18 @@ Use AskUserQuestion when encountering:
 ## LLM Model to use
 
 Try to estimate the size and complexity of the implementation.
-Inform user which model would fit for the implemenation by referring "Model aliases" under https://code.claude.com/docs/en/model-config.
+Inform user which model would fit for the implementation by referring "Model aliases" under https://code.claude.com/docs/en/model-config.
 
 ## Output Location
 
 After creating the plan, offer to:
 
 1. Display in conversation (for review/discussion)
-2. Save to a file to the user provided path, or default to `<project_root>/_sdd/implementation/IMPLEMENATION_PLAN.md`
+2. Save to a file to the user provided path, or default to `<project_root>/_sdd/implementation/IMPLEMENTATION_PLAN.md`
     - If the file already exists, rename it to `PREV_IMPLEMENTATION_PLAN_<timestamp>.md` and create a new one.
-3. Create tasks using TaskCreate tool for tracking
+3. If the plan is too large to fit comfortably in one file (e.g. >25 tasks), split the plan into multiple files:
+    - Keep `IMPLEMENTATION_PLAN.md` as an index/overview and link to the phase files
+    - Name phase files as `IMPLEMENTATION_PLAN_PHASE_1.md`, `IMPLEMENTATION_PLAN_PHASE_2.md`, etc.
+4. Create tasks using TaskCreate tool for tracking
 
 Always confirm with the user which output format they prefer.

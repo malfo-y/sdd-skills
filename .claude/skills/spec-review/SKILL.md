@@ -151,6 +151,18 @@ Update spec document with identified changes:
 4. Archive or remove obsolete content
 5. Add changelog entry
 
+**Spec Splitting (when spec is too large):**
+- If the main spec has grown too large to maintain comfortably in a single file (e.g. >500 lines or difficult navigation), ask the user whether they want to split it into multiple files.
+- If user agrees: keep `_sdd/spec/<project>.md` as an index/overview, move large sections into separate files under `_sdd/spec/`, and link them from the index using a consistent naming scheme such as:
+  - `_sdd/spec/<project>_API.md`
+  - `_sdd/spec/<project>_DATA_MODEL.md`
+  - `_sdd/spec/<project>_COMPONENTS.md`
+- Other suffixes are allowed if they better match the project domain (e.g. `_ARCH.md`, `_FLOWS.md`, `_DB_SCHEMA.md`). Keep the naming consistent and confirm the intended split with the user.
+- Naming style: prefer `UPPER_SNAKE_CASE` suffixes (e.g. `_DATA_MODEL`, `_DB_SCHEMA`) for consistency.
+- Ask-first template:
+  - "현재 스펙이 커져서 관리가 어려워 보여요. `_sdd/spec/<project>.md`를 인덱스로 두고 `_sdd/spec/<project>_API.md`, `_sdd/spec/<project>_DATA_MODEL.md`(등)으로 분할할까요? 원하시면 suffix/파일 구성을 먼저 합의한 뒤 진행할게요."
+- Create PREV_ backups for every existing file you will modify during the split.
+
 **Versioning:**
 - Increment patch version for minor updates
 - Increment minor version for feature changes
@@ -199,10 +211,10 @@ Present findings before making changes:
 
 After user approval, generate updated spec:
 
-1. Create backup: `PREV_<spec-name>_<timestamp>.md`
-2. Apply changes to spec document
+1. Create backup(s): for each spec file you will edit, save `PREV_<spec-file>_<timestamp>.md` in the same directory
+2. Apply changes to spec document(s)
 3. Update version and last-updated date
-4. Add changelog entry
+4. Add changelog entry (include references to PREV_ backup(s), and note if the spec was split into multiple files)
 
 ## Automation Patterns
 

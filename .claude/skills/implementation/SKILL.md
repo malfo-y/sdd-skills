@@ -30,8 +30,13 @@ Before starting implementation:
 
 1. **Locate the Implementation Plan**: Check for plan at:
    - User-specified path
-   - `<project_root>/_sdd/implementation/IMPLEMENTATION_PLAN.md`
+   - `<project_root>/_sdd/implementation/IMPLEMENTATION_PLAN.md` (preferred entry point; may link to phase files)
+   - `<project_root>/_sdd/implementation/IMPLEMENTATION_PLAN_PHASE_<phase-number>.md` (when the plan is split by phase)
    - Recent conversation context
+
+If multiple plan files exist and the user did not specify a starting point:
+- If `IMPLEMENTATION_PLAN.md` exists, start from it.
+- Otherwise, ask the user which phase to start/resume (default: start from Phase 1).
 
 2. **Verify Plan Exists**: If no plan is found, suggest using the `implementation-plan` skill first.
 
@@ -288,6 +293,7 @@ For these cases, still write tests, but the order may vary.
 
 After completing a phase or all phases, save the report under a user-specified file (default: `<project-root>/_sdd/implementation/IMPLEMENTATION_PROGRESS.md`).  
 - If the file already exists, rename it to `PREV_IMPLEMENTATION_PROGRESS_<timestamp>.md` and create a new one.
+- If executing a phased plan, save a per-phase progress report under `<project-root>/_sdd/implementation/IMPLEMENTATION_PROGRESS_PHASE_<phase-number>.md` for the phase you just completed, and include a brief overall status summary (completed phases + what comes next).
 
 The report should include:
 
@@ -469,7 +475,7 @@ Use AskUserQuestion when:
 When user says "implement the plan":
 
 1. Acquire implementation plan by running `implementation-plan` skill if not exists
-2. Look for implementation plan at `_sdd/implementation/IMPLEMENTATION_PLAN.md`
+2. Look for implementation plan at `_sdd/implementation/IMPLEMENTATION_PLAN.md` (or `_sdd/implementation/IMPLEMENTATION_PLAN_PHASE_<phase-number>.md` if split by phase)
 3. If user input severly conflicts with the plan, abort and ask user to resolve the conflict
 4. Parse the plan and create task tracking
 5. **Identify testing framework** used in the project

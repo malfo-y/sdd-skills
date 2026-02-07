@@ -35,13 +35,14 @@ Claude와 함께하는 소프트웨어 개발을 위한 SDD 스킬 종합 가이
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
-### 8가지 SDD 스킬
+### 9가지 SDD 스킬
 
 | 스킬 | 트리거 | 목적 |
 |------|--------|------|
 | **spec-create** | "스펙 생성", "프로젝트 문서화" | 코드 분석 또는 초안에서 스펙 생성 |
 | **spec-update** | "스펙에 기능 추가", "스펙 업데이트" | 스펙에 새 요구사항 추가 |
 | **spec-review** | "스펙 리뷰", "스펙 동기화" | 구현 변경사항과 스펙 동기화 |
+| **spec-summary** | "스펙 요약", "프로젝트 개요" | 스펙의 요약본 생성 (현황 파악용) |
 | **pr-spec-patch** | "PR 스펙 패치", "PR 리뷰 준비" | PR과 스펙 비교하여 패치 초안 생성 |
 | **pr-review** | "PR 리뷰", "PR 검증" | PR 구현을 스펙 대비 검증 및 판정 |
 | **implementation-plan** | "구현 계획 생성" | 스펙에서 실행 가능한 작업 생성 |
@@ -63,8 +64,10 @@ project/
 │   │   └── PR_REVIEW.md              # PR 리뷰 리포트
 │   │
 │   ├── implementation/
-│   │   ├── IMPLEMENTATION_PLAN.md     # 현재 구현 계획
-│   │   ├── IMPLEMENTATION_PROGRESS.md # 진행 상황 추적
+│   │   ├── IMPLEMENTATION_PLAN.md     # 구현 계획 (인덱스/요약; 필요 시 phase 파일로 분할)
+│   │   ├── IMPLEMENTATION_PLAN_PHASE_<n>.md     # (선택) phase별 구현 계획
+│   │   ├── IMPLEMENTATION_PROGRESS.md           # 진행 상황 추적 (전체/요약)
+│   │   ├── IMPLEMENTATION_PROGRESS_PHASE_<n>.md  # (선택) phase별 진행 리포트
 │   │   ├── IMPLEMENTATION_REVIEW.md   # 리뷰 결과
 │   │   ├── TEST_SUMMARY.md            # 테스트 현황
 │   │   ├── user_input.md              # 구현 요청 (입력)
@@ -307,6 +310,20 @@ vim _sdd/spec/user_spec.md
 /implementation-review
 ```
 
+#### 시나리오 6: 스펙 현황 파악 (Spec Status Check)
+
+```bash
+# 스펙 요약 생성
+/spec-summary
+# Claude가 SUMMARY.md 생성 (진행률, 이슈, 추천사항 포함)
+
+# 용도:
+# - 스테이크홀더 미팅 전
+# - 새 팀원 온보딩
+# - 주기적 현황 점검
+# - 다음 작업 우선순위 결정
+```
+
 ---
 
 ## 3. 구현 및 스펙 유지보수
@@ -375,9 +392,14 @@ implementation 스킬은 테스트 주도 개발(TDD)을 사용합니다:
 
 ```
 _sdd/implementation/
-├── IMPLEMENTATION_PLAN.md                      # 현재
+├── IMPLEMENTATION_PLAN.md                      # 현재 (인덱스/요약)
+├── IMPLEMENTATION_PLAN_PHASE_1.md              # (선택) phase 1 상세 계획
+├── IMPLEMENTATION_PROGRESS.md                  # 진행 추적 (전체/요약)
+├── IMPLEMENTATION_PROGRESS_PHASE_1.md          # (선택) phase 1 진행 리포트
 ├── PREV_IMPLEMENTATION_PLAN_20260204_150502.md # 이전
 ├── PREV_IMPLEMENTATION_PLAN_20260204_194934.md # 더 이전
+├── PREV_IMPLEMENTATION_PROGRESS_20260204_150502.md # 이전 진행 추적
+├── PREV_IMPLEMENTATION_PROGRESS_20260204_194934.md # 더 이전 진행 추적
 ```
 
 ### 스펙의 상태 마커
@@ -482,6 +504,7 @@ _sdd/implementation/
 | `/spec-create` | 새 프로젝트 시작 또는 기존 코드 문서화 |
 | `/spec-update` | 스펙에 새 기능/요구사항 추가 |
 | `/spec-review` | 구현 변경사항과 스펙 동기화 |
+| `/spec-summary` | 스펙 현황 파악 및 요약본 생성 |
 | `/pr-spec-patch` | PR과 스펙 비교하여 패치 초안 생성 |
 | `/pr-review` | PR 구현을 스펙/패치 초안 대비 검증 및 판정 |
 | `/implementation-plan` | 스펙에서 작업 생성 |
@@ -514,10 +537,13 @@ _sdd/implementation/
 |------|----------|
 | 메인 스펙 | `_sdd/spec/main.md` 또는 `_sdd/spec/<프로젝트>.md` |
 | 스펙 입력 | `_sdd/spec/user_spec.md` |
+| 스펙 요약 | `_sdd/spec/SUMMARY.md` |
 | PR 패치 초안 | `_sdd/pr/spec_patch_draft.md` |
 | PR 리뷰 리포트 | `_sdd/pr/PR_REVIEW.md` |
-| 구현 계획 | `_sdd/implementation/IMPLEMENTATION_PLAN.md` |
-| 진행 추적 | `_sdd/implementation/IMPLEMENTATION_PROGRESS.md` |
+| 구현 계획 (인덱스) | `_sdd/implementation/IMPLEMENTATION_PLAN.md` |
+| 구현 계획 (phase 분할 시) | `_sdd/implementation/IMPLEMENTATION_PLAN_PHASE_<n>.md` |
+| 진행 추적 (전체/요약) | `_sdd/implementation/IMPLEMENTATION_PROGRESS.md` |
+| 진행 추적 (phase 분할 시) | `_sdd/implementation/IMPLEMENTATION_PROGRESS_PHASE_<n>.md` |
 | 리뷰 결과 | `_sdd/implementation/IMPLEMENTATION_REVIEW.md` |
 | 환경 설정 | `_sdd/env.md` |
 
@@ -588,10 +614,11 @@ _sdd/implementation/
 
 1. **Spec First (가능하면)**: 큰 구현 전에 항상 스펙 업데이트
 2. **자주 리뷰**: 각 페이즈 후 implementation-review 실행
-3. **동기화 유지**: 코드가 문서와 다를 때 spec-review 실행
-4. **히스토리 보존**: 프로젝트 안정화 전까지 PREV_* 파일 삭제 금지
-5. **상태 표시**: 스펙에 상태 마커(📋, 🚧, ✅) 사용
-6. **테스트 먼저**: implementation 스킬에서 TDD 준수
+3. **큰 계획은 phase 분할**: `IMPLEMENTATION_PLAN.md`는 인덱스/요약으로 두고 `IMPLEMENTATION_PLAN_PHASE_<n>.md`로 분할 (진행 리포트도 `IMPLEMENTATION_PROGRESS_PHASE_<n>.md` 사용)
+4. **동기화 유지**: 코드가 문서와 다를 때 spec-review 실행
+5. **히스토리 보존**: 프로젝트 안정화 전까지 PREV_* 파일 삭제 금지
+6. **상태 표시**: 스펙에 상태 마커(📋, 🚧, ✅) 사용
+7. **테스트 먼저**: implementation 스킬에서 TDD 준수
 
 ---
 
@@ -614,6 +641,14 @@ _sdd/implementation/
 - "스펙 동기화"
 - "스펙 드리프트 확인"
 - "review spec", "sync spec with code"
+
+### spec-summary
+- "스펙 요약"
+- "스펙 개요"
+- "스펙 현황"
+- "프로젝트 개요"
+- "현재 상태는"
+- "summarize spec", "spec summary", "show spec overview"
 
 ### pr-spec-patch
 - "PR 스펙 패치"

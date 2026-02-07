@@ -93,9 +93,20 @@ Example structured file format:
 ### Step 2: Load Current Spec
 
 ```
-1. Locate spec document in `_sdd/spec/`
-2. Read current spec content
-3. Identify sections that will be updated:
+1. Locate the main spec document in `_sdd/spec/` (prefer `_sdd/spec/<project>.md` as the index/main spec; `_sdd/spec/main.md` may exist in older projects)
+2. If multiple plausible main spec files exist, ask the user which file to update (and treat as the index/main spec)
+3. If the spec is already split across multiple files, follow the index/links and update the appropriate file(s)
+4. Check spec size/complexity. If the spec is getting too large to maintain comfortably in one file (e.g. >500 lines, or the component/API sections dominate navigation), ask the user whether they want to split the spec into multiple files.
+   - If user agrees: keep `_sdd/spec/<project>.md` as an index/overview, extract long sections into separate files under `_sdd/spec/`, and link them from the index using a consistent naming scheme such as:
+     - `_sdd/spec/<project>_API.md`
+     - `_sdd/spec/<project>_DATA_MODEL.md`
+     - `_sdd/spec/<project>_COMPONENTS.md`
+     - Other suffixes are allowed if they better fit the project domain (e.g. `_ARCH.md`, `_FLOWS.md`, `_DB_SCHEMA.md`)—just keep the naming consistent and confirm the split/file map with the user before doing a large refactor.
+     - Naming style: prefer `UPPER_SNAKE_CASE` suffixes (e.g. `_DATA_MODEL`, `_DB_SCHEMA`) for consistency.
+     - Ask-first template:
+       - "현재 스펙이 커져서 관리가 어려워 보여요. `_sdd/spec/<project>.md`를 인덱스로 두고 `_sdd/spec/<project>_API.md`, `_sdd/spec/<project>_DATA_MODEL.md`(등)으로 분할할까요? 원하시면 suffix/파일 구성을 먼저 합의한 뒤 진행할게요."
+5. Read current spec content (index + any referenced sub-specs that will be affected)
+6. Identify sections that will be updated:
    - "목표" / "Goal" → for new features
    - "발견된 이슈 및 개선 필요사항" / "Issues & Improvements" → for bugs/improvements
    - "컴포넌트 상세" / "Component Details" → for component changes
@@ -159,11 +170,14 @@ Before modifying, present update plan:
 
 Update spec document:
 
-1. **Backup**: Create version note in changelog
+1. **Backup**: Before editing any spec file, save a versioned copy in the same directory:
+   - `PREV_<spec-file>_<timestamp>.md`
+   - If multiple spec files will be edited (because the spec is split), create a PREV_ backup for each file being modified
 2. **Insert**: Add new items to appropriate sections
 3. **Format**: Match existing style and language
 4. **Version**: Increment patch version (X.Y.Z → X.Y.Z+1)
 5. **Date**: Update "최종 수정일" / "Last Updated"
+6. **Changelog**: Add an entry describing the update and referencing the PREV_ backup(s)
 
 ### Step 7: Process Input Files
 
@@ -296,7 +310,7 @@ After updating, provide summary:
 ### File Management
 
 - **Atomic Updates**: Complete all changes before saving
-- **Backup Implicitly**: Version control handles history
+- **Backup Explicitly**: Always create `PREV_<spec-file>_<timestamp>.md` before updating a spec file (even if git history exists)
 - **Clean Up**: Rename processed input files
 - **Track Processing**: Add metadata to processed files
 
