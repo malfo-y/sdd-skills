@@ -13,6 +13,7 @@ Update existing spec documents with new features, requirements, and planned impr
 This skill processes user requirements and feature requests to update spec documents. Input can come from:
 1. **User conversation**: Direct discussion about new features
 2. **Input file**: `_sdd/spec/user_spec.md` or `_sdd/spec/user_draft.md` containing structured requirements
+3. **Decision log**: `_sdd/spec/DECISION_LOG.md` for existing rationale/constraints (if present)
 
 After processing input files, rename them to mark as processed:
 - `user_spec.md` → `_processed_user_spec.md`
@@ -77,6 +78,13 @@ Example structured file format:
 [Additional context or constraints]
 ```
 
+### 3. Decision Log (`_sdd/spec/DECISION_LOG.md`, optional)
+
+If present, use it as a constraint/rationale source:
+- Prior decisions that limit solution space
+- Rejected alternatives to avoid reintroducing
+- Context needed to understand "why this requirement exists"
+
 ## Update Process
 
 ### Step 1: Identify Input Source
@@ -106,7 +114,8 @@ Example structured file format:
      - Ask-first template:
        - "현재 스펙이 커져서 관리가 어려워 보여요. `_sdd/spec/<project>.md`를 인덱스로 두고 `_sdd/spec/<project>_API.md`, `_sdd/spec/<project>_DATA_MODEL.md`(등)으로 분할할까요? 원하시면 suffix/파일 구성을 먼저 합의한 뒤 진행할게요."
 5. Read current spec content (index + any referenced sub-specs that will be affected)
-6. Identify sections that will be updated:
+6. If `_sdd/spec/DECISION_LOG.md` exists, read relevant entries before deciding how to insert/update requirements
+7. Identify sections that will be updated:
    - "목표" / "Goal" → for new features
    - "발견된 이슈 및 개선 필요사항" / "Issues & Improvements" → for bugs/improvements
    - "컴포넌트 상세" / "Component Details" → for component changes
@@ -179,6 +188,7 @@ Update spec document:
 4. **Version**: Increment patch version (X.Y.Z → X.Y.Z+1)
 5. **Date**: Update "최종 수정일" / "Last Updated"
 6. **Changelog**: Add an entry describing the update and referencing the `prev/PREV_...` backup(s)
+7. **Decision Log** (optional but recommended): if this update introduces or changes a key decision, append a concise entry to `_sdd/spec/DECISION_LOG.md`
 
 ### Step 7: Process Input Files
 
@@ -288,6 +298,10 @@ After updating, provide summary:
 - [x] `_sdd/spec/user_draft.md` → `_processed_user_draft.md` (if used)
 - [x] `_sdd/spec/user_spec.md` → `_processed_user_spec.md` (if used)
 
+### Decision Log
+- [x] `_sdd/spec/DECISION_LOG.md` updated (if a new/changed decision was identified)
+- [ ] No decision-log update needed
+
 ### Next Steps
 - Run `/spec-update-done` after implementation to sync spec with code
 ```
@@ -307,6 +321,8 @@ After updating, provide summary:
 - **Preserve Structure**: Don't reorganize existing content
 - **Mark New Items**: Use comments or markers for traceability
 - **Keep History**: Update changelog for significant additions
+- **Preserve Why**: Reuse/update `_sdd/spec/DECISION_LOG.md` when requirements depend on non-obvious rationale
+- **Keep Scope Tight**: Do not introduce additional side documents beyond `DECISION_LOG.md` unless requested
 
 ### File Management
 

@@ -12,6 +12,7 @@ Review and update Software Design Description (SDD) spec documents based on code
 
 This skill analyzes multiple sources of truth to identify spec drift and generate updates:
 - Current spec documents in `_sdd/spec/`
+- Decision rationale in `_sdd/spec/DECISION_LOG.md` (if present)
 - Implementation logs in `_sdd/implementation/`
 - Code diffs (git diff, recent commits)
 - User conversation and feedback
@@ -48,6 +49,7 @@ This skill analyzes multiple sources of truth to identify spec drift and generat
 - `_sdd/spec/main.md` or `<project-name>.md`
 - Component-specific specs
 - Any referenced sub-specs
+- `_sdd/spec/DECISION_LOG.md` (if present)
 
 ### 4. User Conversation
 
@@ -72,7 +74,8 @@ Collect information from all available sources:
    - git status (current state)
    - git diff (uncommitted changes)
    - git log --oneline -20 (recent commits)
-4. Note user conversation context
+4. Read relevant decision-log entries from `_sdd/spec/DECISION_LOG.md` (if file exists)
+5. Note user conversation context
 ```
 
 ### Step 2: Identify Spec Drift
@@ -150,6 +153,7 @@ Update spec document with identified changes:
 3. Update changed information
 4. Archive or remove obsolete content
 5. Add changelog entry
+6. If behavior/architecture intent changed, append a concise entry to `_sdd/spec/DECISION_LOG.md`
 
 **Spec Splitting (when spec is too large):**
 - If the main spec has grown too large to maintain comfortably in a single file (e.g. >500 lines or difficult navigation), ask the user whether they want to split it into multiple files.
@@ -215,6 +219,7 @@ After user approval, generate updated spec:
 2. Apply changes to spec document(s)
 3. Update version and last-updated date
 4. Add changelog entry (include references to `prev/PREV_...` backup(s), and note if the spec was split into multiple files)
+5. Update `_sdd/spec/DECISION_LOG.md` if this sync introduces a new decision or changes previous rationale
 
 ## Automation Patterns
 
@@ -272,7 +277,8 @@ Incremental updates during development:
 - **Report before changing**: Show findings before applying updates
 - **Highlight breaking changes**: Flag architecture/API changes
 - **Ask when uncertain**: Use AskUserQuestion for ambiguities
-- **Document decisions**: Note why changes were made
+- **Document decisions**: Note why changes were made in `_sdd/spec/DECISION_LOG.md`
+- **Avoid Artifact Sprawl**: Do not create extra context/governance docs unless the user explicitly asks
 
 ## Integration
 

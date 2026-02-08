@@ -117,6 +117,8 @@ This is the full template with all possible sections. Adapt as needed for each p
 | Use async | Performance for I/O-bound tasks | Sync (rejected: blocking) |
 | PostgreSQL | ACID compliance, JSON support | MongoDB (rejected: consistency) |
 
+Record significant decisions in `_sdd/spec/DECISION_LOG.md` as well, so rationale remains traceable when the main spec is later split or simplified.
+
 ---
 
 ## Component Details

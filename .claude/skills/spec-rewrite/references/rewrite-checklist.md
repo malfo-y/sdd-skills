@@ -7,6 +7,7 @@ Checklist to reduce omissions during spec rewrite work.
 - [ ] Identify the main target spec file (`_sdd/spec/main.md` or `_sdd/spec/<project>.md`)
 - [ ] Collect the list of linked sub-spec files
 - [ ] Confirm backup policy (`_sdd/spec/prev/PREV_<filename>_<timestamp>.md`)
+- [ ] Load `_sdd/spec/DECISION_LOG.md` if present
 - [ ] Confirm with the user before large-scale file splitting
 
 ## 2) Prune / Appendix Decision Rules
@@ -53,6 +54,7 @@ Include at least the following in `_sdd/spec/REWRITE_REPORT.md`:
 - File split map
 - Ambiguities and issues list
 - Priority-based recommended resolutions
+- Decision-log additions (when rationale was moved out of main body)
 
 ## 6) Exit Criteria
 
@@ -60,3 +62,4 @@ Include at least the following in `_sdd/spec/REWRITE_REPORT.md`:
 - [ ] Detailed content is discoverable through topic-based sub-files
 - [ ] Cross-document duplication is minimized
 - [ ] Unresolved ambiguities remain explicitly documented
+- [ ] Essential rationale is preserved in `_sdd/spec/DECISION_LOG.md` when removed from main spec

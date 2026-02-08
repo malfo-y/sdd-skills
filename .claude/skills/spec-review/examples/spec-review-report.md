@@ -71,6 +71,15 @@ The spec remains mostly aligned with project intent, but multiple high-confidenc
 2. Convert ambiguous acceptance criteria into measurable thresholds.
 3. Regenerate `/spec-summary` after approved updates are applied.
 
+## Decision Log Follow-ups (Proposal Only)
+
+- Proposed entry: "Rate-limit canonical policy update"
+  - Context: Spec and middleware values diverged after recent scaling changes.
+  - Decision: Use middleware-config values as the canonical policy source.
+  - Rationale: Runtime behavior already depends on middleware settings.
+  - Alternatives considered: Keep legacy static spec values (rejected: drift recurrence risk).
+  - Impact / follow-up: Update rate-limit section and tests/docs cross-reference.
+
 ## Handoff for Spec Updates (if SYNC_REQUIRED)
 
 - Recommended command: `/spec-update-done`

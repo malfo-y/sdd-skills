@@ -8,6 +8,7 @@ This checklist does not authorize direct spec edits.
 - [ ] Main spec index identified (`_sdd/spec/<project>.md` or `_sdd/spec/main.md`)
 - [ ] Linked sub-spec files identified
 - [ ] Generated/backup files excluded (`SUMMARY.md`, `prev/PREV_*.md`)
+- [ ] `_sdd/spec/DECISION_LOG.md` loaded if present
 - [ ] Review scope declared (Spec-only or Spec+Code)
 
 ## 2) Spec-Only Quality Checks
@@ -26,6 +27,7 @@ This checklist does not authorize direct spec edits.
 - [ ] API endpoints/methods/schemas match runtime behavior
 - [ ] Config/env/dependency claims match actual project state
 - [ ] Issue status in spec reflects implementation/test reality
+- [ ] Decision-log assumptions/rationale still match implementation behavior
 
 ## 4) Evidence Quality
 
@@ -55,10 +57,12 @@ Choose one:
 - [ ] Spec-to-code drift notes included
 - [ ] Open questions included
 - [ ] Prioritized next actions included
+- [ ] Decision-log follow-up proposals included when rationale drift is found
 - [ ] Handoff instructions included when `SYNC_REQUIRED`
 
 ## 7) Strict Mode Validation
 
 - [ ] No spec file under `_sdd/spec/` was edited (other than report file)
+- [ ] `_sdd/spec/DECISION_LOG.md` was not edited directly in this skill
 - [ ] Report saved to `_sdd/spec/SPEC_REVIEW_REPORT.md`
 - [ ] Existing report archived as `_sdd/spec/prev/PREV_SPEC_REVIEW_REPORT_<timestamp>.md` if overwritten

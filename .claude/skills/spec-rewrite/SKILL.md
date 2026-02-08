@@ -32,6 +32,7 @@ Primary goals:
 ### Secondary
 - Sub-spec files linked from the main spec
 - `_sdd/implementation/` outputs (plan/progress/review) for ambiguity validation
+- `_sdd/spec/DECISION_LOG.md` (if present, for preserving rationale context)
 
 ## Rewrite Process
 
@@ -85,6 +86,14 @@ Rules:
 - Keep only decision-driving and execution-critical content in the main document
 - Move long examples, verbose logs, and reference-only material to appendix (`appendix.md` or `<project>_APPENDIX.md`)
 - Keep one canonical version of repeated content and replace duplicates with links
+- Do not drop important "why" context silently; preserve it in `_sdd/spec/DECISION_LOG.md` when needed
+
+### Step 4.5: Preserve Decision Context
+
+If rewriting removes narrative sections that contain meaningful rationale:
+- Add a concise entry to `_sdd/spec/DECISION_LOG.md`
+- Keep the rewritten main spec concise, and keep detailed rationale in the decision log
+- Do not create additional side documents by default; keep rationale tracking in `DECISION_LOG.md`
 
 ### Step 5: Hierarchical Split
 
@@ -147,6 +156,10 @@ Create or update `_sdd/spec/REWRITE_REPORT.md` with:
 ## Ambiguities and Issues
 - [Priority] [Type] description
 - Suggested resolution
+
+## Decision Log Additions
+- [Entry title] (if any)
+- Why this was recorded
 ```
 
 ## Quality Checklist
@@ -156,6 +169,7 @@ Create or update `_sdd/spec/REWRITE_REPORT.md` with:
 - Are links and paths valid?
 - Are ambiguities/conflicts/missing items explicitly documented?
 - Is unnecessary duplication removed?
+- Is essential rationale preserved (in spec or `_sdd/spec/DECISION_LOG.md`)?
 
 ## Language Preference
 

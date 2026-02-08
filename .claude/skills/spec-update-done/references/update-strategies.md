@@ -158,6 +158,7 @@ example
 4. Document actual state (not planned)
 5. Have user review before finalizing
 6. Reset version to 1.0.0 or increment major
+7. Add decision rationale entries to `_sdd/spec/DECISION_LOG.md` for major trade-offs
 ```
 
 **Rewrite Checklist:**
@@ -216,6 +217,7 @@ Phase 4: Final review and version bump
    - Git history
    - User feedback
    - Code analysis
+   - Existing decision log (`_sdd/spec/DECISION_LOG.md`, if present)
 
 3. **Plan Changes**
    - List sections to update
@@ -238,6 +240,7 @@ Phase 4: Final review and version bump
    - Note what changed
    - Document reasoning
    - Flag uncertainties
+   - Capture decision-log candidates (what changed and why)
 
 ### Post-Update
 
@@ -250,6 +253,7 @@ Phase 4: Final review and version bump
    - Update version number
    - Update date
    - Add changelog entry
+   - Update `_sdd/spec/DECISION_LOG.md` when rationale changed
 
 3. **Review**
    - Self-review changes

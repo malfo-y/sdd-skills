@@ -7,12 +7,13 @@ version: 1.0.0
 # Spec Review (Strict, Review-Only)
 
 Review SDD spec quality and spec-to-code alignment in strict review-only mode.  
-This skill generates findings and recommendations, but does not edit `_sdd/spec/*.md`.
+This skill generates findings and recommendations, but does not edit `_sdd/spec/*.md` (including `DECISION_LOG.md`).
 
 ## Hard Rule: No Spec Edits
 
 - This skill performs review and reporting only.
 - Never create, modify, rename, or delete spec files under `_sdd/spec/` (except the review report file defined below).
+- Never edit `_sdd/spec/DECISION_LOG.md` in this skill. Propose entries only.
 - If spec changes are needed, record them as actionable recommendations and hand off to `/spec-update-done` for actual edits.
 
 ## Overview
@@ -42,6 +43,7 @@ This skill evaluates two dimensions:
 - `_sdd/implementation/IMPLEMENTATION_PLAN.md`
 - `_sdd/implementation/IMPLEMENTATION_PROGRESS.md`
 - `_sdd/implementation/IMPLEMENTATION_REVIEW.md`
+- `_sdd/spec/DECISION_LOG.md` (if present)
 - Recent code changes (`git diff`, `git log`, current workspace state)
 - Test artifacts (when available)
 
@@ -52,7 +54,8 @@ This skill evaluates two dimensions:
 1. Identify main spec index file.
 2. Enumerate linked sub-spec files.
 3. Exclude generated/backup files (`SUMMARY.md`, `prev/PREV_*.md`) from primary analysis.
-4. Define review scope:
+4. Load `_sdd/spec/DECISION_LOG.md` if present.
+5. Define review scope:
    - Spec-only
    - Spec + code alignment (default)
 
@@ -76,6 +79,7 @@ Compare spec claims to implementation evidence:
 - **API drift**: endpoint/method/schema changes
 - **Config drift**: env vars/defaults/dependency versions
 - **Issue drift**: resolved issues still open in spec, or new issues undocumented
+- **Decision-log drift**: implemented behavior/constraints diverge from recorded rationale
 
 Require concrete evidence wherever possible:
 - `path:line` references
@@ -99,6 +103,7 @@ Assign one overall decision:
 1. Create/update strict review report.
 2. Do not edit actual spec content.
 3. If decision is `SYNC_REQUIRED`, include a ready-to-apply update checklist and recommend running `/spec-update-done`.
+4. If needed, include proposed `DECISION_LOG.md` entries in the report (proposal only).
 
 ## Output
 
@@ -158,6 +163,14 @@ Assign one overall decision:
 1. <action>
 2. <action>
 
+## Decision Log Follow-ups (Proposal Only)
+- Proposed entry: <title>
+  - Context:
+  - Decision:
+  - Rationale:
+  - Alternatives considered:
+  - Impact / follow-up:
+
 ## Handoff for Spec Updates (if SYNC_REQUIRED)
 - Recommended command: `/spec-update-done`
 - Update priorities:
@@ -172,10 +185,12 @@ Assign one overall decision:
 - Prefer evidence-backed findings over broad statements.
 - Separate objective drift findings from subjective design suggestions.
 - Keep recommendations actionable and ordered by risk/impact.
+- Keep `DECISION_LOG.md` updates as recommendations only in this skill.
+- Keep artifact recommendations minimal: default to `DECISION_LOG.md` only unless the user asks for more.
 
 ## Integration with Other Skills
 
-- **spec-update-done**: apply approved spec updates after this review
+- **spec-update-done**: apply approved spec updates and decision-log entries after this review
 - **spec-update-todo**: add planned requirements before implementation
 - **implementation-review**: verify plan/task completion against acceptance criteria
 - **spec-summary**: regenerate summary after approved updates are applied

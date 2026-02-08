@@ -26,7 +26,8 @@ _sdd/
 ├── spec/
 │   ├── main.md             # Main spec document (or <project-name>.md)
 │   ├── <component>.md      # Component-specific specs (for large projects)
-│   └── user_draft.md        # User requirements (if exists)
+│   ├── user_draft.md        # User requirements (if exists)
+│   └── DECISION_LOG.md      # Why/decision rationale log (optional, recommended)
 └── implementation/
     └── IMPLEMENTATION_PLAN.md  # Implementation plan (if exists)
 ```
@@ -40,7 +41,8 @@ Before creating a spec document, collect:
 1. **From User Input**: Direct requirements and constraints
 2. **From Existing Code**: Analyze codebase structure and patterns
 3. **From Documentation**: Read existing README, comments, configs
-4. **Clarification**: Use AskUserQuestion for ambiguous requirements
+4. **From Decision Log**: Read `_sdd/spec/DECISION_LOG.md` if it exists
+5. **Clarification**: Use AskUserQuestion for ambiguous requirements
 
 User input includes user conversation and user-specified files (defaults to `_sdd/spec/user_draft.md`).
 
@@ -160,6 +162,17 @@ project/
 2. Analyze project using explore agent or direct reading
 3. Write spec following template structure
 4. Save as `<project-name>.md` or `main.md`
+5. If decisions or trade-offs were made during drafting, create/update `_sdd/spec/DECISION_LOG.md`
+
+Minimal decision log entry format:
+```markdown
+## YYYY-MM-DD - [Decision Title]
+- Context:
+- Decision:
+- Rationale:
+- Alternatives considered:
+- Impact / follow-up:
+```
 
 ### Modular Specs for Large Projects
 
@@ -204,6 +217,13 @@ See detailed specs:
 - **Dependencies**: List all external dependencies
 - **Configuration**: Document all config options
 
+### Decision Traceability
+
+- **Record Why**: Capture non-obvious decisions in `_sdd/spec/DECISION_LOG.md`
+- **Keep It Minimal**: A short rationale entry is enough; avoid verbose narrative
+- **Update on Change**: Add a new entry when direction/assumption changes
+- **Artifact Scope**: Default to `DECISION_LOG.md` only; do not create extra governance docs unless the user explicitly asks
+
 ## Language Preference
 
 Follow user's language preference for spec content:
@@ -216,6 +236,7 @@ Save spec documents to:
 - **Default**: `_sdd/spec/<project-name>.md` or `_sdd/spec/main.md`
 - **User Specified**: Any path the user requests
 - **Create directories**: Automatically create `_sdd/spec/` if needed
+- **Decision log**: `_sdd/spec/DECISION_LOG.md` (when decisions/rationale need to be preserved)
 
 ## Additional Resources
 

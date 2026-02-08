@@ -10,7 +10,7 @@ version: 1.0.0
 
 ## Overview
 
-이 스킬은 사용자와 대화하며 기능 요청, 개선 사항, 버그 리포트 등을 수집하여 `_sdd/spec/user_draft.md` 파일에 구조화된 형식으로 저장합니다. 출력 형식은 `spec-update-todo` 스킬의 입력 형식("Spec Update Input")을 따르므로, 작성된 초안은 바로 `spec-update-todo` 스킬로 메인 스펙에 반영할 수 있습니다.
+이 스킬은 사용자와 대화하며 기능 요청, 개선 사항, 버그 리포트 등을 수집하여 `_sdd/spec/user_draft.md` 파일에 구조화된 형식으로 저장합니다. 출력 형식은 `spec-update-todo` 스킬의 입력 형식("Spec Update Input")을 따르므로, 작성된 초안은 바로 `spec-update-todo` 스킬로 메인 스펙에 반영할 수 있습니다. 의사결정 근거(Why)가 확인된 경우에는 `_sdd/spec/DECISION_LOG.md`에 짧게 남겨 후속 작업에서 맥락을 잃지 않도록 합니다.
 
 ## When to Use This Skill
 
@@ -25,12 +25,15 @@ version: 1.0.0
 2. **사용자가 수정한 코드 (수정된 코드)**: 사용자가 수정한 코드를 분석하여 요구사항 추출
 3. **기존 초안 파일 (`_sdd/spec/user_draft.md`)**: 이전에 작성된 내용 로드 및 추가
 4. **사용자가 지정한 다른 파일**: 참조 문서나 메모
+5. **기존 결정 로그 (`_sdd/spec/DECISION_LOG.md`)**: 기존 의사결정/근거 확인 (존재 시)
 
 ## Output
 
 **파일 위치**: `_sdd/spec/user_draft.md`
 
 **형식**: "Spec Update Input" 포맷 (spec-update-todo 스킬과 호환)
+
+**선택 출력**: `_sdd/spec/DECISION_LOG.md` (새 결정/트레이드오프가 나온 경우만)
 
 ## Process
 
@@ -193,7 +196,26 @@ AskUserQuestion을 사용하여 추가할 내용의 종류 확인. 이미 추출
 [참조 링크]
 ```
 
-### Step 6: 확인 및 완료
+### Step 6: Decision Log 업데이트 (선택)
+
+`spec-update-todo` 전에 결정 근거를 고정할 필요가 있으면 `_sdd/spec/DECISION_LOG.md`에 짧게 추가:
+
+```markdown
+## YYYY-MM-DD - [Decision Title]
+- Context:
+- Decision:
+- Rationale:
+- Alternatives considered:
+- Impact / follow-up:
+```
+
+다음 조건일 때만 추가:
+- 요구사항 우선순위/방향에 대한 명시적 결정이 내려짐
+- 대안 중 하나를 배제한 근거가 확인됨
+- 추후 재논의 가능성이 높은 판단 포인트가 확인됨
+- `DECISION_LOG.md` 외 별도 운영 문서는 사용자 요청이 없는 한 만들지 않음
+
+### Step 7: 확인 및 완료
 
 1. 작성된 초안 내용을 사용자에게 보여줌
 2. 수정이 필요한지 확인
@@ -275,6 +297,7 @@ spec-draft → spec-update-todo → implementation-plan → implementation
 - **예시 포함**: 가능하면 구체적인 사용 예시 수집
 - **우선순위 명시**: 모든 항목에 우선순위 부여
 - **맥락 설명**: 왜 필요한지 이유 기록
+- **결정 분리 기록**: 결정/근거는 `_sdd/spec/DECISION_LOG.md`에 짧게 분리 기록
 
 ### 파일 관리
 
