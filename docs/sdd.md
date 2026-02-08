@@ -356,6 +356,7 @@ AI가 스펙을 과하게 디테일하게 만들지 않게 하려면, “잘 쓰
   - 메인 스펙: `_sdd/spec/<project>.md` (또는 `main.md`)
   - 요구사항 초안(대화 수집): `_sdd/spec/user_draft.md` (`/spec-draft`)
   - 사용자 입력(배치): `_sdd/spec/user_spec.md`
+  - 보조 검증 리포트(선택): `_sdd/spec/SPEC_REVIEW_REPORT.md` (`/spec-review`)
   - 요약: `_sdd/spec/SUMMARY.md` (`/spec-summary`)
 - Implementation(계획/진행/리뷰): `_sdd/implementation/`
   - 계획: `_sdd/implementation/IMPLEMENTATION_PLAN.md` (`/implementation-plan`)
@@ -375,7 +376,8 @@ AI가 스펙을 과하게 디테일하게 만들지 않게 하려면, “잘 쓰
 | Specify/Clarify | `/spec-create`, `/spec-draft`, `/spec-update-todo` | `_sdd/spec/*.md`, `user_draft.md`, `user_spec.md` |
 | Plan/Tasks | `/implementation-plan` | `_sdd/implementation/IMPLEMENTATION_PLAN.md` |
 | Implement | `/implementation` | 코드 + 테스트 + `_sdd/implementation/IMPLEMENTATION_PROGRESS.md` |
-| Review | `/implementation-review`, `/spec-update-done` | `_sdd/implementation/IMPLEMENTATION_REVIEW.md` + 스펙 갱신 |
+| Review (Core) | `/implementation-review`, `/spec-update-done` | `_sdd/implementation/IMPLEMENTATION_REVIEW.md` + 스펙 갱신 |
+| Validation (Optional) | `/spec-review` | `_sdd/spec/SPEC_REVIEW_REPORT.md` (리포트 전용) |
 | 공유/현황 | `/spec-summary` | `_sdd/spec/SUMMARY.md` |
 
 #### 예시 1) “요구사항 대화 → 스펙 → 계획 → 구현 → 동기화” (일반 루프)
@@ -388,12 +390,21 @@ AI가 스펙을 과하게 디테일하게 만들지 않게 하려면, “잘 쓰
 6. (구현/TDD) `/implementation` → 코드+테스트 + `_sdd/implementation/IMPLEMENTATION_PROGRESS.md`
 7. (구현 품질/수용 기준 점검) `/implementation-review`
 8. (스펙↔코드 드리프트 정리) `/spec-update-done` → 스펙 업데이트 후 `/spec-summary` 재생성
+9. (선택) 결과가 이상하거나 변경 규모가 크면 `/spec-review`로 최종 검증
 
 #### 예시 2) “PR이 먼저 생긴 경우” (PR → 스펙 동기화 루프)
 
 1. (PR 변경사항을 스펙 관점으로 정리) `/pr-spec-patch` → `_sdd/pr/spec_patch_draft.md`
 2. (스펙 준수로 PR 검증/판정) `/pr-review` → `_sdd/pr/PR_REVIEW.md`
-3. (확정된 패치를 스펙에 반영) `/spec-update-todo`
+3. (머지된 구현을 스펙에 반영) `/spec-update-done`
+4. (선택) 대규모 변경/이상 징후 시 `/spec-review`로 검증 리포트 생성
+
+#### spec-review의 위치(보조 수단)
+
+- 기본 루프는 `/spec-update-done`까지가 표준입니다.
+- `/spec-review`는 다음 상황에서만 선택적으로 사용합니다:
+  - 사용자가 결과가 이상하다고 느끼는 경우
+  - 대규모 업데이트를 반영한 뒤 확신이 필요한 경우
 
 #### Clarify/Constitution을 어디에 남길까?
 

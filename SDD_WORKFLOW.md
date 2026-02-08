@@ -35,13 +35,14 @@ Claude와 함께하는 소프트웨어 개발을 위한 SDD 스킬 종합 가이
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
-### 9가지 SDD 스킬
+### 10가지 SDD 스킬
 
 | 스킬 | 트리거 | 목적 |
 |------|--------|------|
 | **spec-create** | "스펙 생성", "프로젝트 문서화" | 코드 분석 또는 초안에서 스펙 생성 |
 | **spec-update-todo** | "스펙에 기능 추가", "스펙 업데이트" | 스펙에 새 요구사항 추가 |
-| **spec-update-done** | "스펙 리뷰", "스펙 동기화" | 구현 변경사항과 스펙 동기화 |
+| **spec-update-done** | "완료 항목 반영", "스펙 동기화" | 구현 변경사항과 스펙 동기화 |
+| **spec-review** | "스펙 리뷰", "드리프트 점검" | 보조 검증용 strict 리뷰 (리포트 전용) |
 | **spec-summary** | "스펙 요약", "프로젝트 개요" | 스펙의 요약본 생성 (현황 파악용) |
 | **pr-spec-patch** | "PR 스펙 패치", "PR 리뷰 준비" | PR과 스펙 비교하여 패치 초안 생성 |
 | **pr-review** | "PR 리뷰", "PR 검증" | PR 구현을 스펙 대비 검증 및 판정 |
@@ -199,7 +200,7 @@ _sdd/spec/user_spec.md 또는 사용자 지정 파일
 │  │   구현해줘"                                                    │  │
 │  │                                           │                   │  │
 │  │                                           ▼                   │  │
-│  │  (선택적) spec-update-todo ← implementation-review ←───┘            │  │
+│  │  (선택적) spec-update-done ← implementation-review ←───┘            │  │
 │  └───────────────────────────────────────────────────────────────┘  │
 │                                                                      │
 │  ┌───────────────────────────────────────────────────────────────┐  │
@@ -281,6 +282,10 @@ vim _sdd/spec/user_spec.md
 
 # 5. 스펙 동기화
 /spec-update-done
+
+# 6. (선택) 보조 검증 리뷰
+# 이상 징후가 있거나 변경 규모가 클 때
+/spec-review
 ```
 
 #### 시나리오 4: 중간 규모 기능 (Direct Plan)
@@ -296,8 +301,8 @@ vim _sdd/spec/user_spec.md
 # 3. 리뷰
 /implementation-review
 
-# 4. (선택적) 스펙 업데이트
-/spec-update-todo
+# 4. (선택적) 스펙 동기화
+/spec-update-done
 ```
 
 #### 시나리오 5: 간단한 버그 수정 (Simple)
@@ -360,14 +365,20 @@ implementation 스킬은 테스트 주도 개발(TDD)을 사용합니다:
 | 새 요구사항 발견 | `/spec-update-todo`로 스펙에 추가 |
 | 계획된 기능 제거 | `/spec-update-done`로 스펙 업데이트 |
 | API 변경 | 스펙의 컴포넌트 상세 업데이트 |
-| PR 생성 후 스펙 반영 | `/pr-spec-patch`로 패치 초안 생성 후 `/spec-update-todo` |
+| PR 생성 후 스펙 반영 | `/pr-spec-patch` 생성 → `/pr-review` 후 머지 → `/spec-update-done` |
 | PR 머지 전 스펙 기반 검증 | `/pr-spec-patch` → `/pr-review`로 검증 후 머지 |
+| 결과가 이상하거나 모호함 | `/spec-review`로 보조 검증 (리포트 전용) |
+| 대규모 업데이트 직후 최종 점검 | `/spec-update-done` 완료 후 `/spec-review` 실행 권장 |
 
 #### 구현 페이즈 완료 후
 
 ```bash
 # 스펙과 코드 동기화
 /spec-update-done
+
+# (선택) 보조 검증
+# 사용자가 이상함을 느끼거나 대규모 업데이트 직후
+/spec-review
 
 # Claude가 수행하는 작업:
 # 1. 구현 로그 읽기
@@ -383,7 +394,7 @@ implementation 스킬은 테스트 주도 개발(TDD)을 사용합니다:
 | 파일 | 용도 | 처리 후 |
 |------|------|---------|
 | `_sdd/spec/user_spec.md` | 사용자 입력 (드래프트 스펙, 새 기능/요구사항 등) | → `_processed_user_spec.md` |
-| `_sdd/pr/spec_patch_draft.md` | PR 기반 스펙 패치 초안 | 확정 후 `/spec-update-todo`로 반영 |
+| `_sdd/pr/spec_patch_draft.md` | PR 기반 스펙 패치 초안 | 머지 후 `/spec-update-done`로 반영 |
 | `_sdd/implementation/user_input.md` | 구현 요청 | → `_processed_user_input.md` |
 
 #### 버전 히스토리
@@ -444,7 +455,7 @@ _sdd/implementation/
 
 **출력 위치**: `_sdd/implementation/IMPLEMENTATION_REVIEW.md`
 
-### 스펙 리뷰 (Spec Review)
+### 스펙 동기화 (Spec Sync)
 
 **사용 시점**: 구현 변경 후
 
@@ -458,6 +469,21 @@ _sdd/implementation/
 2. **드리프트 식별**: 스펙과 코드 비교
 3. **리포트 생성**: 필요한 변경사항 목록
 4. **업데이트 적용**: 승인 후 스펙 업데이트
+
+### 보조 스펙 리뷰 (Spec Review, 선택)
+
+**사용 시점**:
+- 사용자가 결과에 이상함/모호함을 느낄 때
+- 대규모 업데이트를 `/spec-update-done`으로 반영한 직후 최종 검증이 필요할 때
+
+```bash
+/spec-review  또는  "스펙 드리프트 점검"
+```
+
+**수행 내용**:
+1. **리뷰 전용 점검**: 스펙 품질/드리프트 확인
+2. **리포트 생성**: `_sdd/spec/SPEC_REVIEW_REPORT.md`에 기록
+3. **본문 미수정**: 스펙 파일은 직접 수정하지 않음
 
 **감지되는 드리프트 유형**:
 
@@ -493,6 +519,8 @@ _sdd/implementation/
 └─────────────────────────────────────────────────────────────┘
 ```
 
+필요 시(이상 징후 또는 대규모 변경 직후) `/spec-review`를 추가로 실행해 최종 검증합니다.
+
 ---
 
 ## 5. 빠른 참조
@@ -504,6 +532,7 @@ _sdd/implementation/
 | `/spec-create` | 새 프로젝트 시작 또는 기존 코드 문서화 |
 | `/spec-update-todo` | 스펙에 새 기능/요구사항 추가 |
 | `/spec-update-done` | 구현 변경사항과 스펙 동기화 |
+| `/spec-review` | 선택적 보조 검증 (이상 징후/대규모 업데이트 후) |
 | `/spec-summary` | 스펙 현황 파악 및 요약본 생성 |
 | `/pr-spec-patch` | PR과 스펙 비교하여 패치 초안 생성 |
 | `/pr-review` | PR 구현을 스펙/패치 초안 대비 검증 및 판정 |
@@ -516,13 +545,13 @@ _sdd/implementation/
 #### 경로 A: Spec-First (전체)
 
 ```bash
-/spec-update-todo → /implementation-plan → /implementation → /implementation-review → /spec-update-done
+/spec-update-todo → /implementation-plan → /implementation → /implementation-review → /spec-update-done → (필요 시) /spec-review
 ```
 
 #### 경로 B: Direct Plan (중간)
 
 ```bash
-사용자 입력 → /implementation-plan → /implementation → /implementation-review → (선택적) /spec-update-todo
+사용자 입력 → /implementation-plan → /implementation → /implementation-review → (선택적) /spec-update-done
 ```
 
 #### 경로 C: Simple (간단)
@@ -615,7 +644,7 @@ _sdd/implementation/
 1. **Spec First (가능하면)**: 큰 구현 전에 항상 스펙 업데이트
 2. **자주 리뷰**: 각 페이즈 후 implementation-review 실행
 3. **큰 계획은 phase 분할**: `IMPLEMENTATION_PLAN.md`는 인덱스/요약으로 두고 `IMPLEMENTATION_PLAN_PHASE_<n>.md`로 분할 (진행 리포트도 `IMPLEMENTATION_PROGRESS_PHASE_<n>.md` 사용)
-4. **동기화 유지**: 코드가 문서와 다를 때 spec-update-done 실행
+4. **동기화 유지**: 기본은 spec-update-done, 이상 징후/대규모 변경 후에는 spec-review로 보조 검증
 5. **히스토리 보존**: 프로젝트 안정화 전까지 PREV_* 파일 삭제 금지
 6. **상태 표시**: 스펙에 상태 마커(📋, 🚧, ✅) 사용
 7. **테스트 먼저**: implementation 스킬에서 TDD 준수
@@ -637,10 +666,16 @@ _sdd/implementation/
 - "add features to spec", "update spec"
 
 ### spec-update-done
-- "스펙 리뷰"
+- "완료 항목 반영"
 - "스펙 동기화"
+- "구현 반영"
+- "sync spec with code", "update done items in spec"
+
+### spec-review
+- "스펙 리뷰"
 - "스펙 드리프트 확인"
-- "review spec", "sync spec with code"
+- "이상한데 검증해줘"
+- "review spec", "spec drift check", "verify spec quality"
 
 ### spec-summary
 - "스펙 요약"
