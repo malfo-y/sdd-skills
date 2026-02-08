@@ -13,7 +13,7 @@ Execute implementation plans systematically using Test-Driven Development (TDD),
 - This skill **MUST NOT** create/edit/delete any spec documents under `<project_root>/_sdd/spec/`.
 - If implementation reveals spec drift, ambiguity, or missing requirements:
   - Report it in the progress report / chat, and
-  - Ask the user to update the spec via `spec-update` (or run a spec audit via `spec-review`).
+  - Ask the user to update the spec via `spec-update-todo` (or run a spec audit via `spec-update-done`).
 
 ## Core Principle: Test-Driven Development
 

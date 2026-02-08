@@ -383,7 +383,7 @@ Processing Metadata
 Processed: 2026-02-04 14:30:00
 Applied to: apify_ig.md
 Version: 1.0.0 → 1.0.1
-Processor: spec-update skill
+Processor: spec-update-todo skill
 
 Applied Changes:
 - Feature: 스케줄러 통합 → 목표 > 주요 기능

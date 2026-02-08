@@ -2,7 +2,7 @@
 
 This example shows how the implementation skill executes tasks using Test-Driven Development from an authentication system plan.
 
-> **Important**: The `implementation` skill must **never** create/edit/delete spec documents under `_sdd/spec/`. If spec changes are needed, report drift and ask the user to run `spec-update` (or `spec-review`).
+> **Important**: The `implementation` skill must **never** create/edit/delete spec documents under `_sdd/spec/`. If spec changes are needed, report drift and ask the user to run `spec-update-todo` (or `spec-update-done`).
 
 ## Initial State
 

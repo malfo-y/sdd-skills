@@ -334,9 +334,9 @@ Based on current spec state and progress:
 - **Latest Review** (최근 리뷰): `_sdd/implementation/IMPLEMENTATION_REVIEW.md` (if exists)
 
 ### Related Commands
-- `/spec-update` - Add new features to spec
+- `/spec-update-todo` - Add new features to spec
 - `/implementation-plan` - Create implementation plan from spec
-- `/spec-review` - Sync spec with code changes
+- `/spec-update-done` - Sync spec with code changes
 - `/spec-summary` - Regenerate this summary
 
 ---
@@ -420,10 +420,10 @@ Workflow Integration:
 spec-create ──> spec-summary
     │               ↑
     ↓               │
-spec-update ────────┘
+spec-update-todo ────────┘
     │
     ↓
-implementation-plan ──> implementation ──> implementation-review ──> spec-review
+implementation-plan ──> implementation ──> implementation-review ──> spec-update-done
                                                                           │
                                                                           ↓
                                                                     spec-summary
@@ -431,12 +431,12 @@ implementation-plan ──> implementation ──> implementation-review ──>
 
 ### Trigger Points
 
-1. **After spec-update**
+1. **After spec-update-todo**
    - Show what features were added
    - Update progress metrics
    - Adjust recommendations
 
-2. **After spec-review**
+2. **After spec-update-done**
    - Show sync results
    - Highlight drift areas
    - Update implementation progress
@@ -455,13 +455,13 @@ implementation-plan ──> implementation ──> implementation-review ──>
 
 ```bash
 # Workflow 1: Update spec → summarize
-/spec-update
+/spec-update-todo
 # (User adds new features)
 /spec-summary
 # → Summary shows new planned features
 
 # Workflow 2: Review → summarize
-/spec-review
+/spec-update-done
 # (Claude syncs spec with code)
 /spec-summary
 # → Summary shows updated completion status
@@ -493,7 +493,7 @@ The skill adapts to the spec document's language:
 | Situation | Action | Message to User |
 |-----------|--------|-----------------|
 | No spec found | Suggest `/spec-create` | "No spec document found in `_sdd/spec/`. Run `/spec-create` first to generate a specification." |
-| Empty spec | Generate minimal summary with warning | "Spec document is empty or minimal. Summary will be basic. Consider running `/spec-update` to add features." |
+| Empty spec | Generate minimal summary with warning | "Spec document is empty or minimal. Summary will be basic. Consider running `/spec-update-todo` to add features." |
 | No status markers | Mark as "status unknown" | "No status markers found (✅, 🚧, 📋). Progress calculation unavailable. Add markers to feature list for tracking." |
 | Multiple main specs | Ask user which to summarize | "Found multiple spec files: [list]. Which should I summarize? Or say 'all' to merge." |
 | No architecture section | Skip architecture section | "No architecture section found. Summary will omit architecture overview." |

@@ -1,5 +1,5 @@
 ---
-name: spec-update
+name: spec-update-todo
 description: This skill should be used when the user asks to "update spec with features", "add features to spec", "update spec from input", "add requirements to spec", "spec update", "expand spec", "add to-do to spec", "add to-implement to spec", or mentions adding new features, requirements, or planned improvements to an existing specification document.
 version: 1.0.0
 ---
@@ -288,7 +288,7 @@ After updating, provide summary:
 - [x] `_sdd/spec/user_spec.md` → `_processed_user_spec.md` (if used)
 
 ### Next Steps
-- Run `/spec-review` after implementation to sync spec with code
+- Run `/spec-update-done` after implementation to sync spec with code
 ```
 
 ## Best Practices
@@ -332,7 +332,7 @@ After updating, provide summary:
 ## Integration with Other Skills
 
 ```
-spec-create → spec-update → implementation-plan → implementation → spec-review
+spec-create → spec-update-todo → implementation-plan → implementation → spec-update-done
                    ↑                                                    │
                    │                                                    │
               spec-draft                                                │
@@ -345,7 +345,7 @@ spec-create → spec-update → implementation-plan → implementation → spec-
 - **spec-create**: Create initial spec (run first if no spec exists)
 - **implementation-plan**: Plan implementation of new features
 - **implementation**: Implement the planned features
-- **spec-review**: Sync spec with actual code after implementation
+- **spec-update-done**: Sync spec with actual code after implementation
 
 ## Additional Resources
 

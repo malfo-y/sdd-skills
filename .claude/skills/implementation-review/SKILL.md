@@ -12,7 +12,7 @@ Review implementation progress against the implementation plan, verify acceptanc
 
 - 이 스킬은 **리뷰/검증 및 리포트 생성**만 수행합니다.
 - `_sdd/spec/` 아래의 스펙 파일은 **생성/수정/삭제하지 않습니다.**
-- 스펙 변경이 필요하면 리포트에 **"스펙 업데이트 필요"**로만 제안하고, 실제 반영은 `/spec-update`(또는 `/spec-review`)로 진행하도록 안내합니다.
+- 스펙 변경이 필요하면 리포트에 **"스펙 업데이트 필요"**로만 제안하고, 실제 반영은 `/spec-update-todo`(또는 `/spec-update-done`)로 진행하도록 안내합니다.
 
 ## Language
 

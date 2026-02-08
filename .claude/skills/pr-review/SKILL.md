@@ -16,12 +16,12 @@ PR 구현을 원본 스펙과 스펙 패치 초안 대비 검증하여 구조화
 
 - `_sdd/spec/` 아래의 스펙 파일은 **절대** 생성/수정/삭제하지 않습니다.
 - 이 스킬은 오직 리뷰 리포트(`_sdd/pr/PR_REVIEW.md`)만 생성합니다.
-- 스펙 수정이 필요하면 리포트에 "스펙 업데이트 필요 항목"으로만 기록하고, 실제 반영은 `/spec-update`로 진행하도록 안내합니다.
+- 스펙 수정이 필요하면 리포트에 "스펙 업데이트 필요 항목"으로만 기록하고, 실제 반영은 `/spec-update-todo`로 진행하도록 안내합니다.
 
 ## Workflow Position
 
 ```
-implementation → PR → pr-spec-patch → pr-review → 승인/수정 → spec-update
+implementation → PR → pr-spec-patch → pr-review → 승인/수정 → spec-update-todo
                           ↑              ↑↓
                      현재 스펙       검증 및 판정
                   (_sdd/spec/)     (_sdd/pr/PR_REVIEW.md)
@@ -300,7 +300,7 @@ gh pr diff [PR_NUMBER] --name-only
 
 1. [ ] Verdict에 따른 조치
 2. [ ] (if Request Changes) 수정 후 재리뷰: `/pr-review`
-3. [ ] (if Approve) 머지 후 `/spec-update` 실행
+3. [ ] (if Approve) 머지 후 `/spec-update-todo` 실행
 
 ---
 

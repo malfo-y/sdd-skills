@@ -234,9 +234,9 @@ Database       Cache (Redis)
 - **Latest Review** (최근 리뷰): `_sdd/implementation/IMPLEMENTATION_REVIEW.md` [IF exists, else OMIT]
 
 ### Related Commands
-- `/spec-update` - Add new features to spec
+- `/spec-update-todo` - Add new features to spec
 - `/implementation-plan` - Create implementation plan from spec
-- `/spec-review` - Sync spec with code changes
+- `/spec-update-done` - Sync spec with code changes
 - `/spec-summary` - Regenerate this summary
 
 ---

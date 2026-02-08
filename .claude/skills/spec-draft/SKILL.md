@@ -10,14 +10,14 @@ version: 1.0.0
 
 ## Overview
 
-이 스킬은 사용자와 대화하며 기능 요청, 개선 사항, 버그 리포트 등을 수집하여 `_sdd/spec/user_draft.md` 파일에 구조화된 형식으로 저장합니다. 출력 형식은 `spec-update` 스킬의 입력 형식("Spec Update Input")을 따르므로, 작성된 초안은 바로 `spec-update` 스킬로 메인 스펙에 반영할 수 있습니다.
+이 스킬은 사용자와 대화하며 기능 요청, 개선 사항, 버그 리포트 등을 수집하여 `_sdd/spec/user_draft.md` 파일에 구조화된 형식으로 저장합니다. 출력 형식은 `spec-update-todo` 스킬의 입력 형식("Spec Update Input")을 따르므로, 작성된 초안은 바로 `spec-update-todo` 스킬로 메인 스펙에 반영할 수 있습니다.
 
 ## When to Use This Skill
 
 - 새로운 기능에 대한 아이디어를 정리할 때
 - 사용자 요구사항을 체계적으로 수집할 때
 - 버그나 개선사항을 문서화할 때
-- `spec-update`를 실행하기 전 입력 파일을 준비할 때
+- `spec-update-todo`를 실행하기 전 입력 파일을 준비할 때
 
 ## Input Sources
 
@@ -30,7 +30,7 @@ version: 1.0.0
 
 **파일 위치**: `_sdd/spec/user_draft.md`
 
-**형식**: "Spec Update Input" 포맷 (spec-update 스킬과 호환)
+**형식**: "Spec Update Input" 포맷 (spec-update-todo 스킬과 호환)
 
 ## Process
 
@@ -198,7 +198,7 @@ AskUserQuestion을 사용하여 추가할 내용의 종류 확인. 이미 추출
 1. 작성된 초안 내용을 사용자에게 보여줌
 2. 수정이 필요한지 확인
 3. 추가할 내용이 더 있는지 확인
-4. 완료 시 다음 단계 안내: `/spec-update` 실행 권장
+4. 완료 시 다음 단계 안내: `/spec-update-todo` 실행 권장
 
 ## Conversation Flow Example
 
@@ -230,7 +230,7 @@ Claude: 초안에 추가했습니다. 더 추가할 내용이 있나요?
 User: 아니요
 
 Claude: user_draft.md가 업데이트되었습니다.
-        `/spec-update`를 실행하여 메인 스펙에 반영할 수 있습니다.
+        `/spec-update-todo`를 실행하여 메인 스펙에 반영할 수 있습니다.
 ```
 
 ## Priority Levels
@@ -257,14 +257,14 @@ Claude: user_draft.md가 업데이트되었습니다.
 ## Workflow Integration
 
 ```
-spec-draft → spec-update → implementation-plan → implementation
+spec-draft → spec-update-todo → implementation-plan → implementation
      ↑            │
      │            ▼
      └──── user_draft.md
 ```
 
 1. **spec-draft** (이 스킬): 사용자와 대화하여 `user_draft.md` 생성
-2. **spec-update**: `user_draft.md`를 읽어 메인 스펙 업데이트
+2. **spec-update-todo**: `user_draft.md`를 읽어 메인 스펙 업데이트
 3. 필요시 `spec-draft`로 돌아가 추가 내용 작성
 
 ## Best Practices
@@ -280,7 +280,7 @@ spec-draft → spec-update → implementation-plan → implementation
 
 - **증분 저장**: 대화 중에도 주기적으로 파일 업데이트
 - **백업 불필요**: 버전 관리로 히스토리 보존
-- **처리 후 정리**: `spec-update` 실행 후 파일명 변경됨
+- **처리 후 정리**: `spec-update-todo` 실행 후 파일명 변경됨
 
 ## Error Handling
 

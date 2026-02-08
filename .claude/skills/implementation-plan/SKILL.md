@@ -11,7 +11,7 @@ Create structured, actionable implementation plans from user specifications. Fol
 ## Hard Rule: Spec Documents Are Read-Only
 
 - This skill may **read** the spec as input, but it **MUST NOT** modify any files under `_sdd/spec/`.
-- If you think the spec should change, capture it as **Open Questions / Spec gaps** in the plan and direct the user to `spec-update`.
+- If you think the spec should change, capture it as **Open Questions / Spec gaps** in the plan and direct the user to `spec-update-todo`.
 
 ## Implementation spec
 

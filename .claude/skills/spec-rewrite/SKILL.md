@@ -173,6 +173,6 @@ Create or update `_sdd/spec/REWRITE_REPORT.md` with:
 
 ## Integration with Other Skills
 
-- **spec-review**: validate against code-level reality
+- **spec-update-done**: validate against code-level reality
 - **spec-summary**: regenerate summary after rewrite
 - **implementation-plan**: plan implementation from cleaned spec

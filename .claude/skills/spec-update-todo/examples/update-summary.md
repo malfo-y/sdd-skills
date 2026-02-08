@@ -191,7 +191,7 @@ Processing Metadata
 Processed: 2026-02-04 14:30:00
 Applied to: apify_ig.md
 Version: 1.0.0 → 1.1.0
-Processor: spec-update skill
+Processor: spec-update-todo skill
 Items processed: 14
 -->
 ```
@@ -217,7 +217,7 @@ Items processed: 14
 1. **Review**: Verify all changes are accurate
 2. **Plan**: Run `/implementation-plan` to create tasks for planned items
 3. **Implement**: Execute implementation plan
-4. **Sync**: Run `/spec-review` after implementation to sync status
+4. **Sync**: Run `/spec-update-done` after implementation to sync status
 
 ---
 
@@ -237,4 +237,4 @@ Items processed: 14
 ---
 
 **Update Complete**: 2026-02-04 14:30:00
-**Processor**: spec-update skill v1.0.0
+**Processor**: spec-update-todo skill v1.0.0

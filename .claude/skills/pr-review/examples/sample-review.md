@@ -2,7 +2,7 @@
 
 이 예제는 PR #42 (JWT 인증 시스템)에 대한 pr-review 스킬 실행 세션을 보여줍니다.
 
-> **중요**: `pr-review` 스킬은 `_sdd/spec/` 아래의 스펙 문서를 **절대** 생성/수정/삭제하지 않습니다. 스펙 변경이 필요하면 리포트에 “스펙 업데이트 필요”로만 기록하고, 실제 반영은 `/spec-update`로 진행합니다.
+> **중요**: `pr-review` 스킬은 `_sdd/spec/` 아래의 스펙 문서를 **절대** 생성/수정/삭제하지 않습니다. 스펙 변경이 필요하면 리포트에 “스펙 업데이트 필요”로만 기록하고, 실제 반영은 `/spec-update-todo`로 진행합니다.
 
 ## Session Flow
 
@@ -322,7 +322,7 @@ Claude:
 
 1. [x] Verdict에 따른 조치 → REQUEST CHANGES
 2. [ ] 블로커 2건 수정 후 재리뷰: `/pr-review`
-3. [ ] 승인 후 머지, `/spec-update` 실행
+3. [ ] 승인 후 머지, `/spec-update-todo` 실행
 
 ---
 
@@ -411,7 +411,7 @@ Claude: PR 리뷰를 시작합니다.
 
 1. [x] Verdict에 따른 조치 → APPROVE
 2. [ ] 머지 실행
-3. [ ] 머지 후 `/spec-update` 실행하여 스펙 반영
+3. [ ] 머지 후 `/spec-update-todo` 실행하여 스펙 반영
 
 ---
 

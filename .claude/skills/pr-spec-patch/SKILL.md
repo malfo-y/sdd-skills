@@ -10,13 +10,13 @@ PR(Pull Request)과 현재 스펙을 비교하여 구조화된 스펙 패치 초
 
 ## Overview
 
-이 스킬은 PR의 변경사항을 분석하여 현재 스펙 문서와 비교하고, 스펙에 반영해야 할 변경사항을 구조화된 패치 초안(`_sdd/pr/spec_patch_draft.md`)으로 생성합니다. 출력의 "스펙 패치 내용" 섹션은 `spec-update` 스킬의 입력 형식("Spec Update Input")과 호환되므로, 확정된 패치는 `spec-update`로 바로 반영할 수 있습니다.
+이 스킬은 PR의 변경사항을 분석하여 현재 스펙 문서와 비교하고, 스펙에 반영해야 할 변경사항을 구조화된 패치 초안(`_sdd/pr/spec_patch_draft.md`)으로 생성합니다. 출력의 "스펙 패치 내용" 섹션은 `spec-update-todo` 스킬의 입력 형식("Spec Update Input")과 호환되므로, 확정된 패치는 `spec-update-todo`로 바로 반영할 수 있습니다.
 
 ## 하드 룰: 이 스킬은 스펙을 직접 수정하지 않습니다 (중요)
 
 - `_sdd/spec/` 아래의 스펙 파일은 **절대** 생성/수정/삭제하지 않습니다.
 - 이 스킬의 산출물은 오직 `_sdd/pr/spec_patch_draft.md` 입니다.
-- 스펙 반영은 **반드시** `/spec-update`로 진행합니다.
+- 스펙 반영은 **반드시** `/spec-update-todo`로 진행합니다.
 
 ## When to Use This Skill
 
@@ -115,7 +115,7 @@ PR의 파일 변경사항을 스펙 컴포넌트에 매핑:
 2. 질문 및 제안 섹션의 주요 항목을 하이라이트
 3. 다음 단계 안내:
    - 내용 정제가 필요하면 대화 계속
-   - 확정되면 `/spec-update`로 반영 가능
+   - 확정되면 `/spec-update-todo`로 반영 가능
 
 ### Mode 2: 대화 기반 업데이트 (기존 초안 있음)
 
@@ -180,7 +180,7 @@ AskUserQuestion을 사용하여 작업 유형 확인:
 
 ## 스펙 패치 내용
 
-<!-- spec-update의 "Spec Update Input" 형식과 호환 -->
+<!-- spec-update-todo의 "Spec Update Input" 형식과 호환 -->
 
 ### New Features
 
@@ -324,7 +324,7 @@ AskUserQuestion을 사용하여 작업 유형 확인:
 ## Workflow Integration
 
 ```
-implementation → PR → pr-spec-patch → (사용자 정제) → spec-update
+implementation → PR → pr-spec-patch → (사용자 정제) → spec-update-todo
                           ↑                              │
                      현재 스펙                        메인 스펙 업데이트
                   (_sdd/spec/)                     (_sdd/spec/)
@@ -332,7 +332,7 @@ implementation → PR → pr-spec-patch → (사용자 정제) → spec-update
 
 1. **pr-spec-patch** (이 스킬): PR과 스펙을 비교하여 패치 초안 생성
 2. **사용자 정제**: 대화를 통해 초안을 검토/수정/확정
-3. **spec-update**: 확정된 패치를 메인 스펙에 반영
+3. **spec-update-todo**: 확정된 패치를 메인 스펙에 반영
 
 ## Best Practices
 
@@ -353,7 +353,7 @@ implementation → PR → pr-spec-patch → (사용자 정제) → spec-update
 
 - **단일 초안 유지**: PR당 하나의 패치 초안 파일 유지
 - **아카이브**: 다른 PR의 초안은 아카이브 후 새로 생성
-- **확정 후 처리**: 확정된 패치는 `spec-update`로 반영 후 관리
+- **확정 후 처리**: 확정된 패치는 `spec-update-todo`로 반영 후 관리
 
 ## Language Handling
 

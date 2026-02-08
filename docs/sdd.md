@@ -372,28 +372,28 @@ AI가 스펙을 과하게 디테일하게 만들지 않게 하려면, “잘 쓰
 | SDD 단계 | 이 레포에서의 스킬 | 산출물(대표) |
 | --- | --- | --- |
 | Constitution | (수동 작성 권장) | (예) `_sdd/CONSTITUTION.md` |
-| Specify/Clarify | `/spec-create`, `/spec-draft`, `/spec-update` | `_sdd/spec/*.md`, `user_draft.md`, `user_spec.md` |
+| Specify/Clarify | `/spec-create`, `/spec-draft`, `/spec-update-todo` | `_sdd/spec/*.md`, `user_draft.md`, `user_spec.md` |
 | Plan/Tasks | `/implementation-plan` | `_sdd/implementation/IMPLEMENTATION_PLAN.md` |
 | Implement | `/implementation` | 코드 + 테스트 + `_sdd/implementation/IMPLEMENTATION_PROGRESS.md` |
-| Review | `/implementation-review`, `/spec-review` | `_sdd/implementation/IMPLEMENTATION_REVIEW.md` + 스펙 갱신 |
+| Review | `/implementation-review`, `/spec-update-done` | `_sdd/implementation/IMPLEMENTATION_REVIEW.md` + 스펙 갱신 |
 | 공유/현황 | `/spec-summary` | `_sdd/spec/SUMMARY.md` |
 
 #### 예시 1) “요구사항 대화 → 스펙 → 계획 → 구현 → 동기화” (일반 루프)
 
 1. (초기화) 스펙이 없다면: `/spec-create`
 2. (요구사항 수집/명확화) 대화로 초안 만들기: `/spec-draft` → `_sdd/spec/user_draft.md`
-3. (메인 스펙 갱신) `/spec-update` (필요시 PREV 백업 + 버전/날짜 갱신)
+3. (메인 스펙 갱신) `/spec-update-todo` (필요시 PREV 백업 + 버전/날짜 갱신)
 4. (현황/다음 액션) `/spec-summary` → `_sdd/spec/SUMMARY.md`
 5. (구현 계획) `/implementation-plan` → `_sdd/implementation/IMPLEMENTATION_PLAN.md`
 6. (구현/TDD) `/implementation` → 코드+테스트 + `_sdd/implementation/IMPLEMENTATION_PROGRESS.md`
 7. (구현 품질/수용 기준 점검) `/implementation-review`
-8. (스펙↔코드 드리프트 정리) `/spec-review` → 스펙 업데이트 후 `/spec-summary` 재생성
+8. (스펙↔코드 드리프트 정리) `/spec-update-done` → 스펙 업데이트 후 `/spec-summary` 재생성
 
 #### 예시 2) “PR이 먼저 생긴 경우” (PR → 스펙 동기화 루프)
 
 1. (PR 변경사항을 스펙 관점으로 정리) `/pr-spec-patch` → `_sdd/pr/spec_patch_draft.md`
 2. (스펙 준수로 PR 검증/판정) `/pr-review` → `_sdd/pr/PR_REVIEW.md`
-3. (확정된 패치를 스펙에 반영) `/spec-update`
+3. (확정된 패치를 스펙에 반영) `/spec-update-todo`
 
 #### Clarify/Constitution을 어디에 남길까?
 

@@ -9,8 +9,8 @@
 | 스킬 | 트리거 | 용도 |
 |------|--------|------|
 | `/spec-create` | "스펙 생성" | 코드 분석 또는 초안에서 스펙 생성 |
-| `/spec-update` | "스펙에 기능 추가" | 새 기능/요구사항을 스펙에 추가 |
-| `/spec-review` | "스펙 동기화" | 구현 후 스펙과 코드 동기화 |
+| `/spec-update-todo` | "스펙에 기능 추가" | 새 기능/요구사항을 스펙에 추가 |
+| `/spec-update-done` | "스펙 동기화" | 구현 후 스펙과 코드 동기화 |
 | `/pr-spec-patch` | "PR 스펙 패치" | PR과 스펙 비교하여 패치 초안 생성 |
 | `/pr-review` | "PR 리뷰" | PR 구현을 스펙/패치 초안 대비 검증 및 판정 |
 | `/implementation-plan` | "구현 계획 생성" | 스펙에서 실행 가능한 작업 생성 |
@@ -41,7 +41,7 @@
 
 | 경로 | 복잡도 | 사용 시점 | 워크플로우 |
 |------|--------|----------|-----------|
-| **A: Spec-First** | 높음 | 큰 기능, 아키텍처 변경 | spec-update → plan → impl → review → spec-review |
+| **A: Spec-First** | 높음 | 큰 기능, 아키텍처 변경 | spec-update-todo → plan → impl → review → spec-update-done |
 | **B: Direct Plan** | 중간 | 명확한 중간 규모 기능 | 입력 → plan → impl → review |
 | **C: Simple** | 낮음 | 버그 수정, 작은 기능 | 입력 → 직접 구현 → review |
 
@@ -65,7 +65,7 @@
 ### 3. 새 기능 추가 (Spec-First)
 
 ```bash
-/spec-update → /implementation-plan → /implementation → /implementation-review → /spec-review
+/spec-update-todo → /implementation-plan → /implementation → /implementation-review → /spec-update-done
 ```
 
 ### 4. 중간 규모 기능 (Direct Plan)
@@ -83,7 +83,7 @@
 ### 6. PR 기반 스펙 패치 및 리뷰
 
 ```bash
-/pr-spec-patch → (대화로 정제) → /pr-review → (수정 후 재리뷰) → 머지 → /spec-update
+/pr-spec-patch → (대화로 정제) → /pr-review → (수정 후 재리뷰) → 머지 → /spec-update-todo
 ```
 
 ---
