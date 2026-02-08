@@ -102,20 +102,28 @@
 _sdd/
 ├── spec/
 │   ├── apify_ig.md              # 메인 스펙
-│   └── user_spec.md             # 사용자 입력
+│   ├── user_spec.md             # 사용자 입력
+│   └── prev/                    # PREV_* 백업
 │
 ├── pr/
 │   ├── spec_patch_draft.md      # PR 기반 스펙 패치 초안
-│   └── PR_REVIEW.md             # PR 리뷰 리포트
+│   ├── PR_REVIEW.md             # PR 리뷰 리포트
+│   └── prev/                    # PREV_* 백업
 │
 ├── implementation/
 │   ├── IMPLEMENTATION_PLAN.md   # 구현 계획
 │   ├── IMPLEMENTATION_PROGRESS.md
 │   ├── IMPLEMENTATION_REVIEW.md
-│   └── user_input.md            # 구현 요청 (입력)
+│   ├── user_input.md            # 구현 요청 (입력)
+│   └── prev/                    # PREV_* 백업
 │
 └── env.md                       # 환경 설정
 ```
+
+백업 파일은 각 영역의 `prev/`에 저장:
+- `_sdd/spec/prev/PREV_<파일명>_<timestamp>.md`
+- `_sdd/pr/prev/PREV_<파일명>_<timestamp>.md`
+- `_sdd/implementation/prev/PREV_<파일명>_<timestamp>.md`
 
 ---
 

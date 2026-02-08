@@ -77,7 +77,7 @@ For large structural changes (file splits and bulk moves), get user confirmation
 
 ### Step 3: Create Safety Backups
 
-For every existing file you modify, create a backup in the same directory using `PREV_<filename>_<timestamp>.md`.
+For every existing file you modify, create a backup under `_sdd/spec/prev/` using `prev/PREV_<filename>_<timestamp>.md` (create `_sdd/spec/prev/` first if missing).
 
 ### Step 4: Prune and Appendix Migration
 

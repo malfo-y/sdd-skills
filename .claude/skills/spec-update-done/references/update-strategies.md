@@ -152,7 +152,7 @@ example
 
 **Process:**
 ```
-1. Archive current spec as PREV_<name>_<date>.md
+1. Archive current spec as `_sdd/spec/prev/PREV_<name>_<date>.md`
 2. Start fresh using template
 3. Analyze current codebase thoroughly
 4. Document actual state (not planned)
@@ -206,7 +206,9 @@ Phase 4: Final review and version bump
 
 1. **Backup**
    ```bash
-   cp spec.md PREV_spec_$(date +%Y%m%d_%H%M%S).md
+   spec_file="_sdd/spec/<spec-file>.md"
+   mkdir -p _sdd/spec/prev
+   cp "$spec_file" "_sdd/spec/prev/PREV_<spec-file>_$(date +%Y%m%d_%H%M%S).md"
    ```
 
 2. **Review Inputs**

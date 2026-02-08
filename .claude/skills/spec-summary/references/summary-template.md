@@ -25,7 +25,7 @@ Some sections should only appear if data is available:
 | Implementation Progress (Phases) | Any `IMPLEMENTATION_PROGRESS_PHASE_<n>.md` exists | Include **latest phase** in Quick Reference; omit if none |
 | Implementation Review | `IMPLEMENTATION_REVIEW.md` exists | Omit from Quick Reference |
 | Split Specs | Index spec links to other `_sdd/spec/*.md` files | Include linked sub-specs in Quick Reference; omit if not split |
-| Summary Backup | `_sdd/spec/SUMMARY.md` already exists | Create `_sdd/spec/PREV_SUMMARY_<timestamp>.md` before overwriting |
+| Summary Backup | `_sdd/spec/SUMMARY.md` already exists | Create `_sdd/spec/prev/PREV_SUMMARY_<timestamp>.md` before overwriting |
 | On Hold Features | Any ⏸️ markers in spec | Omit "On Hold" subsection |
 | High Priority Issues | Any high-priority items | Show "No high-priority issues" |
 | Architecture Diagram | 2+ components | Generate ASCII diagram |
@@ -250,9 +250,10 @@ Database       Cache (Redis)
 ### Step 1: Read Spec
 ```bash
 # List candidate spec files (exclude generated/backup files)
-candidates=$(find _sdd/spec -name "*.md" \
+candidates=$(find _sdd/spec -path "*/prev/*" -prune -o -name "*.md" \
   -not -name "SUMMARY.md" \
-  -not -name "PREV_*.md")
+  -not -name "PREV_*.md" \
+  -print)
 
 echo "$candidates"
 
@@ -367,7 +368,7 @@ checklist = [
 | Listing all components | Limit to 3-5 most important |
 | Vague next steps | Make specific and time-bound |
 | Wrong status calculation | Exclude ⏸️ from total count |
-| Summarizing generated/backup files | Exclude `SUMMARY.md` and `PREV_*.md` from spec inputs; pick the index spec explicitly |
+| Summarizing generated/backup files | Exclude `SUMMARY.md` and `prev/PREV_*.md` from spec inputs; pick the index spec explicitly |
 | Missing split sub-specs | Prefer index/link-based discovery and read linked `_sdd/spec/<project>_*.md` files |
 | Missing conditional sections | Check if data exists before adding section |
 | Hardcoded file paths | Use actual project file paths |

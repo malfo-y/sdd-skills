@@ -35,7 +35,7 @@ This skill analyzes multiple sources of truth to identify spec drift and generat
 | `IMPLEMENTATION_REVIEW.md` | Review findings and issues |
 | `TEST_SUMMARY.md` | Test results and coverage |
 | `user_spec.md` | User requirements and feedback |
-| `PREV_*.md` | Historical versions for context |
+| `_sdd/implementation/prev/PREV_*.md` | Historical versions for context |
 
 ### 2. Code Changes
 
@@ -161,7 +161,7 @@ Update spec document with identified changes:
 - Naming style: prefer `UPPER_SNAKE_CASE` suffixes (e.g. `_DATA_MODEL`, `_DB_SCHEMA`) for consistency.
 - Ask-first template:
   - "현재 스펙이 커져서 관리가 어려워 보여요. `_sdd/spec/<project>.md`를 인덱스로 두고 `_sdd/spec/<project>_API.md`, `_sdd/spec/<project>_DATA_MODEL.md`(등)으로 분할할까요? 원하시면 suffix/파일 구성을 먼저 합의한 뒤 진행할게요."
-- Create PREV_ backups for every existing file you will modify during the split.
+- Create backups under `_sdd/spec/prev/` for every existing file you will modify during the split.
 
 **Versioning:**
 - Increment patch version for minor updates
@@ -211,10 +211,10 @@ Present findings before making changes:
 
 After user approval, generate updated spec:
 
-1. Create backup(s): for each spec file you will edit, save `PREV_<spec-file>_<timestamp>.md` in the same directory
+1. Create backup(s): for each spec file you will edit, save `prev/PREV_<spec-file>_<timestamp>.md` in `_sdd/spec/prev/` (create the directory first if needed)
 2. Apply changes to spec document(s)
 3. Update version and last-updated date
-4. Add changelog entry (include references to PREV_ backup(s), and note if the spec was split into multiple files)
+4. Add changelog entry (include references to `prev/PREV_...` backup(s), and note if the spec was split into multiple files)
 
 ## Automation Patterns
 
@@ -262,7 +262,7 @@ Incremental updates during development:
 
 ### Preservation
 
-- **Keep history**: Always create PREV_ backup before updates
+- **Keep history**: Always create `prev/PREV_...` backup under `_sdd/spec/prev/` before updates
 - **Preserve context**: Don't remove valuable explanations
 - **Maintain structure**: Follow existing spec organization
 - **Version control**: Increment version appropriately

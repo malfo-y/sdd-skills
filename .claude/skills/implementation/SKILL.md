@@ -299,7 +299,7 @@ For these cases, still write tests, but the order may vary.
 ## Step 5: Verify & Report
 
 After completing a phase or all phases, save the report under a user-specified file (default: `<project-root>/_sdd/implementation/IMPLEMENTATION_PROGRESS.md`).  
-- If the file already exists, rename it to `PREV_IMPLEMENTATION_PROGRESS_<timestamp>.md` and create a new one.
+- If the file already exists, archive it as `<project-root>/_sdd/implementation/prev/PREV_IMPLEMENTATION_PROGRESS_<timestamp>.md` (create `prev/` if needed) and create a new one.
 - If executing a phased plan, save a per-phase progress report under `<project-root>/_sdd/implementation/IMPLEMENTATION_PROGRESS_PHASE_<phase-number>.md` for the phase you just completed, and include a brief overall status summary (completed phases + what comes next).
 
 The report should include:

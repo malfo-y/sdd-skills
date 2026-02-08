@@ -453,5 +453,5 @@ Use AskUserQuestion when:
 ## Saving report
 
 Save the report under a user-specified file (default: `<project-root>/_sdd/implementation/IMPLEMENTATION_REVIEW.md`).
-    - If the file already exists, rename it to `PREV_IMPLEMENTATION_REVIEW_<timestamp>.md` and create a new one.
+    - If the file already exists, archive it as `<project-root>/_sdd/implementation/prev/PREV_IMPLEMENTATION_REVIEW_<timestamp>.md` (create `prev/` if needed) and create a new one.
 Also update implementation plan (TODOs, status, acceptance criteria) document based on the review.

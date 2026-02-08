@@ -173,7 +173,7 @@ After creating the plan, offer to:
 
 1. Display in conversation (for review/discussion)
 2. Save to a file to the user provided path, or default to `<project_root>/_sdd/implementation/IMPLEMENTATION_PLAN.md`
-    - If the file already exists, rename it to `PREV_IMPLEMENTATION_PLAN_<timestamp>.md` and create a new one.
+    - If the file already exists, archive it as `<project_root>/_sdd/implementation/prev/PREV_IMPLEMENTATION_PLAN_<timestamp>.md` (create `prev/` if needed) and create a new one.
 3. If the plan is too large to fit comfortably in one file (e.g. >25 tasks), split the plan into multiple files:
     - Keep `IMPLEMENTATION_PLAN.md` as an index/overview and link to the phase files
     - Name phase files as `IMPLEMENTATION_PLAN_PHASE_1.md`, `IMPLEMENTATION_PLAN_PHASE_2.md`, etc.

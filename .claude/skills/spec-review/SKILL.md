@@ -51,7 +51,7 @@ This skill evaluates two dimensions:
 
 1. Identify main spec index file.
 2. Enumerate linked sub-spec files.
-3. Exclude generated/backup files (`SUMMARY.md`, `PREV_*.md`) from primary analysis.
+3. Exclude generated/backup files (`SUMMARY.md`, `prev/PREV_*.md`) from primary analysis.
 4. Define review scope:
    - Spec-only
    - Spec + code alignment (default)
@@ -106,7 +106,7 @@ Assign one overall decision:
 
 - Default path: `_sdd/spec/SPEC_REVIEW_REPORT.md`
 - If the file already exists, archive it first:
-  - `_sdd/spec/PREV_SPEC_REVIEW_REPORT_<timestamp>.md`
+  - `_sdd/spec/prev/PREV_SPEC_REVIEW_REPORT_<timestamp>.md` (create `_sdd/spec/prev/` if missing)
 
 ### Report Format
 

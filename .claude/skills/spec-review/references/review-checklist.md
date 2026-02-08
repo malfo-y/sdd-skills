@@ -7,7 +7,7 @@ This checklist does not authorize direct spec edits.
 
 - [ ] Main spec index identified (`_sdd/spec/<project>.md` or `_sdd/spec/main.md`)
 - [ ] Linked sub-spec files identified
-- [ ] Generated/backup files excluded (`SUMMARY.md`, `PREV_*.md`)
+- [ ] Generated/backup files excluded (`SUMMARY.md`, `prev/PREV_*.md`)
 - [ ] Review scope declared (Spec-only or Spec+Code)
 
 ## 2) Spec-Only Quality Checks
@@ -61,4 +61,4 @@ Choose one:
 
 - [ ] No spec file under `_sdd/spec/` was edited (other than report file)
 - [ ] Report saved to `_sdd/spec/SPEC_REVIEW_REPORT.md`
-- [ ] Existing report archived as `PREV_SPEC_REVIEW_REPORT_<timestamp>.md` if overwritten
+- [ ] Existing report archived as `_sdd/spec/prev/PREV_SPEC_REVIEW_REPORT_<timestamp>.md` if overwritten

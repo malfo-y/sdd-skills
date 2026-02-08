@@ -158,7 +158,7 @@ gh pr diff [PR_NUMBER] --name-only
 
 #### Step 7: 리포트 생성
 
-1. 기존 `PR_REVIEW.md`가 있으면 `PREV_PR_REVIEW_<timestamp>.md`로 아카이브
+1. 기존 `PR_REVIEW.md`가 있으면 `_sdd/pr/prev/PREV_PR_REVIEW_<timestamp>.md`로 아카이브 (`_sdd/pr/prev/` 없으면 생성)
 2. 아래 [Output Format](#output-format) 형식으로 `_sdd/pr/PR_REVIEW.md` 생성
 3. 사용자에게 요약 제시 및 다음 단계 안내
 
@@ -321,7 +321,7 @@ gh pr diff [PR_NUMBER] --name-only
 | 스펙 파일 없음 | 경고, `/spec-create` 권장, PR diff만으로 최소 리뷰 |
 | PR 없음 / `gh` 미인증 | 오류 감지, 설치/인증 안내 |
 | 여러 스펙 파일 | AskUserQuestion으로 선택 |
-| 기존 리뷰 파일 존재 | `PREV_PR_REVIEW_<timestamp>.md`로 아카이브 후 새로 생성 |
+| 기존 리뷰 파일 존재 | `_sdd/pr/prev/PREV_PR_REVIEW_<timestamp>.md`로 아카이브 후 새로 생성 |
 | 다른 PR의 패치 초안 | 경고, 패치 초안 무시하고 degraded mode 또는 `/pr-spec-patch` 재실행 권장 |
 | 이미 머지된 PR | 허용 (소급 리뷰), 머지 상태 명시 |
 | 대규모 PR (50+ 파일) | 스펙 관련 컴포넌트에 집중, 디렉토리별 요약 |

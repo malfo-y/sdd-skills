@@ -58,11 +58,13 @@ project/
 │   ├── spec/
 │   │   ├── main.md                   # 메인 스펙 문서
 │   │   ├── user_spec.md              # 새 기능 요청 (입력)
-│   │   └── _processed_user_spec.md   # 처리된 요청 (아카이브)
+│   │   ├── _processed_user_spec.md   # 처리된 요청 (아카이브)
+│   │   └── prev/                      # 스펙 백업 (PREV_*.md)
 │   │
 │   ├── pr/
 │   │   ├── spec_patch_draft.md       # PR 기반 스펙 패치 초안
-│   │   └── PR_REVIEW.md              # PR 리뷰 리포트
+│   │   ├── PR_REVIEW.md              # PR 리뷰 리포트
+│   │   └── prev/                      # PR 리포트 백업 (PREV_*.md)
 │   │
 │   ├── implementation/
 │   │   ├── IMPLEMENTATION_PLAN.md     # 구현 계획 (인덱스/요약; 필요 시 phase 파일로 분할)
@@ -72,7 +74,7 @@ project/
 │   │   ├── IMPLEMENTATION_REVIEW.md   # 리뷰 결과
 │   │   ├── TEST_SUMMARY.md            # 테스트 현황
 │   │   ├── user_input.md              # 구현 요청 (입력)
-│   │   └── PREV_*.md                  # 이전 버전들
+│   │   └── prev/                      # 구현 문서 백업 (PREV_*.md)
 │   │
 │   └── env.md                         # 환경 설정
 │
@@ -397,6 +399,14 @@ implementation 스킬은 테스트 주도 개발(TDD)을 사용합니다:
 | `_sdd/pr/spec_patch_draft.md` | PR 기반 스펙 패치 초안 | 머지 후 `/spec-update-done`로 반영 |
 | `_sdd/implementation/user_input.md` | 구현 요청 | → `_processed_user_input.md` |
 
+#### PREV 백업 저장 위치 규칙
+
+- `_sdd/spec/prev/PREV_<파일명>_<timestamp>.md`
+- `_sdd/pr/prev/PREV_<파일명>_<timestamp>.md`
+- `_sdd/implementation/prev/PREV_<파일명>_<timestamp>.md`
+
+`prev/`가 없으면 먼저 생성한 뒤 저장합니다.
+
 #### 버전 히스토리
 
 이전 버전은 자동으로 아카이브됩니다:
@@ -407,10 +417,11 @@ _sdd/implementation/
 ├── IMPLEMENTATION_PLAN_PHASE_1.md              # (선택) phase 1 상세 계획
 ├── IMPLEMENTATION_PROGRESS.md                  # 진행 추적 (전체/요약)
 ├── IMPLEMENTATION_PROGRESS_PHASE_1.md          # (선택) phase 1 진행 리포트
-├── PREV_IMPLEMENTATION_PLAN_20260204_150502.md # 이전
-├── PREV_IMPLEMENTATION_PLAN_20260204_194934.md # 더 이전
-├── PREV_IMPLEMENTATION_PROGRESS_20260204_150502.md # 이전 진행 추적
-├── PREV_IMPLEMENTATION_PROGRESS_20260204_194934.md # 더 이전 진행 추적
+└── prev/
+    ├── PREV_IMPLEMENTATION_PLAN_20260204_150502.md # 이전
+    ├── PREV_IMPLEMENTATION_PLAN_20260204_194934.md # 더 이전
+    ├── PREV_IMPLEMENTATION_PROGRESS_20260204_150502.md # 이전 진행 추적
+    └── PREV_IMPLEMENTATION_PROGRESS_20260204_194934.md # 더 이전 진행 추적
 ```
 
 ### 스펙의 상태 마커
@@ -645,7 +656,7 @@ _sdd/implementation/
 2. **자주 리뷰**: 각 페이즈 후 implementation-review 실행
 3. **큰 계획은 phase 분할**: `IMPLEMENTATION_PLAN.md`는 인덱스/요약으로 두고 `IMPLEMENTATION_PLAN_PHASE_<n>.md`로 분할 (진행 리포트도 `IMPLEMENTATION_PROGRESS_PHASE_<n>.md` 사용)
 4. **동기화 유지**: 기본은 spec-update-done, 이상 징후/대규모 변경 후에는 spec-review로 보조 검증
-5. **히스토리 보존**: 프로젝트 안정화 전까지 PREV_* 파일 삭제 금지
+5. **히스토리 보존**: 프로젝트 안정화 전까지 `prev/` 아래 PREV_* 파일 삭제 금지
 6. **상태 표시**: 스펙에 상태 마커(📋, 🚧, ✅) 사용
 7. **테스트 먼저**: implementation 스킬에서 TDD 준수
 

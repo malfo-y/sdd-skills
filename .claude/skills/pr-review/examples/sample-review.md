@@ -349,7 +349,7 @@ Claude: PR 리뷰를 시작합니다.
 
 ## 사전 조건 확인
 
-✓ 기존 리뷰 발견: PREV_PR_REVIEW_20260206_153000.md로 아카이브
+✓ 기존 리뷰 발견: _sdd/pr/prev/PREV_PR_REVIEW_20260206_153000.md로 아카이브
 ✓ PR #42 - 추가 커밋 감지: "fix: refresh token expiry + add middleware context test"
 
 ## 변경된 수용 기준 재검증

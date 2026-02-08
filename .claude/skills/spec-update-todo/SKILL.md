@@ -170,14 +170,15 @@ Before modifying, present update plan:
 
 Update spec document:
 
-1. **Backup**: Before editing any spec file, save a versioned copy in the same directory:
-   - `PREV_<spec-file>_<timestamp>.md`
-   - If multiple spec files will be edited (because the spec is split), create a PREV_ backup for each file being modified
+1. **Backup**: Before editing any spec file, save a versioned copy under `_sdd/spec/prev/`:
+   - `prev/PREV_<spec-file>_<timestamp>.md`
+   - If `_sdd/spec/prev/` does not exist, create it first
+   - If multiple spec files will be edited (because the spec is split), create one `prev/PREV_...` backup for each file being modified
 2. **Insert**: Add new items to appropriate sections
 3. **Format**: Match existing style and language
 4. **Version**: Increment patch version (X.Y.Z → X.Y.Z+1)
 5. **Date**: Update "최종 수정일" / "Last Updated"
-6. **Changelog**: Add an entry describing the update and referencing the PREV_ backup(s)
+6. **Changelog**: Add an entry describing the update and referencing the `prev/PREV_...` backup(s)
 
 ### Step 7: Process Input Files
 
@@ -310,7 +311,7 @@ After updating, provide summary:
 ### File Management
 
 - **Atomic Updates**: Complete all changes before saving
-- **Backup Explicitly**: Always create `PREV_<spec-file>_<timestamp>.md` before updating a spec file (even if git history exists)
+- **Backup Explicitly**: Always create `prev/PREV_<spec-file>_<timestamp>.md` in `_sdd/spec/prev/` before updating a spec file (even if git history exists)
 - **Clean Up**: Rename processed input files
 - **Track Processing**: Add metadata to processed files
 

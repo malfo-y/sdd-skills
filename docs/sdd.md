@@ -358,15 +358,18 @@ AI가 스펙을 과하게 디테일하게 만들지 않게 하려면, “잘 쓰
   - 사용자 입력(배치): `_sdd/spec/user_spec.md`
   - 보조 검증 리포트(선택): `_sdd/spec/SPEC_REVIEW_REPORT.md` (`/spec-review`)
   - 요약: `_sdd/spec/SUMMARY.md` (`/spec-summary`)
+  - 백업: `_sdd/spec/prev/PREV_<파일명>_<timestamp>.md`
 - Implementation(계획/진행/리뷰): `_sdd/implementation/`
   - 계획: `_sdd/implementation/IMPLEMENTATION_PLAN.md` (`/implementation-plan`)
   - 진행 리포트: `_sdd/implementation/IMPLEMENTATION_PROGRESS.md` (`/implementation`)
   - 구현 리뷰: `_sdd/implementation/IMPLEMENTATION_REVIEW.md` (`/implementation-review`)
+  - 백업: `_sdd/implementation/prev/PREV_<파일명>_<timestamp>.md`
 - PR 기반 워크플로: `_sdd/pr/`
   - 스펙 패치 초안: `_sdd/pr/spec_patch_draft.md` (`/pr-spec-patch`)
   - PR 리뷰 리포트: `_sdd/pr/PR_REVIEW.md` (`/pr-review`)
+  - 백업: `_sdd/pr/prev/PREV_<파일명>_<timestamp>.md`
 
-> 백업 규칙: 스펙/계획/리포트를 덮어쓰기 전에 `PREV_<파일명>_<timestamp>.md`를 같은 폴더에 저장하는 관례를 사용합니다.
+> 백업 규칙: 스펙/계획/리포트를 덮어쓰기 전에 각 영역의 `prev/` 하위 폴더를 만들고 `PREV_<파일명>_<timestamp>.md`를 저장합니다.
 
 #### 단계 ↔ 스킬 매핑(추천)
 

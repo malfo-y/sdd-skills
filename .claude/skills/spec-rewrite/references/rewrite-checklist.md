@@ -6,7 +6,7 @@ Checklist to reduce omissions during spec rewrite work.
 
 - [ ] Identify the main target spec file (`_sdd/spec/main.md` or `_sdd/spec/<project>.md`)
 - [ ] Collect the list of linked sub-spec files
-- [ ] Confirm backup policy (`PREV_<filename>_<timestamp>.md`)
+- [ ] Confirm backup policy (`_sdd/spec/prev/PREV_<filename>_<timestamp>.md`)
 - [ ] Confirm with the user before large-scale file splitting
 
 ## 2) Prune / Appendix Decision Rules

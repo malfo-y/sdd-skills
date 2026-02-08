@@ -51,7 +51,7 @@ The skill reads information from multiple sources:
 - **Main spec**: `_sdd/spec/<project>.md` or `_sdd/spec/main.md`
 - **Sub-specs**: Prefer sub-spec files referenced/linked from the index/main spec.
   - Common convention: `_sdd/spec/<project>_*.md` (e.g. `<project>_API.md`, `<project>_DATA_MODEL.md`)
-  - Important: exclude generated/backup files such as `SUMMARY.md` and `PREV_*.md`
+  - Important: exclude generated/backup files such as `SUMMARY.md` and `prev/PREV_*.md`
 
 ### Secondary Sources (Optional)
 - **Implementation progress**: `_sdd/implementation/IMPLEMENTATION_PROGRESS.md`
@@ -97,11 +97,11 @@ The skill expects spec documents to follow SDD format:
    - If still ambiguous: list candidates and ask the user which should be treated as the index/main spec
    - Do **not** auto-select generated/backup files:
      - `SUMMARY.md`
-     - `PREV_*.md`
+     - `prev/PREV_*.md`
 2. If spec is split:
    - Identify sub-spec files via index/links
    - Read all linked/related specs for a complete picture
-   - If the index does not link clearly, prefer `_sdd/spec/<project>_*.md` (excluding `SUMMARY.md` and `PREV_*.md`) and confirm the intended set with the user
+   - If the index does not link clearly, prefer `_sdd/spec/<project>_*.md` (excluding `SUMMARY.md` and `prev/PREV_*.md`) and confirm the intended set with the user
 3. Check for implementation files:
    - `_sdd/implementation/IMPLEMENTATION_PROGRESS.md`
    - `_sdd/implementation/IMPLEMENTATION_PROGRESS_PHASE_<n>.md` (if multiple exist, prefer the latest phase; ask the user if they want all phases summarized)
@@ -213,7 +213,7 @@ Pseudo-logic:
 1. Apply summary template (see `references/summary-template.md`)
 2. Fill in extracted information
 3. If `_sdd/spec/SUMMARY.md` already exists, create a versioned backup before overwriting:
-   - `_sdd/spec/PREV_SUMMARY_<timestamp>.md`
+   - `_sdd/spec/prev/PREV_SUMMARY_<timestamp>.md` (create `_sdd/spec/prev/` if missing)
 4. Generate or update `_sdd/spec/SUMMARY.md`
 5. Add generation timestamp and metadata
 6. Preserve human-readable formatting (tables, emojis, visual markers)
