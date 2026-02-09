@@ -29,6 +29,7 @@ Some sections should only appear if data is available:
 | On Hold Features | Any ⏸️ markers in spec | Omit "On Hold" subsection |
 | High Priority Issues | Any high-priority items | Show "No high-priority issues" |
 | Architecture Diagram | 2+ components | Generate ASCII diagram |
+| Key Features (High-Level) | Feature/goal details exist in spec | Infer up to 3 capabilities from Goal and mark status as "Unknown" if details are weak |
 
 ## Full Template
 
@@ -60,6 +61,25 @@ Some sections should only appear if data is available:
   - Count of 🚧 markers
 - **계획된 기능** (Planned): [K]개
   - Count of 📋 markers
+
+---
+
+## ✨ Key Features (High-Level)
+
+[Summarize top capabilities, not every backlog item]
+[Choose 3-5 user-facing capabilities from Goal + feature sections]
+
+| Key Feature | What It Enables | Status |
+|-------------|-----------------|--------|
+| [Capability Name] | [Plain-language value statement] | [✅/🚧/📋/✅+🚧/Unknown] |
+| [Capability Name] | [Plain-language value statement] | [✅/🚧/📋/✅+🚧/Unknown] |
+| [Capability Name] | [Plain-language value statement] | [✅/🚧/📋/✅+🚧/Unknown] |
+
+[RULES for key feature extraction:]
+- Maximum 5 items (prefer 3 if spec is large/complex)
+- Merge related low-level features into one capability
+- Use stakeholder-friendly language (avoid deep technical wording)
+- If status is mixed across sub-features, use mixed marker (e.g., ✅+🚧)
 
 ---
 
@@ -291,6 +311,7 @@ fi
 ### Step 4: Extract Sections
 ```yaml
 Goal: [Text after "## 목표" or "## Goal"]
+KeyFeatures: [Top 3-5 capability summaries from Goal + feature sections]
 Architecture: [Text after "## 아키텍처 개요" or "## Architecture Overview"]
 Components: [Parse component names from architecture section]
 Issues: [Text after "## 발견된 이슈" or "## Issues"]
@@ -352,6 +373,7 @@ Replace placeholders:
 ```python
 checklist = [
     "Executive summary is non-technical",
+    "Key features capture 3-5 high-level capabilities",
     "Architecture has 3-5 components max",
     "Status percentages are accurate",
     "Issues are categorized by priority",
@@ -365,6 +387,7 @@ checklist = [
 | Pitfall | How to Avoid |
 |---------|--------------|
 | Too technical in executive summary | Use plain language, avoid jargon |
+| Over-detailed key features | Keep only 3-5 capabilities and move details to dashboard |
 | Listing all components | Limit to 3-5 most important |
 | Vague next steps | Make specific and time-bound |
 | Wrong status calculation | Exclude ⏸️ from total count |
@@ -376,6 +399,7 @@ checklist = [
 ## Quality Checklist
 
 - [ ] Executive summary readable by non-developers
+- [ ] Key features summarize 3-5 high-level capabilities
 - [ ] Architecture shows only 3-5 core components
 - [ ] Status percentages match marker counts
 - [ ] All issues have priority assigned

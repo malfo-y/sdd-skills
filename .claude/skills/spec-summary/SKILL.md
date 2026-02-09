@@ -1,7 +1,7 @@
 ---
 name: spec-summary
 description: This skill should be used when the user asks to "summarize spec", "spec summary", "show spec overview", "스펙 요약", "스펙 개요", "show spec status", "스펙 현황", "project overview", "프로젝트 개요", "what's the current state", "현재 상태는", or wants a human-readable summary of the current specification for quick understanding.
-version: 1.0.0
+version: 1.1.0
 ---
 
 # spec-summary: Specification Summary Generator
@@ -11,6 +11,7 @@ version: 1.0.0
 The **spec-summary** skill generates human-readable summaries of SDD (Spec-Driven Development) specification documents. It creates a layered, scannable document that helps both technical and non-technical stakeholders quickly understand:
 
 - **Project motivation and goals** (What and Why)
+- **Key features at a glance** (3-5 high-level capabilities, user-value focused)
 - **High-level architecture** (3-5 key components, bird's-eye view)
 - **Current status and progress** (completion percentage, feature dashboard)
 - **Open issues and improvements** (prioritized by impact)
@@ -125,7 +126,13 @@ The skill expects spec documents to follow SDD format:
    - Extract purpose statement
    - Identify problem being solved
 
-3. **Feature List with Status** → Progress Calculation
+3. **Key Features (High-Level)** → Capability Snapshot
+   - Extract 3-5 high-impact capabilities from Goal and feature sections
+   - Merge low-level items into user-facing capability statements
+   - Write one-line "what it enables" explanations in plain language
+   - Map each capability to a representative status (✅ / 🚧 / 📋 / mixed / Unknown)
+
+4. **Feature List with Status** → Progress Calculation
    ```
    Parse status markers:
    - ✅ (완료/completed) → count as done
@@ -137,13 +144,13 @@ The skill expects spec documents to follow SDD format:
    (completed / (completed + in-progress + planned)) * 100
    ```
 
-4. **Architecture Overview** → Core Components
+5. **Architecture Overview** → Core Components
    - Extract component names and purposes
    - **Limit to 3-5 key components** (not all details)
    - Identify relationships between components
    - Extract tech stack information
 
-5. **Issues & Improvements** → Prioritized List
+6. **Issues & Improvements** → Prioritized List
    - Parse 발견된 이슈 및 개선 필요사항 section
    - Categorize: Bug, Enhancement, Tech Debt
    - Infer priority from spec order or keywords
@@ -246,6 +253,22 @@ The generated summary follows this layered structure:
 - **완료된 기능** (Completed): N개
 - **진행중인 기능** (In Progress): M개
 - **계획된 기능** (Planned): K개
+
+---
+
+## ✨ Key Features (High-Level)
+
+| Key Feature | What It Enables | Status |
+|-------------|-----------------|--------|
+| [Capability 1] | [Plain-language value statement] | ✅ / 🚧 / 📋 / ✅+🚧 / Unknown |
+| [Capability 2] | [Plain-language value statement] | ✅ / 🚧 / 📋 / ✅+🚧 / Unknown |
+| [Capability 3] | [Plain-language value statement] | ✅ / 🚧 / 📋 / ✅+🚧 / Unknown |
+
+[Selection rules]
+- Choose 3-5 capabilities (prefer top 3 if spec is large)
+- Group related low-level features into one capability
+- Focus on user/business value, not internal implementation details
+- If evidence is weak, infer conservatively from Goal and mark status as `Unknown`
 
 ---
 
@@ -355,7 +378,7 @@ Based on current spec state and progress:
    - Each section standalone and scannable
 
 2. **Visual Hierarchy**
-   - Emojis for quick scanning (🎯, 🏗️, 📊, ⚠️, 🚀, 📚)
+   - Emojis for quick scanning (🎯, ✨, 🏗️, 📊, ⚠️, 🚀, 📚)
    - Tables for structured data
    - Checkboxes for actionable items
    - Priority colors (🔴 🟡 🟢)
@@ -366,6 +389,7 @@ Based on current spec state and progress:
 
 4. **Conciseness**
    - Executive summary: 1-2 sentences per item
+   - Key features: 3-5 capability-level items
    - Architecture: 3-5 components max
    - Next steps: Specific and time-bound
 
@@ -382,21 +406,26 @@ Based on current spec state and progress:
    - Show only 3-5 key components that matter to understanding
    - Focus on relationships and data flow
 
-3. **Prioritize Issues by Impact**
+3. **Keep Key Features High-Level**
+   - Avoid dumping the full feature backlog in this section
+   - Describe capability + user value in one sentence
+   - Keep implementation details in the status dashboard
+
+4. **Prioritize Issues by Impact**
    - Not just spec order
    - Consider: user impact, security, performance, tech debt cost
    - High priority = blocks progress or affects users
 
-4. **Make Next Steps Concrete and Time-Bound**
+5. **Make Next Steps Concrete and Time-Bound**
    - ❌ Bad: "Improve performance"
    - ✅ Good: "Profile database queries and optimize top 3 slow endpoints (this week)"
 
-5. **Use Visual Markers for Scannability**
+6. **Use Visual Markers for Scannability**
    - Tables > long paragraphs
    - Emojis > text labels (when appropriate)
    - Checkboxes > bulleted lists (for action items)
 
-6. **When validating with local execution, use the documented environment**
+7. **When validating with local execution, use the documented environment**
    - If local commands/tests are required, follow `_sdd/env.md` first
    - If `_sdd/env.md` is missing/incomplete, ask the user and proceed with document-only summary until clarified
 
@@ -545,6 +574,7 @@ Users can request focused summaries:
 # "이슈만 요약해줘" / "Only issues and recommendations"
 # "진행률만 보여줘" / "Only progress dashboard"
 # "아키텍처만 요약해줘" / "Only architecture overview"
+# "핵심 기능만 요약해줘" / "Only key features (high-level)"
 ```
 
 This generates a shorter summary with only requested sections.
@@ -561,6 +591,7 @@ A good summary should:
 
 - [ ] Be scannable in < 2 minutes
 - [ ] Answer "What/Why/Status" in executive summary
+- [ ] Highlight 3-5 high-level key features with clear value statements
 - [ ] Show 3-5 core components (not all details)
 - [ ] Calculate accurate completion percentage
 - [ ] Prioritize issues by impact
@@ -570,6 +601,10 @@ A good summary should:
 
 ## Version History
 
+- **1.1.0** (2026-02): Added high-level key features section
+  - New "Key Features (High-Level)" output section
+  - Capability extraction guidance in summary generation process
+  - Scope option for key-feature-only summaries
 - **1.0.0** (2026-02): Initial release
   - Layered summary format
   - Status dashboard

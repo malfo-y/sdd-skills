@@ -22,6 +22,17 @@ Replaces scattered task tracking across email, spreadsheets, and chat tools with
 
 ---
 
+## ✨ Key Features (High-Level)
+
+| Key Feature | What It Enables | Status |
+|-------------|-----------------|--------|
+| **Collaborative Task Lifecycle** | Teams can create, assign, track, and complete work in one shared workflow | ✅ |
+| **Reliable Team Coordination** | Notifications, comments, and due-date visibility reduce missed handoffs and deadlines | ✅ |
+| **Adaptive Planning & Execution** | Dependencies and recurring-task logic support structured delivery for ongoing work | 🚧 |
+| **Secure Access Control** | Authentication and role controls protect project data by user role and permissions | 🚧 |
+
+---
+
 ## 🏗️ Architecture at a Glance (아키텍처 개요)
 
 ### Core Components (3-5 key components only)
