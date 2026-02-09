@@ -14,6 +14,8 @@ This template shows the structure and placeholders for generating spec summaries
 | `[brief description]` | 1 sentence description | "Validates user credentials securely" |
 | `[Why/Impact]` | Reason or consequence | "Improves user experience" |
 | `Q[N] YYYY` | Quarter and year | "Q2 2026" |
+| `<!-- spec-summary:start -->` | README managed block start marker | `<!-- spec-summary:start -->` |
+| `<!-- spec-summary:end -->` | README managed block end marker | `<!-- spec-summary:end -->` |
 
 ## Conditional Sections
 
@@ -30,6 +32,7 @@ Some sections should only appear if data is available:
 | High Priority Issues | Any high-priority items | Show "No high-priority issues" |
 | Architecture Diagram | 2+ components | Generate ASCII diagram |
 | Key Feature Explanations | Feature/goal details exist in spec | Explain representative features in subsection form; if details are weak, mark status as "Unknown" and state assumptions |
+| README Sync (Optional) | User explicitly asks for README create/update | Update only marker block; if absent, insert safely after first H1 or append |
 
 ## Full Template
 
@@ -271,6 +274,38 @@ Database       Cache (Redis)
 **How to Generate**: Run `/spec-summary` to automatically create/update this file.
 ```
 
+## Optional README Sync Template
+
+Use this template only when the user requests README create/update:
+
+```markdown
+<!-- spec-summary:start -->
+## Project Snapshot
+
+### What
+[1-2 sentence summary from spec goal]
+
+### Current Status
+- Overall Progress: [X]%
+- Completed / In Progress / Planned: [N] / [M] / [K]
+
+### Key Feature Explanations
+### 1. [Feature Name]
+[Plain-text what/how/why/status paragraph]
+
+### 2. [Feature Name]
+[Plain-text what/how/why/status paragraph]
+
+More details: [`_sdd/spec/SUMMARY.md`](_sdd/spec/SUMMARY.md)
+<!-- spec-summary:end -->
+```
+
+[README update rules:]
+- Never overwrite full `README.md`
+- Replace only content between markers if markers already exist
+- If markers are missing, insert block after first H1; if no H1, append to EOF
+- Keep README snapshot concise and defer deep details to `SUMMARY.md`
+
 ## Template Usage Guide
 
 ### Step 1: Read Spec
@@ -323,6 +358,8 @@ Architecture: [Text after "## 아키텍처 개요" or "## Architecture Overview"
 Components: [Parse component names from architecture section]
 Issues: [Text after "## 발견된 이슈" or "## Issues"]
 Dependencies: [Text after "## 환경 및 의존성" or "## Dependencies"]
+ReadmePath: [`README.md` if exists]
+ReadmeMarkers: [Whether `spec-summary` markers already exist]
 ```
 
 ### Step 5: Prioritize Issues
@@ -389,6 +426,15 @@ checklist = [
 ]
 ```
 
+### Step 9: Optional README Sync
+```python
+if user_requested_readme_sync:
+    if readme_has_markers:
+        replace_between_markers("<!-- spec-summary:start -->", "<!-- spec-summary:end -->", block)
+    else:
+        insert_block_after_h1_or_append(block)
+```
+
 ## Common Pitfalls
 
 | Pitfall | How to Avoid |
@@ -396,6 +442,8 @@ checklist = [
 | Too technical in executive summary | Use plain language, avoid jargon |
 | Key features too abstract | Explain each feature with what/how/why/status in plain text |
 | Listing all components | Focus on key components and omit low-value details |
+| Overwriting entire README | Update only managed marker block |
+| README grows too long | Keep snapshot short and link to `SUMMARY.md` |
 | Vague next steps | Make specific and time-bound |
 | Wrong status calculation | Exclude ⏸️ from total count |
 | Summarizing generated/backup files | Exclude `SUMMARY.md` and `prev/PREV_*.md` from spec inputs; pick the index spec explicitly |
@@ -412,6 +460,7 @@ checklist = [
 - [ ] All issues have priority assigned
 - [ ] Next steps have timeframes (week/month/quarter)
 - [ ] Conditional sections handled correctly
+- [ ] (If requested) README sync uses markers without touching unrelated content
 - [ ] No placeholder syntax left unreplaced
 - [ ] File paths point to real files
 - [ ] Language matches spec document

@@ -205,3 +205,31 @@ Based on current spec state and progress:
 **How to Generate**: Run `/spec-summary` to automatically create/update this file.
 
 **Note**: Regenerating this summary should first create `_sdd/spec/prev/PREV_SUMMARY_<timestamp>.md` (create `_sdd/spec/prev/` if needed) if an existing `_sdd/spec/SUMMARY.md` is being overwritten.
+
+---
+
+## Optional README Sync Output
+
+When user requests README update, only this marker block is managed:
+
+```markdown
+<!-- spec-summary:start -->
+## Project Snapshot
+
+### What
+Task Management helps teams plan, execute, and track collaborative work in one place.
+
+### Current Status
+- Overall Progress: 65%
+- Completed / In Progress / Planned: 13 / 4 / 3
+
+### Key Feature Explanations
+### 1. Collaborative Task Lifecycle
+Teams can create, assign, track, and complete tasks in a single workflow with clear ownership and deadlines.
+
+### 2. Adaptive Planning & Execution
+Dependencies and recurring-task logic support realistic delivery planning, though some edge-case handling is still in progress.
+
+More details: [`_sdd/spec/SUMMARY.md`](_sdd/spec/SUMMARY.md)
+<!-- spec-summary:end -->
+```

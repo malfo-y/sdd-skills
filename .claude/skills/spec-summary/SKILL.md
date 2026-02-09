@@ -1,7 +1,7 @@
 ---
 name: spec-summary
 description: This skill should be used when the user asks to "summarize spec", "spec summary", "show spec overview", "스펙 요약", "스펙 개요", "show spec status", "스펙 현황", "project overview", "프로젝트 개요", "what's the current state", "현재 상태는", or wants a human-readable summary of the current specification for quick understanding.
-version: 1.2.0
+version: 1.3.0
 ---
 
 # spec-summary: Specification Summary Generator
@@ -16,10 +16,12 @@ The **spec-summary** skill generates human-readable summaries of SDD (Spec-Drive
 - **Current status and progress** (completion percentage, feature dashboard)
 - **Open issues and improvements** (prioritized by impact)
 - **Recommended next steps** (immediate, short-term, long-term)
+- **Project README snapshot** (optional, marker-based update on request)
 
 ### Output
 
-- **File**: `_sdd/spec/SUMMARY.md`
+- **Primary file**: `_sdd/spec/SUMMARY.md`
+- **Optional file**: `README.md` (only when user explicitly requests README create/update)
 - **Format**: Layered markdown (executive summary → technical details)
 - **Audience**: Mixed (stakeholders + developers)
 - **Language**: Follows spec document language (Korean/English/bilingual)
@@ -43,6 +45,8 @@ The skill auto-activates when the user says:
 - "show spec status" / "스펙 현황"
 - "project overview" / "프로젝트 개요"
 - "what's the current state" / "현재 상태는"
+- "README도 같이 업데이트" / "update README too"
+- "README 만들어줘" / "create README from summary"
 
 ## Input Sources
 
@@ -58,6 +62,7 @@ The skill reads information from multiple sources:
 - **Implementation progress**: `_sdd/implementation/IMPLEMENTATION_PROGRESS.md`
 - **Implementation progress (phases)**: `_sdd/implementation/IMPLEMENTATION_PROGRESS_PHASE_<n>.md` (if present, prefer the latest phase for “current status”)
 - **Implementation review**: `_sdd/implementation/IMPLEMENTATION_REVIEW.md`
+- **Project README**: `README.md` (only when README sync is requested)
 - **Status markers in spec**: 📋 (계획됨), 🚧 (진행중), ✅ (완료), ⏸️ (보류)
 - **Execution/test environment guide**: `_sdd/env.md` (only when local validation commands/tests are needed)
 
@@ -227,6 +232,19 @@ Pseudo-logic:
 5. Add generation timestamp and metadata
 6. Preserve human-readable formatting (tables, emojis, visual markers)
 
+### Step 6: Optional README Sync (On Request Only)
+
+1. Trigger only when user explicitly asks to create/update README
+2. Use marker block strategy for safe partial updates:
+   - Start marker: `<!-- spec-summary:start -->`
+   - End marker: `<!-- spec-summary:end -->`
+3. If markers exist in `README.md`, replace only content between markers
+4. If markers do not exist:
+   - Insert a new marker block after the first H1 (`# ...`) when present
+   - Otherwise append the block to the end of `README.md`
+5. Never overwrite the entire README; preserve all non-marker content
+6. Keep README concise and link back to `_sdd/spec/SUMMARY.md` for full details
+
 ## Output Format
 
 The generated summary follows this layered structure:
@@ -378,6 +396,32 @@ Based on current spec state and progress:
 **How to Generate**: Run `/spec-summary` to automatically create/update this file.
 ```
 
+### Optional README Block Output
+
+When README sync is requested, generate/update this marker block in `README.md`:
+
+```markdown
+<!-- spec-summary:start -->
+## Project Snapshot
+
+### What
+[1-2 sentence summary]
+
+### Current Status
+- Overall Progress: X%
+- Completed / In Progress / Planned: N / M / K
+
+### Key Feature Explanations
+### 1. [Feature Name]
+[Plain-text what/how/why/status paragraph]
+
+### 2. [Feature Name]
+[Plain-text what/how/why/status paragraph]
+
+More details: [`_sdd/spec/SUMMARY.md`](_sdd/spec/SUMMARY.md)
+<!-- spec-summary:end -->
+```
+
 ### Key Formatting Principles
 
 1. **Layered Information**
@@ -399,6 +443,7 @@ Based on current spec state and progress:
    - Executive summary: 1-2 sentences per item
    - Key features: feature-level paragraphs 
    - Architecture: key components first
+   - README block: short snapshot + link to full summary
    - Next steps: Specific and time-bound
 
 ## Best Practices
@@ -436,6 +481,11 @@ Based on current spec state and progress:
 7. **When validating with local execution, use the documented environment**
    - If local commands/tests are required, follow `_sdd/env.md` first
    - If `_sdd/env.md` is missing/incomplete, ask the user and proceed with document-only summary until clarified
+
+8. **Use Marker-Based README Updates**
+   - Update only the `spec-summary` marker block in `README.md`
+   - Do not rewrite unrelated README sections
+   - Always include a link to `_sdd/spec/SUMMARY.md`
 
 ### For Spec Authors
 
@@ -541,6 +591,8 @@ The skill adapts to the spec document's language:
 | Multiple main specs | Ask user which to summarize | "Found multiple spec files: [list]. Which should I summarize? Or say 'all' to merge." |
 | No architecture section | Skip architecture section | "No architecture section found. Summary will omit architecture overview." |
 | No issues section | Show "No open issues documented" | Creates empty issues section with note. |
+| README sync requested but `README.md` not found | Create minimal README with marker block | "README.md not found. I'll create one and insert a spec-summary block." |
+| README has no marker block | Insert new marker block safely | "README exists without spec-summary markers. I'll insert a new managed block and preserve other content." |
 | `_sdd/env.md` missing/incomplete (while local validation requested) | Skip local execution and ask user | "Local validation requested, but `_sdd/env.md` is missing/incomplete. I'll proceed with document-based summary unless you provide runtime setup details." |
 
 ## Advanced Usage
@@ -583,6 +635,7 @@ Users can request focused summaries:
 # "진행률만 보여줘" / "Only progress dashboard"
 # "아키텍처만 요약해줘" / "Only architecture overview"
 # "핵심 기능 상세만 요약해줘" / "Only key feature explanations"
+# "README도 같이 업데이트해줘" / "Also update README snapshot"
 ```
 
 This generates a shorter summary with only requested sections.
@@ -606,9 +659,14 @@ A good summary should:
 - [ ] Provide concrete, time-bound next steps
 - [ ] Serve both technical and non-technical readers
 - [ ] Update smoothly when spec changes
+- [ ] (If requested) README marker block is updated without damaging other README content
 
 ## Version History
 
+- **1.3.0** (2026-02): Added optional README create/update flow
+  - Added explicit README trigger phrases and optional output target
+  - Added marker-based README sync strategy (`<!-- spec-summary:start/end -->`)
+  - Added README snapshot output block template and error handling
 - **1.2.0** (2026-02): Switched key features to feature-by-feature narrative subsections
   - Replaced high-level key-feature table with paper-like per-feature explanations
   - Updated extraction rules for plain-text what/how/why/status descriptions
