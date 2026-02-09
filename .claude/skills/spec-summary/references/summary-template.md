@@ -29,7 +29,7 @@ Some sections should only appear if data is available:
 | On Hold Features | Any ⏸️ markers in spec | Omit "On Hold" subsection |
 | High Priority Issues | Any high-priority items | Show "No high-priority issues" |
 | Architecture Diagram | 2+ components | Generate ASCII diagram |
-| Key Features (High-Level) | Feature/goal details exist in spec | Infer up to 3 capabilities from Goal and mark status as "Unknown" if details are weak |
+| Key Feature Explanations | Feature/goal details exist in spec | Explain representative features in subsection form; if details are weak, mark status as "Unknown" and state assumptions |
 
 ## Full Template
 
@@ -64,28 +64,34 @@ Some sections should only appear if data is available:
 
 ---
 
-## ✨ Key Features (High-Level)
+## ✨ Key Feature Explanations (기능별 상세 설명)
 
-[Summarize top capabilities, not every backlog item]
-[Choose 3-5 user-facing capabilities from Goal + feature sections]
+[Explain representative features as paper-like subsections. Use plain language and avoid heavy jargon.]
+[Choose representative features from Goal + feature sections]
 
-| Key Feature | What It Enables | Status |
-|-------------|-----------------|--------|
-| [Capability Name] | [Plain-language value statement] | [✅/🚧/📋/✅+🚧/Unknown] |
-| [Capability Name] | [Plain-language value statement] | [✅/🚧/📋/✅+🚧/Unknown] |
-| [Capability Name] | [Plain-language value statement] | [✅/🚧/📋/✅+🚧/Unknown] |
+### 1. [Feature Name]
+**Status**: [✅/🚧/📋/✅+🚧/Unknown]
+[plain-text explanation]
+- what this feature does.
+- how it works end-to-end in simple terms.
+- why this matters (user/business impact).
+- (optional): current limitation, blocker, or next step.
+
+### 2. [Feature Name]
+**Status**: [✅/🚧/📋/✅+🚧/Unknown]
+[plain-text explanation following the same pattern]
 
 [RULES for key feature extraction:]
-- Maximum 5 items (prefer 3 if spec is large/complex)
-- Merge related low-level features into one capability
-- Use stakeholder-friendly language (avoid deep technical wording)
-- If status is mixed across sub-features, use mixed marker (e.g., ✅+🚧)
+- Choose representative features (prefer user-facing + actively developed)
+- Do not collapse major features into one generic capability name
+- Keep terminology simple; define unavoidable technical terms once
+- If evidence is weak, mark status as `Unknown` and state assumptions explicitly
 
 ---
 
 ## 🏗️ Architecture at a Glance (아키텍처 개요)
 
-### Core Components (3-5 key components only)
+### Core Components (key components only)
 
 [IF 2+ components: Generate ASCII diagram]
 ```
@@ -311,7 +317,8 @@ fi
 ### Step 4: Extract Sections
 ```yaml
 Goal: [Text after "## 목표" or "## Goal"]
-KeyFeatures: [Top 3-5 capability summaries from Goal + feature sections]
+KeyFeatures: [Representative feature names from Goal + feature sections]
+FeatureNarratives: [Plain-text what/how/why/status notes per selected feature]
 Architecture: [Text after "## 아키텍처 개요" or "## Architecture Overview"]
 Components: [Parse component names from architecture section]
 Issues: [Text after "## 발견된 이슈" or "## Issues"]
@@ -373,8 +380,8 @@ Replace placeholders:
 ```python
 checklist = [
     "Executive summary is non-technical",
-    "Key features capture 3-5 high-level capabilities",
-    "Architecture has 3-5 components max",
+    "Key features are explained with clear plain-text paragraph (what/how/why/status)",
+    "Architecture focuses on key components",
     "Status percentages are accurate",
     "Issues are categorized by priority",
     "Next steps are actionable and specific",
@@ -387,8 +394,8 @@ checklist = [
 | Pitfall | How to Avoid |
 |---------|--------------|
 | Too technical in executive summary | Use plain language, avoid jargon |
-| Over-detailed key features | Keep only 3-5 capabilities and move details to dashboard |
-| Listing all components | Limit to 3-5 most important |
+| Key features too abstract | Explain each feature with what/how/why/status in plain text |
+| Listing all components | Focus on key components and omit low-value details |
 | Vague next steps | Make specific and time-bound |
 | Wrong status calculation | Exclude ⏸️ from total count |
 | Summarizing generated/backup files | Exclude `SUMMARY.md` and `prev/PREV_*.md` from spec inputs; pick the index spec explicitly |
@@ -399,8 +406,8 @@ checklist = [
 ## Quality Checklist
 
 - [ ] Executive summary readable by non-developers
-- [ ] Key features summarize 3-5 high-level capabilities
-- [ ] Architecture shows only 3-5 core components
+- [ ] Explain features with clear plain-text paragraph (what/how/why/status)
+- [ ] Architecture focuses on key components (not all details)
 - [ ] Status percentages match marker counts
 - [ ] All issues have priority assigned
 - [ ] Next steps have timeframes (week/month/quarter)

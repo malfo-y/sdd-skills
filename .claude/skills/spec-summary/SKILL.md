@@ -1,7 +1,7 @@
 ---
 name: spec-summary
 description: This skill should be used when the user asks to "summarize spec", "spec summary", "show spec overview", "스펙 요약", "스펙 개요", "show spec status", "스펙 현황", "project overview", "프로젝트 개요", "what's the current state", "현재 상태는", or wants a human-readable summary of the current specification for quick understanding.
-version: 1.1.0
+version: 1.2.0
 ---
 
 # spec-summary: Specification Summary Generator
@@ -11,8 +11,8 @@ version: 1.1.0
 The **spec-summary** skill generates human-readable summaries of SDD (Spec-Driven Development) specification documents. It creates a layered, scannable document that helps both technical and non-technical stakeholders quickly understand:
 
 - **Project motivation and goals** (What and Why)
-- **Key features at a glance** (3-5 high-level capabilities, user-value focused)
-- **High-level architecture** (3-5 key components, bird's-eye view)
+- **Key features explained clearly** (feature-by-feature plain text paragraphs)
+- **High-level architecture** (key components, bird's-eye view)
 - **Current status and progress** (completion percentage, feature dashboard)
 - **Open issues and improvements** (prioritized by impact)
 - **Recommended next steps** (immediate, short-term, long-term)
@@ -126,11 +126,11 @@ The skill expects spec documents to follow SDD format:
    - Extract purpose statement
    - Identify problem being solved
 
-3. **Key Features (High-Level)** → Capability Snapshot
-   - Extract 3-5 high-impact capabilities from Goal and feature sections
-   - Merge low-level items into user-facing capability statements
-   - Write one-line "what it enables" explanations in plain language
-   - Map each capability to a representative status (✅ / 🚧 / 📋 / mixed / Unknown)
+3. **Key Feature Explanations (Feature-by-Feature)** → Narrative Paragraphs
+   - Select representative features from Goal and feature sections
+   - For each feature, capture: what it does, how it works, why it matters, and current status
+   - Write plain-text explanations (paper paragraph style)
+   - If details are incomplete, keep wording explicit and mark status as `Unknown`
 
 4. **Feature List with Status** → Progress Calculation
    ```
@@ -146,7 +146,7 @@ The skill expects spec documents to follow SDD format:
 
 5. **Architecture Overview** → Core Components
    - Extract component names and purposes
-   - **Limit to 3-5 key components** (not all details)
+   - **Limit to key components** (not all details)
    - Identify relationships between components
    - Extract tech stack information
 
@@ -256,25 +256,33 @@ The generated summary follows this layered structure:
 
 ---
 
-## ✨ Key Features (High-Level)
+## ✨ Key Feature Explanations (기능별 상세 설명)
 
-| Key Feature | What It Enables | Status |
-|-------------|-----------------|--------|
-| [Capability 1] | [Plain-language value statement] | ✅ / 🚧 / 📋 / ✅+🚧 / Unknown |
-| [Capability 2] | [Plain-language value statement] | ✅ / 🚧 / 📋 / ✅+🚧 / Unknown |
-| [Capability 3] | [Plain-language value statement] | ✅ / 🚧 / 📋 / ✅+🚧 / Unknown |
+[Explain representative features as paper-like subsections. Use plain language and avoid heavy jargon.]
+
+### 1. [Feature Name]
+**Status**: ✅ / 🚧 / 📋 / ✅+🚧 / Unknown  
+[plain-text explanation]
+- what this feature does.
+- how it works end-to-end in simple terms.
+- why this matters (user/business impact).
+- (optional): current limitation, blocker, or next step.
+
+### 2. [Feature Name]
+**Status**: ✅ / 🚧 / 📋 / ✅+🚧 / Unknown  
+[plain-text explanation following the same pattern]
 
 [Selection rules]
-- Choose 3-5 capabilities (prefer top 3 if spec is large)
-- Group related low-level features into one capability
-- Focus on user/business value, not internal implementation details
-- If evidence is weak, infer conservatively from Goal and mark status as `Unknown`
+- Choose representative features (prefer user-facing + actively developed)
+- Do not collapse major features into one generic capability name
+- Keep terminology simple; define unavoidable technical terms once
+- If evidence is weak, mark status as `Unknown` and state assumptions explicitly
 
 ---
 
 ## 🏗️ Architecture at a Glance (아키텍처 개요)
 
-### Core Components (3-5 key components only)
+### Core Components (key components only)
 
 ```
 [ASCII diagram showing component relationships]
@@ -389,8 +397,8 @@ Based on current spec state and progress:
 
 4. **Conciseness**
    - Executive summary: 1-2 sentences per item
-   - Key features: 3-5 capability-level items
-   - Architecture: 3-5 components max
+   - Key features: feature-level paragraphs 
+   - Architecture: key components first
    - Next steps: Specific and time-bound
 
 ## Best Practices
@@ -403,13 +411,13 @@ Based on current spec state and progress:
 
 2. **Limit Architecture to Core Components**
    - Don't list every class/module
-   - Show only 3-5 key components that matter to understanding
+   - Show only key components that matter to understanding
    - Focus on relationships and data flow
 
-3. **Keep Key Features High-Level**
-   - Avoid dumping the full feature backlog in this section
-   - Describe capability + user value in one sentence
-   - Keep implementation details in the status dashboard
+3. **Explain Key Features Feature-by-Feature**
+   - Each paragraph should read like a mini abstract (what/how/why/status)
+   - Keep explanations concrete and tied to feature names
+   - Keep exhaustive counts and raw lists in the status dashboard
 
 4. **Prioritize Issues by Impact**
    - Not just spec order
@@ -574,7 +582,7 @@ Users can request focused summaries:
 # "이슈만 요약해줘" / "Only issues and recommendations"
 # "진행률만 보여줘" / "Only progress dashboard"
 # "아키텍처만 요약해줘" / "Only architecture overview"
-# "핵심 기능만 요약해줘" / "Only key features (high-level)"
+# "핵심 기능 상세만 요약해줘" / "Only key feature explanations"
 ```
 
 This generates a shorter summary with only requested sections.
@@ -591,8 +599,8 @@ A good summary should:
 
 - [ ] Be scannable in < 2 minutes
 - [ ] Answer "What/Why/Status" in executive summary
-- [ ] Highlight 3-5 high-level key features with clear value statements
-- [ ] Show 3-5 core components (not all details)
+- [ ] Explain features with clear plain-text paragraph (what/how/why/status)
+- [ ] Show core components (not all details)
 - [ ] Calculate accurate completion percentage
 - [ ] Prioritize issues by impact
 - [ ] Provide concrete, time-bound next steps
@@ -601,6 +609,10 @@ A good summary should:
 
 ## Version History
 
+- **1.2.0** (2026-02): Switched key features to feature-by-feature narrative subsections
+  - Replaced high-level key-feature table with paper-like per-feature explanations
+  - Updated extraction rules for plain-text what/how/why/status descriptions
+  - Added focused scope phrase for key-feature explanation-only summaries
 - **1.1.0** (2026-02): Added high-level key features section
   - New "Key Features (High-Level)" output section
   - Capability extraction guidance in summary generation process

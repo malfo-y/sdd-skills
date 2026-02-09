@@ -22,20 +22,29 @@ Replaces scattered task tracking across email, spreadsheets, and chat tools with
 
 ---
 
-## ✨ Key Features (High-Level)
+## ✨ Key Feature Explanations (기능별 상세 설명)
 
-| Key Feature | What It Enables | Status |
-|-------------|-----------------|--------|
-| **Collaborative Task Lifecycle** | Teams can create, assign, track, and complete work in one shared workflow | ✅ |
-| **Reliable Team Coordination** | Notifications, comments, and due-date visibility reduce missed handoffs and deadlines | ✅ |
-| **Adaptive Planning & Execution** | Dependencies and recurring-task logic support structured delivery for ongoing work | 🚧 |
-| **Secure Access Control** | Authentication and role controls protect project data by user role and permissions | 🚧 |
+### 1. Collaborative Task Lifecycle
+**Status**: ✅  
+This feature gives teams a single flow to create tasks, assign owners, update progress, and close work without switching tools. Users can track ownership and due dates from the same workspace, which reduces handoff errors. The feature is fully implemented for core CRUD, assignment, and status updates.
+
+### 2. Reliable Team Coordination
+**Status**: ✅  
+This feature keeps collaborators aligned through comments, notifications, and deadline visibility tied to each task. Team members receive context where work happens instead of relying on separate chat or email threads. It improves day-to-day execution by reducing missed updates and duplicated communication.
+
+### 3. Adaptive Planning & Execution
+**Status**: 🚧  
+This feature expands planning depth with dependencies and recurring tasks so teams can model real delivery sequences. Work can be ordered by prerequisite tasks and repeated automatically on defined schedules. Core concepts are working, but advanced dependency handling and recurrence edge cases are still in progress.
+
+### 4. Secure Access Control
+**Status**: 🚧  
+This feature protects project data through authentication and role-based permissions. It defines who can view, modify, or administer tasks based on team responsibility. Basic login and permission scaffolding exist, while fine-grained role policies are still being completed.
 
 ---
 
 ## 🏗️ Architecture at a Glance (아키텍처 개요)
 
-### Core Components (3-5 key components only)
+### Core Components (key components only)
 
 ```
 React Frontend
