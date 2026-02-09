@@ -46,6 +46,7 @@ This skill evaluates two dimensions:
 - `_sdd/spec/DECISION_LOG.md` (if present)
 - Recent code changes (`git diff`, `git log`, current workspace state)
 - Test artifacts (when available)
+- `_sdd/env.md` (when local runtime/test verification is needed)
 
 ## Review Process
 
@@ -58,6 +59,7 @@ This skill evaluates two dimensions:
 5. Define review scope:
    - Spec-only
    - Spec + code alignment (default)
+6. If local commands/tests will be run for evidence, read `_sdd/env.md` and apply required setup first.
 
 ### Step 2: Spec-Only Quality Audit
 
@@ -85,6 +87,9 @@ Require concrete evidence wherever possible:
 - `path:line` references
 - test names/status
 - commit or diff references
+
+When local runtime/test execution is used to collect evidence, follow `_sdd/env.md`.
+If `_sdd/env.md` is missing/incomplete, ask the user for environment details instead of guessing.
 
 ### Step 4: Severity and Decision
 
@@ -187,6 +192,7 @@ Assign one overall decision:
 - Keep recommendations actionable and ordered by risk/impact.
 - Keep `DECISION_LOG.md` updates as recommendations only in this skill.
 - Keep artifact recommendations minimal: default to `DECISION_LOG.md` only unless the user asks for more.
+- Do not run local runtime/tests with inferred setup; use `_sdd/env.md` or user-confirmed environment details.
 
 ## Integration with Other Skills
 

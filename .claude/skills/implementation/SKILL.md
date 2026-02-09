@@ -52,10 +52,12 @@ If multiple plan files exist and the user did not specify a starting point:
    - **Testing framework and conventions** (critical for TDD)
    - Test file locations and naming conventions
 
-4. **Locate the environment variables**: Check for env at:
+4. **Load the execution/test environment guide** before running any code or tests:
    - User-specified path
-   - `<project_root>/_sdd/env.md`
+   - `<project_root>/_sdd/env.md` (source of environment variables, conda env, required setup commands)
    - Recent conversation context
+
+If `_sdd/env.md` exists, apply its setup instructions first (for example: `conda activate ...`, required `export` variables, required local services).
 
 ## Process Overview
 
@@ -245,8 +247,8 @@ When all criteria have passing tests → Task is complete
 
 ### Testing environment
 
-For testing enviroment, refer `_sdd/env.md` if the file exists.
-Otherwise, infer from the user input.
+Before running any test or executable command, read `_sdd/env.md` and apply the listed setup.
+If `_sdd/env.md` is missing, ask the user for the required runtime/test environment instead of guessing.
 
 ### What to Test
 

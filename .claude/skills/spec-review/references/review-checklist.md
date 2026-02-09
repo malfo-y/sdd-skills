@@ -10,6 +10,7 @@ This checklist does not authorize direct spec edits.
 - [ ] Generated/backup files excluded (`SUMMARY.md`, `prev/PREV_*.md`)
 - [ ] `_sdd/spec/DECISION_LOG.md` loaded if present
 - [ ] Review scope declared (Spec-only or Spec+Code)
+- [ ] If local runtime/test checks are planned, `_sdd/env.md` is checked and setup is applied first
 
 ## 2) Spec-Only Quality Checks
 

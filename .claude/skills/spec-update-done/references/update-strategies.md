@@ -165,6 +165,7 @@ example
 - [ ] All components documented
 - [ ] All APIs documented
 - [ ] All config options listed
+- [ ] `_sdd/env.md` checked and required runtime/test setup applied before local example tests
 - [ ] Examples tested and working
 - [ ] Architecture diagram current
 - [ ] Dependencies accurate
@@ -218,6 +219,7 @@ Phase 4: Final review and version bump
    - User feedback
    - Code analysis
    - Existing decision log (`_sdd/spec/DECISION_LOG.md`, if present)
+   - `_sdd/env.md` (if local commands/tests are needed)
 
 3. **Plan Changes**
    - List sections to update
@@ -234,7 +236,7 @@ Phase 4: Final review and version bump
 2. **Update Content**
    - Be precise and accurate
    - Include code references
-   - Test examples
+   - Test examples (apply `_sdd/env.md` setup before local runs)
 
 3. **Track Changes**
    - Note what changed
@@ -246,7 +248,7 @@ Phase 4: Final review and version bump
 
 1. **Validate**
    - All links work
-   - Examples run
+   - Examples run (with `_sdd/env.md` setup applied when running locally)
    - Cross-references valid
 
 2. **Version**
@@ -335,7 +337,7 @@ Phase 4: Final review and version bump
 
 ### Accuracy
 - [ ] All statements verifiable in code
-- [ ] Examples produce documented output
+- [ ] Examples produce documented output (using `_sdd/env.md` setup for local runs)
 - [ ] Version numbers match reality
 - [ ] File paths exist
 

@@ -58,6 +58,7 @@ The skill reads information from multiple sources:
 - **Implementation progress (phases)**: `_sdd/implementation/IMPLEMENTATION_PROGRESS_PHASE_<n>.md` (if present, prefer the latest phase for “current status”)
 - **Implementation review**: `_sdd/implementation/IMPLEMENTATION_REVIEW.md`
 - **Status markers in spec**: 📋 (계획됨), 🚧 (진행중), ✅ (완료), ⏸️ (보류)
+- **Execution/test environment guide**: `_sdd/env.md` (only when local validation commands/tests are needed)
 
 ### Spec Document Structure Expected
 
@@ -106,6 +107,7 @@ The skill expects spec documents to follow SDD format:
    - `_sdd/implementation/IMPLEMENTATION_PROGRESS.md`
    - `_sdd/implementation/IMPLEMENTATION_PROGRESS_PHASE_<n>.md` (if multiple exist, prefer the latest phase; ask the user if they want all phases summarized)
    - `_sdd/implementation/IMPLEMENTATION_REVIEW.md`
+4. If local runtime/test validation is needed for summary evidence, read `_sdd/env.md` and apply setup before running commands.
 
 **Error Handling**: If no spec found → suggest `/spec-create` first
 
@@ -394,6 +396,10 @@ Based on current spec state and progress:
    - Emojis > text labels (when appropriate)
    - Checkboxes > bulleted lists (for action items)
 
+6. **When validating with local execution, use the documented environment**
+   - If local commands/tests are required, follow `_sdd/env.md` first
+   - If `_sdd/env.md` is missing/incomplete, ask the user and proceed with document-only summary until clarified
+
 ### For Spec Authors
 
 1. **Use Status Markers Consistently**
@@ -498,6 +504,7 @@ The skill adapts to the spec document's language:
 | Multiple main specs | Ask user which to summarize | "Found multiple spec files: [list]. Which should I summarize? Or say 'all' to merge." |
 | No architecture section | Skip architecture section | "No architecture section found. Summary will omit architecture overview." |
 | No issues section | Show "No open issues documented" | Creates empty issues section with note. |
+| `_sdd/env.md` missing/incomplete (while local validation requested) | Skip local execution and ask user | "Local validation requested, but `_sdd/env.md` is missing/incomplete. I'll proceed with document-based summary unless you provide runtime setup details." |
 
 ## Advanced Usage
 

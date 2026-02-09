@@ -45,10 +45,12 @@ If there are multiple phase plan/progress files (e.g. `IMPLEMENTATION_PLAN_PHASE
    - Creating a plan with `implementation-plan` skill
    - Doing a general code review instead
 
-3. **Locate the environment variables**: Check for env at:
+3. **Load the execution/test environment guide** before running any local checks:
    - User-specified path
-   - `<project_root>/_sdd/env.md`
+   - `<project_root>/_sdd/env.md` (source of environment variables, conda env, required setup commands)
    - Recent conversation context
+
+If `_sdd/env.md` exists, apply its setup instructions first (for example: `conda activate ...`, required `export` variables, required local services).
 
 ## Review Process Overview
 
@@ -125,10 +127,11 @@ For each expected artifact:
 ### Test Verification
 ```
 For each task with test requirements:
-1. Find corresponding test files
-2. Count test cases
-3. Run tests if possible (or check CI status)
-4. Note: PASSING / FAILING / MISSING
+1. Read `_sdd/env.md` and apply required setup before local test execution
+2. Find corresponding test files
+3. Count test cases
+4. Run tests if possible (or check CI status)
+5. Note: PASSING / FAILING / MISSING
 ```
 
 ### Output Format

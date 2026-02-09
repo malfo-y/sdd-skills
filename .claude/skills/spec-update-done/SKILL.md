@@ -57,6 +57,13 @@ This skill analyzes multiple sources of truth to identify spec drift and generat
 - New requirements mentioned
 - Clarifications on behavior
 
+### 5. Execution/Test Environment Guide (when local verification is needed)
+
+- `_sdd/env.md` (preferred)
+- User-provided environment instructions
+
+If local code/test execution is needed to verify claims, read `_sdd/env.md` first and apply required setup (e.g., conda env, environment variables, local services).
+
 ## Review Process
 
 ### Step 1: Gather Context
@@ -76,6 +83,7 @@ Collect information from all available sources:
    - git log --oneline -20 (recent commits)
 4. Read relevant decision-log entries from `_sdd/spec/DECISION_LOG.md` (if file exists)
 5. Note user conversation context
+6. If local execution/tests are required for verification, load `_sdd/env.md` and apply setup before running commands
 ```
 
 ### Step 2: Identify Spec Drift
@@ -180,6 +188,8 @@ Verify updated spec accuracy:
 - Check all file paths exist
 - Verify dependency versions
 - Confirm API endpoints match
+- If local tests/commands are used for verification, apply `_sdd/env.md` setup first
+- If `_sdd/env.md` is missing/incomplete, ask the user for environment details instead of guessing
 - Review with user if significant changes
 
 ## Output Format
@@ -263,6 +273,7 @@ Incremental updates during development:
 - **Verify before updating**: Don't assume implementation matches plan
 - **Check code directly**: Read actual files, not just logs
 - **Test assertions**: Verify API endpoints, configs actually work
+- **Use correct runtime setup**: Before local checks/tests, follow `_sdd/env.md`
 - **Cross-reference**: Compare multiple sources
 
 ### Preservation

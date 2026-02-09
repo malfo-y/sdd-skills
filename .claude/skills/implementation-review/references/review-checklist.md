@@ -7,6 +7,7 @@ Before starting the review:
 ```markdown
 - [ ] Implementation plan is located and readable
 - [ ] Codebase is accessible
+- [ ] `_sdd/env.md` is checked and required runtime/test setup is applied (conda/env vars/services)
 - [ ] Test suite can be run (or CI results available)
 - [ ] Clear on review scope (full review vs specific phase)
 ```

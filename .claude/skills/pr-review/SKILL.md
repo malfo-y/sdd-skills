@@ -51,6 +51,7 @@ Report the model used at the beginning of the review.
 - `_sdd/spec/` 디렉토리에 스펙 문서 존재 (권장)
 - `_sdd/pr/spec_patch_draft.md` 존재 (권장, 필수 아님)
 - PR이 존재하는 GitHub 저장소
+- 로컬에서 코드/테스트를 실행할 경우 `_sdd/env.md`를 먼저 확인하고 실행 환경(예: conda, 환경변수, 필수 서비스)을 적용
 
 ## Input Sources
 
@@ -58,6 +59,7 @@ Report the model used at the beginning of the review.
 2. **스펙 패치 초안 (`_sdd/pr/spec_patch_draft.md`)**: PR에서 클레임한 변경사항 및 수용 기준
 3. **PR 데이터 (`gh` CLI)**: PR 메타데이터, diff, 커밋 정보
 4. **테스트 결과**: CI 상태 또는 로컬 테스트 실행 결과
+5. **실행환경 문서 (`_sdd/env.md`)**: 로컬 테스트/실행에 필요한 환경변수, conda 환경, 사전 실행 절차
 
 ## Output
 
@@ -77,6 +79,7 @@ Report the model used at the beginning of the review.
 3. `_sdd/pr/spec_patch_draft.md` 존재 확인
 4. PR 번호 확인 (자동 감지 또는 사용자 입력)
 5. `_sdd/pr/` 디렉토리 없으면 생성
+6. 로컬 테스트를 실행할 계획이면 `_sdd/env.md`를 확인하고 필요한 환경 설정 적용
 ```
 
 **패치 초안의 PR 번호 불일치 시:**
@@ -116,7 +119,7 @@ gh pr diff [PR_NUMBER] --name-only
 각 수용 기준(Acceptance Criterion)에 대해:
 1. PR diff에서 해당 구현 찾기 → 파일:라인 참조
 2. 관련 테스트 찾기 → 테스트 이름
-3. 테스트 통과 여부 확인 (CI 또는 로컬)
+3. 테스트 통과 여부 확인 (CI 또는 로컬; 로컬 실행 시 `_sdd/env.md` 지침 적용)
 4. 상태 판정:
    - ✓ 충족: 구현 존재 + 테스트 통과
    - ✗ 미충족: 구현 없음 또는 테스트 실패
@@ -326,6 +329,7 @@ gh pr diff [PR_NUMBER] --name-only
 | 이미 머지된 PR | 허용 (소급 리뷰), 머지 상태 명시 |
 | 대규모 PR (50+ 파일) | 스펙 관련 컴포넌트에 집중, 디렉토리별 요약 |
 | 테스트 없음 / CI 없음 | 테스트 섹션 "확인 불가"로 표시, 로컬 실행 안내 |
+| `_sdd/env.md` 없음/불완전 | 추정 실행 금지, 사용자에게 환경 확인 요청 후 진행 |
 
 ## Best Practices
 
