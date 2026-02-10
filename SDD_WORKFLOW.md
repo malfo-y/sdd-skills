@@ -1,7 +1,7 @@
 # 스펙 기반 개발 (SDD) 워크플로우 가이드
 
-**버전**: 1.2.0
-**날짜**: 2026-02-06
+**버전**: 1.2.1
+**날짜**: 2026-02-10
 
 Claude와 함께하는 소프트웨어 개발을 위한 SDD 스킬 종합 가이드
 
@@ -35,15 +35,17 @@ Claude와 함께하는 소프트웨어 개발을 위한 SDD 스킬 종합 가이
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
-### 10가지 SDD 스킬
+### 현재 제공 SDD 스킬(12개)
 
 | 스킬 | 트리거 | 목적 |
 |------|--------|------|
 | **spec-create** | "스펙 생성", "프로젝트 문서화" | 코드 분석 또는 초안에서 스펙 생성 |
+| **spec-draft** | "스펙 초안", "스펙 드래프트" | 스펙 업데이트 입력(user_draft.md) 초안 생성 (Spec Update Input 포맷) |
 | **spec-update-todo** | "스펙에 기능 추가", "스펙 업데이트" | 스펙에 새 요구사항 추가 |
 | **spec-update-done** | "완료 항목 반영", "스펙 동기화" | 구현 변경사항과 스펙 동기화 |
 | **spec-review** | "스펙 리뷰", "드리프트 점검" | 보조 검증용 strict 리뷰 (리포트 전용) |
 | **spec-summary** | "스펙 요약", "프로젝트 개요" | 스펙의 요약본 생성 (현황 파악용) |
+| **spec-rewrite** | "스펙 리라이트", "스펙 정리" | 긴/복잡한 스펙을 구조 재정리(파일 분할/부록 이동) + 이슈 리포트 |
 | **pr-spec-patch** | "PR 스펙 패치", "PR 리뷰 준비" | PR과 스펙 비교하여 패치 초안 생성 |
 | **pr-review** | "PR 리뷰", "PR 검증" | PR 구현을 스펙 대비 검증 및 판정 |
 | **implementation-plan** | "구현 계획 생성" | 스펙에서 실행 가능한 작업 생성 |
@@ -56,13 +58,18 @@ Claude와 함께하는 소프트웨어 개발을 위한 SDD 스킬 종합 가이
 project/
 ├── _sdd/
 │   ├── spec/
-│   │   ├── main.md                   # 메인 스펙 문서
-│   │   ├── user_spec.md              # 새 기능 요청 (입력)
-│   │   ├── _processed_user_spec.md   # 처리된 요청 (아카이브)
-│   │   └── prev/                      # 스펙 백업 (PREV_*.md)
+	│   │   ├── main.md                   # 메인 스펙 문서 (또는 <project>.md)
+	│   │   ├── user_spec.md              # 스펙 업데이트 입력(자유 형식 가능)
+	│   │   ├── user_draft.md             # 스펙 업데이트 입력(권장 포맷; spec-draft가 생성)
+	│   │   ├── _processed_user_spec.md   # 처리된 입력 (아카이브; spec-update-todo가 rename)
+	│   │   ├── _processed_user_draft.md  # 처리된 입력 (아카이브; spec-update-todo가 rename)
+	│   │   ├── SUMMARY.md                # 스펙 요약 (spec-summary)
+	│   │   ├── SPEC_REVIEW_REPORT.md     # 스펙 리뷰 리포트 (spec-review)
+	│   │   ├── DECISION_LOG.md           # (선택) 결정/근거 기록
+	│   │   └── prev/                      # 스펙 백업 (PREV_*.md)
 │   │
 │   ├── pr/
-│   │   ├── spec_patch_draft.md       # PR 기반 스펙 패치 초안
+	│   │   ├── spec_patch_draft.md       # PR 기반 스펙 패치 초안 (스펙 반영은 spec-update-todo로)
 │   │   ├── PR_REVIEW.md              # PR 리뷰 리포트
 │   │   └── prev/                      # PR 리포트 백업 (PREV_*.md)
 │   │
@@ -135,8 +142,9 @@ project/
 기획서나 요구사항 문서가 있을 때 사용:
 
 ```bash
-# 1. 초안 파일 생성
-_sdd/spec/user_spec.md 또는 사용자 지정 파일
+# 1. 초안/요구사항 입력 준비
+# - 간단히 적을 때: _sdd/spec/user_spec.md
+# - 권장 포맷으로 만들 때: /spec-draft  (=> _sdd/spec/user_draft.md 생성)
 
 # 2. 스펙 생성 요청
 "이 초안을 기반으로 스펙을 생성해줘"
@@ -365,9 +373,9 @@ implementation 스킬은 테스트 주도 개발(TDD)을 사용합니다:
 |------|------|
 | 더 나은 접근법 발견 | 진행 상황에 기록, 페이즈 후 스펙 업데이트 |
 | 새 요구사항 발견 | `/spec-update-todo`로 스펙에 추가 |
-| 계획된 기능 제거 | `/spec-update-done`로 스펙 업데이트 |
+| 계획된 기능 제거 | `/spec-update-todo`로 스펙 업데이트 |
 | API 변경 | 스펙의 컴포넌트 상세 업데이트 |
-| PR 생성 후 스펙 반영 | `/pr-spec-patch` 생성 → `/pr-review` 후 머지 → `/spec-update-done` |
+| PR 생성 후 스펙 반영 | `/pr-spec-patch` 생성 → `/pr-review` → (패치 초안을 입력으로) `/spec-update-todo` |
 | PR 머지 전 스펙 기반 검증 | `/pr-spec-patch` → `/pr-review`로 검증 후 머지 |
 | 결과가 이상하거나 모호함 | `/spec-review`로 보조 검증 (리포트 전용) |
 | 대규모 업데이트 직후 최종 점검 | `/spec-update-done` 완료 후 `/spec-review` 실행 권장 |
@@ -396,8 +404,12 @@ implementation 스킬은 테스트 주도 개발(TDD)을 사용합니다:
 | 파일 | 용도 | 처리 후 |
 |------|------|---------|
 | `_sdd/spec/user_spec.md` | 사용자 입력 (드래프트 스펙, 새 기능/요구사항 등) | → `_processed_user_spec.md` |
-| `_sdd/pr/spec_patch_draft.md` | PR 기반 스펙 패치 초안 | 머지 후 `/spec-update-done`로 반영 |
+| `_sdd/spec/user_draft.md` | 사용자 입력 (권장 포맷; Spec Update Input) | → `_processed_user_draft.md` |
+| `_sdd/pr/spec_patch_draft.md` | PR 기반 스펙 패치 초안 | 스펙 반영은 `/spec-update-todo`로 진행 |
 | `_sdd/implementation/user_input.md` | 구현 요청 | → `_processed_user_input.md` |
+
+> 참고: `_sdd/pr/spec_patch_draft.md`의 내용은 그대로 스펙에 자동 반영되지 않습니다.
+> 패치 내용을 `_sdd/spec/user_draft.md`(권장) 또는 `_sdd/spec/user_spec.md`로 옮긴 뒤 `/spec-update-todo`를 실행해 반영합니다.
 
 #### PREV 백업 저장 위치 규칙
 
@@ -541,10 +553,12 @@ _sdd/implementation/
 | 명령어 | 사용 시점 |
 |--------|----------|
 | `/spec-create` | 새 프로젝트 시작 또는 기존 코드 문서화 |
+| `/spec-draft` | 스펙 업데이트 입력(user_draft.md) 초안 생성 |
 | `/spec-update-todo` | 스펙에 새 기능/요구사항 추가 |
 | `/spec-update-done` | 구현 변경사항과 스펙 동기화 |
 | `/spec-review` | 선택적 보조 검증 (이상 징후/대규모 업데이트 후) |
 | `/spec-summary` | 스펙 현황 파악 및 요약본 생성 |
+| `/spec-rewrite` | 긴/복잡한 스펙 구조 재정리(파일 분할/부록 이동) |
 | `/pr-spec-patch` | PR과 스펙 비교하여 패치 초안 생성 |
 | `/pr-review` | PR 구현을 스펙/패치 초안 대비 검증 및 판정 |
 | `/implementation-plan` | 스펙에서 작업 생성 |
@@ -577,7 +591,10 @@ _sdd/implementation/
 |------|----------|
 | 메인 스펙 | `_sdd/spec/main.md` 또는 `_sdd/spec/<프로젝트>.md` |
 | 스펙 입력 | `_sdd/spec/user_spec.md` |
+| 스펙 입력(권장 포맷) | `_sdd/spec/user_draft.md` |
 | 스펙 요약 | `_sdd/spec/SUMMARY.md` |
+| 스펙 리뷰 리포트 | `_sdd/spec/SPEC_REVIEW_REPORT.md` |
+| 결정/근거 로그(선택) | `_sdd/spec/DECISION_LOG.md` |
 | PR 패치 초안 | `_sdd/pr/spec_patch_draft.md` |
 | PR 리뷰 리포트 | `_sdd/pr/PR_REVIEW.md` |
 | 구현 계획 (인덱스) | `_sdd/implementation/IMPLEMENTATION_PLAN.md` |
@@ -670,6 +687,12 @@ _sdd/implementation/
 - "SDD 생성"
 - "create a spec", "document the project"
 
+### spec-draft
+- "스펙 초안"
+- "스펙 드래프트"
+- "스펙 업데이트 입력 만들어줘"
+- "draft spec update input", "spec draft"
+
 ### spec-update-todo
 - "스펙에 기능 추가"
 - "스펙 업데이트"
@@ -695,6 +718,12 @@ _sdd/implementation/
 - "프로젝트 개요"
 - "현재 상태는"
 - "summarize spec", "spec summary", "show spec overview"
+
+### spec-rewrite
+- "스펙 리라이트"
+- "스펙 정리"
+- "스펙을 파일로 쪼개줘"
+- "rewrite spec", "refactor spec", "split spec"
 
 ### pr-spec-patch
 - "PR 스펙 패치"

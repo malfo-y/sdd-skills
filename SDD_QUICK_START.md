@@ -9,9 +9,12 @@
 | 스킬 | 트리거 | 용도 |
 |------|--------|------|
 | `/spec-create` | "스펙 생성" | 코드 분석 또는 초안에서 스펙 생성 |
+| `/spec-draft` | "스펙 초안" | 스펙 업데이트 입력(user_draft.md) 초안 생성 |
 | `/spec-update-todo` | "스펙에 기능 추가" | 새 기능/요구사항을 스펙에 추가 |
 | `/spec-update-done` | "스펙 동기화" | 구현 후 스펙과 코드 동기화 |
 | `/spec-review` | "스펙 리뷰", "드리프트 점검" | 선택적 보조 검증 (리포트 전용, 스펙 본문 미수정) |
+| `/spec-summary` | "스펙 요약" | 스펙 요약본 생성(현황 파악/온보딩) |
+| `/spec-rewrite` | "스펙 리라이트", "스펙 정리" | 너무 긴/복잡한 스펙을 구조 재정리(파일 분할/부록 이동) |
 | `/pr-spec-patch` | "PR 스펙 패치" | PR과 스펙 비교하여 패치 초안 생성 |
 | `/pr-review` | "PR 리뷰" | PR 구현을 스펙/패치 초안 대비 검증 및 판정 |
 | `/implementation-plan` | "구현 계획 생성" | 스펙에서 실행 가능한 작업 생성 |
@@ -52,6 +55,7 @@
 - `/spec-review`는 아래 경우에만 보조적으로 사용합니다:
   - 결과가 이상하거나 모호하다고 느낄 때
   - 대규모 업데이트를 `/spec-update-done`까지 완료한 뒤 최종 검증할 때
+  - 결과물: `_sdd/spec/SPEC_REVIEW_REPORT.md` (리포트만 생성)
 
 ---
 
@@ -91,8 +95,11 @@
 ### 6. PR 기반 스펙 패치 및 리뷰
 
 ```bash
-/pr-spec-patch → (대화로 정제) → /pr-review → (수정 후 재리뷰) → 머지 → /spec-update-done → (필요 시) /spec-review
+/pr-spec-patch → (대화로 정제) → /pr-review → (스펙 반영은 /spec-update-todo) → (필요 시) /spec-update-done → (필요 시) /spec-review
 ```
+
+**중요 규칙(스킬 기준)**: PR에서 나온 스펙 변경사항 반영은 **반드시** `/spec-update-todo`로 진행합니다.
+(`_sdd/pr/spec_patch_draft.md` 내용을 `_sdd/spec/user_draft.md` 또는 `_sdd/spec/user_spec.md`로 옮겨서 실행)
 
 ---
 
@@ -101,8 +108,14 @@
 ```
 _sdd/
 ├── spec/
-│   ├── apify_ig.md              # 메인 스펙
-│   ├── user_spec.md             # 사용자 입력
+│   ├── main.md                  # 메인 스펙 (또는 <project>.md)
+│   ├── user_spec.md             # 스펙 업데이트 입력(자유 형식 가능)
+│   ├── user_draft.md            # 스펙 업데이트 입력(권장 포맷; /spec-draft가 생성)
+│   ├── _processed_user_spec.md  # 처리된 입력 아카이브(/spec-update-todo가 rename)
+│   ├── _processed_user_draft.md # 처리된 입력 아카이브(/spec-update-todo가 rename)
+│   ├── SUMMARY.md               # 스펙 요약(/spec-summary)
+│   ├── SPEC_REVIEW_REPORT.md    # 스펙 리뷰 리포트(/spec-review)
+│   ├── DECISION_LOG.md          # (선택) 결정/근거 기록
 │   └── prev/                    # PREV_* 백업
 │
 ├── pr/
