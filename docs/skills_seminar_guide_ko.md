@@ -1,6 +1,6 @@
-# Spec / Implementation / PR 스킬 세미나 가이드
+# Spec / Implementation / PR 스킬 가이드
 
-이 문서는 팀 세미나에서 바로 설명할 수 있도록, 현재 저장소의 스킬들을 `spec`, `implementation`, `pr` 3개 그룹으로 나누어 기능과 역할을 정리한 문서입니다.
+이 문서는 현재 저장소의 스킬들을 `spec`, `implementation`, `pr` 3개 그룹으로 나누어 기능과 역할을 정리한 문서입니다.
 
 기준 문서:
 - `.claude/skills/*/SKILL.md`
@@ -307,7 +307,7 @@ pr-spec-patch -> pr-review -> (머지 후) spec-update-done
 
 ---
 
-## 6. 세미나에서 강조할 핵심 메시지
+## 6. 핵심 메시지
 
 ### 6-1. 각 그룹의 책임 경계
 
