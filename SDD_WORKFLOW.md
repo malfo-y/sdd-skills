@@ -1,7 +1,7 @@
 # 스펙 기반 개발 (SDD) 워크플로우 가이드
 
-**버전**: 1.2.1
-**날짜**: 2026-02-10
+**버전**: 1.3.0
+**날짜**: 2026-02-14
 
 Claude와 함께하는 소프트웨어 개발을 위한 SDD 스킬 종합 가이드
 
@@ -35,22 +35,43 @@ Claude와 함께하는 소프트웨어 개발을 위한 SDD 스킬 종합 가이
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
-### 현재 제공 SDD 스킬(12개)
+### 현재 제공 SDD 스킬(13개)
 
 | 스킬 | 트리거 | 목적 |
 |------|--------|------|
 | **spec-create** | "스펙 생성", "프로젝트 문서화" | 코드 분석 또는 초안에서 스펙 생성 |
-| **spec-draft** | "스펙 초안", "스펙 드래프트" | 스펙 업데이트 입력(user_draft.md) 초안 생성 (Spec Update Input 포맷) |
-| **spec-update-todo** | "스펙에 기능 추가", "스펙 업데이트" | 스펙에 새 요구사항 추가 |
+| **spec-draft** (레거시) | "스펙 초안", "스펙 드래프트" | 스펙 업데이트 입력(user_draft.md) 초안 생성 (Spec Update Input 포맷) |
+| **feature-draft** **(권장)** | "기능 초안", "feature draft" | **통합 스킬**: 스펙 패치 초안 + 구현 계획을 한 번에 생성 |
+| **spec-update-todo** (레거시) | "스펙에 기능 추가", "스펙 업데이트" | 스펙에 새 요구사항 추가 |
 | **spec-update-done** | "완료 항목 반영", "스펙 동기화" | 구현 변경사항과 스펙 동기화 |
 | **spec-review** | "스펙 리뷰", "드리프트 점검" | 보조 검증용 strict 리뷰 (리포트 전용) |
 | **spec-summary** | "스펙 요약", "프로젝트 개요" | 스펙의 요약본 생성 (현황 파악용) |
 | **spec-rewrite** | "스펙 리라이트", "스펙 정리" | 긴/복잡한 스펙을 구조 재정리(파일 분할/부록 이동) + 이슈 리포트 |
 | **pr-spec-patch** | "PR 스펙 패치", "PR 리뷰 준비" | PR과 스펙 비교하여 패치 초안 생성 |
 | **pr-review** | "PR 리뷰", "PR 검증" | PR 구현을 스펙 대비 검증 및 판정 |
-| **implementation-plan** | "구현 계획 생성" | 스펙에서 실행 가능한 작업 생성 |
+| **implementation-plan** (레거시) | "구현 계획 생성" | 스펙에서 실행 가능한 작업 생성 |
 | **implementation** | "계획 구현", "구현 시작" | TDD 방식으로 작업 실행 |
-| **implementation-review** | "구현 리뷰", "진행 상황 확인" | 계획 대비 구현 검증 |
+| **implementation-review** (레거시) | "구현 리뷰", "진행 상황 확인" | 계획 대비 구현 검증 |
+
+### 간소화된 워크플로우 (권장)
+
+`feature-draft`는 기존의 `spec-draft` + `spec-update-todo` + `implementation-plan`을 하나로 통합한 스킬입니다. 이를 통해 기능 추가 워크플로우가 **7단계에서 4단계**로 간소화됩니다:
+
+```
+spec-create → feature-draft → implementation → spec-update-done
+```
+
+| | 기존 워크플로우 (7단계) | 간소화된 워크플로우 (4단계) |
+|---|---|---|
+| 1단계 | spec-draft (초안 생성) | **spec-create** (스펙 생성/확인) |
+| 2단계 | spec-update-todo (스펙에 추가) | **feature-draft** (패치 초안 + 구현 계획) |
+| 3단계 | implementation-plan (계획 수립) | **implementation** (TDD 구현) |
+| 4단계 | implementation (구현) | **spec-update-done** (스펙 동기화) |
+| 5단계 | implementation-review (리뷰) | — |
+| 6단계 | spec-update-done (동기화) | — |
+| 7단계 | spec-review (검증) | — |
+
+> **참고**: `implementation` 스킬에 페이즈별 리뷰가 내장되어 있어 별도의 `implementation-review`가 불필요합니다. 기존 워크플로우는 세밀한 단계별 제어가 필요한 경우에 레거시로 사용할 수 있습니다.
 
 ### 디렉토리 구조
 
@@ -82,6 +103,10 @@ project/
 │   │   ├── TEST_SUMMARY.md            # 테스트 현황
 │   │   ├── user_input.md              # 구현 요청 (입력)
 │   │   └── prev/                      # 구현 문서 백업 (PREV_*.md)
+│   │
+│   ├── drafts/                          # feature-draft 출력
+│   │   ├── feature_draft_*.md           # 스펙 패치 + 구현 계획 통합 파일
+│   │   └── prev/                        # 아카이브
 │   │
 │   └── env.md                         # 환경 설정
 │
@@ -177,16 +202,28 @@ project/
 
 ### 구현 경로 선택
 
-기능의 복잡도와 상황에 따라 세 가지 경로 중 선택:
+기능의 복잡도와 상황에 따라 경로를 선택합니다:
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
 │                        구현 경로 선택                                 │
 │                                                                      │
 │  ┌───────────────────────────────────────────────────────────────┐  │
-│  │                  경로 A: Spec-First (전체 프로세스)              │  │
+│  │            경로 A: Feature Draft (권장 — 4단계)                 │  │
 │  │                                                               │  │
 │  │  복잡도: 높음 | 큰 기능, 아키텍처 변경, 문서화 중요             │  │
+│  │                                                               │  │
+│  │  spec-create → feature-draft → implementation → spec-update-done  │  │
+│  │       │            │                │                │        │  │
+│  │       ▼            ▼                ▼                ▼        │  │
+│  │  스펙 생성/    패치 초안 +     TDD로 구현       스펙 동기화     │  │
+│  │  확인          구현 계획                                      │  │
+│  └───────────────────────────────────────────────────────────────┘  │
+│                                                                      │
+│  ┌───────────────────────────────────────────────────────────────┐  │
+│  │        경로 A' (레거시): Spec-First (전체 7단계 프로세스)        │  │
+│  │                                                               │  │
+│  │  세밀한 단계별 제어가 필요할 때 사용                             │  │
 │  │                                                               │  │
 │  │  spec-update-todo → implementation-plan → implementation           │  │
 │  │       │              │                    │                   │  │
@@ -235,8 +272,9 @@ project/
 
 | 상황 | 권장 경로 | 이유 |
 |------|----------|------|
-| 새로운 대규모 기능 | A: Spec-First | 문서화 및 추적 중요 |
-| 아키텍처 변경 | A: Spec-First | 설계 결정 문서화 필요 |
+| 새로운 대규모 기능 | A: Feature Draft (권장) | 4단계로 문서화 및 구현 완료 |
+| 아키텍처 변경 | A: Feature Draft (권장) | 패치 초안 + 구현 계획을 한 번에 |
+| 세밀한 단계별 제어 | A' (레거시): Spec-First | 각 단계를 개별 확인 필요 시 |
 | 중간 규모 기능 | B: Direct Plan | 계획은 필요하나 스펙 업데이트는 나중에 |
 | 명확한 작은 기능 | B: Direct Plan | 계획 수립 후 빠른 구현 |
 | 버그 수정 | C: Simple | 바로 수정, 리뷰로 확인 |
@@ -267,19 +305,37 @@ vim _sdd/spec/user_spec.md
 # 2. 스펙 생성
 /spec-create
 
-# 3. 구현 계획 수립
-/implementation-plan
+# 3. 기능 초안 + 구현 계획 (통합)
+/feature-draft
 
 # 4. 구현 시작
 /implementation
+
+# 5. 스펙 동기화
+/spec-update-done
 ```
 
-#### 시나리오 3: 새 기능 추가 (Spec-First)
+#### 시나리오 3: 새 기능 추가 (Feature Draft — 권장)
+
+```bash
+# 1. 기능 초안 + 구현 계획 (통합)
+/feature-draft
+# 스펙 패치 초안(Part 1)과 구현 계획(Part 2)을 단일 파일로 생성
+
+# 2. 구현
+/implementation
+
+# 3. 스펙 동기화
+/spec-update-done
+```
+
+#### 시나리오 3': 새 기능 추가 (레거시: Spec-First)
+
+> 세밀한 단계별 제어가 필요한 경우에만 사용합니다.
 
 ```bash
 # 1. 스펙에 기능 추가
 /spec-update-todo
-# 또는 user_spec.md에 작성 후 /spec-update-todo
 
 # 2. 구현 계획 수립
 /implementation-plan
@@ -294,7 +350,6 @@ vim _sdd/spec/user_spec.md
 /spec-update-done
 
 # 6. (선택) 보조 검증 리뷰
-# 이상 징후가 있거나 변경 규모가 클 때
 /spec-review
 ```
 
@@ -372,8 +427,8 @@ implementation 스킬은 테스트 주도 개발(TDD)을 사용합니다:
 | 상황 | 조치 |
 |------|------|
 | 더 나은 접근법 발견 | 진행 상황에 기록, 페이즈 후 스펙 업데이트 |
-| 새 요구사항 발견 | `/spec-update-todo`로 스펙에 추가 |
-| 계획된 기능 제거 | `/spec-update-todo`로 스펙 업데이트 |
+| 새 요구사항 발견 | `/feature-draft`로 통합 초안 생성 (또는 레거시: `/spec-update-todo`로 스펙에 추가) |
+| 계획된 기능 제거 | `/feature-draft`로 패치 초안 생성 (또는 레거시: `/spec-update-todo`로 스펙 업데이트) |
 | API 변경 | 스펙의 컴포넌트 상세 업데이트 |
 | PR 생성 후 스펙 반영 | `/pr-spec-patch` 생성 → `/pr-review` → (패치 초안을 입력으로) `/spec-update-todo` |
 | PR 머지 전 스펙 기반 검증 | `/pr-spec-patch` → `/pr-review`로 검증 후 머지 |
@@ -461,6 +516,8 @@ _sdd/implementation/
 ## 4. 리뷰 프로세스
 
 ### 구현 리뷰 (Implementation Review)
+
+> **참고**: `implementation` 스킬에 페이즈별 리뷰가 내장되어 있으므로, 간소화된 워크플로우(경로 A)에서는 별도의 `/implementation-review` 실행이 선택 사항입니다. 레거시 워크플로우(경로 A')나 세밀한 검증이 필요한 경우에 사용합니다.
 
 **사용 시점**: 작업 또는 페이즈 완료 후
 
@@ -553,21 +610,28 @@ _sdd/implementation/
 | 명령어 | 사용 시점 |
 |--------|----------|
 | `/spec-create` | 새 프로젝트 시작 또는 기존 코드 문서화 |
-| `/spec-draft` | 스펙 업데이트 입력(user_draft.md) 초안 생성 |
-| `/spec-update-todo` | 스펙에 새 기능/요구사항 추가 |
+| `/spec-draft` (레거시) | 스펙 업데이트 입력(user_draft.md) 초안 생성 |
+| `/feature-draft` **(권장)** | 스펙 패치 초안 + 구현 계획 통합 생성 |
+| `/spec-update-todo` (레거시) | 스펙에 새 기능/요구사항 추가 |
 | `/spec-update-done` | 구현 변경사항과 스펙 동기화 |
 | `/spec-review` | 선택적 보조 검증 (이상 징후/대규모 업데이트 후) |
 | `/spec-summary` | 스펙 현황 파악 및 요약본 생성 |
 | `/spec-rewrite` | 긴/복잡한 스펙 구조 재정리(파일 분할/부록 이동) |
 | `/pr-spec-patch` | PR과 스펙 비교하여 패치 초안 생성 |
 | `/pr-review` | PR 구현을 스펙/패치 초안 대비 검증 및 판정 |
-| `/implementation-plan` | 스펙에서 작업 생성 |
+| `/implementation-plan` (레거시) | 스펙에서 작업 생성 |
 | `/implementation` | TDD로 작업 실행 |
-| `/implementation-review` | 진행 상황 확인 및 기준 검증 |
+| `/implementation-review` (레거시) | 진행 상황 확인 및 기준 검증 |
 
 ### 경로별 워크플로우 요약
 
-#### 경로 A: Spec-First (전체)
+#### 경로 A: Feature Draft (권장 — 4단계)
+
+```bash
+/spec-create → /feature-draft → /implementation → /spec-update-done
+```
+
+#### 경로 A' (레거시): Spec-First (7단계)
 
 ```bash
 /spec-update-todo → /implementation-plan → /implementation → /implementation-review → /spec-update-done → (필요 시) /spec-review
@@ -627,50 +691,40 @@ _sdd/implementation/
 │              │ spec-create │                  │                     │
 │              └──────┬──────┘                  │                     │
 │                     │                         │                     │
-│                     ▼                         │                     │
-│              ┌─────────────┐                  │                     │
-│              │ spec-update-todo │←─────────────────┤                     │
-│              └──────┬──────┘                  │                     │
-│                     │                         │                     │
-│         ┌───────────┼───────────┐             │                     │
-│         │           │           │             │                     │
-│         ▼           ▼           ▼             ▼                     │
-│   ┌──────────┐ ┌──────────┐ ┌────────────────────┐                 │
-│   │Spec-First│ │Direct    │ │     Simple         │                 │
-│   │ 경로 A   │ │Plan 경로B│ │     경로 C         │                 │
-│   └────┬─────┘ └────┬─────┘ └─────────┬──────────┘                 │
-│        │            │                 │                             │
-│        └────────────┼─────────────────┘                             │
-│                     ▼                                               │
-│           ┌─────────────────┐                                       │
-│           │implementation-  │                                       │
-│           │     plan        │ (경로 C는 건너뜀)                      │
-│           └────────┬────────┘                                       │
-│                    │                                                │
-│                    ▼                                                │
-│           ┌─────────────────┐                                       │
-│           │ implementation  │                                       │
-│           │    (TDD)        │                                       │
-│           └────────┬────────┘                                       │
-│                    │                                                │
-│                    ▼                                                │
-│           ┌─────────────────┐                                       │
-│           │implementation-  │                                       │
-│           │    review       │                                       │
-│           └────────┬────────┘                                       │
-│                    │                                                │
-│                    ▼                                                │
-│           ┌─────────────────┐                                       │
-│           │  spec-update-done    │────────→ (사이클 반복)                 │
-│           └─────────────────┘                                       │
+│         ┌───────────┼─────────────────────────┤                     │
+│         │           │                         │                     │
+│         ▼           ▼                         ▼                     │
+│   ┌──────────┐ ┌──────────┐           ┌────────────────────┐       │
+│   │Feature   │ │Direct    │           │     Simple         │       │
+│   │Draft(권장)│ │Plan 경로B│           │     경로 C         │       │
+│   │ 경로 A   │ └────┬─────┘           └─────────┬──────────┘       │
+│   └────┬─────┘      │                          │                   │
+│        │            │                          │                   │
+│        ▼            ▼                          │                   │
+│   ┌──────────┐ ┌─────────────────┐             │                   │
+│   │feature-  │ │implementation-  │             │                   │
+│   │  draft   │ │     plan        │             │                   │
+│   └────┬─────┘ └────────┬────────┘             │                   │
+│        │                │                      │                   │
+│        └────────┬───────┘                      │                   │
+│                 ▼                               │                   │
+│        ┌─────────────────┐                     │                   │
+│        │ implementation  │ ←───────────────────┘                   │
+│        │    (TDD)        │                                          │
+│        └────────┬────────┘                                          │
+│                 │                                                   │
+│                 ▼                                                   │
+│        ┌─────────────────┐                                          │
+│        │  spec-update-done    │────────→ (사이클 반복)                    │
+│        └─────────────────┘                                          │
 │                                                                      │
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
 ### 모범 사례
 
-1. **Spec First (가능하면)**: 큰 구현 전에 항상 스펙 업데이트
-2. **자주 리뷰**: 각 페이즈 후 implementation-review 실행
+1. **Feature Draft First (가능하면)**: 큰 구현 전에 `/feature-draft`로 패치 초안 + 구현 계획을 한 번에 생성
+2. **자주 리뷰**: `implementation` 스킬에 페이즈별 리뷰가 내장되어 있으며, 필요 시 `/implementation-review`로 추가 검증
 3. **큰 계획은 phase 분할**: `IMPLEMENTATION_PLAN.md`는 인덱스/요약으로 두고 `IMPLEMENTATION_PLAN_PHASE_<n>.md`로 분할 (진행 리포트도 `IMPLEMENTATION_PROGRESS_PHASE_<n>.md` 사용)
 4. **동기화 유지**: 기본은 spec-update-done, 이상 징후/대규모 변경 후에는 spec-review로 보조 검증
 5. **히스토리 보존**: 프로젝트 안정화 전까지 `prev/` 아래 PREV_* 파일 삭제 금지
@@ -687,13 +741,21 @@ _sdd/implementation/
 - "SDD 생성"
 - "create a spec", "document the project"
 
-### spec-draft
+### spec-draft (레거시)
 - "스펙 초안"
 - "스펙 드래프트"
 - "스펙 업데이트 입력 만들어줘"
 - "draft spec update input", "spec draft"
 
-### spec-update-todo
+### feature-draft (권장)
+- "기능 초안", "기능 계획"
+- "feature draft", "feature plan"
+- "초안과 계획", "draft and plan"
+- "feature spec and plan"
+- "기능 스펙과 계획"
+
+### spec-update-todo (레거시)
+> 간소화된 워크플로우에서는 `feature-draft`가 이 역할을 대체합니다.
 - "스펙에 기능 추가"
 - "스펙 업데이트"
 - "요구사항 추가"
@@ -739,7 +801,8 @@ _sdd/implementation/
 - "PR 승인 검토"
 - "review PR", "review PR against spec", "PR review"
 
-### implementation-plan
+### implementation-plan (레거시)
+> 간소화된 워크플로우에서는 `feature-draft`가 구현 계획을 포함합니다.
 - "구현 계획 생성"
 - "구현 계획 만들어줘"
 - "계획 수립"
@@ -751,7 +814,8 @@ _sdd/implementation/
 - "작업 실행"
 - "implement the plan", "start implementation"
 
-### implementation-review
+### implementation-review (레거시)
+> `implementation` 스킬에 페이즈별 리뷰가 내장되어 있어 별도 실행은 선택 사항입니다.
 - "구현 리뷰"
 - "진행 상황 확인"
 - "뭐가 완료됐어?"
