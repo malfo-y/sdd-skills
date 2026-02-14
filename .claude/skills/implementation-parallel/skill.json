@@ -1,0 +1,6 @@
+{
+  "name": "implementation-parallel",
+  "description": "Use this skill when the user wants to execute an implementation plan with parallel sub-agents, or says \"implement parallel\", \"parallel implementation\", \"병렬 구현\", \"병렬로 구현\", \"implement the plan in parallel\". Requires a plan with Target Files for optimal parallel execution.",
+  "instruction_file": "SKILL.md",
+  "version": "1.0.0"
+}

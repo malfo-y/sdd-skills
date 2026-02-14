@@ -1,0 +1,4 @@
+interface:
+  display_name: "Feature Draft Parallel"
+  short_description: "Draft parallel-ready spec patch and implementation plan"
+  default_prompt: "Use the feature-draft-parallel workflow and follow its SKILL.md exactly."

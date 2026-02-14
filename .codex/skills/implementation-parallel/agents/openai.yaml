@@ -1,0 +1,4 @@
+interface:
+  display_name: "Implementation Parallel"
+  short_description: "Execute implementation plans with conflict-aware parallel groups"
+  default_prompt: "Use the implementation-parallel workflow and follow its SKILL.md exactly."
