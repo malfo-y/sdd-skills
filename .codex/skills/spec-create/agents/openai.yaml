@@ -1,0 +1,4 @@
+interface:
+  display_name: "Spec Create"
+  short_description: "Help with Spec Create SDD workflows"
+  default_prompt: "Use the spec-create workflow and follow its SKILL.md exactly."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Implementation"
+  short_description: "Help with Implementation SDD workflows"
+  default_prompt: "Use the implementation workflow and follow its SKILL.md exactly."

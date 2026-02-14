@@ -1,0 +1,4 @@
+interface:
+  display_name: "Spec Rewrite"
+  short_description: "Help with Spec Rewrite SDD workflows"
+  default_prompt: "Use the spec-rewrite workflow and follow its SKILL.md exactly."

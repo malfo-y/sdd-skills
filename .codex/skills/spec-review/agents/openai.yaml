@@ -1,0 +1,4 @@
+interface:
+  display_name: "Spec Review"
+  short_description: "Help with Spec Review SDD workflows"
+  default_prompt: "Use the spec-review workflow and follow its SKILL.md exactly."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Pr Review"
+  short_description: "Help with Pr Review SDD workflows"
+  default_prompt: "Use the pr-review workflow and follow its SKILL.md exactly."

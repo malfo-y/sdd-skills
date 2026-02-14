@@ -1,0 +1,4 @@
+interface:
+  display_name: "Spec Update Done"
+  short_description: "Help with Spec Update Done SDD workflows"
+  default_prompt: "Use the spec-update-done workflow and follow its SKILL.md exactly."

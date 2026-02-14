@@ -1,0 +1,4 @@
+interface:
+  display_name: "Feature Draft"
+  short_description: "Draft spec patch and implementation plan"
+  default_prompt: "Use the feature-draft workflow and follow its SKILL.md exactly."
