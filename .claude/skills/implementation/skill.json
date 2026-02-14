@@ -1,0 +1,6 @@
+{
+  "name": "implementation",
+  "description": "Use this skill when the user wants to execute an implementation plan, start implementing tasks from a plan, work through a development roadmap, or says \"implement the plan\", \"start implementation\", \"execute the plan\", or \"work on the tasks\".",
+  "instruction_file": "SKILL.md",
+  "version": "1.2.0"
+}

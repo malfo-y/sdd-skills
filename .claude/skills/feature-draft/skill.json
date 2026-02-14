@@ -1,0 +1,6 @@
+{
+  "name": "feature-draft",
+  "description": "This skill should be used when the user asks to \"feature draft\", \"draft feature\", \"feature plan\", \"plan feature\", or wants to combine requirements gathering, spec patch drafting, and implementation planning into a single workflow.",
+  "instruction_file": "SKILL.md",
+  "version": "1.0.0"
+}

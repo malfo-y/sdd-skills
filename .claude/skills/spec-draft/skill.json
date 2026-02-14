@@ -1,0 +1,6 @@
+{
+  "name": "spec-draft",
+  "description": "This skill should be used when the user asks to \"draft spec\", \"create spec draft\", \"write requirements\", \"collect requirements\", \"spec draft\", or wants to have a conversation to gather and document feature requests, improvements, or bug reports before updating the main spec.",
+  "instruction_file": "SKILL.md",
+  "version": "1.0.0"
+}
