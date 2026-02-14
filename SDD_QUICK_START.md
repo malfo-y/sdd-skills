@@ -10,6 +10,7 @@
 |------|--------|------|
 | `/spec-create` | "스펙 생성" | 코드 분석 또는 초안에서 스펙 생성 |
 | `/spec-draft` | "스펙 초안" | 스펙 업데이트 입력(user_draft.md) 초안 생성 |
+| `/feature-draft` | "기능 초안", "feature draft" | **통합 스킬**: 스펙 패치 초안 + 구현 계획을 한 번에 생성 |
 | `/spec-update-todo` | "스펙에 기능 추가" | 새 기능/요구사항을 스펙에 추가 |
 | `/spec-update-done` | "스펙 동기화" | 구현 후 스펙과 코드 동기화 |
 | `/spec-review` | "스펙 리뷰", "드리프트 점검" | 선택적 보조 검증 (리포트 전용, 스펙 본문 미수정) |
@@ -46,6 +47,7 @@
 | 경로 | 복잡도 | 사용 시점 | 워크플로우 |
 |------|--------|----------|-----------|
 | **A: Spec-First** | 높음 | 큰 기능, 아키텍처 변경 | spec-update-todo → plan → impl → review → spec-update-done |
+| **A': Feature Draft** | 높음 | 큰 기능 (토큰 절약) | **feature-draft** → (spec-update-todo) → impl → review → spec-update-done |
 | **B: Direct Plan** | 중간 | 명확한 중간 규모 기능 | 입력 → plan → impl → review → (선택) spec-update-done |
 | **C: Simple** | 낮음 | 버그 수정, 작은 기능 | 입력 → 직접 구현 → review |
 
@@ -79,6 +81,15 @@
 ```bash
 /spec-update-todo → /implementation-plan → /implementation → /implementation-review → /spec-update-done → (필요 시) /spec-review
 ```
+
+### 3'. 새 기능 추가 (Feature Draft - 토큰 절약)
+
+```bash
+/feature-draft → (선택: /spec-update-todo로 패치 적용) → /implementation → /implementation-review → /spec-update-done
+```
+
+> `feature-draft`는 `spec-draft` + `spec-update-todo` + `implementation-plan`을 하나로 합친 스킬입니다.
+> 스펙 패치 초안(Part 1)과 구현 계획(Part 2)을 단일 파일로 출력합니다.
 
 ### 4. 중간 규모 기능 (Direct Plan)
 
@@ -130,6 +141,10 @@ _sdd/
 │   ├── user_input.md            # 구현 요청 (입력)
 │   └── prev/                    # PREV_* 백업
 │
+├── drafts/                      # feature-draft 출력
+│   ├── feature_draft_*.md       # 스펙 패치 + 구현 계획 통합 파일
+│   └── prev/                    # 아카이브
+│
 └── env.md                       # 환경 설정
 ```
 
@@ -155,8 +170,9 @@ _sdd/
 
 | 상황 | 권장 경로 |
 |------|----------|
-| 새로운 대규모 기능 | A: Spec-First |
-| 아키텍처 변경 | A: Spec-First |
+| 새로운 대규모 기능 | A: Spec-First 또는 A': Feature Draft |
+| 아키텍처 변경 | A: Spec-First 또는 A': Feature Draft |
+| 토큰 절약이 중요할 때 | A': Feature Draft |
 | 중간 규모 기능 | B: Direct Plan |
 | 버그 수정 | C: Simple |
 | 긴급 핫픽스 | C: Simple |

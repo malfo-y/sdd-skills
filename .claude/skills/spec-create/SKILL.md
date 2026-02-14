@@ -9,6 +9,24 @@ version: 1.0.0
 Create and manage Software Design Description (SDD) spec documents for projects. Spec documents provide comprehensive technical documentation including goals, architecture, components, and usage examples.
 Use Korean (한국어) for the spec document.
 
+## Simplified Workflow
+
+This skill is **Step 1 of 4** in the simplified SDD workflow:
+
+```
+spec (this) → feature-draft → implementation → spec-update-done
+```
+
+| Step | Skill | Purpose |
+|------|-------|---------|
+| **1** | **spec-create** | Create the initial spec document |
+| 2 | feature-draft | Draft feature spec patch + implementation plan |
+| 3 | implementation | Execute the implementation plan (TDD) |
+| 4 | spec-update-done | Sync spec with actual code |
+
+> **Previous workflow** (7 steps): spec → spec-draft → spec-update-todo → implementation-plan → implementation → implementation-review → spec-update-done
+> **New workflow** (4 steps): spec → feature-draft → implementation → spec-update-done
+
 ## Overview
 
 Spec documents are stored in the `_sdd/spec/` directory within the project root. They follow a standardized structure to ensure consistency and completeness across different projects.
@@ -251,6 +269,6 @@ Save spec documents to:
 ## Integration with Other Skills
 
 This skill works well with:
-- **implementation-plan**: Create implementation plan from spec
+- **feature-draft**: Draft feature spec patch + implementation plan (next step in simplified workflow)
 - **implementation**: Implement features based on spec
-- **implementation-review**: Review implementation against spec
+- **spec-update-done**: Sync spec with actual code after implementation

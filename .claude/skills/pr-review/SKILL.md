@@ -4,33 +4,33 @@ description: This skill should be used when the user asks to "review PR", "PR re
 version: 1.0.0
 ---
 
-# PR Review - 스펙 기반 PR 검증 및 판정
+# PR Review - Spec-Based PR Verification and Verdict
 
-PR 구현을 원본 스펙과 스펙 패치 초안 대비 검증하여 구조화된 리뷰 리포트(`_sdd/pr/PR_REVIEW.md`)를 생성합니다.
+Verifies PR implementation against the original spec and spec patch draft, then generates a structured review report (`_sdd/pr/PR_REVIEW.md`).
 
 ## Overview
 
-이 스킬은 PR의 구현 내용을 현재 스펙 문서(`_sdd/spec/`)와 스펙 패치 초안(`_sdd/pr/spec_patch_draft.md`)을 기준으로 검증하여, 수용 기준 충족 여부, 스펙 준수 상태, 갭 분석 결과를 포함한 구조화된 리뷰 리포트를 생성합니다. 최종 판정(Approve / Request Changes / Needs Discussion)을 제공합니다.
+This skill verifies PR implementation against the current spec documents (`_sdd/spec/`) and the spec patch draft (`_sdd/pr/spec_patch_draft.md`), producing a structured review report that includes acceptance criteria fulfillment, spec compliance status, gap analysis results, and a final verdict (Approve / Request Changes / Needs Discussion).
 
-## 하드 룰: 이 스킬은 스펙을 직접 수정하지 않습니다 (중요)
+## Hard Rule: This skill does NOT modify specs (IMPORTANT)
 
-- `_sdd/spec/` 아래의 스펙 파일은 **절대** 생성/수정/삭제하지 않습니다.
-- 이 스킬은 오직 리뷰 리포트(`_sdd/pr/PR_REVIEW.md`)만 생성합니다.
-- 스펙 수정이 필요하면 리포트에 "스펙 업데이트 필요 항목"으로만 기록하고, 실제 반영은 `/spec-update-todo`로 진행하도록 안내합니다.
+- Spec files under `_sdd/spec/` are **never** created/modified/deleted.
+- This skill only produces the review report (`_sdd/pr/PR_REVIEW.md`).
+- If spec updates are needed, they are recorded in the report as "Items Requiring Spec Update" and the user is directed to use `/spec-update-todo` for actual changes.
 
 ## Workflow Position
 
 ```
-implementation → PR → pr-spec-patch → pr-review → 승인/수정 → spec-update-todo
+implementation → PR → pr-spec-patch → pr-review → approve/revise → spec-update-todo
                           ↑              ↑↓
-                     현재 스펙       검증 및 판정
+                     current spec   verification & verdict
                   (_sdd/spec/)     (_sdd/pr/PR_REVIEW.md)
 ```
 
 ## Language
 
-Use Korean (한국어) for all communications with the user.
-모든 내용은 한국어로 작성합니다.
+- **Write in Korean**: All review report output must be written in Korean.
+- Follow the spec's language: if the spec is in Korean, the review should also be in Korean.
 
 ## LLM Model to use
 
@@ -39,149 +39,149 @@ Report the model used at the beginning of the review.
 
 ## When to Use This Skill
 
-- PR 생성 후 머지 전 검증
-- 스펙 관점에서 PR 구현 리뷰
-- 패치 초안의 수용 기준 클레임 검증
-- 스펙 준수 확인 및 위반 감지
-- 이미 머지된 PR에 대한 소급 리뷰
+- Post-PR, pre-merge verification
+- Reviewing PR implementation from a spec perspective
+- Verifying acceptance criteria claims in the patch draft
+- Checking spec compliance and detecting violations
+- Retroactive review of already-merged PRs
 
 ## Prerequisites
 
-- `gh` CLI 인증 완료 (`gh auth status`로 확인)
-- `_sdd/spec/` 디렉토리에 스펙 문서 존재 (권장)
-- `_sdd/pr/spec_patch_draft.md` 존재 (권장, 필수 아님)
-- PR이 존재하는 GitHub 저장소
-- 로컬에서 코드/테스트를 실행할 경우 `_sdd/env.md`를 먼저 확인하고 실행 환경(예: conda, 환경변수, 필수 서비스)을 적용
+- `gh` CLI authenticated (`gh auth status` to verify)
+- Spec documents exist in `_sdd/spec/` directory (recommended)
+- `_sdd/pr/spec_patch_draft.md` exists (recommended, not required)
+- GitHub repository with an existing PR
+- If running code/tests locally, check `_sdd/env.md` first and apply the execution environment (e.g., conda, env vars, required services)
 
 ## Input Sources
 
-1. **현재 스펙 (`_sdd/spec/`)**: 기존 스펙 요구사항 및 아키텍처 기준
-2. **스펙 패치 초안 (`_sdd/pr/spec_patch_draft.md`)**: PR에서 클레임한 변경사항 및 수용 기준
-3. **PR 데이터 (`gh` CLI)**: PR 메타데이터, diff, 커밋 정보
-4. **테스트 결과**: CI 상태 또는 로컬 테스트 실행 결과
-5. **실행환경 문서 (`_sdd/env.md`)**: 로컬 테스트/실행에 필요한 환경변수, conda 환경, 사전 실행 절차
+1. **Current spec (`_sdd/spec/`)**: Existing spec requirements and architecture baseline
+2. **Spec patch draft (`_sdd/pr/spec_patch_draft.md`)**: Claimed changes and acceptance criteria from the PR
+3. **PR data (`gh` CLI)**: PR metadata, diff, commit information
+4. **Test results**: CI status or local test execution results
+5. **Environment docs (`_sdd/env.md`)**: Environment variables, conda environments, pre-execution procedures needed for local testing
 
 ## Output
 
-**파일 위치**: `_sdd/pr/PR_REVIEW.md`
+**File location**: `_sdd/pr/PR_REVIEW.md`
 
-**형식**: 판정(Verdict) + 메트릭 요약 + 수용 기준 검증 + 스펙 준수 검증 + 갭 분석 + 권장 사항
+**Format**: Verdict + metrics summary + acceptance criteria verification + spec compliance verification + gap analysis + recommendations
 
 ## Process
 
-### Mode 1: Preferred (패치 초안 있음)
+### Mode 1: Preferred (patch draft available)
 
-#### Step 1: 사전 조건 확인
-
-```
-1. `gh auth status` 실행하여 인증 상태 확인
-2. `_sdd/spec/` 디렉토리에서 스펙 파일 탐색
-3. `_sdd/pr/spec_patch_draft.md` 존재 확인
-4. PR 번호 확인 (자동 감지 또는 사용자 입력)
-5. `_sdd/pr/` 디렉토리 없으면 생성
-6. 로컬 테스트를 실행할 계획이면 `_sdd/env.md`를 확인하고 필요한 환경 설정 적용
-```
-
-**패치 초안의 PR 번호 불일치 시:**
-- 경고: "패치 초안이 다른 PR(#X)에 대한 것입니다."
-- 패치 초안 무시하고 degraded mode 실행, 또는 `/pr-spec-patch` 재실행 권장
-
-#### Step 2: 컨텍스트 로드
+#### Step 1: Verify prerequisites
 
 ```
-1. 현재 스펙 파일 읽기 (여러 파일이면 AskUserQuestion으로 선택)
-2. 패치 초안 읽기 → 수용 기준(Acceptance Criteria) 추출
-3. PR 메타데이터 수집 (gh pr view)
-4. PR diff 수집 (gh pr diff)
+1. Run `gh auth status` to check authentication
+2. Search for spec files in `_sdd/spec/` directory
+3. Verify `_sdd/pr/spec_patch_draft.md` exists
+4. Determine PR number (auto-detect or user input)
+5. Create `_sdd/pr/` directory if it doesn't exist
+6. If planning to run tests locally, check `_sdd/env.md` and apply required environment settings
 ```
 
-PR 데이터 수집 명령어는 `pr-spec-patch/references/gh-commands.md` 참조:
+**When patch draft PR number doesn't match:**
+- Warning: "The patch draft is for a different PR (#X)."
+- Ignore the patch draft and run in degraded mode, or recommend re-running `/pr-spec-patch`
+
+#### Step 2: Load context
+
+```
+1. Read current spec files (if multiple, use AskUserQuestion to select)
+2. Read patch draft → extract Acceptance Criteria
+3. Collect PR metadata (gh pr view)
+4. Collect PR diff (gh pr diff)
+```
+
+See `pr-spec-patch/references/gh-commands.md` for PR data collection commands:
 
 ```bash
-# PR 번호 자동 감지
+# Auto-detect PR number
 gh pr view --json number --jq '.number'
 
-# PR 메타데이터
+# PR metadata
 gh pr view [PR_NUMBER] --json title,body,author,state,url,additions,deletions,changedFiles,headRefName,baseRefName,commits,comments,reviews
 
 # PR diff
 gh pr diff [PR_NUMBER]
 
-# 변경 파일 목록
+# Changed files list
 gh pr diff [PR_NUMBER] --name-only
 ```
 
-#### Step 3: 수용 기준 검증
+#### Step 3: Acceptance criteria verification
 
-패치 초안의 각 Feature/Improvement/Bug Fix에 대해:
-
-```
-각 수용 기준(Acceptance Criterion)에 대해:
-1. PR diff에서 해당 구현 찾기 → 파일:라인 참조
-2. 관련 테스트 찾기 → 테스트 이름
-3. 테스트 통과 여부 확인 (CI 또는 로컬; 로컬 실행 시 `_sdd/env.md` 지침 적용)
-4. 상태 판정:
-   - ✓ 충족: 구현 존재 + 테스트 통과
-   - ✗ 미충족: 구현 없음 또는 테스트 실패
-   - △ 부분 충족: 구현은 있으나 테스트 없음, 또는 부분적 구현
-```
-
-#### Step 4: 스펙 준수 검증
+For each Feature/Improvement/Bug Fix in the patch draft:
 
 ```
-1. 기존 스펙의 주요 요구사항 목록 추출
-2. PR 변경사항이 기존 요구사항을 위반하는지 확인
-3. Breaking changes 식별
-4. API 계약 변경 확인
+For each Acceptance Criterion:
+1. Find the corresponding implementation in the PR diff → file:line reference
+2. Find related tests → test name
+3. Verify test pass status (CI or local; apply `_sdd/env.md` instructions for local execution)
+4. Determine status:
+   - ✓ Met: Implementation exists + tests pass
+   - ✗ Not met: No implementation or test failure
+   - △ Partially met: Implementation exists but no tests, or partial implementation
 ```
 
-#### Step 5: 갭 분석
-
-세 가지 관점에서 갭 분석:
-
-**(a) 패치 초안 vs PR 구현:**
-- 패치에서 클레임했으나 PR에 미구현된 항목
-- PR에 있으나 패치에 미기재된 변경사항
-
-**(b) 테스트 갭:**
-- 수용 기준 중 테스트되지 않은 항목
-- 실패하는 테스트
-
-**(c) 문서 갭:**
-- 새 설정/환경변수가 문서화되지 않은 항목
-- API 변경사항이 문서화되지 않은 항목
-
-#### Step 6: 판정 결정
-
-| 판정 | 조건 |
-|------|------|
-| **APPROVE** | 모든 수용 기준 충족 + 스펙 위반 없음 + 모든 테스트 통과 |
-| **REQUEST CHANGES** | 중요 수용 기준 미충족 / 스펙 위반 / 테스트 실패 / 보안 이슈 |
-| **NEEDS DISCUSSION** | 의도적 스펙 변경 / 설계 트레이드오프 / 스코프 모호성 / 새로운 아키텍처 결정 필요 |
-
-#### Step 7: 리포트 생성
-
-1. 기존 `PR_REVIEW.md`가 있으면 `_sdd/pr/prev/PREV_PR_REVIEW_<timestamp>.md`로 아카이브 (`_sdd/pr/prev/` 없으면 생성)
-2. 아래 [Output Format](#output-format) 형식으로 `_sdd/pr/PR_REVIEW.md` 생성
-3. 사용자에게 요약 제시 및 다음 단계 안내
-
-### Mode 2: Degraded (패치 초안 없음)
-
-패치 초안이 없는 경우 degraded mode로 실행:
+#### Step 4: Spec compliance verification
 
 ```
-경고 메시지:
-"패치 초안 없이 리뷰합니다. `/pr-spec-patch` 실행 후 다시 리뷰하면 더 정확한 결과를 얻을 수 있습니다."
+1. Extract the list of key requirements from the existing spec
+2. Check whether PR changes violate existing requirements
+3. Identify breaking changes
+4. Check for API contract changes
 ```
 
-**차이점:**
-- Step 2: 패치 초안 로드 건너뜀
-- Step 3: 수용 기준을 PR diff에서 추론 (커밋 메시지, PR 설명 기반)
-- Step 5: 갭 분석에서 패치 vs PR 비교 불가 → PR vs 스펙만 비교
-- 리포트의 "Patch Draft" 필드: "Not Found"
-- 전체적으로 낮은 확신도 명시
+#### Step 5: Gap analysis
 
-나머지 Step 4, 6, 7은 동일하게 수행.
+Three-perspective gap analysis:
+
+**(a) Patch draft vs PR implementation:**
+- Items claimed in the patch but not implemented in the PR
+- Changes in the PR but not listed in the patch
+
+**(b) Test gaps:**
+- Acceptance criteria without tests
+- Failing tests
+
+**(c) Documentation gaps:**
+- New settings/environment variables not documented
+- API changes not documented
+
+#### Step 6: Verdict decision
+
+| Verdict | Conditions |
+|---------|-----------|
+| **APPROVE** | All acceptance criteria met + no spec violations + all tests pass |
+| **REQUEST CHANGES** | Critical acceptance criteria not met / spec violation / test failure / security issue |
+| **NEEDS DISCUSSION** | Intentional spec change / design trade-off / scope ambiguity / new architectural decision needed |
+
+#### Step 7: Report generation
+
+1. If existing `PR_REVIEW.md` exists, archive to `_sdd/pr/prev/PREV_PR_REVIEW_<timestamp>.md` (create `_sdd/pr/prev/` if needed)
+2. Generate `_sdd/pr/PR_REVIEW.md` using the [Output Format](#output-format) below
+3. Present summary to user and guide next steps
+
+### Mode 2: Degraded (no patch draft)
+
+When no patch draft is available, run in degraded mode:
+
+```
+Warning message:
+"Reviewing without a patch draft. Running `/pr-spec-patch` first and then re-reviewing will produce more accurate results."
+```
+
+**Differences:**
+- Step 2: Skip patch draft loading
+- Step 3: Infer acceptance criteria from PR diff (based on commit messages, PR description)
+- Step 5: Cannot compare patch vs PR → compare PR vs spec only
+- Report's "Patch Draft" field: "Not Found"
+- Explicitly note lower confidence overall
+
+Steps 4, 6, and 7 proceed identically.
 
 ## Output Format
 
@@ -197,184 +197,184 @@ gh pr diff [PR_NUMBER] --name-only
 
 ---
 
-## 검토 결과 (Verdict)
+## Verdict
 
 **[APPROVE / REQUEST CHANGES / NEEDS DISCUSSION]**
 
-**근거**: <1-2 sentence rationale>
-**주요 발견사항**:
+**Rationale**: <1-2 sentence rationale>
+**Key Findings**:
 - <finding 1>
 - <finding 2>
 
 ---
 
-## 메트릭 요약
+## Metrics Summary
 
-| 항목 | 수치 |
-|------|------|
-| 수용 기준 총 개수 | N |
-| 충족됨 (✓) | X (Y%) |
-| 미충족 (✗) | A (B%) |
-| 부분 충족 (△) | C (D%) |
-| 스펙 위반 | E |
-| 테스트 통과율 | F% |
+| Item | Count |
+|------|-------|
+| Total acceptance criteria | N |
+| Met (✓) | X (Y%) |
+| Not met (✗) | A (B%) |
+| Partially met (△) | C (D%) |
+| Spec violations | E |
+| Test pass rate | F% |
 
 ---
 
-## 수용 기준 검증
+## Acceptance Criteria Verification
 
-### Feature: <이름>
+### Feature: <name>
 **Source**: Patch Draft - <section>
 
-| # | 수용 기준 | PR 구현 | 테스트 | 상태 | 비고 |
-|---|----------|---------|--------|------|------|
+| # | Acceptance Criterion | PR Implementation | Test | Status | Notes |
+|---|---------------------|-------------------|------|--------|-------|
 | 1 | <criterion> | `file:line` | test_name | ✓/✗/△ | note |
 
-**평가**: X/Y 충족 ✓/✗
+**Assessment**: X/Y met ✓/✗
 
-(각 Feature/Improvement/Bug Fix에 대해 반복)
-
----
-
-## 스펙 준수 검증
-
-### 기존 스펙 요구사항 검증
-
-| 스펙 섹션 | 요구사항 | PR 영향 | 상태 | 비고 |
-|----------|---------|---------|------|------|
-
-### 스펙 위반 사항
-(목록 또는 "없음")
+(Repeat for each Feature/Improvement/Bug Fix)
 
 ---
 
-## 갭 분석
+## Spec Compliance Verification
 
-### 패치 초안 vs PR 구현
+### Existing Spec Requirements Verification
 
-#### 패치에서 클레임했으나 미구현
+| Spec Section | Requirement | PR Impact | Status | Notes |
+|-------------|------------|-----------|--------|-------|
+
+### Spec Violations
+(List or "None")
+
+---
+
+## Gap Analysis
+
+### Patch Draft vs PR Implementation
+
+#### Claimed in patch but not implemented
 1. <item with file:line refs>
 
-#### PR에 있으나 패치에 미기재
+#### In PR but not listed in patch
 1. <item with file:line refs>
 
-### 테스트 갭
+### Test Gaps
 1. <untested criteria or failing tests>
 
 ---
 
-## 테스트 상태
+## Test Status
 
-### 테스트 실행 결과
+### Test Execution Results
 
-| 테스트 파일 | 테스트 수 | 통과 | 실패 | 스킵 |
-|------------|----------|------|------|------|
+| Test File | Test Count | Pass | Fail | Skip |
+|-----------|-----------|------|------|------|
 
-### 실패 테스트 상세
-(실패 테스트별: 파일, 오류, 관련 수용 기준, 심각도, 조치)
-
----
-
-## 권장 사항
-
-### 머지 전 필수 (Blockers)
-| Priority | 항목 | 심각도 | 위치 | 조치 |
-|----------|------|--------|------|------|
-
-### 머지 전 권장 (Recommended)
-| Priority | 항목 | 심각도 | 조치 |
-|----------|------|--------|------|
-
-### 선택적 개선 (Optional)
-| Priority | 항목 | 이점 |
-|----------|------|------|
+### Failed Test Details
+(Per failed test: file, error, related acceptance criteria, severity, action)
 
 ---
 
-## 리뷰어 노트
+## Recommendations
 
-### 설계 결정 사항
-### 스펙 업데이트 필요 항목
-### 후속 작업 제안
+### Pre-merge Blockers
+| Priority | Item | Severity | Location | Action |
+|----------|------|----------|----------|--------|
+
+### Pre-merge Recommended
+| Priority | Item | Severity | Action |
+|----------|------|----------|--------|
+
+### Optional Improvements
+| Priority | Item | Benefit |
+|----------|------|---------|
 
 ---
 
-## 다음 단계
+## Reviewer Notes
 
-1. [ ] Verdict에 따른 조치
-2. [ ] (if Request Changes) 수정 후 재리뷰: `/pr-review`
-3. [ ] (if Approve) 머지 후 `/spec-update-todo` 실행
+### Design Decisions
+### Items Requiring Spec Update
+### Suggested Follow-up Work
 
 ---
 
-## 메타데이터
+## Next Steps
 
-**리뷰 버전**: <count>
-**PR 커밋 SHA**: <sha>
-**스펙 파일**: <path>
-**패치 초안 파일**: <path or "없음">
-**생성 시각**: YYYY-MM-DD HH:MM:SS
+1. [ ] Take action based on Verdict
+2. [ ] (if Request Changes) Fix and re-review: `/pr-review`
+3. [ ] (if Approve) After merge, run `/spec-update-todo`
+
+---
+
+## Metadata
+
+**Review version**: <count>
+**PR commit SHA**: <sha>
+**Spec file**: <path>
+**Patch draft file**: <path or "None">
+**Generated at**: YYYY-MM-DD HH:MM:SS
 ```
 
 ## Edge Cases
 
-| 상황 | 대응 |
-|------|------|
-| 패치 초안 없음 | Degraded mode 실행, `/pr-spec-patch` 실행 권장 |
-| 스펙 파일 없음 | 경고, `/spec-create` 권장, PR diff만으로 최소 리뷰 |
-| PR 없음 / `gh` 미인증 | 오류 감지, 설치/인증 안내 |
-| 여러 스펙 파일 | AskUserQuestion으로 선택 |
-| 기존 리뷰 파일 존재 | `_sdd/pr/prev/PREV_PR_REVIEW_<timestamp>.md`로 아카이브 후 새로 생성 |
-| 다른 PR의 패치 초안 | 경고, 패치 초안 무시하고 degraded mode 또는 `/pr-spec-patch` 재실행 권장 |
-| 이미 머지된 PR | 허용 (소급 리뷰), 머지 상태 명시 |
-| 대규모 PR (50+ 파일) | 스펙 관련 컴포넌트에 집중, 디렉토리별 요약 |
-| 테스트 없음 / CI 없음 | 테스트 섹션 "확인 불가"로 표시, 로컬 실행 안내 |
-| `_sdd/env.md` 없음/불완전 | 추정 실행 금지, 사용자에게 환경 확인 요청 후 진행 |
+| Situation | Response |
+|-----------|----------|
+| No patch draft | Run in degraded mode, recommend running `/pr-spec-patch` |
+| No spec file | Warn, recommend `/spec-create`, perform minimal review from PR diff only |
+| No PR / `gh` not authenticated | Detect error, guide installation/authentication |
+| Multiple spec files | Use AskUserQuestion to select |
+| Existing review file | Archive to `_sdd/pr/prev/PREV_PR_REVIEW_<timestamp>.md` then create new |
+| Patch draft for a different PR | Warn, ignore patch draft and run degraded mode or recommend re-running `/pr-spec-patch` |
+| Already merged PR | Allow (retroactive review), note merge status |
+| Large PR (50+ files) | Focus on spec-related components, summarize by directory |
+| No tests / no CI | Mark test section as "Cannot verify", guide local execution |
+| `_sdd/env.md` missing/incomplete | Do not guess execution environment, ask user to confirm environment before proceeding |
 
 ## Best Practices
 
-### 효과적인 리뷰
+### Effective Reviews
 
-- **증거 기반**: 모든 판정에 구체적 파일:라인 참조 포함
-- **수용 기준 중심**: 패치 초안의 수용 기준을 체계적으로 하나씩 검증
-- **스펙 대비 검증**: 새 기능뿐 아니라 기존 스펙 요구사항 위반 여부도 확인
-- **테스트 연계**: 각 수용 기준에 대응하는 테스트 존재 및 통과 여부 확인
+- **Evidence-based**: Include specific file:line references for all verdicts
+- **Acceptance criteria-focused**: Systematically verify each acceptance criterion from the patch draft one by one
+- **Verify against spec**: Check not only new features but also whether existing spec requirements are violated
+- **Test linkage**: Verify existence and pass status of tests corresponding to each acceptance criterion
 
-### 판정 기준
+### Verdict Guidelines
 
-- **보수적 판정**: 확신이 없으면 NEEDS DISCUSSION으로 판정
-- **블로커 명확화**: REQUEST CHANGES 시 반드시 구체적 블로커 목록 제시
-- **설계 토론 분리**: 기능적 이슈와 설계 결정 사항을 구분하여 기재
+- **Conservative verdicts**: When uncertain, verdict as NEEDS DISCUSSION
+- **Clarify blockers**: When issuing REQUEST CHANGES, always provide a specific list of blockers
+- **Separate design discussions**: Distinguish functional issues from design decisions in the report
 
-### 파일 관리
+### File Management
 
-- **아카이브 우선**: 기존 리뷰 파일은 항상 아카이브 후 새로 생성
-- **리뷰 버전 추적**: 재리뷰 시 버전 번호 증가
-- **패치 초안 연계**: 패치 초안 파일 경로를 메타데이터에 기록
+- **Archive first**: Always archive existing review files before creating new ones
+- **Track review versions**: Increment version number on re-reviews
+- **Link patch draft**: Record patch draft file path in metadata
 
 ## Language Handling
 
-- **SKILL.md**: 영어 (스킬 정의)
-- **리뷰 리포트 출력**: 한국어 (Korean)
-- **스펙 언어 따르기**: 스펙이 한국어이면 리뷰도 한국어로 작성
-- **PR 내용 보존**: PR 제목/설명은 원문 유지, 필요시 번역 병기
+- **SKILL.md**: English (skill definition)
+- **Review report output**: Korean
+- **Follow spec language**: If the spec is in Korean, write the review in Korean
+- **Preserve PR content**: Keep PR title/description as-is, provide translation alongside if needed
 
 ## Error Handling
 
-| 상황 | 대응 |
-|------|------|
-| `gh` CLI 미설치 | 설치 안내: `brew install gh` |
-| `gh auth` 실패 | `gh auth login` 실행 안내 |
-| PR 번호 잘못됨 | 오류 메시지 표시, 올바른 PR 번호 요청 |
-| 네트워크 오류 | 재시도 안내 |
-| 스펙 파일 파싱 실패 | 오류 위치 표시, 수동 확인 요청 |
-| `_sdd/pr/` 디렉토리 없음 | 자동 생성 |
+| Situation | Response |
+|-----------|----------|
+| `gh` CLI not installed | Guide installation: `brew install gh` |
+| `gh auth` failure | Guide running `gh auth login` |
+| Wrong PR number | Display error message, request correct PR number |
+| Network error | Guide retry |
+| Spec file parsing failure | Show error location, request manual review |
+| `_sdd/pr/` directory missing | Create automatically |
 
 ## Additional Resources
 
 ### Reference Files
-- **`references/review-checklist.md`** - PR 리뷰 체크리스트
-- **`pr-spec-patch/references/gh-commands.md`** - `gh` CLI 명령어 레퍼런스
+- **`references/review-checklist.md`** - PR review checklist
+- **`pr-spec-patch/references/gh-commands.md`** - `gh` CLI command reference
 
 ### Example Files
-- **`examples/sample-review.md`** - PR 리뷰 세션 예시
+- **`examples/sample-review.md`** - PR review session example

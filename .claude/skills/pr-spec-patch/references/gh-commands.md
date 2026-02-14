@@ -1,16 +1,16 @@
 # GitHub CLI (`gh`) Commands Reference
 
-`pr-spec-patch` 스킬에서 사용하는 `gh` CLI 명령어 레퍼런스.
+`gh` CLI command reference used by the `pr-spec-patch` skill.
 
 ---
 
-## 인증 확인
+## Authentication Check
 
 ```bash
 gh auth status
 ```
 
-**성공 출력 예시:**
+**Success output example:**
 ```
 github.com
   ✓ Logged in to github.com account username (keyring)
@@ -20,66 +20,66 @@ github.com
   - Token scopes: 'gist', 'read:org', 'repo', 'workflow'
 ```
 
-**실패 시:**
+**On failure:**
 ```
 You are not logged into any GitHub hosts. Run gh auth login to authenticate.
 ```
 
-**대응:** `gh auth login` 실행 안내
+**Response:** Guide user to run `gh auth login`
 
 ---
 
-## PR 자동 감지
+## PR Auto-Detection
 
-현재 브랜치에 연결된 PR 번호 조회:
+Query the PR number linked to the current branch:
 
 ```bash
 gh pr view --json number --jq '.number'
 ```
 
-**성공 출력:**
+**Success output:**
 ```
 42
 ```
 
-**PR 없을 때:**
+**When no PR exists:**
 ```
 no pull requests found for branch "feature/my-branch"
 ```
 
-**대응:** PR 번호를 직접 입력하도록 요청
+**Response:** Request user to provide the PR number directly
 
 ---
 
-## PR 메타데이터 수집
+## PR Metadata Collection
 
 ```bash
 gh pr view [PR_NUMBER] --json title,body,author,state,url,additions,deletions,changedFiles,headRefName,baseRefName,commits,comments,reviews
 ```
 
-**JSON 필드 설명:**
+**JSON field descriptions:**
 
-| 필드 | 타입 | 설명 |
-|------|------|------|
-| `title` | string | PR 제목 |
-| `body` | string | PR 설명 (마크다운) |
-| `author` | object | 작성자 (`login` 필드) |
-| `state` | string | PR 상태: `OPEN`, `CLOSED`, `MERGED` |
+| Field | Type | Description |
+|-------|------|-------------|
+| `title` | string | PR title |
+| `body` | string | PR description (markdown) |
+| `author` | object | Author (`login` field) |
+| `state` | string | PR state: `OPEN`, `CLOSED`, `MERGED` |
 | `url` | string | PR URL |
-| `additions` | number | 추가된 라인 수 |
-| `deletions` | number | 삭제된 라인 수 |
-| `changedFiles` | number | 변경된 파일 수 |
-| `headRefName` | string | 소스 브랜치명 |
-| `baseRefName` | string | 타깃 브랜치명 |
-| `commits` | array | 커밋 목록 (각 항목에 `oid`, `messageHeadline`) |
-| `comments` | array | PR 코멘트 |
-| `reviews` | array | 리뷰 목록 |
+| `additions` | number | Lines added |
+| `deletions` | number | Lines deleted |
+| `changedFiles` | number | Number of changed files |
+| `headRefName` | string | Source branch name |
+| `baseRefName` | string | Target branch name |
+| `commits` | array | Commit list (each with `oid`, `messageHeadline`) |
+| `comments` | array | PR comments |
+| `reviews` | array | Review list |
 
-**출력 예시:**
+**Output example:**
 ```json
 {
-  "title": "사용자 인증 시스템 구현",
-  "body": "## Summary\n\nJWT 기반 인증 시스템 구현...",
+  "title": "Implement user authentication system",
+  "body": "## Summary\n\nImplement JWT-based authentication system...",
   "author": {
     "login": "developer-kim"
   },
@@ -93,11 +93,11 @@ gh pr view [PR_NUMBER] --json title,body,author,state,url,additions,deletions,ch
   "commits": [
     {
       "oid": "abc1234def5678",
-      "messageHeadline": "feat: JWT 인증 서비스 구현"
+      "messageHeadline": "feat: implement JWT auth service"
     },
     {
       "oid": "def5678ghi9012",
-      "messageHeadline": "fix: 세션 만료 시 토큰 갱신 버그 수정"
+      "messageHeadline": "fix: token refresh bug on session expiry"
     }
   ],
   "comments": [],
@@ -107,15 +107,15 @@ gh pr view [PR_NUMBER] --json title,body,author,state,url,additions,deletions,ch
 
 ---
 
-## PR Diff 수집
+## PR Diff Collection
 
-### 전체 Diff
+### Full Diff
 
 ```bash
 gh pr diff [PR_NUMBER]
 ```
 
-**출력:** 표준 unified diff 형식
+**Output:** Standard unified diff format
 
 ```diff
 diff --git a/src/services/auth_service.py b/src/services/auth_service.py
@@ -128,13 +128,13 @@ new file mode 100644
 +...
 ```
 
-### 변경된 파일 목록만
+### Changed Files List Only
 
 ```bash
 gh pr diff [PR_NUMBER] --name-only
 ```
 
-**출력:**
+**Output:**
 ```
 src/services/auth_service.py
 src/routes/auth.py
@@ -152,72 +152,72 @@ config/settings.py
 
 ---
 
-## 에러 핸들링
+## Error Handling
 
-### PR을 찾을 수 없는 경우
+### PR Not Found
 
 ```bash
 gh pr view 999
 ```
 
-**출력:**
+**Output:**
 ```
 GraphQL: Could not resolve to a PullRequest with the number of 999. (repository.pullRequest)
 ```
 
-**대응:** 올바른 PR 번호 확인 요청
+**Response:** Request correct PR number
 
-### 인증되지 않은 경우
+### Not Authenticated
 
 ```bash
 gh pr view 42
 ```
 
-**출력:**
+**Output:**
 ```
 gh: not logged into any GitHub hosts
 ```
 
-**대응:** `gh auth login` 실행 안내
+**Response:** Guide user to run `gh auth login`
 
-### 리포지토리 외부에서 실행
+### Running Outside a Repository
 
 ```bash
 gh pr view 42
 ```
 
-**출력:**
+**Output:**
 ```
 could not determine base repo: no git remotes found
 ```
 
-**대응:** GitHub 저장소 디렉토리에서 실행하도록 안내
+**Response:** Guide user to run from a GitHub repository directory
 
 ---
 
-## 유용한 추가 명령어
+## Useful Additional Commands
 
-### 특정 필드만 추출 (jq 필터)
+### Extract Specific Fields (jq filters)
 
 ```bash
-# PR 제목만
+# PR title only
 gh pr view 42 --json title --jq '.title'
 
-# 커밋 메시지 목록
+# Commit message list
 gh pr view 42 --json commits --jq '.commits[].messageHeadline'
 
-# HEAD 커밋 SHA
+# HEAD commit SHA
 gh pr view 42 --json commits --jq '.commits[-1].oid'
 ```
 
-### PR 상태 확인
+### PR Status Check
 
 ```bash
-# 현재 브랜치의 PR 상태
+# PR status for current branch
 gh pr status
 ```
 
-### 리뷰 코멘트 조회
+### View Review Comments
 
 ```bash
 gh api repos/{owner}/{repo}/pulls/42/comments
@@ -225,16 +225,16 @@ gh api repos/{owner}/{repo}/pulls/42/comments
 
 ---
 
-## 대규모 PR 처리 팁
+## Tips for Large PRs
 
-`changedFiles`가 50 이상인 경우:
+When `changedFiles` is 50 or more:
 
-1. `--name-only`로 파일 목록 먼저 확인
-2. 디렉토리별 그룹핑으로 변경 규모 파악
-3. 스펙에 문서화된 컴포넌트 관련 파일만 diff 확인
-4. 전체 diff 대신 파일별 diff 선택적 확인:
+1. Check the file list first with `--name-only`
+2. Group by directory to understand change scope
+3. Only check diffs for files related to components documented in the spec
+4. Selectively check per-file diffs instead of the full diff:
 
 ```bash
-# 특정 파일의 diff만 확인
+# Check diff for specific directory only
 gh pr diff 42 | grep -A 50 "^diff --git a/src/services/"
 ```

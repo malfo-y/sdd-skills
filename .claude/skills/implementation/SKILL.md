@@ -1,12 +1,32 @@
 ---
 name: implementation
 description: Use this skill when the user wants to execute an implementation plan, start implementing tasks from a plan, work through a development roadmap, or says "implement the plan", "start implementation", "execute the plan", or "work on the tasks".
-version: 1.1.0
+version: 1.2.0
 ---
 
 # Implementation Execution (TDD Approach)
 
 Execute implementation plans systematically using Test-Driven Development (TDD), working through tasks phase by phase while tracking progress and maintaining code quality.
+
+## Simplified Workflow
+
+This skill is **Step 3 of 4** in the simplified SDD workflow:
+
+```
+spec → feature-draft → implementation (this) → spec-update-done
+```
+
+| Step | Skill | Purpose |
+|------|-------|---------|
+| 1 | spec-create | Create the initial spec document |
+| 2 | feature-draft | Draft feature spec patch + implementation plan |
+| **3** | **implementation** | Execute the implementation plan (TDD) |
+| 4 | spec-update-done | Sync spec with actual code |
+
+> **Previous workflow** (7 steps): spec → spec-draft → spec-update-todo → implementation-plan → implementation → implementation-review → spec-update-done
+> **New workflow** (4 steps): spec → feature-draft → implementation → spec-update-done
+>
+> This skill now includes in-phase and final reviews, so a separate `implementation-review` invocation is no longer required.
 
 ## Hard Rule: Never Modify Spec Files
 
@@ -39,13 +59,16 @@ Before starting implementation:
    - User-specified path
    - `<project_root>/_sdd/implementation/IMPLEMENTATION_PLAN.md` (preferred entry point; may link to phase files)
    - `<project_root>/_sdd/implementation/IMPLEMENTATION_PLAN_PHASE_<phase-number>.md` (when the plan is split by phase)
+   - `<project_root>/_sdd/drafts/feature_draft_<feature_name>.md` (produced by `feature-draft` skill; use Part 2: 구현 계획 as the implementation plan)
    - Recent conversation context
 
 If multiple plan files exist and the user did not specify a starting point:
-- If `IMPLEMENTATION_PLAN.md` exists, start from it.
-- Otherwise, ask the user which phase to start/resume (default: start from Phase 1).
+- If only one source exists (IMPLEMENTATION_PLAN or a single feature draft), start from it.
+- If both `IMPLEMENTATION_PLAN.md` and feature draft(s) exist, compare whether they describe the same feature. If they do, prefer `IMPLEMENTATION_PLAN.md`. If they describe different features, ask the user which to implement.
+- If multiple feature drafts exist and no `IMPLEMENTATION_PLAN.md`, ask the user which feature draft to implement.
+- For phase-split plans, ask the user which phase to start/resume (default: Phase 1).
 
-2. **Verify Plan Exists**: If no plan is found, suggest using the `implementation-plan` skill first.
+2. **Verify Plan Exists**: If no plan is found, suggest using the `implementation-plan` or `feature-draft` skill first.
 
 3. **Understand the Codebase**: Use codebase-retrieval or exploration to understand:
    - Existing code patterns
@@ -65,7 +88,8 @@ If `_sdd/env.md` exists, apply its setup instructions first (for example: `conda
 2. **Initialize Task Tracking** - Create tasks in the task system
 3. **Execute by Phase** - Work through phases in order
 4. **Implement Tasks with TDD** - Red-Green-Refactor for each task
-5. **Verify & Report** - Confirm completion and summarize progress
+5. **Phase Review** - Quality checks after each phase (security, patterns, performance)
+6. **Final Review & Report** - Comprehensive review and combined report after all phases
 
 ## Step 1: Load the Plan
 
@@ -298,37 +322,125 @@ Some tasks don't fit pure TDD. Adapt the approach:
 
 For these cases, still write tests, but the order may vary.
 
-## Step 5: Verify & Report
+## Step 5: Phase Review
 
-After completing a phase or all phases, save the report under a user-specified file (default: `<project-root>/_sdd/implementation/IMPLEMENTATION_PROGRESS.md`).  
-- If the file already exists, archive it as `<project-root>/_sdd/implementation/prev/PREV_IMPLEMENTATION_PROGRESS_<timestamp>.md` (create `prev/` if needed) and create a new one.
-- If executing a phased plan, save a per-phase progress report under `<project-root>/_sdd/implementation/IMPLEMENTATION_PROGRESS_PHASE_<phase-number>.md` for the phase you just completed, and include a brief overall status summary (completed phases + what comes next).
+After completing all tasks in a phase (and before moving to the next phase), run a lightweight quality review. This catches cross-cutting issues that TDD alone cannot cover.
 
-The report should include:
+### 5.1 Collect Phase Context
+
+Reuse data already tracked during TDD — **no re-discovery needed**:
+- Files created/modified during this phase
+- Tests written and their pass/fail status
+- Acceptance criteria met
+- Any notes or blockers encountered
+
+### 5.2 Cross-Cutting Quality Checks
+
+Run the following checks on all files touched in this phase. Reference `references/review-checklist.md` for detailed criteria.
+
+| Category | What to Check |
+|----------|---------------|
+| **Security** | SQL injection, XSS, hardcoded secrets, missing auth, input validation |
+| **Error Handling** | Consistent response format, logging, graceful degradation |
+| **Code Patterns** | Naming conventions, abstraction level, duplication, project conventions |
+| **Performance** | N+1 queries, missing indexes, async blocking, resource cleanup |
+| **Test Quality** | Independent, deterministic, behavior-focused (not implementation-testing) |
+| **Cross-Task Integration** | Tasks within this phase work together correctly |
+
+### 5.3 Categorize Issues
+
+Classify each finding by severity:
+
+- **Critical**: Security vulnerability, data loss risk, core functionality broken → **must fix before next phase**
+- **Quality**: Missing edge-case tests, inconsistent error handling, growing tech debt → document, proceed
+- **Improvement**: Performance optimization, readability enhancement → note for later
+
+### 5.4 Decision Gate
+
+```
+IF critical issues found:
+    Fix using TDD (write test exposing the issue → fix → verify)
+    Re-run phase review on fixed areas
+ELSE IF quality issues only:
+    Document findings, proceed to next phase
+ELSE:
+    Phase is clean — proceed
+```
+
+### 5.5 Phase Review Output
+
+Append findings to the phase completion summary. Save per-phase report under `<project-root>/_sdd/implementation/IMPLEMENTATION_REPORT_PHASE_<phase-number>.md`.
+
+## Step 6: Final Review & Report
+
+After all phases complete, run a comprehensive quality review across the **entire implementation**, then produce a combined report.
+
+### 6.1 Comprehensive Quality Review
+
+Apply the same checklists from Step 5.2 but with **cross-phase scope**:
+- Do modules from different phases integrate correctly?
+- Are there inconsistent patterns between early and late phases?
+- Do security boundaries hold across the full system?
+- Are there performance issues that only appear at full scale?
+
+### 6.2 Final Decision Gate
+
+Same rules as Step 5.4. Critical issues must be fixed with TDD before declaring completion.
+
+### 6.3 Generate Combined Report
+
+Save the report under a user-specified file (default: `<project-root>/_sdd/implementation/IMPLEMENTATION_REPORT.md`).
+- If the file already exists, archive it as `<project-root>/_sdd/implementation/prev/PREV_IMPLEMENTATION_REPORT_<timestamp>.md` (create `prev/` if needed) and create a new one.
+
+The combined report should include:
 
 ### Progress Summary
 ```markdown
-## Implementation Progress
+## Implementation Report
+
+### Progress Summary
+- Total Tasks: X
+- Completed: X
+- Tests Added: X
+- All Passing: Yes/No
 
 ### Completed
 - [x] Task 1: Set up database schema (3 tests)
 - [x] Task 2: Implement password hashing (5 tests)
 
-### In Progress
-- [ ] Task 5: Implement registration (working - 4/7 criteria tested)
-
-### Remaining
-- [ ] Task 6: Implement login
-- [ ] Task 7: Add OAuth support
-
 ### Test Summary
 - New tests added: 15
 - All tests passing: Yes
 - Coverage: 87%
+```
 
-### Notes
-- Discovered need for additional index on users.email
-- Consider adding rate limiting earlier than planned
+### Quality Assessment
+```markdown
+### Quality Assessment
+
+#### Phase Reviews
+| Phase | Critical | Quality | Improvements | Status |
+|-------|----------|---------|--------------|--------|
+| 1: Foundation | 0 | 1 | 2 | Clean |
+| 2: Core Auth | 1 (fixed) | 0 | 1 | Fixed |
+
+#### Cross-Phase Review
+- Integration: All modules communicate correctly
+- Security: Auth boundaries verified across all endpoints
+- Performance: No N+1 queries detected
+
+#### Issues Found
+| # | Severity | Description | Phase | Status |
+|---|----------|-------------|-------|--------|
+| 1 | Critical | Rate limiter not applied to OAuth routes | Cross-phase | Fixed |
+| 2 | Quality | Password validation only checks length | Phase 1 | Documented |
+
+#### Recommendations
+1. Add password complexity validation before production
+2. Consider adding integration test suite for cross-module flows
+
+### Conclusion
+[Overall assessment: READY / NEEDS WORK / BLOCKED]
 ```
 
 ## Output Format
@@ -375,7 +487,7 @@ Provide updates showing the TDD cycle:
 - Tests failing: 1 (expected - in RED phase)
 ```
 
-### Phase Completion
+### Phase Completion (with Review)
 
 ```markdown
 ## Phase 1 Complete
@@ -396,12 +508,63 @@ All foundation tasks completed with full test coverage.
 - All passing: Yes
 - No regressions detected
 
+### Phase Review Findings
+| Category | Status | Notes |
+|----------|--------|-------|
+| Security | Clean | No hardcoded secrets, parameterized queries |
+| Error Handling | Quality issue | Inconsistent error format in rate limiter |
+| Code Patterns | Clean | Follows project conventions |
+| Performance | Clean | Indexes in place |
+| Test Quality | Clean | All tests independent and deterministic |
+
+**Issues**: 1 Quality (inconsistent error format — documented, not blocking)
+**Decision**: Proceed to Phase 2
+
 ### Ready for Phase 2
 The following tasks are now unblocked:
 - Task 5: User registration
 - Task 6: Login endpoint
 
 Proceeding to Phase 2...
+```
+
+### Final Report
+
+```markdown
+## Implementation Report
+
+### Progress Summary
+- Total Tasks: 20 | Completed: 20
+- Tests Added: 113 | All Passing: Yes | Coverage: 91%
+
+### Phase Reports
+| Phase | Tasks | Tests | Critical | Quality | Status |
+|-------|-------|-------|----------|---------|--------|
+| 1: Foundation | 4 | 27 | 0 | 1 | Clean |
+| 2: Core Auth | 5 | 34 | 1 (fixed) | 0 | Fixed |
+| 3: OAuth | 3 | 18 | 0 | 0 | Clean |
+| 4: User Mgmt | 4 | 22 | 0 | 2 | Clean |
+| 5: Testing | 4 | 12 | 0 | 0 | Clean |
+
+### Quality Assessment
+#### Cross-Phase Review
+- Integration: All modules communicate correctly
+- Security: Auth boundaries verified across all endpoints
+- Performance: No N+1 queries detected
+
+#### Issues Found
+| # | Severity | Description | Phase | Status |
+|---|----------|-------------|-------|--------|
+| 1 | Critical | Rate limiter not applied to OAuth routes | Cross-phase | Fixed |
+| 2 | Quality | Password validation only checks length | 1 | Documented |
+| 3 | Quality | Missing retry logic for email service | 4 | Documented |
+
+### Recommendations
+1. Add password complexity rules before production
+2. Add retry/backoff to email service calls
+
+### Conclusion
+READY — All critical issues resolved, 3 quality items documented for follow-up.
 ```
 
 ## Handling Common Situations
@@ -477,17 +640,20 @@ Use AskUserQuestion when:
 ## Integration with Other Skills
 
 - **implementation-plan**: Use first to create the plan this skill executes
-- **Code review**: Consider requesting review after major phases
+- **feature-draft**: Also produces an implementation plan (Part 2: 구현 계획) inside its output file. This skill can consume feature drafts directly.
+- **implementation-review**: Remains available as a standalone skill for independent audits. This implementation skill now includes in-place phase and final reviews, so a separate review invocation is no longer required for the standard workflow.
 
 ## Quick Start
 
 When user says "implement the plan":
 
-1. Acquire implementation plan by running `implementation-plan` skill if not exists
-2. Look for implementation plan at `_sdd/implementation/IMPLEMENTATION_PLAN.md` (or `_sdd/implementation/IMPLEMENTATION_PLAN_PHASE_<phase-number>.md` if split by phase)
-3. If user input severly conflicts with the plan, abort and ask user to resolve the conflict
+1. Acquire implementation plan by running `implementation-plan` or `feature-draft` skill if not exists
+2. Look for implementation plan at `_sdd/implementation/IMPLEMENTATION_PLAN.md`, phase-split files, or `_sdd/drafts/feature_draft_<feature_name>.md`
+3. If user input severely conflicts with the plan, abort and ask user to resolve the conflict
 4. Parse the plan and create task tracking
 5. **Identify testing framework** used in the project
 6. Start with Phase 1, Task with lowest ID that is unblocked and highest priority
 7. For each acceptance criterion: **RED → GREEN → REFACTOR**
-8. Report progress after each phase, including test counts
+8. After each phase: **Run phase review** (security, quality, patterns, performance)
+9. Fix any **critical issues** found during review (using TDD)
+10. After all phases: Run **final review**, generate `IMPLEMENTATION_REPORT.md`

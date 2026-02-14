@@ -6,6 +6,11 @@ version: 1.0.0
 
 # Spec Update from User Input
 
+> **Simplified Workflow Note**: This skill is part of the **legacy workflow**.
+> In the simplified 4-step workflow (`spec → feature-draft → implementation → spec-update-done`),
+> this skill's functionality is included in the **`feature-draft`** skill.
+> Consider using `feature-draft` instead, which combines `spec-draft` + `spec-update-todo` + `implementation-plan` into a single step.
+
 Update existing spec documents with new features, requirements, and planned improvements based on user input. This skill focuses on adding "to-add" or "to-implement" items to the spec.
 
 ## Overview

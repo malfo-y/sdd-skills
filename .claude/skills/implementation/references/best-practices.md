@@ -389,3 +389,26 @@ Before marking a task complete:
 - [ ] No untested code paths added
 - [ ] Refactoring complete (no TODOs in code)
 ```
+
+## Post-TDD Quality Review
+
+TDD verifies **specified behavior** — every acceptance criterion gets a test, and the code is driven by those tests. But TDD cannot catch **unspecified risks**: security vulnerabilities, performance issues, cross-task integration gaps, and pattern violations that no acceptance criterion explicitly mentions.
+
+The phase review (Step 5) and final review (Step 6) exist to cover this gap:
+
+- **Security**: SQL injection, XSS, hardcoded secrets, missing auth — these are rarely acceptance criteria but always matter
+- **Performance**: N+1 queries, missing indexes, blocking async calls — emerge from how code is used, not how it's specified
+- **Patterns**: Naming inconsistencies, duplication across tasks, abstraction misuse — TDD drives correctness, not consistency
+- **Integration**: Tasks pass individually but fail together — cross-task interactions aren't tested by single-criterion TDD
+
+### Critical Issues → Fix with TDD
+
+When a review uncovers a critical issue, fix it using the same TDD discipline:
+
+1. Write a test that **exposes** the issue (RED)
+2. Fix the code to make the test pass (GREEN)
+3. Clean up (REFACTOR)
+
+This ensures the fix is verified and regression-protected.
+
+See `references/review-checklist.md` for detailed checklists used during phase and final reviews.

@@ -387,7 +387,59 @@ All foundation tasks completed using TDD approach.
 Proceeding to Phase 2...
 ```
 
-### 6. Handling a Difficult Test Case
+### 6. Phase 1 Review
+
+```
+Claude:
+## Phase 1 Review
+
+### Collecting Phase Context
+Reusing TDD tracking data — no re-discovery needed:
+- Files created: 8 (4 source, 4 test)
+- Tests: 27 passing, 0 failing
+- All 17 acceptance criteria met across 4 tasks
+
+### Cross-Cutting Quality Checks
+
+Running checks from references/review-checklist.md...
+
+#### Security
+- ✓ Parameterized queries in migrations
+- ✓ No hardcoded secrets
+- ✓ bcrypt with cost 12 for password hashing
+
+#### Error Handling
+- ✓ ValueError for empty passwords
+- ⚠ Rate limiter returns raw error string instead of JSON format
+
+#### Code Patterns
+- ✓ Consistent naming across all modules
+- ✓ Follows project conventions
+
+#### Performance
+- ✓ Indexes on users.email and oauth_connections(provider, provider_id)
+- ✓ No blocking operations
+
+#### Test Quality
+- ✓ All tests independent (no shared state)
+- ✓ Descriptive test names
+- ⚠ Password validation only checks length, not complexity
+
+#### Cross-Task Integration
+- ✓ JWT utilities correctly reference user schema
+- ✓ Rate limiter integrates with middleware chain
+
+### Issue Classification
+| # | Severity | Description | Location |
+|---|----------|-------------|----------|
+| 1 | Quality | Rate limiter returns raw string, not JSON | src/middleware/rate_limit.py:28 |
+| 2 | Quality | Password validation only checks length | src/utils/security.py:15 |
+
+### Decision
+No critical issues found. Quality issues documented. Proceeding to Phase 2.
+```
+
+### 7. Handling a Difficult Test Case
 
 ```
 Claude:
@@ -431,11 +483,11 @@ Running test... PASSED ✓
 Running all tests... PASSED ✓
 ```
 
-### 7. Final Implementation Summary
+### 8. Final Implementation Summary
 
 ```
 Claude:
-## Implementation Complete
+## Implementation Complete — All Phases Done
 
 ### Overall Progress
 - Total Tasks: 20
@@ -456,18 +508,77 @@ Claude:
 - **All passing**: Yes
 - **Coverage**: 91%
 - **TDD compliance**: All features test-first
+```
 
-### Files Created/Modified
-- 14 source files
-- 12 test files
-- 3 migration files
+### 9. Final Review
 
-### Next Steps
-1. Run full E2E test suite
-2. Deploy to staging
-3. Security review
+```
+Claude:
+## Final Review — Cross-Phase Quality Assessment
 
-All acceptance criteria verified through tests.
+Running comprehensive quality review across all 5 phases...
+
+### Cross-Phase Integration Check
+
+#### Security Boundaries
+- ✓ Auth middleware applied to all protected routes (Phase 2)
+- ✗ **Rate limiter not applied to OAuth callback routes** (Phase 1 + Phase 3 gap)
+- ✓ CSRF tokens validated on state-changing endpoints
+
+#### Data Flow
+- ✓ User creation → email verification → login flow works end-to-end
+- ✓ OAuth connections properly linked to user records
+- ✓ Session tokens properly scoped
+
+#### Pattern Consistency
+- ✓ Error response format consistent across phases 2-5
+- ⚠ Phase 1 rate limiter still uses raw string (documented in Phase 1 review)
+
+### Critical Issue Found
+
+**Rate limiter not applied to OAuth routes**
+- OAuth callback at `/api/auth/oauth/callback` bypasses rate limiting
+- This could allow brute-force attacks on the OAuth flow
+- Severity: **Critical** — must fix before declaring complete
+
+### Fixing Critical Issue with TDD
+
+**RED**:
+```python
+def test_oauth_callback_is_rate_limited():
+    """OAuth callback should enforce rate limiting"""
+    for _ in range(101):
+        response = client.get("/api/auth/oauth/callback?code=test")
+    assert response.status_code == 429
+```
+Running test... FAILED ✗ (no rate limit on OAuth routes)
+
+**GREEN**:
+```python
+# src/routes/oauth.py
+@router.get("/callback")
+@rate_limit(max_requests=100, window=60)
+async def oauth_callback(code: str):
+    ...
+```
+Running test... PASSED ✓
+
+Running full test suite... 114 tests, all pass ✓
+
+### Final Issue Summary
+| # | Severity | Description | Status |
+|---|----------|-------------|--------|
+| 1 | Critical | Rate limiter missing on OAuth routes | **Fixed** (test added) |
+| 2 | Quality | Rate limiter raw string error format | Documented |
+| 3 | Quality | Password only checks length | Documented |
+
+### Generating IMPLEMENTATION_REPORT.md
+
+Saved to: _sdd/implementation/IMPLEMENTATION_REPORT.md
+
+### Conclusion
+READY — All critical issues resolved. 2 quality items documented for follow-up.
+All acceptance criteria verified through tests. 114 tests passing.
 ```
 
 ## Key TDD Patterns Demonstrated
@@ -478,3 +589,5 @@ All acceptance criteria verified through tests.
 4. **Mocking**: External dependencies isolated in tests
 5. **Progress Tracking**: Test counts reported throughout
 6. **Regression Prevention**: Full suite run after each task
+7. **Phase Review**: Quality checks after each phase catch issues TDD can't (security, patterns, performance)
+8. **Critical Issue Gate**: Critical findings fixed with TDD before proceeding (test exposing the issue → fix → verify)

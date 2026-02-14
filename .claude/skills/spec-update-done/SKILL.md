@@ -8,6 +8,24 @@ version: 1.0.0
 
 Review and update Software Design Description (SDD) spec documents based on code changes, implementation logs, and user feedback. Ensures spec documents remain accurate and synchronized with the actual codebase.
 
+## Simplified Workflow
+
+This skill is **Step 4 of 4** in the simplified SDD workflow:
+
+```
+spec → feature-draft → implementation → spec-update-done (this)
+```
+
+| Step | Skill | Purpose |
+|------|-------|---------|
+| 1 | spec-create | Create the initial spec document |
+| 2 | feature-draft | Draft feature spec patch + implementation plan |
+| 3 | implementation | Execute the implementation plan (TDD) |
+| **4** | **spec-update-done** | Sync spec with actual code |
+
+> **Previous workflow** (7 steps): spec → spec-draft → spec-update-todo → implementation-plan → implementation → implementation-review → spec-update-done
+> **New workflow** (4 steps): spec → feature-draft → implementation → spec-update-done
+
 ## Overview
 
 This skill analyzes multiple sources of truth to identify spec drift and generate updates:
@@ -34,30 +52,38 @@ This skill analyzes multiple sources of truth to identify spec drift and generat
 | `IMPLEMENTATION_PLAN.md` | Current implementation tasks and phases |
 | `IMPLEMENTATION_PROGRESS.md` | Task completion status |
 | `IMPLEMENTATION_REVIEW.md` | Review findings and issues |
+| `IMPLEMENTATION_REPORT.md` | Final implementation report (progress, quality assessment, issues, recommendations) |
+| `IMPLEMENTATION_REPORT_PHASE_<N>.md` | Per-phase implementation report |
 | `TEST_SUMMARY.md` | Test results and coverage |
 | `user_spec.md` | User requirements and feedback |
 | `_sdd/implementation/prev/PREV_*.md` | Historical versions for context |
 
-### 2. Code Changes
+### 2. Feature Drafts (`_sdd/drafts/`)
+
+| File | Purpose |
+|------|---------|
+| `feature_draft_<name>.md` | Combined spec patch draft (Part 1) and implementation plan (Part 2) from `feature-draft` skill |
+
+### 3. Code Changes
 
 - `git diff` - Uncommitted changes
 - `git log` - Recent commit history
 - `git diff HEAD~N` - Changes over N commits
 
-### 3. Current Spec Documents
+### 4. Current Spec Documents
 
 - `_sdd/spec/main.md` or `<project-name>.md`
 - Component-specific specs
 - Any referenced sub-specs
 - `_sdd/spec/DECISION_LOG.md` (if present)
 
-### 4. User Conversation
+### 5. User Conversation
 
 - Direct feedback and corrections
 - New requirements mentioned
 - Clarifications on behavior
 
-### 5. Execution/Test Environment Guide (when local verification is needed)
+### 6. Execution/Test Environment Guide (when local verification is needed)
 
 - `_sdd/env.md` (preferred)
 - User-provided environment instructions
@@ -76,14 +102,18 @@ Collect information from all available sources:
    - IMPLEMENTATION_PLAN.md (planned work)
    - IMPLEMENTATION_PROGRESS.md (what's done)
    - IMPLEMENTATION_REVIEW.md (issues found)
+   - IMPLEMENTATION_REPORT.md (final report: progress, quality, issues, recommendations)
+   - IMPLEMENTATION_REPORT_PHASE_<N>.md (per-phase reports, if present)
    - TEST_SUMMARY.md (test status)
-3. Analyze code changes:
+3. Read feature drafts (if present):
+   - _sdd/drafts/feature_draft_<name>.md (spec patch + implementation plan)
+4. Analyze code changes:
    - git status (current state)
    - git diff (uncommitted changes)
    - git log --oneline -20 (recent commits)
-4. Read relevant decision-log entries from `_sdd/spec/DECISION_LOG.md` (if file exists)
-5. Note user conversation context
-6. If local execution/tests are required for verification, load `_sdd/env.md` and apply setup before running commands
+5. Read relevant decision-log entries from `_sdd/spec/DECISION_LOG.md` (if file exists)
+6. Note user conversation context
+7. If local execution/tests are required for verification, load `_sdd/env.md` and apply setup before running commands
 ```
 
 ### Step 2: Identify Spec Drift
@@ -296,13 +326,17 @@ Incremental updates during development:
 ### With Implementation Skills
 
 ```
-create-spec → implementation-plan → implementation → implementation-review → spec-update-done
-     ↑                                                                           │
-     └───────────────────────────────────────────────────────────────────────────┘
+spec-create → feature-draft → implementation → spec-update-done
+                                    │                   │
+                                    ↓                   │
+                           IMPLEMENTATION_REPORT.md     │
+     ↑                                                  │
+     └──────────────────────────────────────────────────┘
 ```
 
 ### Trigger Points
 
+- After `implementation` skill completes and generates `IMPLEMENTATION_REPORT.md`
 - After `implementation-review` completes
 - When user says "implementation done"
 - Before creating new implementation plan

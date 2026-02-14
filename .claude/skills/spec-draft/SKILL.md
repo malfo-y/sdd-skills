@@ -6,6 +6,11 @@ version: 1.0.0
 
 # Spec Draft - 사용자 대화 기반 스펙 초안 작성
 
+> **Simplified Workflow Note**: This skill is part of the **legacy workflow**.
+> In the simplified 4-step workflow (`spec → feature-draft → implementation → spec-update-done`),
+> this skill's functionality is included in the **`feature-draft`** skill.
+> Consider using `feature-draft` instead, which combines `spec-draft` + `spec-update-todo` + `implementation-plan` into a single step.
+
 사용자와의 대화를 통해 요구사항을 수집하고 구조화된 스펙 초안(user_draft.md)을 작성합니다.
 
 ## Overview

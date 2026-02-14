@@ -6,6 +6,12 @@ version: 1.0.0
 
 # Implementation Review
 
+> **Simplified Workflow Note**: This skill is part of the **legacy workflow**.
+> In the simplified 4-step workflow (`spec → feature-draft → implementation → spec-update-done`),
+> the `implementation` skill now includes **in-phase and final reviews** built in.
+> A separate `implementation-review` invocation is no longer required for the standard workflow.
+> This skill remains available for **standalone audits** outside the normal flow.
+
 Review implementation progress against the implementation plan, verify acceptance criteria are met, identify issues and improvements, and provide actionable next steps.
 
 ## 하드 룰: 스펙은 절대 수정하지 않기 (중요)

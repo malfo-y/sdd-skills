@@ -4,154 +4,154 @@ description: This skill should be used when the user asks to "create spec patch 
 version: 1.0.0
 ---
 
-# PR Spec Patch - PR 기반 스펙 패치 초안 생성
+# PR Spec Patch - PR-Based Spec Patch Draft Generation
 
-PR(Pull Request)과 현재 스펙을 비교하여 구조화된 스펙 패치 초안을 생성하고, 대화를 통해 정제합니다.
+Compares a PR (Pull Request) against the current spec, generates a structured spec patch draft, and refines it through conversation.
 
 ## Overview
 
-이 스킬은 PR의 변경사항을 분석하여 현재 스펙 문서와 비교하고, 스펙에 반영해야 할 변경사항을 구조화된 패치 초안(`_sdd/pr/spec_patch_draft.md`)으로 생성합니다. 출력의 "스펙 패치 내용" 섹션은 `spec-update-todo` 스킬의 입력 형식("Spec Update Input")과 호환되므로, 확정된 패치는 `spec-update-todo`로 바로 반영할 수 있습니다.
+This skill analyzes PR changes, compares them against the current spec documents, and generates a structured patch draft (`_sdd/pr/spec_patch_draft.md`) containing changes that should be reflected in the spec. The "Spec Patch Content" section of the output is compatible with the `spec-update-todo` skill's input format ("Spec Update Input"), so finalized patches can be directly applied via `spec-update-todo`.
 
-## 하드 룰: 이 스킬은 스펙을 직접 수정하지 않습니다 (중요)
+## Hard Rule: This skill does NOT modify specs (IMPORTANT)
 
-- `_sdd/spec/` 아래의 스펙 파일은 **절대** 생성/수정/삭제하지 않습니다.
-- 이 스킬의 산출물은 오직 `_sdd/pr/spec_patch_draft.md` 입니다.
-- 스펙 반영은 **반드시** `/spec-update-todo`로 진행합니다.
+- Spec files under `_sdd/spec/` are **never** created/modified/deleted.
+- The only output of this skill is `_sdd/pr/spec_patch_draft.md`.
+- Spec updates **must** be done via `/spec-update-todo`.
 
 ## When to Use This Skill
 
-- PR을 기반으로 스펙 패치 초안을 생성할 때
-- PR 리뷰 전 스펙 관점에서 변경사항을 정리할 때
-- PR 변경사항을 대화를 통해 정제하여 스펙에 반영할 때
-- 이미 머지된 PR을 소급하여 스펙에 반영할 때
+- When generating a spec patch draft from a PR
+- When organizing changes from a spec perspective before PR review
+- When refining PR changes through conversation for spec integration
+- When retroactively reflecting an already-merged PR into the spec
 
 ## Prerequisites
 
-- `gh` CLI 인증 완료 (`gh auth status`로 확인)
-- `_sdd/spec/` 디렉토리에 스펙 문서 존재 (권장, 필수는 아님)
-- PR이 존재하는 GitHub 저장소
+- `gh` CLI authenticated (`gh auth status` to verify)
+- Spec documents exist in `_sdd/spec/` directory (recommended, not required)
+- GitHub repository with an existing PR
 
 ## Input Sources
 
-1. **현재 스펙 (`_sdd/spec/`)**: 비교 기준이 되는 메인 스펙 문서
-2. **PR 데이터 (`gh` CLI)**: PR 메타데이터, 변경 파일, diff
-3. **사용자 대화 (현재 세션)**: 패치 초안 정제 및 확정
-4. **기존 초안 (`_sdd/pr/spec_patch_draft.md`)**: 이전 초안이 있으면 업데이트 모드
+1. **Current spec (`_sdd/spec/`)**: Main spec document used as comparison baseline
+2. **PR data (`gh` CLI)**: PR metadata, changed files, diff
+3. **User conversation (current session)**: Patch draft refinement and finalization
+4. **Existing draft (`_sdd/pr/spec_patch_draft.md`)**: If a prior draft exists, enter update mode
 
 ## Output
 
-**파일 위치**: `_sdd/pr/spec_patch_draft.md`
+**File location**: `_sdd/pr/spec_patch_draft.md`
 
-**형식**: PR 요약 + "Spec Update Input" 호환 패치 내용 + 질문 및 제안
+**Format**: PR summary + "Spec Update Input" compatible patch content + questions and suggestions
 
 ## Process
 
-### Mode 1: 초기 생성 (기존 초안 없음)
+### Mode 1: Initial generation (no existing draft)
 
-#### Step 1: 사전 조건 확인
-
-```
-1. `gh auth status` 실행하여 인증 상태 확인
-2. `_sdd/spec/` 디렉토리에서 스펙 파일 탐색
-3. `_sdd/pr/` 디렉토리 없으면 생성
-```
-
-**스펙 파일이 없는 경우:**
-- 사용자에게 경고: "스펙 문서가 없습니다. `/spec-create`로 먼저 생성하는 것을 권장합니다."
-- 사용자가 계속 진행을 원하면 비교 기준 없이 생성 (baseline 없음 명시)
-
-#### Step 2: 현재 스펙 읽기
+#### Step 1: Verify prerequisites
 
 ```
-1. `_sdd/spec/` 내 메인 스펙 파일 로드
-2. 여러 스펙 파일이 있으면 AskUserQuestion으로 선택 요청
-3. 스펙의 컴포넌트, 기능, 섹션 구조 파악
+1. Run `gh auth status` to check authentication
+2. Search for spec files in `_sdd/spec/` directory
+3. Create `_sdd/pr/` directory if it doesn't exist
 ```
 
-#### Step 3: PR 데이터 수집
+**When no spec file exists:**
+- Warn user: "No spec document found. Recommend creating one first with `/spec-create`."
+- If user wants to proceed, generate without a comparison baseline (note "no baseline")
 
-PR 번호가 지정되지 않은 경우 현재 브랜치에서 자동 감지:
+#### Step 2: Read current spec
+
+```
+1. Load main spec file from `_sdd/spec/`
+2. If multiple spec files exist, use AskUserQuestion to request selection
+3. Understand the spec's component, feature, and section structure
+```
+
+#### Step 3: Collect PR data
+
+If no PR number is specified, auto-detect from the current branch:
 
 ```bash
-# PR 번호 자동 감지 (현재 브랜치 기반)
+# Auto-detect PR number (based on current branch)
 gh pr view --json number --jq '.number'
 
-# PR 메타데이터 수집
+# Collect PR metadata
 gh pr view [PR_NUMBER] --json title,body,author,state,url,additions,deletions,changedFiles,headRefName,baseRefName,commits,comments,reviews
 
-# PR diff 수집
+# Collect PR diff
 gh pr diff [PR_NUMBER]
 
-# 변경된 파일 목록
+# List changed files
 gh pr diff [PR_NUMBER] --name-only
 ```
 
-**대규모 PR 처리 (changedFiles > 50):**
-- 디렉토리/컴포넌트별 요약으로 전환
-- 스펙에 문서화된 컴포넌트에 집중
-- 사용자에게 대규모 PR임을 알리고 핵심 변경사항 위주로 진행
+**Handling large PRs (changedFiles > 50):**
+- Switch to directory/component-level summary
+- Focus on components documented in the spec
+- Inform user about the large PR and proceed with key changes only
 
-#### Step 4: 변경사항 분석
+#### Step 4: Analyze changes
 
-PR의 파일 변경사항을 스펙 컴포넌트에 매핑:
+Map PR file changes to spec components:
 
-| 분류 | 판별 기준 | 예시 |
-|------|----------|------|
-| New Features | 새 파일/모듈 추가, 새 엔드포인트, 새 클래스 | 새 서비스 클래스, 새 API 엔드포인트 |
-| Improvements | 기존 파일 수정, 성능 개선, 리팩토링 | 함수 최적화, 코드 정리 |
-| Bug Fixes | 버그 수정 커밋, 에러 핸들링 추가 | 예외 처리 추가, 조건문 수정 |
-| Component Changes | 컴포넌트 구조 변경, 인터페이스 변경 | 새 메서드 추가, 시그니처 변경 |
-| Configuration Changes | 설정 파일 변경, 환경변수 추가 | .env 변경, config 파일 수정 |
+| Category | Detection Criteria | Examples |
+|----------|-------------------|----------|
+| New Features | New files/modules added, new endpoints, new classes | New service class, new API endpoint |
+| Improvements | Existing file modifications, performance improvements, refactoring | Function optimization, code cleanup |
+| Bug Fixes | Bug fix commits, error handling additions | Exception handling added, condition fix |
+| Component Changes | Component structure changes, interface changes | New method added, signature change |
+| Configuration Changes | Config file changes, environment variable additions | .env change, config file modification |
 
-#### Step 5: 패치 초안 생성
+#### Step 5: Generate patch draft
 
-수집/분석된 정보를 `_sdd/pr/spec_patch_draft.md`에 구조화하여 저장합니다.
+Save the collected/analyzed information in structured form to `_sdd/pr/spec_patch_draft.md`.
 
-출력 형식은 아래 [Output Format](#output-format) 섹션을 참조하세요.
+See the [Output Format](#output-format) section below for the output format.
 
-#### Step 6: 사용자에게 제시
+#### Step 6: Present to user
 
-1. 생성된 패치 초안 요약을 보여줌
-2. 질문 및 제안 섹션의 주요 항목을 하이라이트
-3. 다음 단계 안내:
-   - 내용 정제가 필요하면 대화 계속
-   - 확정되면 `/spec-update-todo`로 반영 가능
+1. Show summary of the generated patch draft
+2. Highlight key items from the questions and suggestions section
+3. Guide next steps:
+   - Continue conversation if refinement is needed
+   - Once finalized, can be applied via `/spec-update-todo`
 
-### Mode 2: 대화 기반 업데이트 (기존 초안 있음)
+### Mode 2: Conversation-based update (existing draft)
 
-#### Step 1: 기존 초안 로드
+#### Step 1: Load existing draft
 
 ```
-1. `_sdd/pr/spec_patch_draft.md` 내용 읽기
-2. 초안의 PR 번호와 현재 요청 비교
-3. 다른 PR의 초안인 경우: AskUserQuestion으로 처리 방법 확인
-   - 기존 초안 아카이브 후 새로 생성
-   - 작업 중단
+1. Read contents of `_sdd/pr/spec_patch_draft.md`
+2. Compare the draft's PR number with the current request
+3. If the draft is for a different PR: use AskUserQuestion to determine handling
+   - Archive existing draft and create new one
+   - Abort operation
 ```
 
-#### Step 2: 사용자 의도 확인
+#### Step 2: Confirm user intent
 
-AskUserQuestion을 사용하여 작업 유형 확인:
+Use AskUserQuestion to determine the operation type:
 
-- **내용 정제**: 기존 패치 내용 수정/보완
-- **질문 해결**: 질문 및 제안 섹션의 항목에 답변
-- **항목 추가**: 새로운 변경사항 추가
-- **항목 제거**: 불필요한 항목 삭제
-- **재생성**: PR 데이터 다시 수집하여 초안 재생성
-- **확정**: 현재 초안을 최종 확정
+- **Refine content**: Modify/supplement existing patch content
+- **Resolve questions**: Answer items in the questions and suggestions section
+- **Add items**: Add new changes
+- **Remove items**: Delete unnecessary items
+- **Regenerate**: Re-collect PR data and regenerate draft
+- **Finalize**: Confirm current draft as final
 
-#### Step 3: 변경 적용
+#### Step 3: Apply changes
 
-사용자 피드백에 따라 해당 섹션 업데이트:
-- 패치 내용 수정/추가/삭제
-- 질문 항목 해결 처리
-- 스펙 갭 업데이트
+Update relevant sections based on user feedback:
+- Modify/add/remove patch content
+- Mark questions as resolved
+- Update spec gaps
 
-#### Step 4: 저장
+#### Step 4: Save
 
-- 초안 파일 업데이트
-- 메타데이터의 대화 라운드 증가
-- 타임스탬프 갱신
+- Update draft file
+- Increment conversation round in metadata
+- Update timestamp
 
 ## Output Format
 
@@ -163,105 +163,105 @@ AskUserQuestion을 사용하여 작업 유형 확인:
 **PR Author**: <author>
 **PR URL**: <url>
 **Target Spec**: <spec filename>
-**Status**: 초안 / 검토됨 / 확정됨
+**Status**: Draft / Reviewed / Finalized
 
 ---
 
-## PR 요약
+## PR Summary
 
-**브랜치**: <head> → <base>
-**변경 규모**: +<additions> -<deletions>, <changedFiles>개 파일
-**주요 변경사항**:
+**Branch**: <head> → <base>
+**Change Scale**: +<additions> -<deletions>, <changedFiles> files
+**Key Changes**:
 - <change 1>
 - <change 2>
 - <change 3>
 
 ---
 
-## 스펙 패치 내용
+## Spec Patch Content
 
-<!-- spec-update-todo의 "Spec Update Input" 형식과 호환 -->
+<!-- Compatible with spec-update-todo's "Spec Update Input" format -->
 
 ### New Features
 
-#### Feature: <기능 이름>
+#### Feature: <feature name>
 **Priority**: High/Medium/Low
-**Category**: <카테고리>
-**Target Component**: <대상 컴포넌트>
+**Category**: <category>
+**Target Component**: <target component>
 **Source**: PR #<number>
 
 **Description**:
-<기능 설명>
+<feature description>
 
 **Acceptance Criteria**:
-- [ ] 기준 1
-- [ ] 기준 2
+- [ ] Criterion 1
+- [ ] Criterion 2
 
-**PR 근거**:
-- `<file>:<line>` - <변경 내용 요약>
+**PR Evidence**:
+- `<file>:<line>` - <change summary>
 
 ---
 
 ### Improvements
 
-#### Improvement: <개선 이름>
+#### Improvement: <improvement name>
 **Priority**: High/Medium/Low
-**Current State**: <현재 상태>
-**Proposed**: <제안 내용>
-**Reason**: <개선 이유>
+**Current State**: <current state>
+**Proposed**: <proposed change>
+**Reason**: <reason for improvement>
 **Source**: PR #<number>
 
-**PR 근거**:
-- `<file>:<line>` - <변경 내용 요약>
+**PR Evidence**:
+- `<file>:<line>` - <change summary>
 
 ---
 
 ### Bug Reports
 
-#### Bug Fix: <버그 수정 이름>
+#### Bug Fix: <bug fix name>
 **Severity**: High/Medium/Low
-**Location**: <파일:라인>
+**Location**: <file:line>
 **Source**: PR #<number>
 
 **Description**:
-<수정된 버그 설명>
+<bug description>
 
 **Fix Approach**:
-<수정 방법>
+<fix method>
 
-**PR 근거**:
-- `<file>:<line>` - <변경 내용 요약>
+**PR Evidence**:
+- `<file>:<line>` - <change summary>
 
 ---
 
 ### Component Changes
 
-#### New Component: <컴포넌트 이름>
-**Purpose**: <목적>
-**Input**: <입력>
-**Output**: <출력>
+#### New Component: <component name>
+**Purpose**: <purpose>
+**Input**: <input>
+**Output**: <output>
 **Source**: PR #<number>
 
 **Planned Methods**:
-- `method_name()` - 설명
+- `method_name()` - description
 
-#### Update Component: <컴포넌트 이름>
+#### Update Component: <component name>
 **Change Type**: Enhancement/Refactor/Fix
 **Source**: PR #<number>
 
 **Changes**:
-- 변경 사항 1
-- 변경 사항 2
+- Change 1
+- Change 2
 
 ---
 
 ### Configuration Changes
 
-#### New Config: <설정 이름>
+#### New Config: <config name>
 **Type**: Environment Variable / Config File
 **Required**: Yes/No
-**Default**: <기본값>
-**Description**: <설명>
+**Default**: <default value>
+**Description**: <description>
 **Source**: PR #<number>
 
 ---
@@ -269,114 +269,114 @@ AskUserQuestion을 사용하여 작업 유형 확인:
 ### Notes
 
 #### Context
-<PR의 배경 및 맥락>
+<PR background and context>
 
 #### Constraints
-<제약 사항>
+<constraints>
 
 ---
 
-## 질문 및 제안
+## Questions and Suggestions
 
-### 확인 필요 사항
+### Items Requiring Confirmation
 
-1. **[섹션: <스펙 섹션명>]** <질문 내용>
-   - 맥락: <왜 이 질문이 필요한지>
-   - 제안: <권장 방안>
+1. **[Section: <spec section name>]** <question content>
+   - Context: <why this question is needed>
+   - Suggestion: <recommended approach>
 
-2. **[섹션: <스펙 섹션명>]** <질문 내용>
-   - 맥락: <왜 이 질문이 필요한지>
-   - 제안: <권장 방안>
+2. **[Section: <spec section name>]** <question content>
+   - Context: <why this question is needed>
+   - Suggestion: <recommended approach>
 
-### 스펙 갭
+### Spec Gaps
 
-| # | 설명 | 스펙 섹션 | PR 근거 | 제안 |
-|---|------|----------|---------|------|
-| 1 | <갭 설명> | <관련 스펙 섹션> | `<file>:<line>` | <제안> |
+| # | Description | Spec Section | PR Evidence | Suggestion |
+|---|------------|-------------|-------------|------------|
+| 1 | <gap description> | <related spec section> | `<file>:<line>` | <suggestion> |
 
-### 모호한 사항
+### Ambiguous Items
 
-- <모호한 점 1>
-- <모호한 점 2>
+- <ambiguity 1>
+- <ambiguity 2>
 
 ---
 
-## 메타데이터
+## Metadata
 
-**생성일**: YYYY-MM-DD HH:MM
-**스펙 버전**: <version>
-**PR 커밋**: <HEAD SHA>
-**대화 라운드**: <count>
+**Created**: YYYY-MM-DD HH:MM
+**Spec version**: <version>
+**PR commit**: <HEAD SHA>
+**Conversation round**: <count>
 ```
 
 ## Edge Cases
 
-| 상황 | 대응 |
-|------|------|
-| 스펙 파일 없음 | 경고 후 `/spec-create` 권장, 사용자 동의 시 baseline 없이 생성 |
-| PR 없음 / `gh` 미인증 | 오류 감지, `gh auth login` 안내 |
-| 여러 스펙 파일 존재 | AskUserQuestion으로 비교 대상 선택 |
-| 다른 PR의 기존 초안 | AskUserQuestion: 아카이브 후 새로 생성 / 작업 중단 |
-| 이미 머지된 PR | 허용 (소급 스펙 유지보수), 머지 상태 명시 |
-| 대규모 PR (50+ 파일) | 디렉토리/컴포넌트별 요약, 스펙 관련 컴포넌트 집중 |
-| PR에 스펙 관련 변경 없음 | 사용자에게 알림, 최소한의 패치 초안 생성 |
+| Situation | Response |
+|-----------|----------|
+| No spec file | Warn, recommend `/spec-create`, generate without baseline if user agrees |
+| No PR / `gh` not authenticated | Detect error, guide `gh auth login` |
+| Multiple spec files exist | Use AskUserQuestion to select comparison target |
+| Existing draft for a different PR | AskUserQuestion: archive and create new / abort |
+| Already merged PR | Allow (retroactive spec maintenance), note merge status |
+| Large PR (50+ files) | Directory/component-level summary, focus on spec-related components |
+| No spec-related changes in PR | Notify user, generate minimal patch draft |
 
 ## Workflow Integration
 
 ```
-implementation → PR → pr-spec-patch → (사용자 정제) → spec-update-todo
-                          ↑                              │
-                     현재 스펙                        메인 스펙 업데이트
-                  (_sdd/spec/)                     (_sdd/spec/)
+implementation → PR → pr-spec-patch → (user refinement) → spec-update-todo
+                          ↑                                    │
+                     current spec                        main spec update
+                  (_sdd/spec/)                         (_sdd/spec/)
 ```
 
-1. **pr-spec-patch** (이 스킬): PR과 스펙을 비교하여 패치 초안 생성
-2. **사용자 정제**: 대화를 통해 초안을 검토/수정/확정
-3. **spec-update-todo**: 확정된 패치를 메인 스펙에 반영
+1. **pr-spec-patch** (this skill): Compare PR against spec and generate patch draft
+2. **User refinement**: Review/modify/finalize draft through conversation
+3. **spec-update-todo**: Apply finalized patch to the main spec
 
 ## Best Practices
 
-### 효과적인 패치 생성
+### Effective Patch Generation
 
-- **PR 근거 명시**: 모든 패치 항목에 PR diff의 구체적 파일:라인 참조 포함
-- **스펙 섹션 매핑**: 각 변경사항이 스펙의 어느 섹션에 해당하는지 명확히 표시
-- **우선순위 설정**: PR의 변경 규모와 영향도를 기반으로 우선순위 부여
-- **질문 구체화**: 확인이 필요한 사항은 맥락과 제안을 함께 제시
+- **Cite PR evidence**: Include specific file:line references from the PR diff for all patch items
+- **Map to spec sections**: Clearly indicate which spec section each change corresponds to
+- **Set priorities**: Assign priorities based on the PR's change scale and impact
+- **Specific questions**: Include context and suggestions when asking for confirmation
 
-### 대화 기반 정제
+### Conversation-Based Refinement
 
-- **점진적 개선**: 한 번에 완벽한 초안보다 반복적 정제를 지향
-- **질문 해결 우선**: 미해결 질문이 있으면 먼저 해결 후 확정
-- **변경 이력 추적**: 대화 라운드를 통해 수정 이력 관리
+- **Iterative improvement**: Aim for iterative refinement rather than a perfect draft in one pass
+- **Resolve questions first**: Resolve outstanding questions before finalizing
+- **Track change history**: Manage revision history through conversation rounds
 
-### 파일 관리
+### File Management
 
-- **단일 초안 유지**: PR당 하나의 패치 초안 파일 유지
-- **아카이브**: 다른 PR의 초안은 아카이브 후 새로 생성
-- **확정 후 처리**: 확정된 패치는 `spec-update-todo`로 반영 후 관리
+- **Maintain single draft**: Keep one patch draft file per PR
+- **Archive**: Archive drafts for other PRs before creating new ones
+- **Post-finalization**: Apply finalized patches via `spec-update-todo` for management
 
 ## Language Handling
 
-- **SKILL.md**: 영어 (스킬 정의)
-- **패치 초안 출력**: 한국어 (Korean)
-- **스펙 언어 따르기**: 스펙이 한국어이면 패치도 한국어로 작성
-- **PR 내용 보존**: PR 제목/설명은 원문 유지, 필요시 번역 병기
+- **SKILL.md**: English (skill definition)
+- **Patch draft output**: Korean
+- **Follow spec language**: If the spec is in Korean, write the patch in Korean
+- **Preserve PR content**: Keep PR title/description as-is, provide translation alongside if needed
 
 ## Error Handling
 
-| 상황 | 대응 |
-|------|------|
-| `gh` CLI 미설치 | 설치 안내: `brew install gh` |
-| `gh auth` 실패 | `gh auth login` 실행 안내 |
-| PR 번호 잘못됨 | 오류 메시지 표시, 올바른 PR 번호 요청 |
-| 네트워크 오류 | 재시도 안내 |
-| 스펙 파일 파싱 실패 | 오류 위치 표시, 수동 확인 요청 |
-| `_sdd/pr/` 디렉토리 없음 | 자동 생성 |
+| Situation | Response |
+|-----------|----------|
+| `gh` CLI not installed | Guide installation: `brew install gh` |
+| `gh auth` failure | Guide running `gh auth login` |
+| Wrong PR number | Display error message, request correct PR number |
+| Network error | Guide retry |
+| Spec file parsing failure | Show error location, request manual review |
+| `_sdd/pr/` directory missing | Create automatically |
 
 ## Additional Resources
 
 ### Reference Files
-- **`references/gh-commands.md`** - `gh` CLI 명령어 레퍼런스
+- **`references/gh-commands.md`** - `gh` CLI command reference
 
 ### Example Files
-- **`examples/spec_patch_draft.md`** - 패치 초안 출력 예시
+- **`examples/spec_patch_draft.md`** - Patch draft output example
