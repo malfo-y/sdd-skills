@@ -7,6 +7,24 @@ description: This skill should be used when the user asks to "review spec", "upd
 
 Synchronize `_sdd/spec/` with implementation evidence and review artifacts.
 
+## Simplified Workflow
+
+This skill is **Step 4 of 4** in the simplified SDD workflow:
+
+```
+spec -> feature-draft -> implementation -> spec-update-done (this)
+```
+
+| Step | Skill | Purpose |
+|------|-------|---------|
+| 1 | spec-create | Create the initial spec document |
+| 2 | feature-draft | Draft feature spec patch + implementation plan |
+| 3 | implementation | Execute the implementation plan (TDD + built-in review) |
+| **4** | **spec-update-done** | Sync spec with actual code |
+
+> **Previous workflow** (7 steps): spec -> spec-draft -> spec-update-todo -> implementation-plan -> implementation -> implementation-review -> spec-update-done
+> **New workflow** (4 steps): spec -> feature-draft -> implementation -> spec-update-done
+
 ## Purpose
 
 - Reduce drift between implementation and spec.
@@ -130,9 +148,11 @@ Ask user when:
 
 Recommended flows:
 
-`implementation-review` -> `spec-update-done` -> `spec-summary`
-
 `feature-draft` -> `implementation` -> `spec-update-done`
+
+Optional standalone audit path:
+
+`implementation-review` -> `spec-update-done` -> `spec-summary`
 
 ## References
 

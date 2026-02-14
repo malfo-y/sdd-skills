@@ -7,6 +7,26 @@ description: Use this skill when the user wants to execute an implementation pla
 
 Execute an implementation plan with dependency-aware TDD, phase reviews, and a final review report.
 
+## Simplified Workflow
+
+This skill is **Step 3 of 4** in the simplified SDD workflow:
+
+```
+spec -> feature-draft -> implementation (this) -> spec-update-done
+```
+
+| Step | Skill | Purpose |
+|------|-------|---------|
+| 1 | spec-create | Create the initial spec document |
+| 2 | feature-draft | Draft feature spec patch + implementation plan |
+| **3** | **implementation** | Execute the implementation plan (TDD + built-in review) |
+| 4 | spec-update-done | Sync spec with actual code |
+
+> **Previous workflow** (7 steps): spec -> spec-draft -> spec-update-todo -> implementation-plan -> implementation -> implementation-review -> spec-update-done
+> **New workflow** (4 steps): spec -> feature-draft -> implementation -> spec-update-done
+>
+> This skill includes in-phase and final reviews, so a separate `implementation-review` invocation is optional in the standard flow.
+
 ## Hard Rules
 
 - Do not create, edit, rename, or delete files under `_sdd/spec/`.
@@ -159,9 +179,10 @@ Ask the user directly when:
 
 ## Integration
 
-- Upstream planning: `implementation-plan`, `feature-draft` (Part 2)
+- Simplified standard flow: `spec -> feature-draft -> implementation -> spec-update-done`
+- Upstream planning sources: `feature-draft` (Part 2), `implementation-plan` (legacy/optional)
 - Built-in reviews: phase review + final review inside this skill
-- Standalone audit option: `implementation-review`
+- Standalone audit option: `implementation-review` (optional)
 - Spec sync if drift found: `spec-update-done`
 
 ## References

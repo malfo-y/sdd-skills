@@ -10,6 +10,24 @@ Create a single draft file that contains both:
 - Part 1: spec patch input (compatible with `spec-update-todo`)
 - Part 2: implementation plan (phase/task based)
 
+## Simplified Workflow
+
+This skill is **Step 2 of 4** in the simplified SDD workflow:
+
+```
+spec -> feature-draft (this) -> implementation -> spec-update-done
+```
+
+| Step | Skill | Purpose |
+|------|-------|---------|
+| 1 | spec-create | Create the initial spec document |
+| **2** | **feature-draft** | Draft feature spec patch + implementation plan |
+| 3 | implementation | Execute the implementation plan (TDD + built-in review) |
+| 4 | spec-update-done | Sync spec with actual code |
+
+> **Previous workflow** (7 steps): spec -> spec-draft -> spec-update-todo -> implementation-plan -> implementation -> implementation-review -> spec-update-done
+> **New workflow** (4 steps): spec -> feature-draft -> implementation -> spec-update-done
+
 This skill compresses a 3-step flow into one run:
 `spec-draft -> spec-update-todo -> implementation-plan`.
 
@@ -136,7 +154,11 @@ Before finalizing:
 
 ## Integration
 
-Downstream flow:
+Simplified standard flow:
+
+`spec -> feature-draft -> implementation -> spec-update-done`
+
+Legacy-compatible path (optional):
 
 `feature-draft -> spec-update-todo -> implementation -> implementation-review -> spec-update-done`
 

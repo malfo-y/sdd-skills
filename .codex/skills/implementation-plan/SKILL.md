@@ -5,6 +5,11 @@ description: This skill should be used when the user asks to "create an implemen
 
 # Implementation Plan Creation
 
+> **Simplified Workflow Note**: This skill is part of the **legacy workflow**.
+> In the simplified 4-step workflow (`spec -> feature-draft -> implementation -> spec-update-done`),
+> this skill's functionality is included in **`feature-draft`** (Part 2: Implementation Plan).
+> Use `feature-draft` when possible; it combines `spec-draft` + `spec-update-todo` + `implementation-plan` in one step.
+
 Create structured, actionable implementation plans from user specifications. Follow this systematic approach to transform requirements into executable development tasks.
 
 ## Hard Rule: Spec Documents Are Read-Only

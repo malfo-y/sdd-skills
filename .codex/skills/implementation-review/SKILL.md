@@ -5,6 +5,11 @@ description: Use this skill to review implementation progress against the plan, 
 
 # Implementation Review
 
+> **Simplified Workflow Note**: This skill is part of the **legacy workflow**.
+> In the simplified 4-step workflow (`spec -> feature-draft -> implementation -> spec-update-done`),
+> the `implementation` skill already includes in-phase and final reviews.
+> Use this skill as an optional standalone audit path.
+
 Run an independent audit of implementation status and report readiness with evidence.
 
 ## Hard Rule

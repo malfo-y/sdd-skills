@@ -5,6 +5,11 @@ description: This skill should be used when the user asks to "update spec with f
 
 # Spec Update from Planned Inputs
 
+> **Simplified Workflow Note**: This skill is part of the **legacy workflow**.
+> In the simplified 4-step workflow (`spec -> feature-draft -> implementation -> spec-update-done`),
+> this skill's functionality is included in **`feature-draft`** (Part 1).
+> Use `feature-draft` when possible; it combines `spec-draft` + `spec-update-todo` + `implementation-plan` in one step.
+
 Update spec documents with newly requested features, improvements, and planned work.
 
 ## Purpose
