@@ -12,6 +12,8 @@ description: Use this skill to review implementation progress against the plan, 
 
 Run an independent audit of implementation status and report readiness with evidence.
 
+Always output the report as documented under "## Output" section below.
+
 ## Hard Rule
 
 - Do not modify files under `_sdd/spec/`.

@@ -7,6 +7,8 @@ description: Use this skill when the user wants to execute an implementation pla
 
 Execute an implementation plan with dependency-aware TDD, phase reviews, and a final review report.
 
+Always output reports as documented under below sections.
+
 ## Simplified Workflow
 
 This skill is **Step 3 of 4** in the simplified SDD workflow:
@@ -31,7 +33,8 @@ spec -> feature-draft -> implementation (this) -> spec-update-done
 
 - Do not create, edit, rename, or delete files under `_sdd/spec/`.
 - If spec drift is discovered, record it in progress notes and hand off to `spec-update-todo` or `spec-update-done`.
-- Before running tests or runtime commands, apply `_sdd/env.md` when present.
+- Before running tests or runtime commands, look for `_sdd/env.md` and apply the required environment setup based on its content.
+- If there is no `_sdd/env.md`, ask the user for the required runtime/test environment instead of guessing.
 
 ## Inputs
 

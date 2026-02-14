@@ -10,6 +10,8 @@ Create a single draft file that contains both:
 - Part 1: spec patch input (compatible with `spec-update-todo`)
 - Part 2: implementation plan (phase/task based)
 
+which is saved as documented under "## Output" section below.
+
 ## Simplified Workflow
 
 This skill is **Step 2 of 4** in the simplified SDD workflow:

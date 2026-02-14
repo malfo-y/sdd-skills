@@ -7,6 +7,8 @@ description: This skill should be used when the user asks to "review PR", "PR re
 
 Review PR implementation against the current spec and spec patch draft, then issue a structured verdict.
 
+Always output the report as documented under "## Output" section below.
+
 ## Hard Rule
 
 - Do not modify `_sdd/spec/` in this skill.

@@ -12,6 +12,8 @@ description: This skill should be used when the user asks to "create an implemen
 
 Create structured, actionable implementation plans from user specifications. Follow this systematic approach to transform requirements into executable development tasks.
 
+Always output the plan as documented under "## Output Location" section below.
+
 ## Hard Rule: Spec Documents Are Read-Only
 
 - This skill may **read** the spec as input, but it **MUST NOT** modify any files under `_sdd/spec/`.
