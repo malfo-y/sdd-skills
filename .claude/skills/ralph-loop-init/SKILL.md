@@ -170,6 +170,7 @@ You are running inside an automated training loop. The loop structure is:
 
 ### ANALYZING
 [... what to analyze: project-specific metrics, output files ...]
+[... write ralph/results/experiment_report.md per Section 11 of the reference ...]
 
 ### ADJUSTING
 [... generic debugging protocol from reference ...]
@@ -177,6 +178,7 @@ You are running inside an automated training loop. The loop structure is:
 
 ### DONE
 [... final summary format ...]
+[... confirm experiment_report.md was written ...]
 
 ## action.sh Rules
 
@@ -243,7 +245,7 @@ Files created:
   ralph/PROMPT.md    — LLM instructions for the training loop
   ralph/run.sh       — Loop controller script
   ralph/state.md     — Initial state (SETUP, iteration 0)
-  ralph/results/     — Output directory (empty)
+  ralph/results/     — Output directory (experiment_report.md auto-generated in ANALYZING)
 
 Next steps:
   1. Review and edit ralph/config.sh (especially dataset paths and model paths)
