@@ -1,0 +1,99 @@
+#!/usr/bin/env bash
+# Ralph loop for ML training: LLM thinks -> script executes -> repeat
+#
+# Flow per iteration:
+#   1. LLM reads state.md + results, diagnoses, writes action.sh
+#   2. action.sh executes (training, validation, etc.) -- may take hours
+#   3. action.sh saves results to ralph/results/
+#   4. Loop restarts -> LLM reads new results
+#
+# Usage: bash ralph/run.sh
+# Stop:  Ctrl+C or set phase to DONE in state.md
+
+set -euo pipefail
+cd "$(dirname "$0")/.."
+
+ITERATION=0
+
+while :; do
+  ITERATION=$((ITERATION + 1))
+  echo ""
+  echo "=========================================="
+  echo "  Ralph iteration #${ITERATION}"
+  echo "  $(date '+%Y-%m-%d %H:%M:%S')"
+  echo "=========================================="
+
+  # --- Phase 1: LLM thinks ---
+  echo "[ralph] Phase 1: LLM analyzing state and writing action..."
+  claude -p --dangerously-skip-permissions --output-format stream-json < ralph/PROMPT.md \
+    | tee "ralph/results/llm_iter${ITERATION}.json" \
+    | python3 -u -c "
+import sys, json
+for line in sys.stdin:
+    line = line.strip()
+    if not line: continue
+    try:
+        ev = json.loads(line)
+    except json.JSONDecodeError:
+        continue
+    t = ev.get('type','')
+    if t == 'assistant' and 'content' in ev:
+        for block in ev['content']:
+            if block.get('type') == 'text':
+                print(block['text'], end='', flush=True)
+            elif block.get('type') == 'tool_use':
+                name = block.get('name','')
+                inp = block.get('input',{})
+                if name in ('Read','Glob','Grep'):
+                    target = inp.get('file_path') or inp.get('pattern','')
+                    print(f'  [{name}] {target}', flush=True)
+                elif name == 'Write':
+                    print(f'  [Write] {inp.get(\"file_path\",\"\")}', flush=True)
+                elif name == 'Edit':
+                    print(f'  [Edit] {inp.get(\"file_path\",\"\")}', flush=True)
+                elif name == 'Bash':
+                    cmd = inp.get('command','')[:80]
+                    print(f'  [Bash] {cmd}', flush=True)
+                else:
+                    print(f'  [{name}]', flush=True)
+    elif t == 'result':
+        pass  # tool results -- skip (too verbose)
+" 2>/dev/null || true
+  echo ""
+
+  # Check if state is DONE (LLM decided we're finished)
+  if grep -q "^phase: DONE" ralph/state.md 2>/dev/null; then
+    echo "[ralph] State is DONE. Exiting loop."
+    break
+  fi
+
+  # --- Phase 2: Execute action ---
+  if [ -f ralph/action.sh ]; then
+    echo "[ralph] Phase 2: Executing action.sh..."
+    echo ""
+
+    # Run action.sh, capture exit code (don't fail the loop on error)
+    set +e
+    bash ralph/action.sh
+    ACTION_EXIT=$?
+    set -e
+
+    # Record exit code for LLM to read next iteration
+    echo "${ACTION_EXIT}" > ralph/results/last_exit_code
+
+    if [ ${ACTION_EXIT} -ne 0 ]; then
+      echo "[ralph] action.sh exited with code ${ACTION_EXIT}"
+    else
+      echo "[ralph] action.sh completed successfully"
+    fi
+
+    # Archive action.sh so LLM writes a fresh one next iteration
+    mv ralph/action.sh "ralph/results/action_iter${ITERATION}.sh"
+  else
+    echo "[ralph] No action.sh found -- LLM-only iteration"
+  fi
+
+  echo ""
+  echo "--- Iteration #${ITERATION} complete ---"
+  sleep 3
+done
