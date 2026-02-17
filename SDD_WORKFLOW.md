@@ -25,14 +25,13 @@ Claude와 함께하는 소프트웨어 개발을 위한 SDD 스킬 종합 가이
 
 ### SDD 철학
 
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│                     스펙 = 진실의 단일 공급원                          │
-│                                                                      │
-│    요구사항 ──→ 스펙 ──→ 계획 ──→ 코드 ──→ 리뷰 ──→ 스펙 업데이트     │
-│         ↑                                                    │      │
-│         └────────────────────────────────────────────────────┘      │
-└─────────────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart LR
+    Req["요구사항"]:::step --> Spec["스펙<br/>(Single Source of Truth)"]:::spec --> Plan["계획"]:::step --> Code["코드"]:::step --> Review["리뷰"]:::step --> Sync["스펙 업데이트"]:::step
+    Sync -.->|"피드백/반영"| Spec
+
+    classDef spec fill:#E8F5E9,stroke:#2E7D32,stroke-width:2px,color:#1B5E20;
+    classDef step fill:#E3F2FD,stroke:#1565C0,stroke-width:1.5px,color:#0D47A1;
 ```
 
 ### 현재 제공 SDD 스킬(13개)
@@ -50,7 +49,7 @@ Claude와 함께하는 소프트웨어 개발을 위한 SDD 스킬 종합 가이
 | **pr-spec-patch** | "PR 스펙 패치", "PR 리뷰 준비" | PR과 스펙 비교하여 패치 초안 생성 |
 | **pr-review** | "PR 리뷰", "PR 검증" | PR 구현을 스펙 대비 검증 및 판정 |
 | **implementation-plan** (레거시) | "구현 계획 생성" | 스펙에서 실행 가능한 작업 생성 |
-| **implementation** | "계획 구현", "구현 시작" | TDD 방식으로 작업 실행 |
+| **implementation** | "계획 구현", "구현 검증" | TDD 방식으로 작업 실행 |
 | **implementation-review** (레거시) | "구현 리뷰", "진행 상황 확인" | 계획 대비 구현 검증 |
 
 ### 간소화된 워크플로우 (권장)
@@ -79,18 +78,18 @@ spec-create → feature-draft → implementation → spec-update-done
 project/
 ├── _sdd/
 │   ├── spec/
-	│   │   ├── main.md                   # 메인 스펙 문서 (또는 <project>.md)
-	│   │   ├── user_spec.md              # 스펙 업데이트 입력(자유 형식 가능)
-	│   │   ├── user_draft.md             # 스펙 업데이트 입력(권장 포맷; spec-draft가 생성)
-	│   │   ├── _processed_user_spec.md   # 처리된 입력 (아카이브; spec-update-todo가 rename)
-	│   │   ├── _processed_user_draft.md  # 처리된 입력 (아카이브; spec-update-todo가 rename)
-	│   │   ├── SUMMARY.md                # 스펙 요약 (spec-summary)
-	│   │   ├── SPEC_REVIEW_REPORT.md     # 스펙 리뷰 리포트 (spec-review)
-	│   │   ├── DECISION_LOG.md           # (선택) 결정/근거 기록
-	│   │   └── prev/                      # 스펙 백업 (PREV_*.md)
+│   │   ├── main.md                   # 메인 스펙 문서 (또는 <project>.md)
+│   │   ├── user_spec.md              # 스펙 업데이트 입력(자유 형식 가능)
+│   │   ├── user_draft.md             # 스펙 업데이트 입력(권장 포맷; spec-draft가 생성)
+│   │   ├── _processed_user_spec.md   # 처리된 입력 (아카이브; spec-update-todo가 rename)
+│   │   ├── _processed_user_draft.md  # 처리된 입력 (아카이브; spec-update-todo가 rename)
+│   │   ├── SUMMARY.md                # 스펙 요약 (spec-summary)
+│   │   ├── SPEC_REVIEW_REPORT.md     # 스펙 리뷰 리포트 (spec-review)
+│   │   ├── DECISION_LOG.md           # (선택) 결정/근거 기록
+│   │   └── prev/                      # 스펙 백업 (PREV_*.md)
 │   │
 │   ├── pr/
-	│   │   ├── spec_patch_draft.md       # PR 기반 스펙 패치 초안 (스펙 반영은 spec-update-todo로)
+│   │   ├── spec_patch_draft.md       # PR 기반 스펙 패치 초안 (스펙 반영은 spec-update-todo로)
 │   │   ├── PR_REVIEW.md              # PR 리뷰 리포트
 │   │   └── prev/                      # PR 리포트 백업 (PREV_*.md)
 │   │
@@ -121,25 +120,15 @@ project/
 
 스펙은 두 가지 방식으로 생성할 수 있습니다:
 
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│                      스펙 생성 시작점                                 │
-│                                                                      │
-│   ┌─────────────────────┐         ┌─────────────────────┐           │
-│   │  A. 기존 코드 분석   │         │  B. 사용자 초안 기반  │           │
-│   │                     │         │                     │           │
-│   │  • 레거시 프로젝트   │         │  • 기획서 존재       │           │
-│   │  • 코드 먼저 개발    │         │  • 요구사항 문서화됨  │           │
-│   │  • 문서화 필요       │         │  • 새 프로젝트       │           │
-│   └──────────┬──────────┘         └──────────┬──────────┘           │
-│              │                               │                       │
-│              ▼                               ▼                       │
-│   ┌─────────────────────────────────────────────────────┐           │
-│   │                    spec-create                       │           │
-│   │              → _sdd/spec/main.md 생성                │           │
-│   └─────────────────────────────────────────────────────┘           │
-│                                                                      │
-└─────────────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart LR
+    A["A. 기존 코드 분석<br/>• 레거시 프로젝트<br/>• 코드 먼저 개발<br/>• 문서화 필요"]:::choice --> SC["spec-create"]:::action
+    B["B. 사용자 초안 기반<br/>• 기획서 존재<br/>• 요구사항 문서화됨<br/>• 새 프로젝트"]:::choice --> SC
+    SC --> Out["_sdd/spec/main.md 생성"]:::output
+
+    classDef choice fill:#E3F2FD,stroke:#1565C0,stroke-width:2px,color:#0D47A1;
+    classDef action fill:#E8F5E9,stroke:#2E7D32,stroke-width:2px,color:#1B5E20;
+    classDef output fill:#F5F5F5,stroke:#616161,stroke-width:1.5px,color:#212121;
 ```
 
 #### A. 기존 코드 분석으로 시작
@@ -204,68 +193,69 @@ project/
 
 기능의 복잡도와 상황에 따라 경로를 선택합니다:
 
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│                        구현 경로 선택                                 │
-│                                                                      │
-│  ┌───────────────────────────────────────────────────────────────┐  │
-│  │            경로 A: Feature Draft (권장 — 4단계)                 │  │
-│  │                                                               │  │
-│  │  복잡도: 높음 | 큰 기능, 아키텍처 변경, 문서화 중요             │  │
-│  │                                                               │  │
-│  │  spec-create → feature-draft → implementation → spec-update-done  │  │
-│  │       │            │                │                │        │  │
-│  │       ▼            ▼                ▼                ▼        │  │
-│  │  스펙 생성/    패치 초안 +     TDD로 구현       스펙 동기화     │  │
-│  │  확인          구현 계획                                      │  │
-│  └───────────────────────────────────────────────────────────────┘  │
-│                                                                      │
-│  ┌───────────────────────────────────────────────────────────────┐  │
-│  │        경로 A' (레거시): Spec-First (전체 7단계 프로세스)        │  │
-│  │                                                               │  │
-│  │  세밀한 단계별 제어가 필요할 때 사용                             │  │
-│  │                                                               │  │
-│  │  spec-update-todo → implementation-plan → implementation           │  │
-│  │       │              │                    │                   │  │
-│  │       ▼              ▼                    ▼                   │  │
-│  │  스펙에 기능    계획 수립 및      TDD로 구현                    │  │
-│  │  추가/업데이트   작업 분해                                     │  │
-│  │                                           │                   │  │
-│  │                                           ▼                   │  │
-│  │  spec-update-done ← implementation-review ←────┘                   │  │
-│  └───────────────────────────────────────────────────────────────┘  │
-│                                                                      │
-│  ┌───────────────────────────────────────────────────────────────┐  │
-│  │                  경로 B: Direct Plan (중간 프로세스)             │  │
-│  │                                                               │  │
-│  │  복잡도: 중간 | 명확한 요구사항, 중간 규모 기능                  │  │
-│  │                                                               │  │
-│  │  사용자 입력 → implementation-plan → implementation            │  │
-│  │       │              │                    │                   │  │
-│  │       ▼              ▼                    ▼                   │  │
-│  │  "이 기능을     계획 생성           TDD로 구현                  │  │
-│  │   구현해줘"                                                    │  │
-│  │                                           │                   │  │
-│  │                                           ▼                   │  │
-│  │  (선택적) spec-update-done ← implementation-review ←───┘            │  │
-│  └───────────────────────────────────────────────────────────────┘  │
-│                                                                      │
-│  ┌───────────────────────────────────────────────────────────────┐  │
-│  │                  경로 C: Simple/Direct (간단 프로세스)           │  │
-│  │                                                               │  │
-│  │  복잡도: 낮음 | 버그 수정, 작은 기능, 긴급 수정                  │  │
-│  │                                                               │  │
-│  │  사용자 입력 ──────────→ implementation (직접)                  │  │
-│  │       │                         │                             │  │
-│  │       ▼                         ▼                             │  │
-│  │  "이 버그를                 바로 수정                          │  │
-│  │   고쳐줘"                                                      │  │
-│  │                                 │                             │  │
-│  │                                 ▼                             │  │
-│  │  (선택적) spec-update-done ← implementation-review ←───┘            │  │
-│  └───────────────────────────────────────────────────────────────┘  │
-│                                                                      │
-└─────────────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart LR
+    Start(["구현 경로 선택"]):::start
+
+    %% 경로 A (권장)
+    subgraph A["A: Feature Draft (권장 — 4단계)"]
+        direction TB
+        A1["spec-create<br/>스펙 생성/확인"]:::rec
+        A2["feature-draft<br/>패치 초안 + 구현 계획"]:::rec
+        A3["implementation<br/>TDD로 구현"]:::rec
+        A4["spec-update-done<br/>스펙 동기화"]:::rec
+        A1 --> A2 --> A3 --> A4
+    end
+
+    %% 경로 A' (레거시)
+    subgraph Aprime["A' (레거시): Spec-First (전체 7단계)"]
+        direction TB
+        A1p["spec-update-todo<br/>스펙에 기능 추가/업데이트"]:::legacy
+        A2p["implementation-plan<br/>계획 수립 및 작업 분해"]:::legacy
+        A3p["implementation<br/>TDD로 구현"]:::legacy
+        A4p["implementation-review"]:::legacy
+        A5p["spec-update-done"]:::legacy
+        A1p --> A2p --> A3p --> A4p --> A5p
+    end
+
+    %% 경로 B (중간)
+    subgraph B["B: Direct Plan (중간 프로세스)"]
+        direction TB
+        B0["사용자 입력<br/>'이 기능을 구현해줘'"]:::normal
+        B1["implementation-plan<br/>계획 생성"]:::normal
+        B2["implementation<br/>TDD로 구현"]:::normal
+        B3["implementation-review"]:::normal
+        B4["spec-update-done<br/>(선택적)"]:::normal
+        B0 --> B1 --> B2 --> B3 -.-> B4
+    end
+
+    %% 경로 C (간단)
+    subgraph C["C: Simple/Direct (간단 프로세스)"]
+        direction TB
+        C0["사용자 입력<br/>'이 버그를 고쳐줘'"]:::simple
+        C1["implementation<br/>바로 수정"]:::simple
+        C2["implementation-review"]:::simple
+        C3["spec-update-done<br/>(선택적)"]:::simple
+        C0 --> C1 --> C2 -.-> C3
+    end
+
+    %% 선택 가이드 (Start에서 각 경로로)
+    Start -->|"대규모/복잡"| A1
+    Start -->|"세밀한 단계 제어"| A1p
+    Start -->|"중간 규모"| B0
+    Start -->|"작은 기능/버그"| C0
+
+    %% 스타일
+    classDef start fill:#FFFFFF,stroke:#37474F,stroke-width:2px,color:#263238;
+    classDef rec fill:#E8F5E9,stroke:#2E7D32,stroke-width:2px,color:#1B5E20;
+    classDef legacy fill:#FFF8E1,stroke:#F9A825,stroke-width:2px,color:#6D4C41;
+    classDef normal fill:#E3F2FD,stroke:#1565C0,stroke-width:2px,color:#0D47A1;
+    classDef simple fill:#F5F5F5,stroke:#616161,stroke-width:2px,color:#212121;
+
+    style A stroke:#2E7D32,stroke-width:2px,fill:#F1F8E9
+    style Aprime stroke:#F9A825,stroke-width:2px,fill:#FFFDE7
+    style B stroke:#1565C0,stroke-width:2px,fill:#EAF3FF
+    style C stroke:#616161,stroke-width:2px,fill:#FAFAFA
 ```
 
 ### 경로 선택 가이드
@@ -402,22 +392,14 @@ vim _sdd/spec/user_spec.md
 
 implementation 스킬은 테스트 주도 개발(TDD)을 사용합니다:
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                    작업별 TDD 사이클                              │
-│                                                                  │
-│  각 수용 기준(Acceptance Criterion)에 대해:                       │
-│                                                                  │
-│  ┌─────────┐      ┌─────────┐      ┌──────────┐                │
-│  │  RED    │ ───→ │  GREEN  │ ───→ │ REFACTOR │                │
-│  │실패하는 │      │테스트를 │      │테스트를   │                │
-│  │테스트   │      │통과하는 │      │유지하며   │                │
-│  │작성     │      │최소 코드 │      │정리      │                │
-│  └─────────┘      └─────────┘      └──────────┘                │
-│       │                                   │                     │
-│       └────────── 반복 ───────────────────┘                     │
-│                                                                  │
-└─────────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart LR
+    Red["RED<br/>실패하는 테스트 작성"]:::red --> Green["GREEN<br/>테스트를 통과하는 최소 코드"]:::green --> Ref["REFACTOR<br/>테스트를 유지하며 정리"]:::ref
+    Ref -->|"반복"| Red
+
+    classDef red fill:#FFEBEE,stroke:#C62828,stroke-width:2px,color:#B71C1C;
+    classDef green fill:#E8F5E9,stroke:#2E7D32,stroke-width:2px,color:#1B5E20;
+    classDef ref fill:#E3F2FD,stroke:#1565C0,stroke-width:2px,color:#0D47A1;
 ```
 
 ### 스펙 유지보수 전략
@@ -576,27 +558,14 @@ _sdd/implementation/
 
 ### 리뷰 사이클
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                      리뷰 사이클                              │
-│                                                              │
-│    ┌───────────────┐         ┌────────────────┐             │
-│    │implementation-│         │  spec-update-done   │             │
-│    │    review     │         │                │             │
-│    └───────┬───────┘         └────────┬───────┘             │
-│            │                          │                      │
-│            ▼                          ▼                      │
-│    ┌───────────────┐         ┌────────────────┐             │
-│    │ 코드를 계획   │         │ 스펙을 코드    │             │
-│    │ 대비 검증     │         │ 대비 검증      │             │
-│    └───────────────┘         └────────────────┘             │
-│            │                          │                      │
-│            ▼                          ▼                      │
-│    PROGRESS.md 업데이트       SPEC.md 업데이트               │
-│    갭 식별                    드리프트 식별                  │
-│    다음 단계 제안             문서 동기화                    │
-│                                                              │
-└─────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart LR
+    IR["implementation-review"]:::normal --> PlanCheck["코드를 계획 대비 검증"]:::normal --> Prog["PROGRESS.md 업데이트<br/>갭 식별 / 다음 단계 제안"]:::doc
+    SUD["spec-update-done"]:::rec --> SpecCheck["스펙을 코드 대비 검증"]:::rec --> SpecDoc["SPEC.md 업데이트<br/>드리프트 식별 / 문서 동기화"]:::doc
+
+    classDef normal fill:#E3F2FD,stroke:#1565C0,stroke-width:2px,color:#0D47A1;
+    classDef rec fill:#E8F5E9,stroke:#2E7D32,stroke-width:2px,color:#1B5E20;
+    classDef doc fill:#F5F5F5,stroke:#616161,stroke-width:1.5px,color:#212121;
 ```
 
 필요 시(이상 징후 또는 대규모 변경 직후) `/spec-review`를 추가로 실행해 최종 검증합니다.
@@ -670,55 +639,63 @@ _sdd/implementation/
 
 ### 전체 워크플로우 다이어그램
 
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│                         SDD 전체 워크플로우                           │
-│                                                                      │
-│                    ┌──────────────────────┐                         │
-│                    │      시작점 선택      │                         │
-│                    └──────────┬───────────┘                         │
-│                               │                                      │
-│              ┌────────────────┼────────────────┐                    │
-│              ▼                ▼                ▼                    │
-│      ┌─────────────┐  ┌─────────────┐  ┌─────────────┐             │
-│      │ 기존 코드    │  │ 사용자 초안  │  │ 직접 요청   │             │
-│      │ 분석        │  │ 기반        │  │ (간단한 것) │             │
-│      └──────┬──────┘  └──────┬──────┘  └──────┬──────┘             │
-│             │                │                │                     │
-│             └────────┬───────┘                │                     │
-│                      ▼                        │                     │
-│              ┌─────────────┐                  │                     │
-│              │ spec-create │                  │                     │
-│              └──────┬──────┘                  │                     │
-│                     │                         │                     │
-│         ┌───────────┼─────────────────────────┤                     │
-│         │           │                         │                     │
-│         ▼           ▼                         ▼                     │
-│   ┌──────────┐ ┌──────────┐           ┌────────────────────┐       │
-│   │Feature   │ │Direct    │           │     Simple         │       │
-│   │Draft(권장)│ │Plan 경로B│           │     경로 C         │       │
-│   │ 경로 A   │ └────┬─────┘           └─────────┬──────────┘       │
-│   └────┬─────┘      │                          │                   │
-│        │            │                          │                   │
-│        ▼            ▼                          │                   │
-│   ┌──────────┐ ┌─────────────────┐             │                   │
-│   │feature-  │ │implementation-  │             │                   │
-│   │  draft   │ │     plan        │             │                   │
-│   └────┬─────┘ └────────┬────────┘             │                   │
-│        │                │                      │                   │
-│        └────────┬───────┘                      │                   │
-│                 ▼                               │                   │
-│        ┌─────────────────┐                     │                   │
-│        │ implementation  │ ←───────────────────┘                   │
-│        │    (TDD)        │                                          │
-│        └────────┬────────┘                                          │
-│                 │                                                   │
-│                 ▼                                                   │
-│        ┌─────────────────┐                                          │
-│        │  spec-update-done    │────────→ (사이클 반복)                    │
-│        └─────────────────┘                                          │
-│                                                                      │
-└─────────────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TB
+    Start(["시작점 선택"]):::start
+
+    CodeBase["기존 코드 분석"]:::choice
+    Draft["사용자 초안 기반"]:::choice
+    Direct["직접 요청<br/>(간단한 것)"]:::choice
+
+    SC["spec-create"]:::action --> SpecOut["_sdd/spec/main.md"]:::output
+
+    subgraph Paths["구현 경로"]
+        direction LR
+
+        subgraph PathA["경로 A: Feature Draft (권장)"]
+            direction TB
+            FD["feature-draft"]:::rec
+        end
+
+        subgraph PathB["경로 B: Direct Plan"]
+            direction TB
+            IP["implementation-plan"]:::normal
+        end
+
+        subgraph PathC["경로 C: Simple"]
+            direction TB
+            Simple["(직접) implementation"]:::simple
+        end
+    end
+
+    Impl["implementation<br/>(TDD)"]:::action
+    Sync["spec-update-done"]:::rec
+
+    Start --> CodeBase --> SC
+    Start --> Draft --> SC
+    Start --> Direct --> PathC
+
+    SC --> PathA
+    SC --> PathB
+    SC --> PathC
+
+    FD --> Impl
+    IP --> Impl
+    Simple --> Impl
+    Impl --> Sync
+    Sync -.->|"사이클 반복"| Start
+
+    classDef start fill:#FFFFFF,stroke:#37474F,stroke-width:2px,color:#263238;
+    classDef choice fill:#E3F2FD,stroke:#1565C0,stroke-width:2px,color:#0D47A1;
+    classDef action fill:#FFFFFF,stroke:#37474F,stroke-width:2px,color:#263238;
+    classDef rec fill:#E8F5E9,stroke:#2E7D32,stroke-width:2px,color:#1B5E20;
+    classDef normal fill:#E3F2FD,stroke:#1565C0,stroke-width:2px,color:#0D47A1;
+    classDef simple fill:#F5F5F5,stroke:#616161,stroke-width:2px,color:#212121;
+    classDef output fill:#F5F5F5,stroke:#616161,stroke-width:1.5px,color:#212121;
+
+    style PathA stroke:#2E7D32,stroke-width:2px,fill:#F1F8E9
+    style PathB stroke:#1565C0,stroke-width:2px,fill:#EAF3FF
+    style PathC stroke:#616161,stroke-width:2px,fill:#FAFAFA
 ```
 
 ### 모범 사례
