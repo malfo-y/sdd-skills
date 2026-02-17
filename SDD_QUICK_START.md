@@ -26,18 +26,20 @@
 
 ## 스펙 생성 시작점
 
-```
-┌─────────────────────┐         ┌─────────────────────┐
-│  A. 기존 코드 분석   │         │  B. 사용자 초안 기반  │
-│  • 레거시 프로젝트   │         │  • 기획서 존재       │
-│  • 문서화 필요       │         │  • 새 프로젝트       │
-└──────────┬──────────┘         └──────────┬──────────┘
-           │                               │
-           └───────────────┬───────────────┘
-                           ▼
-                    ┌─────────────┐
-                    │ spec-create │
-                    └─────────────┘
+```mermaid
+flowchart LR
+    A["A. 기존 코드 분석<br/>• 레거시 프로젝트<br/>• 문서화 필요"]:::choice
+    B["B. 사용자 초안 기반<br/>• 기획서 존재<br/>• 새 프로젝트"]:::choice
+    SC["spec-create"]:::action
+    Out["_sdd/spec/main.md 생성"]:::output
+
+    A --> SC
+    B --> SC
+    SC --> Out
+
+    classDef choice fill:#E3F2FD,stroke:#1565C0,stroke-width:2px,color:#0D47A1;
+    classDef action fill:#E8F5E9,stroke:#2E7D32,stroke-width:2px,color:#1B5E20;
+    classDef output fill:#F5F5F5,stroke:#616161,stroke-width:1.5px,color:#212121;
 ```
 
 ---

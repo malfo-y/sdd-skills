@@ -35,6 +35,11 @@ spec → feature-draft → implementation (this) → spec-update-done
   - Report it in the progress report / chat, and
   - Ask the user to update the spec via `spec-update-todo` (or run a spec audit via `spec-update-done`).
 
+## Output reports
+
+- Save per-phase report under `<project-root>/_sdd/implementation/IMPLEMENTATION_REPORT_PHASE_<phase-number>.md`.
+- Save the final report under a user-specified file (default: `<project-root>/_sdd/implementation/IMPLEMENTATION_REPORT.md`).
+
 ## Core Principle: Test-Driven Development
 
 All implementation follows the **Red-Green-Refactor** cycle:
