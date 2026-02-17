@@ -1,0 +1,126 @@
+#!/usr/bin/env bash
+# Ralph loop for ML training: Codex plans -> script executes -> repeat
+#
+# Flow per iteration:
+#   1. Codex reads state.md + results, diagnoses, writes action.sh
+#   2. action.sh executes (training, validation, etc.) -- may take hours
+#   3. action.sh saves results to ralph/results/
+#   4. Loop restarts -> Codex reads new results
+#
+# Usage: bash ralph/run.sh
+# Stop:  Ctrl+C or set phase to DONE in state.md
+
+set -euo pipefail
+cd "$(dirname "$0")/.."
+
+ITERATION=0
+AGENT_FAIL_COUNT=0
+MAX_AGENT_FAILURES=3
+
+mkdir -p ralph/results
+
+while :; do
+  ITERATION=$((ITERATION + 1))
+  echo ""
+  echo "=========================================="
+  echo "  Ralph iteration #${ITERATION}"
+  echo "  $(date '+%Y-%m-%d %H:%M:%S')"
+  echo "=========================================="
+
+  # --- Phase 1: Codex thinks ---
+  echo "[ralph] Phase 1: Codex analyzing state and writing action..."
+  # Disable errexit temporarily so Codex failures are handled by retry logic.
+  set +e
+  codex exec --dangerously-bypass-approvals-and-sandbox --json - < ralph/PROMPT.md \
+    | tee "ralph/results/codex_iter${ITERATION}.json" \
+    | python3 -u -c "
+import sys, json
+for line in sys.stdin:
+    line = line.strip()
+    if not line:
+        continue
+    try:
+        ev = json.loads(line)
+    except json.JSONDecodeError:
+        continue
+
+    t = ev.get('type', '')
+
+    if t == 'item.started':
+        item = ev.get('item', {})
+        if item.get('type') == 'command_execution':
+            cmd = item.get('command', '')
+            if cmd:
+                print(f'  [Command] {cmd}', flush=True)
+
+    elif t == 'item.completed':
+        item = ev.get('item', {})
+        item_type = item.get('type', '')
+
+        if item_type == 'agent_message':
+            text = item.get('text', '')
+            if text:
+                print(text, end='' if text.endswith('\\n') else '\\n', flush=True)
+
+        elif item_type == 'command_execution':
+            cmd = item.get('command', '')
+            code = item.get('exit_code')
+            if cmd:
+                print(f'  [Command done] {cmd}', flush=True)
+            if code is not None:
+                print(f'  [Exit] {code}', flush=True)
+" 2>/dev/null
+  AGENT_EXIT=$?
+  set -e
+  echo ""
+
+  if [ ${AGENT_EXIT} -ne 0 ]; then
+    AGENT_FAIL_COUNT=$((AGENT_FAIL_COUNT + 1))
+    echo "[ralph] Codex step failed (exit code ${AGENT_EXIT}, failure ${AGENT_FAIL_COUNT}/${MAX_AGENT_FAILURES})"
+    if [ ${AGENT_FAIL_COUNT} -ge ${MAX_AGENT_FAILURES} ]; then
+      echo "[ralph] ERROR: Codex step failed ${MAX_AGENT_FAILURES} consecutive times. Exiting."
+      echo "[ralph] Check: codex CLI installed? auth valid? network OK?"
+      exit 1
+    fi
+    echo "[ralph] Retrying after sleep..."
+    sleep 10
+    continue
+  fi
+  AGENT_FAIL_COUNT=0
+
+  # Check if state is DONE (Codex decided we're finished)
+  if grep -q "^phase: DONE" ralph/state.md 2>/dev/null; then
+    echo "[ralph] State is DONE. Exiting loop."
+    break
+  fi
+
+  # --- Phase 2: Execute action ---
+  if [ -f ralph/action.sh ]; then
+    echo "[ralph] Phase 2: Executing action.sh..."
+    echo ""
+
+    # Run action.sh, capture exit code (don't fail the loop on error)
+    set +e
+    bash ralph/action.sh
+    ACTION_EXIT=$?
+    set -e
+
+    # Record exit code for Codex to read next iteration
+    echo "${ACTION_EXIT}" > ralph/results/last_exit_code
+
+    if [ ${ACTION_EXIT} -ne 0 ]; then
+      echo "[ralph] action.sh exited with code ${ACTION_EXIT}"
+    else
+      echo "[ralph] action.sh completed successfully"
+    fi
+
+    # Archive action.sh so Codex writes a fresh one next iteration
+    mv ralph/action.sh "ralph/results/action_iter${ITERATION}.sh"
+  else
+    echo "[ralph] No action.sh found -- agent-only iteration"
+  fi
+
+  echo ""
+  echo "--- Iteration #${ITERATION} complete ---"
+  sleep 3
+done

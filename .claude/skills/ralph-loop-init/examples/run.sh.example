@@ -14,6 +14,10 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 ITERATION=0
+LLM_FAIL_COUNT=0
+MAX_LLM_FAILURES=3
+
+mkdir -p ralph/results
 
 while :; do
   ITERATION=$((ITERATION + 1))
@@ -25,6 +29,8 @@ while :; do
 
   # --- Phase 1: LLM thinks ---
   echo "[ralph] Phase 1: LLM analyzing state and writing action..."
+  # Disable errexit temporarily so LLM failures are handled by retry logic.
+  set +e
   claude -p --dangerously-skip-permissions --output-format stream-json < ralph/PROMPT.md \
     | tee "ralph/results/llm_iter${ITERATION}.json" \
     | python3 -u -c "
@@ -58,8 +64,24 @@ for line in sys.stdin:
                     print(f'  [{name}]', flush=True)
     elif t == 'result':
         pass  # tool results -- skip (too verbose)
-" 2>/dev/null || true
+" 2>/dev/null
+  LLM_EXIT=$?
+  set -e
   echo ""
+
+  if [ ${LLM_EXIT} -ne 0 ]; then
+    LLM_FAIL_COUNT=$((LLM_FAIL_COUNT + 1))
+    echo "[ralph] LLM step failed (exit code ${LLM_EXIT}, failure ${LLM_FAIL_COUNT}/${MAX_LLM_FAILURES})"
+    if [ ${LLM_FAIL_COUNT} -ge ${MAX_LLM_FAILURES} ]; then
+      echo "[ralph] ERROR: LLM step failed ${MAX_LLM_FAILURES} consecutive times. Exiting."
+      echo "[ralph] Check: claude CLI installed? API key valid? Network OK?"
+      exit 1
+    fi
+    echo "[ralph] Retrying after sleep..."
+    sleep 10
+    continue
+  fi
+  LLM_FAIL_COUNT=0
 
   # Check if state is DONE (LLM decided we're finished)
   if grep -q "^phase: DONE" ralph/state.md 2>/dev/null; then

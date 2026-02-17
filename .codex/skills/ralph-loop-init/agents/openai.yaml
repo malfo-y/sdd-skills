@@ -1,0 +1,4 @@
+interface:
+  display_name: "Ralph Loop Init"
+  short_description: "Initialize Codex ralph training-loop scaffolding"
+  default_prompt: "Use the ralph-loop-init workflow and follow its SKILL.md exactly."
