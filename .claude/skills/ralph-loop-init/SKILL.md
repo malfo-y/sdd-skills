@@ -6,6 +6,8 @@ version: 1.0.0
 
 # Ralph Loop Initialization
 
+> **Security Notice**: The generated `run.sh` uses `--dangerously-skip-permissions` to enable unattended automation. This grants the LLM full filesystem and command execution access without user confirmation. **Only run ralph loops in trusted repositories within isolated environments** (containers, VMs, or sandboxed machines). Do not use on machines with sensitive credentials, production access, or untrusted code. Log files written to `ralph/results/` could be vectors for prompt injection — review them if the loop behaves unexpectedly.
+
 Generate a complete `ralph/` directory for LLM-driven automated ML training debugging. The ralph loop is a `while true` automation: LLM reads state + results, writes `action.sh`, the script executes it, and the loop repeats until training is complete or the LLM escalates to a human.
 
 This skill discovers the project's training pipeline, confirms findings with the user, and generates four project-specific files: `config.sh`, `PROMPT.md`, `run.sh`, and `state.md`.
@@ -45,7 +47,7 @@ Use Glob and Grep to find:
 - Identify dataset format (local files + JSONL, WebDataset, HuggingFace datasets, etc.)
 
 ### 1.4 Structured Logging
-- Grep for `[TRAIN]` in the training script source code
+- Grep for the literal string `[TRAIN]` in the training script source code (use fixed-string mode or escape brackets: `\[TRAIN\]`)
 - If found: PROMPT.md will include `[TRAIN]` event parsing instructions
 - If not found: PROMPT.md will instruct parsing raw log output instead
 
@@ -124,7 +126,7 @@ LOG_EVERY=10
 This is the most critical file. It tells the LLM inside the ralph loop exactly what to do.
 
 ### 4.1 Read the Reference
-Read the file at: `~/.claude/skills/ralph-loop-init/references/ralph-loop-concept.md`
+Find and read `ralph-loop-concept.md` by globbing for `**/.claude/skills/ralph-loop-init/references/ralph-loop-concept.md`. This works regardless of whether the skill is installed globally (`~/.claude/skills/`) or locally (`.claude/skills/`).
 
 This contains the generic skeleton: state machine, action.sh rules, iteration protocol, error patterns, anti-recursion warning.
 
@@ -199,7 +201,7 @@ You are running inside an automated training loop. The loop structure is:
 
 ## Step 5: Generate `ralph/run.sh`
 
-Read the template from: `~/.claude/skills/ralph-loop-init/examples/run.sh.example`
+Find and read `run.sh.example` by globbing for `**/.claude/skills/ralph-loop-init/examples/run.sh.example`.
 
 Copy it nearly verbatim into `ralph/run.sh`. The only modification needed:
 - If the project doesn't use `python3`, adjust the inline Python parser's invocation (the `python3 -u -c` part). This is rare — most systems have `python3`.
@@ -210,7 +212,7 @@ Make the file executable description in the output.
 
 ## Step 6: Generate `ralph/state.md`
 
-Read the template from: `~/.claude/skills/ralph-loop-init/examples/state.md.example`
+Find and read `state.md.example` by globbing for `**/.claude/skills/ralph-loop-init/examples/state.md.example`.
 
 Copy it verbatim into `ralph/state.md`. The initial state is always identical:
 
@@ -250,7 +252,7 @@ Files created:
 Next steps:
   1. Review and edit ralph/config.sh (especially dataset paths and model paths)
   2. Run: bash ralph/run.sh
-  3. Monitor the loop — it will SETUP -> TRAIN -> VALIDATE -> ANALYZE -> DONE
+  3. Monitor the loop — it will SETUP -> TRAINING -> VALIDATING -> ANALYZING -> DONE
   4. Ctrl+C to stop at any time
 ```
 
