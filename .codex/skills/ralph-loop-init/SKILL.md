@@ -162,10 +162,12 @@ You are running inside an automated training loop.
 [... exact validation command or skipped ...]
 ### ANALYZING
 [... project-specific metrics analysis ...]
+[... write ralph/results/experiment_report.md per Section 11 of the reference ...]
 ### ADJUSTING
 [... debugging protocol + project-specific error patterns ...]
 ### DONE
 [... final summary format ...]
+[... confirm experiment_report.md was written ...]
 
 ## action.sh Rules
 [... 10 rules from reference, customized python command ...]
@@ -225,6 +227,7 @@ notes: Initial state. Ralph loop initialized.
 2. Ensure `ralph/results/` exists.
 3. Print concise summary:
    - files created
+   - `ralph/results/` directory (experiment_report.md auto-generated in ANALYZING)
    - run command: `bash ralph/run.sh`
    - phase flow: `SETUP -> TRAINING -> VALIDATING -> ANALYZING -> DONE`
 4. Remind user `MAX_STEPS="10"` is only for first debug run.

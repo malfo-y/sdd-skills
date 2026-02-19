@@ -34,7 +34,8 @@ ralph/
     ├── last_checkpoint_path
     ├── validation.log
     ├── validation_output/
-    └── codex_iter{N}.json <- Codex JSONL event log (for debugging)
+    ├── codex_iter{N}.json <- Codex JSONL event log (for debugging)
+    └── experiment_report.md  <- Experiment report for production runs
 ```
 
 ---
@@ -52,9 +53,9 @@ SETUP -> TRAINING -> VALIDATING -> ANALYZING -> DONE
 | **SETUP** | Verify environment (dataset, scripts, GPU) | Not needed (Codex checks only) | TRAINING |
 | **TRAINING** | Execute training | Training script + log capture | VALIDATING (success) / ADJUSTING (failure) |
 | **VALIDATING** | Run validation/inference | Validation script | ANALYZING (success) / ADJUSTING (failure) |
-| **ANALYZING** | Analyze results + summarize | Not needed (Codex analysis only) | DONE |
+| **ANALYZING** | Analyze results + write experiment report | Not needed (Codex analysis only) | DONE |
 | **ADJUSTING** | Diagnose error + apply fix | Fix action (optional) | TRAINING / VALIDATING (retry) |
-| **DONE** | Final summary | Not needed | — |
+| **DONE** | Final summary + verify experiment report | Not needed | — |
 
 ### Transition Rules
 
@@ -63,7 +64,7 @@ SETUP -> TRAINING -> VALIDATING -> ANALYZING -> DONE
 - **TRAINING -> ADJUSTING**: exit code != 0, or NaN detected, or training anomaly
 - **VALIDATING -> ANALYZING**: Validation output files generated and non-trivial (>10KB)
 - **VALIDATING -> ADJUSTING**: Validation failed
-- **ANALYZING -> DONE**: Analysis complete, summary written
+- **ANALYZING -> DONE**: Analysis complete, summary written, experiment_report.md generated
 - **ADJUSTING -> TRAINING**: Fix applied, retry training
 - **ADJUSTING -> VALIDATING**: Fix applied, retry validation
 
@@ -72,6 +73,10 @@ SETUP -> TRAINING -> VALIDATING -> ANALYZING -> DONE
 - Same root cause fails **3 times** -> set phase to DONE with note "STUCK: {error description}. Human intervention needed."
 - Error cannot be diagnosed (no traceback, no clear cause) -> set phase to DONE with note "UNKNOWN ERROR: {last 10 lines of log}. Human intervention needed."
 - Error requires external action (API key, hardware change, data corruption) -> set phase to DONE with explanation
+
+### ANALYZING Phase Protocol
+
+After writing the summary to state.md, Codex **must** generate `ralph/results/experiment_report.md` following the template in Section 11. This document captures everything needed to reproduce the experiment at production scale.
 
 ---
 
@@ -196,3 +201,38 @@ grep "^\[TRAIN\]" ralph/results/training.log | tail -20
 ```
 
 If no structured logging exists, Codex should parse raw log output instead (look for loss values, error messages, progress indicators).
+
+---
+
+## 11. Experiment Report (`ralph/results/experiment_report.md`)
+
+During the ANALYZING phase, after writing the summary to state.md, Codex must generate `ralph/results/experiment_report.md`. The purpose of this document is to record all information needed to reproduce the same experiment at production scale.
+
+### Template
+
+```markdown
+# Experiment Report
+
+## Execution Command
+(Copy the full execution command from the last successful training action.sh verbatim)
+
+## Key Parameters
+| Category | Parameter | Value |
+|----------|-----------|-------|
+(List all key parameters from config.sh, organized by category)
+
+## Training Results
+- Final avg loss, total steps, duration
+- NaN/instability occurrences
+- Checkpoint path
+
+## Validation Results
+- Project-specific validation metric summary
+- Validation failure items
+
+## Production Run Guide
+- Values to change in config.sh (e.g., set MAX_STEPS="" for unlimited, increase NUM_EPOCHS)
+- Ready-to-run command: `bash ralph/run.sh`
+```
+
+This template is project-agnostic. The generated PROMPT.md should customize it with project-specific metrics and parameters.
