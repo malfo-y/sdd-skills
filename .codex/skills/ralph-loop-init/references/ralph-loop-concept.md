@@ -17,6 +17,8 @@ The Codex agent's job: Read state, diagnose, then output `ralph/action.sh` and u
 
 The Codex agent must **never** run training or long commands itself. It writes them into `ralph/action.sh` instead.
 
+`run.sh` archives each executed `ralph/action.sh` to `ralph/results/action_iter{N}.sh`; therefore, the next iteration may start with no `ralph/action.sh`, which is normal.
+
 ---
 
 ## 2. Directory Structure
@@ -34,6 +36,7 @@ ralph/
     ├── last_checkpoint_path
     ├── validation.log
     ├── validation_output/
+    ├── action_iter{N}.sh <- Archived action script from each completed execution
     ├── codex_iter{N}.json <- Codex JSONL event log (for debugging)
     └── experiment_report.md  <- Experiment report for production runs
 ```
@@ -64,6 +67,7 @@ SETUP -> TRAINING -> VALIDATING -> ANALYZING -> DONE
 - **TRAINING -> ADJUSTING**: exit code != 0, or NaN detected, or training anomaly
 - **VALIDATING -> ANALYZING**: Validation output files generated and non-trivial (>10KB)
 - **VALIDATING -> ADJUSTING**: Validation failed
+- **VALIDATING -> ADJUSTING**: Validation action reported success (`last_exit_code=0`) but expected validation output file is still missing (indicates broken action script/runner)
 - **ANALYZING -> DONE**: Analysis complete, summary written, experiment_report.md generated
 - **ADJUSTING -> TRAINING**: Fix applied, retry training
 - **ADJUSTING -> VALIDATING**: Fix applied, retry validation
@@ -97,7 +101,7 @@ Every iteration, the Codex agent must follow these steps in order:
 
 ## 5. action.sh Canonical Rules
 
-Every `action.sh` must follow these 10 rules:
+Every `action.sh` must follow these rules:
 
 1. Always start with `#!/usr/bin/env bash` and `set -euo pipefail`
 2. Always `source ralph/config.sh` to load user-specified parameters
@@ -109,6 +113,8 @@ Every `action.sh` must follow these 10 rules:
 8. Use `2>&1 | tee ralph/results/<name>.log` to capture stdout+stderr
 9. Keep it simple — one logical action per script
 10. Use the correct Python command for the project (e.g., `uv run python`, `python3`, etc.)
+11. If the Python command includes `conda run`, do **not** execute inline heredoc Python (`${PYTHON_CMD} - <<'PY'`); write a runner `.py` file and execute it.
+12. Do not blindly copy archived `ralph/results/action_iter*.sh`; regenerate a fresh action script from current state/results.
 
 ---
 

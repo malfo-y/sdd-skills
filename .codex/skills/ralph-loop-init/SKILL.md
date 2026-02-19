@@ -27,6 +27,12 @@ If it exists:
 
 If `_sdd/` does not exist, continue with code-only discovery.
 
+Environment context rule:
+- If `_sdd/env.md` exists, read it and extract only runtime setup hints
+  (e.g., conda env name, required env var names).
+- Never copy secret values from `_sdd/env.md` into generated files, logs, or chat output.
+- Reflect this in generated `ralph/PROMPT.md` as an environment setup reference.
+
 ---
 
 ## Step 1: Discover the Training Pipeline
@@ -152,14 +158,20 @@ You are running inside an automated training loop.
 - Python command: `<detected python command>`
 - Validation script: `<path or none>`
 - Results dir: `ralph/results/`
+- Environment setup reference: `_sdd/env.md` (if present)
+- `run.sh` archives executed `ralph/action.sh` to `ralph/results/action_iter{N}.sh`; missing `ralph/action.sh` next iteration is expected.
+- If Python command contains `conda run`, never use `${PYTHON_CMD} - <<'PY'`; write runner files under `ralph/results/*.py` and execute `${PYTHON_CMD} <runner.py>`.
 
 ## State Machine
 ### SETUP
 [... project checks ...]
+- If a required env var is missing, check `_sdd/env.md` first and attempt shell/env loading before declaring STUCK.
 ### TRAINING
 [... exact training command with config vars ...]
 ### VALIDATING
 [... exact validation command or skipped ...]
+- Before generating a new validation action, check if existing validation output already determines pass/fail.
+- If validation action exit code is `0` but required validation output file is still missing, transition to `ADJUSTING` (root cause: output-not-produced) instead of repeating the same validation action indefinitely.
 ### ANALYZING
 [... project-specific metrics analysis ...]
 [... write ralph/results/experiment_report.md per Section 11 of the reference ...]
@@ -171,6 +183,7 @@ You are running inside an automated training loop.
 
 ## action.sh Rules
 [... 10 rules from reference, customized python command ...]
+- Include the "no heredoc with `conda run`" and "no blind reuse of archived action_iter scripts" constraints from the reference.
 
 ## state.md Format
 [... canonical format from reference ...]
@@ -181,6 +194,9 @@ Required project-specific customizations:
 - Exact validation command (or explicit skip)
 - Log parsing instructions matching actual log format
 - Project-specific error patterns
+- Environment setup guidance referencing `_sdd/env.md` when available
+- Python execution style that is safe for the detected command (especially `conda run` stdin/heredoc caveat)
+- Artifact-driven phase transitions that prevent VALIDATING/ADJUSTING infinite loops
 
 ---
 
