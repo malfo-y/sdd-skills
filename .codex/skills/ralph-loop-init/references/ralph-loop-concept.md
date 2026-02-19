@@ -92,10 +92,11 @@ Every iteration, the Codex agent must follow these steps in order:
 2. Read `ralph/state.md` (current phase, errors, notes)
 3. Read `ralph/results/last_exit_code` if it exists (was previous action successful?)
 4. Read any result files relevant to the current phase
-5. Decide what to do next
-6. Write `ralph/action.sh` with the next action (or skip if agent-only iteration)
-7. Update `ralph/state.md` (always increment iteration, update phase/notes)
-8. Exit
+5. Read `_sdd/env.md` if it exists (Python environment, required env variables, runtime configuration)
+6. Decide what to do next
+7. Write `ralph/action.sh` with the next action (or skip if agent-only iteration)
+8. Update `ralph/state.md` (always increment iteration, update phase/notes)
+9. Exit
 
 ---
 

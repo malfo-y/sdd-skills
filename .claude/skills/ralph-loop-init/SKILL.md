@@ -23,6 +23,7 @@ If it exists:
 2. If multiple spec files are found, use AskUserQuestion to ask the user which file(s) describe the training pipeline (training script, dataset format, loss functions, CLI args, validation)
 3. Read the relevant spec files — these are the **primary source of truth** for understanding the training architecture
 4. Extract key information: training script path, dataset format, CLI arguments, loss functions, validation pipeline, hyperparameters, framework details
+5. Also check if `_sdd/env.md` exists. If it does, read it — it contains Python environment setup (conda env name, venv path, `uv` config), required environment variables (API keys, paths, tokens), and other runtime configuration needed to run the code.
 
 If `_sdd/` does not exist, skip to Step 1 (code-only discovery).
 
@@ -52,7 +53,8 @@ Use Glob and Grep to find:
 - If not found: PROMPT.md will instruct parsing raw log output instead
 
 ### 1.5 Python Environment
-- Check if `pyproject.toml` exists and contains `[tool.uv]` or `[project]` with uv → use `uv run python`
+- If `_sdd/env.md` was read in Step 0, use its Python environment specification as the authoritative source
+- Otherwise: check if `pyproject.toml` exists and contains `[tool.uv]` or `[project]` with uv → use `uv run python`
 - Check if `requirements.txt` exists → use `python3` or `python`
 - Default: `python3`
 
@@ -157,6 +159,7 @@ You are running inside an automated training loop. The loop structure is:
 - **Python**: Always use `<detected python command>` in action.sh
 - **Validation script**: `<path or "none — skip VALIDATING phase">`
 - **Results dir**: `ralph/results/` (action.sh should write outputs here)
+- **Environment**: `_sdd/env.md` (if it exists — read it for Python env setup, required env variables, and runtime configuration before writing action.sh)
 
 ## State Machine
 
