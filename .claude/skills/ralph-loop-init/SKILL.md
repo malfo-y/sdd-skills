@@ -204,6 +204,27 @@ You are running inside an automated training loop. The loop structure is:
 - Log parsing instructions must match the project's actual log format
 - Error patterns should include project-specific issues (e.g., specific dataset format errors, model loading issues)
 
+### 4.3 Generate `## Known Errors` Section in PROMPT.md
+
+After the ADJUSTING section, add a `## Known Errors (Confirmed + Fixed)` section following the format in Section 12 of the reference.
+
+**Always include E1 (macOS timeout)** if the environment is or may be macOS:
+
+```markdown
+### E1: `timeout: command not found`
+- **Where**: Any action.sh using `timeout N cmd`
+- **Cause**: macOS does not ship GNU `timeout`
+- **Fix**: Use background process + kill pattern (see reference Section 12)
+- **Status**: ✅ Use pattern from Section 12 whenever timeout is needed
+```
+
+**Add project-specific errors** discovered during Step 1 (code discovery):
+- If the project imports packages from sibling directories (not in the venv), add a PYTHONPATH error entry
+- If the project requires specific directories to exist at runtime (e.g., `./data/`, `./outputs/`), add a missing-directory entry
+- If there are known schema or API compatibility issues from spec/README, add them
+
+The LLM inside the ralph loop checks this section first in ADJUSTING (Step 0 of the ADJUSTING protocol), so pre-populating it with anticipated errors reduces investigation turns significantly.
+
 ---
 
 ## Step 5: Generate `ralph/run.sh`

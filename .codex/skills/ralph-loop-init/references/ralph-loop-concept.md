@@ -143,13 +143,14 @@ notes: <free-form notes from this iteration>
 | `CUDA out of memory` | GPU memory exceeded | Reduce batch size, image resolution, or add gradient accumulation |
 | `loss=nan` or `event=nan_detected` | Learning rate too high or data issue | Reduce learning rate by 10x, enable gradient clipping |
 | Loss increasing over epochs | Overfitting or LR too high | Reduce LR, add regularization |
-| `ModuleNotFoundError` | Missing dependency | Install the package (`pip install` / `uv sync`) |
+| `ModuleNotFoundError` | Missing dependency or PYTHONPATH not set | Install (`pip install` / `uv sync`) or add `export PYTHONPATH=$(pwd)` |
 | `FileNotFoundError` | Wrong path in config | Check and fix path in config.sh or script |
 | `RuntimeError: expected scalar type` | dtype mismatch | Check model dtype vs data dtype |
 | `KeyError` in dataset loading | Missing field in metadata | Check metadata format matches code expectations |
 | `Connection error` / `HTTP 403` | Model download failed | Check auth token, network, or use local path |
 | Process killed without traceback | OOM killer (system level) | Reduce memory usage significantly |
 | Training exits without final summary | Crash mid-training | Check last traceback in log |
+| `timeout: command not found` | macOS -- no GNU `timeout` | Use background process + kill pattern (see Section 12) |
 
 ---
 
@@ -170,6 +171,11 @@ This prevents the model inside the ralph loop from recursively launching nested 
 ## 9. ADJUSTING Phase Protocol
 
 When in ADJUSTING phase, Codex acts as a debugger:
+
+**Step 0: Check Known Errors first**
+- Before reading any log files, scan the `## Known Errors` section of this PROMPT.md
+- If the symptom matches a known error -> apply the documented fix immediately, skip Steps 1-2
+- This prevents re-investigating already-solved problems and saves iteration turns
 
 **Step 1: Gather evidence**
 - Read the FULL error from training.log or validation.log
@@ -247,3 +253,54 @@ During the ANALYZING phase, after writing the summary to state.md, Codex must ge
 ```
 
 This template is project-agnostic. The generated PROMPT.md should customize it with project-specific metrics and parameters.
+
+---
+
+## 12. Known Errors Pattern
+
+### What It Is
+
+A `## Known Errors` section in PROMPT.md that documents errors **already confirmed and fixed** during previous iterations. Codex checks this section first in ADJUSTING phase (Step 0) before any investigation.
+
+### Why It Matters
+
+Without a Known Errors section, Codex re-investigates the same error every time it recurs -- reading logs, checking schemas, searching source files -- consuming many turns and risking timeout. With it, a recurring error is fixed in 1 turn.
+
+### Format (include in generated PROMPT.md)
+
+```markdown
+## Known Errors (Confirmed + Fixed)
+
+These errors have been observed and resolved. Apply the fix immediately without further investigation.
+
+### E1: `<error message snippet>`
+- **Where**: Which command / phase triggers it
+- **Cause**: Root cause in one sentence
+- **Fix**: Exact fix (command, code change, env var)
+- **Status**: ✅ Fixed / ⚠️ Workaround
+
+### E2: ...
+```
+
+### macOS Timeout Pattern (always include)
+
+macOS does not ship the GNU `timeout` command. Any action.sh that uses `timeout N cmd` will fail with `timeout: command not found`. Use the background process + kill pattern instead:
+
+```bash
+# Instead of: timeout ${TIMEOUT} uv run some-long-command
+uv run some-long-command 2>&1 | tee ralph/results/output.log &
+CMD_PID=$!
+ELAPSED=0; INTERVAL=15
+while kill -0 $CMD_PID 2>/dev/null; do
+    sleep $INTERVAL
+    ELAPSED=$((ELAPSED + INTERVAL))
+    if [ $ELAPSED -ge ${TIMEOUT} ]; then
+        kill $CMD_PID 2>/dev/null || true
+        echo "[timeout] Killed after ${TIMEOUT}s" >> ralph/results/output.log
+        break
+    fi
+done
+wait $CMD_PID 2>/dev/null || true
+```
+
+Include this as E1 in the Known Errors section of every generated PROMPT.md when the platform may be macOS.
