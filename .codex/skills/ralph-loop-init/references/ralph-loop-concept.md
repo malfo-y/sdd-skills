@@ -47,31 +47,37 @@ ralph/
 ## 3. State Machine
 
 ```
-SETUP -> TRAINING -> VALIDATING -> ANALYZING -> DONE
-              \-> ADJUSTING ->/         ->/
-                    ^ (retry)
+SETUP -> SMOKE_TEST -> TRAINING -> VALIDATING -> ANALYZING -> DONE
+                \-> ADJUSTING -> SMOKE_TEST (if smoke-test failure)
+                          \----> TRAINING / VALIDATING (other fixes)
 ```
 
 | Phase | Role | action.sh | Next Phase |
 |-------|------|-----------|------------|
-| **SETUP** | Verify environment (dataset, scripts, GPU) | Not needed (Codex checks only) | TRAINING |
+| **SETUP** | Verify environment (dataset, scripts, GPU) | Not needed (Codex checks only) | SMOKE_TEST |
+| **SMOKE_TEST** | Run 1 training step to verify pipeline works | Training with `MAX_STEPS=1` | TRAINING (pass) / ADJUSTING (fail) |
 | **TRAINING** | Execute training | Training script + log capture | VALIDATING (success) / ADJUSTING (failure) |
 | **VALIDATING** | Run validation/inference | Validation script | ANALYZING (success) / ADJUSTING (failure) |
 | **ANALYZING** | Analyze results + write experiment report | Not needed (Codex analysis only) | DONE |
-| **ADJUSTING** | Diagnose error + apply fix | Fix action (optional) | TRAINING / VALIDATING (retry) |
+| **ADJUSTING** | Diagnose error + apply fix | Fix action (optional) | SMOKE_TEST / TRAINING / VALIDATING (retry) |
 | **DONE** | Final summary + verify experiment report | Not needed | — |
 
 ### Transition Rules
 
-- **SETUP -> TRAINING**: Environment verified (dataset exists, training script exists, GPU available)
+- **SETUP -> SMOKE_TEST**: Environment verified (dataset exists, training script exists, GPU available)
+- **SMOKE_TEST -> TRAINING**: exit code 0 AND log contains >=1 step completion indicator
+- **SMOKE_TEST -> ADJUSTING**: exit code != 0, or no step logged
 - **TRAINING -> VALIDATING**: exit code 0 + checkpoint exists
 - **TRAINING -> ADJUSTING**: exit code != 0, or NaN detected, or training anomaly
 - **VALIDATING -> ANALYZING**: Validation output files generated and non-trivial (>10KB)
 - **VALIDATING -> ADJUSTING**: Validation failed
 - **VALIDATING -> ADJUSTING**: Validation action reported success (`last_exit_code=0`) but expected validation output file is still missing (indicates broken action script/runner)
 - **ANALYZING -> DONE**: Analysis complete, summary written, experiment_report.md generated
+- **ADJUSTING -> SMOKE_TEST**: If the failure being fixed originated in SMOKE_TEST, rerun the smoke gate before allowing full training
 - **ADJUSTING -> TRAINING**: Fix applied, retry training
 - **ADJUSTING -> VALIDATING**: Fix applied, retry validation
+
+**Note**: SMOKE_TEST uses `MAX_STEPS=1` hardcoded in action.sh -- it does not read `${MAX_STEPS}` from config.sh. This ensures the smoke test is always fast (seconds to minutes) regardless of configured training length.
 
 ### Escalation Rules
 
@@ -110,7 +116,7 @@ Every `action.sh` must follow these rules:
 3. Always `mkdir -p ralph/results` at the top
 4. Always `export PYTHONUNBUFFERED=1` (flush output immediately, prevents lost logs on crash)
 5. Always `export TQDM_DISABLE=1` for training scripts (suppress tqdm noise)
-6. Use config variables (`${LEARNING_RATE}`, `${NUM_EPOCHS}`, etc.) — never hardcode values
+6. Use config variables (`${LEARNING_RATE}`, `${NUM_EPOCHS}`, etc.) -- never hardcode values, except SMOKE_TEST's intentional `MAX_STEPS=1` override
 7. Save all outputs to `ralph/results/` so Codex can read them next iteration
 8. Use `2>&1 | tee ralph/results/<name>.log` to capture stdout+stderr
 9. Keep it simple — one logical action per script
@@ -123,7 +129,7 @@ Every `action.sh` must follow these rules:
 ## 6. state.md Canonical Format
 
 ```
-phase: <SETUP|TRAINING|VALIDATING|ANALYZING|ADJUSTING|DONE>
+phase: <SETUP|SMOKE_TEST|TRAINING|VALIDATING|ANALYZING|ADJUSTING|DONE>
 iteration: <number>
 initialized_at: <ISO-8601 UTC timestamp of initial state creation/reset>
 errors: [<list of error descriptions>]
@@ -196,7 +202,8 @@ When in ADJUSTING phase, Codex acts as a debugger:
 - Record in state.md: what the error was and what you changed
 
 **Step 4: Retry**
-- Set phase back to TRAINING (or VALIDATING if that's what failed)
+- If failure originated in SMOKE_TEST, set phase back to SMOKE_TEST (repeat gate)
+- Otherwise set phase back to TRAINING (or VALIDATING if that's what failed)
 
 ---
 

@@ -10,7 +10,7 @@ version: 1.0.0
 
 Generate a complete `ralph/` directory for LLM-driven automated ML training debugging. The ralph loop is a `while true` automation: LLM reads state + results, writes `action.sh`, the script executes it, and the loop repeats until training is complete or the LLM escalates to a human.
 
-This skill discovers the project's training pipeline, confirms findings with the user, and generates four project-specific files: `config.sh`, `PROMPT.md`, `run.sh`, and `state.md`.
+This skill discovers the project's training pipeline, confirms findings with the user, and generates five project-specific files: `CHECKS.md`, `config.sh`, `PROMPT.md`, `run.sh`, and `state.md`.
 
 ---
 
@@ -109,11 +109,13 @@ Project: <project name>
   - [ ] Pass criteria stated: exit code 0 AND log contains ≥1 step indicator
   - [ ] On PASS → transitions to `TRAINING`
   - [ ] On FAIL → transitions to `ADJUSTING` with "SMOKE_TEST failed: <error>"
+  - [ ] If failure originated in SMOKE_TEST, ADJUSTING sends phase back to `SMOKE_TEST` (repeat gate)
 - [ ] All phases present: SETUP, SMOKE_TEST, TRAINING, VALIDATING, ANALYZING, ADJUSTING, DONE
 - [ ] TRAINING section contains exact command using `config.sh` variables
 - [ ] VALIDATING section contains exact command or explicit skip notice
 - [ ] `## Known Errors` section present (E1 macOS timeout included if applicable)
 - [ ] `## action.sh Rules` section present
+- [ ] `SMOKE_TEST` explicitly states `MAX_STEPS=1` is the only allowed hardcoded exception
 
 ## run.sh
 - [ ] `--reset` flag behavior present (clears `ralph/results/`, rewrites `state.md`)
@@ -236,7 +238,11 @@ Write `action.sh` to:
 On PASS → set `phase: TRAINING` in state.md, note "Smoke test passed (1 step)."
 On FAIL → set `phase: ADJUSTING` in state.md, note "SMOKE_TEST failed: <first error from log>"
 
-[Note: `MAX_STEPS=1` in SMOKE_TEST is hardcoded in action.sh — it does not use `${MAX_STEPS}` from config.sh, which is set to 10 for the full debug run. Customize the step indicator grep pattern based on whether the project uses structured `[TRAIN]` logging or raw log output. SMOKE_TEST failure transitions to ADJUSTING, not a retry loop.]
+**Repeat gate rule**:
+- If ADJUSTING fixes a failure that originated in SMOKE_TEST, set phase back to `SMOKE_TEST` and rerun the 1-step smoke test.
+- Do not transition to `TRAINING` until SMOKE_TEST passes.
+
+[Note: `MAX_STEPS=1` in SMOKE_TEST is hardcoded in action.sh — it does not use `${MAX_STEPS}` from config.sh, which is set to 10 for the full debug run. This is the only intentional hardcoded-value exception to the general config-variable rule. Customize the step indicator grep pattern based on whether the project uses structured `[TRAIN]` logging or raw log output. SMOKE_TEST is a repeat gate: after ADJUSTING fixes a smoke failure, return to SMOKE_TEST until it passes.]
 
 ### TRAINING
 [... exact training command using config variables, specific to this project ...]
@@ -244,6 +250,8 @@ On FAIL → set `phase: ADJUSTING` in state.md, note "SMOKE_TEST failed: <first 
 
 ### VALIDATING
 [... exact validation command, or note that validation is skipped ...]
+- Before generating a new validation action, check if existing validation output already determines pass/fail.
+- If validation action exit code is `0` but required validation output file is still missing, transition to `ADJUSTING` (root cause: output-not-produced) instead of repeating the same validation action indefinitely.
 
 ### ANALYZING
 [... what to analyze: project-specific metrics, output files ...]
@@ -268,8 +276,10 @@ On FAIL → set `phase: ADJUSTING` in state.md, note "SMOKE_TEST failed: <first 
 
 **Key customizations per project:**
 - The SMOKE_TEST section's grep pattern must match the project's actual log format (structured `[TRAIN] event=step` or raw `loss=`/`step 1`)
+- The SMOKE_TEST section must enforce repeat-gate behavior (`ADJUSTING -> SMOKE_TEST` for smoke-origin failures)
+- The SMOKE_TEST section must call out `MAX_STEPS=1` as an explicit exception to the no-hardcoding rule
 - The TRAINING section must contain the **exact command** to run training, using config variables
-- The VALIDATING section must contain the **exact command** to run validation (or be marked as skipped)
+- The VALIDATING section must contain the **exact command** to run validation (or be marked as skipped), plus artifact-driven transition rules to prevent infinite loops
 - Log parsing instructions must match the project's actual log format
 - Error patterns should include project-specific issues (e.g., specific dataset format errors, model loading issues)
 
@@ -340,12 +350,20 @@ For each criterion in `ralph/CHECKS.md`, perform a targeted check:
 - Check for remaining placeholders: count occurrences of `<` in the file — expect 0
 - Check `MAX_STEPS="10"` is present
 - Check `LLM_TIMEOUT_SECONDS` is defined
+- Check every variable referenced in PROMPT.md's TRAINING command is defined in config.sh
+- Check variable names align with training script CLI argument names
 
 **PROMPT.md**:
 - Check anti-recursion warning: grep for `Do NOT invoke`
 - Check SMOKE_TEST phase: grep for `SMOKE_TEST`
+- Check SMOKE_TEST hardcoded rule: grep for `MAX_STEPS=1` and confirm it does not use `${MAX_STEPS}`
+- Check SMOKE_TEST pass criteria: grep for both `Exit code = 0` and `step completion indicator`
+- Check SMOKE_TEST repeat gate: confirm `ADJUSTING -> SMOKE_TEST` behavior is written
 - Check all phases present: grep for SETUP, SMOKE_TEST, TRAINING, VALIDATING, ANALYZING, ADJUSTING, DONE
+- Check TRAINING section includes exact command using config variables
+- Check VALIDATING section includes exact command or explicit skip
 - Check Known Errors section: grep for `## Known Errors`
+- Check action.sh Rules section: grep for `## action.sh Rules`
 
 **run.sh**:
 - Check `--reset` flag: grep for `--reset`
@@ -354,6 +372,7 @@ For each criterion in `ralph/CHECKS.md`, perform a targeted check:
 
 **state.md**:
 - Check phase: grep for `^phase: SETUP`
+- Check iteration: grep for `^iteration: 0`
 - Check no placeholder: confirm `__INITIALIZED_AT_UTC__` is NOT in the file
 
 Mark each check ✅ (pass) or ❌ (fail) in the output. If any criterion fails, fix the
