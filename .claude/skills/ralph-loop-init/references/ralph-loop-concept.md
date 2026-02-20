@@ -47,14 +47,15 @@ ralph/
 ## 3. State Machine
 
 ```
-SETUP -> TRAINING -> VALIDATING -> ANALYZING -> DONE
-              \-> ADJUSTING ->/         ->/
-                    ^ (retry)
+SETUP -> SMOKE_TEST -> TRAINING -> VALIDATING -> ANALYZING -> DONE
+                \-> ADJUSTING          \-> ADJUSTING
+                      ^ (retry)
 ```
 
 | Phase | Role | action.sh | Next Phase |
 |-------|------|-----------|------------|
-| **SETUP** | Verify environment (dataset, scripts, GPU) | Not needed (LLM checks only) | TRAINING |
+| **SETUP** | Verify environment (dataset, scripts, GPU) | Not needed (LLM checks only) | SMOKE_TEST |
+| **SMOKE_TEST** | Run 1 training step to verify pipeline works | Training with `MAX_STEPS=1` | TRAINING (pass) / ADJUSTING (fail) |
 | **TRAINING** | Execute training | Training script + log capture | VALIDATING (success) / ADJUSTING (failure) |
 | **VALIDATING** | Run validation/inference | Validation script | ANALYZING (success) / ADJUSTING (failure) |
 | **ANALYZING** | Analyze results + write experiment report | Not needed (LLM analysis only) | DONE |
@@ -63,7 +64,9 @@ SETUP -> TRAINING -> VALIDATING -> ANALYZING -> DONE
 
 ### Transition Rules
 
-- **SETUP -> TRAINING**: Environment verified (dataset exists, training script exists, GPU available)
+- **SETUP -> SMOKE_TEST**: Environment verified (dataset exists, training script exists, GPU available)
+- **SMOKE_TEST -> TRAINING**: exit code 0 AND log contains ≥1 step completion indicator
+- **SMOKE_TEST -> ADJUSTING**: exit code != 0, or no step logged
 - **TRAINING -> VALIDATING**: exit code 0 + checkpoint exists
 - **TRAINING -> ADJUSTING**: exit code != 0, or NaN detected, or training anomaly
 - **VALIDATING -> ANALYZING**: Validation output files generated and non-trivial (>10KB)
@@ -72,6 +75,8 @@ SETUP -> TRAINING -> VALIDATING -> ANALYZING -> DONE
 - **ANALYZING -> DONE**: Analysis complete, summary written, experiment_report.md generated
 - **ADJUSTING -> TRAINING**: Fix applied, retry training
 - **ADJUSTING -> VALIDATING**: Fix applied, retry validation
+
+**Note**: SMOKE_TEST uses `MAX_STEPS=1` hardcoded in action.sh — it does not read `${MAX_STEPS}` from config.sh. This ensures the smoke test is always fast (seconds to minutes) regardless of the configured training length.
 
 ### Escalation Rules
 
@@ -123,7 +128,7 @@ Every `action.sh` must follow these rules:
 ## 6. state.md Canonical Format
 
 ```
-phase: <SETUP|TRAINING|VALIDATING|ANALYZING|ADJUSTING|DONE>
+phase: <SETUP|SMOKE_TEST|TRAINING|VALIDATING|ANALYZING|ADJUSTING|DONE>
 iteration: <number>
 initialized_at: <ISO-8601 UTC timestamp of initial state creation/reset>
 errors: [<list of error descriptions>]

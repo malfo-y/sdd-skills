@@ -81,6 +81,54 @@ Structure the question so the user can quickly confirm defaults or override spec
 
 ---
 
+## Step 2.5: Write `ralph/CHECKS.md`
+
+Before generating any files, create `ralph/` directory and write `ralph/CHECKS.md`.
+This document defines acceptance criteria for each generated file. It is written first
+so generation targets are explicit before code is produced.
+
+Content to write:
+
+---
+```
+# Ralph Loop: Acceptance Criteria
+Generated: <current UTC timestamp>
+Project: <project name>
+
+## config.sh
+- [ ] No `<placeholder>` strings remain (no `<...>` literals)
+- [ ] `MAX_STEPS="10"` is set for debug-first approach
+- [ ] `LLM_TIMEOUT_SECONDS` is defined
+- [ ] Every variable referenced in PROMPT.md's training command is defined here
+- [ ] Variable names match the training script's actual CLI argument names
+
+## PROMPT.md
+- [ ] Anti-recursion warning present near the top
+- [ ] `SMOKE_TEST` phase defined between `SETUP` and `TRAINING`
+  - [ ] `SMOKE_TEST` runs training with `MAX_STEPS=1` (hardcoded, overrides config)
+  - [ ] Pass criteria stated: exit code 0 AND log contains ≥1 step indicator
+  - [ ] On PASS → transitions to `TRAINING`
+  - [ ] On FAIL → transitions to `ADJUSTING` with "SMOKE_TEST failed: <error>"
+- [ ] All phases present: SETUP, SMOKE_TEST, TRAINING, VALIDATING, ANALYZING, ADJUSTING, DONE
+- [ ] TRAINING section contains exact command using `config.sh` variables
+- [ ] VALIDATING section contains exact command or explicit skip notice
+- [ ] `## Known Errors` section present (E1 macOS timeout included if applicable)
+- [ ] `## action.sh Rules` section present
+
+## run.sh
+- [ ] `--reset` flag behavior present (clears `ralph/results/`, rewrites `state.md`)
+- [ ] `LLM_TIMEOUT_SECONDS` sourced from `config.sh`
+- [ ] DONE phase detection present (loop exits when `phase: DONE`)
+
+## state.md
+- [ ] `phase: SETUP`
+- [ ] `iteration: 0`
+- [ ] `initialized_at` set to current UTC timestamp (no `__INITIALIZED_AT_UTC__` placeholder)
+```
+---
+
+---
+
 ## Step 3: Generate `ralph/config.sh`
 
 Create `ralph/config.sh` with shell variables grouped by category. Follow this structure:
@@ -170,6 +218,26 @@ You are running inside an automated training loop. The loop structure is:
 ### SETUP
 [... generic setup checks, customized for this project's requirements ...]
 
+### SMOKE_TEST
+
+**Purpose**: Verify the training pipeline runs end-to-end before committing to full training.
+
+Write `action.sh` to:
+1. Run the training command with `MAX_STEPS=1` (hardcode the value — do not use `${MAX_STEPS}`)
+2. Save output to `ralph/results/smoke_test.log` (use `2>&1 | tee`)
+3. After the run, grep the log for a step/loss indicator:
+   - If structured logging: look for `[TRAIN] event=step`
+   - If raw logging: look for `loss=` or `step 1` or equivalent
+
+**Acceptance criteria** (BOTH must pass):
+- Exit code = 0
+- `ralph/results/smoke_test.log` contains at least one step completion indicator
+
+On PASS → set `phase: TRAINING` in state.md, note "Smoke test passed (1 step)."
+On FAIL → set `phase: ADJUSTING` in state.md, note "SMOKE_TEST failed: <first error from log>"
+
+[Note: `MAX_STEPS=1` in SMOKE_TEST is hardcoded in action.sh — it does not use `${MAX_STEPS}` from config.sh, which is set to 10 for the full debug run. Customize the step indicator grep pattern based on whether the project uses structured `[TRAIN]` logging or raw log output. SMOKE_TEST failure transitions to ADJUSTING, not a retry loop.]
+
 ### TRAINING
 [... exact training command using config variables, specific to this project ...]
 [... structured log parsing if [TRAIN] events exist, or raw log parsing ...]
@@ -199,6 +267,7 @@ You are running inside an automated training loop. The loop structure is:
 ```
 
 **Key customizations per project:**
+- The SMOKE_TEST section's grep pattern must match the project's actual log format (structured `[TRAIN] event=step` or raw `loss=`/`step 1`)
 - The TRAINING section must contain the **exact command** to run training, using config variables
 - The VALIDATING section must contain the **exact command** to run validation (or be marked as skipped)
 - Log parsing instructions must match the project's actual log format
@@ -261,34 +330,64 @@ notes: Initial state. Ralph loop initialized.
 
 ---
 
-## Step 7: Verify and Summarize
+## Step 7: Verify Against CHECKS.md and Summarize
 
-1. Confirm all four files exist:
-   - `ralph/config.sh`
-   - `ralph/PROMPT.md`
-   - `ralph/run.sh`
-   - `ralph/state.md`
+### 7.1 Verify Each File Against Its Criteria
 
-2. Create `ralph/results/` directory (mkdir -p)
+For each criterion in `ralph/CHECKS.md`, perform a targeted check:
 
-3. Print a summary to the user:
+**config.sh**:
+- Check for remaining placeholders: count occurrences of `<` in the file — expect 0
+- Check `MAX_STEPS="10"` is present
+- Check `LLM_TIMEOUT_SECONDS` is defined
+
+**PROMPT.md**:
+- Check anti-recursion warning: grep for `Do NOT invoke`
+- Check SMOKE_TEST phase: grep for `SMOKE_TEST`
+- Check all phases present: grep for SETUP, SMOKE_TEST, TRAINING, VALIDATING, ANALYZING, ADJUSTING, DONE
+- Check Known Errors section: grep for `## Known Errors`
+
+**run.sh**:
+- Check `--reset` flag: grep for `--reset`
+- Check `LLM_TIMEOUT_SECONDS`: grep for `LLM_TIMEOUT_SECONDS`
+- Check DONE phase detection: grep for `phase: DONE` or equivalent
+
+**state.md**:
+- Check phase: grep for `^phase: SETUP`
+- Check no placeholder: confirm `__INITIALIZED_AT_UTC__` is NOT in the file
+
+Mark each check ✅ (pass) or ❌ (fail) in the output. If any criterion fails, fix the
+generated file before proceeding.
+
+### 7.2 Update CHECKS.md with Results
+
+After verification, update `ralph/CHECKS.md` — replace `[ ]` with `[x]` for passing
+criteria and `[!]` for failing ones (with a note on what was wrong and how it was fixed).
+
+### 7.3 Create results directory and Summarize
+
+Create `ralph/results/` directory (mkdir -p), then print summary to user:
 
 ```
-Ralph loop initialized successfully!
+Ralph loop initialized (TDD verified)!
 
 Files created:
+  ralph/CHECKS.md    — Acceptance criteria (all criteria verified ✅)
   ralph/config.sh    — Training configuration (edit before running)
   ralph/PROMPT.md    — LLM instructions for the training loop
   ralph/run.sh       — Loop controller script
   ralph/state.md     — Initial state (SETUP, iteration 0)
-  ralph/results/     — Output directory (experiment_report.md auto-generated in ANALYZING)
+  ralph/results/     — Output directory
+
+Loop phases: SETUP -> SMOKE_TEST -> TRAINING -> VALIDATING -> ANALYZING -> DONE
 
 Next steps:
   1. Review and edit ralph/config.sh (especially dataset paths and model paths)
   2. Resume run: bash ralph/run.sh
   3. Fresh restart (clear old outputs): bash ralph/run.sh --reset
-  4. Monitor the loop — it will SETUP -> TRAINING -> VALIDATING -> ANALYZING -> DONE
+  4. The loop will SMOKE_TEST (1 step) before TRAINING (MAX_STEPS=10)
   5. Ctrl+C to stop at any time
 ```
 
-4. Remind the user that `MAX_STEPS="10"` is set for a quick debug run — they should increase it (or set to empty for unlimited) once the first run succeeds.
+Remind user that `MAX_STEPS="10"` is for the debug training run after smoke test passes —
+increase it (or set to empty for unlimited) once the first full run succeeds.
