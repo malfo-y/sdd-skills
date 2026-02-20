@@ -142,7 +142,7 @@ while :; do
   # Disable errexit temporarily so LLM failures are handled by retry logic.
   set +e
   run_llm_with_timeout "${LLM_TIMEOUT_SECONDS}" "ralph/PROMPT.md" \
-    claude -p --dangerously-skip-permissions --output-format stream-json \
+    claude -p --verbose --dangerously-skip-permissions --output-format stream-json \
     | tee "ralph/results/llm_iter${ITERATION}.json" \
     | python3 -u -c "
 import sys, json

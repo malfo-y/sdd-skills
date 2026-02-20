@@ -394,12 +394,13 @@ Before marking a task complete:
 
 TDD verifies **specified behavior** — every acceptance criterion gets a test, and the code is driven by those tests. But TDD cannot catch **unspecified risks**: security vulnerabilities, performance issues, cross-task integration gaps, and pattern violations that no acceptance criterion explicitly mentions.
 
-The phase review (Step 5) and final review (Step 6) exist to cover this gap:
+The phase review (Step 6) and final review (Step 7) exist to cover this gap:
 
 - **Security**: SQL injection, XSS, hardcoded secrets, missing auth — these are rarely acceptance criteria but always matter
 - **Performance**: N+1 queries, missing indexes, blocking async calls — emerge from how code is used, not how it's specified
 - **Patterns**: Naming inconsistencies, duplication across tasks, abstraction misuse — TDD drives correctness, not consistency
 - **Integration**: Tasks pass individually but fail together — cross-task interactions aren't tested by single-criterion TDD
+- **Parallel Consistency**: Sub-agents may introduce conflicting patterns — requires cross-agent review
 
 ### Critical Issues → Fix with TDD
 

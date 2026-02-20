@@ -1,183 +1,137 @@
 ---
 name: implementation-plan
-description: This skill should be used when the user asks to "create an implementation plan", "plan the implementation", "break down this spec", "create a development roadmap", "analyze requirements and create tasks", or provides a specification document and asks for a structured plan.
+description: Use this skill when the user asks to "create an implementation plan", "plan the implementation", "break down this spec", "create a development roadmap", "analyze requirements and create tasks", "create a parallel implementation plan", "plan parallel implementation", "병렬 구현 계획", or wants a structured implementation plan with task-level Target Files for conflict-aware parallel execution.
 ---
 
-# Implementation Plan Creation
+# Implementation Plan Creation (Parallel-Ready)
 
-> **Simplified Workflow Note**: This skill is part of the **legacy workflow**.
-> In the simplified 4-step workflow (`spec -> feature-draft -> implementation -> spec-update-done`),
-> this skill's functionality is included in **`feature-draft`** (Part 2: Implementation Plan).
-> Use `feature-draft` when possible; it combines `spec-draft` + `spec-update-todo` + `implementation-plan` in one step.
+Create a structured, actionable implementation plan where every task declares `Target Files`.
+Use this skill when planning is needed separately from `feature-draft`.
 
-Create structured, actionable implementation plans from user specifications. Follow this systematic approach to transform requirements into executable development tasks.
+Keep this file concise and rely on `references/` for detailed patterns.
 
-Always output the plan as documented under "## Output Location" section below.
+## Workflow Position
 
-## Hard Rule: Spec Documents Are Read-Only
+Standalone planning path:
 
-- This skill may **read** the spec as input, but it **MUST NOT** modify any files under `_sdd/spec/`.
-- If you think the spec should change, capture it as **Open Questions / Spec gaps** in the plan and direct the user to `spec-update-todo`.
+```
+spec -> implementation-plan (this) -> implementation -> spec-update-done
+```
 
-## Implementation spec
+If the user also needs requirement clarification + spec patch drafting in one run, prefer `feature-draft`.
 
-1. Refer to the user input.
-2. If the user input is not clear, refer to `_sdd/implementation/user_input.md` for the user specification.
-3. If the user input is not clear and there is no user specification, ask the user for clarification.
+## Hard Rule
 
-After processing `user_input.md`, rename it to `_processed_user_input.md` to mark it as processed inputs.
+- Read spec as input, but never modify files under `_sdd/spec/`.
+- If spec changes are needed, capture them as open questions and hand off to `spec-update-todo`.
 
 ## Language
 
-결과로 나오는 .md 파일의 내용은 한국어로 작성합니다. 
+- Default output language: Korean.
 
-## Process Overview
+## Inputs
 
-1. **Analyze the Specification** - Understand scope, requirements, and constraints
-2. **Identify Components** - Break down into logical modules/features
-3. **Define Tasks** - Create granular, actionable work items
-4. **Establish Dependencies** - Map task relationships and critical path
-5. **Output the Plan** - Present in structured, trackable format
+- user request in chat
+- `_sdd/implementation/user_input.md` (if present)
+- current spec files under `_sdd/spec/` (read-only)
+- repository structure and conventions
 
-## Step 1: Specification Analysis
+If input is unclear and no usable context exists, ask the user directly before planning.
 
-Read and analyze the provided specification thoroughly:
+## Output
 
-- **Core Requirements**: What must the system do?
-- **Technical Constraints**: Languages, frameworks, integrations, performance requirements
-- **Scope Boundaries**: What is explicitly in/out of scope?
-- **Success Criteria**: How will completion be measured?
-- **Unknowns/Risks**: What needs clarification or research?
+Default path:
 
-If the specification is unclear or incomplete, ask the user directly to clarify before proceeding.
+- `<project_root>/_sdd/implementation/IMPLEMENTATION_PLAN.md`
 
-## Step 2: Component Identification
+Optional archive when replacing:
 
-Break the system into logical components:
+- `<project_root>/_sdd/implementation/prev/PREV_IMPLEMENTATION_PLAN_<timestamp>.md`
 
-- Group related functionality into modules
-- Identify shared utilities and common patterns
-- Note external dependencies and integrations
-- Consider data models and storage requirements
-- Map user-facing features vs internal services
+Split output option for large plans:
 
-## Step 3: Task Definition
+- `IMPLEMENTATION_PLAN.md` as index
+- `IMPLEMENTATION_PLAN_PHASE_<n>.md` files per phase
 
-For each component, create granular tasks following this structure:
+## Plan Contract
 
-```
-### Task: [Clear, action-oriented title]
-**Component**: [Parent component/module]
-**Priority**: [P0-Critical | P1-High | P2-Medium | P3-Low]
-**Type**: [Feature | Bug | Refactor | Research | Infrastructure | Test]
+Include these sections:
 
-**Description**:
-[Detailed description of what needs to be done]
+1. Overview
+2. Scope (In/Out)
+3. Components
+4. Implementation Phases
+5. Task Details
+6. Parallel Execution Summary
+7. Risks & Mitigations
+8. Open Questions
 
-**Acceptance Criteria**:
-- [ ] [Specific, measurable criterion]
-- [ ] [Another criterion]
+Each task in Task Details must include:
 
-**Technical Notes**:
-- [Implementation hints, patterns to use, files to modify]
+- `Component`, `Priority`, `Type`
+- `Description`
+- `Acceptance Criteria`
+- `Target Files` with `[C]/[M]/[D]` markers
+- `Technical Notes`
+- `Dependencies`
 
-**Dependencies**: [List of blocking tasks by ID]
-```
+## Workflow
 
-### Task Sizing Guidelines
+### 1) Analyze specification
 
-- Each task should be completable in a focused work session
-- If a task seems too large, split into subtasks
-- Include setup/infrastructure tasks often overlooked
-- Don't forget documentation and testing tasks
+Extract requirements, constraints, scope boundaries, and success criteria.
 
-## Step 4: Dependency Mapping
+### 2) Identify components
 
-Establish task relationships:
+Break work into modules/services and integration points.
 
-- **Blocks**: Tasks that must complete before others can start
-- **Related**: Tasks that share context but aren't blocking
-- **Parallel**: Tasks that can be worked on simultaneously
+### 3) Define tasks with Target Files
 
-Create a dependency graph or critical path when complexity warrants.
+- Make tasks granular and executable.
+- Assign exact file-level `Target Files`.
+- Include both implementation files and tests.
 
-## Step 5: Plan Output Format
+### 4) Map dependencies and parallel potential
 
-Present the final plan in this structure:
+- mark blocking dependencies explicitly
+- identify non-overlapping tasks that can run in parallel
+- call out file conflicts that force sequential order
 
-```markdown
-# Implementation Plan: [Project Name]
+### 5) Produce plan
 
-## Overview
-[Brief summary of what will be built]
+Generate final markdown and summarize:
 
-## Scope
-### In Scope
-- [Feature/capability]
+- phase ordering
+- critical path
+- expected parallel efficiency
 
-### Out of Scope
-- [Explicitly excluded items]
+## Quality Gates
 
-## Components
-1. **[Component Name]**: [Brief description]
-2. **[Component Name]**: [Brief description]
+Before finalizing:
 
-## Implementation Phases
+- every task has `Target Files`
+- no directory-level paths or wildcard-only paths
+- dependencies form a valid order
+- conflicts in shared files are explicitly documented
+- semantic conflict risks (shared schema/config/API contracts) are explicitly documented
+- open questions are explicit (do not guess)
 
-### Phase 1: [Foundation/Setup]
-| ID | Task | Priority | Dependencies | Component |
-|----|------|----------|--------------|-----------|
-| 1  | ...  | P0       | -            | Core      |
+## When to Ask the User
 
-### Phase 2: [Core Features]
-| ID | Task | Priority | Dependencies | Component |
-|----|------|----------|--------------|-----------|
-| 2  | ...  | P1       | 1            | Feature A |
+Ask directly when:
 
-### Phase 3: [Polish/Integration]
-...
+- requirements are ambiguous
+- technical stack/constraints are missing
+- target file paths are uncertain
+- multiple scope interpretations are equally valid
 
-## Task Details
-[Expanded task definitions with acceptance criteria]
+## Integration
 
-## Risks & Mitigations
-| Risk | Impact | Mitigation |
-|------|--------|------------|
-| ...  | ...    | ...        |
+- Upstream: `spec-create`, `spec-draft`, `feature-draft` (optional)
+- Downstream: `implementation` (preferred), `implementation-sequential` (sequential fallback)
 
-## Open Questions
-- [ ] [Question requiring clarification]
-```
+## References
 
-## Best Practices
-
-- **Be Specific**: Vague tasks lead to scope creep
-- **Include Infrastructure**: Don't forget CI/CD, environments, tooling
-- **Plan for Testing**: Include unit, integration, and E2E test tasks
-- **Consider Operations**: Monitoring, logging, deployment procedures
-- **Document Decisions**: Capture why certain approaches were chosen
-- **Identify MVP**: Mark which tasks are essential for initial release
-
-## When to Ask for Clarification
-
-Ask the user directly when encountering:
-
-- Ambiguous requirements with multiple valid interpretations
-- Missing technical constraints (language, framework, etc.)
-- Unclear priority between competing features
-- Unknown integration requirements
-- Incomplete success criteria
-
-## Output Location
-
-After creating the plan, offer to:
-
-1. Display in conversation (for review/discussion)
-2. Save to a file to the user provided path, or default to `<project_root>/_sdd/implementation/IMPLEMENTATION_PLAN.md`
-    - If the file already exists, archive it as `<project_root>/_sdd/implementation/prev/PREV_IMPLEMENTATION_PLAN_<timestamp>.md` (create `prev/` if needed) and create a new one.
-3. If the plan is too large to fit comfortably in one file (e.g. >25 tasks), split the plan into multiple files:
-    - Keep `IMPLEMENTATION_PLAN.md` as an index/overview and link to the phase files
-    - Name phase files as `IMPLEMENTATION_PLAN_PHASE_1.md`, `IMPLEMENTATION_PLAN_PHASE_2.md`, etc.
-4. Initialize in-session tracking with `update_plan` (and optional progress table in markdown)
-
-Always confirm with the user which output format they prefer.
+- `references/target-files-spec.md` for `Target Files` grammar and conflict policy
+- `references/advanced-patterns.md` for decomposition/risk/dependency patterns
+- `examples/sample-plan-parallel.md` for a complete sample plan

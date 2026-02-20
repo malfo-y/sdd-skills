@@ -34,13 +34,14 @@ flowchart LR
     classDef step fill:#E3F2FD,stroke:#1565C0,stroke-width:1.5px,color:#0D47A1;
 ```
 
-### 현재 제공 SDD 스킬(13개)
+### 현재 제공 SDD 스킬(16개)
 
 | 스킬 | 트리거 | 목적 |
 |------|--------|------|
 | **spec-create** | "스펙 생성", "프로젝트 문서화" | 코드 분석 또는 초안에서 스펙 생성 |
 | **spec-draft** (레거시) | "스펙 초안", "스펙 드래프트" | 스펙 업데이트 입력(user_draft.md) 초안 생성 (Spec Update Input 포맷) |
 | **feature-draft** **(권장)** | "기능 초안", "feature draft" | **통합 스킬**: 스펙 패치 초안 + 구현 계획을 한 번에 생성 |
+| **feature-draft-sequential** (레거시) | "순차 기능 초안", "legacy feature draft" | Target Files 없이 스펙 패치 초안 + 순차 구현 계획 생성 |
 | **spec-update-todo** (레거시) | "스펙에 기능 추가", "스펙 업데이트" | 스펙에 새 요구사항 추가 |
 | **spec-update-done** | "완료 항목 반영", "스펙 동기화" | 구현 변경사항과 스펙 동기화 |
 | **spec-review** | "스펙 리뷰", "드리프트 점검" | 보조 검증용 strict 리뷰 (리포트 전용) |
@@ -48,8 +49,10 @@ flowchart LR
 | **spec-rewrite** | "스펙 리라이트", "스펙 정리" | 긴/복잡한 스펙을 구조 재정리(파일 분할/부록 이동) + 이슈 리포트 |
 | **pr-spec-patch** | "PR 스펙 패치", "PR 리뷰 준비" | PR과 스펙 비교하여 패치 초안 생성 |
 | **pr-review** | "PR 리뷰", "PR 검증" | PR 구현을 스펙 대비 검증 및 판정 |
-| **implementation-plan** (레거시) | "구현 계획 생성" | 스펙에서 실행 가능한 작업 생성 |
-| **implementation** | "계획 구현", "구현 검증" | TDD 방식으로 작업 실행 |
+| **implementation-plan** **(권장)** | "구현 계획 생성", "병렬 구현 계획" | Target Files 포함 구현 계획 생성 |
+| **implementation-plan-sequential** (레거시) | "순차 구현 계획 생성" | 스펙에서 순차 실행 가능한 작업 생성 |
+| **implementation** **(권장)** | "계획 구현", "병렬 구현" | conflict-aware 병렬 그룹으로 TDD 실행 |
+| **implementation-sequential** (레거시) | "순차 구현" | 계획을 순차 TDD로 실행 |
 | **implementation-review** (레거시) | "구현 리뷰", "진행 상황 확인" | 계획 대비 구현 검증 |
 
 ### 간소화된 워크플로우 (권장)
@@ -64,8 +67,8 @@ spec-create → feature-draft → implementation → spec-update-done
 |---|---|---|
 | 1단계 | spec-draft (초안 생성) | **spec-create** (스펙 생성/확인) |
 | 2단계 | spec-update-todo (스펙에 추가) | **feature-draft** (패치 초안 + 구현 계획) |
-| 3단계 | implementation-plan (계획 수립) | **implementation** (TDD 구현) |
-| 4단계 | implementation (구현) | **spec-update-done** (스펙 동기화) |
+| 3단계 | implementation-plan-sequential (계획 수립) | **implementation** (TDD 구현) |
+| 4단계 | implementation-sequential (구현) | **spec-update-done** (스펙 동기화) |
 | 5단계 | implementation-review (리뷰) | — |
 | 6단계 | spec-update-done (동기화) | — |
 | 7단계 | spec-review (검증) | — |
@@ -211,8 +214,8 @@ flowchart LR
     subgraph Aprime["A' (레거시): Spec-First (전체 7단계)"]
         direction TB
         A1p["spec-update-todo<br/>스펙에 기능 추가/업데이트"]:::legacy
-        A2p["implementation-plan<br/>계획 수립 및 작업 분해"]:::legacy
-        A3p["implementation<br/>TDD로 구현"]:::legacy
+        A2p["implementation-plan-sequential<br/>계획 수립 및 작업 분해"]:::legacy
+        A3p["implementation-sequential<br/>TDD로 구현"]:::legacy
         A4p["implementation-review"]:::legacy
         A5p["spec-update-done"]:::legacy
         A1p --> A2p --> A3p --> A4p --> A5p
@@ -328,10 +331,10 @@ vim _sdd/spec/user_spec.md
 /spec-update-todo
 
 # 2. 구현 계획 수립
-/implementation-plan
+/implementation-plan-sequential
 
 # 3. 구현
-/implementation
+/implementation-sequential
 
 # 4. 리뷰
 /implementation-review
@@ -581,6 +584,7 @@ flowchart LR
 | `/spec-create` | 새 프로젝트 시작 또는 기존 코드 문서화 |
 | `/spec-draft` (레거시) | 스펙 업데이트 입력(user_draft.md) 초안 생성 |
 | `/feature-draft` **(권장)** | 스펙 패치 초안 + 구현 계획 통합 생성 |
+| `/feature-draft-sequential` (레거시) | Target Files 없는 순차 초안 + 계획 통합 생성 |
 | `/spec-update-todo` (레거시) | 스펙에 새 기능/요구사항 추가 |
 | `/spec-update-done` | 구현 변경사항과 스펙 동기화 |
 | `/spec-review` | 선택적 보조 검증 (이상 징후/대규모 업데이트 후) |
@@ -588,8 +592,10 @@ flowchart LR
 | `/spec-rewrite` | 긴/복잡한 스펙 구조 재정리(파일 분할/부록 이동) |
 | `/pr-spec-patch` | PR과 스펙 비교하여 패치 초안 생성 |
 | `/pr-review` | PR 구현을 스펙/패치 초안 대비 검증 및 판정 |
-| `/implementation-plan` (레거시) | 스펙에서 작업 생성 |
-| `/implementation` | TDD로 작업 실행 |
+| `/implementation-plan` **(권장)** | Target Files 포함 구현 계획 생성 |
+| `/implementation-plan-sequential` (레거시) | 스펙에서 순차 실행용 작업 생성 |
+| `/implementation` **(권장)** | conflict-aware 병렬 그룹으로 TDD 실행 |
+| `/implementation-sequential` (레거시) | 순차 TDD 실행 |
 | `/implementation-review` (레거시) | 진행 상황 확인 및 기준 검증 |
 
 ### 경로별 워크플로우 요약
@@ -603,7 +609,7 @@ flowchart LR
 #### 경로 A' (레거시): Spec-First (7단계)
 
 ```bash
-/spec-update-todo → /implementation-plan → /implementation → /implementation-review → /spec-update-done → (필요 시) /spec-review
+/spec-update-todo → /implementation-plan-sequential → /implementation-sequential → /implementation-review → /spec-update-done → (필요 시) /spec-review
 ```
 
 #### 경로 B: Direct Plan (중간)
@@ -731,6 +737,12 @@ flowchart TB
 - "feature spec and plan"
 - "기능 스펙과 계획"
 
+### feature-draft-sequential (레거시)
+- "순차 기능 초안"
+- "legacy feature draft"
+- "feature draft sequential"
+- "sequential feature draft"
+
 ### spec-update-todo (레거시)
 > 간소화된 워크플로우에서는 `feature-draft`가 이 역할을 대체합니다.
 - "스펙에 기능 추가"
@@ -778,18 +790,30 @@ flowchart TB
 - "PR 승인 검토"
 - "review PR", "review PR against spec", "PR review"
 
-### implementation-plan (레거시)
-> 간소화된 워크플로우에서는 `feature-draft`가 구현 계획을 포함합니다.
+### implementation-plan (권장)
 - "구현 계획 생성"
-- "구현 계획 만들어줘"
-- "계획 수립"
+- "병렬 구현 계획"
 - "create implementation plan"
+- "parallel implementation plan"
+
+### implementation-plan-sequential (레거시)
+> 기본적으로는 `implementation-plan`을 사용하고, 순차 실행이 명시될 때만 사용합니다.
+- "순차 구현 계획 생성"
+- "legacy implementation plan"
+- "implementation plan sequential"
 
 ### implementation
 - "계획 구현"
 - "구현 시작"
+- "병렬 구현"
 - "작업 실행"
 - "implement the plan", "start implementation"
+
+### implementation-sequential (레거시)
+- "순차 구현"
+- "legacy implementation"
+- "implementation sequential"
+- "sequential implementation"
 
 ### implementation-review (레거시)
 > `implementation` 스킬에 페이즈별 리뷰가 내장되어 있어 별도 실행은 선택 사항입니다.

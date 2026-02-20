@@ -1,6 +1,6 @@
 # Implementation Review Checklists
 
-These checklists are used during **Phase Review** (Step 5) and **Final Review** (Step 6) of the implementation process. They focus on cross-cutting quality concerns that TDD alone cannot catch — security, error handling, code patterns, performance, and test quality.
+These checklists are used during **Phase Review** (Step 6) and **Final Review** (Step 7) of the parallel implementation process. They focus on cross-cutting quality concerns that TDD alone cannot catch — security, error handling, code patterns, performance, and test quality.
 
 > **Note**: Task-level verification (acceptance criteria, file existence, test coverage per criterion) is already tracked during TDD implementation (Step 4). These checklists cover what remains after TDD.
 
@@ -71,6 +71,32 @@ When reviewing tests:
 - [ ] Each acceptance criterion has a test
 - [ ] Tests would have failed before implementation
 - [ ] Tests aren't testing implementation details
+```
+
+## Parallel Execution Checklist
+
+Additional checks specific to parallel sub-agent execution:
+
+### Cross-Agent Consistency
+```markdown
+- [ ] Naming conventions consistent across sub-agent outputs
+- [ ] Error handling patterns consistent across sub-agents
+- [ ] No conflicting imports or dependency versions
+- [ ] Shared utilities used consistently
+```
+
+### File Boundary Compliance
+```markdown
+- [ ] Each sub-agent only modified its Target Files
+- [ ] No unauthorized file modifications
+- [ ] Read-only files were not modified
+```
+
+### Integration
+```markdown
+- [ ] Sub-agent outputs work together without conflicts
+- [ ] Shared interfaces are compatible
+- [ ] No duplicate code across sub-agent outputs
 ```
 
 ## Issue Severity Classification

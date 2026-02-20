@@ -1,20 +1,20 @@
 ---
 name: feature-draft
-description: Use this skill when the user asks for "feature draft", "draft feature", "feature plan", "plan feature", "draft and plan", or any request to combine requirement clarification, spec patch drafting, and implementation planning in one workflow.
+description: Use this skill when the user asks for "feature draft", "draft feature", "feature plan", "plan feature", "draft and plan", "feature draft parallel", "parallel feature draft", "parallel feature plan", "병렬 기능 초안", "병렬 기능 계획", or wants requirement clarification + spec patch draft + implementation planning in one workflow with Target Files for parallel execution.
 ---
 
-# Feature Draft
+# Feature Draft (Parallel)
 
-Create a single draft file that contains both:
+Create one draft file that includes:
 
 - Part 1: spec patch input (compatible with `spec-update-todo`)
-- Part 2: implementation plan (phase/task based)
+- Part 2: parallel-ready implementation plan (task-level `Target Files` required)
 
-which is saved as documented under "## Output" section below.
+Keep this skill body concise. Use `references/` for detailed templates and rules.
 
 ## Simplified Workflow
 
-This skill is **Step 2 of 4** in the simplified SDD workflow:
+This skill is **Step 2 of 4** in the parallel SDD flow:
 
 ```
 spec -> feature-draft (this) -> implementation -> spec-update-done
@@ -23,22 +23,22 @@ spec -> feature-draft (this) -> implementation -> spec-update-done
 | Step | Skill | Purpose |
 |------|-------|---------|
 | 1 | spec-create | Create the initial spec document |
-| **2** | **feature-draft** | Draft feature spec patch + implementation plan |
-| 3 | implementation | Execute the implementation plan (TDD + built-in review) |
+| **2** | **feature-draft** | Draft spec patch + parallel-ready implementation plan |
+| 3 | implementation | Execute plan with conflict-aware parallel groups |
 | 4 | spec-update-done | Sync spec with actual code |
-
-> **Previous workflow** (7 steps): spec -> spec-draft -> spec-update-todo -> implementation-plan -> implementation -> implementation-review -> spec-update-done
-> **New workflow** (4 steps): spec -> feature-draft -> implementation -> spec-update-done
-
-This skill compresses a 3-step flow into one run:
-`spec-draft -> spec-update-todo -> implementation-plan`.
 
 ## Hard Rules
 
-- Never modify `_sdd/spec/` files directly in this skill.
-- Write output under `_sdd/drafts/` only.
-- If multiple features are detected, ask the user whether to keep one combined file or split files.
-- Keep Part 1 in strict `Spec Update Input` structure so it can be consumed by `spec-update-todo`.
+- Do not modify files under `_sdd/spec/` directly.
+- Save output only under `_sdd/drafts/`.
+- Keep Part 1 in strict `Spec Update Input` structure.
+- Include `Target Files` in **every** task in Part 2.
+- If multiple features are detected, ask whether to combine into one file or split.
+
+## Language
+
+- Default output language: Korean.
+- Keep section headings and schema stable for downstream skills.
 
 ## Inputs
 
@@ -46,12 +46,12 @@ Primary:
 
 - Current chat requirements
 
-Optional supporting inputs:
+Optional context:
 
 - `_sdd/spec/user_draft.md`
 - `_sdd/spec/user_spec.md`
 - `_sdd/implementation/user_input.md`
-- repo changes (`git diff`)
+- repository changes (`git diff`)
 - `_sdd/spec/DECISION_LOG.md`
 - current spec index and linked sub-spec files
 
@@ -59,113 +59,97 @@ Optional supporting inputs:
 
 - `_sdd/drafts/feature_draft_<feature_name>.md`
 
-Optional archive when file already exists:
+Optional archive when replacing same filename:
 
 - `_sdd/drafts/prev/prev_feature_draft_<name>_<timestamp>.md`
 
 ## Downstream Compatibility Contract
 
-Use stable headings and structure so downstream skills can consume this file:
+Keep these exact top-level headings:
 
 - `# Part 1: Spec Patch Draft`
 - `# Spec Update Input`
 - `# Part 2: Implementation Plan`
 
+For Part 2 task details, include:
+
+- `Component`, `Priority`, `Type`, `Description`, `Acceptance Criteria`
+- `Target Files` (`[C]`, `[M]`, `[D]` markers)
+- `Technical Notes`, `Dependencies`
+
 Downstream consumers:
 
-- `implementation`: reads Part 2 as an executable plan
-- `implementation-review`: audits Part 2 against code/tests and generated reports
-- `spec-update-done`: uses Part 1 and implementation artifacts to sync spec
+- `implementation`: executes Part 2 with conflict-aware grouping
+- `implementation-sequential`: can execute Part 2 sequentially (ignores Target Files)
+- `spec-update-todo` / `spec-update-done`: consume Part 1 for spec sync
 
 ## Workflow
 
-### 1) Analyze Input Completeness
+### 1) Analyze input completeness
 
-Classify user input as:
+Classify request as HIGH/MEDIUM/LOW and minimize unnecessary questions.
+Use `references/adaptive-questions.md`.
 
-- HIGH: objective, priority, and acceptance criteria already clear
-- MEDIUM: some key fields missing
-- LOW: idea-level request only
+### 2) Gather read-only context
 
-Use adaptive questioning from `references/adaptive-questions.md`.
+- Locate main spec and linked spec files.
+- Build section map for `Target Section` annotations.
+- Check decision log for constraints.
+- Explore codebase structure to plan realistic `Target Files`.
 
-### 2) Gather Read-Only Context
+### 3) Clarify only missing fields
 
-- Locate primary spec (`_sdd/spec/<project>.md` or `_sdd/spec/main.md`)
-- Follow links if spec is split
-- Capture current section map to target patch locations
-- Check decision log for constraints and prior rationale
+Ask concise questions for missing priority, acceptance criteria, scope boundaries, or technical constraints.
 
-### 3) Clarify Only What Is Missing
+### 4) Design changes and map Target Files
 
-Ask targeted questions for missing fields:
-
-- priority/severity
-- measurable acceptance criteria
-- scope boundaries
-- component or config impact
-
-### 4) Design Feature Changes
-
-Categorize requested changes into:
-
-- New Features
-- Improvements
-- Bug Reports
-- Component Changes
-- Configuration Changes
-
-Map each item to `Target Section` in existing spec.
+- Classify requested changes (feature/improvement/bug/component/config).
+- Map each item to a concrete spec `Target Section`.
+- Define implementation tasks and assign exact file-level `Target Files`.
+- Minimize file overlap across tasks to maximize parallelizability.
 
 ### 5) Generate Part 1 (Spec Patch Draft)
 
-Produce `Spec Update Input` compatible content with:
+Produce `Spec Update Input` compatible content with explicit `Target Section` annotations.
 
-- metadata (`Date`, `Author`, `Target Spec`)
-- sectioned change items
-- `Target Section` annotations
-- acceptance criteria checklists where applicable
+### 6) Generate Part 2 (Parallel-ready Implementation Plan)
 
-### 6) Generate Part 2 (Implementation Plan)
+Produce phase-based plan with:
 
-Produce phase-based implementation plan with:
-
-- in-scope / out-of-scope
-- components
+- scope and components
 - phase tables (`ID`, `Task`, `Priority`, `Dependencies`, `Component`)
-- task details with acceptance criteria
+- task details with `Target Files`
+- `Parallel Execution Summary` (conflicts + max parallel)
 - risks and open questions
 
-### 7) Save and Summarize
-
-- Save combined draft file
-- Report what was included in Part 1 and Part 2
-- Recommend next execution path:
-  - apply patch with `spec-update-todo`
-  - execute plan with `implementation`
-
-## Quality Gates
+### 7) Verify and save
 
 Before finalizing:
 
-- Part 1 is parseable as `Spec Update Input`
-- Part 2 tasks are actionable and dependency-aware
-- no direct spec file edits were made
-- unresolved ambiguity is listed explicitly
-- section headers follow the downstream compatibility contract
+- every task has valid `Target Files`
+- file paths are plausible for the repository
+- expected conflict points are explicitly called out
+- semantic conflict points (shared schema/config/API contracts) are explicitly called out
+- required headings match compatibility contract
+
+Then save and summarize next steps.
+
+## Quality Gates
+
+- Part 1 is parseable as `Spec Update Input`.
+- Part 2 tasks are executable and dependency-aware.
+- `Target Files` are file-level (not directory-level).
+- no direct edits under `_sdd/spec/` were made.
+- unresolved ambiguity is listed under Open Questions.
 
 ## Integration
 
-Simplified standard flow:
-
-`spec -> feature-draft -> implementation -> spec-update-done`
-
-Legacy-compatible path (optional):
-
-`feature-draft -> spec-update-todo -> implementation -> implementation-review -> spec-update-done`
+- Parallel flow: `spec -> feature-draft -> implementation -> spec-update-done`
+- Sequential fallback: `feature-draft-sequential -> implementation-sequential`
 
 ## References
 
 - `references/adaptive-questions.md` for completeness-based questioning
-- `references/output-format.md` for exact output contract
-- `examples/feature_draft.md` for a full sample output
+- `references/output-format.md` for exact output schema
+- `references/target-files-spec.md` for `Target Files` grammar and conflict rules
+- `examples/feature_draft_parallel.md` for a complete sample output

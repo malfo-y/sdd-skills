@@ -11,6 +11,7 @@
 | `/spec-create` | "스펙 생성" | 코드 분석 또는 초안에서 스펙 생성 |
 | `/spec-draft` (레거시) | "스펙 초안" | 스펙 업데이트 입력(user_draft.md) 초안 생성 |
 | `/feature-draft` **(권장)** | "기능 초안", "feature draft" | **통합 스킬**: 스펙 패치 초안 + 구현 계획을 한 번에 생성 |
+| `/feature-draft-sequential` (레거시) | "순차 기능 초안", "legacy feature draft" | Target Files 없이 스펙 패치 초안 + 순차 구현 계획 생성 |
 | `/spec-update-todo` (레거시) | "스펙에 기능 추가" | 새 기능/요구사항을 스펙에 추가 |
 | `/spec-update-done` | "스펙 동기화" | 구현 후 스펙과 코드 동기화 |
 | `/spec-review` | "스펙 리뷰", "드리프트 점검" | 선택적 보조 검증 (리포트 전용, 스펙 본문 미수정) |
@@ -18,8 +19,10 @@
 | `/spec-rewrite` | "스펙 리라이트", "스펙 정리" | 너무 긴/복잡한 스펙을 구조 재정리(파일 분할/부록 이동) |
 | `/pr-spec-patch` | "PR 스펙 패치" | PR과 스펙 비교하여 패치 초안 생성 |
 | `/pr-review` | "PR 리뷰" | PR 구현을 스펙/패치 초안 대비 검증 및 판정 |
-| `/implementation-plan` (레거시) | "구현 계획 생성" | 스펙에서 실행 가능한 작업 생성 |
-| `/implementation` | "구현 시작" | TDD로 작업 실행 |
+| `/implementation-plan` **(권장)** | "구현 계획 생성", "병렬 구현 계획" | Target Files 포함 구현 계획 생성 |
+| `/implementation-plan-sequential` (레거시) | "순차 구현 계획 생성" | 스펙에서 순차 실행 가능한 작업 생성 |
+| `/implementation` **(권장)** | "구현 시작", "병렬 구현" | conflict-aware 병렬 그룹으로 TDD 실행 |
+| `/implementation-sequential` (레거시) | "순차 구현" | 계획을 순차 TDD로 실행 |
 | `/implementation-review` (레거시) | "진행 상황 확인" | 계획 대비 구현 검증 |
 
 ---
@@ -49,7 +52,7 @@ flowchart LR
 | 경로 | 복잡도 | 사용 시점 | 워크플로우 |
 |------|--------|----------|-----------|
 | **A: Feature Draft (권장)** | 높음 | 큰 기능, 아키텍처 변경 | spec-create → feature-draft → implementation → spec-update-done |
-| **A' (레거시): Spec-First** | 높음 | 큰 기능 (전통 방식) | spec-update-todo → implementation-plan → implementation → implementation-review → spec-update-done |
+| **A' (레거시): Spec-First** | 높음 | 큰 기능 (전통 방식) | spec-update-todo → implementation-plan-sequential → implementation-sequential → implementation-review → spec-update-done |
 | **B: Direct Plan** | 중간 | 명확한 중간 규모 기능 | 입력 → implementation-plan → implementation → implementation-review → (선택) spec-update-done |
 | **C: Simple** | 낮음 | 버그 수정, 작은 기능 | 입력 → 직접 구현 → (선택적) implementation-review |
 
@@ -89,10 +92,16 @@ flowchart LR
 ### 3'. 새 기능 추가 (레거시: Spec-First)
 
 ```bash
-/spec-update-todo → /implementation-plan → /implementation → /implementation-review → /spec-update-done → (필요 시) /spec-review
+/spec-update-todo → /implementation-plan-sequential → /implementation-sequential → /implementation-review → /spec-update-done → (필요 시) /spec-review
 ```
 
 > 기존 7단계 워크플로우입니다. 세밀한 단계별 제어가 필요한 경우에만 사용합니다.
+
+### 3''. 새 기능 추가 (레거시: Sequential Draft)
+
+```bash
+/feature-draft-sequential → /implementation-sequential → /spec-update-done
+```
 
 ### 4. 중간 규모 기능 (Direct Plan)
 

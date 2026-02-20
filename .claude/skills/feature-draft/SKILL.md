@@ -1,16 +1,29 @@
 ---
 name: feature-draft
-description: This skill should be used when the user asks to "feature draft", "draft feature", "feature plan", "plan feature", "기능 초안", "기능 계획", "초안과 계획", "draft and plan", "feature spec and plan", or wants to combine requirements gathering, spec patch drafting, and implementation planning into a single workflow.
+description: This skill should be used when the user asks to "feature draft", "draft feature", "feature plan", "plan feature", "draft and plan", "feature draft parallel", "parallel feature draft", "병렬 기능 초안", "parallel feature plan", or wants to combine requirements gathering, spec patch drafting, and implementation planning with Target Files for parallel execution support.
 version: 1.0.0
 ---
 
-# Feature Draft - Unified Spec Patch + Implementation Plan Skill
+# Feature Draft (Parallel) - Unified Spec Patch + Implementation Plan with Target Files
 
-Collects requirements through conversation with the user, then outputs a spec patch draft and implementation plan as a **single file**.
+Collects requirements through conversation with the user, then outputs a spec patch draft and implementation plan as a **single file** — with **Target Files** fields on every task to enable parallel execution via `implementation`.
+
+## Relationship to `feature-draft-sequential`
+
+This skill extends `feature-draft-sequential` with one key addition: **Target Files** on each task in Part 2.
+
+| Aspect | `feature-draft-sequential` | `feature-draft` (this) |
+|--------|-----------------|--------------------------------|
+| Part 1: Spec Patch | Identical | Identical |
+| Part 2: Task template | Standard (no Target Files) | **Target Files 포함** |
+| Execution target | `implementation-sequential` | `implementation` |
+| Output file | Same location/format | Same location/format |
+
+Everything else — process, format rules, adaptive questions, file management — is identical.
 
 ## Simplified Workflow
 
-This skill is **Step 2 of 4** in the simplified SDD workflow:
+This skill is **Step 2 of 4** in the parallel SDD workflow:
 
 ```
 spec → feature-draft (this) → implementation → spec-update-done
@@ -19,27 +32,27 @@ spec → feature-draft (this) → implementation → spec-update-done
 | Step | Skill | Purpose |
 |------|-------|---------|
 | 1 | spec-create | Create the initial spec document |
-| **2** | **feature-draft** | Draft feature spec patch + implementation plan |
-| 3 | implementation | Execute the implementation plan (TDD) |
+| **2** | **feature-draft** | Draft feature spec patch + implementation plan (with Target Files) |
+| 3 | implementation | Execute the plan with parallel sub-agents |
 | 4 | spec-update-done | Sync spec with actual code |
 
-> **Previous workflow** (7 steps): spec → spec-draft → spec-update-todo → implementation-plan → implementation → implementation-review → spec-update-done
-> **New workflow** (4 steps): spec → feature-draft → implementation → spec-update-done
+> The non-parallel workflow (`feature-draft-sequential` → `implementation-sequential`) remains available for simpler projects.
 
 ## Overview
 
 This skill integrates the functionality of three skills: `spec-draft` + `spec-update-todo` + `implementation-plan`.
-In a single conversation, it collects requirements and simultaneously generates a spec patch draft (Part 1) and an implementation plan (Part 2).
+In a single conversation, it collects requirements and simultaneously generates a spec patch draft (Part 1) and an implementation plan with Target Files (Part 2).
 
 **Previous workflow**: `spec-draft` → `spec-update-todo` → `implementation-plan` (3 invocations, 3x tokens)
 **This skill**: `feature-draft` (1 invocation, shared context)
 
 ## When to Use This Skill
 
-- When you want to plan a new feature and create an implementation plan all at once
+- When you want to plan a new feature and create a **parallel-ready** implementation plan all at once
 - When you want to write a spec patch and implementation plan simultaneously
 - When you want to save tokens while getting both a spec patch and implementation plan
 - When you want to collapse the `spec-draft` → `spec-update-todo` → `implementation-plan` chain into one step
+- When you expect the implementation to benefit from parallel sub-agent execution
 
 ## Hard Rules
 
@@ -48,6 +61,7 @@ In a single conversation, it collects requirements and simultaneously generates 
 3. **Write in Korean**: Output file content must be written in Korean.
 4. **Multiple features supported**: Multiple features can be included in one file, but always confirm with the user first.
 5. **spec-update-todo compatible**: Part 1 must follow the "Spec Update Input" format so it can be directly used as input for `spec-update-todo`.
+6. **Target Files required**: Every task in Part 2 MUST include a `**Target Files**` field.
 
 ## Input Sources
 
@@ -64,7 +78,7 @@ In a single conversation, it collects requirements and simultaneously generates 
 
 **File structure** (single file, 2 parts):
 - **Part 1**: Spec patch draft ("Spec Update Input" format + Target Section annotations)
-- **Part 2**: Implementation plan (per-phase tasks, details, risks)
+- **Part 2**: Implementation plan with **Target Files** (per-phase tasks, details, risks)
 
 **Optional output**: `_sdd/spec/DECISION_LOG.md` (only when new decisions/trade-offs arise)
 
@@ -100,6 +114,10 @@ In a single conversation, it collects requirements and simultaneously generates 
 3. Check `_sdd/spec/DECISION_LOG.md` (if present):
    - Review existing decisions/rationale
    - Ensure new feature doesn't conflict with existing decisions
+4. **Explore codebase** for Target Files:
+   - Identify existing file patterns (where source, tests, configs live)
+   - Note naming conventions for new files
+   - Map which existing files will need modification
 ```
 
 ### Step 3: Adaptive Clarification
@@ -152,6 +170,12 @@ Apply different question strategies based on input completeness level:
    - Identify shared utilities/common patterns
    - Check external dependencies and integration points
    - Consider data model/storage requirements
+
+4. **Map Target Files per task**:
+   - For each task, identify which files will be created/modified/deleted
+   - Use codebase exploration to determine exact file paths
+   - Verify no unnecessary file overlaps between tasks
+   - Apply Target Files markers: [C] Create, [M] Modify, [D] Delete
 ```
 
 ### Step 5: Spec Patch Generation = Part 1
@@ -207,7 +231,7 @@ Part 1 follows the "Spec Update Input" format with `**Target Section**` annotati
 **Target Section**: `_sdd/spec/xxx.md` > `Issues > Improvements`
 **Current State**: [current state]
 **Proposed**: [proposed change]
-**Reason**: [reason for improvement]
+**Reason**: [reason]
 
 ---
 
@@ -218,8 +242,8 @@ Part 1 follows the "Spec Update Input" format with `**Target Section**` annotati
 **Target Section**: `_sdd/spec/xxx.md` > `Issues > Bugs`
 **Location**: [file:line]
 **Description**: [bug description]
-**Reproduction**: [reproduction steps]
-**Expected Behavior**: [expected behavior]
+**Reproduction**: [steps]
+**Expected Behavior**: [expected]
 
 ---
 
@@ -255,9 +279,12 @@ Part 1 follows the "Spec Update Input" format with `**Target Section**` annotati
 [constraints]
 ```
 
+> **상세 포맷**: 각 섹션의 전체 필드 목록과 선택/필수 구분은 `references/output-format.md`를 참고하세요.
+
 ### Step 6: Implementation Plan Generation = Part 2
 
 Reuse the components and analysis results from Step 4 to create the implementation plan.
+**Key difference from `feature-draft-sequential`**: Every task includes a `**Target Files**` field.
 
 **Implementation plan structure**:
 
@@ -304,8 +331,13 @@ Reuse the components and analysis results from Step 4 to create the implementati
 - [ ] [specific, measurable criterion]
 - [ ] [additional criterion]
 
+**Target Files**:
+- [C] `src/services/new_service.py` -- 새 서비스 클래스
+- [M] `src/config/settings.py` -- 설정 항목 추가
+- [C] `tests/test_new_service.py` -- 단위 테스트
+
 **Technical Notes**:
-- [implementation hints, patterns to use, files to modify]
+- [implementation hints, patterns to use]
 
 **Dependencies**: [blocking task ID list]
 
@@ -327,11 +359,18 @@ Reuse the components and analysis results from Step 4 to create the implementati
 - Include infrastructure/setup tasks (CI/CD, environment configuration, etc.)
 - Include test tasks (unit, integration, E2E)
 - Include documentation tasks
+- **Every task MUST have Target Files** (see `references/target-files-spec.md`)
+
+**Target Files guidelines**:
+- List ALL files the task will create, modify, or delete
+- Use exact file paths (project root relative)
+- Minimize overlap between tasks to maximize parallelization
+- When overlap is unavoidable, note it in Technical Notes
 
 **Dependency mapping**:
 - **Blocks**: Tasks that cannot start until this task is complete
 - **Related**: Shares context but no blocking relationship
-- **Parallel**: Can be worked on concurrently
+- **Parallel**: Can be worked on concurrently (when Target Files don't overlap)
 
 **Phase strategy** (choose based on complexity):
 - **MVP-First**: Foundation → MVP → Core → Nice-to-Have
@@ -348,14 +387,18 @@ See "Model aliases" at https://code.claude.com/docs/en/model-config.
 1. Show generated draft to user (Part 1 + Part 2)
 2. Incorporate modifications
 3. Check if there's anything else to add
+4. **Verify Target Files**:
+   a. Every task has Target Files
+   b. File paths are plausible (match project structure)
+   c. Review overlaps and note which tasks must be sequential
 
-4. Save file:
+5. Save file:
    a. Create `_sdd/drafts/` directory (if it doesn't exist)
    b. Archive existing file (if a file with the same name exists):
       - `_sdd/drafts/prev/prev_feature_draft_<name>_<timestamp>.md`
    c. Save: `_sdd/drafts/feature_draft_<feature_name>.md`
 
-5. Process input files (if used):
+6. Process input files (if used):
    - `user_draft.md` → `_processed_user_draft.md`
    - `user_spec.md` → `_processed_user_spec.md`
    - `user_input.md` → `_processed_user_input.md`
@@ -363,17 +406,17 @@ See "Model aliases" at https://code.claude.com/docs/en/model-config.
    <!-- Processed: YYYY-MM-DD -->
    <!-- Applied to: feature_draft_<name>.md -->
 
-6. Update Decision Log (optional):
+7. Update Decision Log (optional):
    - Only when significant decisions/trade-offs were made
    - Add brief entry to `_sdd/spec/DECISION_LOG.md`
 
-7. Provide next steps guidance:
+8. Provide next steps guidance:
 ```
 
 **Completion message template**:
 
 ```markdown
-## Feature Draft Complete
+## Feature Draft Complete (Parallel-Ready)
 
 **File**: `_sdd/drafts/feature_draft_<name>.md`
 **Date**: YYYY-MM-DD
@@ -382,7 +425,13 @@ See "Model aliases" at https://code.claude.com/docs/en/model-config.
 | Part | Content | Item Count |
 |------|---------|------------|
 | Part 1 | Spec patch draft | N items |
-| Part 2 | Implementation plan | N tasks (M phases) |
+| Part 2 | Implementation plan (with Target Files) | N tasks (M phases) |
+
+### Parallel Execution Summary
+| Phase | Total Tasks | Max Parallel | Sequential (conflicts) |
+|-------|-------------|--------------|----------------------|
+| 1     | N           | N            | 0                    |
+| 2     | N           | N            | N                    |
 
 ### Input Files Processed
 - [x] `user_draft.md` → `_processed_user_draft.md` (if used)
@@ -394,7 +443,8 @@ Apply spec patch (choose one):
 - **Method B (manual)**: Copy-paste each patch from Part 1 to the target section
 
 Execute implementation:
-- Run `implementation` skill → use Part 2 as implementation plan
+- **Parallel**: Run `implementation` skill → use Part 2 as implementation plan
+- **Sequential**: Run `implementation-sequential` skill → use Part 2 as implementation plan (Target Files ignored)
 
 ### Model Recommendation
 [model recommendation for implementation]
@@ -439,6 +489,13 @@ Execute implementation:
 - **Document decisions**: Record reasons for choosing specific approaches
 - **Identify MVP**: Mark tasks essential for initial release
 
+### Target Files Quality (Parallel-Specific)
+- **Be precise**: Use exact file paths, not directory names
+- **Minimize overlaps**: Design tasks to touch different files when possible
+- **Include tests**: Always list the test file alongside the source file
+- **Think about configs**: Don't forget shared config/settings files that multiple tasks may need
+- **Verify with codebase**: Check actual project structure before naming files
+
 ## Error Handling
 
 | Situation | Response |
@@ -450,32 +507,32 @@ Execute implementation:
 | Incomplete information | Supplement with adaptive questions |
 | User interrupts | Save content gathered so far |
 | Multiple features detected in input | Confirm with user (single file vs separate) |
+| Cannot determine Target Files | Ask user for file paths, or note as TBD |
 
 ## Workflow Integration
 
 ```
-Previous chain (3 skills):
-  spec-draft → spec-update-todo → implementation-plan
-
-Unified skill (1 skill):
+Parallel workflow:
   feature-draft
        ↓
   _sdd/drafts/feature_draft_<name>.md
-                            ↓
-       ↓    manual copy-paste or spec-update-todo
-                            ↓
-  implementation ←──────────┘
-       ↓
-  implementation-review
+       ↓                        ↓
+       ↓    spec-update-todo    ↓
+       ↓                        ↓
+  implementation ←─────┘
        ↓
   spec-update-done
+
+Non-parallel fallback:
+  Output is fully compatible with `implementation-sequential` (Target Files ignored)
 ```
 
 ## Additional Resources
 
 ### Reference Files
 - **`references/adaptive-questions.md`** - Adaptive mode question guide (completeness level assessment + type-specific questions)
-- **`references/output-format.md`** - Output file detailed format specification
+- **`references/output-format.md`** - Output file detailed format specification (with Target Files extension)
+- **`references/target-files-spec.md`** - Target Files field detailed specification
 
 ### Example Files
-- **`examples/feature_draft.md`** - Completed output example file
+- **`examples/feature_draft_parallel.md`** - Completed output example file with Target Files

@@ -1,0 +1,6 @@
+{
+  "name": "implementation-plan-sequential",
+  "description": "This skill should be used when the user asks to \"create a sequential implementation plan\", \"implementation plan sequential\", \"legacy implementation plan\", \"순차 구현 계획\", or explicitly wants a non-parallel implementation plan without Target Files.",
+  "instruction_file": "SKILL.md",
+  "version": "1.0.0"
+}

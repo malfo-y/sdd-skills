@@ -22,11 +22,19 @@
 ### 1-2. 권장 흐름 (Spec-First 기준)
 
 ```text
-spec-draft (선택) -> spec-update-todo -> implementation-plan -> implementation
--> implementation-review -> spec-update-done -> spec-summary (선택)
+병렬 기본 통합 흐름:
+feature-draft -> implementation -> spec-update-done
+
+spec-draft (선택) -> spec-update-todo -> implementation-plan -> implementation -> implementation-review -> spec-update-done -> spec-summary (선택)
 
 PR 단위 흐름:
 pr-spec-patch -> pr-review -> (머지 후) spec-update-done
+
+레거시 순차 흐름(필요 시):
+feature-draft-sequential -> implementation-sequential -> spec-update-done
+
+레거시 단계 분리 흐름(필요 시):
+spec-update-todo -> implementation-plan-sequential -> implementation-sequential -> implementation-review -> spec-update-done
 ```
 
 ---
@@ -202,14 +210,18 @@ pr-spec-patch -> pr-review -> (머지 후) spec-update-done
 대상 스킬:
 - `implementation-plan`
 - `implementation`
+- `implementation-plan-sequential` (레거시)
+- `implementation-sequential` (레거시)
 - `implementation-review`
 
 ### 4-1. 빠른 비교표
 
 | 스킬 | 주 목적 | 입력 | 출력 | 하드 룰 |
 |------|---------|------|------|---------|
-| `implementation-plan` | 스펙/요구사항을 작업 단위로 분해 | 스펙 + 대화 + `user_input.md` | `IMPLEMENTATION_PLAN.md` | `_sdd/spec/` 수정 금지 |
-| `implementation` | 계획 실행(TDD) | 구현 계획 + 코드베이스 + env | 코드/테스트 + `IMPLEMENTATION_PROGRESS*.md` | `_sdd/spec/` 수정 금지 |
+| `implementation-plan` | 스펙/요구사항을 Target Files 포함 작업 단위로 분해 (병렬 기본) | 스펙 + 대화 + `user_input.md` | `IMPLEMENTATION_PLAN.md` | `_sdd/spec/` 수정 금지 |
+| `implementation` | 계획 실행(TDD, 병렬 그룹 기본) | 구현 계획 + 코드베이스 + env | 코드/테스트 + `IMPLEMENTATION_PROGRESS*.md` | `_sdd/spec/` 수정 금지 |
+| `implementation-plan-sequential` (레거시) | 스펙/요구사항을 순차 실행용 작업 단위로 분해 | 스펙 + 대화 + `user_input.md` | `IMPLEMENTATION_PLAN.md` | `_sdd/spec/` 수정 금지 |
+| `implementation-sequential` (레거시) | 계획 실행(TDD, 순차) | 구현 계획 + 코드베이스 + env | 코드/테스트 + `IMPLEMENTATION_PROGRESS*.md` | `_sdd/spec/` 수정 금지 |
 | `implementation-review` | 계획 대비 구현 검증 | 계획/진행 파일 + 코드 + 테스트 결과 | `IMPLEMENTATION_REVIEW.md` | 스펙 본문 수정 금지(리뷰 전용) |
 
 ### 4-2. `implementation-plan`
@@ -363,4 +375,3 @@ pr-spec-patch -> pr-review -> merge -> spec-update-done
 | `implementation-review` | `_sdd/implementation/IMPLEMENTATION_REVIEW.md` |
 | `pr-spec-patch` | `_sdd/pr/spec_patch_draft.md` |
 | `pr-review` | `_sdd/pr/PR_REVIEW.md` |
-

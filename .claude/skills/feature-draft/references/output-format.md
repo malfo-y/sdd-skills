@@ -1,6 +1,7 @@
 # Output Format Specification
 
 Detailed format specification for the `feature-draft` skill's output files.
+This extends the `feature-draft-sequential` output format with **Target Files** fields in Part 2.
 
 ---
 
@@ -19,7 +20,7 @@ Detailed format specification for the `feature-draft` skill's output files.
 ---
 
 # Part 2: Implementation Plan
-[Implementation Plan format]
+[Implementation Plan format with Target Files]
 
 ---
 
@@ -250,7 +251,7 @@ For split specs, use actual filenames:
 
 ---
 
-## Part 2: Implementation Plan
+## Part 2: Implementation Plan (with Target Files)
 
 ### Full Structure
 
@@ -300,12 +301,23 @@ For split specs, use actual filenames:
 - [ ] criterion 1
 - [ ] criterion 2
 
+**Target Files**:
+- [C] `src/path/to/file.py` -- 설명
+- [M] `src/path/to/existing.py` -- 변경 설명
+- [C] `tests/test_file.py` -- 테스트
+
 **Technical Notes**:
 - [implementation hints]
 
 **Dependencies**: [blocking task IDs]
 
 ---
+
+## Parallel Execution Summary
+| Phase | Total Tasks | Max Parallel | File Conflicts |
+|-------|-------------|--------------|----------------|
+| 1     | N           | N            | None           |
+| 2     | N           | N            | file.py (Task X, Y) |
 
 ## Risks and Mitigations
 | Risk | Impact | Mitigation |
@@ -318,7 +330,7 @@ For split specs, use actual filenames:
 [model recommendation]
 ```
 
-### Task Structure Details
+### Task Structure Details (with Target Files)
 
 ```markdown
 ### Task [ID]: [clear, action-oriented title]
@@ -333,11 +345,24 @@ For split specs, use actual filenames:
 - [ ] [specific, measurable criterion]
 - [ ] [additional criterion]
 
+**Target Files**:
+- [C/M/D] `path/to/file` -- 변경 설명
+
 **Technical Notes**:
-- [implementation hints, patterns to use, files to modify]
+- [implementation hints, patterns to use]
 
 **Dependencies**: [blocking task ID list, or "-" if none]
 ```
+
+### Target Files Markers
+
+| Marker | Meaning | Description |
+|--------|---------|-------------|
+| `[C]` | Create | New file to be created |
+| `[M]` | Modify | Existing file to be modified |
+| `[D]` | Delete | File to be deleted |
+
+See `references/target-files-spec.md` for the full specification.
 
 ### Priority Definitions
 
@@ -379,7 +404,8 @@ Phase 3: Remaining (low-risk items)
 - **Method B (manual)**: Copy-paste each item from Part 1 to its Target Section
 
 ### Execute Implementation
-- Run `implementation` skill → use Part 2 as implementation plan
+- **Parallel**: Run `implementation` skill → use Part 2 as implementation plan
+- **Sequential**: Run `implementation-sequential` skill → use Part 2 as plan (Target Files ignored)
 
 ### Model Recommendation
 - [model recommendation for implementation]

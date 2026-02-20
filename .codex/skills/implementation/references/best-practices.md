@@ -392,18 +392,24 @@ Before marking a task complete:
 
 ## Post-TDD Quality Review
 
-TDD verifies specified behavior, but does not automatically catch all cross-cutting risks.
-After task-level TDD, run phase/final review checks for:
+TDD verifies **specified behavior** — every acceptance criterion gets a test, and the code is driven by those tests. But TDD cannot catch **unspecified risks**: security vulnerabilities, performance issues, cross-task integration gaps, and pattern violations that no acceptance criterion explicitly mentions.
 
-- Security risks (injection, auth gaps, secret handling)
-- Performance risks (N+1, blocking async, missing indexes)
-- Pattern consistency (naming, duplication, abstractions)
-- Cross-task integration issues
+The phase review (Step 6) and final review (Step 7) exist to cover this gap:
 
-If a critical issue is found, fix it with TDD:
+- **Security**: SQL injection, XSS, hardcoded secrets, missing auth — these are rarely acceptance criteria but always matter
+- **Performance**: N+1 queries, missing indexes, blocking async calls — emerge from how code is used, not how it's specified
+- **Patterns**: Naming inconsistencies, duplication across tasks, abstraction misuse — TDD drives correctness, not consistency
+- **Integration**: Tasks pass individually but fail together — cross-task interactions aren't tested by single-criterion TDD
+- **Parallel Consistency**: Sub-agents may introduce conflicting patterns — requires cross-agent review
 
-1. write a failing test that exposes the issue
-2. implement the fix
-3. re-run tests and review checks
+### Critical Issues → Fix with TDD
 
-Use `references/review-checklist.md` during phase and final review.
+When a review uncovers a critical issue, fix it using the same TDD discipline:
+
+1. Write a test that **exposes** the issue (RED)
+2. Fix the code to make the test pass (GREEN)
+3. Clean up (REFACTOR)
+
+This ensures the fix is verified and regression-protected.
+
+See `references/review-checklist.md` for detailed checklists used during phase and final reviews.

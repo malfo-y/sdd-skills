@@ -1,16 +1,30 @@
 ---
 name: implementation
-description: Use this skill when the user wants to execute an implementation plan, start implementing tasks from a plan, work through a development roadmap, or says "implement the plan", "start implementation", "execute the plan", or "work on the tasks".
-version: 1.2.0
+description: Use this skill when the user wants to execute an implementation plan, start implementing tasks from a plan, work through a development roadmap, says "implement the plan", "start implementation", "execute the plan", "work on the tasks", or explicitly asks for "implement parallel", "parallel implementation", "병렬 구현", "병렬로 구현". Uses conflict-aware parallel execution when Target Files are available.
+version: 1.0.0
 ---
 
-# Implementation Execution (TDD Approach)
+# Implementation Execution (Parallel TDD Approach)
 
-Execute implementation plans systematically using Test-Driven Development (TDD), working through tasks phase by phase while tracking progress and maintaining code quality.
+Execute implementation plans systematically using Test-Driven Development (TDD), with **parallel sub-agent dispatch** for independent tasks within each phase. Tasks without file conflicts are executed concurrently via the Task tool.
+
+## Relationship to `implementation-sequential`
+
+This skill extends `implementation-sequential` with parallel execution capability:
+
+| Aspect | `implementation-sequential` | `implementation` (this) |
+|--------|-----------------|----------------------------------|
+| TDD approach | Red-Green-Refactor | Same |
+| Task execution | Sequential (one at a time) | **Parallel groups** (concurrent sub-agents) |
+| Phase/Final review | Same | Same |
+| Input format | Standard plan | Plan with **Target Files** (preferred) |
+| Fallback | N/A | Sequential (when Target Files absent or conflicting) |
+
+Everything else — TDD protocol, review checklists, reporting — is identical.
 
 ## Simplified Workflow
 
-This skill is **Step 3 of 4** in the simplified SDD workflow:
+This skill is **Step 3 of 4** in the parallel SDD workflow:
 
 ```
 spec → feature-draft → implementation (this) → spec-update-done
@@ -19,14 +33,11 @@ spec → feature-draft → implementation (this) → spec-update-done
 | Step | Skill | Purpose |
 |------|-------|---------|
 | 1 | spec-create | Create the initial spec document |
-| 2 | feature-draft | Draft feature spec patch + implementation plan |
-| **3** | **implementation** | Execute the implementation plan (TDD) |
+| 2 | feature-draft | Draft feature spec patch + implementation plan (with Target Files) |
+| **3** | **implementation** | Execute the plan with parallel sub-agents (TDD) |
 | 4 | spec-update-done | Sync spec with actual code |
 
-> **Previous workflow** (7 steps): spec → spec-draft → spec-update-todo → implementation-plan → implementation → implementation-review → spec-update-done
-> **New workflow** (4 steps): spec → feature-draft → implementation → spec-update-done
->
-> This skill now includes in-phase and final reviews, so a separate `implementation-review` invocation is no longer required.
+> Also compatible with `feature-draft-sequential` or `implementation-plan-sequential` output (falls back to sequential when Target Files missing).
 
 ## Hard Rule: Never Modify Spec Files
 
@@ -34,11 +45,6 @@ spec → feature-draft → implementation (this) → spec-update-done
 - If implementation reveals spec drift, ambiguity, or missing requirements:
   - Report it in the progress report / chat, and
   - Ask the user to update the spec via `spec-update-todo` (or run a spec audit via `spec-update-done`).
-
-## Output reports
-
-- Save per-phase report under `<project-root>/_sdd/implementation/IMPLEMENTATION_REPORT_PHASE_<phase-number>.md`.
-- Save the final report under a user-specified file (default: `<project-root>/_sdd/implementation/IMPLEMENTATION_REPORT.md`).
 
 ## Core Principle: Test-Driven Development
 
@@ -56,6 +62,8 @@ All implementation follows the **Red-Green-Refactor** cycle:
 └─────────────────────────────────────────────────────────┘
 ```
 
+Each sub-agent follows this same TDD protocol independently.
+
 ## Prerequisites
 
 Before starting implementation:
@@ -64,7 +72,7 @@ Before starting implementation:
    - User-specified path
    - `<project_root>/_sdd/implementation/IMPLEMENTATION_PLAN.md` (preferred entry point; may link to phase files)
    - `<project_root>/_sdd/implementation/IMPLEMENTATION_PLAN_PHASE_<phase-number>.md` (when the plan is split by phase)
-   - `<project_root>/_sdd/drafts/feature_draft_<feature_name>.md` (produced by `feature-draft` skill; use Part 2: 구현 계획 as the implementation plan)
+   - `<project_root>/_sdd/drafts/feature_draft_<feature_name>.md` (produced by `feature-draft-sequential` or `feature-draft` skill; use Part 2: 구현 계획 as the implementation plan)
    - Recent conversation context
 
 If multiple plan files exist and the user did not specify a starting point:
@@ -75,12 +83,16 @@ If multiple plan files exist and the user did not specify a starting point:
 
 2. **Verify Plan Exists**: If no plan is found, suggest using the `implementation-plan` or `feature-draft` skill first.
 
-3. **Understand the Codebase**: Use codebase-retrieval or exploration to understand:
+3. **Check for Target Files**: Examine whether tasks have `**Target Files**` fields.
+   - **Present**: Enable parallel execution (this skill's main advantage)
+   - **Absent**: Fall back to sequential mode with optional Target Files inference (see Step 3)
+
+4. **Understand the Codebase**: Use codebase-retrieval or exploration to understand:
    - Existing code patterns
    - **Testing framework and conventions** (critical for TDD)
    - Test file locations and naming conventions
 
-4. **Load the execution/test environment guide** before running any code or tests:
+5. **Load the execution/test environment guide** before running any code or tests:
    - User-specified path
    - `<project_root>/_sdd/env.md` (source of environment variables, conda env, required setup commands)
    - Recent conversation context
@@ -91,10 +103,11 @@ If `_sdd/env.md` exists, apply its setup instructions first (for example: `conda
 
 1. **Load the Plan** - Read and parse the implementation plan
 2. **Initialize Task Tracking** - Create tasks in the task system
-3. **Execute by Phase** - Work through phases in order
-4. **Implement Tasks with TDD** - Red-Green-Refactor for each task
-5. **Phase Review** - Quality checks after each phase (security, patterns, performance)
-6. **Final Review & Report** - Comprehensive review and combined report after all phases
+3. **Analyze Parallelization** - Build conflict graph, form parallel groups
+4. **Execute by Phase (Parallel)** - Dispatch sub-agents for each group
+5. **Integrate & Verify** - Post-group verification, handle failures
+6. **Phase Review** - Quality checks after each phase
+7. **Final Review & Report** - Comprehensive review and combined report
 
 ## Step 1: Load the Plan
 
@@ -104,12 +117,13 @@ Read the implementation plan file and extract:
 - **Phases**: The ordered implementation stages
 - **Tasks**: Individual work items with details
 - **Dependencies**: Task relationships and blocking items
+- **Target Files**: Per-task file lists (for parallel scheduling)
 
 ```markdown
 Key sections to parse:
 - ## Components
 - ## Implementation Phases
-- ## Task Details
+- ## Task Details (including Target Files)
 - ## Open Questions (address before proceeding)
 ```
 
@@ -138,138 +152,389 @@ Plan ID 1 → System Task "abc123"
 Plan ID 2 → System Task "def456"
 ```
 
-## Step 3: Execute by Phase
+## Step 3: Analyze Parallelization
 
-Work through phases in order:
+This is the **key step** that differentiates this skill from `implementation-sequential`.
+
+### 3.1 Check Target Files Availability
+
+```
+IF all tasks have Target Files:
+    → Proceed with full parallel analysis
+ELSE IF some tasks have Target Files:
+    → Parallel for tasks with Target Files, sequential for others
+ELSE (no Target Files at all):
+    → Attempt inference (see 3.2) or fall back to sequential
+```
+
+### 3.2 Target Files Inference (when absent)
+
+If a plan lacks Target Files:
+
+```
+For each task:
+1. Analyze Description and Technical Notes for file path mentions
+2. Use codebase-retrieval to identify related files
+3. Infer Target Files with [C] or [M] markers
+
+Present inferred Target Files to user:
+  "Task 1의 Target Files를 다음과 같이 추론했습니다:
+   - [C] src/services/auth.py
+   - [C] tests/test_auth.py
+   확인하시겠습니까?"
+
+IF user confirms → Use for parallel scheduling
+IF user declines or uncertain → Execute that task sequentially
+```
+
+### 3.3 Build Conflict Graph
+
+For each pair of unblocked tasks in a phase, check **both** file-level and semantic conflicts:
+
+```
+For task_a, task_b in unblocked_tasks:
+    files_a = set(task_a.target_files.paths)
+    files_b = set(task_b.target_files.paths)
+
+    # 1단계: 파일 수준 충돌
+    IF files_a ∩ files_b ≠ ∅:
+        mark_conflict(task_a, task_b)
+        continue
+
+    # 2단계: 의미적 충돌 (파일이 겹치지 않아도 발생 가능)
+    IF task_a creates model/type that task_b imports or depends on:
+        mark_conflict(task_a, task_b)
+    IF both tasks create DB migrations:
+        mark_conflict(task_a, task_b)
+    IF both tasks assume shared config/env values:
+        mark_conflict(task_a, task_b)
+    IF task_a defines API contract that task_b consumes:
+        mark_conflict(task_a, task_b)
+```
+
+> **Note**: 의미적 충돌은 Acceptance Criteria, Technical Notes, Description에서 추론합니다. 불확실한 경우 순차 실행이 안전합니다. 상세 규칙은 `references/parallel-execution.md`의 "의미적 충돌" 섹션을 참조하세요.
+
+### 3.4 Form Parallel Groups
+
+See `references/parallel-execution.md` for the full algorithm.
+
+```
+function buildParallelGroups(unblockedTasks):
+    groups = []
+    remaining = sort(unblockedTasks, by=[priority DESC, id ASC])
+
+    while remaining is not empty:
+        currentGroup = []
+        usedFiles = {}
+
+        for task in remaining:
+            if task.targetFiles ∩ usedFiles == ∅:
+                currentGroup.append(task)
+                usedFiles = usedFiles ∪ task.targetFiles
+
+        groups.append(currentGroup)
+        remaining = remaining - currentGroup
+
+    return groups
+```
+
+### 3.5 Report Parallelization Plan
+
+Before executing, show the user the parallel dispatch plan:
+
+```markdown
+## Phase 1 병렬 실행 계획
+
+### Group 1 (동시 실행):
+- Task 1: 데이터베이스 스키마 설정 [P0]
+- Task 2: 비밀번호 해싱 유틸리티 [P0]
+- Task 4: 레이트 제한 미들웨어 [P1]
+
+### Group 2 (Group 1 완료 후):
+- Task 3: JWT 유틸리티 (Task 1과 config.py 충돌)
+
+예상 효율: 4 tasks → 2 groups (2x speedup)
+```
+
+## Step 4: Execute by Phase (Parallel)
+
+For each phase, execute parallel groups in order:
 
 ```
 For each phase:
-1. Identify all tasks in this phase
-2. Check which tasks are unblocked (no pending dependencies)
-3. Work on unblocked P0 tasks first, then P1, P2, P3
-4. Mark tasks complete as you finish them
-5. Move to next phase when all tasks complete
+  1. Compute parallel groups (Step 3)
+  2. For each group:
+     a. Dispatch sub-agents via Task tool (concurrent calls)
+     b. Wait for all sub-agents in group to complete
+     c. Run post-group verification (Step 5)
+     d. Handle failures and unplanned dependencies
+  3. Proceed to next group
+  4. When all groups complete → Phase Review (Step 6)
 ```
 
-### Phase Execution Pattern
+### 4.1 Sub-Agent Dispatch
 
-```markdown
-## Working on Phase 1: Foundation
+For each task in a parallel group, call the Task tool **simultaneously**:
 
-### Available Tasks (unblocked):
-- Task 1: Set up database schema [P0] ← Start here
-- Task 2: Implement password hashing [P0]
-
-### Blocked Tasks:
-- Task 5: Implement registration [blocked by 1, 2]
-
-Starting with Task 1...
+```
+Task(
+  subagent_type="general-purpose",
+  model="sonnet",
+  prompt="[Sub-Agent Prompt - see below]"
+)
 ```
 
-## Step 4: Implement Individual Tasks with TDD
+**Call all tasks in the same group as parallel Task tool calls in a single message.**
 
-For each task, follow the TDD workflow:
+### 4.2 Sub-Agent Prompt Template
 
-### 4.1 Start Task
+Each sub-agent receives:
+
+```
+당신은 TDD 구현 sub-agent입니다. 아래 task를 구현하세요.
+
+## 담당 Task
+### Task {id}: {title}
+**Component**: {component}
+**Priority**: {priority}
+
+**Description**:
+{description}
+
+**Acceptance Criteria**:
+{acceptance_criteria}
+
+**Technical Notes**:
+{technical_notes}
+
+## 수정 허용 파일 (Target Files)
+{target_files_list}
+
+## TDD 프로토콜
+각 Acceptance Criterion마다:
+1. **RED**: 실패하는 테스트 작성 → 테스트 실행 → 실패 확인
+2. **GREEN**: 최소한의 코드로 테스트 통과 → 테스트 실행 → 통과 확인
+3. **REFACTOR**: 코드 정리 → 전체 테스트 실행 → 통과 확인
+
+## 파일 경계 규칙
+- 위의 Target Files만 생성/수정/삭제 가능
+- 다른 파일은 읽기(Read)만 가능
+- Target Files 외 파일 수정이 필요하면:
+  수정하지 말고 보고: "UNPLANNED_DEPENDENCY: {파일경로} - {필요한 변경 설명}"
+
+## 환경
+{env_setup}
+
+## 테스트 프레임워크
+{test_framework_info}
+
+## 완료 시 보고 형식
+아래 형식으로 결과를 보고하세요:
+
+## Task {id} 완료 보고
+### 결과: SUCCESS / PARTIAL / FAILED
+### TDD 진행 상황
+| Criterion | RED | GREEN | REFACTOR | 상태 |
+|-----------|-----|-------|----------|------|
+| (criterion name) | ✓/✗ | ✓/✗ | ✓/✗ | 완료/실패 |
+### 생성/수정된 파일
+- [C/M] `path` (N lines)
+### 테스트 결과
+- 새 테스트: N개
+- 전체 통과: Yes/No
+### Unplanned Dependencies (있는 경우)
+- UNPLANNED_DEPENDENCY: `path` - 설명
+### 발견 사항
+- 특이사항
+```
+
+### 4.3 Sequential Fallback
+
+When tasks cannot be parallelized (conflicts or missing Target Files), execute them sequentially using the same TDD approach as the original `implementation-sequential` skill:
+
 ```
 1. TaskUpdate: Set status to "in_progress"
-2. Read task details: acceptance criteria, technical notes
-3. Explore relevant code AND test files using codebase-retrieval
-4. Identify the testing framework and patterns used
+2. Read task details
+3. For each acceptance criterion: RED → GREEN → REFACTOR
+4. TaskUpdate: Set status to "completed"
 ```
 
-### 4.2 TDD Cycle: Red-Green-Refactor
+## Step 5: Integrate & Verify (Post-Group)
 
-For EACH acceptance criterion in the task:
+After each parallel group completes:
 
-#### RED: Write Failing Test First
+### 5.1 Run Full Test Suite
+
 ```
-1. Translate the acceptance criterion into a test case
-2. Write the test that describes the expected behavior
-3. Run the test - it MUST fail (confirms test is valid)
-4. If test passes without implementation, the test is wrong or feature exists
+1. Execute all tests (new + existing)
+2. Check for regressions
+3. If tests fail:
+   a. Identify which sub-agent's changes caused the failure
+   b. Fix or re-run that task sequentially
 ```
 
-Example:
+### 5.2 Process Unplanned Dependencies
+
+```
+1. Collect UNPLANNED_DEPENDENCY reports from all sub-agents
+2. For each unplanned dependency:
+   a. Assess if the dependency is valid
+   b. If valid: resolve it directly (sequential) → re-verify
+   c. If invalid: note as non-issue
+3. Re-run affected tests after resolution
+```
+
+### 5.3 Handle Sub-Agent Failures
+
+```
+IF a sub-agent reports FAILED or PARTIAL:
+  1. Other sub-agents' results are NOT affected
+  2. Mark failed task as needs_retry
+  3. After group completes, retry failed task sequentially
+  4. If retry also fails: report to user, skip task
+```
+
+### 5.4 Verify File Integrity
+
+```
+1. Check that no sub-agent modified files outside their Target Files
+2. If violations found:
+   a. Revert unauthorized changes
+   b. Re-run the task sequentially with stricter instructions
+```
+
+### 5.5 Update Task Status
+
+```
+For each task in the completed group:
+  IF success → TaskUpdate: status = "completed"
+  IF failed → TaskUpdate: keep as "in_progress" (for retry)
+  IF partial → Note incomplete criteria for follow-up
+```
+
+## Step 6: Phase Review
+
+After completing all tasks in a phase, run a lightweight quality review (same as `implementation-sequential` skill).
+
+### 6.1 Collect Phase Context
+
+Reuse data already tracked during TDD — **no re-discovery needed**:
+- Files created/modified during this phase (from all sub-agents)
+- Tests written and their pass/fail status
+- Acceptance criteria met
+- Any notes or blockers encountered
+
+### 6.2 Cross-Cutting Quality Checks
+
+Run the following checks on all files touched in this phase. Reference `references/review-checklist.md` for detailed criteria.
+
+| Category | What to Check |
+|----------|---------------|
+| **Security** | SQL injection, XSS, hardcoded secrets, missing auth, input validation |
+| **Error Handling** | Consistent response format, logging, graceful degradation |
+| **Code Patterns** | Naming conventions, abstraction level, duplication, project conventions |
+| **Performance** | N+1 queries, missing indexes, async blocking, resource cleanup |
+| **Test Quality** | Independent, deterministic, behavior-focused |
+| **Cross-Task Integration** | Tasks within this phase work together correctly |
+| **Parallel Integration** | Sub-agent outputs are consistent with each other |
+
+### 6.3 Categorize Issues
+
+- **Critical**: Security vulnerability, data loss risk, core functionality broken → **must fix before next phase**
+- **Quality**: Missing edge-case tests, inconsistent error handling → document, proceed
+- **Improvement**: Performance optimization, readability enhancement → note for later
+
+### 6.4 Decision Gate
+
+```
+IF critical issues found:
+    Fix using TDD (write test exposing the issue → fix → verify)
+    Re-run phase review on fixed areas
+ELSE IF quality issues only:
+    Document findings, proceed to next phase
+ELSE:
+    Phase is clean — proceed
+```
+
+### 6.5 Phase Review Output
+
+Save per-phase report under `<project-root>/_sdd/implementation/IMPLEMENTATION_REPORT_PHASE_<phase-number>.md`.
+
+## Step 7: Final Review & Report
+
+After all phases complete, run a comprehensive quality review across the **entire implementation**, then produce a combined report.
+
+### 7.1 Comprehensive Quality Review
+
+Apply the same checklists from Step 6.2 but with **cross-phase scope**:
+- Do modules from different phases integrate correctly?
+- Are there inconsistent patterns between early and late phases?
+- Do security boundaries hold across the full system?
+- Are there performance issues that only appear at full scale?
+
+### 7.2 Final Decision Gate
+
+Same rules as Step 6.4. Critical issues must be fixed with TDD before declaring completion.
+
+### 7.3 Generate Combined Report
+
+Save the report under a user-specified file (default: `<project-root>/_sdd/implementation/IMPLEMENTATION_REPORT.md`).
+- If the file already exists, archive it as `<project-root>/_sdd/implementation/prev/PREV_IMPLEMENTATION_REPORT_<timestamp>.md` (create `prev/` if needed) and create a new one.
+
+The combined report should include:
+
+### Progress Summary
 ```markdown
-### Acceptance Criterion: "Returns 409 if email already exists"
+## Implementation Report (Parallel Execution)
 
-Writing test first:
-```python
-def test_registration_returns_409_for_duplicate_email():
-    # Arrange
-    create_user(email="existing@test.com")
+### Progress Summary
+- Total Tasks: X
+- Completed: X
+- Tests Added: X
+- All Passing: Yes/No
 
-    # Act
-    response = client.post("/api/auth/register", json={
-        "email": "existing@test.com",
-        "password": "SecurePass123"
-    })
+### Parallel Execution Stats
+- Total Groups Dispatched: X
+- Tasks Run in Parallel: X
+- Sequential Fallbacks: X
+- Sub-agent Failures: X (retried: Y, resolved: Z)
 
-    # Assert
-    assert response.status_code == 409
-    assert "already exists" in response.json()["error"]
+### Completed
+- [x] Task 1: Set up database schema (3 tests) [parallel: group 1]
+- [x] Task 2: Implement password hashing (5 tests) [parallel: group 1]
+
+### Test Summary
+- New tests added: N
+- All tests passing: Yes
+- Coverage: X%
 ```
 
-Running test... FAILED (as expected - endpoint doesn't handle this yet)
-```
-
-#### GREEN: Write Minimal Code to Pass
-```
-1. Write the simplest code that makes the test pass
-2. Don't add extra functionality
-3. Don't optimize prematurely
-4. Run the test - it MUST pass now
-```
-
-Example:
+### Quality Assessment
 ```markdown
-Implementing minimal code:
-```python
-@router.post("/register")
-async def register(data: RegisterRequest):
-    existing = await get_user_by_email(data.email)
-    if existing:
-        raise HTTPException(status_code=409, detail="Email already exists")
-    # ... rest of registration
-```
+### Quality Assessment
 
-Running test... PASSED
-```
+#### Phase Reviews
+| Phase | Critical | Quality | Improvements | Parallel Groups | Status |
+|-------|----------|---------|--------------|-----------------|--------|
+| 1: Foundation | 0 | 1 | 2 | 2 | Clean |
+| 2: Core Auth | 1 (fixed) | 0 | 1 | 3 | Fixed |
 
-#### REFACTOR: Clean Up (Keep Tests Green)
-```
-1. Improve code quality without changing behavior
-2. Remove duplication
-3. Improve naming
-4. Run ALL tests after refactoring - must still pass
-```
+#### Cross-Phase Review
+- Integration: All modules communicate correctly
+- Security: Auth boundaries verified across all endpoints
+- Performance: No N+1 queries detected
+- Parallel Consistency: No conflicting changes between sub-agents
 
-Example:
-```markdown
-Refactoring:
-- Extracted email validation to shared utility
-- Improved error message format
+#### Issues Found
+| # | Severity | Description | Phase | Status |
+|---|----------|-------------|-------|--------|
+| 1 | Critical | Rate limiter not applied to OAuth routes | Cross-phase | Fixed |
 
-Running all tests... All PASSED
-```
+#### Recommendations
+1. [recommendation]
 
-### 4.3 Repeat for Each Criterion
-
-```
-For each acceptance criterion in the task:
-    RED → GREEN → REFACTOR
-
-When all criteria have passing tests → Task is complete
-```
-
-### 4.4 Complete Task
-```
-1. Verify all acceptance criteria have corresponding tests
-2. Run full test suite to check for regressions
-3. TaskUpdate: Set status to "completed"
-4. Note any follow-up items discovered
-5. Check if this unblocks other tasks
+### Conclusion
+[Overall assessment: READY / NEEDS WORK / BLOCKED]
 ```
 
 ## TDD Guidelines
@@ -293,11 +558,6 @@ If `_sdd/env.md` is missing, ask the user for the required runtime/test environm
 Follow the project's existing convention, or use:
 ```
 test_<unit>_<scenario>_<expected_result>
-
-Examples:
-- test_register_with_valid_data_creates_user
-- test_register_with_duplicate_email_returns_409
-- test_login_with_wrong_password_returns_401
 ```
 
 ### Test Structure (Arrange-Act-Assert)
@@ -325,256 +585,34 @@ Some tasks don't fit pure TDD. Adapt the approach:
 | UI components | Use component testing or integration tests |
 | External integrations | Mock the external service in tests |
 
-For these cases, still write tests, but the order may vary.
-
-## Step 5: Phase Review
-
-After completing all tasks in a phase (and before moving to the next phase), run a lightweight quality review. This catches cross-cutting issues that TDD alone cannot cover.
-
-### 5.1 Collect Phase Context
-
-Reuse data already tracked during TDD — **no re-discovery needed**:
-- Files created/modified during this phase
-- Tests written and their pass/fail status
-- Acceptance criteria met
-- Any notes or blockers encountered
-
-### 5.2 Cross-Cutting Quality Checks
-
-Run the following checks on all files touched in this phase. Reference `references/review-checklist.md` for detailed criteria.
-
-| Category | What to Check |
-|----------|---------------|
-| **Security** | SQL injection, XSS, hardcoded secrets, missing auth, input validation |
-| **Error Handling** | Consistent response format, logging, graceful degradation |
-| **Code Patterns** | Naming conventions, abstraction level, duplication, project conventions |
-| **Performance** | N+1 queries, missing indexes, async blocking, resource cleanup |
-| **Test Quality** | Independent, deterministic, behavior-focused (not implementation-testing) |
-| **Cross-Task Integration** | Tasks within this phase work together correctly |
-
-### 5.3 Categorize Issues
-
-Classify each finding by severity:
-
-- **Critical**: Security vulnerability, data loss risk, core functionality broken → **must fix before next phase**
-- **Quality**: Missing edge-case tests, inconsistent error handling, growing tech debt → document, proceed
-- **Improvement**: Performance optimization, readability enhancement → note for later
-
-### 5.4 Decision Gate
-
-```
-IF critical issues found:
-    Fix using TDD (write test exposing the issue → fix → verify)
-    Re-run phase review on fixed areas
-ELSE IF quality issues only:
-    Document findings, proceed to next phase
-ELSE:
-    Phase is clean — proceed
-```
-
-### 5.5 Phase Review Output
-
-Append findings to the phase completion summary. Save per-phase report under `<project-root>/_sdd/implementation/IMPLEMENTATION_REPORT_PHASE_<phase-number>.md`.
-
-## Step 6: Final Review & Report
-
-After all phases complete, run a comprehensive quality review across the **entire implementation**, then produce a combined report.
-
-### 6.1 Comprehensive Quality Review
-
-Apply the same checklists from Step 5.2 but with **cross-phase scope**:
-- Do modules from different phases integrate correctly?
-- Are there inconsistent patterns between early and late phases?
-- Do security boundaries hold across the full system?
-- Are there performance issues that only appear at full scale?
-
-### 6.2 Final Decision Gate
-
-Same rules as Step 5.4. Critical issues must be fixed with TDD before declaring completion.
-
-### 6.3 Generate Combined Report
-
-Save the report under a user-specified file (default: `<project-root>/_sdd/implementation/IMPLEMENTATION_REPORT.md`).
-- If the file already exists, archive it as `<project-root>/_sdd/implementation/prev/PREV_IMPLEMENTATION_REPORT_<timestamp>.md` (create `prev/` if needed) and create a new one.
-
-The combined report should include:
-
-### Progress Summary
-```markdown
-## Implementation Report
-
-### Progress Summary
-- Total Tasks: X
-- Completed: X
-- Tests Added: X
-- All Passing: Yes/No
-
-### Completed
-- [x] Task 1: Set up database schema (3 tests)
-- [x] Task 2: Implement password hashing (5 tests)
-
-### Test Summary
-- New tests added: 15
-- All tests passing: Yes
-- Coverage: 87%
-```
-
-### Quality Assessment
-```markdown
-### Quality Assessment
-
-#### Phase Reviews
-| Phase | Critical | Quality | Improvements | Status |
-|-------|----------|---------|--------------|--------|
-| 1: Foundation | 0 | 1 | 2 | Clean |
-| 2: Core Auth | 1 (fixed) | 0 | 1 | Fixed |
-
-#### Cross-Phase Review
-- Integration: All modules communicate correctly
-- Security: Auth boundaries verified across all endpoints
-- Performance: No N+1 queries detected
-
-#### Issues Found
-| # | Severity | Description | Phase | Status |
-|---|----------|-------------|-------|--------|
-| 1 | Critical | Rate limiter not applied to OAuth routes | Cross-phase | Fixed |
-| 2 | Quality | Password validation only checks length | Phase 1 | Documented |
-
-#### Recommendations
-1. Add password complexity validation before production
-2. Consider adding integration test suite for cross-module flows
-
-### Conclusion
-[Overall assessment: READY / NEEDS WORK / BLOCKED]
-```
-
-## Output Format
-
-### During TDD Implementation
-
-Provide updates showing the TDD cycle:
-
-```markdown
-## Task 5: Implement user registration
-
-**Status**: In Progress
-**Component**: Auth Core
-
-### TDD Progress
-
-#### Criterion 1: Accepts email and password ✓
-- [x] RED: Wrote test_register_accepts_valid_credentials
-- [x] GREEN: Implemented basic endpoint
-- [x] REFACTOR: Extracted validation
-
-#### Criterion 2: Validates email format ✓
-- [x] RED: Wrote test_register_rejects_invalid_email
-- [x] GREEN: Added email validation
-- [x] REFACTOR: Used shared email validator
-
-#### Criterion 3: Returns 409 for duplicate email (current)
-- [x] RED: Wrote test_register_returns_409_duplicate
-- [ ] GREEN: Implementing...
-- [ ] REFACTOR: Pending
-
-#### Remaining Criteria
-- [ ] Hashes password before storing
-- [ ] Creates user record
-- [ ] Returns JWT on success
-
-### Files Modified
-- src/routes/auth.ts
-- tests/test_auth.py (new tests)
-
-### Test Status
-- Tests written: 6
-- Tests passing: 5
-- Tests failing: 1 (expected - in RED phase)
-```
-
-### Phase Completion (with Review)
-
-```markdown
-## Phase 1 Complete
-
-### Summary
-All foundation tasks completed with full test coverage.
-
-### Completed Tasks
-| ID | Task | Tests Added | Status |
-|----|------|-------------|--------|
-| 1 | Database schema | 4 | Done |
-| 2 | Password hashing | 6 | Done |
-| 3 | JWT utilities | 8 | Done |
-| 4 | Rate limiting | 5 | Done |
-
-### Test Summary
-- Total new tests: 23
-- All passing: Yes
-- No regressions detected
-
-### Phase Review Findings
-| Category | Status | Notes |
-|----------|--------|-------|
-| Security | Clean | No hardcoded secrets, parameterized queries |
-| Error Handling | Quality issue | Inconsistent error format in rate limiter |
-| Code Patterns | Clean | Follows project conventions |
-| Performance | Clean | Indexes in place |
-| Test Quality | Clean | All tests independent and deterministic |
-
-**Issues**: 1 Quality (inconsistent error format — documented, not blocking)
-**Decision**: Proceed to Phase 2
-
-### Ready for Phase 2
-The following tasks are now unblocked:
-- Task 5: User registration
-- Task 6: Login endpoint
-
-Proceeding to Phase 2...
-```
-
-### Final Report
-
-```markdown
-## Implementation Report
-
-### Progress Summary
-- Total Tasks: 20 | Completed: 20
-- Tests Added: 113 | All Passing: Yes | Coverage: 91%
-
-### Phase Reports
-| Phase | Tasks | Tests | Critical | Quality | Status |
-|-------|-------|-------|----------|---------|--------|
-| 1: Foundation | 4 | 27 | 0 | 1 | Clean |
-| 2: Core Auth | 5 | 34 | 1 (fixed) | 0 | Fixed |
-| 3: OAuth | 3 | 18 | 0 | 0 | Clean |
-| 4: User Mgmt | 4 | 22 | 0 | 2 | Clean |
-| 5: Testing | 4 | 12 | 0 | 0 | Clean |
-
-### Quality Assessment
-#### Cross-Phase Review
-- Integration: All modules communicate correctly
-- Security: Auth boundaries verified across all endpoints
-- Performance: No N+1 queries detected
-
-#### Issues Found
-| # | Severity | Description | Phase | Status |
-|---|----------|-------------|-------|--------|
-| 1 | Critical | Rate limiter not applied to OAuth routes | Cross-phase | Fixed |
-| 2 | Quality | Password validation only checks length | 1 | Documented |
-| 3 | Quality | Missing retry logic for email service | 4 | Documented |
-
-### Recommendations
-1. Add password complexity rules before production
-2. Add retry/backoff to email service calls
-
-### Conclusion
-READY — All critical issues resolved, 3 quality items documented for follow-up.
-```
-
 ## Handling Common Situations
 
-### Test is Hard to Write
+### Parallel-Specific
+
+#### Sub-agent modifies wrong file
+```
+1. Revert the unauthorized change
+2. Re-run the task sequentially with explicit file boundary warnings
+3. If still fails, ask user for guidance
+```
+
+#### Multiple sub-agents report conflicting patterns
+```
+1. Identify the inconsistency during Phase Review
+2. Choose one pattern as canonical
+3. Fix the other tasks to match (using TDD)
+```
+
+#### Sub-agent blocked by unplanned dependency
+```
+1. Sub-agent completes what it can, reports UNPLANNED_DEPENDENCY
+2. Main agent resolves the dependency after group completes
+3. Re-run the incomplete parts of the task
+```
+
+### General (same as `implementation-sequential`)
+
+#### Test is Hard to Write
 ```
 1. Simplify the acceptance criterion
 2. Break into smaller, testable pieces
@@ -582,35 +620,19 @@ READY — All critical issues resolved, 3 quality items documented for follow-up
 4. Ask user if criterion can be clarified
 ```
 
-### Test Passes Immediately (No Code Written)
+#### Test Passes Immediately
 ```
 1. Feature may already exist - verify
 2. Test may be wrong - review the assertion
 3. Test may be testing the wrong thing - rewrite
 ```
 
-### Refactoring Breaks Tests
-```
-1. Undo the refactoring
-2. Check if test was too implementation-specific
-3. Refactor in smaller steps
-4. Consider if the test needs updating (rarely)
-```
-
-### Task is Blocked by External Dependency
+#### Task is Blocked by External Dependency
 ```
 1. Write tests with mocks for the external dependency
 2. Implement code against the mocks
 3. Note that integration test needed when dependency available
 4. Move to next task
-```
-
-### Acceptance Criteria Unclear
-```
-1. Check task details and technical notes
-2. Review related code for context
-3. Use AskUserQuestion if still unclear
-4. Write test based on best interpretation, confirm with user
 ```
 
 ## Implementation Best Practices
@@ -621,14 +643,14 @@ READY — All critical issues resolved, 3 quality items documented for follow-up
 - **Follow existing patterns**: Match the codebase's style and conventions
 - **Refactor fearlessly**: Tests give confidence to improve code
 
-### Task Execution
-- **One criterion at a time**: Complete Red-Green-Refactor before next
-- **Check dependencies**: Never start a blocked task
-- **Update status**: Keep task tracking current
-- **Document blockers**: If stuck, note the issue and move to another task
+### Parallel Execution
+- **Trust sub-agents**: Don't re-do their work; verify through tests
+- **Fix forward**: If a sub-agent's output has minor issues, fix in place rather than re-running
+- **Maximize concurrency**: Dispatch all non-conflicting tasks simultaneously
+- **Fail gracefully**: One sub-agent's failure doesn't stop others
 
 ### Communication
-- **Report TDD progress**: Show which criteria have tests
+- **Report parallel progress**: Show which groups are executing/completed
 - **Surface blockers**: Alert user to issues requiring decisions
 - **Confirm scope changes**: Ask before deviating from the plan
 
@@ -636,6 +658,8 @@ READY — All critical issues resolved, 3 quality items documented for follow-up
 
 Use AskUserQuestion when:
 
+- **Target Files unclear**: Can't determine file boundaries for parallelization
+- **Inference uncertain**: Inferred Target Files need user confirmation
 - **Test unclear**: Can't determine what to assert
 - **Ambiguous requirements**: Multiple valid interpretations
 - **Scope decisions**: Discovered work that may or may not be in scope
@@ -644,21 +668,26 @@ Use AskUserQuestion when:
 
 ## Integration with Other Skills
 
-- **implementation-plan**: Use first to create the plan this skill executes
-- **feature-draft**: Also produces an implementation plan (Part 2: 구현 계획) inside its output file. This skill can consume feature drafts directly.
-- **implementation-review**: Remains available as a standalone skill for independent audits. This implementation skill now includes in-place phase and final reviews, so a separate review invocation is no longer required for the standard workflow.
+- **implementation-plan**: Creates plans with Target Files that this skill consumes
+- **feature-draft**: Also produces plans with Target Files (Part 2: 구현 계획)
+- **implementation-plan-sequential / feature-draft-sequential**: Plans without Target Files → sequential fallback
+- **implementation-review**: Available for standalone audits
+- **implementation**: The sequential alternative when parallelism isn't needed
 
 ## Quick Start
 
-When user says "implement the plan":
+When user says "implement the plan in parallel":
 
-1. Acquire implementation plan by running `implementation-plan` or `feature-draft` skill if not exists
-2. Look for implementation plan at `_sdd/implementation/IMPLEMENTATION_PLAN.md`, phase-split files, or `_sdd/drafts/feature_draft_<feature_name>.md`
-3. If user input severely conflicts with the plan, abort and ask user to resolve the conflict
-4. Parse the plan and create task tracking
+1. Acquire implementation plan (from `feature-draft`, `implementation-plan`, or existing plan files)
+2. Parse the plan and check for Target Files
+3. If Target Files absent: infer → confirm → or fall back to sequential
+4. Create task tracking
 5. **Identify testing framework** used in the project
-6. Start with Phase 1, Task with lowest ID that is unblocked and highest priority
-7. For each acceptance criterion: **RED → GREEN → REFACTOR**
-8. After each phase: **Run phase review** (security, quality, patterns, performance)
-9. Fix any **critical issues** found during review (using TDD)
-10. After all phases: Run **final review**, generate `IMPLEMENTATION_REPORT.md`
+6. For each phase:
+   a. Build parallel groups from unblocked tasks + Target Files
+   b. Show dispatch plan to user
+   c. **Dispatch sub-agents for each group** (Task tool, concurrent calls)
+   d. After each group: **run full test suite**, handle failures
+   e. After all groups in phase: **run phase review**
+   f. Fix any **critical issues** (using TDD)
+7. After all phases: Run **final review**, generate `IMPLEMENTATION_REPORT.md`
