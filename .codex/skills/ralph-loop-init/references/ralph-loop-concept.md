@@ -18,6 +18,7 @@ The Codex agent's job: Read state, diagnose, then output `ralph/action.sh` and u
 The Codex agent must **never** run training or long commands itself. It writes them into `ralph/action.sh` instead.
 
 `run.sh` archives each executed `ralph/action.sh` to `ralph/results/action_iter{N}.sh`; therefore, the next iteration may start with no `ralph/action.sh`, which is normal.
+`run.sh` should enforce a per-turn timeout using `LLM_TIMEOUT_SECONDS` from `ralph/config.sh` so a hung Codex turn cannot block the loop forever.
 
 ---
 
@@ -124,11 +125,14 @@ Every `action.sh` must follow these rules:
 ```
 phase: <SETUP|TRAINING|VALIDATING|ANALYZING|ADJUSTING|DONE>
 iteration: <number>
+initialized_at: <ISO-8601 UTC timestamp of initial state creation/reset>
 errors: [<list of error descriptions>]
 last_checkpoint: <path or null>
 validation_results: <summary or null>
 notes: <free-form notes from this iteration>
 ```
+
+`initialized_at` is set when `state.md` is first created (or reset) and should remain unchanged across later iterations.
 
 ---
 

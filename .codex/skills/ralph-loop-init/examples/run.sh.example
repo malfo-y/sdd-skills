@@ -7,11 +7,121 @@
 #   3. action.sh saves results to ralph/results/
 #   4. Loop restarts -> Codex reads new results
 #
-# Usage: bash ralph/run.sh
+# Usage: bash ralph/run.sh [--reset]
 # Stop:  Ctrl+C or set phase to DONE in state.md
 
 set -euo pipefail
 cd "$(dirname "$0")/.."
+
+show_usage() {
+  cat <<'USAGE'
+Usage: bash ralph/run.sh [--reset]
+
+Options:
+  --reset   Remove previous loop artifacts and restart from initial state.
+USAGE
+}
+
+RESET=0
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --reset)
+      RESET=1
+      ;;
+    -h|--help)
+      show_usage
+      exit 0
+      ;;
+    *)
+      echo "[ralph] Unknown option: $1" >&2
+      show_usage >&2
+      exit 1
+      ;;
+  esac
+  shift
+done
+
+if [ ${RESET} -eq 1 ]; then
+  INIT_TS="$(date -u '+%Y-%m-%dT%H:%M:%SZ')"
+  echo "[ralph] --reset enabled: clearing previous artifacts."
+  rm -rf ralph/results
+  rm -f ralph/action.sh
+  cat > ralph/state.md <<EOF
+phase: SETUP
+iteration: 0
+initialized_at: ${INIT_TS}
+errors: []
+last_checkpoint: null
+validation_results: null
+notes: Initial state. Ralph loop initialized.
+EOF
+fi
+
+if [ -f ralph/config.sh ]; then
+  # shellcheck source=/dev/null
+  source ralph/config.sh
+fi
+
+LLM_TIMEOUT_SECONDS="${LLM_TIMEOUT_SECONDS:-600}"
+if ! [[ "${LLM_TIMEOUT_SECONDS}" =~ ^[0-9]+$ ]]; then
+  echo "[ralph] Invalid LLM_TIMEOUT_SECONDS='${LLM_TIMEOUT_SECONDS}'. Use a non-negative integer." >&2
+  exit 1
+fi
+
+if [ "${LLM_TIMEOUT_SECONDS}" -eq 0 ]; then
+  echo "[ralph] LLM timeout disabled (LLM_TIMEOUT_SECONDS=0)."
+else
+  echo "[ralph] LLM timeout: ${LLM_TIMEOUT_SECONDS}s per Codex step."
+fi
+
+run_agent_with_timeout() {
+  local timeout_seconds="$1"
+  local prompt_path="$2"
+  shift 2
+
+  if [ "${timeout_seconds}" -eq 0 ]; then
+    "$@" < "${prompt_path}"
+    return $?
+  fi
+
+  if command -v timeout >/dev/null 2>&1; then
+    timeout "${timeout_seconds}" "$@" < "${prompt_path}"
+    return $?
+  fi
+
+  if command -v gtimeout >/dev/null 2>&1; then
+    gtimeout "${timeout_seconds}" "$@" < "${prompt_path}"
+    return $?
+  fi
+
+  python3 - "${timeout_seconds}" "${prompt_path}" "$@" <<'PY'
+import subprocess
+import sys
+
+timeout_seconds = int(sys.argv[1])
+prompt_path = sys.argv[2]
+cmd = sys.argv[3:]
+
+with open(prompt_path, "rb") as prompt_file:
+    try:
+        completed = subprocess.run(
+            cmd,
+            stdin=prompt_file,
+            stdout=sys.stdout,
+            stderr=sys.stderr,
+            check=False,
+            timeout=timeout_seconds,
+        )
+    except subprocess.TimeoutExpired:
+        print(
+            f"[ralph] Codex step timed out after {timeout_seconds} seconds.",
+            file=sys.stderr,
+        )
+        sys.exit(124)
+
+sys.exit(completed.returncode)
+PY
+}
 
 ITERATION=0
 AGENT_FAIL_COUNT=0
@@ -31,7 +141,8 @@ while :; do
   echo "[ralph] Phase 1: Codex analyzing state and writing action..."
   # Disable errexit temporarily so Codex failures are handled by retry logic.
   set +e
-  codex exec --dangerously-bypass-approvals-and-sandbox --json - < ralph/PROMPT.md \
+  run_agent_with_timeout "${LLM_TIMEOUT_SECONDS}" "ralph/PROMPT.md" \
+    codex exec --dangerously-bypass-approvals-and-sandbox --json - \
     | tee "ralph/results/codex_iter${ITERATION}.json" \
     | python3 -u -c "
 import sys, json
@@ -76,6 +187,9 @@ for line in sys.stdin:
 
   if [ ${AGENT_EXIT} -ne 0 ]; then
     AGENT_FAIL_COUNT=$((AGENT_FAIL_COUNT + 1))
+    if [ ${AGENT_EXIT} -eq 124 ]; then
+      echo "[ralph] Codex step exceeded timeout (${LLM_TIMEOUT_SECONDS}s)."
+    fi
     echo "[ralph] Codex step failed (exit code ${AGENT_EXIT}, failure ${AGENT_FAIL_COUNT}/${MAX_AGENT_FAILURES})"
     if [ ${AGENT_FAIL_COUNT} -ge ${MAX_AGENT_FAILURES} ]; then
       echo "[ralph] ERROR: Codex step failed ${MAX_AGENT_FAILURES} consecutive times. Exiting."

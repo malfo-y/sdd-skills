@@ -114,10 +114,14 @@ MIXED_PRECISION="<suggested>"
 # -- Output --
 OUTPUT_PATH="./models/train/<project-specific>"
 LOG_EVERY=10
+
+# -- Loop Safety --
+LLM_TIMEOUT_SECONDS=600  # max seconds for one Codex turn (0 disables timeout)
 ```
 
 Key rules:
 - Keep `MAX_STEPS="10"` for the first run.
+- Set `LLM_TIMEOUT_SECONDS` to bound a single Codex turn and avoid indefinite hangs.
 - Use variable names aligned with real CLI arguments.
 - Include only variables that are actually consumed by the training pipeline.
 - Add brief comments only where needed.
@@ -209,6 +213,10 @@ Copy nearly verbatim into `ralph/run.sh`.
 Adjust only if `python3` is unavailable for the inline JSON parser.
 
 The template uses `codex exec --json` and a retry-on-failure guard for Codex step failures.
+Keep the template's CLI behavior:
+- `bash ralph/run.sh` resumes from current `state.md`/`results`.
+- `bash ralph/run.sh --reset` clears prior loop artifacts (`ralph/results/`, stale `ralph/action.sh`) and rewrites `ralph/state.md` to the initial SETUP state with a fresh `initialized_at` UTC timestamp before starting.
+- Source `ralph/config.sh` and apply `LLM_TIMEOUT_SECONDS` to each Codex planning turn (default 600 seconds, `0` disables timeout).
 
 Mark executable:
 - `chmod +x ralph/run.sh`
@@ -220,11 +228,12 @@ Mark executable:
 Find and read template by globbing:
 - `**/.codex/skills/ralph-loop-init/examples/state.md.example`
 
-Copy verbatim into `ralph/state.md`:
+Copy the template into `ralph/state.md`, then replace `__INITIALIZED_AT_UTC__` with the current UTC timestamp (`date -u '+%Y-%m-%dT%H:%M:%SZ'`):
 
 ```yaml
 phase: SETUP
 iteration: 0
+initialized_at: __INITIALIZED_AT_UTC__
 errors: []
 last_checkpoint: null
 validation_results: null
@@ -244,6 +253,7 @@ notes: Initial state. Ralph loop initialized.
 3. Print concise summary:
    - files created
    - `ralph/results/` directory (experiment_report.md auto-generated in ANALYZING)
-   - run command: `bash ralph/run.sh`
+   - run command (resume): `bash ralph/run.sh`
+   - fresh restart command: `bash ralph/run.sh --reset`
    - phase flow: `SETUP -> TRAINING -> VALIDATING -> ANALYZING -> DONE`
 4. Remind user `MAX_STEPS="10"` is only for first debug run.

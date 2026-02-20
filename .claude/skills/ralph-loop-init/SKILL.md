@@ -112,10 +112,14 @@ MIXED_PRECISION="<suggested>"
 # ── Output ──
 OUTPUT_PATH="./models/train/<project-specific>"
 LOG_EVERY=10
+
+# ── Loop Safety ──
+LLM_TIMEOUT_SECONDS=600  # max seconds for one LLM turn (0 disables timeout)
 ```
 
 **Key rules:**
 - `MAX_STEPS="10"` always — first run is a quick sanity check
+- Set `LLM_TIMEOUT_SECONDS` to bound a single LLM turn and avoid indefinite hangs
 - Group variables by category with comment headers
 - Use descriptive variable names matching the training script's CLI args
 - Include comments explaining non-obvious variables
@@ -209,6 +213,11 @@ Find and read `run.sh.example` by globbing for `**/.claude/skills/ralph-loop-ini
 Copy it nearly verbatim into `ralph/run.sh`. The only modification needed:
 - If the project doesn't use `python3`, adjust the inline Python parser's invocation (the `python3 -u -c` part). This is rare — most systems have `python3`.
 
+Keep the template's CLI behavior:
+- `bash ralph/run.sh` resumes from current `state.md`/`results`.
+- `bash ralph/run.sh --reset` clears prior loop artifacts (`ralph/results/`, stale `ralph/action.sh`) and rewrites `ralph/state.md` to the initial SETUP state with a fresh `initialized_at` UTC timestamp before starting.
+- Source `ralph/config.sh` and apply `LLM_TIMEOUT_SECONDS` to each LLM planning turn (default 600 seconds, `0` disables timeout).
+
 Make the file executable description in the output.
 
 ---
@@ -217,11 +226,12 @@ Make the file executable description in the output.
 
 Find and read `state.md.example` by globbing for `**/.claude/skills/ralph-loop-init/examples/state.md.example`.
 
-Copy it verbatim into `ralph/state.md`. The initial state is always identical:
+Copy it into `ralph/state.md`, then replace `__INITIALIZED_AT_UTC__` with the current UTC timestamp (`date -u '+%Y-%m-%dT%H:%M:%SZ'`). The initial structure is:
 
 ```
 phase: SETUP
 iteration: 0
+initialized_at: __INITIALIZED_AT_UTC__
 errors: []
 last_checkpoint: null
 validation_results: null
@@ -254,9 +264,10 @@ Files created:
 
 Next steps:
   1. Review and edit ralph/config.sh (especially dataset paths and model paths)
-  2. Run: bash ralph/run.sh
-  3. Monitor the loop — it will SETUP -> TRAINING -> VALIDATING -> ANALYZING -> DONE
-  4. Ctrl+C to stop at any time
+  2. Resume run: bash ralph/run.sh
+  3. Fresh restart (clear old outputs): bash ralph/run.sh --reset
+  4. Monitor the loop — it will SETUP -> TRAINING -> VALIDATING -> ANALYZING -> DONE
+  5. Ctrl+C to stop at any time
 ```
 
 4. Remind the user that `MAX_STEPS="10"` is set for a quick debug run — they should increase it (or set to empty for unlimited) once the first run succeeds.
