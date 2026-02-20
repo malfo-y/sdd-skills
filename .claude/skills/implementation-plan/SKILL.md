@@ -182,6 +182,7 @@ After creating the plan, offer to:
 3. If the plan is too large to fit comfortably in one file (e.g. >25 tasks), split the plan into multiple files:
     - Keep `IMPLEMENTATION_PLAN.md` as an index/overview and link to the phase files
     - Name phase files as `IMPLEMENTATION_PLAN_PHASE_1.md`, `IMPLEMENTATION_PLAN_PHASE_2.md`, etc.
-4. Create tasks using TaskCreate tool for tracking
+4. Process `user_input.md` if used (rename to `_processed_user_input.md`)
+5. Create tasks using `TaskCreate` tool for tracking
 
 Always confirm with the user which output format they prefer.

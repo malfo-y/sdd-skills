@@ -57,6 +57,7 @@ This skill analyzes multiple sources of truth to identify spec drift and generat
 | `TEST_SUMMARY.md` | Test results and coverage |
 | `user_spec.md` | User requirements and feedback |
 | `_sdd/implementation/prev/PREV_*.md` | Historical versions for context |
+| `IMPLEMENTATION_INDEX.md` | Feature-level archive index (copy history by `feature_id`) |
 
 ### 2. Feature Drafts (`_sdd/drafts/`)
 
@@ -114,6 +115,11 @@ Collect information from all available sources:
 5. Read relevant decision-log entries from `_sdd/spec/DECISION_LOG.md` (if file exists)
 6. Note user conversation context
 7. If local execution/tests are required for verification, load `_sdd/env.md` and apply setup before running commands
+8. Resolve `feature_id` for archive step:
+   - user-provided value if explicit
+   - else derive from `feature_draft_<name>.md` when unambiguous
+   - else derive from implementation plan/report title when unambiguous
+   - else ask user before archive
 ```
 
 ### Step 2: Identify Spec Drift
@@ -222,6 +228,26 @@ Verify updated spec accuracy:
 - If `_sdd/env.md` is missing/incomplete, ask the user for environment details instead of guessing
 - Review with user if significant changes
 
+### Step 6: Archive Implementation Artifacts by Feature (Copy-only)
+
+After spec updates are finalized, archive related implementation artifacts for the resolved `feature_id`.
+
+Rules:
+1. Keep `_sdd/implementation/IMPLEMENTATION_*.md` in place (no move/delete).
+2. Create directory if missing: `_sdd/implementation/features/<feature_id>/`
+3. Copy existing files (if present):
+   - `IMPLEMENTATION_PLAN*.md`
+   - `IMPLEMENTATION_PROGRESS*.md`
+   - `IMPLEMENTATION_REVIEW.md`
+   - `IMPLEMENTATION_REPORT*.md`
+   - `TEST_SUMMARY.md`
+4. Use timestamped destination filenames to avoid overwrite:
+   - `_sdd/implementation/features/<feature_id>/SYNC_<YYYYMMDD_HHMMSS>_<original_filename>`
+5. Create/update `_sdd/implementation/IMPLEMENTATION_INDEX.md`:
+   - maintain one section per `feature_id`
+   - append sync entries with `synced_at` (UTC), copied file mappings (`destination <- source`), and optional notes
+6. If `feature_id` is still ambiguous, ask user and skip archive step until confirmed.
+
 ## Output Format
 
 ### Change Report
@@ -260,6 +286,7 @@ After user approval, generate updated spec:
 3. Update version and last-updated date
 4. Add changelog entry (include references to `prev/PREV_...` backup(s), and note if the spec was split into multiple files)
 5. Update `_sdd/spec/DECISION_LOG.md` if this sync introduces a new decision or changes previous rationale
+6. Copy implementation artifacts to `_sdd/implementation/features/<feature_id>/` and update `_sdd/implementation/IMPLEMENTATION_INDEX.md` (copy-only; keep root implementation files intact)
 
 ## Automation Patterns
 
@@ -309,6 +336,7 @@ Incremental updates during development:
 ### Preservation
 
 - **Keep history**: Always create `prev/PREV_...` backup under `_sdd/spec/prev/` before updates
+- **Archive by feature safely**: Copy implementation artifacts to `features/<feature_id>/` and record them in `IMPLEMENTATION_INDEX.md` without moving root files
 - **Preserve context**: Don't remove valuable explanations
 - **Maintain structure**: Follow existing spec organization
 - **Version control**: Increment version appropriately

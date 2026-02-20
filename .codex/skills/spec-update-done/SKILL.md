@@ -49,12 +49,15 @@ spec -> feature-draft -> implementation -> spec-update-done (this)
 - Optional:
   - `_sdd/spec/DECISION_LOG.md`
   - `_sdd/env.md`
+  - `_sdd/implementation/IMPLEMENTATION_INDEX.md` (if present)
 
 ## Outputs
 
 - Updated `_sdd/spec/*.md`
 - Backups: `_sdd/spec/prev/PREV_<file>_<timestamp>.md`
 - Optional decision-log updates: `_sdd/spec/DECISION_LOG.md`
+- Feature archive copies: `_sdd/implementation/features/<feature_id>/...`
+- Updated artifact index: `_sdd/implementation/IMPLEMENTATION_INDEX.md`
 
 ## Workflow
 
@@ -62,7 +65,12 @@ spec -> feature-draft -> implementation -> spec-update-done (this)
 
 1. Identify main/index spec.
 2. Include linked sub-spec files.
-3. Exclude generated backups (`SUMMARY.md`, `prev/PREV_*`).
+3. Determine `feature_id` for this sync:
+   - use user-provided `feature_id` if explicitly given
+   - else derive from `feature_draft_<name>.md` when a matching draft exists (`<name>` -> `feature_id`)
+   - else derive from current implementation plan/report title if unambiguous
+   - else ask user before archiving
+4. Exclude generated backups (`SUMMARY.md`, `prev/PREV_*`).
 
 ### 2) Collect Evidence and Detect Drift
 
@@ -119,6 +127,31 @@ Publish summary:
 - key synced sections
 - unresolved questions
 
+### 7) Archive Implementation Artifacts by Feature (Copy-only)
+
+After spec sync is complete, archive implementation artifacts for the resolved `feature_id`.
+
+Rules:
+
+1. Never move/delete root artifacts under `_sdd/implementation/`; copy only.
+2. Create feature directory if missing:
+   - `_sdd/implementation/features/<feature_id>/`
+3. Collect and copy existing files (if present):
+   - `IMPLEMENTATION_PLAN*.md`
+   - `IMPLEMENTATION_PROGRESS*.md`
+   - `IMPLEMENTATION_REVIEW.md`
+   - `IMPLEMENTATION_REPORT*.md`
+   - `TEST_SUMMARY.md`
+4. Use timestamped destination filenames to prevent overwrite:
+   - `_sdd/implementation/features/<feature_id>/SYNC_<YYYYMMDD_HHMMSS>_<original_filename>`
+5. Create/update `_sdd/implementation/IMPLEMENTATION_INDEX.md`:
+   - keep one section per `feature_id`
+   - append a new sync record with:
+     - `synced_at` (UTC)
+     - copied file list (`destination <- source`)
+     - optional note (e.g., spec files updated in this run)
+6. If `feature_id` cannot be determined reliably, ask user and skip archive step until confirmed.
+
 ## Spec Split Guidance
 
 If the main spec is too large, ask user whether to split.
@@ -134,6 +167,7 @@ When splitting:
 - each major change is traceable to evidence
 - rationale changes are recorded
 - uncertainty is labeled explicitly (no silent assumptions)
+- feature archive step is copy-only and `IMPLEMENTATION_INDEX.md` is updated when archive runs
 
 ## When to Ask User
 
