@@ -194,6 +194,16 @@ When in ADJUSTING phase, the LLM acts as a debugger:
 - If error is in project code -> fix it directly
 - If error is in a library -> check version, args, or environment
 
+**Step 2.5: Check if root cause is in PROMPT.md** (see Section 13)
+- If the error is caused by a missing/incorrect template **in PROMPT.md itself**:
+  - AND this is the 2nd+ occurrence of the same root cause
+  - → Apply targeted fix to `ralph/PROMPT.md` directly (edit the specific template)
+  - → Add the error to `## Known Errors` section of PROMPT.md
+  - Record: `"iterN PROMPT_FIX: <phase> — <description>"`
+  - No action.sh needed for this iteration — the PROMPT.md fix is the action
+  - Set phase back to the failed phase for retry
+  - Skip Steps 3–4
+
 **Step 3: Apply ONE fix**
 - Change only one thing at a time (so you know what fixed it)
 - Edit the relevant file (training script, config, source code)
@@ -310,3 +320,52 @@ wait $CMD_PID 2>/dev/null || true
 ```
 
 Include this as E1 in the Known Errors section of every generated PROMPT.md when the platform may be macOS.
+
+---
+
+## 13. PROMPT.md Self-Correction Protocol
+
+### Problem
+
+PROMPT.md templates are generated before the loop starts, based on code discovery and specs. Some templates may contain errors (missing environment variables, wrong paths, incomplete phase transition instructions) that only surface at runtime. Without self-correction, the LLM inside the loop cannot fix these template errors — it can only retry with the same broken template, causing repeated failures until a human intervenes.
+
+### Solution: Allow Targeted PROMPT.md Edits
+
+When the LLM detects that a recurring error is caused by an incorrect or incomplete template **in PROMPT.md itself**, it may edit PROMPT.md to fix the template.
+
+### Trigger Conditions
+
+The LLM should modify PROMPT.md when **ALL** of these conditions are true:
+1. The same root cause has appeared **2 or more times** (checked via `state.md` errors list)
+2. The root cause traces back to a **template or instruction in PROMPT.md** (not external code, data, or infrastructure)
+3. The fix is a **targeted edit** to the specific phase template (not a structural redesign)
+
+### Allowed Modifications
+
+| Allowed | Not Allowed |
+|---------|-------------|
+| Fix missing env vars in templates (`export PYTHONPATH=...`) | Change state machine structure or add new phases |
+| Fix incorrect paths or variable names | Rewrite core iteration protocol |
+| Add missing instructions to phase transitions | Remove anti-recursion warning |
+| Add new entries to `## Known Errors` section | Change `action.sh` canonical rules |
+| Fix incorrect schema field references | Restructure the overall document |
+| Add fallback logic to templates | Remove existing phases |
+
+### Procedure
+
+1. In ADJUSTING Step 2.5, identify that the root cause is a PROMPT.md template error
+2. Apply the targeted fix to `ralph/PROMPT.md` using the Edit tool
+3. If the error is likely to recur in future runs, also add it to the `## Known Errors` section
+4. Record in `state.md` errors: `"iterN PROMPT_FIX: <phase> — <what was changed>"`
+5. Set phase back to the fixed phase for retry
+6. Do NOT write an `action.sh` for this iteration — the PROMPT.md fix is the action
+
+### Examples from Real Loops
+
+**Example 1**: RETRIEVE template missing `export PYTHONPATH=$(pwd)` — LLM failed at RETRIEVE_TC, then again at RETRIEVE_T2C with the same `ModuleNotFoundError`. On the 2nd occurrence, LLM should fix ALL RETRIEVE templates in PROMPT.md, not just the current one.
+
+**Example 2**: POLL_T2C transition says "write job_id to state.md" but omits "also write job_id file for next phase's `cat` command". LLM fails at RETRIEVE_T2C because the file doesn't exist. LLM should add the missing file-write instruction AND a fallback (`state.md` grep) to the RETRIEVE template.
+
+### Known Errors Accumulation
+
+When the LLM adds a new entry to `## Known Errors`, it persists across iterations. If the loop is later restarted with `--reset`, the accumulated Known Errors remain in PROMPT.md because `--reset` only clears `ralph/results/` and `ralph/state.md`, not `ralph/PROMPT.md`. This means future runs benefit from past debugging experience.

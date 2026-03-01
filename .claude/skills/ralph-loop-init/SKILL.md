@@ -116,6 +116,7 @@ Project: <project name>
 - [ ] `## Known Errors` section present (E1 macOS timeout included if applicable)
 - [ ] `## action.sh Rules` section present
 - [ ] `SMOKE_TEST` explicitly states `MAX_STEPS=1` is the only allowed hardcoded exception
+- [ ] PROMPT.md self-correction protocol present in ADJUSTING section (Step 2.5 or dedicated subsection)
 
 ## run.sh
 - [ ] `--reset` flag behavior present (clears `ralph/results/`, rewrites `state.md`)
@@ -258,8 +259,19 @@ On FAIL → set `phase: ADJUSTING` in state.md, note "SMOKE_TEST failed: <first 
 [... write ralph/results/experiment_report.md per Section 11 of the reference ...]
 
 ### ADJUSTING
-[... generic debugging protocol from reference ...]
+[... generic debugging protocol from reference, including Step 2.5 for PROMPT.md self-correction ...]
 [... project-specific error patterns added to the common patterns table ...]
+
+### PROMPT.md Self-Correction (Section 13 of reference)
+
+When a recurring error (2+ occurrences) traces back to an incorrect template in this PROMPT.md:
+1. Fix the template directly using the Edit tool
+2. Add the error to `## Known Errors` section
+3. Record `"iterN PROMPT_FIX: <phase> — <description>"` in state.md errors
+4. No action.sh needed — set phase back to the failed phase for retry
+
+Allowed: fix env vars, paths, variable names, phase transition instructions, add Known Errors.
+Not allowed: change state machine structure, remove phases, rewrite core protocol.
 
 ### DONE
 [... final summary format ...]
@@ -364,6 +376,7 @@ For each criterion in `ralph/CHECKS.md`, perform a targeted check:
 - Check VALIDATING section includes exact command or explicit skip
 - Check Known Errors section: grep for `## Known Errors`
 - Check action.sh Rules section: grep for `## action.sh Rules`
+- Check PROMPT.md self-correction: grep for `PROMPT_FIX` or `Self-Correction` or `self-correction`
 
 **run.sh**:
 - Check `--reset` flag: grep for `--reset`
