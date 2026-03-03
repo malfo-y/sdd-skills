@@ -118,6 +118,11 @@ Project: <project name>
 - [ ] `SMOKE_TEST` explicitly states `MAX_STEPS=1` is the only allowed hardcoded exception
 - [ ] PROMPT.md self-correction protocol present in ADJUSTING section (Step 2.5 or dedicated subsection)
 
+## decisions.md
+- [ ] PROMPT.md instructs LLM to read `ralph/results/decisions.md` each iteration (after state.md)
+- [ ] PROMPT.md instructs LLM to append to `ralph/results/decisions.md` each iteration (after updating state.md)
+- [ ] Decision entry format is specified in PROMPT.md (Iteration N, Observed, Decision, Reason, Action)
+
 ## run.sh
 - [ ] `--reset` flag behavior present (clears `ralph/results/`, rewrites `state.md`)
 - [ ] `LLM_TIMEOUT_SECONDS` sourced from `config.sh`
@@ -206,7 +211,7 @@ You are running inside an automated training loop. The loop structure is:
 
 ## Step-by-step for EVERY iteration
 
-[... 8-step protocol from reference ...]
+[... iteration protocol from reference, including reading decisions.md after state.md and appending to decisions.md after updating state.md ...]
 
 ## Project Context
 
@@ -280,6 +285,26 @@ Not allowed: change state machine structure, remove phases, rewrite core protoco
 ## action.sh Rules
 
 [... 10 rules from reference, with project-specific Python command ...]
+
+## Decision Log
+
+After updating `ralph/state.md`, append a decision entry to `ralph/results/decisions.md`.
+
+### Format
+
+Each iteration, append exactly one entry:
+
+    ## Iteration {N} — {PHASE}
+    - **Observed**: {what you saw — key facts from logs, exit codes, state}
+    - **Decision**: {what action/transition you chose}
+    - **Reason**: {why this decision, not alternatives}
+    - **Action**: {action.sh summary or "LLM-only iteration (no action.sh)"}
+
+### Rules
+- Read `ralph/results/decisions.md` at the start of every iteration (after state.md) to review prior decisions
+- Append-only: read existing content, write back with new entry at the end
+- One entry per iteration, even for LLM-only iterations (SETUP, ANALYZING, DONE)
+- Keep each field to 1–2 sentences
 
 ## state.md Format
 
@@ -377,6 +402,8 @@ For each criterion in `ralph/CHECKS.md`, perform a targeted check:
 - Check Known Errors section: grep for `## Known Errors`
 - Check action.sh Rules section: grep for `## action.sh Rules`
 - Check PROMPT.md self-correction: grep for `PROMPT_FIX` or `Self-Correction` or `self-correction`
+- Check PROMPT.md contains decision log reading instruction: grep for `decisions.md` in the iteration steps
+- Check PROMPT.md contains decision log writing/append instruction: grep for `decisions.md` in the post-state-update steps
 
 **run.sh**:
 - Check `--reset` flag: grep for `--reset`

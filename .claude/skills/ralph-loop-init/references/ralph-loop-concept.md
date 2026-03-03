@@ -32,6 +32,7 @@ ralph/
 ├── action.sh       <- LLM-generated execution script (each iteration)
 ├── state.md        <- Current phase, iteration, errors, checkpoint path, notes
 └── results/        <- Training/validation logs and outputs
+    ├── decisions.md        <- Accumulated LLM decision summaries per iteration
     ├── training.log
     ├── last_exit_code
     ├── last_checkpoint_path
@@ -97,13 +98,15 @@ Every iteration, the LLM must follow these steps in order:
 
 1. Read `ralph/config.sh` (user-specified parameters)
 2. Read `ralph/state.md` (current phase, errors, notes)
-3. Read `ralph/results/last_exit_code` if it exists (was previous action successful?)
-4. Read any result files relevant to the current phase
-5. Read `_sdd/env.md` if it exists (Python environment, required env variables, runtime configuration)
-6. Decide what to do next
-7. Write `ralph/action.sh` with the next action (or skip if LLM-only iteration)
-8. Update `ralph/state.md` (always increment iteration, update phase/notes)
-9. Exit
+3. Read `ralph/results/decisions.md` if it exists (prior iteration decisions — see Section 14)
+4. Read `ralph/results/last_exit_code` if it exists (was previous action successful?)
+5. Read any result files relevant to the current phase
+6. Read `_sdd/env.md` if it exists (Python environment, required env variables, runtime configuration)
+7. Decide what to do next
+8. Write `ralph/action.sh` with the next action (or skip if LLM-only iteration)
+9. Update `ralph/state.md` (always increment iteration, update phase/notes)
+10. Append this iteration's decision entry to `ralph/results/decisions.md` (see Section 14)
+11. Exit
 
 ---
 
@@ -320,6 +323,38 @@ wait $CMD_PID 2>/dev/null || true
 ```
 
 Include this as E1 in the Known Errors section of every generated PROMPT.md when the platform may be macOS.
+
+---
+
+## 14. Decision Log (`ralph/results/decisions.md`)
+
+### Purpose
+
+An accumulating log where each iteration appends a structured summary of what was observed, decided, and why. The LLM reads this at the start of every iteration (Step 3 of the iteration protocol) to maintain continuity across iterations — preventing repeated failed approaches and preserving context on what was already tried.
+
+### Location
+
+`ralph/results/decisions.md` — lives in `results/` so it is cleared on `--reset` along with other loop artifacts.
+
+### Entry Format
+
+Each iteration appends one entry:
+
+```markdown
+## Iteration {N} — {PHASE}
+- **Observed**: {what the LLM saw — key facts from logs, exit codes, state}
+- **Decision**: {what action/transition was chosen}
+- **Reason**: {why this decision, not alternatives}
+- **Action**: {action.sh summary or "LLM-only iteration (no action.sh)"}
+```
+
+### Rules
+
+1. **Append-only**: Read existing content, then write back with the new entry added at the end
+2. **One entry per iteration**: Every iteration must append exactly one entry, even for LLM-only iterations (SETUP, ANALYZING, DONE)
+3. **Cleared on `--reset`**: Since the file lives in `ralph/results/`, it is automatically removed when `run.sh --reset` clears the results directory
+4. **Read before decide**: The LLM must read `decisions.md` (if it exists) before making any decisions for the current iteration
+5. **Concise entries**: Each field should be 1–2 sentences. The log must remain scannable across many iterations
 
 ---
 
