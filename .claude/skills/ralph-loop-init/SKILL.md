@@ -119,9 +119,10 @@ Project: <project name>
 - [ ] PROMPT.md self-correction protocol present in ADJUSTING section (Step 2.5 or dedicated subsection)
 
 ## decisions.md
-- [ ] PROMPT.md instructs LLM to read `ralph/results/decisions.md` each iteration (after state.md)
+- [ ] PROMPT.md instructs LLM to read the most recent 15 entries from `ralph/results/decisions.md` each iteration (after state.md)
 - [ ] PROMPT.md instructs LLM to append to `ralph/results/decisions.md` each iteration (after updating state.md)
-- [ ] Decision entry format is specified in PROMPT.md (Iteration N, Observed, Decision, Reason, Action)
+- [ ] Decision entry format is specified in PROMPT.md (Iteration N, Observed, Decision, Reason, Evidence, Action)
+- [ ] Decision Evidence rule requires concrete artifacts (`exit code` and `log/artifact path`)
 
 ## run.sh
 - [ ] `--reset` flag behavior present (clears `ralph/results/`, rewrites `state.md`)
@@ -211,7 +212,7 @@ You are running inside an automated training loop. The loop structure is:
 
 ## Step-by-step for EVERY iteration
 
-[... iteration protocol from reference, including reading decisions.md after state.md and appending to decisions.md after updating state.md ...]
+[... iteration protocol from reference, including reading the most recent 15 entries from decisions.md after state.md and appending to decisions.md after updating state.md ...]
 
 ## Project Context
 
@@ -267,7 +268,7 @@ On FAIL → set `phase: ADJUSTING` in state.md, note "SMOKE_TEST failed: <first 
 [... generic debugging protocol from reference, including Step 2.5 for PROMPT.md self-correction ...]
 [... project-specific error patterns added to the common patterns table ...]
 
-### PROMPT.md Self-Correction (Section 13 of reference)
+### PROMPT.md Self-Correction (Section 14 of reference)
 
 When a recurring error (2+ occurrences) traces back to an incorrect template in this PROMPT.md:
 1. Fix the template directly using the Edit tool
@@ -298,10 +299,12 @@ Each iteration, append exactly one entry:
     - **Observed**: {what you saw — key facts from logs, exit codes, state}
     - **Decision**: {what action/transition you chose}
     - **Reason**: {why this decision, not alternatives}
+    - **Evidence**: {must cite concrete artifacts, including exit code and log/artifact path}
     - **Action**: {action.sh summary or "LLM-only iteration (no action.sh)"}
 
 ### Rules
-- Read `ralph/results/decisions.md` at the start of every iteration (after state.md) to review prior decisions
+- Read the most recent 15 entries from `ralph/results/decisions.md` at the start of every iteration (after state.md). If fewer than 15 exist, read all.
+- If repeated failure patterns are suspected and not explained by the recent 15, search older decision entries by keyword before choosing the next action.
 - Append-only: read existing content, write back with new entry at the end
 - One entry per iteration, even for LLM-only iterations (SETUP, ANALYZING, DONE)
 - Keep each field to 1–2 sentences
@@ -402,8 +405,9 @@ For each criterion in `ralph/CHECKS.md`, perform a targeted check:
 - Check Known Errors section: grep for `## Known Errors`
 - Check action.sh Rules section: grep for `## action.sh Rules`
 - Check PROMPT.md self-correction: grep for `PROMPT_FIX` or `Self-Correction` or `self-correction`
-- Check PROMPT.md contains decision log reading instruction: grep for `decisions.md` in the iteration steps
+- Check PROMPT.md contains decision log reading instruction with recent-15 scope: grep for `most recent 15` and `decisions.md`
 - Check PROMPT.md contains decision log writing/append instruction: grep for `decisions.md` in the post-state-update steps
+- Check decision format includes evidence artifacts: grep for `**Evidence**`, `exit code`, and `log/artifact path`
 
 **run.sh**:
 - Check `--reset` flag: grep for `--reset`

@@ -119,6 +119,13 @@ Project: <project name>
 - [ ] `## Known Errors` section present (E1 macOS timeout included if applicable)
 - [ ] `## action.sh Rules` section present
 - [ ] `SMOKE_TEST` explicitly states `MAX_STEPS=1` is the only allowed hardcoded exception
+- [ ] PROMPT.md self-correction protocol present in ADJUSTING section (Step 2.5 or dedicated subsection)
+
+## decisions.md
+- [ ] PROMPT.md instructs Codex to read the most recent 15 entries from `ralph/results/decisions.md` each iteration (after state.md)
+- [ ] PROMPT.md instructs Codex to append to `ralph/results/decisions.md` each iteration (after updating state.md)
+- [ ] Decision entry format is specified in PROMPT.md (Iteration N, Observed, Decision, Reason, Evidence, Action)
+- [ ] Decision Evidence rule requires concrete artifacts (`exit code` and `log/artifact path`)
 
 ## run.sh
 - [ ] `--reset` flag behavior present (clears `ralph/results/`, rewrites `state.md`)
@@ -204,7 +211,7 @@ You are running inside an automated training loop.
 **DO NOT** run long training/validation commands directly. Put them into `ralph/action.sh`.
 
 ## Step-by-step for EVERY iteration
-[... 8-step protocol from reference ...]
+[... iteration protocol from reference, including reading the most recent 15 decisions from decisions.md after state.md and appending a new decision entry after updating state.md ...]
 
 ## Project Context
 - Config: `ralph/config.sh`
@@ -244,6 +251,17 @@ You are running inside an automated training loop.
 [... write ralph/results/experiment_report.md per Section 11 of the reference ...]
 ### ADJUSTING
 [... debugging protocol + project-specific error patterns ...]
+
+### PROMPT.md Self-Correction (Section 14 of reference)
+When a recurring error (2+ occurrences) traces back to an incorrect template in this PROMPT.md:
+1. Fix the template directly using the Edit tool.
+2. Add the error to `## Known Errors`.
+3. Record `"iterN PROMPT_FIX: <phase> - <description>"` in `state.md` errors.
+4. No `action.sh` needed; set phase back to the failed phase for retry.
+
+Allowed: env vars, paths, variable names, phase transition instructions, Known Errors additions.
+Not allowed: changing state machine structure, removing phases, rewriting core protocol.
+
 ### DONE
 [... final summary format ...]
 [... confirm experiment_report.md was written ...]
@@ -251,6 +269,26 @@ You are running inside an automated training loop.
 ## action.sh Rules
 [... 10 rules from reference, customized python command ...]
 - Include the "no heredoc with `conda run`" and "no blind reuse of archived action_iter scripts" constraints from the reference.
+
+## Decision Log
+After updating `ralph/state.md`, append one decision entry to `ralph/results/decisions.md`.
+
+### Format
+Each iteration, append exactly one entry:
+
+    ## Iteration {N} - {PHASE}
+    - **Observed**: {key facts from logs, exit codes, and state}
+    - **Decision**: {action/transition selected}
+    - **Reason**: {why this decision over alternatives}
+    - **Evidence**: {must cite concrete artifacts, including exit code and log/artifact path}
+    - **Action**: {action.sh summary or "Codex-only iteration (no action.sh)"}
+
+### Rules
+- At the start of each iteration (after reading `state.md`), read the most recent 15 entries from `ralph/results/decisions.md` (if fewer than 15, read all).
+- If a repeated failure pattern is suspected and not explained by the recent 15 entries, search older decision entries by keyword before deciding.
+- Append-only: never overwrite prior entries.
+- One entry per iteration, including Codex-only iterations (SETUP, ANALYZING, DONE).
+- Keep each field to 1-2 sentences.
 
 ## state.md Format
 [... canonical format from reference ...]
@@ -267,6 +305,8 @@ Required project-specific customizations:
 - Environment setup guidance referencing `_sdd/env.md` when available
 - Python execution style that is safe for the detected command (especially `conda run` stdin/heredoc caveat)
 - Artifact-driven phase transitions that prevent VALIDATING/ADJUSTING infinite loops
+- Decision Log section with recent-15 read rule and Evidence requirement
+- PROMPT.md self-correction protocol (`PROMPT_FIX` record + retry)
 
 ### 4.3 Generate `## Known Errors` Section in PROMPT.md
 
@@ -353,6 +393,10 @@ For each criterion in `ralph/CHECKS.md`, perform a targeted check:
 - Check VALIDATING section includes exact command or explicit skip.
 - Check Known Errors section: grep for `## Known Errors`.
 - Check action.sh Rules section: grep for `## action.sh Rules`.
+- Check PROMPT.md self-correction: grep for `PROMPT_FIX` or `Self-Correction` or `self-correction`.
+- Check decision log reading instruction includes recent-15 scope: grep for `most recent 15` and `decisions.md`.
+- Check decision log writing/append instruction: grep for `append` and `decisions.md`.
+- Check decision format includes Evidence artifacts: grep for `**Evidence**`, `exit code`, and `log/artifact path`.
 
 **run.sh**:
 - Check `--reset` flag: grep for `--reset`.

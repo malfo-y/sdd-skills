@@ -92,20 +92,20 @@ After writing the summary to state.md, the LLM **must** generate `ralph/results/
 
 ---
 
-## 4. Eight-Step Iteration Protocol
+## 4. Iteration Protocol (11 Steps)
 
 Every iteration, the LLM must follow these steps in order:
 
 1. Read `ralph/config.sh` (user-specified parameters)
 2. Read `ralph/state.md` (current phase, errors, notes)
-3. Read `ralph/results/decisions.md` if it exists (prior iteration decisions — see Section 14)
+3. Read the most recent 15 entries from `ralph/results/decisions.md` if it exists (prior iteration decisions — see Section 13). If fewer than 15 exist, read all.
 4. Read `ralph/results/last_exit_code` if it exists (was previous action successful?)
 5. Read any result files relevant to the current phase
 6. Read `_sdd/env.md` if it exists (Python environment, required env variables, runtime configuration)
 7. Decide what to do next
 8. Write `ralph/action.sh` with the next action (or skip if LLM-only iteration)
 9. Update `ralph/state.md` (always increment iteration, update phase/notes)
-10. Append this iteration's decision entry to `ralph/results/decisions.md` (see Section 14)
+10. Append this iteration's decision entry to `ralph/results/decisions.md` (see Section 13)
 11. Exit
 
 ---
@@ -197,7 +197,7 @@ When in ADJUSTING phase, the LLM acts as a debugger:
 - If error is in project code -> fix it directly
 - If error is in a library -> check version, args, or environment
 
-**Step 2.5: Check if root cause is in PROMPT.md** (see Section 13)
+**Step 2.5: Check if root cause is in PROMPT.md** (see Section 14)
 - If the error is caused by a missing/incorrect template **in PROMPT.md itself**:
   - AND this is the 2nd+ occurrence of the same root cause
   - → Apply targeted fix to `ralph/PROMPT.md` directly (edit the specific template)
@@ -326,7 +326,7 @@ Include this as E1 in the Known Errors section of every generated PROMPT.md when
 
 ---
 
-## 14. Decision Log (`ralph/results/decisions.md`)
+## 13. Decision Log (`ralph/results/decisions.md`)
 
 ### Purpose
 
@@ -345,20 +345,23 @@ Each iteration appends one entry:
 - **Observed**: {what the LLM saw — key facts from logs, exit codes, state}
 - **Decision**: {what action/transition was chosen}
 - **Reason**: {why this decision, not alternatives}
+- **Evidence**: {must cite concrete artifacts, including exit code and log/artifact path}
 - **Action**: {action.sh summary or "LLM-only iteration (no action.sh)"}
 ```
 
 ### Rules
 
-1. **Append-only**: Read existing content, then write back with the new entry added at the end
-2. **One entry per iteration**: Every iteration must append exactly one entry, even for LLM-only iterations (SETUP, ANALYZING, DONE)
-3. **Cleared on `--reset`**: Since the file lives in `ralph/results/`, it is automatically removed when `run.sh --reset` clears the results directory
-4. **Read before decide**: The LLM must read `decisions.md` (if it exists) before making any decisions for the current iteration
-5. **Concise entries**: Each field should be 1–2 sentences. The log must remain scannable across many iterations
+1. **Read before decide**: At the start of every iteration (after reading state.md), read the most recent 15 entries from `decisions.md`. If fewer than 15 exist, read all.
+2. **Keyword search fallback**: If repeated failure patterns are suspected and not explained by the recent 15, search older decision entries by keyword before choosing the next action.
+3. **Append-only**: Read existing content, then write back with the new entry added at the end
+4. **One entry per iteration**: Every iteration must append exactly one entry, even for LLM-only iterations (SETUP, ANALYZING, DONE)
+5. **Cleared on `--reset`**: Since the file lives in `ralph/results/`, it is automatically removed when `run.sh --reset` clears the results directory
+6. **Concise entries**: Each field should be 1–2 sentences. The log must remain scannable across many iterations
+7. **Evidence requirement**: The Evidence field must cite concrete artifacts — at minimum the exit code and the path to the relevant log or artifact file
 
 ---
 
-## 13. PROMPT.md Self-Correction Protocol
+## 14. PROMPT.md Self-Correction Protocol
 
 ### Problem
 

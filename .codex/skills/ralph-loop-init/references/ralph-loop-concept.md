@@ -32,6 +32,7 @@ ralph/
 ├── action.sh       <- Codex-generated execution script (each iteration)
 ├── state.md        <- Current phase, iteration, errors, checkpoint path, notes
 └── results/        <- Training/validation logs and outputs
+    ├── decisions.md        <- Accumulated Codex decision summaries per iteration
     ├── training.log
     ├── last_exit_code
     ├── last_checkpoint_path
@@ -91,19 +92,21 @@ After writing the summary to state.md, Codex **must** generate `ralph/results/ex
 
 ---
 
-## 4. Eight-Step Iteration Protocol
+## 4. Iteration Protocol (11 Steps)
 
 Every iteration, the Codex agent must follow these steps in order:
 
 1. Read `ralph/config.sh` (user-specified parameters)
 2. Read `ralph/state.md` (current phase, errors, notes)
-3. Read `ralph/results/last_exit_code` if it exists (was previous action successful?)
-4. Read any result files relevant to the current phase
-5. Read `_sdd/env.md` if it exists (Python environment, required env variables, runtime configuration)
-6. Decide what to do next
-7. Write `ralph/action.sh` with the next action (or skip if agent-only iteration)
-8. Update `ralph/state.md` (always increment iteration, update phase/notes)
-9. Exit
+3. Read the most recent 15 entries from `ralph/results/decisions.md` if it exists (prior iteration decisions — see Section 13). If fewer than 15 exist, read all.
+4. Read `ralph/results/last_exit_code` if it exists (was previous action successful?)
+5. Read any result files relevant to the current phase
+6. Read `_sdd/env.md` if it exists (Python environment, required env variables, runtime configuration)
+7. Decide what to do next
+8. Write `ralph/action.sh` with the next action (or skip if agent-only iteration)
+9. Update `ralph/state.md` (always increment iteration, update phase/notes)
+10. Append this iteration's decision entry to `ralph/results/decisions.md` (see Section 13)
+11. Exit
 
 ---
 
@@ -194,6 +197,16 @@ When in ADJUSTING phase, Codex acts as a debugger:
 - Trace back through the call stack to find **where** it originated
 - If error is in project code -> fix it directly
 - If error is in a library -> check version, args, or environment
+
+**Step 2.5: Check if root cause is in PROMPT.md** (see Section 14)
+- If the error is caused by a missing/incorrect template **in PROMPT.md itself**:
+  - AND this is the 2nd+ occurrence of the same root cause
+  - -> Apply targeted fix to `ralph/PROMPT.md` directly (edit the specific template)
+  - -> Add the error to `## Known Errors` section of PROMPT.md
+  - Record: `"iterN PROMPT_FIX: <phase> - <description>"`
+  - No action.sh needed for this iteration -- the PROMPT.md fix is the action
+  - Set phase back to the failed phase for retry
+  - Skip Steps 3-4
 
 **Step 3: Apply ONE fix**
 - Change only one thing at a time (so you know what fixed it)
@@ -311,3 +324,87 @@ wait $CMD_PID 2>/dev/null || true
 ```
 
 Include this as E1 in the Known Errors section of every generated PROMPT.md when the platform may be macOS.
+
+---
+
+## 13. Decision Log (`ralph/results/decisions.md`)
+
+### Purpose
+
+An accumulating log where each iteration appends a structured summary of what was observed, decided, and why. Codex reads this at the start of every iteration (Step 3 of the iteration protocol) to maintain continuity across iterations -- preventing repeated failed approaches and preserving context on what was already tried.
+
+### Location
+
+`ralph/results/decisions.md` -- lives in `results/` so it is cleared on `--reset` along with other loop artifacts.
+
+### Entry Format
+
+Each iteration appends one entry:
+
+```markdown
+## Iteration {N} -- {PHASE}
+- **Observed**: {what Codex saw -- key facts from logs, exit codes, state}
+- **Decision**: {what action/transition was chosen}
+- **Reason**: {why this decision, not alternatives}
+- **Evidence**: {must cite concrete artifacts, including exit code and log/artifact path}
+- **Action**: {action.sh summary or "Codex-only iteration (no action.sh)"}
+```
+
+### Rules
+
+1. **Read before decide**: At the start of every iteration (after reading state.md), read the most recent 15 entries from `decisions.md`. If fewer than 15 exist, read all.
+2. **Keyword search fallback**: If repeated failure patterns are suspected and not explained by the recent 15, search older decision entries by keyword before choosing the next action.
+3. **Append-only**: Read existing content, then write back with the new entry added at the end
+4. **One entry per iteration**: Every iteration must append exactly one entry, even for Codex-only iterations (SETUP, ANALYZING, DONE)
+5. **Cleared on `--reset`**: Since the file lives in `ralph/results/`, it is automatically removed when `run.sh --reset` clears the results directory
+6. **Concise entries**: Each field should be 1-2 sentences. The log must remain scannable across many iterations
+7. **Evidence requirement**: The Evidence field must cite concrete artifacts -- at minimum the exit code and the path to the relevant log or artifact file
+
+---
+
+## 14. PROMPT.md Self-Correction Protocol
+
+### Problem
+
+PROMPT.md templates are generated before the loop starts, based on code discovery and specs. Some templates may contain errors (missing environment variables, wrong paths, incomplete phase transition instructions) that only surface at runtime. Without self-correction, the Codex agent inside the loop cannot fix these template errors -- it can only retry with the same broken template, causing repeated failures until a human intervenes.
+
+### Solution: Allow Targeted PROMPT.md Edits
+
+When the Codex agent detects that a recurring error is caused by an incorrect or incomplete template **in PROMPT.md itself**, it may edit PROMPT.md to fix the template.
+
+### Trigger Conditions
+
+The Codex agent should modify PROMPT.md when **ALL** of these conditions are true:
+1. The same root cause has appeared **2 or more times** (checked via `state.md` errors list)
+2. The root cause traces back to a **template or instruction in PROMPT.md** (not external code, data, or infrastructure)
+3. The fix is a **targeted edit** to the specific phase template (not a structural redesign)
+
+### Allowed Modifications
+
+| Allowed | Not Allowed |
+|---------|-------------|
+| Fix missing env vars in templates (`export PYTHONPATH=...`) | Change state machine structure or add new phases |
+| Fix incorrect paths or variable names | Rewrite core iteration protocol |
+| Add missing instructions to phase transitions | Remove anti-recursion warning |
+| Add new entries to `## Known Errors` section | Change `action.sh` canonical rules |
+| Fix incorrect schema field references | Restructure the overall document |
+| Add fallback logic to templates | Remove existing phases |
+
+### Procedure
+
+1. In ADJUSTING Step 2.5, identify that the root cause is a PROMPT.md template error
+2. Apply the targeted fix to `ralph/PROMPT.md` using the Edit tool
+3. If the error is likely to recur in future runs, also add it to the `## Known Errors` section
+4. Record in `state.md` errors: `"iterN PROMPT_FIX: <phase> - <what was changed>"`
+5. Set phase back to the fixed phase for retry
+6. Do NOT write an `action.sh` for this iteration -- the PROMPT.md fix is the action
+
+### Examples from Real Loops
+
+**Example 1**: RETRIEVE template missing `export PYTHONPATH=$(pwd)` -- Codex failed at RETRIEVE_TC, then again at RETRIEVE_T2C with the same `ModuleNotFoundError`. On the 2nd occurrence, Codex should fix ALL RETRIEVE templates in PROMPT.md, not just the current one.
+
+**Example 2**: POLL_T2C transition says "write job_id to state.md" but omits "also write job_id file for next phase's `cat` command". Codex fails at RETRIEVE_T2C because the file doesn't exist. Codex should add the missing file-write instruction AND a fallback (`state.md` grep) to the RETRIEVE template.
+
+### Known Errors Accumulation
+
+When Codex adds a new entry to `## Known Errors`, it persists across iterations. If the loop is later restarted with `--reset`, the accumulated Known Errors remain in PROMPT.md because `--reset` only clears `ralph/results/` and `ralph/state.md`, not `ralph/PROMPT.md`. This means future runs benefit from past debugging experience.
