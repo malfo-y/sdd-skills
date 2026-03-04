@@ -74,25 +74,51 @@ else
   echo "[ralph] LLM timeout: ${LLM_TIMEOUT_SECONDS}s per LLM step."
 fi
 
-LOCK_FILE="ralph/.ralph.lock"
+LOCK_DIR="ralph/.ralph.lock.d"
+LOCK_PID_FILE="${LOCK_DIR}/pid"
 
-cleanup_lock() {
-  rm -f "${LOCK_FILE}"
+is_probably_ralph_process() {
+  local pid="$1"
+  local cmd
+  cmd="$(ps -p "${pid}" -o command= 2>/dev/null || true)"
+  [ -n "${cmd}" ] && [[ "${cmd}" == *"run.sh"* ]]
 }
 
-if [ -f "${LOCK_FILE}" ]; then
-  EXISTING_PID="$(cat "${LOCK_FILE}" 2>/dev/null || echo "")"
-  if [ -n "${EXISTING_PID}" ] && kill -0 "${EXISTING_PID}" 2>/dev/null; then
-    echo "[ralph] ERROR: Another ralph instance is running (PID ${EXISTING_PID})." >&2
-    echo "[ralph] If stale, remove manually: rm ${LOCK_FILE}" >&2
-    exit 1
-  else
-    echo "[ralph] Stale lock file found (PID ${EXISTING_PID}). Removing."
-    rm -f "${LOCK_FILE}"
+cleanup_lock() {
+  local owner_pid
+  owner_pid="$(cat "${LOCK_PID_FILE}" 2>/dev/null || true)"
+  if [ -n "${owner_pid}" ] && [ "${owner_pid}" = "$$" ]; then
+    rm -rf "${LOCK_DIR}"
   fi
-fi
+}
 
-echo $$ > "${LOCK_FILE}"
+acquire_lock() {
+  if mkdir "${LOCK_DIR}" 2>/dev/null; then
+    echo "$$" > "${LOCK_PID_FILE}"
+    return 0
+  fi
+
+  local existing_pid=""
+  existing_pid="$(cat "${LOCK_PID_FILE}" 2>/dev/null || true)"
+
+  if [ -n "${existing_pid}" ] && kill -0 "${existing_pid}" 2>/dev/null && is_probably_ralph_process "${existing_pid}"; then
+    echo "[ralph] ERROR: Another ralph instance is running (PID ${existing_pid})." >&2
+    echo "[ralph] If stale, remove manually: rm -rf ${LOCK_DIR}" >&2
+    return 1
+  fi
+
+  echo "[ralph] Stale lock found (PID ${existing_pid}). Reclaiming lock."
+  rm -rf "${LOCK_DIR}"
+  if mkdir "${LOCK_DIR}" 2>/dev/null; then
+    echo "$$" > "${LOCK_PID_FILE}"
+    return 0
+  fi
+
+  echo "[ralph] ERROR: Failed to acquire lock at ${LOCK_DIR}." >&2
+  return 1
+}
+
+acquire_lock || exit 1
 trap cleanup_lock EXIT INT TERM
 
 run_llm_with_timeout() {
@@ -246,7 +272,7 @@ for line in sys.stdin:
     COMPLETION_PROMISE="${COMPLETION_PROMISE:-}"
     if [ -n "${COMPLETION_PROMISE}" ]; then
       LLM_OUTPUT_FILE="ralph/results/llm_iter${ITERATION}.json"
-      if grep -q "<completion_promise>${COMPLETION_PROMISE}</completion_promise>" "${LLM_OUTPUT_FILE}" 2>/dev/null; then
+      if grep -Fq "<completion_promise>${COMPLETION_PROMISE}</completion_promise>" "${LLM_OUTPUT_FILE}" 2>/dev/null; then
         echo "[ralph] State is DONE. Completion promise verified. Exiting loop."
       else
         echo "[ralph] WARNING: State is DONE but completion promise not found in LLM output."
