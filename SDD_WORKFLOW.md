@@ -1,7 +1,7 @@
 # 스펙 기반 개발 (SDD) 워크플로우 가이드
 
-**버전**: 1.3.0
-**날짜**: 2026-02-14
+**버전**: 1.4.0
+**날짜**: 2026-03-04
 
 Claude와 함께하는 소프트웨어 개발을 위한 SDD 스킬 종합 가이드
 
@@ -34,46 +34,42 @@ flowchart LR
     classDef step fill:#E3F2FD,stroke:#1565C0,stroke-width:1.5px,color:#0D47A1;
 ```
 
-### 현재 제공 SDD 스킬(16개)
+### 현재 제공 SDD 스킬(14개)
 
 | 스킬 | 트리거 | 목적 |
 |------|--------|------|
 | **spec-create** | "스펙 생성", "프로젝트 문서화" | 코드 분석 또는 초안에서 스펙 생성 |
-| **spec-draft** (레거시) | "스펙 초안", "스펙 드래프트" | 스펙 업데이트 입력(user_draft.md) 초안 생성 (Spec Update Input 포맷) |
-| **feature-draft** **(권장)** | "기능 초안", "feature draft" | **통합 스킬**: 스펙 패치 초안 + 구현 계획을 한 번에 생성 |
-| **feature-draft-sequential** (레거시) | "순차 기능 초안", "legacy feature draft" | Target Files 없이 스펙 패치 초안 + 순차 구현 계획 생성 |
-| **spec-update-todo** (레거시) | "스펙에 기능 추가", "스펙 업데이트" | 스펙에 새 요구사항 추가 |
+| **feature-draft** | "기능 초안", "feature draft" | 스펙 패치 초안 + 구현 계획을 한 번에 생성 |
+| **spec-update-todo** | "스펙에 기능 추가", "스펙 업데이트" | 스펙에 새 기능/요구사항을 사전 반영 (대규모 구현 시 드리프트 방지) |
 | **spec-update-done** | "완료 항목 반영", "스펙 동기화" | 구현 변경사항과 스펙 동기화 |
 | **spec-review** | "스펙 리뷰", "드리프트 점검" | 보조 검증용 strict 리뷰 (리포트 전용) |
 | **spec-summary** | "스펙 요약", "프로젝트 개요" | 스펙의 요약본 생성 (현황 파악용) |
 | **spec-rewrite** | "스펙 리라이트", "스펙 정리" | 긴/복잡한 스펙을 구조 재정리(파일 분할/부록 이동) + 이슈 리포트 |
 | **pr-spec-patch** | "PR 스펙 패치", "PR 리뷰 준비" | PR과 스펙 비교하여 패치 초안 생성 |
 | **pr-review** | "PR 리뷰", "PR 검증" | PR 구현을 스펙 대비 검증 및 판정 |
-| **implementation-plan** **(권장)** | "구현 계획 생성", "병렬 구현 계획" | Target Files 포함 구현 계획 생성 |
-| **implementation-plan-sequential** (레거시) | "순차 구현 계획 생성" | 스펙에서 순차 실행 가능한 작업 생성 |
-| **implementation** **(권장)** | "계획 구현", "병렬 구현" | conflict-aware 병렬 그룹으로 TDD 실행 |
-| **implementation-sequential** (레거시) | "순차 구현" | 계획을 순차 TDD로 실행 |
-| **implementation-review** (레거시) | "구현 리뷰", "진행 상황 확인" | 계획 대비 구현 검증 |
+| **implementation-plan** | "구현 계획 생성" | phase별 구현 계획 생성 (대규모 구현 시) |
+| **implementation** | "계획 구현", "구현 시작" | TDD 기반 구현 실행 |
+| **implementation-review** | "구현 리뷰", "진행 상황 확인" | 계획 대비 구현 검증 (대규모 phase별 검증) |
+| **ralph-loop-init** | "ralph loop", "training debug loop" | ML 자동 트레이닝 디버그 루프 생성 |
+| **discussion** | "토론", "discuss", "brainstorm" | 구조화된 반복 토론 + 리서치 지원 (텍스트 출력만, 파일 미생성) |
 
-### 간소화된 워크플로우 (권장)
+### 규모별 워크플로우
 
-`feature-draft`는 기존의 `spec-draft` + `spec-update-todo` + `implementation-plan`을 하나로 통합한 스킬입니다. 이를 통해 기능 추가 워크플로우가 **7단계에서 4단계**로 간소화됩니다:
+기능의 규모에 따라 3가지 경로를 사용합니다:
 
-```
-spec-create → feature-draft → implementation → spec-update-done
-```
+| 규모 | 워크플로우 |
+|------|-----------|
+| **대규모** | feature-draft → spec-update-todo → implementation-plan → implementation (phase 반복) → implementation-review → spec-update-done (→ spec-review) |
+| **중규모** | feature-draft → implementation → spec-update-done |
+| **소규모** | 직접 구현 (→ implementation-review) (→ spec-update-done) |
 
-| | 기존 워크플로우 (7단계) | 간소화된 워크플로우 (4단계) |
-|---|---|---|
-| 1단계 | spec-draft (초안 생성) | **spec-create** (스펙 생성/확인) |
-| 2단계 | spec-update-todo (스펙에 추가) | **feature-draft** (패치 초안 + 구현 계획) |
-| 3단계 | implementation-plan-sequential (계획 수립) | **implementation** (TDD 구현) |
-| 4단계 | implementation-sequential (구현) | **spec-update-done** (스펙 동기화) |
-| 5단계 | implementation-review (리뷰) | — |
-| 6단계 | spec-update-done (동기화) | — |
-| 7단계 | spec-review (검증) | — |
+> **참고**: 스펙이 없는 경우 먼저 `/spec-create`로 스펙을 생성합니다.
 
-> **참고**: `implementation` 스킬에 페이즈별 리뷰가 내장되어 있어 별도의 `implementation-review`가 불필요합니다. 기존 워크플로우는 세밀한 단계별 제어가 필요한 경우에 레거시로 사용할 수 있습니다.
+#### 대규모 vs 중규모 차이
+
+- **대규모**: `spec-update-todo`로 구현 전 스펙에 사전 반영(드리프트 방지), `implementation-plan`으로 phase별 계획 수립, `implementation-review`로 phase별 검증
+- **중규모**: `feature-draft`가 스펙 패치 초안(Part 1) + 구현 계획(Part 2)을 한 번에 생성하므로 별도 계획/검증 불필요
+- **소규모**: `feature-draft` 없이 직접 구현, 필요 시에만 검증/동기화
 
 ### 디렉토리 구조
 
@@ -83,7 +79,7 @@ project/
 │   ├── spec/
 │   │   ├── main.md                   # 메인 스펙 문서 (또는 <project>.md)
 │   │   ├── user_spec.md              # 스펙 업데이트 입력(자유 형식 가능)
-│   │   ├── user_draft.md             # 스펙 업데이트 입력(권장 포맷; spec-draft가 생성)
+│   │   ├── user_draft.md             # 스펙 업데이트 입력(권장 포맷)
 │   │   ├── _processed_user_spec.md   # 처리된 입력 (아카이브; spec-update-todo가 rename)
 │   │   ├── _processed_user_draft.md  # 처리된 입력 (아카이브; spec-update-todo가 rename)
 │   │   ├── SUMMARY.md                # 스펙 요약 (spec-summary)
@@ -125,7 +121,7 @@ project/
 
 ```mermaid
 flowchart LR
-    A["A. 기존 코드 분석<br/>• 레거시 프로젝트<br/>• 코드 먼저 개발<br/>• 문서화 필요"]:::choice --> SC["spec-create"]:::action
+    A["A. 기존 코드 분석<br/>• 기존 프로젝트<br/>• 코드 먼저 개발<br/>• 문서화 필요"]:::choice --> SC["spec-create"]:::action
     B["B. 사용자 초안 기반<br/>• 기획서 존재<br/>• 요구사항 문서화됨<br/>• 새 프로젝트"]:::choice --> SC
     SC --> Out["_sdd/spec/main.md 생성"]:::output
 
@@ -150,7 +146,7 @@ flowchart LR
 ```
 
 **적합한 경우:**
-- 레거시 프로젝트 문서화
+- 기존 프로젝트 문서화
 - 코드 먼저 개발 후 문서 작성
 - 인수인계를 위한 문서화
 
@@ -160,8 +156,7 @@ flowchart LR
 
 ```bash
 # 1. 초안/요구사항 입력 준비
-# - 간단히 적을 때: _sdd/spec/user_spec.md
-# - 권장 포맷으로 만들 때: /spec-draft  (=> _sdd/spec/user_draft.md 생성)
+# - _sdd/spec/user_spec.md 또는 _sdd/spec/user_draft.md에 작성
 
 # 2. 스펙 생성 요청
 "이 초안을 기반으로 스펙을 생성해줘"
@@ -198,122 +193,105 @@ flowchart LR
 
 ```mermaid
 flowchart LR
-    Start(["구현 경로 선택"]):::start
+    Start(["규모별 경로 선택"]):::start
 
-    %% 경로 A (권장)
-    subgraph A["A: Feature Draft (권장 — 4단계)"]
+    %% 대규모
+    subgraph L["대규모"]
         direction TB
-        A1["spec-create<br/>스펙 생성/확인"]:::rec
-        A2["feature-draft<br/>패치 초안 + 구현 계획"]:::rec
-        A3["implementation<br/>TDD로 구현"]:::rec
-        A4["spec-update-done<br/>스펙 동기화"]:::rec
-        A1 --> A2 --> A3 --> A4
+        L1["feature-draft<br/>패치 초안 + 구현 계획"]:::large
+        L2["spec-update-todo<br/>스펙 사전 반영"]:::large
+        L3["implementation-plan<br/>phase별 계획"]:::large
+        L4["implementation<br/>TDD 구현 (phase 반복)"]:::large
+        L5["implementation-review<br/>phase별 검증"]:::large
+        L6["spec-update-done<br/>스펙 동기화"]:::large
+        L1 --> L2 --> L3 --> L4 --> L5 --> L6
     end
 
-    %% 경로 A' (레거시)
-    subgraph Aprime["A' (레거시): Spec-First (전체 7단계)"]
+    %% 중규모
+    subgraph M["중규모"]
         direction TB
-        A1p["spec-update-todo<br/>스펙에 기능 추가/업데이트"]:::legacy
-        A2p["implementation-plan-sequential<br/>계획 수립 및 작업 분해"]:::legacy
-        A3p["implementation-sequential<br/>TDD로 구현"]:::legacy
-        A4p["implementation-review"]:::legacy
-        A5p["spec-update-done"]:::legacy
-        A1p --> A2p --> A3p --> A4p --> A5p
+        M1["feature-draft<br/>패치 초안 + 구현 계획"]:::medium
+        M2["implementation<br/>TDD 구현"]:::medium
+        M3["spec-update-done<br/>스펙 동기화"]:::medium
+        M1 --> M2 --> M3
     end
 
-    %% 경로 B (중간)
-    subgraph B["B: Direct Plan (중간 프로세스)"]
+    %% 소규모
+    subgraph S["소규모"]
         direction TB
-        B0["사용자 입력<br/>'이 기능을 구현해줘'"]:::normal
-        B1["implementation-plan<br/>계획 생성"]:::normal
-        B2["implementation<br/>TDD로 구현"]:::normal
-        B3["implementation-review"]:::normal
-        B4["spec-update-done<br/>(선택적)"]:::normal
-        B0 --> B1 --> B2 --> B3 -.-> B4
+        S0["직접 구현"]:::small
+        S1["implementation-review<br/>(선택)"]:::small
+        S2["spec-update-done<br/>(선택)"]:::small
+        S0 -.-> S1 -.-> S2
     end
 
-    %% 경로 C (간단)
-    subgraph C["C: Simple/Direct (간단 프로세스)"]
-        direction TB
-        C0["사용자 입력<br/>'이 버그를 고쳐줘'"]:::simple
-        C1["implementation<br/>바로 수정"]:::simple
-        C2["implementation-review"]:::simple
-        C3["spec-update-done<br/>(선택적)"]:::simple
-        C0 --> C1 --> C2 -.-> C3
-    end
+    Start -->|"대규모/복잡"| L1
+    Start -->|"중간 규모"| M1
+    Start -->|"작은 기능/버그"| S0
 
-    %% 선택 가이드 (Start에서 각 경로로)
-    Start -->|"대규모/복잡"| A1
-    Start -->|"세밀한 단계 제어"| A1p
-    Start -->|"중간 규모"| B0
-    Start -->|"작은 기능/버그"| C0
-
-    %% 스타일
     classDef start fill:#FFFFFF,stroke:#37474F,stroke-width:2px,color:#263238;
-    classDef rec fill:#E8F5E9,stroke:#2E7D32,stroke-width:2px,color:#1B5E20;
-    classDef legacy fill:#FFF8E1,stroke:#F9A825,stroke-width:2px,color:#6D4C41;
-    classDef normal fill:#E3F2FD,stroke:#1565C0,stroke-width:2px,color:#0D47A1;
-    classDef simple fill:#F5F5F5,stroke:#616161,stroke-width:2px,color:#212121;
+    classDef large fill:#E8F5E9,stroke:#2E7D32,stroke-width:2px,color:#1B5E20;
+    classDef medium fill:#E3F2FD,stroke:#1565C0,stroke-width:2px,color:#0D47A1;
+    classDef small fill:#F5F5F5,stroke:#616161,stroke-width:2px,color:#212121;
 
-    style A stroke:#2E7D32,stroke-width:2px,fill:#F1F8E9
-    style Aprime stroke:#F9A825,stroke-width:2px,fill:#FFFDE7
-    style B stroke:#1565C0,stroke-width:2px,fill:#EAF3FF
-    style C stroke:#616161,stroke-width:2px,fill:#FAFAFA
+    style L stroke:#2E7D32,stroke-width:2px,fill:#F1F8E9
+    style M stroke:#1565C0,stroke-width:2px,fill:#EAF3FF
+    style S stroke:#616161,stroke-width:2px,fill:#FAFAFA
 ```
 
 ### 경로 선택 가이드
 
-| 상황 | 권장 경로 | 이유 |
-|------|----------|------|
-| 새로운 대규모 기능 | A: Feature Draft (권장) | 4단계로 문서화 및 구현 완료 |
-| 아키텍처 변경 | A: Feature Draft (권장) | 패치 초안 + 구현 계획을 한 번에 |
-| 세밀한 단계별 제어 | A' (레거시): Spec-First | 각 단계를 개별 확인 필요 시 |
-| 중간 규모 기능 | B: Direct Plan | 계획은 필요하나 스펙 업데이트는 나중에 |
-| 명확한 작은 기능 | B: Direct Plan | 계획 수립 후 빠른 구현 |
-| 버그 수정 | C: Simple | 바로 수정, 리뷰로 확인 |
-| 긴급 핫픽스 | C: Simple | 속도 우선 |
-| 간단한 개선 | C: Simple | 오버헤드 최소화 |
+| 상황 | 경로 | 이유 |
+|------|------|------|
+| 대규모 기능, 아키텍처 변경 | 대규모 | phase별 계획 + 스펙 사전 반영으로 드리프트 방지 |
+| 중간 규모 기능 | 중규모 | feature-draft로 초안 + 계획을 한 번에 |
+| 버그 수정, 긴급 핫픽스 | 소규모 | 바로 수정, 필요 시 검증 |
+| ML 트레이닝 디버그 | ralph-loop-init | 자동 트레이닝 디버그 루프 |
 
 ---
 
 ### 시나리오별 시작하기
 
-#### 시나리오 1: 레거시 프로젝트 문서화
+#### 시나리오 1: 기존 프로젝트 문서화
 
 ```bash
-# 1. 코드 분석으로 스펙 생성
+# 코드 분석으로 스펙 생성
 /spec-create
-# Claude가 코드베이스를 분석하여 스펙 생성
-
-# 2. 필요시 스펙 보완
-/spec-update-todo
+# 코드베이스를 분석하여 스펙 생성
 ```
 
-#### 시나리오 2: 기획서 기반 새 프로젝트
+#### 시나리오 2: 대규모 기능 구현
 
 ```bash
-# 1. 기획서/초안을 user_spec.md에 작성
-vim _sdd/spec/user_spec.md
-
-# 2. 스펙 생성
-/spec-create
-
-# 3. 기능 초안 + 구현 계획 (통합)
+# 1. 스펙 패치 초안 + 구현 계획 생성
 /feature-draft
 
-# 4. 구현 시작
+# 2. 스펙에 사전 반영 (드리프트 방지)
+/spec-update-todo
+
+# 3. phase별 구현 계획 수립
+/implementation-plan
+
+# 4. 구현 (phase별 반복)
 /implementation
 
-# 5. 스펙 동기화
+# 5. phase별 검증
+/implementation-review
+
+# 6. 스펙 동기화
 /spec-update-done
+
+# 7. (선택) 최종 보조 검증
+/spec-review
 ```
 
-#### 시나리오 3: 새 기능 추가 (Feature Draft — 권장)
+> 스펙이 없으면 먼저 `/spec-create`를 실행합니다.
+
+#### 시나리오 3: 중규모 기능 구현
 
 ```bash
-# 1. 기능 초안 + 구현 계획 (통합)
+# 1. 스펙 패치 초안 + 구현 계획 생성
 /feature-draft
-# 스펙 패치 초안(Part 1)과 구현 계획(Part 2)을 단일 파일로 생성
 
 # 2. 구현
 /implementation
@@ -322,69 +300,69 @@ vim _sdd/spec/user_spec.md
 /spec-update-done
 ```
 
-#### 시나리오 3': 새 기능 추가 (레거시: Spec-First)
+> `feature-draft`가 스펙 패치 초안(Part 1)과 구현 계획(Part 2)을 한 번에 생성하므로 별도의 `implementation-plan`이 불필요합니다.
 
-> 세밀한 단계별 제어가 필요한 경우에만 사용합니다.
-
-```bash
-# 1. 스펙에 기능 추가
-/spec-update-todo
-
-# 2. 구현 계획 수립
-/implementation-plan-sequential
-
-# 3. 구현
-/implementation-sequential
-
-# 4. 리뷰
-/implementation-review
-
-# 5. 스펙 동기화
-/spec-update-done
-
-# 6. (선택) 보조 검증 리뷰
-/spec-review
-```
-
-#### 시나리오 4: 중간 규모 기능 (Direct Plan)
-
-```bash
-# 1. 직접 계획 요청
-"로그인 기능을 구현해줘. JWT 기반으로."
-/implementation-plan
-
-# 2. 구현
-/implementation
-
-# 3. 리뷰
-/implementation-review
-
-# 4. (선택적) 스펙 동기화
-/spec-update-done
-```
-
-#### 시나리오 5: 간단한 버그 수정 (Simple)
+#### 시나리오 4: 소규모 / 버그 수정
 
 ```bash
 # 1. 직접 수정 요청
 "이 파일의 널 포인터 버그를 고쳐줘"
 
-# 2. (선택적) 리뷰
+# 2. (선택) 검증
 /implementation-review
+
+# 3. (선택) 스펙에 영향 있으면 동기화
+/spec-update-done
 ```
 
-#### 시나리오 6: 스펙 현황 파악 (Spec Status Check)
+#### 시나리오 5: ML 트레이닝 디버그 루프
+
+```bash
+# ralph 루프 초기화
+/ralph-loop-init
+# ralph/ 디렉토리에 자동 트레이닝 디버그 루프 구조 생성
+```
+
+> LLM 기반 자동 ML 트레이닝 디버깅을 위한 루프 구조를 생성합니다.
+
+#### 시나리오 6: 구조화된 토론
+
+```bash
+# 토론 시작
+/discussion
+# 토픽 선택 → 맥락 수집(sub-agent) → 반복 질문 → 요약 출력
+
+# 토론 결과를 기반으로 후속 작업:
+# - /spec-create: 요구사항 도출 후 스펙 생성
+# - /feature-draft: 결정된 방향으로 기능 초안
+# - /implementation-plan: 합의된 아키텍처로 계획 수립
+```
+
+> 파일을 생성하지 않으며, 토론 결과 요약은 대화 내 텍스트로만 출력됩니다.
+
+#### 시나리오 7: PR 기반 스펙 패치 및 리뷰
+
+```bash
+# 1. PR과 스펙 비교하여 패치 초안 생성
+/pr-spec-patch
+
+# 2. PR 리뷰
+/pr-review
+
+# 3. (필요 시) 스펙에 반영
+# 패치 초안을 user_draft.md로 옮긴 뒤
+/spec-update-todo
+
+# 4. (필요 시) 스펙 동기화
+/spec-update-done
+```
+
+#### 시나리오 8: 스펙 현황 파악
 
 ```bash
 # 스펙 요약 생성
 /spec-summary
-# Claude가 SUMMARY.md 생성 (진행률, 이슈, 추천사항 포함)
-
-# 용도:
-# - 스테이크홀더 미팅 전
-# - 새 팀원 온보딩
-# - 주기적 현황 점검
-# - 다음 작업 우선순위 결정
+# SUMMARY.md 생성 (진행률, 이슈, 추천사항 포함)
 ```
 
 ---
@@ -412,8 +390,8 @@ flowchart LR
 | 상황 | 조치 |
 |------|------|
 | 더 나은 접근법 발견 | 진행 상황에 기록, 페이즈 후 스펙 업데이트 |
-| 새 요구사항 발견 | `/feature-draft`로 통합 초안 생성 (또는 레거시: `/spec-update-todo`로 스펙에 추가) |
-| 계획된 기능 제거 | `/feature-draft`로 패치 초안 생성 (또는 레거시: `/spec-update-todo`로 스펙 업데이트) |
+| 새 요구사항 발견 | `/feature-draft`로 통합 초안 생성 |
+| 계획된 기능 제거 | `/feature-draft`로 패치 초안 생성 |
 | API 변경 | 스펙의 컴포넌트 상세 업데이트 |
 | PR 생성 후 스펙 반영 | `/pr-spec-patch` 생성 → `/pr-review` → (패치 초안을 입력으로) `/spec-update-todo` |
 | PR 머지 전 스펙 기반 검증 | `/pr-spec-patch` → `/pr-review`로 검증 후 머지 |
@@ -502,7 +480,7 @@ _sdd/implementation/
 
 ### 구현 리뷰 (Implementation Review)
 
-> **참고**: `implementation` 스킬에 페이즈별 리뷰가 내장되어 있으므로, 간소화된 워크플로우(경로 A)에서는 별도의 `/implementation-review` 실행이 선택 사항입니다. 레거시 워크플로우(경로 A')나 세밀한 검증이 필요한 경우에 사용합니다.
+> **참고**: `implementation` 스킬에 페이즈별 리뷰가 내장되어 있으므로, 중규모/소규모에서는 별도의 `/implementation-review` 실행이 선택 사항입니다. 대규모에서는 phase별 검증을 위해 사용합니다.
 
 **사용 시점**: 작업 또는 페이즈 완료 후
 
@@ -582,46 +560,38 @@ flowchart LR
 | 명령어 | 사용 시점 |
 |--------|----------|
 | `/spec-create` | 새 프로젝트 시작 또는 기존 코드 문서화 |
-| `/spec-draft` (레거시) | 스펙 업데이트 입력(user_draft.md) 초안 생성 |
-| `/feature-draft` **(권장)** | 스펙 패치 초안 + 구현 계획 통합 생성 |
-| `/feature-draft-sequential` (레거시) | Target Files 없는 순차 초안 + 계획 통합 생성 |
-| `/spec-update-todo` (레거시) | 스펙에 새 기능/요구사항 추가 |
+| `/feature-draft` | 스펙 패치 초안 + 구현 계획 통합 생성 |
+| `/spec-update-todo` | 스펙에 새 기능/요구사항 사전 반영 (대규모 구현 시) |
 | `/spec-update-done` | 구현 변경사항과 스펙 동기화 |
 | `/spec-review` | 선택적 보조 검증 (이상 징후/대규모 업데이트 후) |
 | `/spec-summary` | 스펙 현황 파악 및 요약본 생성 |
 | `/spec-rewrite` | 긴/복잡한 스펙 구조 재정리(파일 분할/부록 이동) |
 | `/pr-spec-patch` | PR과 스펙 비교하여 패치 초안 생성 |
 | `/pr-review` | PR 구현을 스펙/패치 초안 대비 검증 및 판정 |
-| `/implementation-plan` **(권장)** | Target Files 포함 구현 계획 생성 |
-| `/implementation-plan-sequential` (레거시) | 스펙에서 순차 실행용 작업 생성 |
-| `/implementation` **(권장)** | conflict-aware 병렬 그룹으로 TDD 실행 |
-| `/implementation-sequential` (레거시) | 순차 TDD 실행 |
-| `/implementation-review` (레거시) | 진행 상황 확인 및 기준 검증 |
+| `/implementation-plan` | phase별 구현 계획 생성 (대규모 구현 시) |
+| `/implementation` | TDD 기반 구현 실행 |
+| `/implementation-review` | 계획 대비 구현 검증 (대규모 phase별 검증) |
+| `/ralph-loop-init` | ML 자동 트레이닝 디버그 루프 생성 |
+| `/discussion` | 구조화된 토론 (토픽 탐구 + 리서치 + 요약) |
 
 ### 경로별 워크플로우 요약
 
-#### 경로 A: Feature Draft (권장 — 4단계)
+#### 대규모
 
 ```bash
-/spec-create → /feature-draft → /implementation → /spec-update-done
+/feature-draft → /spec-update-todo → /implementation-plan → /implementation (phase 반복) → /implementation-review → /spec-update-done (→ /spec-review)
 ```
 
-#### 경로 A' (레거시): Spec-First (7단계)
+#### 중규모
 
 ```bash
-/spec-update-todo → /implementation-plan-sequential → /implementation-sequential → /implementation-review → /spec-update-done → (필요 시) /spec-review
+/feature-draft → /implementation → /spec-update-done
 ```
 
-#### 경로 B: Direct Plan (중간)
+#### 소규모
 
 ```bash
-사용자 입력 → /implementation-plan → /implementation → /implementation-review → (선택적) /spec-update-done
-```
-
-#### 경로 C: Simple (간단)
-
-```bash
-사용자 입력 → 직접 구현 → (선택적) /implementation-review
+직접 구현 (→ /implementation-review) (→ /spec-update-done)
 ```
 
 ### 파일 위치
@@ -658,35 +628,35 @@ flowchart TB
     subgraph Paths["구현 경로"]
         direction LR
 
-        subgraph PathA["경로 A: Feature Draft (권장)"]
+        subgraph PathL["대규모"]
             direction TB
-            FD["feature-draft"]:::rec
+            FD["feature-draft → spec-update-todo<br/>→ implementation-plan"]:::rec
         end
 
-        subgraph PathB["경로 B: Direct Plan"]
+        subgraph PathM["중규모"]
             direction TB
-            IP["implementation-plan"]:::normal
+            FDM["feature-draft"]:::normal
         end
 
-        subgraph PathC["경로 C: Simple"]
+        subgraph PathS["소규모"]
             direction TB
-            Simple["(직접) implementation"]:::simple
+            Simple["직접 구현"]:::simple
         end
     end
 
     Impl["implementation<br/>(TDD)"]:::action
-    Sync["spec-update-done"]:::rec
+    Sync["spec-update-done"]:::action
 
     Start --> CodeBase --> SC
     Start --> Draft --> SC
-    Start --> Direct --> PathC
+    Start --> Direct --> PathS
 
-    SC --> PathA
-    SC --> PathB
-    SC --> PathC
+    SC --> PathL
+    SC --> PathM
+    SC --> PathS
 
     FD --> Impl
-    IP --> Impl
+    FDM --> Impl
     Simple --> Impl
     Impl --> Sync
     Sync -.->|"사이클 반복"| Start
@@ -699,15 +669,15 @@ flowchart TB
     classDef simple fill:#F5F5F5,stroke:#616161,stroke-width:2px,color:#212121;
     classDef output fill:#F5F5F5,stroke:#616161,stroke-width:1.5px,color:#212121;
 
-    style PathA stroke:#2E7D32,stroke-width:2px,fill:#F1F8E9
-    style PathB stroke:#1565C0,stroke-width:2px,fill:#EAF3FF
-    style PathC stroke:#616161,stroke-width:2px,fill:#FAFAFA
+    style PathL stroke:#2E7D32,stroke-width:2px,fill:#F1F8E9
+    style PathM stroke:#1565C0,stroke-width:2px,fill:#EAF3FF
+    style PathS stroke:#616161,stroke-width:2px,fill:#FAFAFA
 ```
 
 ### 모범 사례
 
-1. **Feature Draft First (가능하면)**: 큰 구현 전에 `/feature-draft`로 패치 초안 + 구현 계획을 한 번에 생성
-2. **자주 리뷰**: `implementation` 스킬에 페이즈별 리뷰가 내장되어 있으며, 필요 시 `/implementation-review`로 추가 검증
+1. **Feature Draft First**: 대규모/중규모 구현 전에 `/feature-draft`로 패치 초안 + 구현 계획을 한 번에 생성
+2. **대규모는 phase별 검증**: `/implementation-review`로 phase마다 검증, 중규모/소규모에서는 선택적
 3. **큰 계획은 phase 분할**: `IMPLEMENTATION_PLAN.md`는 인덱스/요약으로 두고 `IMPLEMENTATION_PLAN_PHASE_<n>.md`로 분할 (진행 리포트도 `IMPLEMENTATION_PROGRESS_PHASE_<n>.md` 사용)
 4. **동기화 유지**: 기본은 spec-update-done, 이상 징후/대규모 변경 후에는 spec-review로 보조 검증
 5. **히스토리 보존**: 프로젝트 안정화 전까지 `prev/` 아래 PREV_* 파일 삭제 금지
@@ -724,27 +694,15 @@ flowchart TB
 - "SDD 생성"
 - "create a spec", "document the project"
 
-### spec-draft (레거시)
-- "스펙 초안"
-- "스펙 드래프트"
-- "스펙 업데이트 입력 만들어줘"
-- "draft spec update input", "spec draft"
-
-### feature-draft (권장)
+### feature-draft
 - "기능 초안", "기능 계획"
 - "feature draft", "feature plan"
 - "초안과 계획", "draft and plan"
 - "feature spec and plan"
 - "기능 스펙과 계획"
 
-### feature-draft-sequential (레거시)
-- "순차 기능 초안"
-- "legacy feature draft"
-- "feature draft sequential"
-- "sequential feature draft"
-
-### spec-update-todo (레거시)
-> 간소화된 워크플로우에서는 `feature-draft`가 이 역할을 대체합니다.
+### spec-update-todo
+> 대규모 구현 시 `feature-draft` 후 스펙에 사전 반영하는 용도로 사용합니다.
 - "스펙에 기능 추가"
 - "스펙 업데이트"
 - "요구사항 추가"
@@ -790,17 +748,12 @@ flowchart TB
 - "PR 승인 검토"
 - "review PR", "review PR against spec", "PR review"
 
-### implementation-plan (권장)
+### implementation-plan
+> 대규모 구현 시 phase별 계획을 수립하는 용도로 사용합니다.
 - "구현 계획 생성"
 - "병렬 구현 계획"
 - "create implementation plan"
 - "parallel implementation plan"
-
-### implementation-plan-sequential (레거시)
-> 기본적으로는 `implementation-plan`을 사용하고, 순차 실행이 명시될 때만 사용합니다.
-- "순차 구현 계획 생성"
-- "legacy implementation plan"
-- "implementation plan sequential"
 
 ### implementation
 - "계획 구현"
@@ -809,15 +762,21 @@ flowchart TB
 - "작업 실행"
 - "implement the plan", "start implementation"
 
-### implementation-sequential (레거시)
-- "순차 구현"
-- "legacy implementation"
-- "implementation sequential"
-- "sequential implementation"
-
-### implementation-review (레거시)
-> `implementation` 스킬에 페이즈별 리뷰가 내장되어 있어 별도 실행은 선택 사항입니다.
+### implementation-review
+> 대규모 구현 시 phase별 검증에 사용합니다. 중규모/소규모에서는 선택 사항입니다.
 - "구현 리뷰"
 - "진행 상황 확인"
 - "뭐가 완료됐어?"
 - "review implementation", "check progress"
+
+### ralph-loop-init
+- "ralph loop", "init ralph"
+- "training debug loop"
+- "set up ralph loop"
+- "automated training loop"
+
+### discussion
+- "토론", "토론하자"
+- "논의", "의견 나누기"
+- "discuss", "discussion", "let's discuss"
+- "brainstorm"
