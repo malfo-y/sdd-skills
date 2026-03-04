@@ -23,6 +23,8 @@
 | `/ralph-loop-init` | "ralph loop", "training debug loop" | ML 자동 트레이닝 디버그 루프 생성 |
 | `/discussion` | "토론", "discuss", "brainstorm" | 구조화된 반복 토론 + 리서치 + 요약 (텍스트 출력만) |
 
+> Codex의 경우 `/discussion`은 Plan mode에서만 동작합니다.
+
 ---
 
 ## 스펙 생성 시작점

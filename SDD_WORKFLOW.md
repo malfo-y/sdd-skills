@@ -53,6 +53,8 @@ flowchart LR
 | **ralph-loop-init** | "ralph loop", "training debug loop" | ML 자동 트레이닝 디버그 루프 생성 |
 | **discussion** | "토론", "discuss", "brainstorm" | 구조화된 반복 토론 + 리서치 지원 (텍스트 출력만, 파일 미생성) |
 
+> Codex의 경우 `/discussion`은 Plan mode에서만 동작합니다.
+
 ### 규모별 워크플로우
 
 기능의 규모에 따라 3가지 경로를 사용합니다:
