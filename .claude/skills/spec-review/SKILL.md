@@ -52,6 +52,8 @@ This skill evaluates two dimensions:
 
 ### Step 1: Scope and Source Selection
 
+**Tools**: `Glob`, `Read`
+
 1. Identify main spec index file.
 2. Enumerate linked sub-spec files.
 3. Exclude generated/backup files (`SUMMARY.md`, `prev/PREV_*.md`) from primary analysis.
@@ -63,6 +65,8 @@ This skill evaluates two dimensions:
 
 ### Step 2: Spec-Only Quality Audit
 
+**Tools**: `Read`
+
 Assess the spec as a standalone design artifact:
 
 - **Clarity**: ambiguous wording, undefined terms
@@ -72,7 +76,24 @@ Assess the spec as a standalone design artifact:
 - **Navigability**: structure, section discoverability, cross-links
 - **Ownership**: responsibility boundaries and decision ownership
 
+#### Context Management (Step 1 후 적용)
+
+| 스펙 크기 | 전략 | 구체적 방법 |
+|-----------|------|-------------|
+| < 200줄 | 전체 읽기 | `Read`로 전체 파일 읽기 |
+| 200-500줄 | 전체 읽기 가능 | `Read`로 전체 읽기, 필요 시 섹션별 |
+| 500-1000줄 | TOC 먼저, 관련 섹션만 | 상위 50줄(TOC) 읽기 → 관련 섹션만 `Read(offset, limit)` |
+| > 1000줄 | 인덱스만, 타겟 최대 3개 | 인덱스/TOC만 읽기 → 타겟 섹션 최대 3개 선택적 읽기 |
+
+| 코드베이스 크기 | 전략 | 구체적 방법 |
+|----------------|------|-------------|
+| < 50 파일 | 자유 탐색 | `Glob` + `Read` 자유롭게 사용 |
+| 50-200 파일 | 타겟 탐색 | `codebase-retrieval`로 후보 식별 → 타겟 `Read` |
+| > 200 파일 | 시맨틱 위주 | `codebase-retrieval` 위주 → 최소한의 `Read` |
+
 ### Step 3: Code-Linked Drift Audit
+
+**Tools**: `codebase-retrieval`, `Grep`, `Glob`, `Read`, `Bash (git diff, git log)`
 
 Compare spec claims to implementation evidence:
 
@@ -91,7 +112,30 @@ Require concrete evidence wherever possible:
 When local runtime/test execution is used to collect evidence, follow `_sdd/env.md`.
 If `_sdd/env.md` is missing/incomplete, ask the user for environment details instead of guessing.
 
+### Step 3.5: Drift 발견 요약 (Checkpoint)
+
+**Tools**: `AskUserQuestion`
+
+```
+1. Drift 발견 요약 테이블을 사용자에게 제시:
+   | 카테고리 | High | Medium | Low |
+   |----------|------|--------|-----|
+   | Architecture drift | N | N | N |
+   | Feature drift | N | N | N |
+   | API drift | N | N | N |
+   | Config drift | N | N | N |
+   | Issue drift | N | N | N |
+   | Decision-log drift | N | N | N |
+
+2. AskUserQuestion: "Drift 발견 상황을 확인해 주세요."
+   옵션:
+   1. "확인, 평가 진행" → Step 4
+   2. "특정 항목 재점검" → 지정 항목 재검증 후 재제시
+```
+
 ### Step 4: Severity and Decision
+
+**Tools**: — (분석/분류, 도구 불필요)
 
 Classify findings:
 - `High`: architecture breaks, security/reliability risks, contradictory spec claims
@@ -105,10 +149,28 @@ Assign one overall decision:
 
 ### Step 5: Report and Handoff
 
+**Tools**: `Write`, `Bash (mkdir -p)`, `AskUserQuestion`
+
 1. Create/update strict review report.
 2. Do not edit actual spec content.
 3. If decision is `SYNC_REQUIRED`, include a ready-to-apply update checklist and recommend running `/spec-update-done`.
 4. If needed, include proposed `DECISION_LOG.md` entries in the report (proposal only).
+5. **Progressive Disclosure**:
+   ```
+   1. Severity별 요약 테이블 제시:
+      | Severity | 건수 | 주요 항목 |
+      |----------|------|----------|
+      | High | N | ... |
+      | Medium | N | ... |
+      | Low | N | ... |
+      | Decision | SPEC_OK / SYNC_REQUIRED / NEEDS_DISCUSSION |
+
+   2. AskUserQuestion: "상세 내용을 확인하시겠습니까?"
+      옵션:
+      1. "전체 리포트" → 전체 출력
+      2. "High severity만" → High 항목만 상세 출력
+      3. "파일로 저장" → SPEC_REVIEW_REPORT.md 저장
+   ```
 
 ## Output
 
@@ -193,6 +255,19 @@ Assign one overall decision:
 - Keep `DECISION_LOG.md` updates as recommendations only in this skill.
 - Keep artifact recommendations minimal: default to `DECISION_LOG.md` only unless the user asks for more.
 - Do not run local runtime/tests with inferred setup; use `_sdd/env.md` or user-confirmed environment details.
+
+## Error Handling
+
+| 상황 | 대응 |
+|------|------|
+| 스펙 파일 미발견 | `spec-create` 먼저 실행 권장 |
+| 코드베이스 접근 불가 | Spec-only 모드로 전환, 코드 drift 분석 생략 |
+| `_sdd/env.md` 미존재 | 로컬 테스트 건너뛰고 코드 분석만 수행 |
+| git 이력 없음 | 현재 코드 상태만으로 drift 분석 |
+| 다수 스펙 파일 존재 | 사용자에게 리뷰 범위 확인 |
+| Evidence 부족 | UNTESTED로 표시, 신뢰도 낮음 명시 |
+| 기존 리뷰 리포트 존재 | `prev/PREV_SPEC_REVIEW_REPORT_<timestamp>.md`로 아카이브 |
+| Decision Log 미존재 | Decision-log drift 분석 생략, 생성 제안 |
 
 ## Integration with Other Skills
 

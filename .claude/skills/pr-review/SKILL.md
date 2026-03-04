@@ -135,6 +135,25 @@ For each Acceptance Criterion:
 4. Check for API contract changes
 ```
 
+#### Step 4.5: Acceptance Criteria 검증 결과 요약 (Checkpoint)
+
+**Tools**: `AskUserQuestion`
+
+```
+1. 검증 결과 요약 테이블을 사용자에게 제시:
+   | 항목 | Met (✓) | Not Met (✗) | Partial (△) |
+   |------|---------|-------------|-------------|
+   | Features | N | N | N |
+   | Improvements | N | N | N |
+   | Bug Fixes | N | N | N |
+   | Spec Violations | - | N | - |
+
+2. AskUserQuestion: "Acceptance Criteria 검증 결과를 확인해 주세요."
+   옵션:
+   1. "확인, Gap 분석 진행" → Step 5
+   2. "특정 항목 재검증" → 지정 항목 재검증 후 재제시
+```
+
 #### Step 5: Gap analysis
 
 Three-perspective gap analysis:
@@ -163,7 +182,24 @@ Three-perspective gap analysis:
 
 1. If existing `PR_REVIEW.md` exists, archive to `_sdd/pr/prev/PREV_PR_REVIEW_<timestamp>.md` (create `_sdd/pr/prev/` if needed)
 2. Generate `_sdd/pr/PR_REVIEW.md` using the [Output Format](#output-format) below
-3. Present summary to user and guide next steps
+3. **Progressive Disclosure**:
+   ```
+   1. 리뷰 요약 테이블 제시:
+      | 항목 | 내용 |
+      |------|------|
+      | Verdict | APPROVE / REQUEST CHANGES / NEEDS DISCUSSION |
+      | Acceptance Criteria | X/Y met (Z%) |
+      | Spec Violations | N개 |
+      | Test Pass Rate | N% |
+      | Pre-merge Blockers | N개 |
+
+   2. AskUserQuestion: "상세 리뷰 내용을 확인하시겠습니까?"
+      옵션:
+      1. "전체 리뷰" → 전체 리포트 출력
+      2. "Blockers만" → Pre-merge Blockers만 상세 출력
+      3. "파일로 저장" → PR_REVIEW.md 저장
+   ```
+4. Present summary to user and guide next steps
 
 ### Mode 2: Degraded (no patch draft)
 
@@ -182,6 +218,21 @@ Warning message:
 - Explicitly note lower confidence overall
 
 Steps 4, 6, and 7 proceed identically.
+
+## Context Management
+
+| 스펙 크기 | 전략 | 구체적 방법 |
+|-----------|------|-------------|
+| < 200줄 | 전체 읽기 | `Read`로 전체 파일 읽기 |
+| 200-500줄 | 전체 읽기 가능 | `Read`로 전체 읽기, 필요 시 섹션별 |
+| 500-1000줄 | TOC 먼저, 관련 섹션만 | 상위 50줄(TOC) 읽기 → 관련 섹션만 `Read(offset, limit)` |
+| > 1000줄 | 인덱스만, 타겟 최대 3개 | 인덱스/TOC만 읽기 → 타겟 섹션 최대 3개 선택적 읽기 |
+
+| PR 크기 | 전략 | 구체적 방법 |
+|---------|------|-------------|
+| < 10 files | 전체 diff 분석 | `gh pr diff` 전체 읽기 |
+| 10-50 files | 파일별 분석 | `gh pr diff --name-only` → 관련 파일만 diff 확인 |
+| > 50 files | 디렉토리/컴포넌트 수준 | 디렉토리별 요약, 스펙 관련 컴포넌트만 상세 분석 |
 
 ## Output Format
 

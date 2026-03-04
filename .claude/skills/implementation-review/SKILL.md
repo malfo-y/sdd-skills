@@ -76,6 +76,8 @@ If `_sdd/env.md` exists, apply its setup instructions first (for example: `conda
 
 ## Step 1: Inventory - What Was Planned
 
+**Tools**: `Read`, `Glob`
+
 Parse the implementation plan to extract:
 
 ### Tasks Inventory
@@ -117,7 +119,20 @@ Based on the plan, identify expected:
 - [ ] API documentation
 ```
 
+**Decision Gate 1→2**:
+```
+plan_loaded = 구현 계획 읽기 완료
+tasks_extracted = Task 목록 추출 완료
+artifacts_listed = 예상 산출물 목록 작성 완료
+
+IF plan_loaded AND tasks_extracted AND artifacts_listed → Step 2 진행
+ELSE IF NOT plan_loaded → 사용자에게 Plan 위치 확인
+ELSE → 누락 항목 추가 추출
+```
+
 ## Step 2: Verification - What Is Implemented
+
+**Tools**: `Glob`, `Grep`, `Read`, `codebase-retrieval`, `Bash (test runner)`
 
 Explore the codebase to verify what exists:
 
@@ -160,7 +175,36 @@ For each task with test requirements:
 - △ tests/test_jwt.py (incomplete)
 ```
 
+### Step 2.5: 검증 진행 상황 요약 (Checkpoint)
+
+**Tools**: `AskUserQuestion`
+
+```
+1. 검증 진행 상황 요약 테이블을 사용자에게 제시:
+   | 항목 | COMPLETE | PARTIAL | MISSING |
+   |------|----------|---------|---------|
+   | Tasks | N | N | N |
+   | Tests | N passing | N failing | N missing |
+   | Files | N found | N incomplete | N missing |
+
+2. AskUserQuestion: "검증 진행 상황을 확인해 주세요."
+   옵션:
+   1. "확인, 상세 평가 진행" → Step 3
+   2. "특정 Task 재검증" → 지정 Task 재검증 후 재제시
+```
+
+**Decision Gate 2→3**:
+```
+code_verified = 코드 존재 여부 확인 완료
+test_verified = 테스트 존재/통과 여부 확인 완료
+
+IF code_verified AND test_verified → Step 3 진행
+ELSE → 미확인 항목 추가 검증
+```
+
 ## Step 3: Assessment - Acceptance Criteria Check
+
+**Tools**: `Read`, `Grep`, `Bash (test runner)`
 
 For each task, verify every acceptance criterion:
 
@@ -212,7 +256,16 @@ For each criterion, document:
 **Task 3 Result**: 2/5 criteria met ✗
 ```
 
+**Severity-based Decision Gate 3→4**:
+```
+IF critical_criteria_not_met > 0 → Step 4에서 Critical로 분류, 즉시 보고
+ELSE IF untested_criteria > total * 0.3 → Step 4에서 Quality Issues로 분류
+ELSE → 정상 진행
+```
+
 ## Step 4: Issues and Improvements
+
+**Tools**: `Read`, `Grep`, `codebase-retrieval`
 
 ### Issue Categories
 
@@ -291,6 +344,8 @@ Suggestions that aren't blocking:
 
 ## Step 5: Summary and Next Steps
 
+**Tools**: `Write`, `Bash (mkdir -p)`, `AskUserQuestion`
+
 ### Progress Summary
 ```markdown
 ## Implementation Review Summary
@@ -339,6 +394,21 @@ Suggestions that aren't blocking:
 10. [ ] Add user lookup caching
 11. [ ] Improve error messages
 ```
+
+## Context Management
+
+| 스펙 크기 | 전략 | 구체적 방법 |
+|-----------|------|-------------|
+| < 200줄 | 전체 읽기 | `Read`로 전체 파일 읽기 |
+| 200-500줄 | 전체 읽기 가능 | `Read`로 전체 읽기, 필요 시 섹션별 |
+| 500-1000줄 | TOC 먼저, 관련 섹션만 | 상위 50줄(TOC) 읽기 → 관련 섹션만 `Read(offset, limit)` |
+| > 1000줄 | 인덱스만, 타겟 최대 3개 | 인덱스/TOC만 읽기 → 타겟 섹션 최대 3개 선택적 읽기 |
+
+| 코드베이스 크기 | 전략 | 구체적 방법 |
+|----------------|------|-------------|
+| < 50 파일 | 자유 탐색 | `Glob` + `Read` 자유롭게 사용 |
+| 50-200 파일 | 타겟 탐색 | `codebase-retrieval`로 후보 식별 → 타겟 `Read` |
+| > 200 파일 | 시맨틱 위주 | `codebase-retrieval` 위주 → 최소한의 `Read` |
 
 ## Review Output Template
 
@@ -453,6 +523,19 @@ Use AskUserQuestion when:
 - **Missing context**: Need to know deployment requirements
 - **Trade-off decision**: Found issue but fix has side effects
 - **Scope question**: Found improvement but unsure if wanted
+
+## Error Handling
+
+| 상황 | 대응 |
+|------|------|
+| 구현 계획 미발견 | `implementation-plan` 먼저 실행 권장, 또는 일반 코드 리뷰 제안 |
+| 테스트 실행 실패 | `_sdd/env.md` 환경 설정 확인, 실패 시 사용자에게 환경 문의 |
+| `_sdd/env.md` 미존재 | 로컬 테스트 건너뛰고 코드 분석만 수행 |
+| 다수 Phase 존재 | 사용자에게 범위 확인 (최신 Phase만 vs 전체) |
+| Acceptance Criteria 모호 | 최선 해석 후 UNTESTED로 표시, 사용자에게 확인 |
+| 보안 취약점 발견 | Critical Issues로 즉시 보고 |
+| 리뷰 파일 이미 존재 | `prev/PREV_IMPLEMENTATION_REVIEW_<timestamp>.md`로 아카이브 |
+| 대규모 코드베이스 | `codebase-retrieval` 위주 탐색, 핵심 컴포넌트만 검증 |
 
 ## Integration with Other Skills
 

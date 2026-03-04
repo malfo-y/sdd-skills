@@ -91,6 +91,16 @@ gh pr diff [PR_NUMBER] --name-only
 - Focus on components documented in the spec
 - Inform user about the large PR and proceed with key changes only
 
+**Decision Gate 3→4**:
+```
+spec_loaded = 스펙 문서 읽기 완료 (또는 baseline 없이 진행 확인)
+pr_data_collected = PR 메타데이터 + diff 수집 완료
+
+IF spec_loaded AND pr_data_collected → Step 4 진행
+ELSE IF NOT pr_data_collected → PR 데이터 재수집 시도
+ELSE → AskUserQuestion: 스펙 없이 진행 여부 확인
+```
+
 #### Step 4: Analyze changes
 
 Map PR file changes to spec components:
@@ -103,11 +113,30 @@ Map PR file changes to spec components:
 | Component Changes | Component structure changes, interface changes | New method added, signature change |
 | Configuration Changes | Config file changes, environment variable additions | .env change, config file modification |
 
+**Decision Gate 4→5**:
+```
+changes_categorized = PR 변경사항 카테고리 분류 완료
+spec_mapping_done = 스펙 컴포넌트 매핑 완료
+
+IF changes_categorized AND spec_mapping_done → Step 5 진행
+ELSE → 미분류 항목 추가 분석
+```
+
 #### Step 5: Generate patch draft
 
 Save the collected/analyzed information in structured form to `_sdd/pr/spec_patch_draft.md`.
 
 See the [Output Format](#output-format) section below for the output format.
+
+#### Step 5.5: 패치 항목 PR Evidence 검증
+
+```
+패치 항목별 검증:
+  a. 각 Feature/Improvement/Bug Fix에 PR Evidence (file:line) 존재 확인
+  b. PR Evidence의 파일 경로가 PR diff 파일 목록에 포함되는지 확인
+  c. Evidence 누락 항목 → "Evidence 미확인" 표시
+  d. 스펙 섹션 매핑 누락 항목 → "Target Section TBD" 표시
+```
 
 #### Step 6: Present to user
 
@@ -320,6 +349,21 @@ Update relevant sections based on user feedback:
 | Already merged PR | Allow (retroactive spec maintenance), note merge status |
 | Large PR (50+ files) | Directory/component-level summary, focus on spec-related components |
 | No spec-related changes in PR | Notify user, generate minimal patch draft |
+
+## Context Management
+
+| 스펙 크기 | 전략 | 구체적 방법 |
+|-----------|------|-------------|
+| < 200줄 | 전체 읽기 | `Read`로 전체 파일 읽기 |
+| 200-500줄 | 전체 읽기 가능 | `Read`로 전체 읽기, 필요 시 섹션별 |
+| 500-1000줄 | TOC 먼저, 관련 섹션만 | 상위 50줄(TOC) 읽기 → 관련 섹션만 `Read(offset, limit)` |
+| > 1000줄 | 인덱스만, 타겟 최대 3개 | 인덱스/TOC만 읽기 → 타겟 섹션 최대 3개 선택적 읽기 |
+
+| PR 크기 | 전략 | 구체적 방법 |
+|---------|------|-------------|
+| < 10 files | 전체 diff 분석 | `gh pr diff` 전체 읽기 |
+| 10-50 files | 파일별 분석 | `gh pr diff --name-only` → 관련 파일만 diff 확인 |
+| > 50 files | 디렉토리/컴포넌트 수준 | 디렉토리별 요약, 스펙 관련 컴포넌트만 상세 분석 |
 
 ## Workflow Integration
 

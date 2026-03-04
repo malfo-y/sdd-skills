@@ -26,6 +26,13 @@ The **spec-summary** skill generates human-readable summaries of SDD (Spec-Drive
 - **Audience**: Mixed (stakeholders + developers)
 - **Language**: Follows spec document language (Korean/English/bilingual)
 
+## Hard Rules
+
+1. **Spec read-only**: `_sdd/spec/*.md` 파일은 읽기 전용이다 (`SUMMARY.md` 제외). 스펙 내용을 수정하지 않는다.
+2. **README sync on explicit request only**: README 업데이트는 사용자가 명시적으로 요청할 때만 수행한다.
+3. **한국어 작성**: 스펙 문서 언어를 따르되, 기본은 한국어로 작성한다.
+4. **백업 후 덮어쓰기**: 기존 `SUMMARY.md` 존재 시 `prev/PREV_SUMMARY_<timestamp>.md`로 백업 후 새로 생성한다.
+
 ## When to Use This Skill
 
 Trigger `/spec-summary` in these scenarios:
@@ -98,6 +105,8 @@ The skill expects spec documents to follow SDD format:
 
 ### Step 1: Locate Spec Documents
 
+**Tools**: `Glob`, `Read`
+
 1. Search for main spec in `_sdd/spec/`:
    - `<project>.md` (named after project)
    - `main.md` (generic name)
@@ -117,7 +126,19 @@ The skill expects spec documents to follow SDD format:
 
 **Error Handling**: If no spec found → suggest `/spec-create` first
 
+**Decision Gate 1→2**:
+```
+spec_found = 스펙 문서 발견
+spec_readable = 스펙 파일 읽기 가능
+
+IF spec_found AND spec_readable → Step 2 진행
+ELSE IF NOT spec_found → `/spec-create` 먼저 실행 권장
+ELSE → AskUserQuestion: 스펙 파일 접근 방법 확인
+```
+
 ### Step 2: Extract Key Information
+
+**Tools**: `Read`, `Glob`, `codebase-retrieval`
 
 #### From Spec Document(s)
 
@@ -174,6 +195,8 @@ The skill expects spec documents to follow SDD format:
 
 ### Step 3: Analyze Status
 
+**Tools**: — (계산/분석, 도구 불필요)
+
 Calculate project health metrics:
 
 ```
@@ -190,6 +213,8 @@ Issue Metrics:
 ```
 
 ### Step 4: Generate Recommendations
+
+**Tools**: — (분석 기반 권장 사항 생성, 도구 불필요)
 
 Based on current state, suggest actionable next steps:
 
@@ -222,7 +247,41 @@ Pseudo-logic:
   - Long-term: Schedule tech debt cleanup sprint
 ```
 
+### Step 4.5: 요약 초안 확인 (Checkpoint)
+
+**Tools**: `AskUserQuestion`
+
+```
+1. 요약 초안 테이블을 사용자에게 제시:
+   | 항목 | 내용 |
+   |------|------|
+   | 프로젝트명 | ... |
+   | 전체 진행률 | N% |
+   | 완료/진행중/계획 | X / Y / Z |
+   | 핵심 기능 수 | N개 |
+   | 이슈 수 | High N / Medium N / Low N |
+   | 권장 다음 단계 | N개 |
+
+2. AskUserQuestion: "요약 초안을 확인해 주세요."
+   옵션:
+   1. "확인, 문서 생성 진행" → Step 5
+   2. "수정 필요" → 수정 사항 반영 (최대 2라운드)
+   3. "특정 섹션 생략" → 지정 섹션 제외 후 진행
+```
+
+**Decision Gate 5→6**:
+```
+summary_created = SUMMARY.md 생성 완료
+readme_requested = 사용자가 README 업데이트 요청
+
+IF summary_created AND readme_requested → Step 6 진행
+ELSE IF summary_created AND NOT readme_requested → 완료
+ELSE → Step 5 재실행
+```
+
 ### Step 5: Create Summary Document
+
+**Tools**: `Write`, `Bash (mkdir -p)`
 
 1. Apply summary template (see `references/summary-template.md`)
 2. Fill in extracted information
@@ -233,6 +292,8 @@ Pseudo-logic:
 6. Preserve human-readable formatting (tables, emojis, visual markers)
 
 ### Step 6: Optional README Sync (On Request Only)
+
+**Tools**: `Read`, `Edit`, `Write`
 
 1. Trigger only when user explicitly asks to create/update README
 2. Use marker block strategy for safe partial updates:
@@ -646,10 +707,11 @@ See `examples/summary-output.md` for a complete example summary.
 
 See `references/summary-template.md` for the template with placeholders.
 
-## Success Criteria
+## Success Criteria (Glob 기반 검증 포함)
 
 A good summary should:
 
+- [ ] `Glob("_sdd/spec/SUMMARY.md")` → 파일 존재 확인
 - [ ] Be scannable in < 2 minutes
 - [ ] Answer "What/Why/Status" in executive summary
 - [ ] Explain features with clear plain-text paragraph (what/how/why/status)

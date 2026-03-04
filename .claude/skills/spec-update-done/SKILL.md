@@ -26,6 +26,14 @@ spec → feature-draft → implementation → spec-update-done (this)
 > **Previous workflow** (7 steps): spec → spec-draft → spec-update-todo → implementation-plan → implementation → implementation-review → spec-update-done
 > **New workflow** (4 steps): spec → feature-draft → implementation → spec-update-done
 
+## Hard Rules
+
+1. **Report before changing**: 변경 사항을 적용하기 전에 반드시 Change Report를 사용자에게 먼저 제시한다.
+2. **Always backup to prev/**: 스펙 파일 수정 전 `_sdd/spec/prev/PREV_<filename>_<timestamp>.md`로 백업한다.
+3. **Copy-only archive**: 구현 산출물은 복사만 하며 원본을 이동/삭제하지 않는다.
+4. **한국어 작성**: 추가/수정 내용은 한국어로 작성한다 (기존 영어 부분 유지).
+5. **DECISION_LOG.md 최소화**: 결정 로그는 `DECISION_LOG.md`에만 기록하며, 추가 거버넌스 문서는 사용자 요청 시에만 생성한다.
+
 ## Overview
 
 This skill analyzes multiple sources of truth to identify spec drift and generate updates:
@@ -95,6 +103,8 @@ If local code/test execution is needed to verify claims, read `_sdd/env.md` firs
 
 ### Step 1: Gather Context
 
+**Tools**: `Read`, `Glob`, `Bash (git diff, git log, git status)`, `codebase-retrieval`
+
 Collect information from all available sources:
 
 ```
@@ -122,7 +132,19 @@ Collect information from all available sources:
    - else ask user before archive
 ```
 
+**Decision Gate 1→2**:
+```
+spec_loaded = 스펙 문서 읽기 완료
+sources_available = (구현 로그 OR git diff OR 사용자 피드백) 중 하나 이상 존재
+
+IF spec_loaded AND sources_available → Step 2 진행
+ELSE IF NOT spec_loaded → AskUserQuestion: 스펙 파일 위치 확인
+ELSE IF NOT sources_available → AskUserQuestion: 비교 대상 소스 확인
+```
+
 ### Step 2: Identify Spec Drift
+
+**Tools**: `codebase-retrieval`, `Grep`, `Glob`, `Read`, `Bash (git diff)`
 
 Compare spec against reality to find discrepancies:
 
@@ -151,6 +173,8 @@ Compare spec against reality to find discrepancies:
 - Directory structure changes
 
 ### Step 3: Generate Change Report
+
+**Tools**: — (분석 결과 정리, 도구 불필요)
 
 Create a structured diff report:
 
@@ -187,7 +211,19 @@ Create a structured diff report:
 | Python | 3.10 | 3.11 | Update |
 ```
 
+**Decision Gate 3→4**:
+```
+report_presented = Change Report를 사용자에게 제시 완료
+user_approved = 사용자가 변경 사항 승인
+
+IF report_presented AND user_approved → Step 4 진행
+ELSE IF NOT report_presented → Step 3 재실행
+ELSE IF NOT user_approved → 사용자 피드백 반영 후 Report 수정 → 재승인 요청 (최대 2라운드)
+```
+
 ### Step 4: Apply Updates
+
+**Tools**: `Edit`, `Write`, `Bash (mkdir -p)`
 
 Update spec document with identified changes:
 
@@ -218,6 +254,8 @@ Update spec document with identified changes:
 
 ### Step 5: Validate Updates
 
+**Tools**: `Glob`, `Read`, `Grep`, `Bash (git diff)`
+
 Verify updated spec accuracy:
 
 - Cross-reference with code
@@ -228,7 +266,19 @@ Verify updated spec accuracy:
 - If `_sdd/env.md` is missing/incomplete, ask the user for environment details instead of guessing
 - Review with user if significant changes
 
+**Decision Gate 5→6**:
+```
+all_paths_valid = 모든 파일 경로/링크 유효
+versions_match = 의존성 버전 일치
+no_regressions = 기존 정확한 내용 보존됨
+
+IF all_paths_valid AND versions_match AND no_regressions → Step 6 진행
+ELSE → 실패 항목 수정 후 재검증
+```
+
 ### Step 6: Archive Implementation Artifacts by Feature (Copy-only)
+
+**Tools**: `Bash (cp, mkdir -p)`, `Write`, `Read`
 
 After spec updates are finalized, archive related implementation artifacts for the resolved `feature_id`.
 
@@ -247,6 +297,21 @@ Rules:
    - maintain one section per `feature_id`
    - append sync entries with `synced_at` (UTC), copied file mappings (`destination <- source`), and optional notes
 6. If `feature_id` is still ambiguous, ask user and skip archive step until confirmed.
+
+## Context Management
+
+| 스펙 크기 | 전략 | 구체적 방법 |
+|-----------|------|-------------|
+| < 200줄 | 전체 읽기 | `Read`로 전체 파일 읽기 |
+| 200-500줄 | 전체 읽기 가능 | `Read`로 전체 읽기, 필요 시 섹션별 |
+| 500-1000줄 | TOC 먼저, 관련 섹션만 | 상위 50줄(TOC) 읽기 → 관련 섹션만 `Read(offset, limit)` |
+| > 1000줄 | 인덱스만, 타겟 최대 3개 | 인덱스/TOC만 읽기 → 타겟 섹션 최대 3개 선택적 읽기 |
+
+| 코드베이스 크기 | 전략 | 구체적 방법 |
+|----------------|------|-------------|
+| < 50 파일 | 자유 탐색 | `Glob` + `Read` 자유롭게 사용 |
+| 50-200 파일 | 타겟 탐색 | `codebase-retrieval`로 후보 식별 → 타겟 `Read` |
+| > 200 파일 | 시맨틱 위주 | `codebase-retrieval` 위주 → 최소한의 `Read` |
 
 ## Output Format
 
@@ -275,6 +340,24 @@ Present findings before making changes:
 ### Questions for User
 
 [Any ambiguities requiring clarification]
+```
+
+### Progressive Disclosure
+
+```
+1. Change Report 요약 테이블 제시:
+   | 항목 | 내용 |
+   |------|------|
+   | 변경 섹션 수 | N개 |
+   | 추가 항목 | N개 |
+   | 제거/아카이브 항목 | N개 |
+   | 버전 변경 | X.Y.Z → X.Y.Z+1 |
+
+2. AskUserQuestion: "상세 변경 내용을 확인하시겠습니까?"
+   옵션:
+   1. "전체 확인" → 모든 변경 사항 상세 출력
+   2. "특정 카테고리만" → 선택한 카테고리만 출력
+   3. "바로 적용" → Step 4 진행
 ```
 
 ### Updated Spec
@@ -369,6 +452,20 @@ spec-create → feature-draft → implementation → spec-update-done
 - When user says "implementation done"
 - Before creating new implementation plan
 - Periodic maintenance (user-triggered)
+
+## Error Handling
+
+| 상황 | 대응 |
+|------|------|
+| `_sdd/spec/` 디렉토리 미존재 | `spec-create` 먼저 실행 권장 |
+| 스펙 파일 미발견 | 사용자에게 스펙 파일 경로 확인 |
+| 구현 로그 미존재 | git diff 기반 Quick Sync 모드로 전환 |
+| git 이력 없음 | 코드 직접 분석으로 대체 |
+| `_sdd/env.md` 미존재/불완전 | 로컬 실행 건너뛰고 사용자에게 환경 확인 |
+| feature_id 모호 | 사용자에게 확인 후 아카이브 진행 |
+| 대형 스펙 (500줄+) | 분할 제안 (ask-first) |
+| 백업 디렉토리 미존재 | `mkdir -p _sdd/spec/prev/` 자동 생성 |
+| 충돌하는 변경 사항 | 사용자에게 우선순위 확인 |
 
 ## Additional Resources
 

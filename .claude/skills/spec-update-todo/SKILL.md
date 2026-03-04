@@ -32,6 +32,14 @@ After processing input files, rename them to mark as processed:
 - Processing batched feature requests from input file
 - Updating "to-implement" or roadmap sections
 
+## Hard Rules
+
+1. **Always backup**: 스펙 파일 수정 전 반드시 `_sdd/spec/prev/PREV_<filename>_<timestamp>.md`로 백업한다.
+2. **Rename processed input files**: 처리된 입력 파일은 반드시 `_processed_` 접두사로 이름 변경한다.
+3. **한국어 작성**: 추가 내용은 스펙 문서 언어를 따르되, 기본은 한국어로 작성한다.
+4. **DECISION_LOG.md 최소화**: 결정 로그는 `DECISION_LOG.md`에만 기록하며, 추가 문서는 사용자 요청 시에만 생성한다.
+5. **스펙 구조 보존**: 기존 스펙의 구조와 스타일을 유지하며, 필요한 항목만 추가한다.
+
 ## Input Sources
 
 ### 1. User Conversation
@@ -94,6 +102,8 @@ If present, use it as a constraint/rationale source:
 
 ### Step 1: Identify Input Source
 
+**Tools**: `Glob`, `Read`
+
 ```
 1. Check if user provided requirements in conversation
 2. Check if input files exist (in order of priority):
@@ -103,7 +113,17 @@ If present, use it as a constraint/rationale source:
 4. If no sources found, ask user for input
 ```
 
+**Decision Gate 1→2**:
+```
+input_found = (사용자 대화 OR user_draft.md OR user_spec.md) 중 하나 이상 존재
+
+IF input_found → Step 2 진행
+ELSE → AskUserQuestion: 업데이트할 요구사항 요청
+```
+
 ### Step 2: Load Current Spec
+
+**Tools**: `Read`, `Glob`, `AskUserQuestion`
 
 ```
 1. Locate the main spec document in `_sdd/spec/` (prefer `_sdd/spec/<project>.md` as the index/main spec; `_sdd/spec/main.md` may exist in older projects)
@@ -129,6 +149,8 @@ If present, use it as a constraint/rationale source:
 
 ### Step 3: Parse User Input
 
+**Tools**: `Read`
+
 Extract structured information from input:
 
 **From Conversation:**
@@ -144,6 +166,8 @@ Extract structured information from input:
 
 ### Step 4: Categorize Updates
 
+**Tools**: — (분류/매핑, 도구 불필요)
+
 | Category | Target Section | Update Type |
 |----------|---------------|-------------|
 | New Feature | 목표 > 주요 기능 | Add to list |
@@ -154,6 +178,8 @@ Extract structured information from input:
 | API Change | API 레퍼런스 | Add endpoints |
 
 ### Step 5: Generate Update Plan
+
+**Tools**: `AskUserQuestion`
 
 Before modifying, present update plan:
 
@@ -180,7 +206,19 @@ Before modifying, present update plan:
 - [Clarification needed]
 ```
 
+**Decision Gate 5→6**:
+```
+plan_presented = Update Plan을 사용자에게 제시 완료
+user_approved = 사용자가 변경 계획 승인
+
+IF plan_presented AND user_approved → Step 6 진행
+ELSE IF NOT plan_presented → Step 5 재실행
+ELSE → 사용자 피드백 반영 후 계획 수정 (최대 2라운드)
+```
+
 ### Step 6: Apply Updates
+
+**Tools**: `Edit`, `Write`, `Bash (mkdir -p)`
 
 Update spec document:
 
@@ -196,6 +234,8 @@ Update spec document:
 7. **Decision Log** (optional but recommended): if this update introduces or changes a key decision, append a concise entry to `_sdd/spec/DECISION_LOG.md`
 
 ### Step 7: Process Input Files
+
+**Tools**: `Bash (mv)`
 
 Rename processed input files to mark as completed:
 
@@ -336,6 +376,21 @@ After updating, provide summary:
 - **Clean Up**: Rename processed input files
 - **Track Processing**: Add metadata to processed files
 
+## Context Management
+
+| 스펙 크기 | 전략 | 구체적 방법 |
+|-----------|------|-------------|
+| < 200줄 | 전체 읽기 | `Read`로 전체 파일 읽기 |
+| 200-500줄 | 전체 읽기 가능 | `Read`로 전체 읽기, 필요 시 섹션별 |
+| 500-1000줄 | TOC 먼저, 관련 섹션만 | 상위 50줄(TOC) 읽기 → 관련 섹션만 `Read(offset, limit)` |
+| > 1000줄 | 인덱스만, 타겟 최대 3개 | 인덱스/TOC만 읽기 → 타겟 섹션 최대 3개 선택적 읽기 |
+
+| 코드베이스 크기 | 전략 | 구체적 방법 |
+|----------------|------|-------------|
+| < 50 파일 | 자유 탐색 | `Glob` + `Read` 자유롭게 사용 |
+| 50-200 파일 | 타겟 탐색 | `codebase-retrieval`로 후보 식별 → 타겟 `Read` |
+| > 200 파일 | 시맨틱 위주 | `codebase-retrieval` 위주 → 최소한의 `Read` |
+
 ## Language Handling
 
 - **Follow Spec Language**: If spec is in Korean, add Korean content
@@ -350,6 +405,20 @@ After updating, provide summary:
 | Ambiguous input | Use AskUserQuestion for clarification |
 | Conflicting requirements | Flag and ask user to resolve |
 | Invalid input file format | Report parsing errors, suggest corrections |
+| 백업 디렉토리 미존재 | `mkdir -p _sdd/spec/prev/` 자동 생성 |
+| 대형 스펙 (500줄+) | 분할 제안 (ask-first) |
+| 다수 입력 파일 존재 | 사용자에게 선택 확인 |
+| 입력 파일과 스펙 섹션 매핑 불가 | 사용자에게 대상 섹션 확인 |
+
+### Post-Update Glob 검증
+
+```
+1. Glob("_sdd/spec/<project>.md") → 수정된 스펙 파일 존재 확인
+2. 변경 로그(Changelog) 항목 존재 확인
+3. 버전 번호 증가 확인
+4. prev/PREV_* 백업 파일 존재 확인
+5. 처리된 입력 파일 이름 변경 확인 (_processed_ 접두사)
+```
 
 ## Integration with Other Skills
 
