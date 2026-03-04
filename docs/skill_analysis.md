@@ -1,7 +1,7 @@
 # Codex 스킬 정합성 재평가 보고서
 
 - 작성일: 2026-03-04
-- 범위: `.codex/skills`의 11개 대상 스킬 + 본 문서
+- 범위: `.codex/skills`의 12개 대상 스킬 + 본 문서
 - 대상 스킬:
   - `implementation-plan`
   - `implementation-review`
@@ -14,6 +14,7 @@
   - `spec-update-done`
   - `spec-update-todo`
   - `feature-draft`
+  - `ralph-loop-init`
 
 ## 1. 평가 프레임
 
@@ -59,7 +60,7 @@
 | C3 | deprecated 참조 무결성 | 현재 제거된 스킬/도구 참조가 현행 선택지처럼 남아있지 않은가 |
 | C4 | 실행 모드 호환성 | Plan mode(`request_user_input`) / Default mode(직접 질문) 규칙이 적용되는가 |
 
-## 3. 11개 기준 재채점 결과
+## 3. 12개 기준 재채점 결과
 
 | Skill | P1 | P2 | P3 | P4 | O1 | O2 | O3 | O4 | O5 | O6 | O7 | Score |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
@@ -74,29 +75,30 @@
 | spec-update-done | ✅ | ✅ | ✅ | ✅ | ⚠️ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | **10** |
 | spec-update-todo | ✅ | ✅ | ✅ | ✅ | ⚠️ | ✅ | ✅ | ✅ | ✅ | ⚠️ | ✅ | **9** |
 | feature-draft | ✅ | ✅ | ✅ | ✅ | ⚠️ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | **10** |
+| ralph-loop-init | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | **11** |
 
 ### 3.1 요약
 
-- 평균 점수: `113 / 11 = 10.27`
-- `11/11`: `implementation-plan`, `implementation-review`, `pr-review`, `pr-spec-patch`, `spec-create`
+- 평균 점수: `124 / 12 = 10.33`
+- `11/11`: `implementation-plan`, `implementation-review`, `pr-review`, `pr-spec-patch`, `spec-create`, `ralph-loop-init`
 - `10/11`: `spec-review`, `spec-rewrite`, `spec-update-done`, `feature-draft`
 - `9/11`: `spec-summary`, `spec-update-todo`
 
 ### 3.2 기준별 충족률 (`✅` 기준)
 
-| 기준 | ✅/11 | 비고 |
+| 기준 | ✅/12 | 비고 |
 |---|---|---|
-| P1 | 11/11 | 전 스킬 충족 |
-| P2 | 11/11 | 전 스킬 충족 |
-| P3 | 11/11 | 전 스킬 충족 |
-| P4 | 11/11 | 전 스킬 충족 |
-| O1 | 6/11 | `pr-review`, `pr-spec-patch` 보강 반영 |
-| O2 | 11/11 | 전 스킬 조건 분기 정의 |
-| O3 | 11/11 | 전 스킬 확인 지점 존재 |
-| O4 | 10/11 | `spec-rewrite`는 체크리스트 중심(부분 충족) |
-| O5 | 10/11 | `spec-summary`만 부분 충족 |
-| O6 | 10/11 | `spec-update-todo`만 부분 충족 |
-| O7 | 11/11 | 전 스킬 에러 처리 존재 |
+| P1 | 12/12 | 전 스킬 충족 |
+| P2 | 12/12 | 전 스킬 충족 |
+| P3 | 12/12 | 전 스킬 충족 |
+| P4 | 12/12 | 전 스킬 충족 |
+| O1 | 7/12 | `pr-review`, `pr-spec-patch` 보강 반영, `ralph-loop-init` 충족 |
+| O2 | 12/12 | 전 스킬 조건 분기 정의 |
+| O3 | 12/12 | 전 스킬 확인 지점 존재 |
+| O4 | 11/12 | `spec-rewrite`는 체크리스트 중심(부분 충족) |
+| O5 | 11/12 | `spec-summary`만 부분 충족 |
+| O6 | 11/12 | `spec-update-todo`만 부분 충족 |
+| O7 | 12/12 | 전 스킬 에러 처리 존재 |
 
 ## 4. 과대평가 가능 항목 재판정 메모
 
@@ -126,6 +128,35 @@
 - O6 `⚠️`: `Plan → Approve → Apply`는 있으나 별도 점진 공개 섹션/선택지 구조는 약함
   - 근거: `Step 5`, `Decision Gate 5→6` (`spec-update-todo/SKILL.md:180,209`)
 
+### 4.5 `ralph-loop-init` (재판정: 3 → 11)
+
+| 기준 | 점수 (Before) | 점수 (After) |
+|------|--------------|-------------|
+| P1 | ✅ | ✅ |
+| P2 | ⚠️ | ✅ |
+| P3 | ⚠️ | ✅ |
+| P4 | ✅ | ✅ |
+| O1 | ❌ | ✅ |
+| O2 | ⚠️ | ✅ |
+| O3 | ⚠️ | ✅ |
+| O4 | ✅ | ✅ |
+| O5 | ❌ | ✅ |
+| O6 | ❌ | ✅ |
+| O7 | ⚠️ | ✅ |
+| **합계** | **3/11** | **11/11** |
+
+- P1 `✅`: 명확한 트리거 구문, 제한된 범위 정의
+- P2 `⚠️→✅`: 암묵적 스펙 의존 → 명시적 워크플로우 노트 추가
+- P3 `⚠️→✅`: 산재된 규칙 → 번호형 Hard Rules 섹션으로 통합
+- P4 `✅`: 5개 파일 + 디렉토리 구조 명확히 정의
+- O1 `❌→✅`: 도구 매핑 부재 → 모든 Step에 Tools 라인 추가
+- O2 `⚠️→✅`: 산문형 조건 분기 → IF/ELSE 기반 Decision Gate 공식화
+- O3 `⚠️→✅`: 부분적 체크포인트 → 요약 테이블 + Step 5.5 추가
+- O4 `✅`: Step 7 + CHECKS.md로 강력한 검증 절차 제공
+- O5 `❌→✅`: 컨텍스트 관리 부재 → 4-tier + 3-tier 테이블 추가
+- O6 `❌→✅`: 점진적 공개 부재 → summary-first 패턴 도입
+- O7 `⚠️→✅`: 산재된 에러 처리 → 통합 테이블로 정리
+
 ## 5. Codex 적합성 (C1~C4) 결과
 
 | Skill | C1 | C2 | C3 | C4 |
@@ -141,10 +172,11 @@
 | spec-update-done | ✅ | ✅ | ✅ | ✅ |
 | spec-update-todo | ✅ | ✅ | ✅ | ✅ |
 | feature-draft | ✅ | ✅ | ✅ | ✅ |
+| ralph-loop-init | ✅ | ✅ | ✅ | ✅ |
 
 ### 5.1 Codex 적합성 요약
 
-- C1/C2/C3/C4 모두 대상 11개 스킬 충족
+- C1/C2/C3/C4 모두 대상 12개 스킬 충족
 
 ## 6. 정합화 패치 검증
 
@@ -162,7 +194,8 @@ rg "AskUserQuestion|codebase-retrieval|TaskCreate|Opus 4.5|Reviewer\*\*: Claude|
   .codex/skills/spec-summary/SKILL.md \
   .codex/skills/spec-update-done/SKILL.md \
   .codex/skills/spec-update-todo/SKILL.md \
-  .codex/skills/feature-draft/SKILL.md
+  .codex/skills/feature-draft/SKILL.md \
+  .codex/skills/ralph-loop-init/SKILL.md
 ```
 
 - 결과: 대상 스킬 범위에서 잔여 0건
@@ -181,7 +214,8 @@ rg "Opus|Sonnet|Haiku|reasoning effort" \
   .codex/skills/spec-summary/SKILL.md \
   .codex/skills/spec-update-done/SKILL.md \
   .codex/skills/spec-update-todo/SKILL.md \
-  .codex/skills/feature-draft/SKILL.md
+  .codex/skills/feature-draft/SKILL.md \
+  .codex/skills/ralph-loop-init/SKILL.md
 ```
 
 - 결과: 매핑 섹션 존재 파일에서 아래 규칙으로 통일
@@ -192,13 +226,13 @@ rg "Opus|Sonnet|Haiku|reasoning effort" \
 ### 6.3 모드 호환성 검사
 
 ```bash
-rg "request_user_input \(Plan mode\) / direct question \(Default mode\)" .codex/skills/{implementation-plan,implementation-review,pr-review,pr-spec-patch,spec-create,spec-review,spec-rewrite,spec-summary,spec-update-done,spec-update-todo,feature-draft}/SKILL.md
+rg "request_user_input \(Plan mode\) / direct question \(Default mode\)" .codex/skills/{implementation-plan,implementation-review,pr-review,pr-spec-patch,spec-create,spec-review,spec-rewrite,spec-summary,spec-update-done,spec-update-todo,feature-draft,ralph-loop-init}/SKILL.md
 ```
 
-- 결과: 대상 11개 스킬 모두 Plan/Default 이중 규칙 반영
+- 결과: 대상 12개 스킬 모두 Plan/Default 이중 규칙 반영
 
 ## 7. 결론
 
 - 본 라운드의 핵심 목표(1단계 Codex 정합화, 2단계 deprecated 정리, 3단계 재채점/문서 동기화)는 대상 범위 내에서 완료됨.
-- 기존 `11/11` 일괄 평가를 유지하지 않고, O1 엄격 규칙을 적용해 `9~11점` 분포로 재산정함.
+- 기존 `11/11` 일괄 평가를 유지하지 않고, O1 엄격 규칙을 적용해 `9~11점` 분포로 재산정함. `ralph-loop-init`은 Before 3점에서 After 11점으로 대폭 개선됨.
 - 보고서가 이제 `분석 기준 충족(P1~O7)`과 `Codex 적합성(C1~C4)`을 분리해 제시하므로, 문서 품질과 실행 적합성 판단이 분리 가능해짐.

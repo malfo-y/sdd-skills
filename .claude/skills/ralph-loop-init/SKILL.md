@@ -12,9 +12,23 @@ Generate a complete `ralph/` directory for LLM-driven automated ML training debu
 
 This skill discovers the project's training pipeline, confirms findings with the user, and generates five project-specific files: `CHECKS.md`, `config.sh`, `PROMPT.md`, `run.sh`, and `state.md`.
 
+> **Workflow Note**: `ralph-loop-init`은 SDD 워크플로우와 독립적인 ML 학습 디버깅 자동화 스킬이다.
+> `_sdd/spec/`이 존재하면 참조하지만, SDD 4단계 워크플로우(spec → feature-draft → implementation → spec-update-done)에 속하지 않는다.
+> 생성된 `ralph/` 디렉토리의 `run.sh`를 실행하여 자동 학습 디버깅 루프를 수행한다.
+
+## Hard Rules
+
+1. **보안**: ralph 루프는 격리된 환경(컨테이너, VM, 샌드박스)에서만 실행한다.
+2. **Spec 읽기 전용**: `_sdd/` 아래 파일을 읽을 수 있으나, 수정하지 않는다.
+3. **Debug-First**: 초기 `MAX_STEPS="10"` — 첫 실행은 sanity check 목적이다.
+4. **No Placeholders**: 생성된 파일에 `<placeholder>` 문자열이 없어야 한다.
+5. **Template Fidelity**: `run.sh`는 `run.sh.example`을 거의 그대로 복사하며, 최소한의 수정만 허용한다.
+
 ---
 
 ## Step 0: Read Project Specs
+
+**Tools**: `Glob`, `Read`
 
 Check if an `_sdd/` directory exists in the project root.
 
@@ -27,9 +41,21 @@ If it exists:
 
 If `_sdd/` does not exist, skip to Step 1 (code-only discovery).
 
+**Decision Gate 0->1**:
+```
+sdd_exists = `_sdd/` 디렉토리 존재
+spec_files = spec 파일 발견
+
+IF sdd_exists AND spec_files -> spec 읽기 후 Step 1 진행
+ELSE IF sdd_exists AND NOT spec_files -> 경고, Step 1 (코드 기반 탐색)
+ELSE -> Step 1 (코드 기반 탐색)
+```
+
 ---
 
 ## Step 1: Discover the Training Pipeline
+
+**Tools**: `Glob`, `Grep`, `Read`
 
 Use Glob and Grep to find:
 
@@ -53,6 +79,9 @@ Use Glob and Grep to find:
 - If not found: PROMPT.md will instruct parsing raw log output instead
 
 ### 1.5 Python Environment
+
+**Tools**: `Glob`, `Read`
+
 - If `_sdd/env.md` was read in Step 0, use its Python environment specification as the authoritative source
 - Otherwise: check if `pyproject.toml` exists and contains `[tool.uv]` or `[project]` with uv → use `uv run python`
 - Check if `requirements.txt` exists → use `python3` or `python`
@@ -63,11 +92,49 @@ Use Glob and Grep to find:
 - Specs provide richer context (why certain hyperparameters, what metrics matter, what validation measures)
 - Use spec information to fill gaps that code discovery alone cannot provide
 
+**Decision Gate 1->2**:
+```
+training_script_found = 학습 스크립트 1개 이상 식별
+framework_detected = PyTorch/Lightning/HF Trainer 등 프레임워크 식별
+
+IF training_script_found AND framework_detected -> Step 2
+ELSE IF NOT training_script_found -> AskUserQuestion: 학습 스크립트 경로 요청
+ELSE -> 부분 탐색 결과로 Step 2 진행, 미확인 항목 표시
+```
+
+#### Context Management
+
+| Spec 크기 | 전략 | 구체적 방법 |
+|-----------|------|-------------|
+| < 200줄 | 전체 읽기 | `Read`로 전체 파일 읽기 |
+| 200-500줄 | 전체 읽기 가능 | `Read`로 전체 읽기, 필요 시 섹션별 |
+| 500-1000줄 | TOC 먼저, 관련 섹션만 | 상위 50줄(TOC) 읽기 -> 관련 섹션만 `Read(offset, limit)` |
+| > 1000줄 | 인덱스만, 타겟 최대 3개 | 인덱스/TOC만 읽기 -> 타겟 섹션 최대 3개 선택적 읽기 |
+
+| 코드베이스 크기 | 전략 | 구체적 방법 |
+|----------------|------|-------------|
+| < 50 파일 | 자유 탐색 | `Glob` + `Read` 자유롭게 사용 |
+| 50-200 파일 | 타겟 탐색 | `Grep`/`Glob`으로 후보 식별 -> 타겟 `Read` |
+| > 200 파일 | 타겟 탐색 | `Grep`/`Glob` 위주 -> 최소한의 `Read` |
+
 ---
 
 ## Step 2: Confirm Findings with User
 
-Present all discovered information to the user via AskUserQuestion. Ask them to confirm or correct:
+**Tools**: `AskUserQuestion`
+
+Present all discovered information to the user via AskUserQuestion. Ask them to confirm or correct.
+
+분석 결과 요약 테이블을 제시:
+| 항목 | 파악 내용 | 상태 |
+|------|----------|------|
+| 학습 스크립트 | train.py | confirmed |
+| 검증 스크립트 | 미발견 | input needed |
+| 데이터셋 경로 | ./data/train.jsonl | confirmed |
+| 프레임워크 | PyTorch Lightning | confirmed |
+| 가상환경 | .venv (Python 3.10) | confirmed |
+
+Ask the user to confirm or correct:
 
 1. **Training script path** — the main entry point
 2. **Validation script** — path or "none"
@@ -79,9 +146,19 @@ Present all discovered information to the user via AskUserQuestion. Ask them to 
 
 Structure the question so the user can quickly confirm defaults or override specific values.
 
+**Decision Gate 2->2.5**:
+```
+user_confirmed = 사용자 확인 완료
+
+IF user_confirmed -> Step 2.5 진행
+ELSE -> 수정 사항 반영 후 재확인 (최대 2라운드)
+```
+
 ---
 
 ## Step 2.5: Write `ralph/CHECKS.md`
+
+**Tools**: `Bash (mkdir -p)`, `Write`
 
 Before generating any files, create `ralph/` directory and write `ralph/CHECKS.md`.
 This document defines acceptance criteria for each generated file. It is written first
@@ -140,6 +217,8 @@ Project: <project name>
 
 ## Step 3: Generate `ralph/config.sh`
 
+**Tools**: `Read`, `Write`
+
 Create `ralph/config.sh` with shell variables grouped by category. Follow this structure:
 
 ```bash
@@ -185,6 +264,8 @@ LLM_TIMEOUT_SECONDS=600  # max seconds for one LLM turn (0 disables timeout)
 ---
 
 ## Step 4: Generate `ralph/PROMPT.md`
+
+**Tools**: `Glob`, `Read`, `Write`
 
 This is the most critical file. It tells the LLM inside the ralph loop exactly what to do.
 
@@ -348,6 +429,8 @@ The LLM inside the ralph loop checks this section first in ADJUSTING (Step 0 of 
 
 ## Step 5: Generate `ralph/run.sh`
 
+**Tools**: `Read`, `Write`, `Bash (chmod +x)`
+
 Find and read `run.sh.example` by globbing for `**/.claude/skills/ralph-loop-init/examples/run.sh.example`.
 
 Copy it nearly verbatim into `ralph/run.sh`. The only modification needed:
@@ -362,7 +445,28 @@ Make the file executable description in the output.
 
 ---
 
+### Step 5.5: 핵심 파일 확인 (Checkpoint)
+
+**Tools**: `AskUserQuestion`
+
+config.sh, PROMPT.md, run.sh 생성 후 중간 확인:
+
+| 항목 | 내용 |
+|------|------|
+| config.sh 변수 | N개 설정 |
+| PROMPT.md 섹션 | Known Errors, Phases, ... |
+| run.sh 구조 | 루프 + LLM 호출 + 검증 |
+
+AskUserQuestion: "핵심 파일 3개를 확인해 주세요."
+옵션:
+1. "확인, 나머지 진행" -> Step 6
+2. "수정 필요" -> 수정 후 재확인 (최대 2라운드)
+
+---
+
 ## Step 6: Generate `ralph/state.md`
+
+**Tools**: `Write`, `Bash (date -u)`
 
 Find and read `state.md.example` by globbing for `**/.claude/skills/ralph-loop-init/examples/state.md.example`.
 
@@ -381,6 +485,8 @@ notes: Initial state. Ralph loop initialized.
 ---
 
 ## Step 7: Verify Against CHECKS.md and Summarize
+
+**Tools**: `Grep`, `Read`, `Edit`
 
 ### 7.1 Verify Each File Against Its Criteria
 
@@ -454,3 +560,38 @@ Next steps:
 
 Remind user that `MAX_STEPS="10"` is for the debug training run after smoke test passes —
 increase it (or set to empty for unlimited) once the first full run succeeds.
+
+---
+
+## Progressive Disclosure (완료 시)
+
+```
+1. 완료 요약 테이블 제시:
+   | 항목 | 내용 |
+   |------|------|
+   | 생성 파일 | 5개 + results/ |
+   | CHECKS.md 상태 | N/N 통과 |
+   | 감지 프레임워크 | PyTorch Lightning |
+   | Phase 구성 | SETUP -> SMOKE_TEST -> TRAINING -> ... -> DONE |
+
+2. AskUserQuestion: "생성된 파일을 확인하시겠습니까?"
+   옵션:
+   1. "PROMPT.md 상세 확인" -> PROMPT.md 핵심 섹션 출력
+   2. "config.sh 확인" -> 변수 목록 출력
+   3. "확인 완료" -> 종료
+```
+
+---
+
+## Error Handling
+
+| 상황 | 대응 |
+|------|------|
+| 학습 스크립트 미발견 | AskUserQuestion: 경로 요청 (최대 2라운드) |
+| `_sdd/spec` 디렉토리 미존재 | 코드 기반 탐색으로 진행, 사용자에게 경고 |
+| `ralph-loop-concept.md` 참조 파일 미발견 | 오류: 스킬 설치 불완전, 메시지와 함께 중단 |
+| `run.sh.example` 참조 파일 미발견 | 오류: 스킬 설치 불완전, 메시지와 함께 중단 |
+| 사용자 미확인 (2+ 라운드) | 부분 탐색 결과 저장, 수동 설정 안내 |
+| CHECKS.md 검증 실패 (Step 7) | 실패 파일 수정, 재검증 (최대 2라운드) |
+| 복수 학습 스크립트 발견 | AskUserQuestion: 목록 제시, 선택 요청 |
+| 프레임워크 감지 모호 | AskUserQuestion: 후보 + 근거 제시, 선택 요청 |
