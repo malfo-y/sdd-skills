@@ -9,7 +9,7 @@ version: 1.0.0
 > **Simplified Workflow Note**: This skill is part of the **legacy workflow**.
 > In the simplified 4-step workflow (`spec → feature-draft → implementation → spec-update-done`),
 > this skill's functionality is included in the **`feature-draft`** skill.
-> Consider using `feature-draft` instead, which combines `spec-draft` + `spec-update-todo` + `implementation-plan` into a single step.
+> Consider using `feature-draft` instead, which combines spec patch drafting + spec update + implementation planning into a single step.
 
 Update existing spec documents with new features, requirements, and planned improvements based on user input. This skill focuses on adding "to-add" or "to-implement" items to the spec.
 
@@ -54,7 +54,7 @@ Direct input from the current conversation:
 
 User input file for spec update. Two file types are supported:
 - **`user_spec.md`**: User-written specification input
-- **`user_draft.md`**: Draft created via `/spec-draft` conversation
+- **`user_draft.md`**: 사용자 작성 초안 (draft)
 
 If there are both `_sdd/spec/user_spec.md` or `_sdd/spec/user_draft.md` existing, ask user what to choose.
 
@@ -107,7 +107,7 @@ If present, use it as a constraint/rationale source:
 ```
 1. Check if user provided requirements in conversation
 2. Check if input files exist (in order of priority):
-   - `_sdd/spec/user_draft.md` (from /spec-draft)
+   - `_sdd/spec/user_draft.md` (사용자 초안)
    - `_sdd/spec/user_spec.md` (user-written)
 3. If multiple sources exist, process all (conversation first, then files)
 4. If no sources found, ask user for input
@@ -240,7 +240,7 @@ Update spec document:
 Rename processed input files to mark as completed:
 
 ```bash
-# If user_draft.md was used (from /spec-draft)
+# If user_draft.md was used
 mv _sdd/spec/user_draft.md _sdd/spec/_processed_user_draft.md
 
 # If user_spec.md was used (user-written)
@@ -424,15 +424,12 @@ After updating, provide summary:
 
 ```
 spec-create → spec-update-todo → implementation-plan → implementation → spec-update-done
-                   ↑                                                    │
-                   │                                                    │
-              spec-draft                                                │
-              (user_draft.md)                                           │
-                   ↑                                                    │
+                                                                        │
+                                                                        │
+                                                                        │
                    └────────────────────────────────────────────────────┘
 ```
 
-- **spec-draft**: Collect requirements via conversation, outputs `user_draft.md`
 - **spec-create**: Create initial spec (run first if no spec exists)
 - **implementation-plan**: Plan implementation of new features
 - **implementation**: Implement the planned features

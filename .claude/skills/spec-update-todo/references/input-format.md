@@ -11,7 +11,7 @@ _sdd/
 └── spec/
     ├── apify_ig.md              # Main spec document
     ├── user_spec.md             # User-written input (to be processed)
-    ├── user_draft.md            # Draft from /spec-draft (to be processed)
+    ├── user_draft.md            # 사용자 작성 초안 (to be processed)
     ├── _processed_user_spec.md  # Processed user_spec (archived)
     └── _processed_user_draft.md # Processed user_draft (archived)
 ```
@@ -21,7 +21,7 @@ _sdd/
 | File | Source | Description |
 |------|--------|-------------|
 | `user_spec.md` | 사용자 직접 작성 | User-written specification input |
-| `user_draft.md` | `/spec-draft` 스킬 | Draft created via conversation |
+| `user_draft.md` | 사용자 작성 | 사용자 작성 초안 (draft) |
 
 Both files use the same "Spec Update Input" format.
 

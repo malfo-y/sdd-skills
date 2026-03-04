@@ -1,6 +1,0 @@
-{
-  "name": "implementation-sequential",
-  "description": "Use this skill when the user asks for \"implementation sequential\", \"sequential implementation\", \"legacy implementation\", \"순차 구현\", or explicitly wants one-task-at-a-time sequential execution without parallel sub-agent grouping.",
-  "instruction_file": "SKILL.md",
-  "version": "1.2.0"
-}

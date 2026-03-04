@@ -8,19 +8,6 @@ version: 1.0.0
 
 Collects requirements through conversation with the user, then outputs a spec patch draft and implementation plan as a **single file** — with **Target Files** fields on every task to enable parallel execution via `implementation`.
 
-## Relationship to `feature-draft-sequential`
-
-This skill extends `feature-draft-sequential` with one key addition: **Target Files** on each task in Part 2.
-
-| Aspect | `feature-draft-sequential` | `feature-draft` (this) |
-|--------|-----------------|--------------------------------|
-| Part 1: Spec Patch | Identical | Identical |
-| Part 2: Task template | Standard (no Target Files) | **Target Files 포함** |
-| Execution target | `implementation-sequential` | `implementation` |
-| Output file | Same location/format | Same location/format |
-
-Everything else — process, format rules, adaptive questions, file management — is identical.
-
 ## Simplified Workflow
 
 This skill is **Step 2 of 4** in the parallel SDD workflow:
@@ -36,14 +23,11 @@ spec → feature-draft (this) → implementation → spec-update-done
 | 3 | implementation | Execute the plan with parallel sub-agents |
 | 4 | spec-update-done | Sync spec with actual code |
 
-> The non-parallel workflow (`feature-draft-sequential` → `implementation-sequential`) remains available for simpler projects.
-
 ## Overview
 
-This skill integrates the functionality of three skills: `spec-draft` + `spec-update-todo` + `implementation-plan`.
+This skill integrates spec patch drafting + spec update + implementation planning into a single step.
 In a single conversation, it collects requirements and simultaneously generates a spec patch draft (Part 1) and an implementation plan with Target Files (Part 2).
 
-**Previous workflow**: `spec-draft` → `spec-update-todo` → `implementation-plan` (3 invocations, 3x tokens)
 **This skill**: `feature-draft` (1 invocation, shared context)
 
 ## When to Use This Skill
@@ -51,7 +35,7 @@ In a single conversation, it collects requirements and simultaneously generates 
 - When you want to plan a new feature and create a **parallel-ready** implementation plan all at once
 - When you want to write a spec patch and implementation plan simultaneously
 - When you want to save tokens while getting both a spec patch and implementation plan
-- When you want to collapse the `spec-draft` → `spec-update-todo` → `implementation-plan` chain into one step
+- When you want to handle spec patch + implementation plan in one step
 - When you expect the implementation to benefit from parallel sub-agent execution
 
 ## Hard Rules
@@ -91,7 +75,7 @@ In a single conversation, it collects requirements and simultaneously generates 
 ```
 1. Review user conversation content
 2. Check for existing files:
-   - Glob("_sdd/spec/user_draft.md") (created by spec-draft)
+   - Glob("_sdd/spec/user_draft.md") (사용자 작성 초안)
    - Glob("_sdd/spec/user_spec.md") (user-authored)
    - Glob("_sdd/implementation/user_input.md") (implementation input)
 3. Check code changes: Bash("git diff --name-only")
@@ -374,7 +358,7 @@ Part 2 생성은 작업량이 크므로(태스크 상세, Target Files, 의존�
 **Tools**: — (출력 생성 단계, 도구 불필요)
 
 Reuse the components and analysis results from Step 4 to create the implementation plan.
-**Key difference from `feature-draft-sequential`**: Every task includes a `**Target Files**` field.
+**Key requirement**: Every task includes a `**Target Files**` field.
 
 **Implementation plan structure**:
 
@@ -557,7 +541,7 @@ Apply spec patch (choose one):
 
 Execute implementation:
 - **Parallel**: Run `implementation` skill → use Part 2 as implementation plan
-- **Sequential**: Run `implementation-sequential` skill → use Part 2 as implementation plan (Target Files ignored)
+- **Sequential**: Execute tasks sequentially (Target Files ignored)
 
 ### Model Recommendation
 [model recommendation for implementation]
@@ -637,7 +621,7 @@ Parallel workflow:
   spec-update-done
 
 Non-parallel fallback:
-  Output is fully compatible with `implementation-sequential` (Target Files ignored)
+  Output is compatible with sequential execution mode (Target Files ignored)
 ```
 
 ## Additional Resources

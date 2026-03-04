@@ -12,16 +12,6 @@ version: 1.0.0
 
 Create structured, actionable implementation plans from user specifications — with **Target Files** on every task to enable parallel execution via `implementation`.
 
-## Relationship to `implementation-plan-sequential`
-
-This skill extends `implementation-plan-sequential` with one key addition: **Target Files** on each task.
-
-| Aspect | `implementation-plan-sequential` | `implementation-plan` (this) |
-|--------|----------------------|--------------------------------------|
-| Task template | Standard | **Target Files 포함** |
-| Execution target | `implementation-sequential` | `implementation` |
-| Everything else | Identical | Identical |
-
 ## Hard Rule: Spec Documents Are Read-Only
 
 - This skill may **read** the spec as input, but it **MUST NOT** modify any files under `_sdd/spec/`.

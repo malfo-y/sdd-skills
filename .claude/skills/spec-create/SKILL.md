@@ -24,8 +24,7 @@ spec (this) → feature-draft → implementation → spec-update-done
 | 3 | implementation | Execute the implementation plan (TDD) |
 | 4 | spec-update-done | Sync spec with actual code |
 
-> **Previous workflow** (7 steps): spec → spec-draft → spec-update-todo → implementation-plan → implementation → implementation-review → spec-update-done
-> **New workflow** (4 steps): spec → feature-draft → implementation → spec-update-done
+> **Workflow**: spec → feature-draft → implementation → spec-update-done
 
 ## Overview
 

@@ -8,20 +8,6 @@ version: 1.0.0
 
 Execute implementation plans systematically using Test-Driven Development (TDD), with **parallel sub-agent dispatch** for independent tasks within each phase. Tasks without file conflicts are executed concurrently via the Task tool.
 
-## Relationship to `implementation-sequential`
-
-This skill extends `implementation-sequential` with parallel execution capability:
-
-| Aspect | `implementation-sequential` | `implementation` (this) |
-|--------|-----------------|----------------------------------|
-| TDD approach | Red-Green-Refactor | Same |
-| Task execution | Sequential (one at a time) | **Parallel groups** (concurrent sub-agents) |
-| Phase/Final review | Same | Same |
-| Input format | Standard plan | Plan with **Target Files** (preferred) |
-| Fallback | N/A | Sequential (when Target Files absent or conflicting) |
-
-Everything else — TDD protocol, review checklists, reporting — is identical.
-
 ## Simplified Workflow
 
 This skill is **Step 3 of 4** in the parallel SDD workflow:
@@ -37,7 +23,7 @@ spec → feature-draft → implementation (this) → spec-update-done
 | **3** | **implementation** | Execute the plan with parallel sub-agents (TDD) |
 | 4 | spec-update-done | Sync spec with actual code |
 
-> Also compatible with `feature-draft-sequential` or `implementation-plan-sequential` output (falls back to sequential when Target Files missing).
+> Also compatible with plans without Target Files (falls back to sequential execution).
 
 ## Hard Rule: Never Modify Spec Files
 
@@ -72,7 +58,7 @@ Before starting implementation:
    - User-specified path
    - `<project_root>/_sdd/implementation/IMPLEMENTATION_PLAN.md` (preferred entry point; may link to phase files)
    - `<project_root>/_sdd/implementation/IMPLEMENTATION_PLAN_PHASE_<phase-number>.md` (when the plan is split by phase)
-   - `<project_root>/_sdd/drafts/feature_draft_<feature_name>.md` (produced by `feature-draft-sequential` or `feature-draft` skill; use Part 2: 구현 계획 as the implementation plan)
+   - `<project_root>/_sdd/drafts/feature_draft_<feature_name>.md` (produced by `feature-draft` skill; use Part 2: 구현 계획 as the implementation plan)
    - Recent conversation context
 
 If multiple plan files exist and the user did not specify a starting point:
@@ -154,7 +140,7 @@ Plan ID 2 → System Task "def456"
 
 ## Step 3: Analyze Parallelization
 
-This is the **key step** that differentiates this skill from `implementation-sequential`.
+This is the **key step** that differentiates parallel execution from sequential execution.
 
 ### 3.1 Check Target Files Availability
 
@@ -350,7 +336,7 @@ Each sub-agent receives:
 
 ### 4.3 Sequential Fallback
 
-When tasks cannot be parallelized (conflicts or missing Target Files), execute them sequentially using the same TDD approach as the original `implementation-sequential` skill:
+When tasks cannot be parallelized (conflicts or missing Target Files), execute them sequentially using the same TDD approach as sequential execution:
 
 ```
 1. TaskUpdate: Set status to "in_progress"
@@ -414,7 +400,7 @@ For each task in the completed group:
 
 ## Step 6: Phase Review
 
-After completing all tasks in a phase, run a lightweight quality review (same as `implementation-sequential` skill).
+After completing all tasks in a phase, run a lightweight quality review.
 
 ### 6.1 Collect Phase Context
 
@@ -610,7 +596,7 @@ Some tasks don't fit pure TDD. Adapt the approach:
 3. Re-run the incomplete parts of the task
 ```
 
-### General (same as `implementation-sequential`)
+### General
 
 #### Test is Hard to Write
 ```
@@ -670,9 +656,8 @@ Use AskUserQuestion when:
 
 - **implementation-plan**: Creates plans with Target Files that this skill consumes
 - **feature-draft**: Also produces plans with Target Files (Part 2: 구현 계획)
-- **implementation-plan-sequential / feature-draft-sequential**: Plans without Target Files → sequential fallback
+- Plans without Target Files → sequential fallback
 - **implementation-review**: Available for standalone audits
-- **implementation**: The sequential alternative when parallelism isn't needed
 
 ## Quick Start
 
