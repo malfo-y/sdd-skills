@@ -21,7 +21,9 @@ Create structured, actionable implementation plans from user specifications — 
 
 1. Refer to the user input.
 2. If the user input is not clear, refer to `_sdd/implementation/user_input.md` for the user specification.
-3. If the user input is not clear and there is no user specification, ask the user for clarification.
+3. If information remains unclear and there is no user specification:
+   - Plan mode: ask the user via `request_user_input`.
+   - Default mode: proceed with conservative assumptions and record unresolved points in `Open Questions`.
 
 After processing `user_input.md`, rename it to `_processed_user_input.md` to mark it as processed inputs.
 
@@ -34,17 +36,20 @@ After processing `user_input.md`, rename it to `_processed_user_input.md` to mar
 1. **Analyze the Specification** - Understand scope, requirements, and constraints
 2. **Identify Components** - Break down into logical modules/features
 3. **Define Tasks with Target Files** - Create granular, actionable work items with file-level scope
-4. **Establish Dependencies** - Map task relationships and critical path
-5. **Output the Plan** - Present in structured, trackable format
+4. **Decompose into Phases** - Analyze task characteristics, auto-select strategy, group tasks into phases
+5. **Establish Dependencies** - Map task relationships and critical path
+6. **Output the Plan** - Present in structured, trackable format
 
-## User Confirmation Rule (Codex)
+## Interaction Rule (Question Policy)
 
-- Plan mode: use `request_user_input`
-- Default mode: ask a short direct question in chat
+- User-facing questions are allowed only in Plan mode via `request_user_input`.
+- In Default mode, do not ask mid-process questions.
+- When requirements are ambiguous in Default mode, continue with explicit assumptions and record unresolved items in `Open Questions`.
+- Do not pause for phase strategy approval; phase grouping strategy is auto-selected by AI.
 
 ## Step 1: Specification Analysis
 
-**Tools**: `Read`, `Glob`, `rg`, `Bash`, `request_user_input (Plan mode) / direct question (Default mode)`
+**Tools**: `Read`, `Glob`, `rg`, `Bash`
 
 Read and analyze the provided specification thoroughly:
 
@@ -54,7 +59,9 @@ Read and analyze the provided specification thoroughly:
 - **Success Criteria**: How will completion be measured?
 - **Unknowns/Risks**: What needs clarification or research?
 
-If the specification is unclear or incomplete, use `request_user_input` in Plan mode, otherwise ask a short direct question in Default mode.
+If the specification is unclear or incomplete:
+- Plan mode: ask via `request_user_input`.
+- Default mode: proceed with assumptions and log unresolved points in `Open Questions`.
 
 #### Context Management
 
@@ -78,7 +85,7 @@ requirements_clear = 핵심 요구사항 파악 완료
 scope_defined = 스코프 경계 정의 완료
 
 IF spec_loaded AND requirements_clear AND scope_defined → Step 2 진행
-ELSE IF NOT requirements_clear → request_user_input (Plan mode) / direct question (Default mode): 모호한 요구사항 질문
+ELSE IF NOT requirements_clear → 가정으로 진행하고 Open Questions에 미확정 항목 기록
 ELSE → 미파악 항목 추가 분석 후 재평가
 ```
 
@@ -151,23 +158,6 @@ Before assigning Target Files, explore the codebase to understand:
 - Include setup/infrastructure tasks often overlooked
 - Don't forget documentation and testing tasks
 
-### Step 3.5: Task 목록 확인 (Checkpoint)
-
-**Tools**: `request_user_input (Plan mode) / direct question (Default mode)`
-
-```
-1. Task 목록 요약 테이블을 사용자에게 제시:
-   | Phase | Task 수 | P0 | P1 | P2 | P3 | Target Files 유무 |
-   |-------|---------|----|----|----|----|-------------------|
-   | 1     | N       | X  | Y  | Z  | W  | 모두 있음/N개 누락 |
-   | 2     | N       | X  | Y  | Z  | W  | 모두 있음/N개 누락 |
-
-2. request_user_input (Plan mode) / direct question (Default mode): "Task 목록을 확인해 주세요."
-   옵션:
-   1. "확인, 의존성 매핑 진행" → Step 4
-   2. "수정 필요" → 수정 사항 반영 (최대 2라운드)
-```
-
 **Decision Gate 3→4**:
 ```
 all_tasks_have_target_files = 모든 Task에 Target Files 매핑 완료
@@ -177,7 +167,74 @@ IF all_tasks_have_target_files AND acceptance_criteria_defined → Step 4 진행
 ELSE → 누락 항목 보완 후 재확인
 ```
 
-## Step 4: Dependency Mapping
+## Step 4: Phase Decomposition (Auto Strategy)
+
+**Tools**: `Read`, `rg`, `Glob`, `Bash`
+
+정의된 Task들을 분석해 Phase 전략을 자동 선택하고 Phase로 그룹핑한다.
+
+### 4.1 Task 특성 분석
+
+정의된 Task 목록에서 다음 특성을 분석한다:
+
+| 분석 항목 | 확인 내용 |
+|-----------|----------|
+| 의존성 깊이 | Task 간 의존 체인의 최대 깊이 |
+| 위험도 분포 | 고위험/불확실 기술 항목 비율 |
+| 우선순위 분포 | P0-P3 분포 |
+| 기반 작업 유무 | 다른 Task의 전제가 되는 인프라/설정 Task 존재 여부 |
+| 사용자 가치 분포 | 사용자 대면 기능 Task 비율 및 MVP 구성 가능성 |
+
+### 4.2 Phase 전략 자동 선택
+
+아래 우선순위 규칙으로 전략을 자동 결정한다:
+
+```
+risk_ratio = 고위험 Task 수 / 전체 Task 수
+dep_depth = 최대 의존성 체인 깊이
+has_user_facing = 사용자 대면 기능 Task 존재 여부
+needs_incremental_release = 점진 배포/MVP 요구 여부
+
+IF risk_ratio >= 0.30:
+  strategy = Risk-First
+ELSE IF dep_depth >= 3:
+  strategy = Dependency-Driven
+ELSE IF has_user_facing OR needs_incremental_release:
+  strategy = MVP-First
+ELSE:
+  strategy = Dependency-Driven
+```
+
+전략별 기본 Phase 구조:
+
+| 전략 | Phase 구조 |
+|------|-----------|
+| **MVP-First** | Phase 0: 기반 설정 → Phase 1: MVP → Phase 2+: 확장/개선 |
+| **Risk-First** | Phase 1: 고위험 항목 검증 → Phase 2: 핵심 기능 → Phase 3: 저위험 확장 |
+| **Dependency-Driven** | Phase 1: 기반 → Phase 2: 핵심 서비스 → Phase 3: 통합 → Phase 4: 마무리 |
+
+> 상세 패턴 및 예시: `references/advanced-patterns.md`의 "Phase Planning Strategies" 참조
+
+### 4.3 Phase 그룹핑
+
+선택된 전략에 따라 Task를 Phase로 배치한다:
+
+- 각 Phase에 명확한 목표/테마를 부여 (예: "기반 설정", "핵심 인증", "OAuth 통합")
+- Phase 내 Task는 가능한 한 독립적으로 실행 가능하도록 배치
+- Phase 간 의존성이 최소화되도록 구성 (Phase N의 Task는 Phase N-1 완료 후 시작 가능)
+- 전략 선택 근거를 Plan 본문에 명시 (risk_ratio/dep_depth 등 핵심 지표 포함)
+
+**Decision Gate 4→5**:
+```
+phases_defined = 모든 Task가 Phase에 배치 완료
+phase_goals_clear = 각 Phase에 명확한 목표/테마 부여
+strategy_rationale_recorded = 전략 선택 근거를 문서에 기록
+
+IF phases_defined AND phase_goals_clear AND strategy_rationale_recorded → Step 5 진행
+ELSE → 미완료 항목 보완 후 재확인
+```
+
+## Step 5: Dependency Mapping
 
 **Tools**: `Glob` (Target Files 중복 확인)
 
@@ -191,18 +248,18 @@ Create a dependency graph or critical path when complexity warrants.
 
 **Parallel-specific**: After mapping dependencies, verify that tasks marked as parallel-eligible don't have overlapping Target Files.
 
-**Decision Gate 4→5**:
+**Decision Gate 5→6**:
 ```
 dependencies_mapped = 모든 Task 간 의존성 매핑 완료
 no_circular_deps = 순환 의존성 없음
 parallel_groups_identified = 병렬 실행 가능 그룹 식별 완료
 
-IF dependencies_mapped AND no_circular_deps AND parallel_groups_identified → Step 5 진행
+IF dependencies_mapped AND no_circular_deps AND parallel_groups_identified → Step 6 진행
 ELSE IF circular_deps → 순환 의존성 해소 후 재매핑
 ELSE → 미완료 항목 보완
 ```
 
-## Step 5: Plan Output Format
+## Step 6: Plan Output Format
 
 **Tools**: `Write`, `Bash (mkdir -p)`
 
@@ -279,9 +336,9 @@ Present the final plan in this structure:
   e. 전체 Target Files 수집 → 중복 파일 감지 → Parallel Execution Summary에 반영
   f. 중복 파일이 있는 Task는 순차 실행으로 표시
 
-## When to Ask for Clarification
+## Clarification Handling
 
-Use request_user_input (Plan mode) / direct question (Default mode) when encountering:
+If any of the following is encountered:
 
 - Ambiguous requirements with multiple valid interpretations
 - Missing technical constraints (language, framework, etc.)
@@ -289,6 +346,10 @@ Use request_user_input (Plan mode) / direct question (Default mode) when encount
 - Unknown integration requirements
 - Incomplete success criteria
 - Uncertain file paths for Target Files
+
+Then apply this rule:
+- Plan mode: ask via `request_user_input`.
+- Default mode: do not ask; continue with documented assumptions and list unresolved items in `Open Questions`.
 
 ## LLM Model to use
 
@@ -312,7 +373,9 @@ After creating the plan, offer to:
     - Name phase files as `IMPLEMENTATION_PLAN_PHASE_1.md`, `IMPLEMENTATION_PLAN_PHASE_2.md`, etc.
 4. Create tasks using plan document task table for tracking
 
-Always confirm with the user which output format they prefer.
+Output format confirmation rule:
+- Plan mode: confirm via `request_user_input`.
+- Default mode: use the user-specified path/format if given; otherwise use default path and sensible split policy.
 
 ## Progressive Disclosure (Plan 출력 시)
 
@@ -326,11 +389,8 @@ Always confirm with the user which output format they prefer.
    | 예상 File Conflicts | N개 |
    | 모델 추천 | ... |
 
-2. request_user_input (Plan mode) / direct question (Default mode): "상세 내용을 확인하시겠습니까?"
-   옵션:
-   1. "전체 Plan 확인" → 전체 출력
-   2. "특정 Phase만" → 해당 Phase 상세 출력
-   3. "파일로 저장" → IMPLEMENTATION_PLAN.md 저장
+2. 기본 동작으로 전체 Plan을 바로 출력한다.
+3. 사용자가 특정 Phase 재출력/파일 저장 경로를 명시 요청한 경우에만 해당 요청을 반영한다.
 ```
 
 ## Error Handling
@@ -338,12 +398,12 @@ Always confirm with the user which output format they prefer.
 | 상황 | 대응 |
 |------|------|
 | 스펙 파일 미발견 | `spec-create` 먼저 실행 권장 |
-| 스펙 내용 모호 | request_user_input (Plan mode) / direct question (Default mode)으로 명확화 (최대 2라운드) |
-| Target Files 경로 확인 불가 | 사용자에게 경로 확인 요청, TBD로 표시 |
-| 순환 의존성 발견 | Task 분할 또는 사용자에게 우선순위 확인 |
+| 스펙 내용 모호 | Plan mode에서는 `request_user_input`, Default mode에서는 가정 + `Open Questions` 기록 |
+| Target Files 경로 확인 불가 | Plan mode에서는 확인 질문, Default mode에서는 TBD + `Open Questions` 기록 |
+| 순환 의존성 발견 | Task 분할로 해소, 해소 불가 시 `Open Questions`에 의사결정 필요 항목 기록 |
 | 기존 Plan 파일 존재 | `prev/PREV_IMPLEMENTATION_PLAN_<timestamp>.md`로 아카이브 |
 | Plan이 25+ Task | Phase별 파일 분할 (IMPLEMENTATION_PLAN_PHASE_N.md) |
-| 모호한 우선순위 | 사용자에게 P0-P3 확인 요청 |
+| 모호한 우선순위 | Plan mode에서는 확인 질문, Default mode에서는 근거 기반 임시 우선순위 + `Open Questions` 기록 |
 | user_input.md 형식 오류 | 파싱 오류 보고, 자유 형식으로 해석 시도 |
 
 ## Additional Resources
