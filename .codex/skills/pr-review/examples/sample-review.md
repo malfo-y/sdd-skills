@@ -2,7 +2,7 @@
 
 이 예제는 PR #42 (JWT 인증 시스템)에 대한 pr-review 스킬 실행 세션을 보여줍니다.
 
-> **중요**: `pr-review` 스킬은 `_sdd/spec/` 아래의 스펙 문서를 **절대** 생성/수정/삭제하지 않습니다. 스펙 변경이 필요하면 리포트에 “스펙 업데이트 필요”로만 기록하고, 실제 반영은 `spec-update-todo`로 진행합니다.
+> **중요**: `pr-review` 스킬은 `_sdd/spec/` 아래의 스펙 문서를 **절대** 생성/수정/삭제하지 않습니다. 스펙 변경이 필요하면 리포트에 “스펙 업데이트 필요”로만 기록하고, 실제 반영은 `/spec-update-todo`로 진행합니다.
 
 ## Session Flow
 
@@ -11,9 +11,9 @@
 ```
 User: PR 리뷰
 
-Codex: PR 리뷰를 시작합니다.
+Claude: PR 리뷰를 시작합니다.
 
-**사용 모델**: Codex Opus 4.5
+**사용 모델**: gpt-5.3-codex (reasoning effort: extra high)
 
 ## 사전 조건 확인
 
@@ -42,7 +42,7 @@ Codex: PR 리뷰를 시작합니다.
 ### 2. 수용 기준 검증
 
 ```
-Codex:
+Claude:
 ## 수용 기준 검증
 
 ### Feature: JWT 기반 사용자 인증
@@ -92,7 +92,7 @@ Codex:
 ### 3. 스펙 준수 검증
 
 ```
-Codex:
+Claude:
 ## 스펙 준수 검증
 
 ### 기존 스펙 요구사항 검증
@@ -111,7 +111,7 @@ Codex:
 ### 4. 갭 분석
 
 ```
-Codex:
+Claude:
 ## 갭 분석
 
 ### 패치 초안 vs PR 구현
@@ -131,7 +131,7 @@ Codex:
 ### 5. 판정 및 최종 리포트
 
 ```
-Codex:
+Claude:
 리뷰를 완료했습니다. 리포트를 _sdd/pr/PR_REVIEW.md에 저장합니다.
 ```
 
@@ -144,7 +144,7 @@ Codex:
 **PR**: #42 - 사용자 인증 시스템 구현 및 세션 관리 버그 수정
 **PR Author**: developer-kim
 **Review Date**: 2026-02-06
-**Reviewer**: Codex (Opus 4.5)
+**Reviewer**: Codex (gpt-5.3-codex, reasoning effort: extra high)
 **Spec Version**: 1.2.0
 **Patch Draft**: Found
 
@@ -321,8 +321,8 @@ Codex:
 ## 다음 단계
 
 1. [x] Verdict에 따른 조치 → REQUEST CHANGES
-2. [ ] 블로커 2건 수정 후 재리뷰: `pr-review`
-3. [ ] 승인 후 머지, `spec-update-todo` 실행
+2. [ ] 블로커 2건 수정 후 재리뷰: `/pr-review`
+3. [ ] 승인 후 머지, `/spec-update-todo` 실행
 
 ---
 
@@ -343,9 +343,9 @@ Codex:
 ```
 User: PR 리뷰
 
-Codex: PR 리뷰를 시작합니다.
+Claude: PR 리뷰를 시작합니다.
 
-**사용 모델**: Codex Opus 4.5
+**사용 모델**: gpt-5.3-codex (reasoning effort: extra high)
 
 ## 사전 조건 확인
 
@@ -376,7 +376,7 @@ Codex: PR 리뷰를 시작합니다.
 **PR**: #42 - 사용자 인증 시스템 구현 및 세션 관리 버그 수정
 **PR Author**: developer-kim
 **Review Date**: 2026-02-06
-**Reviewer**: Codex (Opus 4.5)
+**Reviewer**: Codex (gpt-5.3-codex, reasoning effort: extra high)
 **Spec Version**: 1.2.0
 **Patch Draft**: Found
 
@@ -411,7 +411,7 @@ Codex: PR 리뷰를 시작합니다.
 
 1. [x] Verdict에 따른 조치 → APPROVE
 2. [ ] 머지 실행
-3. [ ] 머지 후 `spec-update-todo` 실행하여 스펙 반영
+3. [ ] 머지 후 `/spec-update-todo` 실행하여 스펙 반영
 
 ---
 

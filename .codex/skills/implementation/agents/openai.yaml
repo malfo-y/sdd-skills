@@ -1,4 +1,0 @@
-interface:
-  display_name: "Implementation"
-  short_description: "Execute implementation plans with conflict-aware parallel groups"
-  default_prompt: "Use the implementation workflow and follow its SKILL.md exactly."

@@ -73,10 +73,10 @@ Claude:
 ```
 Claude: Dispatching 4 sub-agents for Phase 1...
 
-[parallel call 1: Task 1 - Database schema]
-[parallel call 2: Task 2 - Password hashing]
-[parallel call 3: Task 3 - JWT utilities]
-[parallel call 4: Task 4 - Rate limiting]
+[Task tool call 1: Task 1 - Database schema]
+[Task tool call 2: Task 2 - Password hashing]
+[Task tool call 3: Task 3 - JWT utilities]
+[Task tool call 4: Task 4 - Rate limiting]
 
 (All 4 calls made simultaneously in a single message)
 
@@ -244,9 +244,9 @@ Speedup: 5 tasks → 3 groups (vs 5 sequential)
 Claude:
 ## Phase 2 Group 1 — Dispatching 3 sub-agents
 
-[parallel call: Task 5 - Registration]
-[parallel call: Task 8 - Input validation]
-[parallel call: Task 9 - Auth middleware]
+[Task tool: Task 5 - Registration]
+[Task tool: Task 8 - Input validation]
+[Task tool: Task 9 - Auth middleware]
 
 (3 calls made simultaneously)
 

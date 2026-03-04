@@ -263,15 +263,15 @@ Database       Cache (Redis)
 - **Latest Review** (최근 리뷰): `_sdd/implementation/IMPLEMENTATION_REVIEW.md` [IF exists, else OMIT]
 
 ### Related Commands
-- `spec-update-todo` - Add new features to spec
-- `implementation-plan` - Create implementation plan from spec
-- `spec-update-done` - Sync spec with code changes
-- `spec-summary` - Regenerate this summary
+- `/spec-update-todo` - Add new features to spec
+- `/implementation-plan` - Create implementation plan from spec
+- `/spec-update-done` - Sync spec with code changes
+- `/spec-summary` - Regenerate this summary
 
 ---
 
-**Summary 생성 방법**: `spec-summary`를 실행하면 이 파일이 자동 생성/갱신됩니다.
-**How to Generate**: Run `spec-summary` to automatically create/update this file.
+**Summary 생성 방법**: `/spec-summary`를 실행하면 이 파일이 자동 생성/갱신됩니다.
+**How to Generate**: Run `/spec-summary` to automatically create/update this file.
 ```
 
 ## Optional README Sync Template

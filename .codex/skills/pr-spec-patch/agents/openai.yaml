@@ -1,4 +1,0 @@
-interface:
-  display_name: "Pr Spec Patch"
-  short_description: "Help with Pr Spec Patch SDD workflows"
-  default_prompt: "Use the pr-spec-patch workflow and follow its SKILL.md exactly."

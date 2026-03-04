@@ -1,4 +1,0 @@
-interface:
-  display_name: "Implementation Plan"
-  short_description: "Create parallel-ready implementation plans with Target Files"
-  default_prompt: "Use the implementation-plan workflow and follow its SKILL.md exactly."

@@ -1,6 +1,7 @@
 ---
 name: spec-rewrite
 description: This skill should be used when the user asks to "rewrite spec", "refactor spec", "simplify spec", "split spec into files", "clean up spec", "review spec quality", or equivalent phrases indicating they want to reorganize an overly long/complex spec by pruning noise, splitting into hierarchical files, and explicitly listing ambiguities/problems.
+version: 1.0.0
 ---
 
 # Spec Rewrite - Restructure Long or Complex Specs
@@ -23,6 +24,14 @@ Primary goals:
 - Topic-based separation is needed, but the current file layout is flat or unclear
 - Spec quality needs cleanup before implementation planning starts
 
+## Hard Rules
+
+1. **Always backup**: 수정 전 반드시 `_sdd/spec/prev/PREV_<filename>_<timestamp>.md`로 백업한다.
+2. **Preserve decision context**: 삭제하는 섹션에 중요한 "why" 컨텍스트가 있으면 `DECISION_LOG.md`에 보존한다.
+3. **사용자 확인 우선**: 대규모 구조 변경(파일 분할, 대량 이동) 전에 반드시 사용자 확인을 받는다.
+4. **한국어 작성**: 추가/수정 내용은 한국어로 작성한다 (기존 언어 유지).
+5. **최소 산출물**: `DECISION_LOG.md` 외 추가 거버넌스 문서는 사용자 요청 시에만 생성한다.
+
 ## Input Sources
 
 ### Primary
@@ -37,6 +46,8 @@ Primary goals:
 
 ### Step 1: Diagnose Document Quality
 
+**Tools**: `Read`, `Glob`
+
 First identify structural quality issues in the current spec.
 
 - Section length imbalance (single section dominates document size)
@@ -46,7 +57,19 @@ First identify structural quality issues in the current spec.
 - Ambiguous wording ("as needed", "fast", "appropriately")
 - Missing acceptance or completion criteria
 
+**Decision Gate 1→2**:
+```
+quality_issues_identified = 구조적 품질 이슈 식별 완료
+scope_clear = 리라이트 범위 명확
+
+IF quality_issues_identified AND scope_clear → Step 2 진행
+ELSE IF NOT quality_issues_identified → 추가 진단 수행
+ELSE → request_user_input (Plan mode) / direct question (Default mode): 리라이트 범위 확인
+```
+
 ### Step 2: Propose Rewrite Plan First
+
+**Tools**: `request_user_input (Plan mode) / direct question (Default mode)`
 
 Present a rewrite plan before making changes.
 
@@ -75,11 +98,25 @@ Present a rewrite plan before making changes.
 
 For large structural changes (file splits and bulk moves), get user confirmation first.
 
+**Decision Gate 2→3**:
+```
+plan_presented = 리라이트 계획을 사용자에게 제시 완료
+user_approved = 사용자가 계획 승인
+
+IF plan_presented AND user_approved → Step 3 진행
+ELSE IF NOT plan_presented → Step 2 재실행
+ELSE → 사용자 피드백 반영 후 계획 수정 (최대 2라운드)
+```
+
 ### Step 3: Create Safety Backups
+
+**Tools**: `Bash (mkdir -p, cp)`, `Write`
 
 For every existing file you modify, create a backup under `_sdd/spec/prev/` using `prev/PREV_<filename>_<timestamp>.md` (create `_sdd/spec/prev/` first if missing).
 
 ### Step 4: Prune and Appendix Migration
+
+**Tools**: `Edit`, `Write`, `Read`
 
 Rules:
 - Keep only decision-driving and execution-critical content in the main document
@@ -89,12 +126,16 @@ Rules:
 
 ### Step 4.5: Preserve Decision Context
 
+**Tools**: `Read`, `Edit`
+
 If rewriting removes narrative sections that contain meaningful rationale:
 - Add a concise entry to `_sdd/spec/DECISION_LOG.md`
 - Keep the rewritten main spec concise, and keep detailed rationale in the decision log
 - Do not create additional side documents by default; keep rationale tracking in `DECISION_LOG.md`
 
 ### Step 5: Hierarchical Split
+
+**Tools**: `Write`, `Bash (mkdir -p)`, `Glob`
 
 Default structure:
 
@@ -117,6 +158,8 @@ Rules:
 - Keep section and filename naming conventions consistent
 
 ### Step 6: Ambiguity and Problem Reporting
+
+**Tools**: `Write`
 
 Always call out these issue types explicitly.
 
@@ -175,6 +218,33 @@ Create or update `_sdd/spec/REWRITE_REPORT.md` with:
 - Keep the existing spec language by default
 - For mixed-language specs, follow the index document language
 - If requested by the user, normalize output to a single language
+
+## Context Management
+
+| 스펙 크기 | 전략 | 구체적 방법 |
+|-----------|------|-------------|
+| < 200줄 | 전체 읽기 | `Read`로 전체 파일 읽기 |
+| 200-500줄 | 전체 읽기 가능 | `Read`로 전체 읽기, 필요 시 섹션별 |
+| 500-1000줄 | TOC 먼저, 관련 섹션만 | 상위 50줄(TOC) 읽기 → 관련 섹션만 `Read(offset, limit)` |
+| > 1000줄 | 인덱스만, 타겟 최대 3개 | 인덱스/TOC만 읽기 → 타겟 섹션 최대 3개 선택적 읽기 |
+
+| 코드베이스 크기 | 전략 | 구체적 방법 |
+|----------------|------|-------------|
+| < 50 파일 | 자유 탐색 | `Glob` + `Read` 자유롭게 사용 |
+| 50-200 파일 | 타겟 탐색 | `rg`/`Glob`/`Read`/`Bash`으로 후보 식별 → 타겟 `Read` |
+| > 200 파일 | 타겟 탐색 | `rg`/`Glob`/`Read`/`Bash` 위주 → 최소한의 `Read` |
+
+## Error Handling
+
+| 상황 | 대응 |
+|------|------|
+| 스펙 파일 미발견 | `spec-create` 먼저 실행 권장 |
+| 백업 디렉토리 미존재 | `mkdir -p _sdd/spec/prev/` 자동 생성 |
+| 스펙이 이미 잘 구조화됨 | 불필요한 리라이트 지양, 사용자에게 보고 |
+| 분할 후 링크 깨짐 | Glob으로 경로 검증, 자동 수정 |
+| DECISION_LOG.md 미존재 | 필요 시 새로 생성 |
+| 사용자가 계획 거부 | 피드백 반영 후 수정안 제시 (최대 2라운드) |
+| 대형 스펙 (1000줄+) | 인덱스 기반 점진적 읽기, 섹션별 처리 |
 
 ## Additional Resources
 

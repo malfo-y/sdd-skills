@@ -1,0 +1,6 @@
+{
+  "name": "ralph-loop-init",
+  "description": "Use this skill when the user asks to \"init ralph\", \"ralph loop\", \"set up ralph loop\", \"training loop\", \"training debug loop\", \"create ralph\", \"set up training debug loop\", \"automated training loop\", or wants to generate a ralph/ directory for LLM-driven automated ML training debugging.",
+  "instruction_file": "SKILL.md",
+  "version": "1.0.0"
+}

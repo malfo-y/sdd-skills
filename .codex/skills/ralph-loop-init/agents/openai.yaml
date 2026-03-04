@@ -1,4 +1,0 @@
-interface:
-  display_name: "Ralph Loop Init"
-  short_description: "Initialize Codex Ralph training debug loop"
-  default_prompt: "Use $ralph-loop-init to scaffold a Codex-driven ralph/ training loop with experiment report output."

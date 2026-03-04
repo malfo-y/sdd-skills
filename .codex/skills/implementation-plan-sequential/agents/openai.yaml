@@ -1,4 +1,0 @@
-interface:
-  display_name: "Implementation Plan Sequential"
-  short_description: "Create sequential implementation plans"
-  default_prompt: "Use the implementation-plan-sequential workflow and follow its SKILL.md exactly."

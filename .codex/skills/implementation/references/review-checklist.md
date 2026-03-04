@@ -97,8 +97,6 @@ Additional checks specific to parallel sub-agent execution:
 - [ ] Sub-agent outputs work together without conflicts
 - [ ] Shared interfaces are compatible
 - [ ] No duplicate code across sub-agent outputs
-- [ ] Shared schema/config/API contracts are consistent across parallel tasks
-- [ ] Migration ordering/numbering is conflict-free
 ```
 
 ## Issue Severity Classification

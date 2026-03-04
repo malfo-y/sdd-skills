@@ -1,7 +1,7 @@
 # Spec Review Report (Strict)
 
 **Date**: 2026-02-07  
-**Reviewer**: Codex  
+**Reviewer**: Codex (gpt-5.3-codex)  
 **Scope**: Spec+Code  
 **Spec Files**:
 - `_sdd/spec/apify_ig.md`
@@ -67,9 +67,9 @@ The spec remains mostly aligned with project intent, but multiple high-confidenc
 
 ## Suggested Next Actions
 
-1. Run `spec-update-done` to apply high-priority corrections (API limits, architecture component mapping).
+1. Run `/spec-update-done` to apply high-priority corrections (API limits, architecture component mapping).
 2. Convert ambiguous acceptance criteria into measurable thresholds.
-3. Regenerate `spec-summary` after approved updates are applied.
+3. Regenerate `/spec-summary` after approved updates are applied.
 
 ## Decision Log Follow-ups (Proposal Only)
 
@@ -82,7 +82,7 @@ The spec remains mostly aligned with project intent, but multiple high-confidenc
 
 ## Handoff for Spec Updates (if SYNC_REQUIRED)
 
-- Recommended command: `spec-update-done`
+- Recommended command: `/spec-update-done`
 - Update priorities:
   - P1: API throughput/rate-limit alignment
   - P2: architecture and component documentation

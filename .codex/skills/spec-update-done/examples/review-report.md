@@ -7,7 +7,7 @@ This is an example of a spec review report generated after analyzing implementat
 # Spec Review Report: Instagram Data Pipeline
 
 **Review Date**: 2024-01-20
-**Reviewer**: Codex
+**Reviewer**: Codex (gpt-5.3-codex)
 **Spec Version**: 1.2.0
 **Code Commit**: `abc1234` (main branch)
 

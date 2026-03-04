@@ -1,4 +1,0 @@
-interface:
-  display_name: "Spec Update Todo"
-  short_description: "Help with Spec Update Todo SDD workflows"
-  default_prompt: "Use the spec-update-todo workflow and follow its SKILL.md exactly."

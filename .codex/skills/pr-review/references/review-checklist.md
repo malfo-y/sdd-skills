@@ -1,110 +1,110 @@
 # PR Review Checklist
 
-`pr-review` 스킬에서 사용하는 검증 체크리스트.
+Verification checklist used by the `pr-review` skill.
 
 ---
 
-## 스펙 준수 검증
+## Spec Compliance Verification
 
 ```markdown
-- [ ] 기존 스펙의 주요 요구사항이 PR에 의해 위반되지 않음
-- [ ] API 계약 변경 시 하위 호환성 유지 또는 breaking change 명시
-- [ ] 새 엔드포인트/컴포넌트가 기존 아키텍처 패턴을 따름
-- [ ] 보안 요구사항 (인증, 인가, 암호화) 준수
-- [ ] 데이터 모델 변경이 기존 스키마와 호환
-- [ ] 환경 설정 변경이 스펙의 배포 요구사항과 일치
-```
-
----
-
-## 패치 초안 검증
-
-```markdown
-- [ ] 패치 초안의 모든 Feature가 PR에 구현되어 있음
-- [ ] 패치 초안의 모든 Improvement가 PR에 반영되어 있음
-- [ ] 패치 초안의 모든 Bug Fix가 PR에서 수정되어 있음
-- [ ] 각 수용 기준(Acceptance Criterion)에 대응하는 코드가 존재
-- [ ] PR에 있으나 패치 초안에 기재되지 않은 변경사항 식별
+- [ ] Existing spec key requirements are not violated by the PR
+- [ ] API contract changes maintain backward compatibility or explicitly note breaking changes
+- [ ] New endpoints/components follow existing architecture patterns
+- [ ] Security requirements (authentication, authorization, encryption) are met
+- [ ] Data model changes are compatible with existing schemas
+- [ ] Environment configuration changes match the spec's deployment requirements
 ```
 
 ---
 
-## 테스트 검증
+## Patch Draft Verification
 
 ```markdown
-- [ ] 로컬 테스트 실행 전 `_sdd/env.md` 확인 및 환경 적용 (conda/env vars/services)
-- [ ] 각 수용 기준에 대응하는 테스트가 존재
-- [ ] 모든 테스트가 통과 (CI 또는 로컬)
-- [ ] 새로 추가된 코드에 대한 테스트 커버리지 확인
-- [ ] 에러 경로 및 경계 조건 테스트 존재
+- [ ] All Features in the patch draft are implemented in the PR
+- [ ] All Improvements in the patch draft are reflected in the PR
+- [ ] All Bug Fixes in the patch draft are addressed in the PR
+- [ ] Corresponding code exists for each Acceptance Criterion
+- [ ] Changes present in the PR but not listed in the patch draft are identified
 ```
 
 ---
 
-## 코드 품질
+## Test Verification
 
 ```markdown
-- [ ] 프로젝트의 기존 코딩 패턴 및 컨벤션 준수
-- [ ] 에러 핸들링이 적절하게 구현됨
-- [ ] 새 환경변수/설정값이 문서화됨 (.env.example 등)
-- [ ] 하드코딩된 비밀 값이 없음
+- [ ] Before running local tests, check `_sdd/env.md` and apply environment (conda/env vars/services)
+- [ ] Corresponding tests exist for each acceptance criterion
+- [ ] All tests pass (CI or local)
+- [ ] Test coverage for newly added code is verified
+- [ ] Error path and boundary condition tests exist
 ```
 
 ---
 
-## 문서화
+## Code Quality
 
 ```markdown
-- [ ] 새 환경변수가 .env.example 또는 설정 문서에 기재
-- [ ] Breaking changes가 PR 설명 또는 CHANGELOG에 명시
-- [ ] 새 API 엔드포인트의 요청/응답 형식이 문서화됨
-- [ ] 설정 변경사항이 배포 가이드에 반영됨
+- [ ] Project's existing coding patterns and conventions are followed
+- [ ] Error handling is properly implemented
+- [ ] New environment variables/config values are documented (.env.example etc.)
+- [ ] No hardcoded secrets
 ```
 
 ---
 
-## 보안/성능
+## Documentation
 
 ```markdown
-- [ ] SQL injection, XSS 등 OWASP Top 10 취약점 없음
-- [ ] 성능 회귀 가능성 확인 (N+1 쿼리, 불필요한 I/O 등)
-- [ ] 민감 데이터가 로그에 노출되지 않음
-- [ ] 인증/인가 로직이 올바르게 적용됨
+- [ ] New environment variables are listed in .env.example or config docs
+- [ ] Breaking changes are noted in the PR description or CHANGELOG
+- [ ] Request/response formats for new API endpoints are documented
+- [ ] Configuration changes are reflected in the deployment guide
 ```
 
 ---
 
-## 판정 기준 체크리스트
-
-### APPROVE 조건
+## Security / Performance
 
 ```markdown
-모든 항목 충족 시:
-- [ ] 수용 기준 100% 충족 (✓)
-- [ ] 스펙 위반 0건
-- [ ] 전체 테스트 통과
-- [ ] 보안 이슈 없음
-- [ ] 블로커 0건
+- [ ] No OWASP Top 10 vulnerabilities (SQL injection, XSS, etc.)
+- [ ] Performance regression potential checked (N+1 queries, unnecessary I/O, etc.)
+- [ ] Sensitive data is not exposed in logs
+- [ ] Authentication/authorization logic is correctly applied
 ```
 
-### REQUEST CHANGES 조건
+---
+
+## Verdict Criteria Checklist
+
+### APPROVE Conditions
 
 ```markdown
-아래 중 하나라도 해당 시:
-- [ ] 수용 기준 미충족 (✗) 항목 존재
-- [ ] 스펙 위반 발견
-- [ ] 테스트 실패
-- [ ] 보안 취약점 발견
-- [ ] 핵심 기능 버그
+All items must be satisfied:
+- [ ] 100% acceptance criteria met (✓)
+- [ ] 0 spec violations
+- [ ] All tests pass
+- [ ] No security issues
+- [ ] 0 blockers
 ```
 
-### NEEDS DISCUSSION 조건
+### REQUEST CHANGES Conditions
 
 ```markdown
-아래 중 하나라도 해당 시:
-- [ ] 의도적 스펙 변경이 포함됨 (설계 결정 필요)
-- [ ] 트레이드오프가 있는 구현 방식
-- [ ] 스코프가 모호한 요구사항
-- [ ] 새로운 아키텍처 결정 필요
-- [ ] 패치 초안에서 다루지 않은 중요 변경
+If any of the following apply:
+- [ ] Acceptance criteria not met (✗) items exist
+- [ ] Spec violation found
+- [ ] Test failure
+- [ ] Security vulnerability found
+- [ ] Critical functionality bug
+```
+
+### NEEDS DISCUSSION Conditions
+
+```markdown
+If any of the following apply:
+- [ ] Intentional spec change included (design decision needed)
+- [ ] Implementation approach with trade-offs
+- [ ] Requirements with ambiguous scope
+- [ ] New architectural decision needed
+- [ ] Significant changes not covered in the patch draft
 ```

@@ -1,7 +1,7 @@
 # Output Format Specification
 
 Detailed format specification for the `feature-draft` skill's output files.
-This extends the `feature-draft-sequential` output format with **Target Files** fields in Part 2.
+Output format specification for feature-draft, with **Target Files** fields in Part 2.
 
 ---
 
@@ -405,7 +405,7 @@ Phase 3: Remaining (low-risk items)
 
 ### Execute Implementation
 - **Parallel**: Run `implementation` skill → use Part 2 as implementation plan
-- **Sequential**: Run `implementation-sequential` skill → use Part 2 as plan (Target Files ignored)
+- **Sequential**: Execute tasks sequentially (Target Files ignored)
 
 ### Model Recommendation
 - [model recommendation for implementation]

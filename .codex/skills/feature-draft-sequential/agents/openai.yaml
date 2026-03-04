@@ -1,4 +1,0 @@
-interface:
-  display_name: "Feature Draft Sequential"
-  short_description: "Draft spec patch and implementation plan sequentially"
-  default_prompt: "Use the feature-draft-sequential workflow and follow its SKILL.md exactly."

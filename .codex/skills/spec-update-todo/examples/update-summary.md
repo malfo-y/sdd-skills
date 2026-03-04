@@ -215,9 +215,9 @@ Items processed: 14
 ## Next Steps
 
 1. **Review**: Verify all changes are accurate
-2. **Plan**: Run `implementation-plan` to create tasks for planned items
+2. **Plan**: Run `/implementation-plan` to create tasks for planned items
 3. **Implement**: Execute implementation plan
-4. **Sync**: Run `spec-update-done` after implementation to sync status
+4. **Sync**: Run `/spec-update-done` after implementation to sync status
 
 ---
 

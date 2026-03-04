@@ -1,98 +1,180 @@
 # Adaptive Questions Guide
 
-Use this guide to minimize unnecessary questions while collecting enough detail for both patch drafting and implementation planning.
+Criteria for determining input completeness level and question strategies per level.
 
-## Completeness Levels
+---
 
-### HIGH
+## Input Completeness Level Assessment
 
-Criteria:
+### HIGH (Detailed Input)
 
-- feature/change objective is explicit
-- priority is explicit or obvious
-- acceptance criteria are explicit or directly inferable
+**All** of the following conditions are met:
+- Feature name or improvement target is clear
+- Description is specific (what needs to be done is clear)
+- Acceptance Criteria are present or can be inferred
+- Priority is stated or clear from context
 
-Action:
+**Example**:
+> "Add real-time notification feature (High priority). Send Slack webhook notification on download completion.
+> Acceptance criteria: Slack webhook configurable, message template customizable, retry on error."
 
-- ask no blocking questions
-- provide a short confirmation summary
+**Response**: Proceed directly without questions. Only confirm by summarizing collected information.
 
-### MEDIUM
+---
 
-Criteria:
+### MEDIUM (Partial Input)
 
-- objective exists, but one or more key fields are missing
+Only **some** of the following are met:
+- Feature name or target is present but
+- Acceptance criteria are insufficient or
+- Priority is missing or
+- Technical context is lacking
 
-Action:
+**Example**:
+> "I want to add a feature that sends notifications via Slack."
 
-- ask only targeted questions for missing fields
+**Response**: Ask only 1-3 key questions.
 
-Recommended question types:
+**MEDIUM level question list** (select only what's missing):
 
-1. Priority: `High / Medium / Low`
-2. Acceptance criteria: at least 2 measurable checks
-3. Technical constraints: dependencies, infra, architecture boundaries
+1. **Priority** (when missing):
+   ```json
+   {
+     "question": "What is the priority of this feature?",
+     "header": "Priority",
+     "options": [
+       {"label": "High", "description": "Must be included in the next release"},
+       {"label": "Medium", "description": "Planned improvement"},
+       {"label": "Low", "description": "Nice to have"}
+     ],
+     "multiSelect": false
+   }
+   ```
 
-### LOW
+2. **Acceptance Criteria** (when missing):
+   - "What conditions would indicate this feature is complete? (at least 2)"
 
-Criteria:
+3. **Technical Constraints** (when unclear):
+   - "Are there any technical considerations? (libraries to use, architecture constraints, etc.)"
 
-- idea-level request, broad/ambiguous wording
+---
 
-Action:
+### LOW (Vague Input)
 
-- identify request type first
-- then ask mandatory type-specific questions
+Applies when:
+- Request is at the vague idea level
+- No specific feature name
+- "I want something like this" level
 
-## Type Identification
+**Example**:
+> "Add some notification feature"
+> "Need performance improvements"
 
-Ask user to choose one primary type:
+**Response**: Confirm type first → then ask type-specific required questions.
 
-- New Feature
-- Improvement
-- Bug Report
-- Component Change
-- Configuration Change
+---
 
-## Required Questions by Type
+## LOW Level: Type Confirmation Question
+
+First, confirm the requirement type:
+
+```json
+{
+  "question": "What kind of item is this?",
+  "header": "Type",
+  "options": [
+    {"label": "New Feature", "description": "Adding entirely new functionality"},
+    {"label": "Improvement", "description": "Enhancing existing functionality"},
+    {"label": "Bug Report", "description": "Reporting a discovered issue"},
+    {"label": "Component Change", "description": "Adding or modifying a component"}
+  ],
+  "multiSelect": false
+}
+```
+
+---
+
+## LOW Level: Type-Specific Required Questions
 
 ### New Feature
 
-- What is the feature name?
-- What should it do?
-- What is the priority?
-- What are acceptance criteria (min 2)?
+| Order | Question | Required |
+|-------|----------|----------|
+| 1 | What is the feature name? | Required |
+| 2 | What is the priority? (High/Medium/Low) | Required |
+| 3 | What should this feature do? (description) | Required |
+| 4 | What are the completion criteria? (Acceptance Criteria, at least 2) | Required |
+| 5 | Which components are involved? | Optional |
+| 6 | Are there any technical constraints or notes? | Optional |
 
 ### Improvement
 
-- What is the current state?
-- What should improve?
-- Why is this needed?
-- What priority should it have?
+| Order | Question | Required |
+|-------|----------|----------|
+| 1 | What do you want to improve? (target) | Required |
+| 2 | How does it currently work? (current state) | Required |
+| 3 | How should it be improved? (proposal) | Required |
+| 4 | Why is this improvement needed? (reason) | Required |
+| 5 | What is the priority? | Optional |
 
 ### Bug Report
 
-- What is the bug title?
-- What is severity?
-- How to reproduce?
-- What is expected behavior?
+| Order | Question | Required |
+|-------|----------|----------|
+| 1 | Describe the bug in one sentence (name) | Required |
+| 2 | What is the severity? (High/Medium/Low) | Required |
+| 3 | What is the problem? (description) | Required |
+| 4 | How can it be reproduced? (reproduction steps) | Required |
+| 5 | What should the correct behavior be? (expected behavior) | Required |
+| 6 | Do you know the location? (file:line) | Optional |
+| 7 | Is there a workaround? | Optional |
 
 ### Component Change
 
-- Which component is affected?
-- Is it new or existing?
-- What interface/behavior changes?
-- Any compatibility constraints?
+**Adding a new component**:
+
+| Order | Question | Required |
+|-------|----------|----------|
+| 1 | What is the component name? | Required |
+| 2 | What is the purpose of this component? | Required |
+| 3 | What are the inputs and outputs? | Required |
+| 4 | What are the main methods/functions? | Optional |
+
+**Modifying an existing component**:
+
+| Order | Question | Required |
+|-------|----------|----------|
+| 1 | Which component is being modified? | Required |
+| 2 | What kind of change is it? (Enhancement/Refactor/Fix) | Required |
+| 3 | What specific changes are needed? | Required |
+| 4 | Does it affect backward compatibility? | Optional |
 
 ### Configuration Change
 
-- Config name/key?
-- Type (`env`, config file, CLI arg)?
-- What does it control?
-- Required or optional; default value?
+| Order | Question | Required |
+|-------|----------|----------|
+| 1 | What is the configuration item name? | Required |
+| 2 | What type is it? (environment variable/config file/CLI argument) | Required |
+| 3 | What does this setting control? (description) | Required |
+| 4 | Is it required? What is the default? | Optional |
 
-## Efficiency Rules
+---
 
-- Never re-ask known information from chat/context files.
-- Prefer one concise multi-part prompt over many tiny prompts.
-- If uncertainty remains, document it under open questions rather than guessing.
+## Question Efficiency Tips
+
+### Using request_user_input (Plan mode) / direct question (Default mode)
+
+- Bundle multiple questions into a single request_user_input (Plan mode) / direct question (Default mode) call (up to 4 questions)
+- Use options for choice-based questions (minimize typing)
+- Collect free-text answers through conversation
+
+### Question Order Optimization
+
+1. Choice-based questions first (quick via request_user_input (Plan mode) / direct question (Default mode))
+2. Free-text questions later (naturally through conversation)
+
+### Avoiding Unnecessary Questions
+
+- Don't re-ask information already mentioned in conversation
+- Only confirm information that can be inferred from existing spec
+- Ask optional questions only when user provides additional information

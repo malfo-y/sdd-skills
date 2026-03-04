@@ -194,15 +194,15 @@ Based on current spec state and progress:
 - **Latest Review** (최근 리뷰): `_sdd/implementation/IMPLEMENTATION_REVIEW.md`
 
 ### Related Commands
-- `spec-update-todo` - Add new features to spec
-- `implementation-plan` - Create implementation plan from spec
-- `spec-update-done` - Sync spec with code changes
-- `spec-summary` - Regenerate this summary
+- `/spec-update-todo` - Add new features to spec
+- `/implementation-plan` - Create implementation plan from spec
+- `/spec-update-done` - Sync spec with code changes
+- `/spec-summary` - Regenerate this summary
 
 ---
 
-**Summary 생성 방법**: `spec-summary`를 실행하면 이 파일이 자동 생성/갱신됩니다.
-**How to Generate**: Run `spec-summary` to automatically create/update this file.
+**Summary 생성 방법**: `/spec-summary`를 실행하면 이 파일이 자동 생성/갱신됩니다.
+**How to Generate**: Run `/spec-summary` to automatically create/update this file.
 
 **Note**: Regenerating this summary should first create `_sdd/spec/prev/PREV_SUMMARY_<timestamp>.md` (create `_sdd/spec/prev/` if needed) if an existing `_sdd/spec/SUMMARY.md` is being overwritten.
 

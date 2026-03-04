@@ -29,20 +29,18 @@ For each phase:
   1. 의존성 그래프에서 unblocked task 식별
      - blockedBy에 pending/in_progress task가 없는 task
 
-  2. Unblocked task 쌍의 충돌 확인 (2단계)
+  2. Unblocked task 쌍의 Target Files 겹침 확인
      - 모든 unblocked task 쌍에 대해:
-       a. 파일 수준 충돌: Task A의 Target Files ∩ Task B의 Target Files
-          - 교집합 있음 → 충돌
-       b. 의미적 충돌: 파일이 달라도 공유 계약/스키마/설정 의존 여부 확인
-          - 의미적 의존이 강하면 → 충돌
-       - 파일/의미 충돌 모두 없을 때만 병렬 실행 가능
+       Task A의 Target Files ∩ Task B의 Target Files
+       - 교집합 없음 → 병렬 실행 가능
+       - 교집합 있음 → 순차 실행 (우선순위 → ID 순)
 
   3. 병렬 그룹으로 묶기
-     - 서로 파일/의미 충돌 없는 task들을 하나의 그룹으로
+     - 서로 충돌 없는 task들을 하나의 그룹으로
      - 충돌 있는 task는 별도 그룹 또는 순차 대기열로
 
-  4. 병렬 워크스트림으로 동시 실행
-     - 한 그룹의 모든 task를 동시에 병렬 실행 호출
+  4. Task tool로 동시 spawn
+     - 한 그룹의 모든 task를 동시에 Task tool 호출
      - 각 sub-agent에게 담당 task 정보 전달
 
   5. 모든 sub-agent 완료 후 통합 검증
@@ -71,8 +69,8 @@ function buildParallelGroups(unblockedTasks):
         for task in remaining:
             taskFiles = task.targetFiles
 
-            # 파일 수준 + 의미적 충돌 확인
-            if taskFiles ∩ usedFiles == ∅ and noSemanticConflict(task, currentGroup):
+            # 현재 그룹의 파일과 겹침 확인
+            if taskFiles ∩ usedFiles == ∅:
                 currentGroup.append(task)
                 usedFiles = usedFiles ∪ taskFiles
 
@@ -125,32 +123,33 @@ function buildParallelGroups(unblockedTasks):
 
 ### 2단계: 의미적 충돌 (Semantic Conflict)
 
-파일 경로가 겹치지 않아도 **의미적으로 충돌**할 수 있습니다.
+파일 경로가 겹치지 않아도 **의미적으로 충돌**하는 경우가 있습니다.
 파일 수준 충돌 판정 후, 추가로 아래 패턴을 확인합니다:
 
 | 패턴 | 예시 | 위험 |
 |------|------|------|
-| **공유 스키마/모델 의존** | Task A가 User 모델 생성, Task B가 User 모델을 import하는 서비스 생성 | Task B가 Task A의 모델 구조에 의존 |
-| **공유 설정/환경 변수** | Task A가 `DB_URL` 규약 추가, Task B가 이를 가정한 코드 작성 | 설정 계약 불일치 가능 |
-| **공유 인터페이스/API 계약** | Task A가 `/api/users` 응답 형식 정의, Task B가 이를 소비 | API 계약 충돌 가능 |
-| **공유 타입/상수 정의** | Task A가 상수 정의, Task B가 다른 값/의미를 가정 | 타입/상수 불일치 |
-| **마이그레이션 순서** | Task A, B가 모두 DB 마이그레이션 생성 | 번호/순서 충돌 |
+| **공유 스키마/모델 의존** | Task A가 User 모델 생성, Task B가 User 모델을 import하는 서비스 생성 | Target Files는 다르지만, Task B는 Task A의 모델 구조에 의존 |
+| **공유 설정/환경 변수** | Task A가 `DB_URL` 환경 변수 추가, Task B가 `DB_URL` 형식을 가정한 코드 작성 | 설정 계약(contract)이 암묵적으로 공유됨 |
+| **공유 인터페이스/API 계약** | Task A가 `/api/users` 엔드포인트 생성, Task B가 해당 엔드포인트의 응답 형식을 가정 | API 계약 불일치 가능 |
+| **공유 타입/상수 정의** | Task A가 상수 파일에 `MAX_RETRIES=3` 추가, Task B가 같은 상수를 다른 값으로 가정 | 타입/상수 충돌 |
+| **마이그레이션 순서** | Task A, B 모두 DB 마이그레이션 생성 | 마이그레이션 번호 충돌, 실행 순서 문제 |
 
-의미적 충돌 감지 절차:
+**의미적 충돌 감지 방법**:
 
 ```
-For each pair of file-level non-conflicting tasks:
-  1. Acceptance Criteria / Technical Notes에서 상호 의존 언급 확인
-  2. 생성 모델/타입/상수를 다른 task가 소비하는지 확인
-  3. 두 task가 동시에 마이그레이션 파일을 생성하는지 확인
-  4. env/config 계약을 공유하는지 확인
+For each pair of non-conflicting (파일 수준) tasks:
+  1. Task A의 Acceptance Criteria/Technical Notes에서
+     Task B의 Target Files에 대한 의존 언급이 있는지 확인
+  2. Task A가 생성하는 모델/타입/상수를 Task B가 사용하는지 확인
+  3. 두 task 모두 DB 마이그레이션을 생성하는지 확인
+  4. 공유 설정 파일(env, config)에 대한 암묵적 의존이 있는지 확인
 
-IF semantic conflict detected:
-  -> 순차 실행으로 전환
-  -> 또는 사용자 확인 후 병렬 허용
+IF 의미적 충돌 발견:
+  → 해당 task 쌍을 순차 실행으로 전환
+  → 또는 사용자에게 확인 후 병렬 허용
 ```
 
-불확실하면 순차 실행을 기본값으로 둡니다.
+**중요**: 의미적 충돌은 자동 감지가 불완전할 수 있습니다. 불확실한 경우 순차 실행이 안전합니다.
 
 ### 충돌 시 처리
 
@@ -168,7 +167,7 @@ IF semantic conflict detected:
 
 ### Sub-Agent에게 전달하는 정보
 
-각 sub-agent는 병렬 실행 프롬프트를 통해 다음 정보를 받습니다:
+각 sub-agent는 Task tool을 통해 다음 정보를 받습니다:
 
 ```markdown
 ## Task 정보
@@ -317,10 +316,10 @@ IF sub-agent가 Unplanned Dependency를 보고하면:
   3. 해결 후 미완료 부분 재실행 (순차)
 ```
 
-### 4. 충돌 감지 (런타임)
+### 4. 파일 충돌 감지 (런타임)
 
 ```
-IF 실행 중 예상치 못한 파일/의미 충돌 발생:
+IF 실행 중 예상치 못한 파일 충돌 발생:
   1. 해당 task들만 중단
   2. 나머지 병렬 task는 계속 진행
   3. 중단된 task들은 순차로 재실행
@@ -331,9 +330,13 @@ IF 실행 중 예상치 못한 파일/의미 충돌 발생:
 ```
 IF unblocked task가 10개 이상이면:
   1. 최대 동시 실행 수를 5로 제한
-  2. 완료되는 대로 다음 task 시작 (슬라이딩 윈도우)
-  3. 전체 그룹 완료를 기다리지 않고 incremental 진행
+  2. 그룹 크기를 최대 5로 나누어 여러 그룹으로 분할
+  3. 각 그룹은 기본 정책대로 "그룹 완료 대기 → 통합 검증 → 다음 그룹" 순서로 실행
+  4. 통합 검증 없이 다음 그룹을 시작하지 않음 (회귀 방지)
 ```
+
+> **Note**: 슬라이딩 윈도우(완료 즉시 다음 task 시작) 방식은 통합 검증을 건너뛰어
+> 회귀 위험이 있으므로 사용하지 않습니다. 대신 그룹 크기 제한으로 대규모 phase를 처리합니다.
 
 ---
 

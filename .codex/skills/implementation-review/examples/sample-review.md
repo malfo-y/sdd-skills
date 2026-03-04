@@ -11,7 +11,7 @@ This example shows how the implementation-review skill audits an authentication 
 ```
 User: review implementation
 
-Codex: Found implementation plan at _sdd/implementation/IMPLEMENTATION_PLAN.md
+Claude: Found implementation plan at _sdd/implementation/IMPLEMENTATION_PLAN.md
 
 Starting implementation review for: User Authentication System
 
@@ -38,7 +38,7 @@ Proceeding to verification...
 ### 2. Verifying Implementation
 
 ```
-Codex:
+Claude:
 ## Step 2: Verifying Implementation
 
 ### Searching for expected files...
@@ -83,7 +83,7 @@ Failed Tests:
 ### 3. Assessing Acceptance Criteria
 
 ```
-Codex:
+Claude:
 ## Step 3: Acceptance Criteria Assessment
 
 ### Phase 1: Foundation
@@ -171,7 +171,7 @@ Codex:
 ### 4. Issues and Improvements
 
 ```
-Codex:
+Claude:
 ## Step 4: Issues Identified
 
 ### Critical Issues (4)
@@ -269,14 +269,14 @@ Codex:
 ### 5. Summary and Next Steps
 
 ```
-Codex:
+Claude:
 ## Step 5: Implementation Review Summary
 
 # Implementation Review: User Authentication System
 
 **Review Date**: 2024-01-15
 **Plan**: _sdd/implementation/IMPLEMENTATION_PLAN.md
-**Reviewer**: Codex
+**Reviewer**: Codex (gpt-5.3-codex)
 
 ---
 
