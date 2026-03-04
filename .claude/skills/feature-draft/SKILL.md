@@ -86,41 +86,78 @@ In a single conversation, it collects requirements and simultaneously generates 
 
 ### Step 1: Input Analysis
 
+**Tools**: `Read`, `Glob`, `Bash (git diff)`
+
 ```
 1. Review user conversation content
 2. Check for existing files:
-   - `_sdd/spec/user_draft.md` (created by spec-draft)
-   - `_sdd/spec/user_spec.md` (user-authored)
-   - `_sdd/implementation/user_input.md` (implementation input)
-3. Check code changes (git diff etc.)
-4. Consolidate requirements from all sources
-5. Determine input completeness level (see references/adaptive-questions.md):
+   - Glob("_sdd/spec/user_draft.md") (created by spec-draft)
+   - Glob("_sdd/spec/user_spec.md") (user-authored)
+   - Glob("_sdd/implementation/user_input.md") (implementation input)
+3. Check code changes: Bash("git diff --name-only")
+4. Read discovered input files
+5. Consolidate requirements from all sources
+6. Determine input completeness level (see references/adaptive-questions.md):
    - HIGH: Feature name + description + acceptance criteria + priority all present
    - MEDIUM: Feature name + description present but acceptance criteria or priority missing
    - LOW: Vague idea level
 ```
 
+**Decision Gate 1→2**:
+```
+spec_exists = Glob("_sdd/spec/*.md") 중 프로젝트 스펙 파일 존재 여부
+  (user_draft.md, user_spec.md, DECISION_LOG.md 제외)
+
+IF spec_exists → Step 2 진행
+ELSE → AskUserQuestion:
+  1. "spec-create 먼저 실행" — 스킬 종료
+  2. "Part 2만 생성" — Part 1 생략 모드로 진행
+```
+
 ### Step 2: Context Gathering
+
+**Tools**: `Glob`, `Read`, `codebase-retrieval`
 
 ```
 1. Read existing spec (read-only):
-   - Find `_sdd/spec/<project>.md` or `main.md`
+   - Glob("_sdd/spec/*.md")로 스펙 파일 목록 확인
+   - Read로 스펙 읽기 (크기별 전략은 아래 Context Management 참조)
    - If spec is split, follow links from the index
 2. Understand spec structure:
    - Section list (to determine where patches go)
    - Component list (to understand relationships with existing components)
    - Existing feature list (to prevent duplication)
    - Verify spec language/style (so patches match existing style)
-3. Check `_sdd/spec/DECISION_LOG.md` (if present):
+3. Check Glob("_sdd/spec/DECISION_LOG.md") (if present):
    - Review existing decisions/rationale
    - Ensure new feature doesn't conflict with existing decisions
 4. **Explore codebase** for Target Files:
-   - Identify existing file patterns (where source, tests, configs live)
+   - codebase-retrieval: 프로젝트 구조, 기존 패턴 파악
+   - Glob: 소스/테스트/설정 파일 위치 확인
    - Note naming conventions for new files
    - Map which existing files will need modification
 ```
 
+#### Context Management (Step 2 후 적용)
+
+스펙과 코드베이스 크기에 따라 읽기 전략을 조절한다. 상세 전략은 `references/tool-and-gates.md` 참조.
+
+| 스펙 크기 | 전략 |
+|-----------|------|
+| < 200줄 | 전체 읽기 |
+| 200-500줄 | 전체 읽기 가능 |
+| 500-1000줄 | TOC 먼저, 관련 섹션만 읽기 |
+| > 1000줄 | 인덱스만, 타겟 섹션 최대 3개 |
+
+| 코드베이스 크기 | 전략 |
+|----------------|------|
+| < 50 파일 | `Glob` + `Read` 자유 탐색 |
+| 50-200 파일 | `codebase-retrieval` + 타겟 `Read` |
+| > 200 파일 | `codebase-retrieval` 위주 |
+
 ### Step 3: Adaptive Clarification
+
+**Tools**: `AskUserQuestion`
 
 Apply different question strategies based on input completeness level:
 
@@ -141,7 +178,20 @@ Apply different question strategies based on input completeness level:
   - Use AskUserQuestion to confirm: "It seems like multiple features are included. Would you like to include them all in one file, or separate them into individual files?"
   - Proceed based on user's choice
 
+**Decision Gate 3→4**:
+```
+has_feature_name = 기능명이 명확한가?
+has_description = 기능 설명이 충분한가?
+has_type = 유형 분류가 가능한가? (New Feature / Improvement / Bug / etc.)
+
+IF 모두 충족 → Step 4 진행
+ELSE → 미충족 항목에 대해 AskUserQuestion (최대 2라운드)
+  → 2라운드 후에도 미충족 시 → 가용 정보로 진행, 누락 항목은 Open Questions에 기록
+```
+
 ### Step 4: Feature Design
+
+**Tools**: `codebase-retrieval`, `Glob`
 
 ```
 1. Classify requirements by type:
@@ -173,12 +223,24 @@ Apply different question strategies based on input completeness level:
 
 4. **Map Target Files per task**:
    - For each task, identify which files will be created/modified/deleted
-   - Use codebase exploration to determine exact file paths
+   - codebase-retrieval: "이 기능과 관련된 기존 코드는?" 형태의 시맨틱 검색
+   - Glob: 후보 파일 경로 존재 여부 검증
    - Verify no unnecessary file overlaps between tasks
    - Apply Target Files markers: [C] Create, [M] Modify, [D] Delete
 ```
 
+**Decision Gate 4→5**:
+```
+IF 요구사항 유형별 분류 완료
+   AND 각 항목에 Target Section 매핑 완료
+   AND Target Files 초안 작성 완료
+→ Step 5 진행
+ELSE → 미완료 항목 보완 후 재확인
+```
+
 ### Step 5: Spec Patch Generation = Part 1
+
+**Tools**: — (출력 생성 단계, 도구 불필요)
 
 Part 1 follows the "Spec Update Input" format with `**Target Section**` annotations added to each item.
 
@@ -281,7 +343,35 @@ Part 1 follows the "Spec Update Input" format with `**Target Section**` annotati
 
 > **상세 포맷**: 각 섹션의 전체 필드 목록과 선택/필수 구분은 `references/output-format.md`를 참고하세요.
 
+### Step 5.5: Part 1 Checkpoint
+
+**Tools**: `AskUserQuestion`
+
+Part 2 생성은 작업량이 크므로(태스크 상세, Target Files, 의존성 매핑), Part 1 스코프를 확정한 후 진행한다.
+
+```
+1. Part 1 요약 테이블을 사용자에게 제시:
+   | 섹션 | 항목 수 | 주요 내용 |
+   |------|---------|----------|
+   | New Features | N | ... |
+   | Improvements | N | ... |
+   | ... | ... | ... |
+
+2. AskUserQuestion: "Part 1 내용을 확인해 주세요."
+   옵션:
+   1. "확인, Part 2 진행" → Step 6
+   2. "수정 필요" → 수정 사항 반영
+
+3. 수정 요청 시:
+   - Part 1 수정 반영
+   - 수정된 부분만 재제시
+   - 최대 2라운드까지 수정 반복
+   - 2라운드 후 Step 6 진행
+```
+
 ### Step 6: Implementation Plan Generation = Part 2
+
+**Tools**: — (출력 생성 단계, 도구 불필요)
 
 Reuse the components and analysis results from Step 4 to create the implementation plan.
 **Key difference from `feature-draft-sequential`**: Every task includes a `**Target Files**` field.
@@ -353,6 +443,15 @@ Reuse the components and analysis results from Step 4 to create the implementati
 [model recommendation based on implementation complexity]
 ```
 
+**Conflict minimization patterns** (5+ tasks/phase이고 파일 겹침이 많을 때 적용 권장):
+
+| 패턴 | 상황 | 해결 |
+|------|------|------|
+| **Split-by-method** | 같은 파일에 독립 메서드 추가 | 별도 파일로 분리하여 각 태스크에 배정 |
+| **Shared-config 격리** | 여러 태스크가 settings.py 수정 | 설정 전용 태스크로 통합 |
+| **Test fixture 격리** | conftest.py 충돌 위험 | 디렉토리별 conftest 또는 setup 태스크 통합 |
+| **Interface-first** | 공유 계약(인터페이스) 필요 | 인터페이스 정의 태스크를 먼저 실행 |
+
 **Task definition rules**:
 - Each task should be completable in a single work session
 - Split into subtasks if too large
@@ -381,16 +480,30 @@ Reuse the components and analysis results from Step 4 to create the implementati
 Estimate implementation scale and complexity to recommend an appropriate model.
 See "Model aliases" at https://code.claude.com/docs/en/model-config.
 
+**Decision Gate 6→7**:
+```
+IF Part 1 (또는 Part 2 only 모드) + Part 2 + 병렬 실행 요약 모두 생성 완료
+→ Step 7 진행
+ELSE → 미완료 파트 생성 후 재확인
+```
+
 ### Step 7: Review & Confirm
 
+**Tools**: `Write`, `Bash (mkdir/mv)`, `AskUserQuestion`, `Glob`
+
 ```
-1. Show generated draft to user (Part 1 + Part 2)
-2. Incorporate modifications
-3. Check if there's anything else to add
-4. **Verify Target Files**:
+1. 요약 테이블 제시 (Part 1 항목 수 + Part 2 Phase/Tasks/병렬도)
+2. AskUserQuestion: "상세 확인하시겠습니까? (Part 1 / Part 2 / 전체)"
+3. 요청된 섹션만 상세 출력
+4. 수정사항 반영 → 영향 받은 섹션만 재생성
+5. Check if there's anything else to add
+4. **Verify Target Files** (Glob 기반 검증):
    a. Every task has Target Files
-   b. File paths are plausible (match project structure)
-   c. Review overlaps and note which tasks must be sequential
+   b. [M] 파일: Glob으로 존재 확인 → 미존재 시 [C]로 변경 또는 경로 수정
+   c. [C] 파일: Glob으로 미존재 확인 → 이미 존재하면 [M]으로 변경
+   d. [C] 파일의 상위 디렉토리 존재 확인
+   e. 전체 Target Files 수집 → 중복 파일 감지 → 병렬 실행 요약에 반영
+   f. Review overlaps and note which tasks must be sequential
 
 5. Save file:
    a. Create `_sdd/drafts/` directory (if it doesn't exist)
@@ -533,6 +646,7 @@ Non-parallel fallback:
 - **`references/adaptive-questions.md`** - Adaptive mode question guide (completeness level assessment + type-specific questions)
 - **`references/output-format.md`** - Output file detailed format specification (with Target Files extension)
 - **`references/target-files-spec.md`** - Target Files field detailed specification
+- **`references/tool-and-gates.md`** - Step별 도구 매핑, Decision Gates, Context Management 전략
 
 ### Example Files
 - **`examples/feature_draft_parallel.md`** - Completed output example file with Target Files
