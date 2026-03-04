@@ -38,14 +38,31 @@ Spec documents are stored in the `_sdd/spec/` directory within the project root.
 
 ## Hard Rules
 
-1. **스펙 이외의 코드 파일 수정 금지**: 이 스킬은 `_sdd/spec/` 아래 스펙 문서만 생성한다. 기존 코드 파일을 수정하지 않는다.
+1. **코드 파일 수정 금지**: `src/`, `tests/` 등 구현 코드 파일은 수정하지 않는다.
 2. **한국어 작성**: 스펙 문서 내용은 한국어로 작성한다 (사용자 지정 시 해당 언어 사용).
-3. **출력 위치 준수**: `_sdd/spec/` 디렉토리에만 파일을 저장한다.
+3. **출력 위치 준수**: 스펙은 `_sdd/spec/`에 저장하고, 초기 부트스트랩 파일은 `<project_root>/AGENTS.md`, `<project_root>/CLAUDE.md`, `<project_root>/_sdd/env.md`에만 생성한다.
 4. **기존 스펙 보존**: 이미 스펙 파일이 존재하면 덮어쓰기 전 반드시 `prev/PREV_<filename>_<timestamp>.md`로 백업한다.
-5. **DECISION_LOG.md 최소화**: 결정 로그는 `DECISION_LOG.md`에만 기록하며, 추가 거버넌스 문서는 사용자 요청 시에만 생성한다.
+5. **부트스트랩 파일 최소 수정 원칙**: `AGENTS.md`, `CLAUDE.md`, `_sdd/env.md`가 이미 존재할 때 필수 안내 문구가 누락된 경우, 반드시 사용자 확인 후 필요한 문구만 최소 추가한다.
+6. **DECISION_LOG.md 최소화**: 결정 로그는 `DECISION_LOG.md`에만 기록하며, 추가 거버넌스 문서는 사용자 요청 시에만 생성한다.
 
 ## Directory Structure
 
+```
+<project-root>/
+├── AGENTS.md             # Codex 작업 가이드 (없으면 생성)
+├── CLAUDE.md             # Claude Code 작업 가이드 (없으면 생성)
+└── _sdd/
+    ├── env.md            # 환경/실행 가이드 (없으면 생성)
+    ├── spec/
+    │   ├── main.md             # Main spec document (or <project-name>.md)
+    │   ├── <component>.md      # Component-specific specs (for large projects)
+    │   ├── user_draft.md       # User requirements (if exists)
+    │   └── DECISION_LOG.md     # Why/decision rationale log (optional, recommended)
+    └── implementation/
+        └── IMPLEMENTATION_PLAN.md  # Implementation plan (if exists)
+```
+
+Legacy shorthand:
 ```
 _sdd/
 ├── spec/
@@ -70,6 +87,7 @@ Before creating a spec document, collect:
 3. **From Documentation**: Read existing README, comments, configs
 4. **From Decision Log**: Read `_sdd/spec/DECISION_LOG.md` if it exists
 5. **Clarification**: Use AskUserQuestion for ambiguous requirements
+6. **Bootstrap targets check**: `AGENTS.md`, `CLAUDE.md`, `_sdd/env.md` 존재 여부 확인
 
 User input includes user conversation and user-specified files (defaults to `_sdd/spec/user_draft.md`).
 
@@ -139,11 +157,61 @@ IF has_goal AND has_architecture AND has_components → Step 3 진행
 ELSE → 미파악 항목에 대해 추가 탐색 또는 AskUserQuestion
 ```
 
-### Step 3: Write the Spec Document
+### Step 3: Bootstrap + Write the Spec Document
 
-**Tools**: `Write`, `Bash (mkdir -p)`
+**Tools**: `Read`, `Edit`, `Write`, `Bash (mkdir -p)`
 
-Follow the template structure below, adapting sections as needed:
+Before writing the spec, bootstrap guidance files if missing:
+
+#### Step 3-A: Create missing workspace guidance files
+
+1. Ensure `_sdd/` and `_sdd/spec/` directories exist.
+2. If `<project_root>/AGENTS.md` is missing, create with:
+
+```markdown
+# Workspace Guidance
+
+- 프로젝트 스펙 문서는 `_sdd/spec/`를 기준으로 확인합니다.
+- 환경 관련 설정/실행 방법은 `_sdd/env.md`를 기준으로 확인합니다.
+```
+
+3. If `<project_root>/CLAUDE.md` is missing, create with:
+
+```markdown
+# Workspace Guidance
+
+- 프로젝트 스펙 문서는 `_sdd/spec/`를 기준으로 확인합니다.
+- 환경 관련 설정/실행 방법은 `_sdd/env.md`를 기준으로 확인합니다.
+```
+
+4. If `<project_root>/_sdd/env.md` is missing, create with TODO comments:
+
+```markdown
+# Environment Setup Guide
+
+<!-- TODO: 프로젝트 실행/테스트에 필요한 환경 정보를 여기에 작성하세요. -->
+<!-- 예: Python/Node 버전, 가상환경, 필수 환경변수, 실행 전 준비 서비스 -->
+
+## Runtime
+- <!-- 예: Python 3.11 -->
+
+## Environment Variables
+- <!-- 예: OPENAI_API_KEY=... -->
+
+## Setup Commands
+- <!-- 예: conda activate myenv -->
+- <!-- 예: npm install -->
+```
+
+5. If files already exist:
+   - Check whether required guidance lines already exist:
+     - `AGENTS.md` / `CLAUDE.md`: `_sdd/spec/` 참조 + `_sdd/env.md` 참조 문구
+     - `_sdd/env.md`: 환경 정보 작성용 TODO 주석/섹션
+   - If required lines are missing, ask user via AskUserQuestion
+   - If user approves, append only the missing lines (minimal edit, preserve existing structure).
+   - If user declines, keep file unchanged and continue spec creation.
+
+Then write the spec document using the template structure below, adapting sections as needed:
 
 ```markdown
 # <Project Name>
@@ -244,16 +312,21 @@ project/
 ### Creating a New Spec
 
 1. Create `_sdd/spec/` directory if not exists
-2. Analyze project using explore agent or direct reading
-3. Write spec following template structure
-4. Save as `<project-name>.md` or `main.md`
-5. If decisions or trade-offs were made during drafting, create/update `_sdd/spec/DECISION_LOG.md`
-6. **출력 검증** (Glob 기반):
+2. If missing, create `<project_root>/AGENTS.md` with `_sdd/spec` / `_sdd/env.md` reference lines
+3. If missing, create `<project_root>/CLAUDE.md` with `_sdd/spec` / `_sdd/env.md` reference lines
+4. If missing, create `<project_root>/_sdd/env.md` with TODO comments for environment details
+5. If existing `AGENTS.md` / `CLAUDE.md` / `_sdd/env.md` lack required guidance lines, ask user whether to add them; append only missing lines when approved
+6. Analyze project using explore agent or direct reading
+7. Write spec following template structure
+8. Save as `<project-name>.md` or `main.md`
+9. If decisions or trade-offs were made during drafting, create/update `_sdd/spec/DECISION_LOG.md`
+10. **출력 검증** (Glob 기반):
    a. `Glob("_sdd/spec/<project>.md")` → 생성 파일 존재 확인
    b. 필수 섹션 포함 확인: Goal, Architecture, Component Details, Environment
    c. 500줄 초과 시 → 모듈 분할 제안
    d. `DECISION_LOG.md` 생성 여부 확인 (결정 사항이 있었을 경우)
    e. 링크/경로 유효성 확인
+   f. `AGENTS.md`, `CLAUDE.md`, `_sdd/env.md`의 필수 안내 문구 존재 확인 (생성 또는 사용자 승인 기반 최소 추가)
 
 Minimal decision log entry format:
 ```markdown
@@ -327,6 +400,7 @@ Save spec documents to:
 - **Default**: `_sdd/spec/<project-name>.md` or `_sdd/spec/main.md`
 - **User Specified**: Any path the user requests
 - **Create directories**: Automatically create `_sdd/spec/` if needed
+- **Bootstrap docs**: `<project_root>/AGENTS.md`, `<project_root>/CLAUDE.md`, `<project_root>/_sdd/env.md` (없으면 생성, 기존 파일은 사용자 승인 시 누락 문구만 최소 추가)
 - **Decision log**: `_sdd/spec/DECISION_LOG.md` (when decisions/rationale need to be preserved)
 
 ## Progressive Disclosure (완료 시)
@@ -336,6 +410,7 @@ Save spec documents to:
    | 항목 | 내용 |
    |------|------|
    | 생성 파일 | `_sdd/spec/<project>.md` |
+   | 부트스트랩 파일 | `AGENTS.md` / `CLAUDE.md` / `_sdd/env.md` (신규 생성 또는 사용자 승인 기반 최소 추가) |
    | 총 줄 수 | N줄 |
    | 주요 섹션 | Goal, Architecture, Components, ... |
    | Decision Log | 생성됨/미생성 |
@@ -352,6 +427,9 @@ Save spec documents to:
 | 상황 | 대응 |
 |------|------|
 | `_sdd/spec/` 디렉토리 미존재 | 자동 생성 (`mkdir -p _sdd/spec/`) |
+| `AGENTS.md` / `CLAUDE.md` 미존재 | 표준 안내 문구로 새 파일 생성 |
+| `_sdd/env.md` 미존재 | TODO 주석이 포함된 템플릿 파일 생성 |
+| 기존 `AGENTS.md` / `CLAUDE.md` / `_sdd/env.md`에 필수 문구 누락 | AskUserQuestion으로 추가 여부 확인 후 승인 시 최소 추가 |
 | 기존 스펙 파일 존재 | `prev/PREV_<filename>_<timestamp>.md`로 백업 후 새로 생성 |
 | 프로젝트 코드 접근 불가 | 사용자에게 경로 확인 요청 |
 | user_draft.md 형식 오류 | 파싱 오류 위치 보고, 자유 형식으로 해석 시도 |

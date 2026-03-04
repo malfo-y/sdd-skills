@@ -142,7 +142,7 @@ while :; do
   # Disable errexit temporarily so LLM failures are handled by retry logic.
   set +e
   run_llm_with_timeout "${LLM_TIMEOUT_SECONDS}" "ralph/PROMPT.md" \
-    claude -p --verbose --dangerously-skip-permissions --output-format stream-json \
+    codex exec --json --dangerously-bypass-approvals-and-sandbox - \
     | tee "ralph/results/llm_iter${ITERATION}.json" \
     | python3 -u -c "
 import sys, json
@@ -154,27 +154,27 @@ for line in sys.stdin:
     except json.JSONDecodeError:
         continue
     t = ev.get('type','')
-    if t == 'assistant' and 'content' in ev:
-        for block in ev['content']:
-            if block.get('type') == 'text':
-                print(block['text'], end='', flush=True)
-            elif block.get('type') == 'tool_use':
-                name = block.get('name','')
-                inp = block.get('input',{})
-                if name in ('Read','Glob','Grep'):
-                    target = inp.get('file_path') or inp.get('pattern','')
-                    print(f'  [{name}] {target}', flush=True)
-                elif name == 'Write':
-                    print(f'  [Write] {inp.get(\"file_path\",\"\")}', flush=True)
-                elif name == 'Edit':
-                    print(f'  [Edit] {inp.get(\"file_path\",\"\")}', flush=True)
-                elif name == 'Bash':
-                    cmd = inp.get('command','')[:80]
-                    print(f'  [Bash] {cmd}', flush=True)
-                else:
-                    print(f'  [{name}]', flush=True)
-    elif t == 'result':
-        pass  # tool results -- skip (too verbose)
+    if t in ('item.started', 'item.completed'):
+        item = ev.get('item', {})
+        item_type = item.get('type', '')
+
+        if item_type == 'agent_message':
+            text = item.get('text', '')
+            if text:
+                print(text, flush=True)
+        elif item_type == 'command_execution':
+            cmd = item.get('command', '')[:120]
+            if t == 'item.started':
+                print(f'  [Bash] {cmd}', flush=True)
+            else:
+                exit_code = item.get('exit_code')
+                print(f'  [Bash exit={exit_code}] {cmd}', flush=True)
+        elif item_type == 'reasoning':
+            pass
+    elif t == 'error':
+        msg = ev.get('message', '')
+        if msg:
+            print(f'[codex error] {msg}', flush=True)
 " 2>/dev/null
   LLM_EXIT=$?
   set -e
@@ -188,7 +188,7 @@ for line in sys.stdin:
     echo "[ralph] LLM step failed (exit code ${LLM_EXIT}, failure ${LLM_FAIL_COUNT}/${MAX_LLM_FAILURES})"
     if [ ${LLM_FAIL_COUNT} -ge ${MAX_LLM_FAILURES} ]; then
       echo "[ralph] ERROR: LLM step failed ${MAX_LLM_FAILURES} consecutive times. Exiting."
-      echo "[ralph] Check: claude CLI installed? API key valid? Network OK?"
+      echo "[ralph] Check: codex CLI installed? OpenAI API key valid? Network OK?"
       exit 1
     fi
     echo "[ralph] Retrying after sleep..."

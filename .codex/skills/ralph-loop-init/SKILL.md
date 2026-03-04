@@ -12,26 +12,52 @@ Generate a complete `ralph/` directory for LLM-driven automated ML training debu
 
 This skill discovers the project's training pipeline, confirms findings with the user, and generates five project-specific files: `CHECKS.md`, `config.sh`, `PROMPT.md`, `run.sh`, and `state.md`.
 
+> **Workflow Note**: `ralph-loop-init`은 SDD 워크플로우와 독립적인 ML 학습 디버깅 자동화 스킬이다.
+> `_sdd/spec/`이 존재하면 참조하지만, SDD 4단계 워크플로우(spec → feature-draft → implementation → spec-update-done)에 속하지 않는다.
+> 생성된 `ralph/` 디렉토리의 `run.sh`를 실행하여 자동 학습 디버깅 루프를 수행한다.
+
+## Hard Rules
+
+1. **보안**: ralph 루프는 격리된 환경(컨테이너, VM, 샌드박스)에서만 실행한다.
+2. **Spec 읽기 전용**: `_sdd/` 아래 파일을 읽을 수 있으나, 수정하지 않는다.
+3. **Debug-First**: 초기 `MAX_STEPS="10"` — 첫 실행은 sanity check 목적이다.
+4. **No Placeholders**: 생성된 파일에 `<placeholder>` 문자열이 없어야 한다.
+5. **Template Fidelity**: `run.sh`는 `run.sh.example`을 거의 그대로 복사하며, 최소한의 수정만 허용한다.
+
 ---
 
 ## Step 0: Read Project Specs
+
+**Tools**: `Glob`, `Read`
 
 Check if an `_sdd/` directory exists in the project root.
 
 If it exists:
 1. Glob for `_sdd/spec/**/*.md`
-2. If multiple spec files are found, use request_user_input (Plan mode) / direct question (Default mode) to ask the user which file(s) describe the training pipeline (training script, dataset format, loss functions, CLI args, validation)
+2. If multiple spec files are found, use `request_user_input` in Plan mode (or ask a short direct question in Default mode) to ask which file(s) describe the training pipeline (training script, dataset format, loss functions, CLI args, validation)
 3. Read the relevant spec files — these are the **primary source of truth** for understanding the training architecture
 4. Extract key information: training script path, dataset format, CLI arguments, loss functions, validation pipeline, hyperparameters, framework details
 5. Also check if `_sdd/env.md` exists. If it does, read it — it contains Python environment setup (conda env name, venv path, `uv` config), required environment variables (API keys, paths, tokens), and other runtime configuration needed to run the code.
 
 If `_sdd/` does not exist, skip to Step 1 (code-only discovery).
 
+**Decision Gate 0->1**:
+```
+sdd_exists = `_sdd/` 디렉토리 존재
+spec_files = spec 파일 발견
+
+IF sdd_exists AND spec_files -> spec 읽기 후 Step 1 진행
+ELSE IF sdd_exists AND NOT spec_files -> 경고, Step 1 (코드 기반 탐색)
+ELSE -> Step 1 (코드 기반 탐색)
+```
+
 ---
 
 ## Step 1: Discover the Training Pipeline
 
-Use Glob and Grep to find:
+**Tools**: `Glob`, `rg`, `Read`
+
+Use `Glob` and `rg` to find:
 
 ### 1.1 Training Script
 - Glob for `**/train*.py`, `**/training*.py`, `**/run_training*.py`
@@ -48,11 +74,14 @@ Use Glob and Grep to find:
 - Identify dataset format (local files + JSONL, WebDataset, HuggingFace datasets, etc.)
 
 ### 1.4 Structured Logging
-- Grep for the literal string `[TRAIN]` in the training script source code (use fixed-string mode or escape brackets: `\[TRAIN\]`)
+- Search for the literal string `[TRAIN]` in the training script source code (e.g., `rg -F "[TRAIN]"`)
 - If found: PROMPT.md will include `[TRAIN]` event parsing instructions
 - If not found: PROMPT.md will instruct parsing raw log output instead
 
 ### 1.5 Python Environment
+
+**Tools**: `Glob`, `Read`
+
 - If `_sdd/env.md` was read in Step 0, use its Python environment specification as the authoritative source
 - Otherwise: check if `pyproject.toml` exists and contains `[tool.uv]` or `[project]` with uv → use `uv run python`
 - Check if `requirements.txt` exists → use `python3` or `python`
@@ -63,11 +92,49 @@ Use Glob and Grep to find:
 - Specs provide richer context (why certain hyperparameters, what metrics matter, what validation measures)
 - Use spec information to fill gaps that code discovery alone cannot provide
 
+**Decision Gate 1->2**:
+```
+training_script_found = 학습 스크립트 1개 이상 식별
+framework_detected = PyTorch/Lightning/HF Trainer 등 프레임워크 식별
+
+IF training_script_found AND framework_detected -> Step 2
+ELSE IF NOT training_script_found -> request_user_input (Plan mode) / direct question (Default mode): 학습 스크립트 경로 요청
+ELSE -> 부분 탐색 결과로 Step 2 진행, 미확인 항목 표시
+```
+
+#### Context Management
+
+| Spec 크기 | 전략 | 구체적 방법 |
+|-----------|------|-------------|
+| < 200줄 | 전체 읽기 | `Read`로 전체 파일 읽기 |
+| 200-500줄 | 전체 읽기 가능 | `Read`로 전체 읽기, 필요 시 섹션별 |
+| 500-1000줄 | TOC 먼저, 관련 섹션만 | 상위 50줄(TOC) 읽기 -> 관련 섹션만 `Read(offset, limit)` |
+| > 1000줄 | 인덱스만, 타겟 최대 3개 | 인덱스/TOC만 읽기 -> 타겟 섹션 최대 3개 선택적 읽기 |
+
+| 코드베이스 크기 | 전략 | 구체적 방법 |
+|----------------|------|-------------|
+| < 50 파일 | 자유 탐색 | `Glob` + `Read` 자유롭게 사용 |
+| 50-200 파일 | 타겟 탐색 | `rg`/`Glob`으로 후보 식별 -> 타겟 `Read` |
+| > 200 파일 | 타겟 탐색 | `rg`/`Glob` 위주 -> 최소한의 `Read` |
+
 ---
 
 ## Step 2: Confirm Findings with User
 
-Present all discovered information to the user via request_user_input (Plan mode) / direct question (Default mode). Ask them to confirm or correct:
+**Tools**: `request_user_input (Plan mode) / direct question (Default mode)`
+
+Present all discovered information to the user and ask them to confirm or correct.
+
+분석 결과 요약 테이블을 제시:
+| 항목 | 파악 내용 | 상태 |
+|------|----------|------|
+| 학습 스크립트 | train.py | confirmed |
+| 검증 스크립트 | 미발견 | input needed |
+| 데이터셋 경로 | ./data/train.jsonl | confirmed |
+| 프레임워크 | PyTorch Lightning | confirmed |
+| 가상환경 | .venv (Python 3.10) | confirmed |
+
+Ask the user to confirm or correct:
 
 1. **Training script path** — the main entry point
 2. **Validation script** — path or "none"
@@ -79,9 +146,19 @@ Present all discovered information to the user via request_user_input (Plan mode
 
 Structure the question so the user can quickly confirm defaults or override specific values.
 
+**Decision Gate 2->2.5**:
+```
+user_confirmed = 사용자 확인 완료
+
+IF user_confirmed -> Step 2.5 진행
+ELSE -> 수정 사항 반영 후 재확인 (최대 2라운드)
+```
+
 ---
 
 ## Step 2.5: Write `ralph/CHECKS.md`
+
+**Tools**: `Bash (mkdir -p)`, `Write`
 
 Before generating any files, create `ralph/` directory and write `ralph/CHECKS.md`.
 This document defines acceptance criteria for each generated file. It is written first
@@ -140,6 +217,8 @@ Project: <project name>
 
 ## Step 3: Generate `ralph/config.sh`
 
+**Tools**: `Read`, `Write`
+
 Create `ralph/config.sh` with shell variables grouped by category. Follow this structure:
 
 ```bash
@@ -186,10 +265,14 @@ LLM_TIMEOUT_SECONDS=600  # max seconds for one LLM turn (0 disables timeout)
 
 ## Step 4: Generate `ralph/PROMPT.md`
 
+**Tools**: `Glob`, `Read`, `Write`
+
 This is the most critical file. It tells the LLM inside the ralph loop exactly what to do.
 
 ### 4.1 Read the Reference
-Find and read `ralph-loop-concept.md` by globbing for `**/.claude/skills/ralph-loop-init/references/ralph-loop-concept.md`. This works regardless of whether the skill is installed globally (`~/.claude/skills/`) or locally (`.claude/skills/`).
+Find and read `ralph-loop-concept.md` from the skill directory first (`references/ralph-loop-concept.md` relative to this SKILL.md). If unavailable, fallback by globbing:
+- `**/.codex/skills/ralph-loop-init/references/ralph-loop-concept.md`
+- `**/.claude/skills/ralph-loop-init/references/ralph-loop-concept.md`
 
 This contains the generic skeleton: state machine, action.sh rules, iteration protocol, error patterns, anti-recursion warning.
 
@@ -234,7 +317,7 @@ You are running inside an automated training loop. The loop structure is:
 Write `action.sh` to:
 1. Run the training command with `MAX_STEPS=1` (hardcode the value — do not use `${MAX_STEPS}`)
 2. Save output to `ralph/results/smoke_test.log` (use `2>&1 | tee`)
-3. After the run, grep the log for a step/loss indicator:
+3. After the run, search the log for a step/loss indicator (for example with `rg`):
    - If structured logging: look for `[TRAIN] event=step`
    - If raw logging: look for `loss=` or `step 1` or equivalent
 
@@ -249,7 +332,7 @@ On FAIL → set `phase: ADJUSTING` in state.md, note "SMOKE_TEST failed: <first 
 - If ADJUSTING fixes a failure that originated in SMOKE_TEST, set phase back to `SMOKE_TEST` and rerun the 1-step smoke test.
 - Do not transition to `TRAINING` until SMOKE_TEST passes.
 
-[Note: `MAX_STEPS=1` in SMOKE_TEST is hardcoded in action.sh — it does not use `${MAX_STEPS}` from config.sh, which is set to 10 for the full debug run. This is the only intentional hardcoded-value exception to the general config-variable rule. Customize the step indicator grep pattern based on whether the project uses structured `[TRAIN]` logging or raw log output. SMOKE_TEST is a repeat gate: after ADJUSTING fixes a smoke failure, return to SMOKE_TEST until it passes.]
+[Note: `MAX_STEPS=1` in SMOKE_TEST is hardcoded in action.sh — it does not use `${MAX_STEPS}` from config.sh, which is set to 10 for the full debug run. This is the only intentional hardcoded-value exception to the general config-variable rule. Customize the step-indicator search pattern (for example, with `rg`) based on whether the project uses structured `[TRAIN]` logging or raw log output. SMOKE_TEST is a repeat gate: after ADJUSTING fixes a smoke failure, return to SMOKE_TEST until it passes.]
 
 ### TRAINING
 [... exact training command using config variables, specific to this project ...]
@@ -315,7 +398,7 @@ Each iteration, append exactly one entry:
 ```
 
 **Key customizations per project:**
-- The SMOKE_TEST section's grep pattern must match the project's actual log format (structured `[TRAIN] event=step` or raw `loss=`/`step 1`)
+- The SMOKE_TEST section's log-search pattern (for example, `rg`) must match the project's actual log format (structured `[TRAIN] event=step` or raw `loss=`/`step 1`)
 - The SMOKE_TEST section must enforce repeat-gate behavior (`ADJUSTING -> SMOKE_TEST` for smoke-origin failures)
 - The SMOKE_TEST section must call out `MAX_STEPS=1` as an explicit exception to the no-hardcoding rule
 - The TRAINING section must contain the **exact command** to run training, using config variables
@@ -348,7 +431,11 @@ The LLM inside the ralph loop checks this section first in ADJUSTING (Step 0 of 
 
 ## Step 5: Generate `ralph/run.sh`
 
-Find and read `run.sh.example` by globbing for `**/.claude/skills/ralph-loop-init/examples/run.sh.example`.
+**Tools**: `Read`, `Write`, `Bash (chmod +x)`
+
+Prefer the skill-local path first (`examples/run.sh.example` relative to this SKILL.md), then fallback to:
+- `**/.codex/skills/ralph-loop-init/examples/run.sh.example`
+- `**/.claude/skills/ralph-loop-init/examples/run.sh.example`
 
 Copy it nearly verbatim into `ralph/run.sh`. The only modification needed:
 - If the project doesn't use `python3`, adjust the inline Python parser's invocation (the `python3 -u -c` part). This is rare — most systems have `python3`.
@@ -362,9 +449,32 @@ Make the file executable description in the output.
 
 ---
 
+### Step 5.5: 핵심 파일 확인 (Checkpoint)
+
+**Tools**: `request_user_input (Plan mode) / direct question (Default mode)`
+
+config.sh, PROMPT.md, run.sh 생성 후 중간 확인:
+
+| 항목 | 내용 |
+|------|------|
+| config.sh 변수 | N개 설정 |
+| PROMPT.md 섹션 | Known Errors, Phases, ... |
+| run.sh 구조 | 루프 + LLM 호출 + 검증 |
+
+request_user_input (Plan mode) / direct question (Default mode): "핵심 파일 3개를 확인해 주세요."
+옵션:
+1. "확인, 나머지 진행" -> Step 6
+2. "수정 필요" -> 수정 후 재확인 (최대 2라운드)
+
+---
+
 ## Step 6: Generate `ralph/state.md`
 
-Find and read `state.md.example` by globbing for `**/.claude/skills/ralph-loop-init/examples/state.md.example`.
+**Tools**: `Write`, `Bash (date -u)`
+
+Prefer the skill-local path first (`examples/state.md.example` relative to this SKILL.md), then fallback to:
+- `**/.codex/skills/ralph-loop-init/examples/state.md.example`
+- `**/.claude/skills/ralph-loop-init/examples/state.md.example`
 
 Copy it into `ralph/state.md`, then replace `__INITIALIZED_AT_UTC__` with the current UTC timestamp (`date -u '+%Y-%m-%dT%H:%M:%SZ'`). The initial structure is:
 
@@ -382,6 +492,8 @@ notes: Initial state. Ralph loop initialized.
 
 ## Step 7: Verify Against CHECKS.md and Summarize
 
+**Tools**: `rg`, `Read`, `Edit`
+
 ### 7.1 Verify Each File Against Its Criteria
 
 For each criterion in `ralph/CHECKS.md`, perform a targeted check:
@@ -394,29 +506,29 @@ For each criterion in `ralph/CHECKS.md`, perform a targeted check:
 - Check variable names align with training script CLI argument names
 
 **PROMPT.md**:
-- Check anti-recursion warning: grep for `Do NOT invoke`
-- Check SMOKE_TEST phase: grep for `SMOKE_TEST`
-- Check SMOKE_TEST hardcoded rule: grep for `MAX_STEPS=1` and confirm it does not use `${MAX_STEPS}`
-- Check SMOKE_TEST pass criteria: grep for both `Exit code = 0` and `step completion indicator`
+- Check anti-recursion warning: search for `Do NOT invoke`
+- Check SMOKE_TEST phase: search for `SMOKE_TEST`
+- Check SMOKE_TEST hardcoded rule: search for `MAX_STEPS=1` and confirm it does not use `${MAX_STEPS}`
+- Check SMOKE_TEST pass criteria: search for both `Exit code = 0` and `step completion indicator`
 - Check SMOKE_TEST repeat gate: confirm `ADJUSTING -> SMOKE_TEST` behavior is written
-- Check all phases present: grep for SETUP, SMOKE_TEST, TRAINING, VALIDATING, ANALYZING, ADJUSTING, DONE
+- Check all phases present: search for SETUP, SMOKE_TEST, TRAINING, VALIDATING, ANALYZING, ADJUSTING, DONE
 - Check TRAINING section includes exact command using config variables
 - Check VALIDATING section includes exact command or explicit skip
-- Check Known Errors section: grep for `## Known Errors`
-- Check action.sh Rules section: grep for `## action.sh Rules`
-- Check PROMPT.md self-correction: grep for `PROMPT_FIX` or `Self-Correction` or `self-correction`
-- Check PROMPT.md contains decision log reading instruction with recent-15 scope: grep for `most recent 15` and `decisions.md`
-- Check PROMPT.md contains decision log writing/append instruction: grep for `decisions.md` in the post-state-update steps
-- Check decision format includes evidence artifacts: grep for `**Evidence**`, `exit code`, and `log/artifact path`
+- Check Known Errors section: search for `## Known Errors`
+- Check action.sh Rules section: search for `## action.sh Rules`
+- Check PROMPT.md self-correction: search for `PROMPT_FIX` or `Self-Correction` or `self-correction`
+- Check PROMPT.md contains decision log reading instruction with recent-15 scope: search for `most recent 15` and `decisions.md`
+- Check PROMPT.md contains decision log writing/append instruction: search for `decisions.md` in the post-state-update steps
+- Check decision format includes evidence artifacts: search for `**Evidence**`, `exit code`, and `log/artifact path`
 
 **run.sh**:
-- Check `--reset` flag: grep for `--reset`
-- Check `LLM_TIMEOUT_SECONDS`: grep for `LLM_TIMEOUT_SECONDS`
-- Check DONE phase detection: grep for `phase: DONE` or equivalent
+- Check `--reset` flag: search for `--reset`
+- Check `LLM_TIMEOUT_SECONDS`: search for `LLM_TIMEOUT_SECONDS`
+- Check DONE phase detection: search for `phase: DONE` or equivalent
 
 **state.md**:
-- Check phase: grep for `^phase: SETUP`
-- Check iteration: grep for `^iteration: 0`
+- Check phase: search for `^phase: SETUP`
+- Check iteration: search for `^iteration: 0`
 - Check no placeholder: confirm `__INITIALIZED_AT_UTC__` is NOT in the file
 
 Mark each check ✅ (pass) or ❌ (fail) in the output. If any criterion fails, fix the
@@ -454,3 +566,38 @@ Next steps:
 
 Remind user that `MAX_STEPS="10"` is for the debug training run after smoke test passes —
 increase it (or set to empty for unlimited) once the first full run succeeds.
+
+---
+
+## Progressive Disclosure (완료 시)
+
+```
+1. 완료 요약 테이블 제시:
+   | 항목 | 내용 |
+   |------|------|
+   | 생성 파일 | 5개 + results/ |
+   | CHECKS.md 상태 | N/N 통과 |
+   | 감지 프레임워크 | PyTorch Lightning |
+   | Phase 구성 | SETUP -> SMOKE_TEST -> TRAINING -> ... -> DONE |
+
+2. request_user_input (Plan mode) / direct question (Default mode): "생성된 파일을 확인하시겠습니까?"
+   옵션:
+   1. "PROMPT.md 상세 확인" -> PROMPT.md 핵심 섹션 출력
+   2. "config.sh 확인" -> 변수 목록 출력
+   3. "확인 완료" -> 종료
+```
+
+---
+
+## Error Handling
+
+| 상황 | 대응 |
+|------|------|
+| 학습 스크립트 미발견 | request_user_input (Plan mode) / direct question (Default mode): 경로 요청 (최대 2라운드) |
+| `_sdd/spec` 디렉토리 미존재 | 코드 기반 탐색으로 진행, 사용자에게 경고 |
+| `ralph-loop-concept.md` 참조 파일 미발견 | 오류: 스킬 설치 불완전, 메시지와 함께 중단 |
+| `run.sh.example` 참조 파일 미발견 | 오류: 스킬 설치 불완전, 메시지와 함께 중단 |
+| 사용자 미확인 (2+ 라운드) | 부분 탐색 결과 저장, 수동 설정 안내 |
+| CHECKS.md 검증 실패 (Step 7) | 실패 파일 수정, 재검증 (최대 2라운드) |
+| 복수 학습 스크립트 발견 | request_user_input (Plan mode) / direct question (Default mode): 목록 제시, 선택 요청 |
+| 프레임워크 감지 모호 | request_user_input (Plan mode) / direct question (Default mode): 후보 + 근거 제시, 선택 요청 |
