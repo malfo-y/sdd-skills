@@ -34,8 +34,9 @@ After processing `user_input.md`, rename it to `_processed_user_input.md` to mar
 1. **Analyze the Specification** - Understand scope, requirements, and constraints
 2. **Identify Components** - Break down into logical modules/features
 3. **Define Tasks with Target Files** - Create granular, actionable work items with file-level scope
-4. **Establish Dependencies** - Map task relationships and critical path
-5. **Output the Plan** - Present in structured, trackable format
+4. **Decompose into Phases** - Analyze task characteristics, select strategy, group tasks into phases
+5. **Establish Dependencies** - Map task relationships and critical path
+6. **Output the Plan** - Present in structured, trackable format
 
 ## Step 1: Specification Analysis
 
@@ -146,23 +147,6 @@ Before assigning Target Files, explore the codebase to understand:
 - Include setup/infrastructure tasks often overlooked
 - Don't forget documentation and testing tasks
 
-### Step 3.5: Task 목록 확인 (Checkpoint)
-
-**Tools**: `AskUserQuestion`
-
-```
-1. Task 목록 요약 테이블을 사용자에게 제시:
-   | Phase | Task 수 | P0 | P1 | P2 | P3 | Target Files 유무 |
-   |-------|---------|----|----|----|----|-------------------|
-   | 1     | N       | X  | Y  | Z  | W  | 모두 있음/N개 누락 |
-   | 2     | N       | X  | Y  | Z  | W  | 모두 있음/N개 누락 |
-
-2. AskUserQuestion: "Task 목록을 확인해 주세요."
-   옵션:
-   1. "확인, 의존성 매핑 진행" → Step 4
-   2. "수정 필요" → 수정 사항 반영 (최대 2라운드)
-```
-
 **Decision Gate 3→4**:
 ```
 all_tasks_have_target_files = 모든 Task에 Target Files 매핑 완료
@@ -172,7 +156,87 @@ IF all_tasks_have_target_files AND acceptance_criteria_defined → Step 4 진행
 ELSE → 누락 항목 보완 후 재확인
 ```
 
-## Step 4: Dependency Mapping
+## Step 4: Phase Decomposition
+
+**Tools**: `AskUserQuestion`
+
+정의된 Task들을 분석하여 Phase로 그룹핑한다.
+
+### 4.1 Task 특성 분석
+
+정의된 Task 목록에서 다음 특성을 분석한다:
+
+| 분석 항목 | 확인 내용 |
+|-----------|----------|
+| 의존성 깊이 | Task 간 의존 체인의 최대 깊이 |
+| 위험도 분포 | 고위험/불확실 기술 항목 비율 |
+| 우선순위 분포 | P0-P3 분포 |
+| 기반 작업 유무 | 다른 Task의 전제가 되는 인프라/설정 Task 존재 여부 |
+
+### 4.2 Phase 전략 추천 및 선택
+
+분석 결과를 바탕으로 적합한 Phase 전략을 자동 추천한 뒤, 사용자에게 확인/변경 기회를 제공한다.
+
+#### Phase 전략 자동 추천 기준
+
+| 전략 | 자동 추천 조건 | Phase 구조 |
+|------|---------------|-----------|
+| **MVP-First** | 사용자 대면 기능 존재, 점진적 배포 필요 시 | Phase 0: 기반 설정 → Phase 1: MVP → Phase 2+: 확장/개선 |
+| **Risk-First** | 고위험/불확실 기술 항목이 전체의 30% 이상 | Phase 1: 고위험 항목 (가정 검증) → Phase 2: 핵심 기능 → Phase 3: 저위험 확장 |
+| **Dependency-Driven** | 의존성 체인 깊이가 3 이상, 계층 구조 명확 | Phase 1: 기반 (의존성 없음) → Phase 2: 핵심 서비스 → Phase 3: 통합 → Phase 4: 마무리 |
+
+> 상세 패턴 및 예시: `references/advanced-patterns.md`의 "Phase Planning Strategies" 참조
+
+#### 사용자 확인
+
+```
+1. 추천 전략과 근거를 제시:
+   "Task 특성 분석 결과, [전략명] 전략을 추천합니다.
+    근거: [분석 결과 요약]"
+
+2. AskUserQuestion: "Phase 분할 전략을 선택해 주세요."
+   옵션:
+   1. "[추천 전략명] (추천)" → 추천 전략 적용
+   2. "[대안 전략 A]" → 대안 전략 적용
+   3. "[대안 전략 B]" → 대안 전략 적용
+```
+
+### 4.3 Phase 그룹핑
+
+선택된 전략에 따라 Task를 Phase로 배치한다:
+
+- 각 Phase에 명확한 목표/테마를 부여 (예: "기반 설정", "핵심 인증", "OAuth 통합")
+- Phase 내 Task는 가능한 한 독립적으로 실행 가능하도록 배치
+- Phase 간 의존성이 최소화되도록 구성 (Phase N의 Task는 Phase N-1 완료 후 시작 가능)
+
+### 4.4 Checkpoint
+
+Phase 그룹핑 결과를 사용자에게 확인받는다:
+
+```
+1. Phase별 Task 요약 테이블 제시:
+   | Phase | 테마 | Task 수 | P0 | P1 | P2 | P3 | Target Files 유무 |
+   |-------|------|---------|----|----|----|----|-------------------|
+   | 1     | ...  | N       | X  | Y  | Z  | W  | 모두 있음/N개 누락 |
+   | 2     | ...  | N       | X  | Y  | Z  | W  | 모두 있음/N개 누락 |
+
+2. AskUserQuestion: "Phase 구성을 확인해 주세요."
+   옵션:
+   1. "확인, 의존성 매핑 진행" → Step 5
+   2. "수정 필요" → 수정 사항 반영 (최대 2라운드)
+```
+
+**Decision Gate 4→5**:
+```
+phases_defined = 모든 Task가 Phase에 배치 완료
+phase_goals_clear = 각 Phase에 명확한 목표/테마 부여
+user_approved = 사용자가 Phase 구성 승인
+
+IF phases_defined AND phase_goals_clear AND user_approved → Step 5 진행
+ELSE → 미완료 항목 보완 후 재확인
+```
+
+## Step 5: Dependency Mapping
 
 **Tools**: `Glob` (Target Files 중복 확인)
 
@@ -186,18 +250,18 @@ Create a dependency graph or critical path when complexity warrants.
 
 **Parallel-specific**: After mapping dependencies, verify that tasks marked as parallel-eligible don't have overlapping Target Files.
 
-**Decision Gate 4→5**:
+**Decision Gate 5→6**:
 ```
 dependencies_mapped = 모든 Task 간 의존성 매핑 완료
 no_circular_deps = 순환 의존성 없음
 parallel_groups_identified = 병렬 실행 가능 그룹 식별 완료
 
-IF dependencies_mapped AND no_circular_deps AND parallel_groups_identified → Step 5 진행
+IF dependencies_mapped AND no_circular_deps AND parallel_groups_identified → Step 6 진행
 ELSE IF circular_deps → 순환 의존성 해소 후 재매핑
 ELSE → 미완료 항목 보완
 ```
 
-## Step 5: Plan Output Format
+## Step 6: Plan Output Format
 
 **Tools**: `Write`, `Bash (mkdir -p)`
 
@@ -292,17 +356,22 @@ Inform user which model would fit for the implementation by referring "Model ali
 
 ## Output Location
 
-After creating the plan, offer to:
+After creating the plan:
 
-1. Display in conversation (for review/discussion)
-2. Save to a file to the user provided path, or default to `<project_root>/_sdd/implementation/IMPLEMENTATION_PLAN.md`
-    - If the file already exists, archive it as `<project_root>/_sdd/implementation/prev/PREV_IMPLEMENTATION_PLAN_<timestamp>.md` (create `prev/` if needed) and create a new one.
-3. If the plan is too large to fit comfortably in one file (e.g. >25 tasks), split the plan into multiple files:
-    - Keep `IMPLEMENTATION_PLAN.md` as an index/overview and link to the phase files
-    - Name phase files as `IMPLEMENTATION_PLAN_PHASE_1.md`, `IMPLEMENTATION_PLAN_PHASE_2.md`, etc.
-4. Create tasks using TaskCreate tool for tracking
+1. If a file already exists at the target path, archive it as `<project_root>/_sdd/implementation/prev/PREV_IMPLEMENTATION_PLAN_<timestamp>.md` (create `prev/` if needed).
+2. Ask the user how to save the plan:
 
-Always confirm with the user which output format they prefer.
+```
+AskUserQuestion: "Plan을 어떤 형식으로 저장할까요?"
+옵션:
+1. "Phase별 개별 문서" → IMPLEMENTATION_PLAN.md (인덱스/요약) + IMPLEMENTATION_PLAN_PHASE_N.md (Phase별 상세)
+2. "AI 그룹핑 분할" → IMPLEMENTATION_PLAN.md (인덱스/요약) + 복잡도/규모 기준으로 Phase를 묶은 파일들
+3. "단일 문서" → IMPLEMENTATION_PLAN.md 하나에 전체 Plan 포함
+```
+
+- 기본 저장 경로: `<project_root>/_sdd/implementation/`
+- 사용자가 별도 경로를 지정한 경우 해당 경로에 저장
+3. Create tasks using TaskCreate tool for tracking
 
 ## Progressive Disclosure (Plan 출력 시)
 
@@ -320,7 +389,7 @@ Always confirm with the user which output format they prefer.
    옵션:
    1. "전체 Plan 확인" → 전체 출력
    2. "특정 Phase만" → 해당 Phase 상세 출력
-   3. "파일로 저장" → IMPLEMENTATION_PLAN.md 저장
+   3. "파일로 저장" → Output Location의 파일 분할 옵션 질문 후 저장
 ```
 
 ## Error Handling
@@ -332,7 +401,7 @@ Always confirm with the user which output format they prefer.
 | Target Files 경로 확인 불가 | 사용자에게 경로 확인 요청, TBD로 표시 |
 | 순환 의존성 발견 | Task 분할 또는 사용자에게 우선순위 확인 |
 | 기존 Plan 파일 존재 | `prev/PREV_IMPLEMENTATION_PLAN_<timestamp>.md`로 아카이브 |
-| Plan이 25+ Task | Phase별 파일 분할 (IMPLEMENTATION_PLAN_PHASE_N.md) |
+| Plan이 대규모 | Step 6에서 파일 분할 옵션 제시 (Phase별 개별/AI 그룹핑/단일 문서) |
 | 모호한 우선순위 | 사용자에게 P0-P3 확인 요청 |
 | user_input.md 형식 오류 | 파싱 오류 보고, 자유 형식으로 해석 시도 |
 
