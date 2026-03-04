@@ -1,0 +1,35 @@
+{
+  "name": "sdd-skills",
+  "owner": {
+    "name": "malfo-y",
+    "email": "malfo.y@kakaocorp.com"
+  },
+  "metadata": {
+    "description": "SDD (Spec-Driven Development) workflow skills",
+    "version": "1.0.0"
+  },
+  "plugins": [
+    {
+      "name": "sdd-skills",
+      "description": "스펙 기반 개발 워크플로우 스킬 모음 (스펙 생성/관리, 구현 계획/실행, PR 리뷰, 토론)",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./.claude/skills/discussion",
+        "./.claude/skills/feature-draft",
+        "./.claude/skills/implementation",
+        "./.claude/skills/implementation-plan",
+        "./.claude/skills/implementation-review",
+        "./.claude/skills/pr-review",
+        "./.claude/skills/pr-spec-patch",
+        "./.claude/skills/ralph-loop-init",
+        "./.claude/skills/spec-create",
+        "./.claude/skills/spec-review",
+        "./.claude/skills/spec-rewrite",
+        "./.claude/skills/spec-summary",
+        "./.claude/skills/spec-update-done",
+        "./.claude/skills/spec-update-todo"
+      ]
+    }
+  ]
+}
