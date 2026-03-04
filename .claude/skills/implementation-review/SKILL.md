@@ -132,7 +132,7 @@ ELSE → 누락 항목 추가 추출
 
 ## Step 2: Verification - What Is Implemented
 
-**Tools**: `Glob`, `Grep`, `Read`, `codebase-retrieval`, `Bash (test runner)`
+**Tools**: `Glob`, `Grep`, `Read`, `Bash (test runner)`
 
 Explore the codebase to verify what exists:
 
@@ -265,7 +265,7 @@ ELSE → 정상 진행
 
 ## Step 4: Issues and Improvements
 
-**Tools**: `Read`, `Grep`, `codebase-retrieval`
+**Tools**: `Read`, `Grep`
 
 ### Issue Categories
 
@@ -407,8 +407,8 @@ Suggestions that aren't blocking:
 | 코드베이스 크기 | 전략 | 구체적 방법 |
 |----------------|------|-------------|
 | < 50 파일 | 자유 탐색 | `Glob` + `Read` 자유롭게 사용 |
-| 50-200 파일 | 타겟 탐색 | `codebase-retrieval`로 후보 식별 → 타겟 `Read` |
-| > 200 파일 | 시맨틱 위주 | `codebase-retrieval` 위주 → 최소한의 `Read` |
+| 50-200 파일 | 타겟 탐색 | `Grep`/`Glob`으로 후보 식별 → 타겟 `Read` |
+| > 200 파일 | 타겟 탐색 | `Grep`/`Glob` 위주 → 최소한의 `Read` |
 
 ## Review Output Template
 
@@ -535,7 +535,7 @@ Use AskUserQuestion when:
 | Acceptance Criteria 모호 | 최선 해석 후 UNTESTED로 표시, 사용자에게 확인 |
 | 보안 취약점 발견 | Critical Issues로 즉시 보고 |
 | 리뷰 파일 이미 존재 | `prev/PREV_IMPLEMENTATION_REVIEW_<timestamp>.md`로 아카이브 |
-| 대규모 코드베이스 | `codebase-retrieval` 위주 탐색, 핵심 컴포넌트만 검증 |
+| 대규모 코드베이스 | `Grep`/`Glob` 위주 탐색, 핵심 컴포넌트만 검증 |
 
 ## Integration with Other Skills
 

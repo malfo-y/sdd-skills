@@ -61,7 +61,7 @@ _sdd/
 
 ### Step 1: Gather Information
 
-**Tools**: `Read`, `Glob`, `codebase-retrieval`, `AskUserQuestion`
+**Tools**: `Read`, `Glob`, `AskUserQuestion`
 
 Before creating a spec document, collect:
 
@@ -85,8 +85,8 @@ User input includes user conversation and user-specified files (defaults to `_sd
 | 코드베이스 크기 | 전략 | 구체적 방법 |
 |----------------|------|-------------|
 | < 50 파일 | 자유 탐색 | `Glob` + `Read` 자유롭게 사용 |
-| 50-200 파일 | 타겟 탐색 | `codebase-retrieval`로 후보 식별 → 타겟 `Read` |
-| > 200 파일 | 시맨틱 위주 | `codebase-retrieval` 위주 → 최소한의 `Read` |
+| 50-200 파일 | 타겟 탐색 | `Grep`/`Glob`으로 후보 식별 → 타겟 `Read` |
+| > 200 파일 | 시맨틱 위주 | `Grep`/`Glob` 위주 → 최소한의 `Read` |
 
 **Decision Gate 1→2**:
 ```
@@ -100,7 +100,7 @@ ELSE IF NOT project_readable → AskUserQuestion: 프로젝트 경로/접근 방
 
 ### Step 2: Analyze the Project
 
-**Tools**: `codebase-retrieval`, `Grep`, `Glob`, `Read`
+**Tools**: `Grep`, `Glob`, `Read`
 
 Explore the codebase to understand:
 
@@ -356,7 +356,7 @@ Save spec documents to:
 | 프로젝트 코드 접근 불가 | 사용자에게 경로 확인 요청 |
 | user_draft.md 형식 오류 | 파싱 오류 위치 보고, 자유 형식으로 해석 시도 |
 | 불완전한 사용자 입력 | AskUserQuestion으로 보완 (최대 2라운드) |
-| 대형 프로젝트 (200+ 파일) | `codebase-retrieval` 위주 탐색, 핵심 컴포넌트만 문서화 |
+| 대형 프로젝트 (200+ 파일) | `Grep`/`Glob` 위주 탐색, 핵심 컴포넌트만 문서화 |
 | 다국어 혼재 | 사용자에게 언어 선호도 확인 |
 | DECISION_LOG.md 충돌 | 기존 항목 보존, 새 항목만 추가 |
 

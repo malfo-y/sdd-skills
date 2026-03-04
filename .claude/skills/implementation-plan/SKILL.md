@@ -39,7 +39,7 @@ After processing `user_input.md`, rename it to `_processed_user_input.md` to mar
 
 ## Step 1: Specification Analysis
 
-**Tools**: `Read`, `Glob`, `codebase-retrieval`, `AskUserQuestion`
+**Tools**: `Read`, `Glob`, `AskUserQuestion`
 
 Read and analyze the provided specification thoroughly:
 
@@ -63,8 +63,8 @@ If the specification is unclear or incomplete, use the AskUserQuestion tool to c
 | 코드베이스 크기 | 전략 | 구체적 방법 |
 |----------------|------|-------------|
 | < 50 파일 | 자유 탐색 | `Glob` + `Read` 자유롭게 사용 |
-| 50-200 파일 | 타겟 탐색 | `codebase-retrieval`로 후보 식별 → 타겟 `Read` |
-| > 200 파일 | 시맨틱 위주 | `codebase-retrieval` 위주 → 최소한의 `Read` |
+| 50-200 파일 | 타겟 탐색 | `Grep`/`Glob`으로 후보 식별 → 타겟 `Read` |
+| > 200 파일 | 타겟 탐색 | `Grep`/`Glob` 위주 → 최소한의 `Read` |
 
 **Decision Gate 1→2**:
 ```
@@ -79,7 +79,7 @@ ELSE → 미파악 항목 추가 분석 후 재평가
 
 ## Step 2: Component Identification
 
-**Tools**: `codebase-retrieval`, `Glob`, `Read`
+**Tools**: `Glob`, `Grep`, `Read`
 
 Break the system into logical components:
 
@@ -91,7 +91,7 @@ Break the system into logical components:
 
 ## Step 3: Task Definition with Target Files
 
-**Tools**: `Glob`, `codebase-retrieval`, `Read`
+**Tools**: `Glob`, `Grep`, `Read`
 
 For each component, create granular tasks following this structure:
 

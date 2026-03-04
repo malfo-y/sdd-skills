@@ -102,7 +102,7 @@ If local code/test execution is needed to verify claims, read `_sdd/env.md` firs
 
 ### Step 1: Gather Context
 
-**Tools**: `Read`, `Glob`, `Bash (git diff, git log, git status)`, `codebase-retrieval`
+**Tools**: `Read`, `Glob`, `Bash (git diff, git log, git status)`
 
 Collect information from all available sources:
 
@@ -143,7 +143,7 @@ ELSE IF NOT sources_available → AskUserQuestion: 비교 대상 소스 확인
 
 ### Step 2: Identify Spec Drift
 
-**Tools**: `codebase-retrieval`, `Grep`, `Glob`, `Read`, `Bash (git diff)`
+**Tools**: `Grep`, `Glob`, `Read`, `Bash (git diff)`
 
 Compare spec against reality to find discrepancies:
 
@@ -309,8 +309,8 @@ Rules:
 | 코드베이스 크기 | 전략 | 구체적 방법 |
 |----------------|------|-------------|
 | < 50 파일 | 자유 탐색 | `Glob` + `Read` 자유롭게 사용 |
-| 50-200 파일 | 타겟 탐색 | `codebase-retrieval`로 후보 식별 → 타겟 `Read` |
-| > 200 파일 | 시맨틱 위주 | `codebase-retrieval` 위주 → 최소한의 `Read` |
+| 50-200 파일 | 타겟 탐색 | `Grep`/`Glob`으로 후보 식별 → 타겟 `Read` |
+| > 200 파일 | 타겟 탐색 | `Grep`/`Glob` 위주 → 최소한의 `Read` |
 
 ## Output Format
 

@@ -11,22 +11,22 @@
 | Step | Primary Tools | When to Use |
 |------|--------------|-------------|
 | Step 1: Input Analysis | `Read`, `Glob`, `Bash (git diff)` | 기존 파일 확인, 코드 변경 분석 |
-| Step 2: Context Gathering | `Glob`, `Read`, `codebase-retrieval` | 스펙 읽기, 코드베이스 탐색 |
+| Step 2: Context Gathering | `Glob`, `Read`, `Grep` | 스펙 읽기, 코드베이스 탐색 |
 | Step 3: Adaptive Clarification | `AskUserQuestion` | 사용자 추가 질문 |
-| Step 4: Feature Design | `codebase-retrieval`, `Glob` | Target Files 매핑 시 파일 경로 확인 |
+| Step 4: Feature Design | `Grep`, `Glob` | Target Files 매핑 시 파일 경로 확인 |
 | Step 5: Spec Patch Generation | — | 출력 생성 (도구 불필요) |
 | Step 5.5: Part 1 Checkpoint | `AskUserQuestion` | 사용자 확인 |
 | Step 6: Implementation Plan | — | 출력 생성 (도구 불필요) |
 | Step 7: Review & Confirm | `Write`, `Bash (mkdir/mv)`, `AskUserQuestion`, `Glob` | 파일 저장, 사용자 확인, Target Files 검증 |
 
-### 도구 선택 가이드: codebase-retrieval vs Glob vs Grep
+### 도구 선택 가이드: Grep vs Glob
 
 | 상황 | 도구 | 이유 |
 |------|------|------|
-| "어떤 파일이 인증을 처리하나?" (의미 기반 탐색) | `codebase-retrieval` | 시맨틱 검색, 정확한 파일 위치 모를 때 |
+| "어떤 파일이 인증을 처리하나?" | `Grep` | 패턴 기반 검색, 키워드로 관련 파일 식별 |
 | "src/auth/ 디렉토리에 어떤 파일이 있나?" (패턴 기반 검색) | `Glob` | 정확한 경로/패턴을 알 때 |
 | "`authenticate()` 함수를 호출하는 곳은?" (정확한 문자열 검색) | `Grep` | 특정 식별자의 모든 참조를 찾을 때 |
-| "이 프로젝트의 테스트 구조는?" (아키텍처 이해) | `codebase-retrieval` | 프로젝트 전체적 이해가 필요할 때 |
+| "이 프로젝트의 테스트 구조는?" | `Glob` | 파일 구조/패턴으로 탐색 |
 | "conftest.py 파일 목록" (파일명 검색) | `Glob` | 파일명 패턴이 명확할 때 |
 
 ### Step별 도구 사용 상세
@@ -41,11 +41,11 @@
 **Step 2: Context Gathering**
 - `Glob("_sdd/spec/*.md")` — 스펙 파일 목록 확인
 - `Read` — 스펙 파일 읽기 (크기별 전략은 Context Management 참조)
-- `codebase-retrieval` — 코드베이스 구조 파악, 기존 파일 패턴 확인
+- `Glob` — 코드베이스 구조 파악, 기존 파일 패턴 확인
 - `Glob("_sdd/spec/DECISION_LOG.md")` — 의사결정 로그 존재 여부 확인
 
 **Step 4: Feature Design**
-- `codebase-retrieval` — "이 기능과 관련된 기존 코드는?" 형태의 시맨틱 검색
+- `Grep` — "이 기능과 관련된 기존 코드는?" 형태의 패턴 검색
 - `Glob` — Target Files 후보 경로 검증 (파일 존재 여부)
 
 **Step 7: Review & Confirm**
@@ -162,8 +162,8 @@ AFTER Step 6:
 | 코드베이스 크기 | 전략 | 구체적 방법 |
 |----------------|------|-------------|
 | < 50 파일 | 자유 탐색 | `Glob` + `Read` 자유롭게 사용 |
-| 50-200 파일 | 타겟 탐색 | `codebase-retrieval`로 후보 식별 → 타겟 `Read` |
-| > 200 파일 | 시맨틱 위주 | `codebase-retrieval` 위주 → 최소한의 `Read` |
+| 50-200 파일 | 타겟 탐색 | `Grep`/`Glob`으로 후보 식별 → 타겟 `Read` |
+| > 200 파일 | 타겟 탐색 | `Grep`/`Glob` 위주 → 최소한의 `Read` |
 
 ### 판단 기준
 

@@ -73,7 +73,7 @@ If multiple plan files exist and the user did not specify a starting point:
    - **Present**: Enable parallel execution (this skill's main advantage)
    - **Absent**: Fall back to sequential mode with optional Target Files inference (see Step 3)
 
-4. **Understand the Codebase**: Use codebase-retrieval or exploration to understand:
+4. **Understand the Codebase**: Use Grep/Glob exploration to understand:
    - Existing code patterns
    - **Testing framework and conventions** (critical for TDD)
    - Test file locations and naming conventions
@@ -160,7 +160,7 @@ If a plan lacks Target Files:
 ```
 For each task:
 1. Analyze Description and Technical Notes for file path mentions
-2. Use codebase-retrieval to identify related files
+2. Use Grep/Glob to identify related files
 3. Infer Target Files with [C] or [M] markers
 
 Present inferred Target Files to user:

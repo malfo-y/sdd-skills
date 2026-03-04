@@ -100,7 +100,7 @@ ELSE → AskUserQuestion:
 
 ### Step 2: Context Gathering
 
-**Tools**: `Glob`, `Read`, `codebase-retrieval`
+**Tools**: `Glob`, `Read`, `Grep`
 
 ```
 1. Read existing spec (read-only):
@@ -116,7 +116,7 @@ ELSE → AskUserQuestion:
    - Review existing decisions/rationale
    - Ensure new feature doesn't conflict with existing decisions
 4. **Explore codebase** for Target Files:
-   - codebase-retrieval: 프로젝트 구조, 기존 패턴 파악
+   - Grep/Glob: 프로젝트 구조, 기존 패턴 파악
    - Glob: 소스/테스트/설정 파일 위치 확인
    - Note naming conventions for new files
    - Map which existing files will need modification
@@ -136,8 +136,8 @@ ELSE → AskUserQuestion:
 | 코드베이스 크기 | 전략 |
 |----------------|------|
 | < 50 파일 | `Glob` + `Read` 자유 탐색 |
-| 50-200 파일 | `codebase-retrieval` + 타겟 `Read` |
-| > 200 파일 | `codebase-retrieval` 위주 |
+| 50-200 파일 | `Grep`/`Glob` + 타겟 `Read` |
+| > 200 파일 | `Grep`/`Glob` 위주 |
 
 ### Step 3: Adaptive Clarification
 
@@ -175,7 +175,7 @@ ELSE → 미충족 항목에 대해 AskUserQuestion (최대 2라운드)
 
 ### Step 4: Feature Design
 
-**Tools**: `codebase-retrieval`, `Glob`
+**Tools**: `Grep`, `Glob`
 
 ```
 1. Classify requirements by type:
@@ -207,7 +207,7 @@ ELSE → 미충족 항목에 대해 AskUserQuestion (최대 2라운드)
 
 4. **Map Target Files per task**:
    - For each task, identify which files will be created/modified/deleted
-   - codebase-retrieval: "이 기능과 관련된 기존 코드는?" 형태의 시맨틱 검색
+   - Grep: "이 기능과 관련된 기존 코드는?" 형태의 패턴 검색
    - Glob: 후보 파일 경로 존재 여부 검증
    - Verify no unnecessary file overlaps between tasks
    - Apply Target Files markers: [C] Create, [M] Modify, [D] Delete

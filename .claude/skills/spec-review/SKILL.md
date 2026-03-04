@@ -88,12 +88,12 @@ Assess the spec as a standalone design artifact:
 | 코드베이스 크기 | 전략 | 구체적 방법 |
 |----------------|------|-------------|
 | < 50 파일 | 자유 탐색 | `Glob` + `Read` 자유롭게 사용 |
-| 50-200 파일 | 타겟 탐색 | `codebase-retrieval`로 후보 식별 → 타겟 `Read` |
-| > 200 파일 | 시맨틱 위주 | `codebase-retrieval` 위주 → 최소한의 `Read` |
+| 50-200 파일 | 타겟 탐색 | `Grep`/`Glob`으로 후보 식별 → 타겟 `Read` |
+| > 200 파일 | 타겟 탐색 | `Grep`/`Glob` 위주 → 최소한의 `Read` |
 
 ### Step 3: Code-Linked Drift Audit
 
-**Tools**: `codebase-retrieval`, `Grep`, `Glob`, `Read`, `Bash (git diff, git log)`
+**Tools**: `Grep`, `Glob`, `Read`, `Bash (git diff, git log)`
 
 Compare spec claims to implementation evidence:
 

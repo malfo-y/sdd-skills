@@ -138,7 +138,7 @@ ELSE → AskUserQuestion: 스펙 파일 접근 방법 확인
 
 ### Step 2: Extract Key Information
 
-**Tools**: `Read`, `Glob`, `codebase-retrieval`
+**Tools**: `Read`, `Glob`, `Grep`
 
 #### From Spec Document(s)
 
