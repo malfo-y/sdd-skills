@@ -74,6 +74,27 @@ else
   echo "[ralph] LLM timeout: ${LLM_TIMEOUT_SECONDS}s per LLM step."
 fi
 
+LOCK_FILE="ralph/.ralph.lock"
+
+cleanup_lock() {
+  rm -f "${LOCK_FILE}"
+}
+
+if [ -f "${LOCK_FILE}" ]; then
+  EXISTING_PID="$(cat "${LOCK_FILE}" 2>/dev/null || echo "")"
+  if [ -n "${EXISTING_PID}" ] && kill -0 "${EXISTING_PID}" 2>/dev/null; then
+    echo "[ralph] ERROR: Another ralph instance is running (PID ${EXISTING_PID})." >&2
+    echo "[ralph] If stale, remove manually: rm ${LOCK_FILE}" >&2
+    exit 1
+  else
+    echo "[ralph] Stale lock file found (PID ${EXISTING_PID}). Removing."
+    rm -f "${LOCK_FILE}"
+  fi
+fi
+
+echo $$ > "${LOCK_FILE}"
+trap cleanup_lock EXIT INT TERM
+
 run_llm_with_timeout() {
   local timeout_seconds="$1"
   local prompt_path="$2"
@@ -121,6 +142,24 @@ with open(prompt_path, "rb") as prompt_file:
 
 sys.exit(completed.returncode)
 PY
+}
+
+VALID_PHASES="SETUP SMOKE_TEST TRAINING VALIDATING ANALYZING ADJUSTING DONE"
+
+validate_state_file() {
+  local state_file="ralph/state.md"
+  [ -f "${state_file}" ] || { echo "[ralph] VALIDATION ERROR: ${state_file} missing." >&2; return 1; }
+  [ -s "${state_file}" ] || { echo "[ralph] VALIDATION ERROR: ${state_file} empty." >&2; return 1; }
+
+  local phase
+  phase="$(grep -m1 '^phase:' "${state_file}" | sed 's/^phase:[[:space:]]*//' | tr -d '[:space:]')" || true
+  local phase_valid=0
+  for vp in ${VALID_PHASES}; do [ "${phase}" = "${vp}" ] && phase_valid=1 && break; done
+  [ "${phase_valid}" -eq 1 ] || { echo "[ralph] VALIDATION ERROR: Invalid phase '${phase}'." >&2; return 1; }
+
+  local iter_val
+  iter_val="$(grep -m1 '^iteration:' "${state_file}" | sed 's/^iteration:[[:space:]]*//' | tr -d '[:space:]')" || true
+  [[ "${iter_val}" =~ ^[0-9]+$ ]] || { echo "[ralph] VALIDATION ERROR: Invalid iteration '${iter_val}'." >&2; return 1; }
 }
 
 ITERATION=0
@@ -197,9 +236,26 @@ for line in sys.stdin:
   fi
   LLM_FAIL_COUNT=0
 
+  if ! validate_state_file; then
+    echo "[ralph] ERROR: state.md corrupted after LLM step. Aborting." >&2
+    exit 1
+  fi
+
   # Check if state is DONE (LLM decided we're finished)
   if grep -q "^phase: DONE" ralph/state.md 2>/dev/null; then
-    echo "[ralph] State is DONE. Exiting loop."
+    COMPLETION_PROMISE="${COMPLETION_PROMISE:-}"
+    if [ -n "${COMPLETION_PROMISE}" ]; then
+      LLM_OUTPUT_FILE="ralph/results/llm_iter${ITERATION}.json"
+      if grep -q "<completion_promise>${COMPLETION_PROMISE}</completion_promise>" "${LLM_OUTPUT_FILE}" 2>/dev/null; then
+        echo "[ralph] State is DONE. Completion promise verified. Exiting loop."
+      else
+        echo "[ralph] WARNING: State is DONE but completion promise not found in LLM output."
+        echo "[ralph]   Expected: <completion_promise>${COMPLETION_PROMISE}</completion_promise>"
+        echo "[ralph]   Proceeding with exit (phase: DONE is authoritative)."
+      fi
+    else
+      echo "[ralph] State is DONE. Exiting loop."
+    fi
     break
   fi
 
@@ -208,11 +264,18 @@ for line in sys.stdin:
     echo "[ralph] Phase 2: Executing action.sh..."
     echo ""
 
+    cp ralph/state.md ralph/results/state_backup.md
+
     # Run action.sh, capture exit code (don't fail the loop on error)
     set +e
     bash ralph/action.sh
     ACTION_EXIT=$?
     set -e
+
+    if ! validate_state_file 2>/dev/null; then
+      echo "[ralph] WARNING: state.md corrupted after action.sh. Restoring from backup."
+      cp ralph/results/state_backup.md ralph/state.md
+    fi
 
     # Record exit code for LLM to read next iteration
     echo "${ACTION_EXIT}" > ralph/results/last_exit_code
