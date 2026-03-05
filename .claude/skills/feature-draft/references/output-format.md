@@ -66,6 +66,7 @@ For multiple features:
 ### Full Structure
 
 ```markdown
+<!-- spec-update-todo-input-start -->
 # Part 1: Spec Patch Draft
 
 > This patch can be copy-pasted into the corresponding spec section,
@@ -94,6 +95,7 @@ For multiple features:
 
 ## Notes
 [additional context...]
+<!-- spec-update-todo-input-end -->
 ```
 
 ### Per-Section Detailed Format
@@ -314,8 +316,8 @@ For split specs, use actual filenames:
 ---
 
 ## Parallel Execution Summary
-| Phase | Total Tasks | Max Parallel | File Conflicts |
-|-------|-------------|--------------|----------------|
+| Phase | Total Tasks | Max Parallel | Sequential (conflicts) |
+|-------|-------------|--------------|----------------------|
 | 1     | N           | N            | None           |
 | 2     | N           | N            | file.py (Task X, Y) |
 

@@ -15,7 +15,7 @@
 | Step 3: Adaptive Clarification | `AskUserQuestion` | 사용자 추가 질문 |
 | Step 4: Feature Design | `Grep`, `Glob` | Target Files 매핑 시 파일 경로 확인 |
 | Step 5: Spec Patch Generation | — | 출력 생성 (도구 불필요) |
-| Step 5.5: Part 1 Checkpoint | `AskUserQuestion` | 사용자 확인 |
+| Step 5.5: Part 1 Checkpoint | — | 요약 테이블 제시 (확인 대기 없이 진행) |
 | Step 6: Implementation Plan | — | 출력 생성 (도구 불필요) |
 | Step 7: Review & Confirm | `Write`, `Bash (mkdir/mv)`, `AskUserQuestion`, `Glob` | 파일 저장, 사용자 확인, Target Files 검증 |
 
@@ -112,22 +112,12 @@ AFTER Step 4:
     → 미완료 항목 보완 후 재확인
 ```
 
-### Gate 5→5.5→6: Part 1 확인 후 Part 2 진행
+### Gate 5→5.5→6: Part 1 요약 후 Part 2 진행
 
 ```
 AFTER Step 5:
-  → Step 5.5: Part 1 요약 테이블 제시
-  → AskUserQuestion: "Part 1 내용을 확인해 주세요. 진행/수정?"
-
-  IF 사용자 확인 (진행):
-    → Step 6
-  ELSE IF 수정 요청:
-    round = 0
-    WHILE 수정 요청 AND round < 2:
-      → Part 1 수정 반영
-      → 수정된 부분 재제시
-      round += 1
-    → Step 6
+  → Step 5.5: Part 1 요약 테이블 제시 (사용자 확인을 기다리지 않는다)
+  → Step 6 바로 진행
 ```
 
 ### Gate 6→7: 전체 출력 완료 확인

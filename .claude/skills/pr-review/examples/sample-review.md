@@ -13,7 +13,7 @@ User: PR 리뷰
 
 Claude: PR 리뷰를 시작합니다.
 
-**사용 모델**: Claude Opus 4.5
+**사용 모델**: Claude Opus 4.6
 
 ## 사전 조건 확인
 
@@ -144,7 +144,7 @@ Claude:
 **PR**: #42 - 사용자 인증 시스템 구현 및 세션 관리 버그 수정
 **PR Author**: developer-kim
 **Review Date**: 2026-02-06
-**Reviewer**: Claude (Opus 4.5)
+**Reviewer**: Claude (Opus 4.6)
 **Spec Version**: 1.2.0
 **Patch Draft**: Found
 
@@ -345,7 +345,7 @@ User: PR 리뷰
 
 Claude: PR 리뷰를 시작합니다.
 
-**사용 모델**: Claude Opus 4.5
+**사용 모델**: Claude Opus 4.6
 
 ## 사전 조건 확인
 
@@ -376,7 +376,7 @@ Claude: PR 리뷰를 시작합니다.
 **PR**: #42 - 사용자 인증 시스템 구현 및 세션 관리 버그 수정
 **PR Author**: developer-kim
 **Review Date**: 2026-02-06
-**Reviewer**: Claude (Opus 4.5)
+**Reviewer**: Claude (Opus 4.6)
 **Spec Version**: 1.2.0
 **Patch Draft**: Found
 

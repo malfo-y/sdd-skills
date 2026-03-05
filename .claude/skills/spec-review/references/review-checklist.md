@@ -30,6 +30,11 @@ This checklist does not authorize direct spec edits.
 - [ ] Issue status in spec reflects implementation/test reality
 - [ ] Decision-log assumptions/rationale still match implementation behavior
 
+## 3.5) Drift Summary Presentation
+
+- [ ] Drift findings summarized in category × severity table before proceeding to severity classification
+- [ ] Table covers: Architecture, Feature, API, Config, Issue, Decision-log drift categories
+
 ## 4) Evidence Quality
 
 - [ ] Each high/medium finding has concrete evidence (`path:line`, test, diff, commit)
