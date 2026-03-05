@@ -23,9 +23,17 @@
 | `/implementation` | TDD 기반 구현 실행 |
 | `/implementation-review` | 계획 대비 구현 검증 (대규모 phase별 검증) |
 | `/ralph-loop-init` | ML 자동 트레이닝 디버그 루프 생성 |
-| `/discussion` | 구조화된 반복 토론 + 리서치 + 요약 (텍스트 출력만) |
+| `/discussion` | 구조화 의사결정 토론: 맥락 수집 + 선택지 비교 + 결정/미결/실행항목 정리 |
 
-> Codex의 경우 `/discussion`은 Plan mode에서만 동작합니다.
+> (caveat) `/discussion`은 아직 Codex에서 잘 동작하지 않습니다.
+
+### 언제 `/discussion`을 먼저 쓰나
+
+- 요구사항/방향이 아직 모호할 때
+- 기술 선택지 트레이드오프를 빠르게 합의해야 할 때
+- 구현 전에 리스크/검증 포인트를 정리할 때
+
+출력: 핵심 논점, 결정 사항, 미결 질문, 실행 항목, (선택) Save Handoff
 
 ---
 
@@ -78,7 +86,21 @@ flowchart LR
 # 코드베이스를 분석하여 스펙 생성
 ```
 
-### 2. 대규모 기능 구현
+### 2. 구현 전 의사결정 토론
+
+```bash
+/discussion
+# 토픽 선택 → 맥락 수집 → 반복 질문 → 요약 출력
+```
+
+후속 스킬 연결:
+- `/feature-draft`: 합의된 방향으로 기능 초안 작성
+- `/implementation-plan`: 결정된 구조로 phase 계획 수립
+- `/spec-create`: 요구사항이 정리된 새 프로젝트 스펙 생성
+
+> 토론 결과 요약은 사용자 선택에 따라 `_sdd/discussion/discussion_<title>.md`로 저장할 수 있습니다.
+
+### 3. 대규모 기능 구현
 
 ```bash
 # 1. 스펙 패치 초안 + 구현 계획 생성
@@ -105,7 +127,7 @@ flowchart LR
 
 > 스펙이 없으면 먼저 `/spec-create`를 실행합니다.
 
-### 3. 중규모 기능 구현
+### 4. 중규모 기능 구현
 
 ```bash
 # 1. 스펙 패치 초안 + 구현 계획 생성
@@ -120,7 +142,7 @@ flowchart LR
 
 > `feature-draft`가 스펙 패치 초안(Part 1)과 구현 계획(Part 2)을 한 번에 생성하므로 별도의 `implementation-plan`이 불필요합니다.
 
-### 4. 소규모 / 버그 수정
+### 5. 소규모 / 버그 수정
 
 ```bash
 # 1. 직접 수정 요청
@@ -133,7 +155,7 @@ flowchart LR
 /spec-update-done
 ```
 
-### 5. ML 트레이닝 디버그 루프
+### 6. ML 트레이닝 디버그 루프
 
 ```bash
 /ralph-loop-init
@@ -141,16 +163,6 @@ flowchart LR
 ```
 
 > LLM 기반 자동 ML 트레이닝 디버깅을 위한 루프 구조를 생성합니다.
-
-### 6. 구조화된 토론
-
-```bash
-/discussion
-# 토픽 선택 → 맥락 수집(sub-agent) → 반복 질문 → 요약 출력
-```
-
-> 파일을 생성하지 않으며, 토론 결과 요약은 대화 내 텍스트로만 출력됩니다.
-> 토론 결과를 기반으로 `/spec-create`, `/feature-draft` 등 후속 스킬을 실행할 수 있습니다.
 
 ### 7. PR 기반 스펙 패치 및 리뷰
 

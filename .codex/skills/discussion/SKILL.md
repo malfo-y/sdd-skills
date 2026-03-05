@@ -19,13 +19,14 @@ version: 1.0.0
 ## Hard Rules
 
 1. **Plan mode 전용**: 이 스킬의 질문 루프는 Plan mode에서만 동작한다.
-2. **Default mode 처리**: Default mode에서 호출되면 아래 문구를 출력하고 즉시 종료한다.
+2. **Default mode 즉시 종료(강제)**: Default mode에서 호출되면 아래 문구를 **그대로 1회만 출력**하고 즉시 종료한다.
    - "`discussion` 스킬은 Plan mode 전용입니다. Shift+Tab으로 Plan mode로 전환 후 다시 실행해 주세요."
-3. **Plan mode 내 파일 변경 금지**: Plan mode 중에는 파일 생성/수정/삭제를 수행하지 않는다. 토론 결과는 텍스트로 출력한다.
-4. **도구 제한**: `request_user_input`(Plan mode), `Read`, `Glob`, `rg`, `Bash`(read-only), 선택적 웹 리서치(`search_query`, `open`)만 사용한다.
-5. **질문 옵션 규칙**: `request_user_input`의 옵션은 2~3개를 유지하고, 권장 구성은 `실질 선택지 2개 + 토론 종료/정리 1개`다.
-6. **언어 규칙**: 기본 출력 언어는 한국어로 한다. 사용자가 다른 언어를 명시하면 해당 언어를 따른다.
-7. **저장 방식 규칙**: 저장은 Plan mode에서 직접 실행하지 않고, Plan mode 종료 후 실행할 저장 핸드오프(경로 + 내용 + 실행 프롬프트)를 생성한다.
+3. **Default mode 추가 동작 금지(강제)**: Default mode에서는 추가 설명, 후속 질문, 요약, 코드베이스 탐색, 웹 리서치, 파일 작업, 다른 스킬 연계를 수행하지 않는다.
+4. **Plan mode 내 파일 변경 금지**: Plan mode 중에는 파일 생성/수정/삭제를 수행하지 않는다. 토론 결과는 텍스트로 출력한다.
+5. **도구 제한**: `request_user_input`(Plan mode), `Read`, `Glob`, `rg`, `Bash`(read-only), 선택적 웹 리서치(`search_query`, `open`)만 사용한다.
+6. **질문 옵션 규칙**: `request_user_input`의 옵션은 2~3개를 유지하고, 권장 구성은 `실질 선택지 2개 + 토론 종료/정리 1개`다.
+7. **언어 규칙**: 기본 출력 언어는 한국어로 한다. 사용자가 다른 언어를 명시하면 해당 언어를 따른다.
+8. **저장 방식 규칙**: 저장은 Plan mode에서 직접 실행하지 않고, Plan mode 종료 후 실행할 저장 핸드오프(경로 + 내용 + 실행 프롬프트)를 생성한다.
 
 ## Process
 
@@ -37,7 +38,19 @@ version: 1.0.0
 2. If Plan mode:
    - Step 1로 진행.
 3. If Default mode:
-   - Hard Rule 2의 안내 문구를 출력하고 종료.
+   - Hard Rule 2의 안내 문구를 그대로 1회 출력한다.
+   - 즉시 종료한다.
+   - Step 1 이후 단계를 절대 수행하지 않는다.
+
+간단 의사코드:
+
+```text
+IF mode != Plan:
+  OUTPUT "`discussion` 스킬은 Plan mode 전용입니다. Shift+Tab으로 Plan mode로 전환 후 다시 실행해 주세요."
+  STOP
+ELSE:
+  CONTINUE Step 1
+```
 
 ### Step 1: Topic Selection (토픽 선택)
 
@@ -266,7 +279,7 @@ Step 4 요약 출력 직후 저장 여부를 확인한다.
 
 | 상황 | 대응 |
 |------|------|
-| Default mode에서 호출됨 | Plan mode 전환 안내 문구 출력 후 종료 |
+| Default mode에서 호출됨 | 안내 문구 1회 출력 후 즉시 종료 (추가 동작 금지) |
 | 사용자가 토픽을 정하지 못함 | 카테고리 질문으로 최대 2라운드 보완 |
 | 로컬 맥락 수집 실패 | 근거 부족 명시 후 가정 기반 토론 진행 |
 | 웹 리서치 실패 | 실패 사실 명시, 로컬 근거 중심으로 진행 |

@@ -13,6 +13,8 @@ Codex: discussion 스킬은 Plan mode 전용입니다.
 Shift+Tab으로 Plan mode로 전환 후 다시 실행해 주세요.
 ```
 
+위 응답 1회 출력 후 즉시 종료한다. (추가 설명/질문/탐색/요약 없음)
+
 (Plan mode 전환 후 재실행)
 
 ### 1) 토픽 선택
