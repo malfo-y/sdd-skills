@@ -203,7 +203,23 @@ Three-perspective gap analysis:
 
 ### Mode 2: Degraded (no patch draft)
 
-When no patch draft is available, run in degraded mode:
+When no patch draft is available:
+
+#### Step 0: Large-diff gate
+
+```
+1. Check PR size:
+   - `gh pr diff [PR_NUMBER] --name-only | wc -l` → changed file count
+   - `gh pr view [PR_NUMBER] --json additions,deletions` → line change count
+2. If large PR (10+ changed files OR 500+ total line changes):
+   → AskUserQuestion: "이 PR은 변경 규모가 큽니다 (N개 파일, +X/-Y줄). Spec patch 없이 리뷰하면 정확도가 낮을 수 있습니다."
+     옵션:
+     1. "먼저 `/pr-spec-patch` 실행" → Stop and guide user to run `/pr-spec-patch` first
+     2. "그대로 리뷰 진행" → Continue with degraded mode below
+3. If small PR (< 10 files AND < 500 lines): Continue with degraded mode directly
+```
+
+#### Degraded mode execution
 
 ```
 Warning message:
