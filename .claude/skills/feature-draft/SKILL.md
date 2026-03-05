@@ -459,15 +459,11 @@ ELSE → 미완료 파트 생성 후 재확인
 
 ### Step 7: Review & Confirm
 
-**Tools**: `Write`, `Bash (mkdir/mv)`, `AskUserQuestion`, `Glob`
+**Tools**: `Write`, `Bash (mkdir/mv)`, `Glob`
 
 ```
 1. 요약 테이블 제시 (Part 1 항목 수 + Part 2 Phase/Tasks/병렬도)
-2. AskUserQuestion: "상세 확인하시겠습니까? (Part 1 / Part 2 / 전체)"
-3. 요청된 섹션만 상세 출력
-4. 수정사항 반영 → 영향 받은 섹션만 재생성
-5. Check if there's anything else to add
-4. **Verify Target Files** (Glob 기반 검증):
+2. **Verify Target Files** (Glob 기반 검증):
    a. Every task has Target Files
    b. [M] 파일: Glob으로 존재 확인 → 미존재 시 [C]로 변경 또는 경로 수정
    c. [C] 파일: Glob으로 미존재 확인 → 이미 존재하면 [M]으로 변경

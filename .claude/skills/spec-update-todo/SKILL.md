@@ -129,18 +129,9 @@ ELSE → AskUserQuestion: 업데이트할 요구사항 요청
 1. Locate the main spec document in `_sdd/spec/` (prefer `_sdd/spec/<project>.md` as the index/main spec; `_sdd/spec/main.md` may exist in older projects)
 2. If multiple plausible main spec files exist, ask the user which file to update (and treat as the index/main spec)
 3. If the spec is already split across multiple files, follow the index/links and update the appropriate file(s)
-4. Check spec size/complexity. If the spec is getting too large to maintain comfortably in one file (e.g. >500 lines, or the component/API sections dominate navigation), ask the user whether they want to split the spec into multiple files.
-   - If user agrees: keep `_sdd/spec/<project>.md` as an index/overview, extract long sections into separate files under `_sdd/spec/`, and link them from the index using a consistent naming scheme such as:
-     - `_sdd/spec/<project>_API.md`
-     - `_sdd/spec/<project>_DATA_MODEL.md`
-     - `_sdd/spec/<project>_COMPONENTS.md`
-     - Other suffixes are allowed if they better fit the project domain (e.g. `_ARCH.md`, `_FLOWS.md`, `_DB_SCHEMA.md`)—just keep the naming consistent and confirm the split/file map with the user before doing a large refactor.
-     - Naming style: prefer `UPPER_SNAKE_CASE` suffixes (e.g. `_DATA_MODEL`, `_DB_SCHEMA`) for consistency.
-     - Ask-first template:
-       - "현재 스펙이 커져서 관리가 어려워 보여요. `_sdd/spec/<project>.md`를 인덱스로 두고 `_sdd/spec/<project>_API.md`, `_sdd/spec/<project>_DATA_MODEL.md`(등)으로 분할할까요? 원하시면 suffix/파일 구성을 먼저 합의한 뒤 진행할게요."
-5. Read current spec content (index + any referenced sub-specs that will be affected)
-6. If `_sdd/spec/DECISION_LOG.md` exists, read relevant entries before deciding how to insert/update requirements
-7. Identify sections that will be updated:
+4. Read current spec content (index + any referenced sub-specs that will be affected)
+5. If `_sdd/spec/DECISION_LOG.md` exists, read relevant entries before deciding how to insert/update requirements
+6. Identify sections that will be updated:
    - "목표" / "Goal" → for new features
    - "발견된 이슈 및 개선 필요사항" / "Issues & Improvements" → for bugs/improvements
    - "컴포넌트 상세" / "Component Details" → for component changes
@@ -402,11 +393,10 @@ After updating, provide summary:
 | Situation | Action |
 |-----------|--------|
 | Spec file not found | Suggest running `spec-create` first |
-| Ambiguous input | Use AskUserQuestion for clarification |
+| Ambiguous input | 최선의 해석으로 진행, 판단 불가 시 스펙에 Open Questions로 기록 |
 | Conflicting requirements | Flag and ask user to resolve |
 | Invalid input file format | Report parsing errors, suggest corrections |
 | 백업 디렉토리 미존재 | `mkdir -p _sdd/spec/prev/` 자동 생성 |
-| 대형 스펙 (500줄+) | 분할 제안 (ask-first) |
 | 다수 입력 파일 존재 | 사용자에게 선택 확인 |
 | 입력 파일과 스펙 섹션 매핑 불가 | 사용자에게 대상 섹션 확인 |
 

@@ -159,11 +159,7 @@ Assign one overall decision:
       | Low | N | ... |
       | Decision | SPEC_OK / SYNC_REQUIRED / NEEDS_DISCUSSION |
 
-   2. AskUserQuestion: "상세 내용을 확인하시겠습니까?"
-      옵션:
-      1. "전체 리포트" → 전체 출력
-      2. "High severity만" → High 항목만 상세 출력
-      3. "파일로 저장" → SPEC_REVIEW_REPORT.md 저장
+   2. 전체 리포트를 출력하고 `_sdd/spec/SPEC_REVIEW_REPORT.md`로 저장한다 (사용자 확인을 기다리지 않는다).
    ```
 
 ## Output

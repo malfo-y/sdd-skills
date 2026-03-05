@@ -120,7 +120,7 @@ The skill expects spec documents to follow SDD format:
    - If the index does not link clearly, prefer `_sdd/spec/<project>_*.md` (excluding `SUMMARY.md` and `prev/PREV_*.md`) and confirm the intended set with the user
 3. Check for implementation files:
    - `_sdd/implementation/IMPLEMENTATION_PROGRESS.md`
-   - `_sdd/implementation/IMPLEMENTATION_PROGRESS_PHASE_<n>.md` (if multiple exist, prefer the latest phase; ask the user if they want all phases summarized)
+   - `_sdd/implementation/IMPLEMENTATION_PROGRESS_PHASE_<n>.md` (if multiple exist, summarize all phases)
    - `_sdd/implementation/IMPLEMENTATION_REVIEW.md`
 4. If local runtime/test validation is needed for summary evidence, read `_sdd/env.md` and apply setup before running commands.
 
@@ -133,7 +133,7 @@ spec_readable = 스펙 파일 읽기 가능
 
 IF spec_found AND spec_readable → Step 2 진행
 ELSE IF NOT spec_found → `/spec-create` 먼저 실행 권장
-ELSE → AskUserQuestion: 스펙 파일 접근 방법 확인
+ELSE → 오류 메시지 출력 후 중지: "스펙 파일에 접근할 수 없습니다. 파일 경로와 권한을 확인해 주세요."
 ```
 
 ### Step 2: Extract Key Information

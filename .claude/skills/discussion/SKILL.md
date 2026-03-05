@@ -226,9 +226,9 @@ Agent(subagent_type="general-purpose", prompt="다음 사항에 대한 리서치
 
 ### Step 4: Discussion Summary (토론 정리)
 
-**Tools**: `Write`, `AskUserQuestion`
+**Tools**: `Write`
 
-토론 종료 시 구조화된 요약을 생성하고, 사용자 선택에 따라 `_sdd/discussion/discussion_<title>.md`로 저장한다.
+토론 종료 시 구조화된 요약을 생성하고, `_sdd/discussion/discussion_<title>.md`로 자동 저장한다.
 
 #### 요약 출력 형식
 
@@ -269,6 +269,8 @@ Round 2: [주제] → [결론/방향]
 ## Progressive Disclosure (완료 시)
 
 ```
+완료 요약 테이블을 제시한 후 전체 요약을 바로 출력하고 파일로 저장한다 (사용자 확인을 기다리지 않는다):
+
 1. 완료 요약 테이블 제시:
    | 항목 | 내용 |
    |------|------|
@@ -279,17 +281,7 @@ Round 2: [주제] → [결론/방향]
    | 실행 항목 | N개 |
    | 리서치 수행 | N건 |
 
-2. AskUserQuestion: "요약 내용을 확인하시겠습니까?"
-   옵션:
-   1. "전체 요약 보기" → 전체 요약 출력
-   2. "결정 사항만 보기" → 결정 사항 섹션만 출력
-   3. "실행 항목만 보기" → 실행 항목 섹션만 출력
-   4. "확인 완료" → 종료
-
-3. 요약 확인 후 AskUserQuestion: "토론 내용을 파일로 저장할까요?"
-   옵션:
-   1. "저장" → `_sdd/discussion/discussion_<title>.md`로 저장 (디렉토리 없으면 생성)
-   2. "저장하지 않음" → 종료
+2. 전체 요약을 출력하고 `_sdd/discussion/discussion_<title>.md`로 저장한다 (디렉토리 없으면 생성).
 ```
 
 ## Context Management

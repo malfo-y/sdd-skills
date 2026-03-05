@@ -153,21 +153,16 @@ See the [Output Format](#output-format) section below for the output format.
 ```
 1. Read contents of `_sdd/pr/spec_patch_draft.md`
 2. Compare the draft's PR number with the current request
-3. If the draft is for a different PR: use AskUserQuestion to determine handling
-   - Archive existing draft and create new one
-   - Abort operation
+3. If the draft is for a different PR: 기존 draft를 `_sdd/pr/prev/PREV_spec_patch_draft_<timestamp>.md`로 아카이브한 후 새로 생성
 ```
 
-#### Step 2: Confirm user intent
+#### Step 2: Regenerate draft
 
-Use AskUserQuestion to determine the operation type:
+기존 draft가 존재하는 경우 무조건 PR 데이터를 재수집하여 draft를 재생성한다:
 
-- **Refine content**: Modify/supplement existing patch content
-- **Resolve questions**: Answer items in the questions and suggestions section
-- **Add items**: Add new changes
-- **Remove items**: Delete unnecessary items
-- **Regenerate**: Re-collect PR data and regenerate draft
-- **Finalize**: Confirm current draft as final
+1. PR 데이터 재수집 (gh pr view, gh pr diff)
+2. 기존 draft의 사용자 수정 사항이 있으면 보존하여 반영
+3. 새 draft 생성
 
 #### Step 3: Apply changes
 
@@ -345,7 +340,7 @@ Update relevant sections based on user feedback:
 | No spec file | Warn, recommend `/spec-create`, generate without baseline if user agrees |
 | No PR / `gh` not authenticated | Detect error, guide `gh auth login` |
 | Multiple spec files exist | Use AskUserQuestion to select comparison target |
-| Existing draft for a different PR | AskUserQuestion: archive and create new / abort |
+| Existing draft for a different PR | 기존 draft를 아카이브한 후 새로 생성 |
 | Already merged PR | Allow (retroactive spec maintenance), note merge status |
 | Large PR (50+ files) | Directory/component-level summary, focus on spec-related components |
 | No spec-related changes in PR | Notify user, generate minimal patch draft |

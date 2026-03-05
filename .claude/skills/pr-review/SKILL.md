@@ -135,25 +135,6 @@ For each Acceptance Criterion:
 4. Check for API contract changes
 ```
 
-#### Step 4.5: Acceptance Criteria 검증 결과 요약 (Checkpoint)
-
-**Tools**: `AskUserQuestion`
-
-```
-1. 검증 결과 요약 테이블을 사용자에게 제시:
-   | 항목 | Met (✓) | Not Met (✗) | Partial (△) |
-   |------|---------|-------------|-------------|
-   | Features | N | N | N |
-   | Improvements | N | N | N |
-   | Bug Fixes | N | N | N |
-   | Spec Violations | - | N | - |
-
-2. AskUserQuestion: "Acceptance Criteria 검증 결과를 확인해 주세요."
-   옵션:
-   1. "확인, Gap 분석 진행" → Step 5
-   2. "특정 항목 재검증" → 지정 항목 재검증 후 재제시
-```
-
 #### Step 5: Gap analysis
 
 Three-perspective gap analysis:
@@ -193,11 +174,7 @@ Three-perspective gap analysis:
       | Test Pass Rate | N% |
       | Pre-merge Blockers | N개 |
 
-   2. AskUserQuestion: "상세 리뷰 내용을 확인하시겠습니까?"
-      옵션:
-      1. "전체 리뷰" → 전체 리포트 출력
-      2. "Blockers만" → Pre-merge Blockers만 상세 출력
-      3. "파일로 저장" → PR_REVIEW.md 저장
+   2. 전체 리포트를 출력하고 `_sdd/pr/PR_REVIEW.md`로 저장한다 (사용자 확인을 기다리지 않는다).
    ```
 4. Present summary to user and guide next steps
 

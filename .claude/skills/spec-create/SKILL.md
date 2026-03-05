@@ -406,6 +406,8 @@ Save spec documents to:
 ## Progressive Disclosure (완료 시)
 
 ```
+완료 요약 테이블을 제시한 후 전체 문서 요약을 바로 출력한다 (사용자 확인을 기다리지 않는다):
+
 1. 완료 요약 테이블 제시:
    | 항목 | 내용 |
    |------|------|
@@ -415,11 +417,7 @@ Save spec documents to:
    | 주요 섹션 | Goal, Architecture, Components, ... |
    | Decision Log | 생성됨/미생성 |
 
-2. AskUserQuestion: "상세 내용을 확인하시겠습니까?"
-   옵션:
-   1. "전체 확인" → 전체 문서 출력
-   2. "특정 섹션만" → 섹션 선택 후 해당 부분만 출력
-   3. "확인 완료" → 종료
+2. 전체 문서의 섹션별 요약 출력
 ```
 
 ## Error Handling
@@ -433,7 +431,7 @@ Save spec documents to:
 | 기존 스펙 파일 존재 | `prev/PREV_<filename>_<timestamp>.md`로 백업 후 새로 생성 |
 | 프로젝트 코드 접근 불가 | 사용자에게 경로 확인 요청 |
 | user_draft.md 형식 오류 | 파싱 오류 위치 보고, 자유 형식으로 해석 시도 |
-| 불완전한 사용자 입력 | AskUserQuestion으로 보완 (최대 2라운드) |
+| 불완전한 사용자 입력 | 가용 정보로 진행, 해결 불가 항목은 스펙에 Open Questions로 기록 |
 | 대형 프로젝트 (200+ 파일) | `Grep`/`Glob` 위주 탐색, 핵심 컴포넌트만 문서화 |
 | 다국어 혼재 | 사용자에게 언어 선호도 확인 |
 | DECISION_LOG.md 충돌 | 기존 항목 보존, 새 항목만 추가 |

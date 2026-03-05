@@ -509,14 +509,14 @@ Fix SQL injection in src/services/user.py:45
 Need detailed review? Say "full review"
 ```
 
-## When to Escalate to User
+## Autonomous Decision-Making
 
-Use AskUserQuestion when:
+다음 상황에서는 사용자에게 묻지 않고 최선의 판단으로 자율적으로 진행한다:
 
-- **Ambiguous criterion**: Can't determine if it's met
-- **Missing context**: Need to know deployment requirements
-- **Trade-off decision**: Found issue but fix has side effects
-- **Scope question**: Found improvement but unsure if wanted
+- **모호한 기준**: 가용 증거를 기반으로 최선의 판단 후 UNTESTED로 표시, 판단 근거를 리포트에 기록
+- **누락된 맥락**: 가용 정보로 판단, 가정 사항을 리포트에 명시
+- **트레이드오프 결정**: 리스크가 낮은 쪽을 선택하고 근거를 리포트에 기록
+- **범위 질문**: 구현 계획에 명시된 범위 내에서만 평가, 범위 밖 개선사항은 "Optional Improvements"로 분류
 
 ## Error Handling
 

@@ -113,7 +113,7 @@ Key sections to parse:
 - ## Open Questions (address before proceeding)
 ```
 
-If the plan has **Open Questions**, use AskUserQuestion to resolve them before implementation.
+If the plan has **Open Questions**, resolve them with best judgment before implementation. 판단 불가한 항목은 `IMPLEMENTATION_PROGRESS.md`에 기록하고 진행한다.
 
 ## Step 2: Initialize Task Tracking
 
@@ -162,15 +162,8 @@ For each task:
 1. Analyze Description and Technical Notes for file path mentions
 2. Use Grep/Glob to identify related files
 3. Infer Target Files with [C] or [M] markers
-
-Present inferred Target Files to user:
-  "Task 1의 Target Files를 다음과 같이 추론했습니다:
-   - [C] src/services/auth.py
-   - [C] tests/test_auth.py
-   확인하시겠습니까?"
-
-IF user confirms → Use for parallel scheduling
-IF user declines or uncertain → Execute that task sequentially
+4. 추론된 Target Files를 바로 사용하여 병렬 스케줄링 진행
+5. 추론 확신도가 낮은 task는 순차 실행으로 fallback
 ```
 
 ### 3.3 Build Conflict Graph
@@ -640,17 +633,16 @@ Some tasks don't fit pure TDD. Adapt the approach:
 - **Surface blockers**: Alert user to issues requiring decisions
 - **Confirm scope changes**: Ask before deviating from the plan
 
-## When to Pause and Ask
+## Autonomous Decision-Making
 
-Use AskUserQuestion when:
+다음 상황에서는 사용자에게 묻지 않고 최선의 판단으로 자율적으로 진행한다:
 
-- **Target Files unclear**: Can't determine file boundaries for parallelization
-- **Inference uncertain**: Inferred Target Files need user confirmation
-- **Test unclear**: Can't determine what to assert
-- **Ambiguous requirements**: Multiple valid interpretations
-- **Scope decisions**: Discovered work that may or may not be in scope
-- **Technical choices**: Multiple valid approaches with trade-offs
-- **Blockers**: External dependencies or issues requiring user action
+- **Target Files 불명확**: 가용 정보로 최선의 추론 후 진행, 저확신 시 순차 실행 fallback
+- **테스트 불명확**: 기존 테스트 패턴을 참고하여 최선의 판단으로 작성
+- **모호한 요구사항**: 가장 합리적인 해석으로 진행, 가정 사항을 리포트에 명시
+- **범위 결정**: 구현 계획에 명시된 범위 내에서만 작업, 범위 밖 발견사항은 리포트에 기록
+- **기술 선택**: 기존 코드베이스 패턴을 따르며, 판단 근거를 리포트에 기록
+- **블로커**: 외부 의존성은 mock으로 처리, 해결 불가 항목은 리포트에 기록
 
 ## Integration with Other Skills
 

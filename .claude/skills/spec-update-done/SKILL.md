@@ -128,7 +128,7 @@ Collect information from all available sources:
    - user-provided value if explicit
    - else derive from `feature_draft_<name>.md` when unambiguous
    - else derive from implementation plan/report title when unambiguous
-   - else ask user before archive
+   - else auto-generate a descriptive name (do not ask user)
 ```
 
 **Decision Gate 1→2**:
@@ -213,11 +213,11 @@ Create a structured diff report:
 **Decision Gate 3→4**:
 ```
 report_presented = Change Report를 사용자에게 제시 완료
-user_approved = 사용자가 변경 사항 승인
 
-IF report_presented AND user_approved → Step 4 진행
+IF report_presented → AskUserQuestion: "변경 사항을 적용할까요?" (승인/수정 요청)
+  IF 승인 → Step 4 진행
+  IF 수정 요청 → 피드백 반영 후 Report 수정 → 재승인 요청 (최대 2라운드)
 ELSE IF NOT report_presented → Step 3 재실행
-ELSE IF NOT user_approved → 사용자 피드백 반영 후 Report 수정 → 재승인 요청 (최대 2라운드)
 ```
 
 ### Step 4: Apply Updates
@@ -233,18 +233,6 @@ Update spec document with identified changes:
 4. Archive or remove obsolete content
 5. Add changelog entry
 6. If behavior/architecture intent changed, append a concise entry to `_sdd/spec/DECISION_LOG.md`
-
-**Spec Splitting (when spec is too large):**
-- If the main spec has grown too large to maintain comfortably in a single file (e.g. >500 lines or difficult navigation), ask the user whether they want to split it into multiple files.
-- If user agrees: keep `_sdd/spec/<project>.md` as an index/overview, move large sections into separate files under `_sdd/spec/`, and link them from the index using a consistent naming scheme such as:
-  - `_sdd/spec/<project>_API.md`
-  - `_sdd/spec/<project>_DATA_MODEL.md`
-  - `_sdd/spec/<project>_COMPONENTS.md`
-- Other suffixes are allowed if they better match the project domain (e.g. `_ARCH.md`, `_FLOWS.md`, `_DB_SCHEMA.md`). Keep the naming consistent and confirm the intended split with the user.
-- Naming style: prefer `UPPER_SNAKE_CASE` suffixes (e.g. `_DATA_MODEL`, `_DB_SCHEMA`) for consistency.
-- Ask-first template:
-  - "현재 스펙이 커져서 관리가 어려워 보여요. `_sdd/spec/<project>.md`를 인덱스로 두고 `_sdd/spec/<project>_API.md`, `_sdd/spec/<project>_DATA_MODEL.md`(등)으로 분할할까요? 원하시면 suffix/파일 구성을 먼저 합의한 뒤 진행할게요."
-- Create backups under `_sdd/spec/prev/` for every existing file you will modify during the split.
 
 **Versioning:**
 - Increment patch version for minor updates
@@ -295,7 +283,7 @@ Rules:
 5. Create/update `_sdd/implementation/IMPLEMENTATION_INDEX.md`:
    - maintain one section per `feature_id`
    - append sync entries with `synced_at` (UTC), copied file mappings (`destination <- source`), and optional notes
-6. If `feature_id` is still ambiguous, ask user and skip archive step until confirmed.
+6. If `feature_id` is still ambiguous, auto-generate a descriptive name from context (e.g., commit messages, changed file names) without asking the user.
 
 ## Context Management
 
@@ -352,11 +340,7 @@ Present findings before making changes:
    | 제거/아카이브 항목 | N개 |
    | 버전 변경 | X.Y.Z → X.Y.Z+1 |
 
-2. AskUserQuestion: "상세 변경 내용을 확인하시겠습니까?"
-   옵션:
-   1. "전체 확인" → 모든 변경 사항 상세 출력
-   2. "특정 카테고리만" → 선택한 카테고리만 출력
-   3. "바로 적용" → Step 4 진행
+2. 바로 Step 4 진행 (상세 확인 묻지 않음)
 ```
 
 ### Updated Spec
@@ -461,10 +445,9 @@ spec-create → feature-draft → implementation → spec-update-done
 | 구현 로그 미존재 | git diff 기반 Quick Sync 모드로 전환 |
 | git 이력 없음 | 코드 직접 분석으로 대체 |
 | `_sdd/env.md` 미존재/불완전 | 로컬 실행 건너뛰고 사용자에게 환경 확인 |
-| feature_id 모호 | 사용자에게 확인 후 아카이브 진행 |
-| 대형 스펙 (500줄+) | 분할 제안 (ask-first) |
+| feature_id 모호 | 컨텍스트에서 자동 생성 (커밋 메시지, 변경 파일명 등 활용) |
 | 백업 디렉토리 미존재 | `mkdir -p _sdd/spec/prev/` 자동 생성 |
-| 충돌하는 변경 사항 | 사용자에게 우선순위 확인 |
+| 충돌하는 변경 사항 | 최선 판단 후 진행, `DECISION_LOG.md`에 결정 근거 기록. 판단 불가 시 스펙에 Open Questions로 기록 |
 
 ## Additional Resources
 

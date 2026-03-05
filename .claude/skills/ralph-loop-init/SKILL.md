@@ -566,6 +566,8 @@ increase it (or set to empty for unlimited) once the first full run succeeds.
 ## Progressive Disclosure (완료 시)
 
 ```
+완료 요약 테이블과 함께 전체 정보를 바로 출력한다 (사용자 확인을 기다리지 않는다):
+
 1. 완료 요약 테이블 제시:
    | 항목 | 내용 |
    |------|------|
@@ -574,11 +576,9 @@ increase it (or set to empty for unlimited) once the first full run succeeds.
    | 감지 프레임워크 | PyTorch Lightning |
    | Phase 구성 | SETUP -> SMOKE_TEST -> TRAINING -> ... -> DONE |
 
-2. AskUserQuestion: "생성된 파일을 확인하시겠습니까?"
-   옵션:
-   1. "PROMPT.md 상세 확인" -> PROMPT.md 핵심 섹션 출력
-   2. "config.sh 확인" -> 변수 목록 출력
-   3. "확인 완료" -> 종료
+2. PROMPT.md 핵심 섹션 요약 출력
+
+3. config.sh 변수 목록 출력
 ```
 
 ---
