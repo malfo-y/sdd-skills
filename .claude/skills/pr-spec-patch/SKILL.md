@@ -6,6 +6,10 @@ version: 1.0.0
 
 # PR Spec Patch - PR-Based Spec Patch Draft Generation
 
+| Workflow | Position | When |
+|----------|----------|------|
+| PR workflow | Step 1 of 2 | PR 기반 스펙 패치 초안 생성 |
+
 Compares a PR (Pull Request) against the current spec, generates a structured spec patch draft, and refines it through conversation.
 
 ## Overview

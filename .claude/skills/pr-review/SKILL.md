@@ -20,11 +20,12 @@ This skill verifies PR implementation against the current spec documents (`_sdd/
 
 ## Workflow Position
 
+| Workflow | Position | When |
+|----------|----------|------|
+| PR workflow | Step 2 of 2 | PR 검증 및 판정 (pr-spec-patch 후) |
+
 ```
 implementation → PR → pr-spec-patch → pr-review → approve/revise → spec-update-todo
-                          ↑              ↑↓
-                     current spec   verification & verdict
-                  (_sdd/spec/)     (_sdd/pr/PR_REVIEW.md)
 ```
 
 ## Language
@@ -34,7 +35,7 @@ implementation → PR → pr-spec-patch → pr-review → approve/revise → spe
 
 ## LLM Model to use
 
-Use the default, most capable model (e.g. Opus 4.5) to review the PR otherwise mentioned by the user.
+Use the default, most capable model (e.g. Opus 4.6) to review the PR otherwise mentioned by the user.
 Report the model used at the beginning of the review.
 
 ## When to Use This Skill

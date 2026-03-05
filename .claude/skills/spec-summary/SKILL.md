@@ -6,6 +6,11 @@ version: 1.3.0
 
 # spec-summary: Specification Summary Generator
 
+| Workflow | Position | When |
+|----------|----------|------|
+| Any | Standalone | 프로젝트 현황 파악, 스테이크홀더 미팅, 온보딩 |
+| Any | After spec-update-todo/done | 스펙 변경 후 요약 갱신 |
+
 ## Overview
 
 The **spec-summary** skill generates human-readable summaries of SDD (Spec-Driven Development) specification documents. It creates a layered, scannable document that helps both technical and non-technical stakeholders quickly understand:
@@ -30,7 +35,7 @@ The **spec-summary** skill generates human-readable summaries of SDD (Spec-Drive
 
 1. **Spec read-only**: `_sdd/spec/*.md` 파일은 읽기 전용이다 (`SUMMARY.md` 제외). 스펙 내용을 수정하지 않는다.
 2. **README sync on explicit request only**: README 업데이트는 사용자가 명시적으로 요청할 때만 수행한다.
-3. **한국어 작성**: 스펙 문서 언어를 따르되, 기본은 한국어로 작성한다.
+3. **언어 규칙**: 기존 스펙/문서의 언어를 따른다. 새 프로젝트(기존 스펙 없음)는 한국어 기본. 사용자 명시 지정 시 해당 언어 사용.
 4. **백업 후 덮어쓰기**: 기존 `SUMMARY.md` 존재 시 `prev/PREV_SUMMARY_<timestamp>.md`로 백업 후 새로 생성한다.
 
 ## When to Use This Skill

@@ -6,6 +6,11 @@ version: 1.0.0
 
 # Spec Rewrite - Restructure Long or Complex Specs
 
+| Workflow | Position | When |
+|----------|----------|------|
+| Any | Standalone | 스펙이 비대해졌을 때 정리/재구성 |
+| Any | Before implementation-plan | 구현 전 스펙 품질 정리 |
+
 Rewrite long or complex specs into a clearer structure by pruning unnecessary content (delete or move to appendix), splitting into hierarchical files, and explicitly documenting ambiguities and quality issues.
 
 ## Overview
@@ -29,7 +34,7 @@ Primary goals:
 1. **Always backup**: 수정 전 반드시 `_sdd/spec/prev/PREV_<filename>_<timestamp>.md`로 백업한다.
 2. **Preserve decision context**: 삭제하는 섹션에 중요한 "why" 컨텍스트가 있으면 `DECISION_LOG.md`에 보존한다.
 3. **사용자 확인 우선**: 대규모 구조 변경(파일 분할, 대량 이동) 전에 반드시 사용자 확인을 받는다.
-4. **한국어 작성**: 추가/수정 내용은 한국어로 작성한다 (기존 언어 유지).
+4. **언어 규칙**: 기존 스펙/문서의 언어를 따른다. 새 프로젝트(기존 스펙 없음)는 한국어 기본. 사용자 명시 지정 시 해당 언어 사용.
 5. **최소 산출물**: `DECISION_LOG.md` 외 추가 거버넌스 문서는 사용자 요청 시에만 생성한다.
 
 ## Input Sources
@@ -106,9 +111,12 @@ user_approved = 사용자가 계획 승인
 IF plan_presented AND user_approved → Step 3 진행
 ELSE IF NOT plan_presented → Step 2 재실행
 ELSE → 사용자 피드백 반영 후 계획 수정 (최대 2라운드)
+  → 2라운드 후에도 거부 시 진단 결과를 REWRITE_REPORT.md에 저장하고 종료
 ```
 
 ### Step 3: Create Safety Backups
+
+> Steps 3-5는 실제 파일 수정 단계이다. `Edit`, `Write`, `Bash` 도구를 사용한다.
 
 **Tools**: `Bash (mkdir -p, cp)`, `Write`
 
@@ -171,6 +179,19 @@ Always call out these issue types explicitly.
 
 If needed, add `## Open Questions` to the index and keep detailed items in the report file.
 
+### Step 7: Validation
+
+**Tools**: `Glob`, `Read`
+
+Quality Checklist를 검증 스텝으로 실행한다:
+
+- [ ] 인덱스에서 목표/범위/완료 기준을 빠르게 파악할 수 있는가?
+- [ ] 상세 섹션이 토픽별 전용 파일로 분리되었는가?
+- [ ] 링크와 경로가 유효한가? (`Glob`으로 확인)
+- [ ] 모호성/충돌/누락 항목이 명시적으로 문서화되었는가?
+- [ ] 불필요한 중복이 제거되었는가?
+- [ ] 필수 근거(rationale)가 스펙 또는 `DECISION_LOG.md`에 보존되었는가?
+
 ## Output Format
 
 ### 1) Rewritten Spec Files
@@ -206,18 +227,14 @@ Create or update `_sdd/spec/REWRITE_REPORT.md` with:
 
 ## Quality Checklist
 
-- Can a reader understand goal/scope/acceptance criteria quickly from the index?
-- Are detailed sections separated by topic into dedicated files?
-- Are links and paths valid?
-- Are ambiguities/conflicts/missing items explicitly documented?
-- Is unnecessary duplication removed?
-- Is essential rationale preserved (in spec or `_sdd/spec/DECISION_LOG.md`)?
+> Step 7 (Validation)에서 검증 스텝으로 실행된다. 상세 항목은 Step 7 참조.
 
 ## Language Preference
 
-- Keep the existing spec language by default
-- For mixed-language specs, follow the index document language
-- If requested by the user, normalize output to a single language
+- 기존 스펙/문서의 언어를 따른다
+- 혼합 언어 스펙의 경우 인덱스 문서 언어를 따른다
+- 새 프로젝트(기존 스펙 없음)는 한국어 기본
+- 사용자 명시 지정 시 해당 언어 사용
 
 ## Context Management
 

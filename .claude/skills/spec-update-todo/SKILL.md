@@ -6,10 +6,11 @@ version: 1.0.0
 
 # Spec Update from User Input
 
-> **Simplified Workflow Note**: This skill is part of the **legacy workflow**.
-> In the simplified 4-step workflow (`spec → feature-draft → implementation → spec-update-done`),
-> this skill's functionality is included in the **`feature-draft`** skill.
-> Consider using `feature-draft` instead, which combines spec patch drafting + spec update + implementation planning into a single step.
+| Workflow | Position | When |
+|----------|----------|------|
+| Large | Step 2 of 6 | feature-draft 후 스펙에 사전 반영 (드리프트 방지) |
+| Medium | — | feature-draft가 통합 처리 |
+| Small | — | 직접 구현 |
 
 Update existing spec documents with new features, requirements, and planned improvements based on user input. This skill focuses on adding "to-add" or "to-implement" items to the spec.
 
@@ -36,7 +37,7 @@ After processing input files, rename them to mark as processed:
 
 1. **Always backup**: 스펙 파일 수정 전 반드시 `_sdd/spec/prev/PREV_<filename>_<timestamp>.md`로 백업한다.
 2. **Rename processed input files**: 처리된 입력 파일은 반드시 `_processed_` 접두사로 이름 변경한다.
-3. **한국어 작성**: 추가 내용은 스펙 문서 언어를 따르되, 기본은 한국어로 작성한다.
+3. **언어 규칙**: 기존 스펙/문서의 언어를 따른다. 새 프로젝트(기존 스펙 없음)는 한국어 기본. 사용자 명시 지정 시 해당 언어 사용.
 4. **DECISION_LOG.md 최소화**: 결정 로그는 `DECISION_LOG.md`에만 기록하며, 추가 문서는 사용자 요청 시에만 생성한다.
 5. **스펙 구조 보존**: 기존 스펙의 구조와 스타일을 유지하며, 필요한 항목만 추가한다.
 
@@ -126,11 +127,16 @@ ELSE → AskUserQuestion: 업데이트할 요구사항 요청
 **Tools**: `Read`, `Glob`, `AskUserQuestion`
 
 ```
-1. Locate the main spec document in `_sdd/spec/` (prefer `_sdd/spec/<project>.md` as the index/main spec; `_sdd/spec/main.md` may exist in older projects)
+1. Locate the main spec document in `_sdd/spec/` with this priority:
+   - (1) `_sdd/spec/<project>.md` (프로젝트명 기반)
+   - (2) `_sdd/spec/main.md` (이전 프로젝트)
+   - (3) 단일 .md 파일만 존재하면 자동 선택
+   - (4) 2개 이상 후보 시에만 사용자에게 선택 요청
 2. If multiple plausible main spec files exist, ask the user which file to update (and treat as the index/main spec)
 3. If the spec is already split across multiple files, follow the index/links and update the appropriate file(s)
 4. Read current spec content (index + any referenced sub-specs that will be affected)
 5. If `_sdd/spec/DECISION_LOG.md` exists, read relevant entries before deciding how to insert/update requirements
+   - DECISION_LOG 충돌 처리: (1) Update Plan에 충돌 사항 명시 (2) DECISION_LOG에 새 항목으로 추가 (3) Summary에 포함
 6. Identify sections that will be updated:
    - "목표" / "Goal" → for new features
    - "발견된 이슈 및 개선 필요사항" / "Issues & Improvements" → for bugs/improvements
@@ -168,6 +174,8 @@ Extract structured information from input:
 | Configuration | 설정 | Add options |
 | API Change | API 레퍼런스 | Add endpoints |
 
+> 상세 섹션 매핑 규칙은 `references/section-mapping.md`를 참조한다.
+
 ### Step 5: Generate Update Plan
 
 **Tools**: `AskUserQuestion`
@@ -200,11 +208,9 @@ Before modifying, present update plan:
 **Decision Gate 5→6**:
 ```
 plan_presented = Update Plan을 사용자에게 제시 완료
-user_approved = 사용자가 변경 계획 승인
 
-IF plan_presented AND user_approved → Step 6 진행
-ELSE IF NOT plan_presented → Step 5 재실행
-ELSE → 사용자 피드백 반영 후 계획 수정 (최대 2라운드)
+IF plan_presented → Step 6 진행 (사용자 확인을 기다리지 않는다)
+ELSE → Step 5 재실행
 ```
 
 ### Step 6: Apply Updates
@@ -384,9 +390,10 @@ After updating, provide summary:
 
 ## Language Handling
 
-- **Follow Spec Language**: If spec is in Korean, add Korean content
-- **Preserve Consistency**: Don't mix languages within sections
-- **Translate if Needed**: Convert input to spec's language
+- **Follow Spec Language**: 기존 스펙/문서의 언어를 따른다
+- **Preserve Consistency**: 섹션 내 언어를 혼합하지 않는다
+- **Translate if Needed**: 입력을 스펙 언어로 변환한다
+- **New Project Default**: 새 프로젝트(기존 스펙 없음)는 한국어 기본
 
 ## Error Handling
 
@@ -413,11 +420,9 @@ After updating, provide summary:
 ## Integration with Other Skills
 
 ```
-spec-create → spec-update-todo → implementation-plan → implementation → spec-update-done
-                                                                        │
-                                                                        │
-                                                                        │
-                   └────────────────────────────────────────────────────┘
+Large:    feature-draft → spec-update-todo → implementation-plan → implementation → implementation-review → spec-update-done
+Medium:   feature-draft → implementation → spec-update-done
+Small:    직접 구현 (→ implementation-review) (→ spec-update-done)
 ```
 
 - **spec-create**: Create initial spec (run first if no spec exists)

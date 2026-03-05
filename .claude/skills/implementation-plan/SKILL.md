@@ -6,9 +6,13 @@ version: 1.0.0
 
 # Implementation Plan Creation (Parallel-Ready)
 
-> **Workflow Note**: In the simplified 4-step workflow, `feature-draft` is the default
-> when you want requirement clarification + spec patch drafting + planning in one run.
-> Use this skill when planning should be executed as a standalone step.
+| Workflow | Position | When |
+|----------|----------|------|
+| Large | Step 3 of 6 | Phase별 구현 계획 수립 (standalone) |
+| Medium | — | feature-draft가 통합 처리 |
+| Small | — | 직접 구현 |
+
+> `feature-draft`가 스펙 패치 + 구현 계획을 통합 생성하므로, 이 스킬은 계획을 별도 단계로 실행할 때 사용한다.
 
 Create structured, actionable implementation plans from user specifications — with **Target Files** on every task to enable parallel execution via `implementation`.
 
@@ -27,7 +31,7 @@ After processing `user_input.md`, rename it to `_processed_user_input.md` to mar
 
 ## Language
 
-결과로 나오는 .md 파일의 내용은 한국어로 작성합니다.
+기존 스펙/문서의 언어를 따른다. 새 프로젝트(기존 스펙 없음)는 한국어 기본. 사용자 명시 지정 시 해당 언어 사용.
 
 ## Process Overview
 
@@ -187,18 +191,16 @@ ELSE → 누락 항목 보완 후 재확인
 
 > 상세 패턴 및 예시: `references/advanced-patterns.md`의 "Phase Planning Strategies" 참조
 
-#### 사용자 확인
+#### 전략 선택 (자율 결정)
 
 ```
-1. 추천 전략과 근거를 제시:
-   "Task 특성 분석 결과, [전략명] 전략을 추천합니다.
+분석 결과를 바탕으로 최적 전략을 자동 선택하고, 선택 근거를 Plan에 기록한다:
+
+1. 추천 전략과 근거를 Plan에 명시:
+   "Task 특성 분석 결과, [전략명] 전략을 선택함.
     근거: [분석 결과 요약]"
 
-2. AskUserQuestion: "Phase 분할 전략을 선택해 주세요."
-   옵션:
-   1. "[추천 전략명] (추천)" → 추천 전략 적용
-   2. "[대안 전략 A]" → 대안 전략 적용
-   3. "[대안 전략 B]" → 대안 전략 적용
+2. 선택된 전략으로 바로 진행 (사용자 확인을 기다리지 않는다)
 ```
 
 ### 4.3 Phase 그룹핑
@@ -356,14 +358,14 @@ Inform user which model would fit for the implementation by referring "Model ali
 After creating the plan:
 
 1. If a file already exists at the target path, archive it as `<project_root>/_sdd/implementation/prev/PREV_IMPLEMENTATION_PLAN_<timestamp>.md` (create `prev/` if needed).
-2. Ask the user how to save the plan:
+2. 파일 형식 자동 결정 (deterministic defaults):
 
 ```
-AskUserQuestion: "Plan을 어떤 형식으로 저장할까요?"
-옵션:
-1. "Phase별 개별 문서" → IMPLEMENTATION_PLAN.md (인덱스/요약) + IMPLEMENTATION_PLAN_PHASE_N.md (Phase별 상세)
-2. "AI 그룹핑 분할" → IMPLEMENTATION_PLAN.md (인덱스/요약) + 복잡도/규모 기준으로 Phase를 묶은 파일들
-3. "단일 문서" → IMPLEMENTATION_PLAN.md 하나에 전체 Plan 포함
+총 Task 수 기준:
+  IF total_tasks > 25 → Phase별 개별 문서 (IMPLEMENTATION_PLAN.md 인덱스 + IMPLEMENTATION_PLAN_PHASE_N.md)
+  ELSE → 단일 문서 (IMPLEMENTATION_PLAN.md)
+
+선택 근거를 Plan에 기록한다.
 ```
 
 - 기본 저장 경로: `<project_root>/_sdd/implementation/`

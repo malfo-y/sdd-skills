@@ -8,20 +8,13 @@ version: 1.0.0
 
 Collects requirements through conversation with the user, then outputs a spec patch draft and implementation plan as a **single file** — with **Target Files** fields on every task to enable parallel execution via `implementation`.
 
-## Simplified Workflow
+## Workflow Position
 
-This skill is **Step 2 of 4** in the parallel SDD workflow:
-
-```
-spec → feature-draft (this) → implementation → spec-update-done
-```
-
-| Step | Skill | Purpose |
-|------|-------|---------|
-| 1 | spec-create | Create the initial spec document |
-| **2** | **feature-draft** | Draft feature spec patch + implementation plan (with Target Files) |
-| 3 | implementation | Execute the plan with parallel sub-agents |
-| 4 | spec-update-done | Sync spec with actual code |
+| Workflow | Position | When |
+|----------|----------|------|
+| Large | Step 1 of 6 | 스펙 패치 초안 + 구현 계획 생성 |
+| Medium | Step 1 of 3 | 스펙 패치 초안 + 구현 계획 생성 |
+| Small | — | 직접 구현 |
 
 ## Overview
 
@@ -46,6 +39,7 @@ In a single conversation, it collects requirements and simultaneously generates 
 4. **Multiple features supported**: Multiple features can be included in one file, but always confirm with the user first.
 5. **spec-update-todo compatible**: Part 1 must follow the "Spec Update Input" format so it can be directly used as input for `spec-update-todo`.
 6. **Target Files required**: Every task in Part 2 MUST include a `**Target Files**` field.
+7. **[TBD] 허용**: Target Files에서 경로 미결정 시 `[TBD] <reason>` 마커를 사용할 수 있다.
 
 ## Input Sources
 
@@ -211,6 +205,7 @@ ELSE → 미충족 항목에 대해 AskUserQuestion (최대 2라운드)
    - Glob: 후보 파일 경로 존재 여부 검증
    - Verify no unnecessary file overlaps between tasks
    - Apply Target Files markers: [C] Create, [M] Modify, [D] Delete
+   - 충돌 최소화: 5+ tasks/phase이고 파일 겹침 시 Step 6의 Conflict minimization patterns 참조
 ```
 
 **Decision Gate 4→5**:
@@ -227,6 +222,9 @@ ELSE → 미완료 항목 보완 후 재확인
 **Tools**: — (출력 생성 단계, 도구 불필요)
 
 Part 1 follows the "Spec Update Input" format with `**Target Section**` annotations added to each item.
+Part 1의 시작과 끝에 호환성 마커를 포함한다:
+- 시작: `<!-- spec-update-todo-input-start -->`
+- 끝: `<!-- spec-update-todo-input-end -->`
 
 **Format rules**:
 - Full compliance with "Spec Update Input" format (spec-update-todo compatible)
@@ -401,6 +399,12 @@ Reuse the components and analysis results from Step 4 to create the implementati
 
 **Dependencies**: [blocking task ID list]
 
+## Parallel Execution Summary
+| Phase | Total Tasks | Max Parallel | Sequential (conflicts) |
+|-------|-------------|--------------|----------------------|
+| 1     | N           | N            | 0                    |
+| 2     | N           | N            | N                    |
+
 ## Risks and Mitigations
 | Risk | Impact | Mitigation |
 |------|--------|------------|
@@ -477,7 +481,7 @@ ELSE → 미완료 파트 생성 후 재확인
       - `_sdd/drafts/prev/prev_feature_draft_<name>_<timestamp>.md`
    c. Save: `_sdd/drafts/feature_draft_<feature_name>.md`
 
-6. Process input files (if used):
+6. Process input files (드래프트 저장 성공 후에만 실행):
    - `user_draft.md` → `_processed_user_draft.md`
    - `user_spec.md` → `_processed_user_spec.md`
    - `user_input.md` → `_processed_user_input.md`
@@ -511,6 +515,8 @@ ELSE → 미완료 파트 생성 후 재확인
 |-------|-------------|--------------|----------------------|
 | 1     | N           | N            | 0                    |
 | 2     | N           | N            | N                    |
+
+> `Max Parallel = Total Tasks - Sequential(conflict)`. Conflict = 동일 파일에 [M] 마커를 포함하는 Task 쌍.
 
 ### Input Files Processed
 - [x] `user_draft.md` → `_processed_user_draft.md` (if used)

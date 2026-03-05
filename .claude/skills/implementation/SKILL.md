@@ -8,22 +8,15 @@ version: 1.0.0
 
 Execute implementation plans systematically using Test-Driven Development (TDD), with **parallel sub-agent dispatch** for independent tasks within each phase. Tasks without file conflicts are executed concurrently via the Task tool.
 
-## Simplified Workflow
+## Workflow Position
 
-This skill is **Step 3 of 4** in the parallel SDD workflow:
+| Workflow | Position | When |
+|----------|----------|------|
+| Large | Step 4 of 6 | TDD 구현 (phase 반복) |
+| Medium | Step 2 of 3 | TDD 구현 |
+| Small | Direct | 직접 구현 |
 
-```
-spec → feature-draft → implementation (this) → spec-update-done
-```
-
-| Step | Skill | Purpose |
-|------|-------|---------|
-| 1 | spec-create | Create the initial spec document |
-| 2 | feature-draft | Draft feature spec patch + implementation plan (with Target Files) |
-| **3** | **implementation** | Execute the plan with parallel sub-agents (TDD) |
-| 4 | spec-update-done | Sync spec with actual code |
-
-> Also compatible with plans without Target Files (falls back to sequential execution).
+> Plans without Target Files도 호환 (순차 실행으로 fallback).
 
 ## Hard Rule: Never Modify Spec Files
 

@@ -7,24 +7,13 @@ version: 1.0.0
 # Spec Document Creation and Management
 
 Create and manage Software Design Description (SDD) spec documents for projects. Spec documents provide comprehensive technical documentation including goals, architecture, components, and usage examples.
-Use Korean (한국어) for the spec document.
+기존 스펙/문서의 언어를 따른다. 새 프로젝트는 한국어 기본.
 
-## Simplified Workflow
+## Workflow Position
 
-This skill is **Step 1 of 4** in the simplified SDD workflow:
-
-```
-spec (this) → feature-draft → implementation → spec-update-done
-```
-
-| Step | Skill | Purpose |
-|------|-------|---------|
-| **1** | **spec-create** | Create the initial spec document |
-| 2 | feature-draft | Draft feature spec patch + implementation plan |
-| 3 | implementation | Execute the implementation plan (TDD) |
-| 4 | spec-update-done | Sync spec with actual code |
-
-> **Workflow**: spec → feature-draft → implementation → spec-update-done
+| Workflow | Position | When |
+|----------|----------|------|
+| All | Pre-step | 스펙이 없을 때 먼저 실행 |
 
 ## Overview
 
@@ -39,7 +28,7 @@ Spec documents are stored in the `_sdd/spec/` directory within the project root.
 ## Hard Rules
 
 1. **코드 파일 수정 금지**: `src/`, `tests/` 등 구현 코드 파일은 수정하지 않는다.
-2. **한국어 작성**: 스펙 문서 내용은 한국어로 작성한다 (사용자 지정 시 해당 언어 사용).
+2. **언어 규칙**: 기존 스펙/문서의 언어를 따른다. 새 프로젝트(기존 스펙 없음)는 한국어 기본. 사용자 명시 지정 시 해당 언어 사용.
 3. **출력 위치 준수**: 스펙은 `_sdd/spec/`에 저장하고, 초기 부트스트랩 파일은 `<project_root>/AGENTS.md`, `<project_root>/CLAUDE.md`, `<project_root>/_sdd/env.md`에만 생성한다.
 4. **기존 스펙 보존**: 이미 스펙 파일이 존재하면 덮어쓰기 전 반드시 `prev/PREV_<filename>_<timestamp>.md`로 백업한다.
 5. **부트스트랩 파일 최소 수정 원칙**: `AGENTS.md`, `CLAUDE.md`, `_sdd/env.md`가 이미 존재할 때 필수 안내 문구가 누락된 경우, 반드시 사용자 확인 후 필요한 문구만 최소 추가한다.

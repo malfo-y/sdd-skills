@@ -8,29 +8,20 @@ version: 1.0.0
 
 Review and update Software Design Description (SDD) spec documents based on code changes, implementation logs, and user feedback. Ensures spec documents remain accurate and synchronized with the actual codebase.
 
-## Simplified Workflow
+## Workflow Position
 
-This skill is **Step 4 of 4** in the simplified SDD workflow:
-
-```
-spec → feature-draft → implementation → spec-update-done (this)
-```
-
-| Step | Skill | Purpose |
-|------|-------|---------|
-| 1 | spec-create | Create the initial spec document |
-| 2 | feature-draft | Draft feature spec patch + implementation plan |
-| 3 | implementation | Execute the implementation plan (TDD) |
-| **4** | **spec-update-done** | Sync spec with actual code |
-
-> **Workflow**: spec → feature-draft → implementation → spec-update-done
+| Workflow | Position | When |
+|----------|----------|------|
+| Large | Step 6 of 6 | 구현 완료 후 스펙 동기화 |
+| Medium | Step 3 of 3 | 구현 완료 후 스펙 동기화 |
+| Small | Optional | 스펙에 영향 있는 변경 시 |
 
 ## Hard Rules
 
 1. **Report before changing**: 변경 사항을 적용하기 전에 반드시 Change Report를 사용자에게 먼저 제시한다.
 2. **Always backup to prev/**: 스펙 파일 수정 전 `_sdd/spec/prev/PREV_<filename>_<timestamp>.md`로 백업한다.
 3. **Copy-only archive**: 구현 산출물은 복사만 하며 원본을 이동/삭제하지 않는다.
-4. **한국어 작성**: 추가/수정 내용은 한국어로 작성한다 (기존 영어 부분 유지).
+4. **언어 규칙**: 기존 스펙/문서의 언어를 따른다. 새 프로젝트(기존 스펙 없음)는 한국어 기본. 사용자 명시 지정 시 해당 언어 사용.
 5. **DECISION_LOG.md 최소화**: 결정 로그는 `DECISION_LOG.md`에만 기록하며, 추가 거버넌스 문서는 사용자 요청 시에만 생성한다.
 
 ## Overview

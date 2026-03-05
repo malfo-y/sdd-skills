@@ -12,9 +12,11 @@ Generate a complete `ralph/` directory for LLM-driven automated ML training debu
 
 This skill discovers the project's training pipeline, confirms findings with the user, and generates five project-specific files: `CHECKS.md`, `config.sh`, `PROMPT.md`, `run.sh`, and `state.md`.
 
-> **Workflow Note**: `ralph-loop-init`은 SDD 워크플로우와 독립적인 ML 학습 디버깅 자동화 스킬이다.
-> `_sdd/spec/`이 존재하면 참조하지만, SDD 4단계 워크플로우(spec → feature-draft → implementation → spec-update-done)에 속하지 않는다.
-> 생성된 `ralph/` 디렉토리의 `run.sh`를 실행하여 자동 학습 디버깅 루프를 수행한다.
+| Workflow | Position | When |
+|----------|----------|------|
+| Independent | Standalone | ML 학습/e2e 테스트 등 장기 실행 디버깅 자동화 |
+
+> `ralph-loop-init`은 SDD 워크플로우와 독립적이다. `_sdd/spec/`이 존재하면 참조하지만, 규모별 워크플로우에 속하지 않는다.
 
 ## Hard Rules
 
@@ -41,14 +43,14 @@ If it exists:
 
 If `_sdd/` does not exist, skip to Step 1 (code-only discovery).
 
-**Decision Gate 0->1**:
+**Decision Gate 0→1**:
 ```
-sdd_exists = `_sdd/` 디렉토리 존재
-spec_files = spec 파일 발견
+sdd_exists = Glob("_sdd/") 존재 여부
+spec_files = Glob("_sdd/spec/**/*.md") 결과
 
-IF sdd_exists AND spec_files -> spec 읽기 후 Step 1 진행
-ELSE IF sdd_exists AND NOT spec_files -> 경고, Step 1 (코드 기반 탐색)
-ELSE -> Step 1 (코드 기반 탐색)
+IF sdd_exists AND spec_files → spec 읽기 후 Step 1 진행
+ELSE IF sdd_exists AND NOT spec_files → 경고 출력, Step 1 (코드 기반 탐색)
+ELSE → Step 1 (코드 기반 탐색)
 ```
 
 ---
@@ -148,10 +150,9 @@ Structure the question so the user can quickly confirm defaults or override spec
 
 **Decision Gate 2->2.5**:
 ```
-user_confirmed = 사용자 확인 완료
+findings_presented = 분석 결과 요약 테이블 제시 완료
 
-IF user_confirmed -> Step 2.5 진행
-ELSE -> 수정 사항 반영 후 재확인 (최대 2라운드)
+IF findings_presented -> Step 2.5 진행 (사용자 확인을 기다리지 않는다)
 ```
 
 ---
@@ -161,8 +162,8 @@ ELSE -> 수정 사항 반영 후 재확인 (최대 2라운드)
 **Tools**: `Bash (mkdir -p)`, `Write`
 
 Before generating any files, create `ralph/` directory and write `ralph/CHECKS.md`.
-This document defines acceptance criteria for each generated file. It is written first
-so generation targets are explicit before code is produced.
+This document defines acceptance criteria for each generated file — 자동 검증용 체크리스트로, Step 7에서 프로그래밍적으로 검증한다.
+It is written first so generation targets are explicit before code is produced.
 
 Content to write:
 
@@ -408,7 +409,9 @@ Each iteration, append exactly one entry:
 
 After the ADJUSTING section, add a `## Known Errors (Confirmed + Fixed)` section following the format in Section 12 of the reference.
 
-**Always include E1 (macOS timeout)** if the environment is or may be macOS:
+**플랫폼 감지**: `uname -s` 결과 확인. Darwin이면 E1을 포함하고, Linux면 E1을 reference only로 포함한다.
+
+**Always include E1 (macOS timeout)** if the environment is or may be macOS (Darwin):
 
 ```markdown
 ### E1: `timeout: command not found`
@@ -447,20 +450,15 @@ Make the file executable description in the output.
 
 ### Step 5.5: 핵심 파일 확인 (Checkpoint)
 
-**Tools**: `AskUserQuestion`
+**Tools**: — (요약 제시, 도구 불필요)
 
-config.sh, PROMPT.md, run.sh 생성 후 중간 확인:
+config.sh, PROMPT.md, run.sh 생성 후 요약 테이블을 제시하고 바로 Step 6으로 진행한다 (사용자 확인을 기다리지 않는다):
 
 | 항목 | 내용 |
 |------|------|
 | config.sh 변수 | N개 설정 |
 | PROMPT.md 섹션 | Known Errors, Phases, ... |
 | run.sh 구조 | 루프 + LLM 호출 + 검증 |
-
-AskUserQuestion: "핵심 파일 3개를 확인해 주세요."
-옵션:
-1. "확인, 나머지 진행" -> Step 6
-2. "수정 필요" -> 수정 후 재확인 (최대 2라운드)
 
 ---
 
@@ -493,7 +491,7 @@ notes: Initial state. Ralph loop initialized.
 For each criterion in `ralph/CHECKS.md`, perform a targeted check:
 
 **config.sh**:
-- Check for remaining placeholders: count occurrences of `<` in the file — expect 0
+- Check for remaining placeholders: `<[a-zA-Z_][a-zA-Z0-9_]*>` 패턴 매칭 — expect 0 occurrences
 - Check `MAX_STEPS="10"` is present
 - Check `LLM_TIMEOUT_SECONDS` is defined
 - Check every variable referenced in PROMPT.md's TRAINING command is defined in config.sh

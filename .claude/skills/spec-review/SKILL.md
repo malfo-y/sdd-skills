@@ -6,6 +6,11 @@ version: 1.0.0
 
 # Spec Review (Strict, Review-Only)
 
+| Workflow | Position | When |
+|----------|----------|------|
+| Large | Optional (after spec-update-done) | 대규모 업데이트 후 보조 검증 |
+| Any | On-demand | 이상 징후/모호함 발견 시 보조 검증 |
+
 Review SDD spec quality and spec-to-code alignment in strict review-only mode.  
 This skill generates findings and recommendations, but does not edit `_sdd/spec/*.md` (including `DECISION_LOG.md`).
 
@@ -58,6 +63,7 @@ This skill evaluates two dimensions:
 2. Enumerate linked sub-spec files.
 3. Exclude generated/backup files (`SUMMARY.md`, `prev/PREV_*.md`) from primary analysis.
 4. Load `_sdd/spec/DECISION_LOG.md` if present.
+4.5. Capture code state: `git rev-parse --short HEAD` + uncommitted changes count (`git status --porcelain | wc -l`)
 5. Define review scope:
    - Spec-only
    - Spec + code alignment (default)
@@ -136,6 +142,17 @@ Classify findings:
 - `Medium`: behavior mismatch, missing acceptance criteria, important doc gaps
 - `Low`: style/organization/non-blocking documentation quality issues
 
+#### Drift Type → Default Severity Mapping
+
+| Drift Type | Default Severity |
+|------------|-----------------|
+| Architecture | High |
+| Feature | Medium |
+| API | High |
+| Config | Low |
+| Issue | Low |
+| Decision-log | Medium |
+
 Assign one overall decision:
 - `SPEC_OK`: no material drift or quality blockers
 - `SYNC_REQUIRED`: spec updates are needed before next planning/release step
@@ -205,6 +222,7 @@ Assign one overall decision:
 - Consistency:
 - Testability:
 - Structure:
+- Ownership:
 
 ## Spec-to-Code Drift Notes
 - Architecture:

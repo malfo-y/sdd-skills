@@ -6,11 +6,11 @@ version: 1.0.0
 
 # Implementation Review
 
-> **Simplified Workflow Note**: This skill is part of the **legacy workflow**.
-> In the simplified 4-step workflow (`spec → feature-draft → implementation → spec-update-done`),
-> the `implementation` skill now includes **in-phase and final reviews** built in.
-> A separate `implementation-review` invocation is no longer required for the standard workflow.
-> This skill remains available for **standalone audits** outside the normal flow.
+| Workflow | Position | When |
+|----------|----------|------|
+| Large | Step 5 of 6 | Phase별 검증 |
+| Small | Optional | 선택적 구현 검증 |
+| Any | Standalone audit | 독립적 코드 감사 |
 
 Review implementation progress against the implementation plan, verify acceptance criteria are met, identify issues and improvements, and provide actionable next steps.
 
@@ -27,7 +27,7 @@ Use Korean (한국어) for all communications with the user.
 
 ## LLM Model to use
 
-Use the default, most capable model (e.g. Opus 4.5) to review the implementation otherwise mentioned by the user.
+Use the default, most capable model (e.g. Opus 4.6) to review the implementation otherwise mentioned by the user.
 Report the model used at the beginning of the reviewing.
 
 ## When to Use This Skill
