@@ -220,20 +220,17 @@ Phase 그룹핑 결과를 사용자에게 확인받는다:
    | 1     | ...  | N       | X  | Y  | Z  | W  | 모두 있음/N개 누락 |
    | 2     | ...  | N       | X  | Y  | Z  | W  | 모두 있음/N개 누락 |
 
-2. AskUserQuestion: "Phase 구성을 확인해 주세요."
-   옵션:
-   1. "확인, 의존성 매핑 진행" → Step 5
-   2. "수정 필요" → 수정 사항 반영 (최대 2라운드)
 ```
+
+Phase 구성 테이블을 사용자에게 제시한 후 바로 Step 5로 진행한다 (사용자 확인을 기다리지 않는다).
 
 **Decision Gate 4→5**:
 ```
 phases_defined = 모든 Task가 Phase에 배치 완료
 phase_goals_clear = 각 Phase에 명확한 목표/테마 부여
-user_approved = 사용자가 Phase 구성 승인
 
-IF phases_defined AND phase_goals_clear AND user_approved → Step 5 진행
-ELSE → 미완료 항목 보완 후 재확인
+IF phases_defined AND phase_goals_clear → Step 5 진행
+ELSE → 미완료 항목 보완 후 재시도
 ```
 
 ## Step 5: Dependency Mapping

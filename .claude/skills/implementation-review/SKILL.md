@@ -175,22 +175,16 @@ For each task with test requirements:
 - △ tests/test_jwt.py (incomplete)
 ```
 
-### Step 2.5: 검증 진행 상황 요약 (Checkpoint)
+### Step 2.5: 검증 진행 상황 요약
 
-**Tools**: `AskUserQuestion`
+검증 진행 상황 요약 테이블을 사용자에게 제시한 후 바로 Step 3으로 진행한다 (사용자 확인을 기다리지 않는다):
 
 ```
-1. 검증 진행 상황 요약 테이블을 사용자에게 제시:
-   | 항목 | COMPLETE | PARTIAL | MISSING |
-   |------|----------|---------|---------|
-   | Tasks | N | N | N |
-   | Tests | N passing | N failing | N missing |
-   | Files | N found | N incomplete | N missing |
-
-2. AskUserQuestion: "검증 진행 상황을 확인해 주세요."
-   옵션:
-   1. "확인, 상세 평가 진행" → Step 3
-   2. "특정 Task 재검증" → 지정 Task 재검증 후 재제시
+| 항목 | COMPLETE | PARTIAL | MISSING |
+|------|----------|---------|---------|
+| Tasks | N | N | N |
+| Tests | N passing | N failing | N missing |
+| Files | N found | N incomplete | N missing |
 ```
 
 **Decision Gate 2→3**:

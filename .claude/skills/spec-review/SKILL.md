@@ -112,25 +112,19 @@ Require concrete evidence wherever possible:
 When local runtime/test execution is used to collect evidence, follow `_sdd/env.md`.
 If `_sdd/env.md` is missing/incomplete, ask the user for environment details instead of guessing.
 
-### Step 3.5: Drift 발견 요약 (Checkpoint)
+### Step 3.5: Drift 발견 요약
 
-**Tools**: `AskUserQuestion`
+Drift 발견 요약 테이블을 사용자에게 제시한 후 바로 Step 4로 진행한다 (사용자 확인을 기다리지 않는다):
 
 ```
-1. Drift 발견 요약 테이블을 사용자에게 제시:
-   | 카테고리 | High | Medium | Low |
-   |----------|------|--------|-----|
-   | Architecture drift | N | N | N |
-   | Feature drift | N | N | N |
-   | API drift | N | N | N |
-   | Config drift | N | N | N |
-   | Issue drift | N | N | N |
-   | Decision-log drift | N | N | N |
-
-2. AskUserQuestion: "Drift 발견 상황을 확인해 주세요."
-   옵션:
-   1. "확인, 평가 진행" → Step 4
-   2. "특정 항목 재점검" → 지정 항목 재검증 후 재제시
+| 카테고리 | High | Medium | Low |
+|----------|------|--------|-----|
+| Architecture drift | N | N | N |
+| Feature drift | N | N | N |
+| API drift | N | N | N |
+| Config drift | N | N | N |
+| Issue drift | N | N | N |
+| Decision-log drift | N | N | N |
 ```
 
 ### Step 4: Severity and Decision

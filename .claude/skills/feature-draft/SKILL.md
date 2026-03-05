@@ -327,30 +327,16 @@ Part 1 follows the "Spec Update Input" format with `**Target Section**` annotati
 
 > **상세 포맷**: 각 섹션의 전체 필드 목록과 선택/필수 구분은 `references/output-format.md`를 참고하세요.
 
-### Step 5.5: Part 1 Checkpoint
+### Step 5.5: Part 1 요약
 
-**Tools**: `AskUserQuestion`
-
-Part 2 생성은 작업량이 크므로(태스크 상세, Target Files, 의존성 매핑), Part 1 스코프를 확정한 후 진행한다.
+Part 1 요약 테이블을 사용자에게 제시한 후 바로 Step 6으로 진행한다 (사용자 확인을 기다리지 않는다):
 
 ```
-1. Part 1 요약 테이블을 사용자에게 제시:
-   | 섹션 | 항목 수 | 주요 내용 |
-   |------|---------|----------|
-   | New Features | N | ... |
-   | Improvements | N | ... |
-   | ... | ... | ... |
-
-2. AskUserQuestion: "Part 1 내용을 확인해 주세요."
-   옵션:
-   1. "확인, Part 2 진행" → Step 6
-   2. "수정 필요" → 수정 사항 반영
-
-3. 수정 요청 시:
-   - Part 1 수정 반영
-   - 수정된 부분만 재제시
-   - 최대 2라운드까지 수정 반복
-   - 2라운드 후 Step 6 진행
+| 섹션 | 항목 수 | 주요 내용 |
+|------|---------|----------|
+| New Features | N | ... |
+| Improvements | N | ... |
+| ... | ... | ... |
 ```
 
 ### Step 6: Implementation Plan Generation = Part 2
