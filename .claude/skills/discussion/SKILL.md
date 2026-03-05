@@ -18,9 +18,9 @@ version: 1.0.0
 
 ## Hard Rules
 
-1. **코드 수정 금지**: `Edit`, `Write`, `Bash`(mutation 명령) 사용을 금지한다. 읽기 전용 도구만 사용한다.
-2. **파일 생성 금지**: 어떤 파일도 생성하지 않는다. 최종 요약은 대화 내 텍스트로만 출력한다.
-3. **읽기 전용 도구만 허용**: `Read`, `Glob`, `Grep`, `AskUserQuestion`, `Agent`(sub-agent)만 사용 가능하다.
+1. **코드 수정 금지**: `Edit`, `Bash`(mutation 명령) 사용을 금지한다. 읽기 전용 도구만 사용한다.
+2. **파일 생성은 Step 4에서만 허용**: Step 1-3에서는 파일을 생성하지 않는다. Step 4 (토론 정리)에서만 `Write`로 요약 파일을 저장할 수 있다.
+3. **읽기 전용 도구만 허용 (Step 1-3)**: `Read`, `Glob`, `Grep`, `AskUserQuestion`, `Agent`(sub-agent)만 사용 가능하다. Step 4에서는 `Write` 추가 허용.
 4. **한국어 기본**: 토론 내용과 요약은 한국어로 작성한다 (사용자가 다른 언어 지정 시 해당 언어 사용).
 5. **토론 종료 옵션 항상 포함**: Step 3의 매 질문에 "토론 종료 / 정리해줘" 옵션을 반드시 포함한다.
 6. **AskUserQuestion 도구 필수**: Step 3 토론 루프에서 사용자에게 질문할 때 반드시 `AskUserQuestion` 도구를 사용한다. 일반 텍스트로 질문하지 않는다.
@@ -226,9 +226,9 @@ Agent(subagent_type="general-purpose", prompt="다음 사항에 대한 리서치
 
 ### Step 4: Discussion Summary (토론 정리)
 
-**Tools**: 없음 (텍스트 출력만)
+**Tools**: `Write`, `AskUserQuestion`
 
-토론 종료 시 구조화된 요약을 대화 내 텍스트로 출력한다.
+토론 종료 시 구조화된 요약을 생성하고, 사용자 선택에 따라 `_sdd/discussion/discussion_<title>.md`로 저장한다.
 
 #### 요약 출력 형식
 
@@ -285,6 +285,11 @@ Round 2: [주제] → [결론/방향]
    2. "결정 사항만 보기" → 결정 사항 섹션만 출력
    3. "실행 항목만 보기" → 실행 항목 섹션만 출력
    4. "확인 완료" → 종료
+
+3. 요약 확인 후 AskUserQuestion: "토론 내용을 파일로 저장할까요?"
+   옵션:
+   1. "저장" → `_sdd/discussion/discussion_<title>.md`로 저장 (디렉토리 없으면 생성)
+   2. "저장하지 않음" → 종료
 ```
 
 ## Context Management
