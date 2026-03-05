@@ -23,6 +23,7 @@ version: 1.0.0
 3. **읽기 전용 도구만 허용**: `Read`, `Glob`, `Grep`, `AskUserQuestion`, `Agent`(sub-agent)만 사용 가능하다.
 4. **한국어 기본**: 토론 내용과 요약은 한국어로 작성한다 (사용자가 다른 언어 지정 시 해당 언어 사용).
 5. **토론 종료 옵션 항상 포함**: Step 3의 매 질문에 "토론 종료 / 정리해줘" 옵션을 반드시 포함한다.
+6. **AskUserQuestion 도구 필수**: Step 3 토론 루프에서 사용자에게 질문할 때 반드시 `AskUserQuestion` 도구를 사용한다. 일반 텍스트로 질문하지 않는다.
 
 ## Process
 
