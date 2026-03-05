@@ -688,97 +688,165 @@ flowchart TB
 
 ---
 
-## 부록: 스킬 트리거
+## 부록: 스킬별 설명
+
+클로드 코드 사용시 스킬을 호출하기 위해서는 앞에 스킬 이름을 /\<skillname\> 으로 붙이고 사용합니다.
+- e.g. `/spec-create 이 프로젝트 코드 분석해서 스펙 만들어 줘`
+
+코덱스 사용시에는 스킬 이름을 넣고 대화 방식으로 호출합니다.
+- e.g. `spec-create 스킬로 이 프로젝트 코드 분석해서 스펙 만들어 줘`
 
 ### spec-create
-- "스펙 생성", "스펙 만들어줘"
-- "프로젝트 문서화"
-- "SDD 생성"
-- "create a spec", "document the project"
+
+프로젝트의 SDD(Software Design Document) 스펙 문서를 처음 생성합니다. `_sdd/spec/` 디렉토리 구조와 초기 스펙 파일을 만듭니다.
+
+**트리거**: "스펙 생성", "스펙 만들어줘", "프로젝트 문서화", "SDD 생성", "create a spec", "document the project"
+
+**사용 예시**:
+- "이 프로젝트 스펙 만들어 줘."
+- "코드베이스 분석해서 SDD 문서 생성해 줘."
+- "새 프로젝트 시작하는데 이 초안 파일 참고해서 스펙 문서 구조 잡아 줘."
 
 ### feature-draft
-- "기능 초안", "기능 계획"
-- "feature draft", "feature plan"
-- "초안과 계획", "draft and plan"
-- "feature spec and plan"
-- "기능 스펙과 계획"
+
+새로운 기능의 명세서(스펙 패치 초안)를 작성합니다. 요구사항을 정리하고, 스펙 패치와 구현 계획 초안을 한 번에 생성합니다. 대규모/중규모 구현의 시작점입니다.
+
+**트리거**: "기능 초안", "기능 계획", "feature draft", "feature plan", "초안과 계획", "draft and plan"
+
+**사용 예시**:
+- "지금까지 논의한 내용으로 기능 명세서 만들어 줘."
+- "내가 사용자 인증 기능을 구현하려고 해. 스펙 잡아 줘."
+- "`requirements.md`에 있는 내용을 참고해서 기능 명세서를 만들어 줘."
+- "채팅 기능 추가하려는데, 기술 스펙이랑 구현 계획 초안 같이 뽑아 줘."
 
 ### spec-update-todo
-> 대규모 구현 시 `feature-draft` 후 스펙에 사전 반영하는 용도로 사용합니다.
-- "스펙에 기능 추가"
-- "스펙 업데이트"
-- "요구사항 추가"
-- "add features to spec", "update spec"
+
+대규모 구현 시 `feature-draft` 후 스펙에 사전 반영하는 용도로 사용합니다. 아직 구현되지 않은 기능/요구사항을 스펙 문서에 추가합니다.
+
+**트리거**: "스펙에 기능 추가", "스펙 업데이트", "요구사항 추가", "add features to spec", "update spec"
+
+**사용 예시**:
+- "이번에 만든 feature draft를 스펙에 반영해 줘."
+- "새로운 요구사항이 생겼어. 이 문서의 내용들을 스펙에 추가해 줘."
 
 ### spec-update-done
-- "완료 항목 반영"
-- "스펙 동기화"
-- "구현 반영"
-- "sync spec with code", "update done items in spec"
+
+구현 완료된 내용을 스펙 문서에 동기화합니다. 코드와 문서를 비교하여 상태 마커를 업데이트하고, 실제 구현과 스펙의 차이를 반영합니다.
+
+**트리거**: "완료 항목 반영", "스펙 동기화", "구현 반영", "sync spec with code", "update done items in spec"
+
+**사용 예시**:
+- "지금까지 구현된 내용들 문서와 코드를 보고 스펙에 반영해 줘."
+- "구현된 거 스펙에 반영해 줘. 문서는 없어. 코드만 보고 반영해 줘."
+- "phase 2까지 구현 끝났으니까 스펙 상태 업데이트해 줘."
 
 ### spec-review
-- "스펙 리뷰"
-- "스펙 드리프트 확인"
-- "이상한데 검증해줘"
-- "review spec", "spec drift check", "verify spec quality"
+
+스펙 문서의 품질과 코드-스펙 정합성을 검증합니다. 수정은 하지 않고 분석 리포트만 생성합니다. 대규모 변경 후 이상 징후 확인에 유용합니다.
+
+**트리거**: "스펙 리뷰", "스펙 드리프트 확인", "이상한데 검증해줘", "review spec", "spec drift check", "verify spec quality"
+
+**사용 예시**:
+- "스펙이랑 코드가 좀 안 맞는 것 같은데, 검증해 줘."
+- "리팩토링 후에 스펙 드리프트 없는지 확인해 줘."
+- "스펙 문서 품질 리뷰해 줘."
 
 ### spec-summary
-- "스펙 요약"
-- "스펙 개요"
-- "스펙 현황"
-- "프로젝트 개요"
-- "현재 상태는"
-- "summarize spec", "spec summary", "show spec overview"
+
+현재 스펙 문서의 요약을 생성합니다. 프로젝트 현황을 빠르게 파악할 때 사용합니다.
+
+**트리거**: "스펙 요약", "스펙 개요", "스펙 현황", "프로젝트 개요", "현재 상태는", "summarize spec", "spec summary", "show spec overview"
+
+**사용 예시**:
+- "지금 프로젝트 현황 요약해 줘."
+- "스펙 개요 보여 줘."
+- "어디까지 구현됐는지 한눈에 보고 싶어."
 
 ### spec-rewrite
-- "스펙 리라이트"
-- "스펙 정리"
-- "스펙을 파일로 쪼개줘"
-- "rewrite spec", "refactor spec", "split spec"
+
+스펙 문서가 비대해졌을 때 정리/재구성합니다. 노이즈를 제거하고, 필요시 파일을 분할하여 관리 가능한 구조로 만듭니다.
+
+**트리거**: "스펙 리라이트", "스펙 정리", "스펙을 파일로 쪼개줘", "rewrite spec", "refactor spec", "split spec"
+
+**사용 예시**:
+- "스펙 문서가 너무 길어졌어. 정리해 줘."
+- "스펙을 모듈별로 파일 분할해 줘."
+- "불필요한 내용 정리하고 스펙 깔끔하게 다시 써 줘."
 
 ### pr-spec-patch
-- "PR 스펙 패치"
-- "PR 리뷰 준비"
-- "스펙 패치 생성"
-- "PR 변경사항 스펙 반영"
-- "create spec patch from PR", "compare PR with spec"
+
+PR의 변경사항을 분석하여 스펙 패치 문서를 생성합니다. PR 머지 전에 스펙 반영 준비를 할 때 사용합니다.
+
+**트리거**: "PR 스펙 패치", "PR 리뷰 준비", "스펙 패치 생성", "PR 변경사항 스펙 반영", "create spec patch from PR", "compare PR with spec"
+
+**사용 예시**:
+- "PR #42의 변경사항으로 스펙 패치 만들어 줘."
+- "이 PR 머지하기 전에 스펙에 반영할 내용 정리해 줘."
+- "PR이랑 현재 스펙 비교해서 패치 문서 생성해 줘."
 
 ### pr-review
-- "PR 리뷰"
-- "PR 검증"
-- "스펙 기반 PR 리뷰"
-- "PR 승인 검토"
-- "review PR", "review PR against spec", "PR review"
+
+PR의 구현 내용을 스펙과 스펙 패치 기준으로 검증합니다. 코드 품질, 스펙 준수, 누락 사항을 확인합니다.
+
+**트리거**: "PR 리뷰", "PR 검증", "스펙 기반 PR 리뷰", "PR 승인 검토", "review PR", "review PR against spec", "PR review"
+
+**사용 예시**:
+- "PR #42 스펙 기준으로 리뷰해 줘."
+- "이 PR 승인해도 되는지 검증해 줘."
+- "PR 변경사항이 스펙 패치 내용과 일치하는지 확인해 줘."
 
 ### implementation-plan
-> 대규모 구현 시 phase별 계획을 수립하는 용도로 사용합니다.
-- "구현 계획 생성"
-- "병렬 구현 계획"
-- "create implementation plan"
-- "parallel implementation plan"
+
+대규모 구현 시 phase별 상세 계획을 수립합니다. feature draft와 스펙을 기반으로 구현 순서, 의존성, 병렬 실행 가능 여부를 분석합니다.
+
+**트리거**: "구현 계획 생성", "병렬 구현 계획", "create implementation plan", "parallel implementation plan"
+
+**사용 예시**:
+- "이번에 만든 feature draft와 스펙을 보고 구현 계획을 페이즈별로 상세하게 작성해 줘."
+- "병렬로 진행할 수 있는 작업들 분리해서 구현 계획 세워 줘."
+- "이 기능 구현하려면 어떤 순서로 해야 하는지 계획 잡아 줘."
 
 ### implementation
-- "계획 구현"
-- "구현 시작"
-- "병렬 구현"
-- "작업 실행"
-- "implement the plan", "start implementation"
+
+구현 계획 또는 feature draft를 기반으로 실제 코드를 구현합니다. TDD를 준수하며, phase 단위 또는 전체 구현을 수행합니다.
+
+**트리거**: "계획 구현", "구현 시작", "병렬 구현", "작업 실행", "implement the plan", "start implementation"
+
+**사용 예시**:
+- (중규모) "이번에 만든 feature draft를 보고 기능을 구현해 줘."
+- (대규모) "구현 계획 phase 2와 feature draft를 보고 phase 2를 구현해 줘."
+- "병렬로 구현 가능한 것들 동시에 진행해 줘."
 
 ### implementation-review
-> 대규모 구현 시 phase별 검증에 사용합니다. 중규모/소규모에서는 선택 사항입니다.
-- "구현 리뷰"
-- "진행 상황 확인"
-- "뭐가 완료됐어?"
-- "review implementation", "check progress"
+
+구현 결과를 계획/스펙 대비 검증합니다. 대규모 구현 시 phase별 검증에 사용하며, 중규모/소규모에서는 선택 사항입니다.
+
+**트리거**: "구현 리뷰", "진행 상황 확인", "뭐가 완료됐어?", "review implementation", "check progress"
+
+**사용 예시**:
+- "phase 1부터 3까지 구현된 것들 리뷰해 줘."
+- "이번에 구현된 것 feature draft랑 스펙 참고해서 리뷰해 줘."
+- "구현된 거 리뷰해 줘. 문서는 없고, code diff랑 스펙만 보고 리뷰해 줘."
+- "acceptance criteria 기준으로 통과 여부 확인해 줘."
 
 ### ralph-loop-init
-- "ralph loop", "init ralph"
-- "training debug loop"
-- "set up ralph loop"
-- "automated training loop"
+
+LLM 기반 자동화 ML 학습 디버깅 루프(ralph loop)를 초기화합니다. `ralph/` 디렉토리 구조, 설정 파일, 프롬프트 템플릿을 생성합니다.
+
+**트리거**: "ralph loop", "init ralph", "training debug loop", "set up ralph loop", "automated training loop"
+
+**사용 예시**:
+- "지금 만든 기능을 검증할 ralph loop 초기화해 줘."
+- "자동 e2e 학습 디버깅 루프 만들어 줘."
 
 ### discussion
-- "토론", "토론하자"
-- "논의", "의견 나누기"
-- "discuss", "discussion", "let's discuss"
-- "brainstorm"
+
+구조화된 반복 토론을 진행합니다. 리서치 지원과 함께 아이디어를 정리하고 결론을 도출합니다.
+
+**트리거**: "토론", "토론하자", "논의", "의견 나누기", "discuss", "discussion", "let's discuss", "brainstorm"
+
+**사용 예시**:
+- "새로 넣을 기능에 대해 논의하자."
+- "이 아키텍처에 대해 토론하자."
+- "기술 선택지들 브레인스토밍 해 줘."
+- "이 접근 방식의 장단점 논의해 보자."
