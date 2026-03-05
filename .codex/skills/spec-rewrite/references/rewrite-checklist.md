@@ -8,7 +8,7 @@ Checklist to reduce omissions during spec rewrite work.
 - [ ] Collect the list of linked sub-spec files
 - [ ] Confirm backup policy (`_sdd/spec/prev/PREV_<filename>_<timestamp>.md`)
 - [ ] Load `_sdd/spec/DECISION_LOG.md` if present
-- [ ] Confirm with the user before large-scale file splitting
+- [ ] For large-scale splitting, apply deterministic split policy and record rationale in `Open Questions`
 
 ## 2) Prune / Appendix Decision Rules
 

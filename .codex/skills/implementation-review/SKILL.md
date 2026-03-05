@@ -6,11 +6,9 @@ version: 1.0.0
 
 # Implementation Review
 
-> **Simplified Workflow Note**: This skill is part of the **legacy workflow**.
-> In the simplified 4-step workflow (`spec → feature-draft → implementation → spec-update-done`),
-> the `implementation` skill now includes **in-phase and final reviews** built in.
-> A separate `implementation-review` invocation is no longer required for the standard workflow.
-> This skill remains available for **standalone audits** outside the normal flow.
+> **Workflow Role Note**: In the large-scale SDD path, this is a standard validation step between `implementation` and `spec-update-done`.
+> Run per phase (or before final sync) to verify acceptance criteria, test evidence, and residual risks.
+> It can also be used as a standalone audit when needed.
 
 Review implementation progress against the implementation plan, verify acceptance criteria are met, identify issues and improvements, and provide actionable next steps.
 
@@ -25,10 +23,10 @@ Review implementation progress against the implementation plan, verify acceptanc
 Use Korean (한국어) for all communications with the user.
 모든 내용은 한국어로 작성합니다. 
 
-## User Confirmation Rule (Codex)
+## Non-Interactive Execution Rule
 
-- Plan mode: use `request_user_input`
-- Default mode: ask a short direct question in chat
+- Apply deterministic defaults in all modes.
+- Continue execution without interruption and log unresolved items in `Open Questions`.
 
 ## LLM Model to use
 
@@ -55,7 +53,7 @@ If the user does not specify a model family, default to `gpt-5.3-codex` and pick
    - `<project_root>/_sdd/implementation/IMPLEMENTATION_{PLAN|PROGRESS}.md`
    - Recent conversation context
 
-If there are multiple phase plan/progress files (e.g. `IMPLEMENTATION_PLAN_PHASE_1.md`, `IMPLEMENTATION_PROGRESS_PHASE_1.md`) and the user does not specify scope, ask whether to review the latest phase only (default) or all phases.
+If there are multiple phase plan/progress files (e.g. `IMPLEMENTATION_PLAN_PHASE_1.md`, `IMPLEMENTATION_PROGRESS_PHASE_1.md`) and the user does not specify scope, determine whether to review the latest phase only (default) or all phases.
 
 2. **No Plan Found**: If no plan exists, inform user and suggest:
    - Creating a plan with `implementation-plan` skill
@@ -136,7 +134,7 @@ tasks_extracted = Task 목록 추출 완료
 artifacts_listed = 예상 산출물 목록 작성 완료
 
 IF plan_loaded AND tasks_extracted AND artifacts_listed → Step 2 진행
-ELSE IF NOT plan_loaded → 사용자에게 Plan 위치 확인
+ELSE IF NOT plan_loaded → 기본 경로 자동 탐색 후 탐색 결과를 작업 로그에 기록
 ELSE → 누락 항목 추가 추출
 ```
 
@@ -185,22 +183,21 @@ For each task with test requirements:
 - △ tests/test_jwt.py (incomplete)
 ```
 
-### Step 2.5: 검증 진행 상황 요약 (Checkpoint)
+### Step 2.5: 검증 진행 상황 요약 (Internal Check)
 
-**Tools**: `request_user_input (Plan mode) / direct question (Default mode)`
+**Tools**: `deterministic defaults (non-interactive)`
 
 ```
-1. 검증 진행 상황 요약 테이블을 사용자에게 제시:
+1. 검증 진행 상황 요약 테이블을 작업 로그로 제시:
    | 항목 | COMPLETE | PARTIAL | MISSING |
    |------|----------|---------|---------|
    | Tasks | N | N | N |
    | Tests | N passing | N failing | N missing |
    | Files | N found | N incomplete | N missing |
 
-2. request_user_input (Plan mode) / direct question (Default mode): "검증 진행 상황을 확인해 주세요."
-   옵션:
-   1. "확인, 상세 평가 진행" → Step 3
-   2. "특정 Task 재검증" → 지정 Task 재검증 후 재제시
+2. 내부 자동 처리:
+   - 상세 평가를 바로 진행한다.
+   - 특정 Task 재검증이 필요하면 우선순위가 높은 Task부터 자동 재검증한다.
 ```
 
 **Decision Gate 2→3**:
@@ -354,7 +351,7 @@ Suggestions that aren't blocking:
 
 ## Step 5: Summary and Next Steps
 
-**Tools**: `Write`, `Bash (mkdir -p)`, `request_user_input (Plan mode) / direct question (Default mode)`
+**Tools**: `Write`, `Bash (mkdir -p)`, `deterministic defaults (non-interactive)`
 
 ### Progress Summary
 ```markdown
@@ -522,27 +519,27 @@ For a quick status check, provide abbreviated output:
 ### Next Action
 Fix SQL injection in src/services/user.py:45
 
-Need detailed review? Say "full review"
+Detailed review is available in the full report section below.
 ```
 
-## When to Escalate to User
+## When to Record Open Questions
 
-Use request_user_input (Plan mode) / direct question (Default mode) when:
+Use deterministic defaults (non-interactive) and record assumptions when:
 
 - **Ambiguous criterion**: Can't determine if it's met
 - **Missing context**: Need to know deployment requirements
 - **Trade-off decision**: Found issue but fix has side effects
-- **Scope question**: Found improvement but unsure if wanted
+- **Scope uncertainty**: Found improvement but intent is unclear
 
 ## Error Handling
 
 | 상황 | 대응 |
 |------|------|
 | 구현 계획 미발견 | `implementation-plan` 먼저 실행 권장, 또는 일반 코드 리뷰 제안 |
-| 테스트 실행 실패 | `_sdd/env.md` 환경 설정 확인, 실패 시 사용자에게 환경 문의 |
+| 테스트 실행 실패 | `_sdd/env.md` 기준 환경을 재확인하고, 재현 불가 시 문서 기반 검증으로 계속 진행 + `Open Questions` 기록 |
 | `_sdd/env.md` 미존재 | 로컬 테스트 건너뛰고 코드 분석만 수행 |
-| 다수 Phase 존재 | 사용자에게 범위 확인 (최신 Phase만 vs 전체) |
-| Acceptance Criteria 모호 | 최선 해석 후 UNTESTED로 표시, 사용자에게 확인 |
+| 다수 Phase 존재 | 최신 Phase 우선 + 전체 요약 병행 |
+| Acceptance Criteria 모호 | 최선 해석 후 UNTESTED로 표시, 근거와 함께 `Open Questions` 기록 |
 | 보안 취약점 발견 | Critical Issues로 즉시 보고 |
 | 리뷰 파일 이미 존재 | `prev/PREV_IMPLEMENTATION_REVIEW_<timestamp>.md`로 아카이브 |
 | 대규모 코드베이스 | `rg`/`Glob`/`Read`/`Bash` 위주 탐색, 핵심 컴포넌트만 검증 |
@@ -556,4 +553,4 @@ Use request_user_input (Plan mode) / direct question (Default mode) when:
 
 Save the report under a user-specified file (default: `<project-root>/_sdd/implementation/IMPLEMENTATION_REVIEW.md`).
     - If the file already exists, archive it as `<project-root>/_sdd/implementation/prev/PREV_IMPLEMENTATION_REVIEW_<timestamp>.md` (create `prev/` if needed) and create a new one.
-Also update implementation plan (TODOs, status, acceptance criteria) document based on the review.
+Do not modify implementation plan documents in this skill. Record suggested plan/status updates in the review report (`Recommendations` / `Open Questions`) for follow-up execution.

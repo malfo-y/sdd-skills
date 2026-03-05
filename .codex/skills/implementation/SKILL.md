@@ -30,7 +30,7 @@ spec → feature-draft → implementation (this) → spec-update-done
 - This skill **MUST NOT** create/edit/delete any spec documents under `<project_root>/_sdd/spec/`.
 - If implementation reveals spec drift, ambiguity, or missing requirements:
   - Report it in the progress report / chat, and
-  - Ask the user to update the spec via `spec-update-todo` (or run a spec audit via `spec-update-done`).
+  - Recommend updating the spec via `spec-update-todo` (or running a spec audit via `spec-update-done`) and log unresolved items in `Open Questions`.
 
 ## Core Principle: Test-Driven Development
 
@@ -63,9 +63,9 @@ Before starting implementation:
 
 If multiple plan files exist and the user did not specify a starting point:
 - If only one source exists (IMPLEMENTATION_PLAN or a single feature draft), start from it.
-- If both `IMPLEMENTATION_PLAN.md` and feature draft(s) exist, compare whether they describe the same feature. If they do, prefer `IMPLEMENTATION_PLAN.md`. If they describe different features, ask the user which to implement.
-- If multiple feature drafts exist and no `IMPLEMENTATION_PLAN.md`, ask the user which feature draft to implement.
-- For phase-split plans, ask the user which phase to start/resume (default: Phase 1).
+- If both `IMPLEMENTATION_PLAN.md` and feature draft(s) exist, compare whether they describe the same feature. If they do, prefer `IMPLEMENTATION_PLAN.md`. If they describe different features, apply deterministic defaults which to implement.
+- If multiple feature drafts exist and no `IMPLEMENTATION_PLAN.md`, apply deterministic defaults which feature draft to implement.
+- For phase-split plans, apply deterministic defaults which phase to start/resume (default: Phase 1).
 
 2. **Verify Plan Exists**: If no plan is found, suggest using the `implementation-plan` or `feature-draft` skill first.
 
@@ -113,7 +113,7 @@ Key sections to parse:
 - ## Open Questions (address before proceeding)
 ```
 
-If the plan has **Open Questions**, use `request_user_input` in Plan mode, otherwise ask a short direct question in Default mode.
+If the plan has **Open Questions**, apply deterministic defaults and continue. Record unresolved risk in `Open Questions`.
 
 ## Step 2: Initialize Task Tracking
 
@@ -162,14 +162,9 @@ For each task:
 2. Use `rg`/`Glob` to identify related files
 3. Infer Target Files with [C] or [M] markers
 
-Present inferred Target Files to user:
-  "Task 1의 Target Files를 다음과 같이 추론했습니다:
-   - [C] src/services/auth.py
-   - [C] tests/test_auth.py
-   확인하시겠습니까?"
-
-IF user confirms → Use for parallel scheduling
-IF user declines or uncertain → Execute that task sequentially
+Use inferred Target Files with confidence scoring:
+  - high confidence: use for parallel scheduling
+  - low confidence: execute that task sequentially and log rationale in `Open Questions`
 ```
 
 ### 3.3 Build Conflict Graph
@@ -528,7 +523,7 @@ The combined report should include:
 ### Testing environment
 
 Before running any test or executable command, read `_sdd/env.md` and apply the listed setup.
-If `_sdd/env.md` is missing, ask the user for the required runtime/test environment instead of guessing.
+If `_sdd/env.md` is missing, apply deterministic defaults for the required runtime/test environment instead of guessing.
 
 ### What to Test
 
@@ -579,7 +574,7 @@ Some tasks don't fit pure TDD. Adapt the approach:
 ```
 1. Revert the unauthorized change
 2. Re-run the task sequentially with explicit file boundary warnings
-3. If still fails, ask user for guidance
+3. If still fails, apply deterministic defaults for guidance
 ```
 
 #### Multiple sub-agents report conflicting patterns
@@ -603,7 +598,7 @@ Some tasks don't fit pure TDD. Adapt the approach:
 1. Simplify the acceptance criterion
 2. Break into smaller, testable pieces
 3. Consider if the design needs adjustment (TDD feedback)
-4. Ask user if criterion can be clarified
+4. Record ambiguity in `Open Questions` and continue with the safest testable interpretation
 ```
 
 #### Test Passes Immediately
@@ -638,14 +633,14 @@ Some tasks don't fit pure TDD. Adapt the approach:
 ### Communication
 - **Report parallel progress**: Show which groups are executing/completed
 - **Surface blockers**: Alert user to issues requiring decisions
-- **Confirm scope changes**: Ask before deviating from the plan
+- **Scope drift handling**: If scope deviates, continue with minimal safe scope and log deviation in `Open Questions`
 
-## When to Pause and Ask
+## When to Record and Continue
 
-Use `request_user_input` in Plan mode, otherwise ask a short direct question in Default mode, when:
+Use deterministic defaults and continue (record unresolved items in `Open Questions`) when:
 
 - **Target Files unclear**: Can't determine file boundaries for parallelization
-- **Inference uncertain**: Inferred Target Files need user confirmation
+- **Inference uncertain**: Inferred Target Files have low confidence
 - **Test unclear**: Can't determine what to assert
 - **Ambiguous requirements**: Multiple valid interpretations
 - **Scope decisions**: Discovered work that may or may not be in scope
@@ -657,7 +652,7 @@ Use `request_user_input` in Plan mode, otherwise ask a short direct question in 
 - **implementation-plan**: Creates plans with Target Files that this skill consumes
 - **feature-draft**: Also produces plans with Target Files (Part 2: 구현 계획)
 - Plans without Target Files → sequential fallback
-- **implementation-review**: Available for standalone audits
+- **implementation-review**: Standard phase validation step in large workflows, also available for standalone audits
 
 ## Quick Start
 
@@ -665,7 +660,7 @@ When user says "implement the plan in parallel":
 
 1. Acquire implementation plan (from `feature-draft`, `implementation-plan`, or existing plan files)
 2. Parse the plan and check for Target Files
-3. If Target Files absent: infer → confirm → or fall back to sequential
+3. If Target Files absent: infer → confidence-check → or fall back to sequential
 4. Create task tracking
 5. **Identify testing framework** used in the project
 6. For each phase:

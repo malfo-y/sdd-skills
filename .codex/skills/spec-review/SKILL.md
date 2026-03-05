@@ -31,7 +31,7 @@ This skill evaluates two dimensions:
 - Before implementation planning to validate spec quality
 - After implementation/review cycles to detect drift
 - During periodic documentation governance
-- When a team wants findings first, and spec edits only after approval
+- When a team wants findings first, and spec edits deferred to a follow-up sync step
 
 ## Inputs
 
@@ -110,14 +110,14 @@ Require concrete evidence wherever possible:
 - commit or diff references
 
 When local runtime/test execution is used to collect evidence, follow `_sdd/env.md`.
-If `_sdd/env.md` is missing/incomplete, ask the user for environment details instead of guessing.
+If `_sdd/env.md` is missing/incomplete, apply deterministic defaults for environment details instead of guessing.
 
-### Step 3.5: Drift 발견 요약 (Checkpoint)
+### Step 3.5: Drift 발견 요약 (Internal Check)
 
-**Tools**: `request_user_input (Plan mode) / direct question (Default mode)`
+**Tools**: `deterministic defaults (non-interactive)`
 
 ```
-1. Drift 발견 요약 테이블을 사용자에게 제시:
+1. Drift 발견 요약 테이블을 작업 로그로 제시:
    | 카테고리 | High | Medium | Low |
    |----------|------|--------|-----|
    | Architecture drift | N | N | N |
@@ -127,10 +127,9 @@ If `_sdd/env.md` is missing/incomplete, ask the user for environment details ins
    | Issue drift | N | N | N |
    | Decision-log drift | N | N | N |
 
-2. request_user_input (Plan mode) / direct question (Default mode): "Drift 발견 상황을 확인해 주세요."
-   옵션:
-   1. "확인, 평가 진행" → Step 4
-   2. "특정 항목 재점검" → 지정 항목 재검증 후 재제시
+2. 내부 자동 처리:
+   - 평가를 바로 진행한다.
+   - 신뢰도 낮은 항목은 재점검 후 `Open Questions`에 기록한다.
 ```
 
 ### Step 4: Severity and Decision
@@ -149,7 +148,7 @@ Assign one overall decision:
 
 ### Step 5: Report and Handoff
 
-**Tools**: `Write`, `Bash (mkdir -p)`, `request_user_input (Plan mode) / direct question (Default mode)`
+**Tools**: `Write`, `Bash (mkdir -p)`, `deterministic defaults (non-interactive)`
 
 1. Create/update strict review report.
 2. Do not edit actual spec content.
@@ -165,11 +164,10 @@ Assign one overall decision:
       | Low | N | ... |
       | Decision | SPEC_OK / SYNC_REQUIRED / NEEDS_DISCUSSION |
 
-   2. request_user_input (Plan mode) / direct question (Default mode): "상세 내용을 확인하시겠습니까?"
-      옵션:
-      1. "전체 리포트" → 전체 출력
-      2. "High severity만" → High 항목만 상세 출력
-      3. "파일로 저장" → SPEC_REVIEW_REPORT.md 저장
+   2. 내부 자동 처리:
+      - 전체 리포트 출력
+      - High severity 별도 요약 출력
+      - `SPEC_REVIEW_REPORT.md` 저장
    ```
 
 ## Output
@@ -254,7 +252,7 @@ Assign one overall decision:
 - Keep recommendations actionable and ordered by risk/impact.
 - Keep `DECISION_LOG.md` updates as recommendations only in this skill.
 - Keep artifact recommendations minimal: default to `DECISION_LOG.md` only unless the user asks for more.
-- Do not run local runtime/tests with inferred setup; use `_sdd/env.md` or user-confirmed environment details.
+- Do not run local runtime/tests with inferred setup; use `_sdd/env.md` or skip runtime validation.
 
 ## Error Handling
 
@@ -264,7 +262,7 @@ Assign one overall decision:
 | 코드베이스 접근 불가 | Spec-only 모드로 전환, 코드 drift 분석 생략 |
 | `_sdd/env.md` 미존재 | 로컬 테스트 건너뛰고 코드 분석만 수행 |
 | git 이력 없음 | 현재 코드 상태만으로 drift 분석 |
-| 다수 스펙 파일 존재 | 사용자에게 리뷰 범위 확인 |
+| 다수 스펙 파일 존재 | 메인 스펙 자동 선택 규칙 적용 + 선택 근거 기록 |
 | Evidence 부족 | UNTESTED로 표시, 신뢰도 낮음 명시 |
 | 기존 리뷰 리포트 존재 | `prev/PREV_SPEC_REVIEW_REPORT_<timestamp>.md`로 아카이브 |
 | Decision Log 미존재 | Decision-log drift 분석 생략, 생성 제안 |

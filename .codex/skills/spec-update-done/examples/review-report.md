@@ -1,10 +1,10 @@
-# Example: Spec Review Report
+# Example: Spec Sync Report
 
-This is an example of a spec review report generated after analyzing implementation logs and code changes.
+This is an example of a spec sync report generated after analyzing implementation logs and code changes.
 
 ---
 
-# Spec Review Report: Instagram Data Pipeline
+# Spec Sync Report: Instagram Data Pipeline
 
 **Review Date**: 2024-01-20
 **Reviewer**: Codex (gpt-5.3-codex)
@@ -289,7 +289,7 @@ Recommended: `1.3.0` (new features, no breaking changes)
 
 ---
 
-## Questions for User
+## Open Questions
 
 1. Should video processing be a separate component or part of existing extractor?
 2. Are there additional proxy configuration options to document?
@@ -299,9 +299,8 @@ Recommended: `1.3.0` (new features, no breaking changes)
 
 ## Next Steps
 
-1. [ ] User approves recommended changes
-2. [ ] Create backup of current spec
-3. [ ] Apply updates in order of priority
-4. [ ] Update version to 1.3.0
-5. [ ] Add changelog entry
-6. [ ] User final review
+1. [ ] Create backup of current spec
+2. [ ] Apply updates in order of priority
+3. [ ] Update version to 1.3.0
+4. [ ] Add changelog entry
+5. [ ] Record unresolved decisions in `Open Questions`

@@ -110,17 +110,17 @@ The skill expects spec documents to follow SDD format:
 1. Search for main spec in `_sdd/spec/`:
    - `<project>.md` (named after project)
    - `main.md` (generic name)
-   - If still ambiguous: list candidates and ask the user which should be treated as the index/main spec
+   - If still ambiguous: list candidates and apply deterministic defaults which should be treated as the index/main spec
    - Do **not** auto-select generated/backup files:
      - `SUMMARY.md`
      - `prev/PREV_*.md`
 2. If spec is split:
    - Identify sub-spec files via index/links
    - Read all linked/related specs for a complete picture
-   - If the index does not link clearly, prefer `_sdd/spec/<project>_*.md` (excluding `SUMMARY.md` and `prev/PREV_*.md`) and confirm the intended set with the user
+  - If the index does not link clearly, prefer `_sdd/spec/<project>_*.md` (excluding `SUMMARY.md` and `prev/PREV_*.md`) and record selected set in `Open Questions`
 3. Check for implementation files:
    - `_sdd/implementation/IMPLEMENTATION_PROGRESS.md`
-   - `_sdd/implementation/IMPLEMENTATION_PROGRESS_PHASE_<n>.md` (if multiple exist, prefer the latest phase; ask the user if they want all phases summarized)
+   - `_sdd/implementation/IMPLEMENTATION_PROGRESS_PHASE_<n>.md` (if multiple exist, prefer the latest phase; apply deterministic defaults if they want all phases summarized)
    - `_sdd/implementation/IMPLEMENTATION_REVIEW.md`
 4. If local runtime/test validation is needed for summary evidence, read `_sdd/env.md` and apply setup before running commands.
 
@@ -133,7 +133,7 @@ spec_readable = 스펙 파일 읽기 가능
 
 IF spec_found AND spec_readable → Step 2 진행
 ELSE IF NOT spec_found → `/spec-create` 먼저 실행 권장
-ELSE → request_user_input (Plan mode) / direct question (Default mode): 스펙 파일 접근 방법 확인
+ELSE → deterministic defaults (non-interactive): 스펙 파일 접근 방법 확인
 ```
 
 ### Step 2: Extract Key Information
@@ -247,12 +247,12 @@ Pseudo-logic:
   - Long-term: Schedule tech debt cleanup sprint
 ```
 
-### Step 4.5: 요약 초안 확인 (Checkpoint)
+### Step 4.5: 요약 초안 확인 (Internal Check)
 
-**Tools**: `request_user_input (Plan mode) / direct question (Default mode)`
+**Tools**: `deterministic defaults (non-interactive)`
 
 ```
-1. 요약 초안 테이블을 사용자에게 제시:
+1. 요약 초안 테이블을 작업 로그로 제시:
    | 항목 | 내용 |
    |------|------|
    | 프로젝트명 | ... |
@@ -262,11 +262,10 @@ Pseudo-logic:
    | 이슈 수 | High N / Medium N / Low N |
    | 권장 다음 단계 | N개 |
 
-2. request_user_input (Plan mode) / direct question (Default mode): "요약 초안을 확인해 주세요."
-   옵션:
-   1. "확인, 문서 생성 진행" → Step 5
-   2. "수정 필요" → 수정 사항 반영 (최대 2라운드)
-   3. "특정 섹션 생략" → 지정 섹션 제외 후 진행
+2. 내부 자동 처리:
+   - 문서 생성을 바로 진행
+   - 수정 필요 항목은 최대 2라운드 자동 보정
+   - 신뢰도 낮은 섹션은 축약하고 `Open Questions`에 기록
 ```
 
 **Decision Gate 5→6**:
@@ -479,7 +478,7 @@ When README sync is requested, generate/update this marker block in `README.md`:
 ### 2. [Feature Name]
 [Plain-text what/how/why/status paragraph]
 
-More details: [`_sdd/spec/SUMMARY.md`](_sdd/spec/SUMMARY.md)
+More details: `_sdd/spec/SUMMARY.md`
 <!-- spec-summary:end -->
 ```
 
@@ -541,7 +540,7 @@ More details: [`_sdd/spec/SUMMARY.md`](_sdd/spec/SUMMARY.md)
 
 7. **When validating with local execution, use the documented environment**
    - If local commands/tests are required, follow `_sdd/env.md` first
-   - If `_sdd/env.md` is missing/incomplete, ask the user and proceed with document-only summary until clarified
+   - If `_sdd/env.md` is missing/incomplete, apply deterministic defaults and proceed with document-only summary until clarified
 
 8. **Use Marker-Based README Updates**
    - Update only the `spec-summary` marker block in `README.md`
@@ -649,12 +648,12 @@ The skill adapts to the spec document's language:
 | No spec found | Suggest `/spec-create` | "No spec document found in `_sdd/spec/`. Run `/spec-create` first to generate a specification." |
 | Empty spec | Generate minimal summary with warning | "Spec document is empty or minimal. Summary will be basic. Consider running `/spec-update-todo` to add features." |
 | No status markers | Mark as "status unknown" | "No status markers found (✅, 🚧, 📋). Progress calculation unavailable. Add markers to feature list for tracking." |
-| Multiple main specs | Ask user which to summarize | "Found multiple spec files: [list]. Which should I summarize? Or say 'all' to merge." |
+| Multiple main specs | Apply deterministic selection order and merge when safe | "Multiple spec files found. I selected the main index by fallback order and merged linked specs." |
 | No architecture section | Skip architecture section | "No architecture section found. Summary will omit architecture overview." |
 | No issues section | Show "No open issues documented" | Creates empty issues section with note. |
 | README sync requested but `README.md` not found | Create minimal README with marker block | "README.md not found. I'll create one and insert a spec-summary block." |
 | README has no marker block | Insert new marker block safely | "README exists without spec-summary markers. I'll insert a new managed block and preserve other content." |
-| `_sdd/env.md` missing/incomplete (while local validation requested) | Skip local execution and ask user | "Local validation requested, but `_sdd/env.md` is missing/incomplete. I'll proceed with document-based summary unless you provide runtime setup details." |
+| `_sdd/env.md` missing/incomplete (while local validation requested) | Skip local execution and apply deterministic defaults | "Local validation requested, but `_sdd/env.md` is missing/incomplete. I'll proceed with document-based summary unless you provide runtime setup details." |
 
 ## Advanced Usage
 

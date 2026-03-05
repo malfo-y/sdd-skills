@@ -365,10 +365,10 @@ as it's the largest missing feature.
 
 ---
 
-Would you like me to:
-1. Start fixing the critical issues?
-2. Create detailed tasks for the remaining work?
-3. Do a deeper review of any specific area?
+Next actions (deterministic):
+1. Archive this review and create `IMPLEMENTATION_PROGRESS.md` update tasks for the 4 critical blockers.
+2. Start remediation from the highest-risk blocker (SQL injection) with test evidence first.
+3. Keep unresolved scope/priority items in `Open Questions` and continue phase validation.
 ```
 
 ## Key Review Patterns Demonstrated

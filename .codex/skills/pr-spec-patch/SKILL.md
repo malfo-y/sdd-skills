@@ -50,7 +50,7 @@ This skill analyzes PR changes, compares them against the current spec documents
 
 #### Step 1: Verify prerequisites
 
-**Tools**: `Bash (gh auth status)`, `Glob`, `Bash (mkdir -p)`, `request_user_input (Plan mode) / direct question (Default mode)`
+**Tools**: `Bash (gh auth status)`, `Glob`, `Bash (mkdir -p)`, `deterministic defaults (non-interactive)`
 
 ```
 1. Run `gh auth status` to check authentication
@@ -59,8 +59,8 @@ This skill analyzes PR changes, compares them against the current spec documents
 ```
 
 **When no spec file exists:**
-- Warn user: "No spec document found. Recommend creating one first with `/spec-create`."
-- If user wants to proceed, generate without a comparison baseline (note "no baseline")
+- Record warning: "No spec document found. Recommend creating one first with `/spec-create`."
+- Continue without a comparison baseline (mark output as `no baseline`) and add follow-up to `Open Questions`
 
 **Decision Gate 1→2**:
 ```
@@ -72,11 +72,11 @@ ELSE → 누락 항목 보완
 
 #### Step 2: Read current spec
 
-**Tools**: `Read`, `Glob`, `request_user_input (Plan mode) / direct question (Default mode)`
+**Tools**: `Read`, `Glob`, `deterministic defaults (non-interactive)`
 
 ```
 1. Load main spec file from `_sdd/spec/`
-2. If multiple spec files exist, use request_user_input (Plan mode) / direct question (Default mode) to request selection
+2. If multiple spec files exist, select one deterministically using the global fallback order and log alternatives in `Open Questions`
 3. Understand the spec's component, feature, and section structure
 ```
 
@@ -120,7 +120,7 @@ pr_data_collected = PR 메타데이터 + diff 수집 완료
 
 IF spec_loaded AND pr_data_collected → Step 4 진행
 ELSE IF NOT pr_data_collected → PR 데이터 재수집 시도
-ELSE → request_user_input (Plan mode) / direct question (Default mode): 스펙 없이 진행 여부 확인
+ELSE → baseline 없이 진행하고 리스크를 `Open Questions`에 기록
 ```
 
 #### Step 4: Analyze changes
@@ -174,15 +174,13 @@ IF evidence_checked → Step 6 진행
 ELSE → 누락 항목 보완 후 재검증
 ```
 
-#### Step 6: Present to user
+#### Step 6: Finalize Output
 
-**Tools**: `request_user_input (Plan mode) / direct question (Default mode)`
+**Tools**: `deterministic defaults (non-interactive)`
 
-1. Show summary of the generated patch draft
+1. Generate summary of the patch draft
 2. Highlight key items from the questions and suggestions section
-3. Guide next steps:
-   - Continue conversation if refinement is needed
-   - Once finalized, can be applied via `/spec-update-todo`
+3. Write deterministic next steps in the draft metadata
 
 **Progressive Disclosure**:
 ```
@@ -195,33 +193,31 @@ ELSE → 누락 항목 보완 후 재검증
    | Open Questions | N |
    | Evidence Missing | N |
 
-2. request_user_input (Plan mode) / direct question (Default mode):
-   "상세 패치 내용을 확인하시겠습니까?"
-   옵션:
-   1. "전체 패치" → 전체 초안 표시
-   2. "질문/갭만" → Questions and Suggestions만 표시
-   3. "파일 저장만" → 초안 파일 저장 후 다음 단계 안내
+2. 내부 자동 처리:
+   - 전체 패치 출력
+   - Questions and Suggestions 별도 요약
+   - 초안 파일 저장 및 다음 단계 안내
 ```
 
 ### Mode 2: Conversation-based update (existing draft)
 
 #### Step 1: Load existing draft
 
-**Tools**: `Read`, `request_user_input (Plan mode) / direct question (Default mode)`
+**Tools**: `Read`, `deterministic defaults (non-interactive)`
 
 ```
 1. Read contents of `_sdd/pr/spec_patch_draft.md`
 2. Compare the draft's PR number with the current request
-3. If the draft is for a different PR: use request_user_input (Plan mode) / direct question (Default mode) to determine handling
+3. If the draft is for a different PR: use deterministic defaults (non-interactive) to determine handling
    - Archive existing draft and create new one
    - Abort operation
 ```
 
-#### Step 2: Confirm user intent
+#### Step 2: Determine Intent Deterministically
 
-**Tools**: `request_user_input (Plan mode) / direct question (Default mode)`
+**Tools**: `deterministic defaults (non-interactive)`
 
-Use request_user_input (Plan mode) / direct question (Default mode) to determine the operation type:
+Use deterministic defaults (non-interactive) to determine the operation type:
 
 - **Refine content**: Modify/supplement existing patch content
 - **Resolve questions**: Answer items in the questions and suggestions section
@@ -407,10 +403,10 @@ Update relevant sections based on user feedback:
 
 | Situation | Response |
 |-----------|----------|
-| No spec file | Warn, recommend `/spec-create`, generate without baseline if user agrees |
+| No spec file | Record warning, recommend `/spec-create`, generate without baseline automatically |
 | No PR / `gh` not authenticated | Detect error, guide `gh auth login` |
-| Multiple spec files exist | Use request_user_input (Plan mode) / direct question (Default mode) to select comparison target |
-| Existing draft for a different PR | request_user_input (Plan mode) / direct question (Default mode): archive and create new / abort |
+| Multiple spec files exist | Use deterministic defaults (non-interactive) to select comparison target |
+| Existing draft for a different PR | deterministic defaults (non-interactive): archive and create new / abort |
 | Already merged PR | Allow (retroactive spec maintenance), note merge status |
 | Large PR (50+ files) | Directory/component-level summary, focus on spec-related components |
 | No spec-related changes in PR | Notify user, generate minimal patch draft |
@@ -450,7 +446,7 @@ implementation → PR → pr-spec-patch → (user refinement) → spec-update-to
 - **Cite PR evidence**: Include specific file:line references from the PR diff for all patch items
 - **Map to spec sections**: Clearly indicate which spec section each change corresponds to
 - **Set priorities**: Assign priorities based on the PR's change scale and impact
-- **Specific questions**: Include context and suggestions when asking for confirmation
+- **Specific follow-ups**: Include context and suggestions in `Questions and Suggestions`
 
 ### Conversation-Based Refinement
 
@@ -477,9 +473,9 @@ implementation → PR → pr-spec-patch → (user refinement) → spec-update-to
 |-----------|----------|
 | `gh` CLI not installed | Guide installation: `brew install gh` |
 | `gh auth` failure | Guide running `gh auth login` |
-| Wrong PR number | Display error message, request correct PR number |
+| Wrong PR number | Re-detect from current branch/ref; if unresolved, continue with `PR_NUMBER=UNKNOWN` and log in `Open Questions` |
 | Network error | Guide retry |
-| Spec file parsing failure | Show error location, request manual review |
+| Spec file parsing failure | Record parse error location, continue with readable sections only, and log unresolved sections in `Open Questions` |
 | `_sdd/pr/` directory missing | Create automatically |
 
 ## Additional Resources

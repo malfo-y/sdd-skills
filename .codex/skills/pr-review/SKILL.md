@@ -32,10 +32,10 @@ implementation → PR → pr-spec-patch → pr-review → approve/revise → spe
 - **Write in Korean**: All review report output must be written in Korean.
 - Follow the spec's language: if the spec is in Korean, the review should also be in Korean.
 
-## User Confirmation Rule (Codex)
+## Non-Interactive Execution Rule
 
-- Plan mode: use `request_user_input`
-- Default mode: ask a short direct question in chat
+- Apply deterministic defaults in all modes.
+- Continue execution without interruption and log unresolved items in `Open Questions`.
 
 ## LLM Model to use
 
@@ -83,13 +83,13 @@ If the user does not specify a model family, default to `gpt-5.3-codex` and pick
 
 #### Step 1: Verify prerequisites
 
-**Tools**: `Bash (gh auth status)`, `Glob`, `Read`, `Bash (mkdir -p)`, `request_user_input (Plan mode) / direct question (Default mode)`
+**Tools**: `Bash (gh auth status)`, `Glob`, `Read`, `Bash (mkdir -p)`, `deterministic defaults (non-interactive)`
 
 ```
 1. Run `gh auth status` to check authentication
 2. Search for spec files in `_sdd/spec/` directory
 3. Verify `_sdd/pr/spec_patch_draft.md` exists
-4. Determine PR number (auto-detect or user input)
+4. Determine PR number by auto-detecting from current branch/ref; if unavailable, continue with `PR_NUMBER=UNKNOWN`
 5. Create `_sdd/pr/` directory if it doesn't exist
 6. If planning to run tests locally, check `_sdd/env.md` and apply required environment settings
 ```
@@ -104,21 +104,21 @@ pr_ready = gh 인증 확인 + PR 번호 확인 완료
 spec_ready = 비교 대상 스펙 파일 식별 완료
 
 IF pr_ready AND spec_ready → Step 2 진행
-ELSE → 누락 항목 보완 또는 사용자 확인
+ELSE → 누락 항목 보완 또는 자동 검증
 ```
 
 #### Step 2: Load context
 
-**Tools**: `Read`, `Glob`, `Bash (gh pr view, gh pr diff)`, `request_user_input (Plan mode) / direct question (Default mode)`
+**Tools**: `Read`, `Glob`, `Bash (gh pr view, gh pr diff)`, `deterministic defaults (non-interactive)`
 
 ```
-1. Read current spec files (if multiple, use request_user_input (Plan mode) / direct question (Default mode) to select)
+1. Read current spec files (if multiple, use deterministic defaults (non-interactive) to select)
 2. Read patch draft → extract Acceptance Criteria
 3. Collect PR metadata (gh pr view)
 4. Collect PR diff (gh pr diff)
 ```
 
-See `pr-spec-patch/references/gh-commands.md` for PR data collection commands:
+See `../pr-spec-patch/references/gh-commands.md` for PR data collection commands:
 
 ```bash
 # Auto-detect PR number
@@ -171,12 +171,12 @@ For each Acceptance Criterion:
 4. Check for API contract changes
 ```
 
-#### Step 4.5: Acceptance Criteria 검증 결과 요약 (Checkpoint)
+#### Step 4.5: Acceptance Criteria 검증 결과 요약 (Internal Check)
 
-**Tools**: `request_user_input (Plan mode) / direct question (Default mode)`
+**Tools**: `deterministic defaults (non-interactive)`
 
 ```
-1. 검증 결과 요약 테이블을 사용자에게 제시:
+1. 검증 결과 요약 테이블을 작업 로그로 제시:
    | 항목 | Met (✓) | Not Met (✗) | Partial (△) |
    |------|---------|-------------|-------------|
    | Features | N | N | N |
@@ -184,10 +184,9 @@ For each Acceptance Criterion:
    | Bug Fixes | N | N | N |
    | Spec Violations | - | N | - |
 
-2. request_user_input (Plan mode) / direct question (Default mode): "Acceptance Criteria 검증 결과를 확인해 주세요."
-   옵션:
-   1. "확인, Gap 분석 진행" → Step 5
-   2. "특정 항목 재검증" → 지정 항목 재검증 후 재제시
+2. 내부 자동 처리:
+   - Gap 분석을 바로 진행한다.
+   - 검증 신뢰도가 낮은 항목은 재검증 후 `Open Questions`에 기록한다.
 ```
 
 #### Step 5: Gap analysis
@@ -236,7 +235,7 @@ ELSE → 판정 근거 보강 후 재판정
 
 #### Step 7: Report generation
 
-**Tools**: `Write`, `Bash (mkdir -p, cp)`, `request_user_input (Plan mode) / direct question (Default mode)`
+**Tools**: `Write`, `Bash (mkdir -p, cp)`, `deterministic defaults (non-interactive)`
 
 1. If existing `PR_REVIEW.md` exists, archive to `_sdd/pr/prev/PREV_PR_REVIEW_<timestamp>.md` (create `_sdd/pr/prev/` if needed)
 2. Generate `_sdd/pr/PR_REVIEW.md` using the [Output Format](#output-format) below
@@ -251,11 +250,10 @@ ELSE → 판정 근거 보강 후 재판정
       | Test Pass Rate | N% |
       | Pre-merge Blockers | N개 |
 
-   2. request_user_input (Plan mode) / direct question (Default mode): "상세 리뷰 내용을 확인하시겠습니까?"
-      옵션:
-      1. "전체 리뷰" → 전체 리포트 출력
-      2. "Blockers만" → Pre-merge Blockers만 상세 출력
-      3. "파일로 저장" → PR_REVIEW.md 저장
+   2. 내부 자동 처리:
+      - 전체 리뷰 출력
+      - Blockers 섹션 별도 요약
+      - `PR_REVIEW.md` 저장
    ```
 4. Present summary to user and guide next steps
 
@@ -434,13 +432,13 @@ Steps 4, 6, and 7 proceed identically.
 | No patch draft | Run in degraded mode, recommend running `/pr-spec-patch` |
 | No spec file | Warn, recommend `/spec-create`, perform minimal review from PR diff only |
 | No PR / `gh` not authenticated | Detect error, guide installation/authentication |
-| Multiple spec files | Use request_user_input (Plan mode) / direct question (Default mode) to select |
+| Multiple spec files | Use deterministic defaults (non-interactive) to select |
 | Existing review file | Archive to `_sdd/pr/prev/PREV_PR_REVIEW_<timestamp>.md` then create new |
 | Patch draft for a different PR | Warn, ignore patch draft and run degraded mode or recommend re-running `/pr-spec-patch` |
 | Already merged PR | Allow (retroactive review), note merge status |
 | Large PR (50+ files) | Focus on spec-related components, summarize by directory |
 | No tests / no CI | Mark test section as "Cannot verify", guide local execution |
-| `_sdd/env.md` missing/incomplete | Do not guess execution environment, ask user to confirm environment before proceeding |
+| `_sdd/env.md` missing/incomplete | Do not guess execution environment; skip local execution and continue with document-based evidence |
 
 ## Best Practices
 
@@ -476,16 +474,16 @@ Steps 4, 6, and 7 proceed identically.
 |-----------|----------|
 | `gh` CLI not installed | Guide installation: `brew install gh` |
 | `gh auth` failure | Guide running `gh auth login` |
-| Wrong PR number | Display error message, request correct PR number |
+| Wrong PR number | Re-detect from current branch/ref; if unresolved, continue with `PR_NUMBER=UNKNOWN` and log in `Open Questions` |
 | Network error | Guide retry |
-| Spec file parsing failure | Show error location, request manual review |
+| Spec file parsing failure | Record parse error location, continue with readable sections only, and log unresolved sections in `Open Questions` |
 | `_sdd/pr/` directory missing | Create automatically |
 
 ## Additional Resources
 
 ### Reference Files
 - **`references/review-checklist.md`** - PR review checklist
-- **`pr-spec-patch/references/gh-commands.md`** - `gh` CLI command reference
+- **`../pr-spec-patch/references/gh-commands.md`** - `gh` CLI command reference
 
 ### Example Files
 - **`examples/sample-review.md`** - PR review session example

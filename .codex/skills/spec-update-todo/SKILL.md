@@ -6,10 +6,8 @@ version: 1.0.0
 
 # Spec Update from User Input
 
-> **Simplified Workflow Note**: This skill is part of the **legacy workflow**.
-> In the simplified 4-step workflow (`spec → feature-draft → implementation → spec-update-done`),
-> this skill's functionality is included in the **`feature-draft`** skill.
-> Consider using `feature-draft` instead, which combines spec patch drafting + spec update + implementation planning into a single step.
+> **Workflow Role Note**: In the large-scale SDD path, run this skill after `feature-draft` to pre-reflect planned requirements into spec documents before implementation.
+> `feature-draft` generates draft artifacts only; actual spec document updates are applied by this skill.
 
 Update existing spec documents with new features, requirements, and planned improvements based on user input. This skill focuses on adding "to-add" or "to-implement" items to the spec.
 
@@ -56,7 +54,7 @@ User input file for spec update. Two file types are supported:
 - **`user_spec.md`**: User-written specification input
 - **`user_draft.md`**: 사용자 작성 초안 (draft)
 
-If there are both `_sdd/spec/user_spec.md` or `_sdd/spec/user_draft.md` existing, ask user what to choose.
+If there are both `_sdd/spec/user_spec.md` or `_sdd/spec/user_draft.md` existing, apply deterministic defaults what to choose.
 
 Recommended format is a structured file format for batched updates, but any free-form text are accepted.
 
@@ -110,7 +108,7 @@ If present, use it as a constraint/rationale source:
    - `_sdd/spec/user_draft.md` (사용자 초안)
    - `_sdd/spec/user_spec.md` (user-written)
 3. If multiple sources exist, process all (conversation first, then files)
-4. If no sources found, ask user for input
+4. If no sources found, apply deterministic defaults for input
 ```
 
 **Decision Gate 1→2**:
@@ -118,26 +116,26 @@ If present, use it as a constraint/rationale source:
 input_found = (사용자 대화 OR user_draft.md OR user_spec.md) 중 하나 이상 존재
 
 IF input_found → Step 2 진행
-ELSE → request_user_input (Plan mode) / direct question (Default mode): 업데이트할 요구사항 요청
+ELSE → deterministic defaults (non-interactive): 업데이트할 요구사항 요청
 ```
 
 ### Step 2: Load Current Spec
 
-**Tools**: `Read`, `Glob`, `request_user_input (Plan mode) / direct question (Default mode)`
+**Tools**: `Read`, `Glob`, `deterministic defaults (non-interactive)`
 
 ```
 1. Locate the main spec document in `_sdd/spec/` (prefer `_sdd/spec/<project>.md` as the index/main spec; `_sdd/spec/main.md` may exist in older projects)
-2. If multiple plausible main spec files exist, ask the user which file to update (and treat as the index/main spec)
+2. If multiple plausible main spec files exist, apply deterministic defaults which file to update (and treat as the index/main spec)
 3. If the spec is already split across multiple files, follow the index/links and update the appropriate file(s)
-4. Check spec size/complexity. If the spec is getting too large to maintain comfortably in one file (e.g. >500 lines, or the component/API sections dominate navigation), ask the user whether they want to split the spec into multiple files.
-   - If user agrees: keep `_sdd/spec/<project>.md` as an index/overview, extract long sections into separate files under `_sdd/spec/`, and link them from the index using a consistent naming scheme such as:
+4. Check spec size/complexity. If the spec is getting too large to maintain comfortably in one file (e.g. >500 lines, or the component/API sections dominate navigation), split automatically using deterministic defaults.
+   - keep `_sdd/spec/<project>.md` as an index/overview, extract long sections into separate files under `_sdd/spec/`, and link them from the index using a consistent naming scheme such as:
      - `_sdd/spec/<project>_API.md`
      - `_sdd/spec/<project>_DATA_MODEL.md`
      - `_sdd/spec/<project>_COMPONENTS.md`
-     - Other suffixes are allowed if they better fit the project domain (e.g. `_ARCH.md`, `_FLOWS.md`, `_DB_SCHEMA.md`)—just keep the naming consistent and confirm the split/file map with the user before doing a large refactor.
+     - Other suffixes are allowed if they better fit the project domain (e.g. `_ARCH.md`, `_FLOWS.md`, `_DB_SCHEMA.md`)—keep the naming consistent and log the split/file map in `Open Questions`.
      - Naming style: prefer `UPPER_SNAKE_CASE` suffixes (e.g. `_DATA_MODEL`, `_DB_SCHEMA`) for consistency.
-     - Ask-first template:
-       - "현재 스펙이 커져서 관리가 어려워 보여요. `_sdd/spec/<project>.md`를 인덱스로 두고 `_sdd/spec/<project>_API.md`, `_sdd/spec/<project>_DATA_MODEL.md`(등)으로 분할할까요? 원하시면 suffix/파일 구성을 먼저 합의한 뒤 진행할게요."
+     - Split rationale template:
+       - "대형 스펙 자동 분할 적용: 인덱스+하위 문서 구조로 전환하고 파일맵을 기록."
 5. Read current spec content (index + any referenced sub-specs that will be affected)
 6. If `_sdd/spec/DECISION_LOG.md` exists, read relevant entries before deciding how to insert/update requirements
 7. Identify sections that will be updated:
@@ -179,7 +177,7 @@ Extract structured information from input:
 
 ### Step 5: Generate Update Plan
 
-**Tools**: `request_user_input (Plan mode) / direct question (Default mode)`
+**Tools**: `deterministic defaults (non-interactive)`
 
 Before modifying, present update plan:
 
@@ -208,12 +206,12 @@ Before modifying, present update plan:
 
 **Decision Gate 5→6**:
 ```
-plan_presented = Update Plan을 사용자에게 제시 완료
-user_approved = 사용자가 변경 계획 승인
+plan_presented = Update Plan을 작업 로그로 제시 완료
+plan_validated = 자동 일관성 검증 통과
 
-IF plan_presented AND user_approved → Step 6 진행
+IF plan_presented AND plan_validated → Step 6 진행
 ELSE IF NOT plan_presented → Step 5 재실행
-ELSE → 사용자 피드백 반영 후 계획 수정 (최대 2라운드)
+ELSE → 자동 보정 후 계획 수정 (최대 2라운드)
 ```
 
 ### Step 6: Apply Updates
@@ -402,13 +400,13 @@ After updating, provide summary:
 | Situation | Action |
 |-----------|--------|
 | Spec file not found | Suggest running `spec-create` first |
-| Ambiguous input | Use request_user_input (Plan mode) / direct question (Default mode) for clarification |
-| Conflicting requirements | Flag and ask user to resolve |
+| Ambiguous input | Use deterministic defaults (non-interactive) for clarification |
+| Conflicting requirements | Flag and apply deterministic defaults to resolve |
 | Invalid input file format | Report parsing errors, suggest corrections |
 | 백업 디렉토리 미존재 | `mkdir -p _sdd/spec/prev/` 자동 생성 |
-| 대형 스펙 (500줄+) | 분할 제안 (ask-first) |
-| 다수 입력 파일 존재 | 사용자에게 선택 확인 |
-| 입력 파일과 스펙 섹션 매핑 불가 | 사용자에게 대상 섹션 확인 |
+| 대형 스펙 (500줄+) | 인덱스+하위 문서 구조로 자동 분할 |
+| 다수 입력 파일 존재 | 입력 우선순위 규칙으로 자동 병합 |
+| 입력 파일과 스펙 섹션 매핑 불가 | 휴리스틱 매핑 후 `Open Questions` 기록 |
 
 ### Post-Update Glob 검증
 

@@ -10,7 +10,7 @@ version: 1.0.0
 
 Generate a complete `ralph/` directory for LLM-driven automated ML training debugging. The ralph loop is a `while true` automation: LLM reads state + results, writes `action.sh`, the script executes it, and the loop repeats until training is complete or the LLM escalates to a human.
 
-This skill discovers the project's training pipeline, confirms findings with the user, and generates five project-specific files: `CHECKS.md`, `config.sh`, `PROMPT.md`, `run.sh`, and `state.md`.
+This skill discovers the project's training pipeline deterministically and generates five project-specific files: `CHECKS.md`, `config.sh`, `PROMPT.md`, `run.sh`, and `state.md`.
 
 > **Workflow Note**: `ralph-loop-init`은 SDD 워크플로우와 독립적인 ML 학습 디버깅 자동화 스킬이다.
 > `_sdd/spec/`이 존재하면 참조하지만, SDD 4단계 워크플로우(spec → feature-draft → implementation → spec-update-done)에 속하지 않는다.
@@ -34,7 +34,7 @@ Check if an `_sdd/` directory exists in the project root.
 
 If it exists:
 1. Glob for `_sdd/spec/**/*.md`
-2. If multiple spec files are found, use `request_user_input` in Plan mode (or ask a short direct question in Default mode) to ask which file(s) describe the training pipeline (training script, dataset format, loss functions, CLI args, validation)
+2. If multiple spec files are found, select the most relevant file(s) deterministically (training script, dataset format, loss functions, CLI args, validation) and log alternatives in `Open Questions`
 3. Read the relevant spec files — these are the **primary source of truth** for understanding the training architecture
 4. Extract key information: training script path, dataset format, CLI arguments, loss functions, validation pipeline, hyperparameters, framework details
 5. Also check if `_sdd/env.md` exists. If it does, read it — it contains Python environment setup (conda env name, venv path, `uv` config), required environment variables (API keys, paths, tokens), and other runtime configuration needed to run the code.
@@ -98,7 +98,7 @@ training_script_found = 학습 스크립트 1개 이상 식별
 framework_detected = PyTorch/Lightning/HF Trainer 등 프레임워크 식별
 
 IF training_script_found AND framework_detected -> Step 2
-ELSE IF NOT training_script_found -> request_user_input (Plan mode) / direct question (Default mode): 학습 스크립트 경로 요청
+ELSE IF NOT training_script_found -> deterministic defaults (non-interactive): 학습 스크립트 경로 요청
 ELSE -> 부분 탐색 결과로 Step 2 진행, 미확인 항목 표시
 ```
 
@@ -119,11 +119,11 @@ ELSE -> 부분 탐색 결과로 Step 2 진행, 미확인 항목 표시
 
 ---
 
-## Step 2: Confirm Findings with User
+## Step 2: Validate Findings Deterministically
 
-**Tools**: `request_user_input (Plan mode) / direct question (Default mode)`
+**Tools**: `deterministic defaults (non-interactive)`
 
-Present all discovered information to the user and ask them to confirm or correct.
+Validate discovered information using repo evidence and consistency checks.
 
 분석 결과 요약 테이블을 제시:
 | 항목 | 파악 내용 | 상태 |
@@ -134,7 +134,7 @@ Present all discovered information to the user and ask them to confirm or correc
 | 프레임워크 | PyTorch Lightning | confirmed |
 | 가상환경 | .venv (Python 3.10) | confirmed |
 
-Ask the user to confirm or correct:
+Auto-fill or infer the following when missing:
 
 1. **Training script path** — the main entry point
 2. **Validation script** — path or "none"
@@ -144,14 +144,14 @@ Ask the user to confirm or correct:
 6. **Initial hyperparameters** — learning rate, epochs, batch size (suggest reasonable defaults based on framework)
 7. **Python command** — `uv run python`, `python3`, or other
 
-Structure the question so the user can quickly confirm defaults or override specific values.
+Apply deterministic defaults and record low-confidence values in `Open Questions`.
 
 **Decision Gate 2->2.5**:
 ```
-user_confirmed = 사용자 확인 완료
+findings_validated = 자동 검증 완료
 
-IF user_confirmed -> Step 2.5 진행
-ELSE -> 수정 사항 반영 후 재확인 (최대 2라운드)
+IF findings_validated -> Step 2.5 진행
+ELSE -> 수정 사항 반영 후 재검증 (최대 2라운드)
 ```
 
 ---
@@ -449,9 +449,9 @@ Make the file executable description in the output.
 
 ---
 
-### Step 5.5: 핵심 파일 확인 (Checkpoint)
+### Step 5.5: 핵심 파일 확인 (Internal Check)
 
-**Tools**: `request_user_input (Plan mode) / direct question (Default mode)`
+**Tools**: `deterministic defaults (non-interactive)`
 
 config.sh, PROMPT.md, run.sh 생성 후 중간 확인:
 
@@ -461,10 +461,9 @@ config.sh, PROMPT.md, run.sh 생성 후 중간 확인:
 | PROMPT.md 섹션 | Known Errors, Phases, ... |
 | run.sh 구조 | 루프 + LLM 호출 + 검증 |
 
-request_user_input (Plan mode) / direct question (Default mode): "핵심 파일 3개를 확인해 주세요."
-옵션:
-1. "확인, 나머지 진행" -> Step 6
-2. "수정 필요" -> 수정 후 재확인 (최대 2라운드)
+내부 자동 처리:
+1. 나머지 단계 진행
+2. 수정 필요 항목 자동 반영 후 재검증 (최대 2라운드)
 
 ---
 
@@ -580,11 +579,10 @@ increase it (or set to empty for unlimited) once the first full run succeeds.
    | 감지 프레임워크 | PyTorch Lightning |
    | Phase 구성 | SETUP -> SMOKE_TEST -> TRAINING -> ... -> DONE |
 
-2. request_user_input (Plan mode) / direct question (Default mode): "생성된 파일을 확인하시겠습니까?"
-   옵션:
-   1. "PROMPT.md 상세 확인" -> PROMPT.md 핵심 섹션 출력
-   2. "config.sh 확인" -> 변수 목록 출력
-   3. "확인 완료" -> 종료
+2. 내부 자동 처리:
+   - PROMPT.md 핵심 섹션 출력
+   - config.sh 변수 목록 출력
+   - 검증 완료 후 종료
 ```
 
 ---
@@ -593,11 +591,11 @@ increase it (or set to empty for unlimited) once the first full run succeeds.
 
 | 상황 | 대응 |
 |------|------|
-| 학습 스크립트 미발견 | request_user_input (Plan mode) / direct question (Default mode): 경로 요청 (최대 2라운드) |
-| `_sdd/spec` 디렉토리 미존재 | 코드 기반 탐색으로 진행, 사용자에게 경고 |
+| 학습 스크립트 미발견 | 코드/스펙 휴리스틱 재탐색 후 `Open Questions` 기록 (최대 2라운드) |
+| `_sdd/spec` 디렉토리 미존재 | 코드 기반 탐색으로 진행, 작업 로그에 경고 |
 | `ralph-loop-concept.md` 참조 파일 미발견 | 오류: 스킬 설치 불완전, 메시지와 함께 중단 |
 | `run.sh.example` 참조 파일 미발견 | 오류: 스킬 설치 불완전, 메시지와 함께 중단 |
-| 사용자 미확인 (2+ 라운드) | 부분 탐색 결과 저장, 수동 설정 안내 |
+| 자동 검증 미통과 (2+ 라운드) | 부분 탐색 결과 저장, 수동 설정 안내 |
 | CHECKS.md 검증 실패 (Step 7) | 실패 파일 수정, 재검증 (최대 2라운드) |
-| 복수 학습 스크립트 발견 | request_user_input (Plan mode) / direct question (Default mode): 목록 제시, 선택 요청 |
-| 프레임워크 감지 모호 | request_user_input (Plan mode) / direct question (Default mode): 후보 + 근거 제시, 선택 요청 |
+| 복수 학습 스크립트 발견 | 우선순위 규칙으로 자동 선택 + 후보 기록 |
+| 프레임워크 감지 모호 | 후보별 근거 기반 최고 신뢰도 선택 + 후보 기록 |

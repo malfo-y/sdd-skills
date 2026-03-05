@@ -22,8 +22,8 @@ Create structured, actionable implementation plans from user specifications — 
 1. Refer to the user input.
 2. If the user input is not clear, refer to `_sdd/implementation/user_input.md` for the user specification.
 3. If information remains unclear and there is no user specification:
-   - Plan mode: ask the user via `request_user_input`.
-   - Default mode: proceed with conservative assumptions and record unresolved points in `Open Questions`.
+   - Apply deterministic defaults.
+   - Record conservative assumptions and unresolved points in `Open Questions`.
 
 After processing `user_input.md`, rename it to `_processed_user_input.md` to mark it as processed inputs.
 
@@ -40,11 +40,10 @@ After processing `user_input.md`, rename it to `_processed_user_input.md` to mar
 5. **Establish Dependencies** - Map task relationships and critical path
 6. **Output the Plan** - Present in structured, trackable format
 
-## Interaction Rule (Question Policy)
+## Interaction Rule (Non-Interactive)
 
-- User-facing questions are allowed only in Plan mode via `request_user_input`.
-- In Default mode, do not ask mid-process questions.
-- When requirements are ambiguous in Default mode, continue with explicit assumptions and record unresolved items in `Open Questions`.
+- Do not ask mid-process questions.
+- When requirements are ambiguous, continue with explicit assumptions and record unresolved items in `Open Questions`.
 - Do not pause for phase strategy approval; phase grouping strategy is auto-selected by AI.
 
 ## Step 1: Specification Analysis
@@ -60,8 +59,7 @@ Read and analyze the provided specification thoroughly:
 - **Unknowns/Risks**: What needs clarification or research?
 
 If the specification is unclear or incomplete:
-- Plan mode: ask via `request_user_input`.
-- Default mode: proceed with assumptions and log unresolved points in `Open Questions`.
+- proceed with assumptions and log unresolved points in `Open Questions`.
 
 #### Context Management
 
@@ -348,8 +346,7 @@ If any of the following is encountered:
 - Uncertain file paths for Target Files
 
 Then apply this rule:
-- Plan mode: ask via `request_user_input`.
-- Default mode: do not ask; continue with documented assumptions and list unresolved items in `Open Questions`.
+- do not ask; continue with documented assumptions and list unresolved items in `Open Questions`.
 
 ## LLM Model to use
 
@@ -373,9 +370,8 @@ After creating the plan, offer to:
     - Name phase files as `IMPLEMENTATION_PLAN_PHASE_1.md`, `IMPLEMENTATION_PLAN_PHASE_2.md`, etc.
 4. Create tasks using plan document task table for tracking
 
-Output format confirmation rule:
-- Plan mode: confirm via `request_user_input`.
-- Default mode: use the user-specified path/format if given; otherwise use default path and sensible split policy.
+Output format selection rule:
+- use the user-specified path/format if given; otherwise use default path and sensible split policy.
 
 ## Progressive Disclosure (Plan 출력 시)
 
@@ -398,12 +394,12 @@ Output format confirmation rule:
 | 상황 | 대응 |
 |------|------|
 | 스펙 파일 미발견 | `spec-create` 먼저 실행 권장 |
-| 스펙 내용 모호 | Plan mode에서는 `request_user_input`, Default mode에서는 가정 + `Open Questions` 기록 |
-| Target Files 경로 확인 불가 | Plan mode에서는 확인 질문, Default mode에서는 TBD + `Open Questions` 기록 |
+| 스펙 내용 모호 | 가정으로 진행 + `Open Questions` 기록 |
+| Target Files 경로 확인 불가 | 휴리스틱 추론 후 `TBD` + `Open Questions` 기록 |
 | 순환 의존성 발견 | Task 분할로 해소, 해소 불가 시 `Open Questions`에 의사결정 필요 항목 기록 |
 | 기존 Plan 파일 존재 | `prev/PREV_IMPLEMENTATION_PLAN_<timestamp>.md`로 아카이브 |
 | Plan이 25+ Task | Phase별 파일 분할 (IMPLEMENTATION_PLAN_PHASE_N.md) |
-| 모호한 우선순위 | Plan mode에서는 확인 질문, Default mode에서는 근거 기반 임시 우선순위 + `Open Questions` 기록 |
+| 모호한 우선순위 | 근거 기반 임시 우선순위 + `Open Questions` 기록 |
 | user_input.md 형식 오류 | 파싱 오류 보고, 자유 형식으로 해석 시도 |
 
 ## Additional Resources

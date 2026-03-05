@@ -156,7 +156,7 @@ example
 2. Start fresh using template
 3. Analyze current codebase thoroughly
 4. Document actual state (not planned)
-5. Have user review before finalizing
+5. Perform internal consistency review before finalizing; log unresolved ambiguities in `Open Questions`
 6. Reset version to 1.0.0 or increment major
 7. Add decision rationale entries to `_sdd/spec/DECISION_LOG.md` for major trade-offs
 ```
@@ -259,8 +259,8 @@ Phase 4: Final review and version bump
 
 3. **Review**
    - Self-review changes
-   - User review if significant
-   - Address feedback
+   - If changes are significant, add impact/risk notes in `Open Questions`
+   - Address internally detected inconsistencies
 
 ---
 
@@ -310,7 +310,7 @@ Phase 4: Final review and version bump
 **Resolution Options:**
 1. **Update Spec** - If code is correct/intended
 2. **File Bug** - If spec is correct, code is wrong
-3. **Ask User** - If intent is unclear
+3. **Deterministic Default + Open Questions** - If intent is unclear
 
 ### Spec vs User Feedback Conflict
 
