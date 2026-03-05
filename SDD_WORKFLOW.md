@@ -54,7 +54,7 @@ flowchart LR
 | **ralph-loop-init** | "ralph loop", "training debug loop" | ML 자동 트레이닝 디버그 루프 생성 |
 | **discussion** | "토론", "discuss", "brainstorm" | 구조화 의사결정 토론: 맥락 수집 + 선택지 비교 + 결정/미결/실행항목 정리 |
 
-> (caveat) `/discussion`은 아직 Codex에서 잘 동작하지 않습니다.
+> (caveat) `/discussion` 스킬은 Claude Code에서만 지원합니다.
 
 ### 규모별 워크플로우
 
