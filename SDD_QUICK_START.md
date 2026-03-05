@@ -6,22 +6,24 @@
 
 ## 사용 가능한 스킬
 
-| 스킬 | 트리거 | 용도 |
-|------|--------|------|
-| `/spec-create` | "스펙 생성" | 코드 분석 또는 초안에서 스펙 생성 |
-| `/feature-draft` | "기능 초안", "feature draft" | 스펙 패치 초안 + 구현 계획을 한 번에 생성 |
-| `/spec-update-todo` | "스펙에 기능 추가" | 스펙에 새 기능/요구사항을 사전 반영 (대규모 구현 시 드리프트 방지) |
-| `/spec-update-done` | "스펙 동기화" | 구현 후 스펙과 코드 동기화 |
-| `/spec-review` | "스펙 리뷰", "드리프트 점검" | 선택적 보조 검증 (리포트 전용, 스펙 본문 미수정) |
-| `/spec-summary` | "스펙 요약" | 스펙 요약본 생성(현황 파악/온보딩) |
-| `/spec-rewrite` | "스펙 리라이트", "스펙 정리" | 너무 긴/복잡한 스펙을 구조 재정리(파일 분할/부록 이동) |
-| `/pr-spec-patch` | "PR 스펙 패치" | PR과 스펙 비교하여 패치 초안 생성 |
-| `/pr-review` | "PR 리뷰" | PR 구현을 스펙/패치 초안 대비 검증 및 판정 |
-| `/implementation-plan` | "구현 계획 생성" | phase별 구현 계획 생성 (대규모 구현 시) |
-| `/implementation` | "구현 시작" | TDD 기반 구현 실행 |
-| `/implementation-review` | "진행 상황 확인" | 계획 대비 구현 검증 (대규모 phase별 검증) |
-| `/ralph-loop-init` | "ralph loop", "training debug loop" | ML 자동 트레이닝 디버그 루프 생성 |
-| `/discussion` | "토론", "discuss", "brainstorm" | 구조화된 반복 토론 + 리서치 + 요약 (텍스트 출력만) |
+각 스킬의 트리거 키워드와 사용 예시는 [SDD_WORKFLOW.md > 부록: 스킬별 설명](SDD_WORKFLOW.md#부록-스킬별-설명)을 참고하세요.
+
+| 스킬 | 용도 |
+|------|------|
+| `/spec-create` | 코드 분석 또는 초안에서 스펙 생성 |
+| `/feature-draft` | 스펙 패치 초안 + 구현 계획을 한 번에 생성 |
+| `/spec-update-todo` | 스펙에 새 기능/요구사항을 사전 반영 (대규모 구현 시 드리프트 방지) |
+| `/spec-update-done` | 구현 후 스펙과 코드 동기화 |
+| `/spec-review` | 선택적 보조 검증 (리포트 전용, 스펙 본문 미수정) |
+| `/spec-summary` | 스펙 요약본 생성(현황 파악/온보딩) |
+| `/spec-rewrite` | 너무 긴/복잡한 스펙을 구조 재정리(파일 분할/부록 이동) |
+| `/pr-spec-patch` | PR과 스펙 비교하여 패치 초안 생성 |
+| `/pr-review` | PR 구현을 스펙/패치 초안 대비 검증 및 판정 |
+| `/implementation-plan` | phase별 구현 계획 생성 (대규모 구현 시) |
+| `/implementation` | TDD 기반 구현 실행 |
+| `/implementation-review` | 계획 대비 구현 검증 (대규모 phase별 검증) |
+| `/ralph-loop-init` | ML 자동 트레이닝 디버그 루프 생성 |
+| `/discussion` | 구조화된 반복 토론 + 리서치 + 요약 (텍스트 출력만) |
 
 > Codex의 경우 `/discussion`은 Plan mode에서만 동작합니다.
 
