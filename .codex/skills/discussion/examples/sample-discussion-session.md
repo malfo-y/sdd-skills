@@ -120,3 +120,26 @@ Round 1: 우선 기준 선택 -> 가치 우선
 Round 2: 전환 시점 논의 -> 지금 JWT 점진 전환
 Round 3: 구현 방식 탐색 -> 종료 및 요약
 ```
+
+### 5) 저장 핸드오프 (선택)
+
+```text
+Codex:
+토론 요약을 파일로 저장할까요?
+1. 저장하지 않음
+2. 기본 경로로 저장 준비
+3. 경로 지정 후 저장 준비
+
+User: 2
+
+Codex:
+## Save Handoff (Plan mode -> Default mode)
+- target_path: _sdd/discussion/DISCUSSION_api-auth-choice_20260305.md
+- overwrite_policy: backup-and-replace
+- content_source: Step 4 토론 요약 전체
+
+다음 단계:
+1) Plan mode를 종료한다.
+2) 아래 요청을 실행한다.
+"방금 discussion 요약을 _sdd/discussion/DISCUSSION_api-auth-choice_20260305.md에 저장해 줘. 파일이 있으면 prev 백업 후 덮어써."
+```

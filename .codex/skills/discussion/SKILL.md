@@ -6,7 +6,7 @@ version: 1.0.0
 
 # Structured Discussion (Plan Mode Only) - 구조화된 토론 진행
 
-구조화된 반복 토론을 진행한다. 질문-응답 루프로 주제를 심층 탐구하고, 필요 시 코드베이스 탐색 및 선택적 웹 리서치를 통해 근거를 보강한다. 토론 종료 시 구조화된 요약을 대화 내 텍스트로 출력한다.
+구조화된 반복 토론을 진행한다. 질문-응답 루프로 주제를 심층 탐구하고, 필요 시 코드베이스 탐색 및 선택적 웹 리서치를 통해 근거를 보강한다. 토론 종료 시 구조화된 요약을 대화 내 텍스트로 출력하며, 원할 경우 Plan mode 종료 후 저장할 수 있도록 저장 핸드오프를 생성한다.
 
 ## When to Use This Skill
 
@@ -21,10 +21,11 @@ version: 1.0.0
 1. **Plan mode 전용**: 이 스킬의 질문 루프는 Plan mode에서만 동작한다.
 2. **Default mode 처리**: Default mode에서 호출되면 아래 문구를 출력하고 즉시 종료한다.
    - "`discussion` 스킬은 Plan mode 전용입니다. Shift+Tab으로 Plan mode로 전환 후 다시 실행해 주세요."
-3. **코드/파일 변경 금지**: 파일 생성/수정/삭제를 수행하지 않는다. 토론 결과는 텍스트로만 출력한다.
+3. **Plan mode 내 파일 변경 금지**: Plan mode 중에는 파일 생성/수정/삭제를 수행하지 않는다. 토론 결과는 텍스트로 출력한다.
 4. **도구 제한**: `request_user_input`(Plan mode), `Read`, `Glob`, `rg`, `Bash`(read-only), 선택적 웹 리서치(`search_query`, `open`)만 사용한다.
 5. **질문 옵션 규칙**: `request_user_input`의 옵션은 2~3개를 유지하고, 권장 구성은 `실질 선택지 2개 + 토론 종료/정리 1개`다.
 6. **언어 규칙**: 기본 출력 언어는 한국어로 한다. 사용자가 다른 언어를 명시하면 해당 언어를 따른다.
+7. **저장 방식 규칙**: 저장은 Plan mode에서 직접 실행하지 않고, Plan mode 종료 후 실행할 저장 핸드오프(경로 + 내용 + 실행 프롬프트)를 생성한다.
 
 ## Process
 
@@ -199,6 +200,43 @@ Round 2: [주제] -> [결론/방향]
 ...
 ```
 
+### Step 5: Save Handoff (선택)
+
+**Tools**: `request_user_input` (Plan mode)
+
+Step 4 요약 출력 직후 저장 여부를 확인한다.
+
+```text
+질문: "토론 요약을 파일로 저장할까요?"
+옵션:
+1. "저장하지 않음"
+2. "기본 경로로 저장 준비"
+3. "경로 지정 후 저장 준비"
+```
+
+- 옵션 1: 저장 없이 종료.
+- 옵션 2: 기본 경로를 `"_sdd/discussion/DISCUSSION_<topic_slug>_<YYYYMMDD>.md"`로 설정하고 저장 핸드오프를 출력.
+- 옵션 3: 추가 질문으로 경로를 확정한 뒤 저장 핸드오프를 출력.
+  - 기본 질문 옵션 예시:
+    1. `"_sdd/discussion/" 사용`
+    2. `"_sdd/" 루트에 저장`
+    3. `다른 경로 지정` (자유 입력)
+
+저장 핸드오프 출력 형식:
+
+```markdown
+## Save Handoff (Plan mode -> Default mode)
+- target_path: [확정 경로]
+- overwrite_policy: [create|backup-and-replace]
+- content_source: "Step 4 토론 요약 전체"
+
+다음 단계:
+1. Plan mode를 종료한다.
+2. 아래 요청을 그대로 실행한다.
+
+"방금 discussion 요약을 [target_path]에 저장해 줘. 파일이 있으면 prev 백업 후 덮어써."
+```
+
 ## Progressive Disclosure (완료 시)
 
 1. 완료 요약 테이블을 먼저 제시한다.
@@ -206,6 +244,7 @@ Round 2: [주제] -> [결론/방향]
    - "전체 요약 보기"
    - "결정 사항만 보기"
    - "실행 항목만 보기"
+   - "저장 준비 (Plan mode 종료 후)"
 
 ## Context Management
 
@@ -234,6 +273,7 @@ Round 2: [주제] -> [결론/방향]
 | 사용자 응답 중단 | 현재까지 내용으로 부분 요약 생성 |
 | 토론이 범위를 벗어남 | 범위 재확인 질문으로 복귀 |
 | MAX_ROUNDS 도달 | 자동으로 Step 4 요약 출력 |
+| 저장 요청됨(Plan mode) | Step 5 저장 핸드오프 출력 후 Plan mode 종료 안내 |
 
 ## Integration with Other Skills
 
