@@ -205,9 +205,7 @@ Create a structured diff report:
 ```
 report_presented = Change Report를 사용자에게 제시 완료
 
-IF report_presented → AskUserQuestion: "변경 사항을 적용할까요?" (승인/수정 요청)
-  IF 승인 → Step 4 진행
-  IF 수정 요청 → 피드백 반영 후 Report 수정 → 재승인 요청 (최대 2라운드)
+IF report_presented → 바로 Step 4 진행 (사용자 확인을 기다리지 않는다)
 ELSE IF NOT report_presented → Step 3 재실행
 ```
 
@@ -242,7 +240,6 @@ Verify updated spec accuracy:
 - Confirm API endpoints match
 - If local tests/commands are used for verification, apply `_sdd/env.md` setup first
 - If `_sdd/env.md` is missing/incomplete, ask the user for environment details instead of guessing
-- Review with user if significant changes
 
 **Decision Gate 5→6**:
 ```
