@@ -1,9 +1,9 @@
-# Spec Review Checklist (Strict)
+# Spec Review Checklist (Strict) / 스펙 리뷰 체크리스트 (Strict)
 
-Use this checklist for review-only spec validation.  
+Use this checklist for review-only spec validation.
 This checklist does not authorize direct spec edits.
 
-## 1) Scope Setup
+## 1) Scope Setup / 범위 설정
 
 - [ ] Main spec index identified (`_sdd/spec/<project>.md` or `_sdd/spec/main.md`)
 - [ ] Linked sub-spec files identified
@@ -12,7 +12,7 @@ This checklist does not authorize direct spec edits.
 - [ ] Review scope declared (Spec-only or Spec+Code)
 - [ ] If local runtime/test checks are planned, `_sdd/env.md` is checked and setup is applied first
 
-## 2) Spec-Only Quality Checks
+## 2) Spec-Only Quality Checks / 스펙 품질 검증
 
 - [ ] Goals and scope are explicit and non-conflicting
 - [ ] Acceptance criteria are present and measurable
@@ -21,7 +21,7 @@ This checklist does not authorize direct spec edits.
 - [ ] Component responsibilities and ownership boundaries are clear
 - [ ] Section flow is navigable and links are valid
 
-## 3) Code-Linked Drift Checks
+## 3) Code-Linked Drift Checks / 코드 연동 드리프트 검증
 
 - [ ] Architecture claims match current code structure
 - [ ] Feature behavior claims match implementation
@@ -30,13 +30,18 @@ This checklist does not authorize direct spec edits.
 - [ ] Issue status in spec reflects implementation/test reality
 - [ ] Decision-log assumptions/rationale still match implementation behavior
 
-## 4) Evidence Quality
+## 3.5) Drift Summary Presentation / 드리프트 요약 제시
+
+- [ ] Drift findings summarized in category x severity table before proceeding to severity classification
+- [ ] Table covers: Architecture, Feature, API, Config, Issue, Decision-log drift categories
+
+## 4) Evidence Quality / 근거 품질
 
 - [ ] Each high/medium finding has concrete evidence (`path:line`, test, diff, commit)
 - [ ] Unknowns are explicitly marked as unknown
 - [ ] Inference vs direct evidence is clearly distinguished
 
-## 5) Decision Rule
+## 5) Decision Rule / 판정 기준
 
 Choose one:
 
@@ -50,7 +55,7 @@ Choose one:
 - [ ] `NEEDS_DISCUSSION`
   - Core ambiguity/trade-off unresolved by available evidence
 
-## 6) Report Completeness
+## 6) Report Completeness / 리포트 완성도
 
 - [ ] Executive summary included
 - [ ] Findings grouped by severity
@@ -61,7 +66,7 @@ Choose one:
 - [ ] Decision-log follow-up proposals included when rationale drift is found
 - [ ] Handoff instructions included when `SYNC_REQUIRED`
 
-## 7) Strict Mode Validation
+## 7) Strict Mode Validation / Strict 모드 검증
 
 - [ ] No spec file under `_sdd/spec/` was edited (other than report file)
 - [ ] `_sdd/spec/DECISION_LOG.md` was not edited directly in this skill

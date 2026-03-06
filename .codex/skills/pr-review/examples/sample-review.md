@@ -13,7 +13,7 @@ User: PR 리뷰
 
 Claude: PR 리뷰를 시작합니다.
 
-**사용 모델**: gpt-5.3-codex (reasoning effort: extra high)
+**사용 모델**: Claude Opus 4.6
 
 ## 사전 조건 확인
 
@@ -144,7 +144,7 @@ Claude:
 **PR**: #42 - 사용자 인증 시스템 구현 및 세션 관리 버그 수정
 **PR Author**: developer-kim
 **Review Date**: 2026-02-06
-**Reviewer**: Codex (gpt-5.3-codex, reasoning effort: extra high)
+**Reviewer**: Claude (Opus 4.6)
 **Spec Version**: 1.2.0
 **Patch Draft**: Found
 
@@ -345,7 +345,7 @@ User: PR 리뷰
 
 Claude: PR 리뷰를 시작합니다.
 
-**사용 모델**: gpt-5.3-codex (reasoning effort: extra high)
+**사용 모델**: Claude Opus 4.6
 
 ## 사전 조건 확인
 
@@ -376,7 +376,7 @@ Claude: PR 리뷰를 시작합니다.
 **PR**: #42 - 사용자 인증 시스템 구현 및 세션 관리 버그 수정
 **PR Author**: developer-kim
 **Review Date**: 2026-02-06
-**Reviewer**: Codex (gpt-5.3-codex, reasoning effort: extra high)
+**Reviewer**: Claude (Opus 4.6)
 **Spec Version**: 1.2.0
 **Patch Draft**: Found
 
@@ -422,6 +422,124 @@ Claude: PR 리뷰를 시작합니다.
 **스펙 파일**: _sdd/spec/project-api.md
 **패치 초안 파일**: _sdd/pr/spec_patch_draft.md
 **생성 시각**: 2026-02-06 16:15:00
+
+---
+
+---
+
+## Mode 2 (Degraded) Session Example
+
+패치 초안 없이 PR을 리뷰하는 Mode 2 시나리오입니다.
+
+### 1. 리뷰 시작
+
+```
+User: PR 리뷰
+
+Claude: PR 리뷰를 시작합니다.
+
+**사용 모델**: Claude Opus 4.6
+
+## 사전 조건 확인
+
+✓ gh auth status: 인증됨 (github.com)
+✓ 스펙 파일: _sdd/spec/project-api.md (v1.2.0)
+✗ 패치 초안: _sdd/pr/spec_patch_draft.md 없음
+
+⚠️ Reviewing without a patch draft. Running `/pr-spec-patch` first
+and then re-reviewing will produce more accurate results.
+
+## PR 크기 확인
+- 변경 파일: 3개
+- 변경 규모: +52 -18
+
+소규모 PR이므로 Degraded 모드로 바로 진행합니다.
+```
+
+### 2. 수용 기준 추론
+
+```
+Claude:
+## 수용 기준 추론 (패치 초안 없음)
+
+패치 초안이 없으므로 PR 설명과 커밋 메시지에서 수용 기준을 추론합니다.
+
+### PR 설명 분석
+- Title: "fix: 비밀번호 재설정 토큰 만료 검증 누락"
+- Body: "비밀번호 재설정 시 토큰 만료 여부를 확인하지 않아 만료된 토큰으로도
+  비밀번호 변경이 가능한 보안 이슈를 수정합니다."
+
+### 추론된 수용 기준
+| # | 추론된 기준 | 근거 | 신뢰도 |
+|---|-----------|------|--------|
+| 1 | 만료된 토큰으로 비밀번호 변경 시 거부 | PR 설명 | High |
+| 2 | 유효한 토큰으로는 정상 변경 | 암묵적 요구 | High |
+| 3 | 만료 시 적절한 에러 응답 반환 | 보안 관례 | Medium |
+
+⚠️ 패치 초안 없이 추론한 기준이므로 실제 요구사항과 다를 수 있습니다.
+```
+
+### 3. 검증 및 판정
+
+```
+Claude:
+## 수용 기준 검증
+
+| # | 추론된 기준 | PR 구현 | 테스트 | 상태 | 비고 |
+|---|-----------|---------|--------|------|------|
+| 1 | 만료 토큰 거부 | `src/services/password_service.py:34-42` | test_expired_token_rejected | ✓ | |
+| 2 | 유효 토큰 정상 변경 | `src/services/password_service.py:28-33` | test_valid_token_reset | ✓ | |
+| 3 | 만료 시 에러 응답 | `src/services/password_service.py:40` | test_expired_token_error_response | ✓ | 400 + 메시지 |
+
+## 스펙 준수 검증
+| 스펙 섹션 | 요구사항 | PR 영향 | 상태 |
+|----------|---------|---------|------|
+| 보안 고려사항 | 토큰 유효성 검증 | 만료 검증 추가 | ✓ |
+
+스펙 위반 사항: 없음
+
+## 갭 분석 (스펙 vs PR만 비교)
+- PR에 포함되었으나 스펙에 미기재: 없음
+- 테스트 갭: 없음
+
+## 검토 결과 (Verdict)
+
+**APPROVE**
+
+**근거**: 보안 버그 수정이 올바르게 구현되었고, 모든 추론된 수용 기준이 충족되며,
+테스트가 통과합니다. 기존 스펙 위반 없음.
+
+⚠️ 이 리뷰는 패치 초안 없이 수행되었으므로 정확도가 제한적입니다.
+수용 기준은 PR 설명에서 추론되었습니다.
+```
+
+### 생성된 리포트 (요약)
+
+```markdown
+# PR Review Report
+
+**PR**: #55 - fix: 비밀번호 재설정 토큰 만료 검증 누락
+**PR Author**: developer-park
+**Review Date**: 2026-02-10
+**Reviewer**: Claude (Opus 4.6)
+**Spec Version**: 1.2.0
+**Patch Draft**: Not Found
+
+---
+
+## Verdict
+
+**APPROVE**
+
+**Rationale**: 보안 버그가 올바르게 수정됨. 추론된 수용 기준 3/3 충족.
+**Key Findings**:
+- 만료 토큰 검증 로직 추가 완료
+- 관련 테스트 3건 모두 통과
+- 기존 스펙 위반 없음
+
+⚠️ Degraded mode: 패치 초안 없이 PR 설명 기반으로 수용 기준을 추론하여 리뷰함.
+정확도 향상을 위해 `/pr-spec-patch` 후 재리뷰 권장.
+```
 
 ---
 

@@ -10,7 +10,7 @@ User has a parallel-ready implementation plan at `_sdd/drafts/feature_draft_auth
 
 ## Session Flow
 
-### 1. Loading the Plan & Analyzing Parallelization
+### Step 1: Load the Plan
 
 ```
 User: implement the plan in parallel
@@ -36,11 +36,27 @@ All 12 tasks have Target Files — parallel execution enabled.
 - Framework: pytest
 - Test location: tests/
 - Naming convention: test_*.py
-
-### Analyzing Parallel Groups...
 ```
 
-### 2. Phase 1 Parallelization Analysis
+### Step 2: Initialize Task Tracking
+
+```
+Claude:
+## Task Tracking Initialized
+
+| ID | Task | Phase | Priority | Status |
+|----|------|-------|----------|--------|
+| 1 | Database schema | 1 | P0 | PENDING |
+| 2 | Password hashing | 1 | P0 | PENDING |
+| 3 | JWT utilities | 1 | P0 | PENDING |
+| 4 | Rate limiting | 1 | P1 | PENDING |
+| 5 | Registration | 2 | P0 | PENDING |
+| ... | ... | ... | ... | PENDING |
+
+12 tasks tracked. Starting Phase 1...
+```
+
+### Step 3: Analyze Parallelization
 
 ```
 Claude:
@@ -68,7 +84,9 @@ Claude:
 🚀 4 tasks dispatched simultaneously (4x speedup vs sequential)
 ```
 
-### 3. Dispatching Phase 1 Sub-Agents
+### Step 4: Execute by Phase (Parallel)
+
+#### Phase 1 — Dispatching Sub-Agents
 
 ```
 Claude: Dispatching 4 sub-agents for Phase 1...
@@ -83,7 +101,7 @@ Claude: Dispatching 4 sub-agents for Phase 1...
 Waiting for all sub-agents to complete...
 ```
 
-### 4. Sub-Agent Results
+#### Phase 1 — Sub-Agent Results
 
 ```
 Claude:
@@ -137,11 +155,57 @@ Tests: 5 new, all passing
 ### No Unplanned Dependencies reported.
 ```
 
-### 5. Post-Group Verification
+#### Phase 2 — Analysis & Execution
 
 ```
 Claude:
-## Post-Group Verification
+## Phase 2: Core Auth — Parallel Analysis
+
+### Conflict Analysis:
+- Task 5 ∩ Task 6 = {routes/auth.py, services/auth_service.py} ❌
+- Task 5 ∩ Task 8 = ∅ ✓
+- Task 5 ∩ Task 9 = ∅ ✓
+- Task 6 ∩ Task 7 = {routes/auth.py, services/auth_service.py} ❌
+- Task 8 ∩ Task 9 = ∅ ✓
+
+### Parallel Groups:
+- **Group 1**: [Task 5, Task 8, Task 9] — 3 tasks parallel
+- **Group 2**: [Task 6] — sequential (shares auth.py with Task 5)
+- **Group 3**: [Task 7] — sequential (shares auth.py with Task 6)
+
+Speedup: 5 tasks → 3 groups (vs 5 sequential)
+
+## Phase 2 Group 1 — Dispatching 3 sub-agents
+[Task tool: Task 5 - Registration]
+[Task tool: Task 8 - Input validation]
+[Task tool: Task 9 - Auth middleware]
+(3 calls made simultaneously)
+
+### Group 1 Results: All 3 SUCCESS ✅
+Running full test suite... 54 tests, ALL PASSING ✓
+
+## Phase 2 Group 2 — Sequential: Task 6 (Login)
+(Modifies auth.py created by Task 5)
+
+### TDD Progress for Task 6:
+#### Criterion 1: Email/password authentication ✓
+- [x] RED: test_login_with_valid_credentials
+- [x] GREEN: Implemented login endpoint
+- [x] REFACTOR: Extracted common validation
+... (all criteria complete) ...
+
+Running full test suite... 68 tests, ALL PASSING ✓
+
+## Phase 2 Group 3 — Sequential: Task 7 (Logout)
+... (similar TDD flow) ...
+Running full test suite... 74 tests, ALL PASSING ✓
+```
+
+### Step 5: Integrate & Verify
+
+```
+Claude:
+## Post-Group Verification (Phase 1 example)
 
 ### Full Test Suite
 Running all tests... 27 tests, ALL PASSING ✓
@@ -166,7 +230,7 @@ Running all tests... 27 tests, ALL PASSING ✓
 All Phase 1 tasks complete. Running Phase Review...
 ```
 
-### 6. Phase 1 Review
+### Step 6: Phase Review
 
 ```
 Claude:
@@ -202,86 +266,7 @@ Claude:
 **Decision**: No critical issues. Proceed to Phase 2.
 ```
 
-### 7. Phase 2 Parallelization Analysis
-
 ```
-Claude:
-## Phase 2: Core Auth — Parallel Analysis
-
-### Unblocked Tasks (after Phase 1):
-| ID | Task | Priority | Target Files |
-|----|------|----------|-------------|
-| 5 | Registration | P0 | routes/auth.py, services/auth_service.py, tests/test_registration.py |
-| 6 | Login | P0 | routes/auth.py, services/auth_service.py, tests/test_login.py |
-| 7 | Logout | P0 | routes/auth.py, services/auth_service.py, tests/test_logout.py |
-| 8 | Input validation | P1 | middleware/validation.py, validators/auth_validators.py, tests/test_validation.py |
-| 9 | Auth middleware | P0 | middleware/auth.py, tests/test_auth_middleware.py |
-
-### Conflict Analysis:
-- Task 5 ∩ Task 6 = {routes/auth.py, services/auth_service.py} ❌
-- Task 5 ∩ Task 7 = {routes/auth.py, services/auth_service.py} ❌
-- Task 5 ∩ Task 8 = ∅ ✓
-- Task 5 ∩ Task 9 = ∅ ✓
-- Task 6 ∩ Task 7 = {routes/auth.py, services/auth_service.py} ❌
-- Task 6 ∩ Task 8 = ∅ ✓
-- Task 6 ∩ Task 9 = ∅ ✓
-- Task 7 ∩ Task 8 = ∅ ✓
-- Task 7 ∩ Task 9 = ∅ ✓
-- Task 8 ∩ Task 9 = ∅ ✓
-
-### Parallel Groups:
-- **Group 1**: [Task 5, Task 8, Task 9] — 3 tasks parallel
-  (Task 5 creates auth.py; Task 8 & 9 touch different middleware files)
-- **Group 2**: [Task 6] — sequential (shares auth.py with Task 5)
-- **Group 3**: [Task 7] — sequential (shares auth.py with Task 6)
-
-Speedup: 5 tasks → 3 groups (vs 5 sequential)
-```
-
-### 8. Phase 2 Execution
-
-```
-Claude:
-## Phase 2 Group 1 — Dispatching 3 sub-agents
-
-[Task tool: Task 5 - Registration]
-[Task tool: Task 8 - Input validation]
-[Task tool: Task 9 - Auth middleware]
-
-(3 calls made simultaneously)
-
-... (sub-agents complete) ...
-
-### Group 1 Results: All 3 SUCCESS ✅
-
-Running full test suite... 54 tests, ALL PASSING ✓
-
-## Phase 2 Group 2 — Sequential: Task 6 (Login)
-
-Task 6 executes sequentially (modifies auth.py created by Task 5).
-
-### TDD Progress for Task 6:
-
-#### Criterion 1: Email/password authentication ✓
-- [x] RED: test_login_with_valid_credentials
-- [x] GREEN: Implemented login endpoint
-- [x] REFACTOR: Extracted common validation
-
-... (all criteria complete) ...
-
-Running full test suite... 68 tests, ALL PASSING ✓
-
-## Phase 2 Group 3 — Sequential: Task 7 (Logout)
-
-... (similar TDD flow) ...
-
-Running full test suite... 74 tests, ALL PASSING ✓
-```
-
-### 9. Phase 2 Review & Handling Unplanned Dependency
-
-```
-Claude:
 ## Phase 2 Review
 
 ### Cross-Cutting Quality Checks
@@ -297,7 +282,7 @@ Claude:
 **Decision**: Proceed to Phase 3
 ```
 
-### 10. Final Report (after Phase 3)
+### Step 7: Final Review & Report
 
 ```
 Claude:

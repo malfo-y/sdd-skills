@@ -1,10 +1,10 @@
-# PR Review Checklist
+# PR Review Checklist / PR 리뷰 체크리스트
 
 Verification checklist used by the `pr-review` skill.
 
 ---
 
-## Spec Compliance Verification
+## Spec Compliance Verification / 스펙 준수 검증
 
 ```markdown
 - [ ] Existing spec key requirements are not violated by the PR
@@ -17,7 +17,7 @@ Verification checklist used by the `pr-review` skill.
 
 ---
 
-## Patch Draft Verification
+## Patch Draft Verification / 패치 초안 검증
 
 ```markdown
 - [ ] All Features in the patch draft are implemented in the PR
@@ -29,7 +29,7 @@ Verification checklist used by the `pr-review` skill.
 
 ---
 
-## Test Verification
+## Test Verification / 테스트 검증
 
 ```markdown
 - [ ] Before running local tests, check `_sdd/env.md` and apply environment (conda/env vars/services)
@@ -41,7 +41,7 @@ Verification checklist used by the `pr-review` skill.
 
 ---
 
-## Code Quality
+## Code Quality / 코드 품질
 
 ```markdown
 - [ ] Project's existing coding patterns and conventions are followed
@@ -52,7 +52,7 @@ Verification checklist used by the `pr-review` skill.
 
 ---
 
-## Documentation
+## Documentation / 문서화
 
 ```markdown
 - [ ] New environment variables are listed in .env.example or config docs
@@ -63,7 +63,7 @@ Verification checklist used by the `pr-review` skill.
 
 ---
 
-## Security / Performance
+## Security / Performance / 보안 / 성능
 
 ```markdown
 - [ ] No OWASP Top 10 vulnerabilities (SQL injection, XSS, etc.)
@@ -74,9 +74,9 @@ Verification checklist used by the `pr-review` skill.
 
 ---
 
-## Verdict Criteria Checklist
+## Verdict Criteria Checklist / 판정 기준 체크리스트
 
-### APPROVE Conditions
+### APPROVE Conditions / 승인 조건
 
 ```markdown
 All items must be satisfied:
@@ -87,7 +87,7 @@ All items must be satisfied:
 - [ ] 0 blockers
 ```
 
-### REQUEST CHANGES Conditions
+### REQUEST CHANGES Conditions / 변경 요청 조건
 
 ```markdown
 If any of the following apply:
@@ -98,7 +98,7 @@ If any of the following apply:
 - [ ] Critical functionality bug
 ```
 
-### NEEDS DISCUSSION Conditions
+### NEEDS DISCUSSION Conditions / 논의 필요 조건
 
 ```markdown
 If any of the following apply:

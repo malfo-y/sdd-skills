@@ -288,6 +288,91 @@ grep -oP '\[.*?\]\(\.?/?[^)]+\)' spec.md | \
 
 ---
 
+## 7. Environment Configuration Drift (`env.md`)
+
+### Pattern: Undocumented Environment Changes
+
+**Detection:**
+```bash
+# Find env var usage in code not documented in env.md
+grep -rhoP 'os\.environ\[?"(\w+)"\]?' src/ | sort -u > code_env_vars.txt
+grep -oP '`\w+`' _sdd/env.md | tr -d '`' | sort -u > doc_env_vars.txt
+diff code_env_vars.txt doc_env_vars.txt
+```
+
+**Symptoms:**
+- New environment variables added in code but not in `_sdd/env.md`
+- conda/venv setup commands changed but `env.md` not updated
+- Required services (DB, Redis) added but not documented in env.md
+- Port numbers or service URLs changed
+
+**Resolution:**
+- Update `_sdd/env.md` with new environment variables
+- Sync conda/venv setup instructions
+- Document new required services and startup commands
+
+### Pattern: Stale Setup Instructions
+
+**Detection:**
+- Run `_sdd/env.md` setup commands and check for failures
+- Compare documented Python/Node version with actual project requirements
+- Check if documented conda environment name matches actual environment
+
+**Symptoms:**
+- Setup commands fail (package not found, version conflict)
+- Documented conda env doesn't exist or has different packages
+- Tests fail due to missing environment setup
+
+**Resolution:**
+- Regenerate setup instructions from current working environment
+- Update version requirements
+- Test setup instructions from scratch
+
+---
+
+## 8. Decision Log Drift (`DECISION_LOG.md`)
+
+### Pattern: Outdated Decision Rationale
+
+**Detection:**
+- Cross-reference `_sdd/spec/DECISION_LOG.md` entries with current implementation
+- Check if alternatives listed in decisions were later adopted instead
+- Verify that constraints cited in decisions still hold
+
+**Symptoms:**
+- Decision rationale references constraints that no longer exist
+- Chosen approach was later replaced but decision log not updated
+- New decisions contradict earlier logged decisions without noting the change
+
+**Resolution:**
+- Add "Superseded by" note on outdated decisions
+- Update status field (Active → Superseded / Revisited)
+- Link to new decision if approach changed
+
+### Pattern: Missing Decisions
+
+**Detection:**
+- Look for significant architectural patterns in code without corresponding decision log entries
+- Check git log for major refactors without decision documentation
+- Review PR descriptions for design discussions not captured in decision log
+
+```bash
+# Find commits mentioning design decisions
+git log --oneline --grep="decision\|chose\|trade-off\|alternative" | head -20
+```
+
+**Symptoms:**
+- Team members ask "why was X done this way?" with no documented answer
+- New contributors make changes that unknowingly reverse past decisions
+- Repeated discussions about already-decided topics
+
+**Resolution:**
+- Add retroactive decision entries with available context
+- Mark as "Retroactive" to distinguish from real-time decisions
+- Include git commit references as evidence
+
+---
+
 ## Detection Checklist
 
 ### Quick Review (5 minutes)
