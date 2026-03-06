@@ -25,6 +25,15 @@ Claude와 함께하는 소프트웨어 개발을 위한 SDD 스킬 종합 가이
 
 스펙 기반 개발(Spec-Driven Development, SDD)은 **스펙 문서**가 소프트웨어 개발 생명주기 전반에 걸쳐 단일 진실 공급원(Single Source of Truth) 역할을 하는 방법론입니다. 코드와 함께 진화하는 살아있는 문서를 유지하여 요구사항과 구현 사이의 간극을 메웁니다.
 
+### 두 단계 스펙 구조
+
+SDD는 **글로벌 스펙**과 **임시 스펙**, 두 단계로 문서를 관리합니다.
+
+- **글로벌 스펙** (`_sdd/spec/main.md`): `CLAUDE.md`를 대체하는 프로젝트의 Single Source of Truth. 목표, 아키텍처, 컴포넌트 상세 등 모든 프로젝트 정보를 담으며, 모든 스킬이 이 문서를 기준으로 동작합니다.
+- **임시 스펙** (`feature_draft`, `spec_patch_draft`, `user_draft`): 글로벌 스펙에 대한 **변경 제안서**. Git의 feature branch처럼 먼저 만들고, 검증 후 글로벌 스펙에 병합한 뒤 아카이브됩니다.
+
+> 두 단계 구조의 상세 설명과 생명주기: [SDD_CONCEPT.md](SDD_CONCEPT.md)
+
 ### SDD 철학
 
 ```mermaid
