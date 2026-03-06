@@ -13,6 +13,8 @@ Spec-Driven Development (SDD) workflow skills for Claude Code and Codex.
 /plugin install sdd-skills@sdd-skills
 ```
 
+> **Note**: 플러그인 설치 후 스킬을 활성화하려면 Claude Code를 재시작해야 합니다.
+
 ### Codex
 
 #### Option A: LobeHub Skills Marketplace 경유 설치 (권장)
