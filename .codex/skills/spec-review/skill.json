@@ -2,5 +2,5 @@
   "name": "spec-review",
   "description": "This skill should be used when the user asks to \"review spec\", \"spec drift check\", \"verify spec accuracy\", \"audit spec quality\", \"review spec against code\", or wants a review-only analysis of spec quality and code-to-spec alignment without directly editing spec files.",
   "instruction_file": "SKILL.md",
-  "version": "1.2.0"
+  "version": "1.3.0"
 }

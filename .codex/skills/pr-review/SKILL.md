@@ -1,7 +1,7 @@
 ---
 name: pr-review
 description: This skill should be used when the user asks to "review PR", "PR review", "review PR against spec", "PR 리뷰", "PR 검증", "스펙 기반 PR 리뷰", "PR 승인 검토", or wants to verify a pull request's implementation against the specification and spec patch draft.
-version: 1.2.0
+version: 1.3.0
 ---
 
 # PR Review
@@ -12,6 +12,7 @@ PR 구현이 현재 스펙과 스펙 패치 초안에 맞는지 검증하고 `_s
 
 - 새 흐름이 `Runtime Map`에 반영되어야 하는가
 - 새 컴포넌트/경로가 `Component Index`에 반영되어야 하는가
+- 컴포넌트 동작 개요나 설계 의도가 `Component Details > Overview`에 반영되어야 하는가
 - 운영/디버깅 경로가 `Common Change Paths`에 반영되어야 하는가
 - 구현이 스펙의 불변 조건과 결정 맥락을 깨지 않는가
 
@@ -51,6 +52,7 @@ PR이 아래를 바꿨는지 본다.
 - `Repository Map`
 - `Runtime Map`
 - `Component Index`
+- `Component Details > Overview`
 - `Common Change Paths`
 - `Open Questions`
 - `DECISION_LOG.md` 후보
@@ -70,7 +72,7 @@ PR이 아래를 바꿨는지 본다.
 1. 메인 스펙과 관련 컴포넌트 스펙 로드
 2. 패치 초안에서 acceptance criteria와 예상 spec impact 추출
 3. PR 메타데이터, changed files, 핵심 diff 로드
-4. 기존 스펙의 `Repository Map`, `Runtime Map`, `Component Index`, `Common Change Paths` 추출
+4. 기존 스펙의 `Repository Map`, `Runtime Map`, `Component Index`, `Component Details > Overview`, `Common Change Paths` 추출
 
 패치 초안이 없으면 degraded mode로 진행하되, PR 설명과 diff에서 기준을 유추하고 리포트에 신뢰도 저하를 명시한다.
 
@@ -88,8 +90,9 @@ PR이 아래를 바꿨는지 본다.
 아래 관점으로 PR을 본다.
 
 - 새 디렉터리/파일/엔트리포인트가 생겼는가
-- 기존 요청/이벤트/배치 흐름이 달라졌는가
+- 기존 요청/이벤트/배치 흐름이나 사용자 관점 설명이 달라졌는가
 - 컴포넌트 책임 경계가 바뀌었는가
+- 컴포넌트 동작 개요나 설계 의도가 달라졌는가
 - 변경/디버깅 시작점이 달라졌는가
 - 새 미확정 사항이 생겼는가
 - 구현이 기존 spec invariant를 위반하는가
@@ -139,7 +142,7 @@ PR이 아래를 바꿨는지 본다.
 좋은 PR 리뷰 리포트는 "통과/실패"만 말하지 않는다. 아래를 분명히 해야 한다.
 
 - 어떤 spec section이 후속 업데이트가 필요한가
-- 어떤 새 경로/컴포넌트/흐름이 문서에서 빠져 있는가
+- 어떤 새 경로/컴포넌트/흐름/설계 의도 설명이 문서에서 빠져 있는가
 - merge 전 blocker와 merge 후 spec sync 작업이 무엇인가
 - spec update가 전혀 필요 없는 경우도 명시적으로 `NO update`로 적는다
 

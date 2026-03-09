@@ -32,6 +32,7 @@
 - [ ] `Goal` 반영 필요 여부 확인
 - [ ] `Runtime Map` 반영 필요 여부 확인
 - [ ] `Component Index` 반영 필요 여부 확인
+- [ ] `Component Details > Overview` 반영 필요 여부 확인
 - [ ] `Common Change Paths` 반영 필요 여부 확인
 - [ ] `Environment & Dependencies` 반영 필요 여부 확인
 - [ ] `Open Questions` 반영 필요 여부 확인

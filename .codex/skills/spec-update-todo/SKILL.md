@@ -1,7 +1,7 @@
 ---
 name: spec-update-todo
 description: This skill should be used when the user asks to "update spec with features", "add features to spec", "update spec from input", "add requirements to spec", "spec update", "expand spec", "add to-do to spec", "add to-implement to spec", or mentions adding new features, requirements, or planned improvements to an existing specification document.
-version: 1.2.0
+version: 1.3.0
 ---
 
 # Spec Update from Planned Input
@@ -11,6 +11,7 @@ Apply planned requirements into an existing exploration-first spec.
 This skill updates `_sdd/spec/` with planned or to-implement items.
 It does not implement code. It turns draft requirements into spec entries that help future readers understand:
 - what is planned
+- how important components are expected to behave and why
 - where the change affects the system
 - which components or paths are involved
 - what risks or unknowns remain
@@ -91,7 +92,7 @@ Read:
 Prioritize these target areas:
 - `Goal > Project Snapshot / Key Features / Non-Goals`
 - `Architecture Overview > System Boundary / Repository Map / Runtime Map`
-- `Component Details > Component Index`
+- `Component Details > Component Index / Overview`
 - `Environment & Dependencies`
 - `Identified Issues & Improvements`
 - `Usage Examples > Common Operations / Common Change Paths`
@@ -157,6 +158,7 @@ Default mapping:
 |------------|--------------------------|
 | New Feature | `Goal > Key Features` |
 | Boundary or flow change | `Architecture Overview` |
+| Component behavior/design intent change | `Component Details > Overview` |
 | Component change | `Component Details` |
 | Environment/dependency/config change | `Environment & Dependencies` |
 | Planned operational/debug path | `Usage Examples` |
@@ -209,7 +211,7 @@ Rules:
 3. if classification is `NO update`, skip spec edits and report why
 4. add planned markers such as `📋 계획됨` only where they improve clarity
 5. update multiple sections when one feature affects multiple views of the system
-6. add or refresh `Component Index`, `Runtime Map`, or `Common Change Paths` when needed for planned changes
+6. add or refresh `Component Index`, component `Overview`, `Runtime Map`, or `Common Change Paths` when needed for planned changes
 7. add or update optional sections only when they materially help future navigation
 8. add/merge `Open Questions` for unresolved assumptions
 9. update `DECISION_LOG.md` only if the planned direction introduces a meaningful decision
@@ -235,7 +237,7 @@ Scope rules:
 | Criterion | Probe | PASS | WEAK | FAIL |
 |-----------|-------|------|------|------|
 | 저장소 이해 | "이번 planned update가 저장소 목적/범위를 흐리지 않는가?" | Goal이나 관련 설명이 이번 planned item과 충돌하지 않는다 | 기존 Goal과의 연결이 다소 약하다 | 이번 planned item이 저장소 목적/범위를 혼란스럽게 만든다 |
-| 기능 위치 탐색 | "이번에 추가한 planned item X는 어디에 붙는가?" | 새 planned item이 `Component Details`/`Component Index`/관련 경로에 명확히 연결된다 | 컴포넌트 수준 설명은 있으나 경로/심볼 연결이 약하다 | planned item의 소유 컴포넌트나 경로를 알 수 없다 |
+| 기능 위치 탐색 | "이번에 추가한 planned item X는 어디에 붙는가?" | 새 planned item이 `Component Details`/`Component Index`/`Overview`/관련 경로에 명확히 연결된다 | 컴포넌트 수준 설명은 있으나 경로/심볼 연결이 약하다 | planned item의 소유 컴포넌트나 경로를 알 수 없다 |
 | 안전한 수정 판단 | "이 planned item을 구현하려면 어디서 시작해야 하는가?" | `Change Recipes` 또는 `Common Change Paths` 수준의 변경 시작점과 확인 포인트가 있다 | 시작점은 있으나 검증 포인트나 영향 범위가 약하다 | 구현 시작점과 변경 가이드가 없다 |
 | 결정/불변 조건 기억 | "이번 planned item으로 새로 생긴 결정/가정은 무엇인가?" | 새 결정, 제약, 미해결 사항이 `Open Questions` 또는 `DECISION_LOG.md` 등에 기록된다 | 기록은 있으나 불명확하다 | 새 결정/가정이 전혀 남지 않는다 |
 

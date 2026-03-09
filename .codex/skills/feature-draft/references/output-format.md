@@ -51,6 +51,7 @@ Part 1 should reflect the exploration-first spec philosophy:
 5. low-confidence items are collected in `Open Questions`
 6. include `**Spec Update Classification**`
 7. omit empty optional sections and compress repeated prose
+8. when behavior or design intent changes matter, target `Component Details > Overview`
 
 ### Full Structure
 
@@ -200,6 +201,10 @@ Part 1 should reflect the exploration-first spec philosophy:
 **Responsibility**:
 - [what it does]
 
+**Overview**:
+- 동작 개요: [how the component works]
+- 설계 의도: [why this structure exists]
+
 **Interfaces / Contracts**:
 - Inputs: ...
 - Outputs: ...
@@ -214,6 +219,10 @@ Part 1 should reflect the exploration-first spec philosophy:
 **Changes**:
 - [change 1]
 - [change 2]
+
+**Overview Update**:
+- 동작 개요: [updated behavior summary]
+- 설계 의도: [updated rationale if relevant]
 
 **Risks / Invariants**:
 - [notes]
@@ -264,6 +273,7 @@ Part 1 should reflect the exploration-first spec philosophy:
 | New user-visible capability | `Goal > Key Features` |
 | Boundary or integration scope change | `Architecture Overview > System Boundary` |
 | Runtime/data/event flow change | `Architecture Overview > Runtime Map` |
+| Component behavior/design intent change | `Component Details > Overview` |
 | Component ownership/contract change | `Component Details` |
 | Config/dependency/runtime change | `Environment & Dependencies` |
 | Operational or debugging entry point | `Usage Examples > Common Change Paths` or `Common Operations` |
@@ -276,7 +286,7 @@ Part 1 should reflect the exploration-first spec philosophy:
 # Part 2: Implementation Plan
 
 ## Overview
-[summary]
+[summary including user-facing flow and design intent when useful]
 
 ## Scope
 

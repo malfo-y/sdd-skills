@@ -11,7 +11,7 @@
 
 ## Executive Summary
 
-메인 스펙은 프로젝트 목적과 컴포넌트 구성을 대체로 설명하지만, `Runtime Map`과 `Common Change Paths`가 현재 구현을 충분히 따라가지 못한다. 특히 인증 흐름과 백그라운드 작업 경로가 코드 기준으로 확장됐는데 문서에는 반영이 부족하다.
+메인 스펙은 프로젝트 목적과 컴포넌트 구성을 대체로 설명하지만, `Runtime Map`, `Component Overview`, `Common Change Paths`가 현재 구현을 충분히 따라가지 못한다. 특히 인증 흐름과 백그라운드 작업 경로가 코드 기준으로 확장됐는데 문서에는 반영이 부족하다.
 
 ## Findings by Severity
 
@@ -34,6 +34,11 @@
    - Impact: 권한 변경 시 관련 테스트/미들웨어를 놓치기 쉽다
    - Recommendation: 정책 변경용 change path를 추가한다
 
+3. `auth.md`에 인증 미들웨어의 `Overview`가 없다
+   - Evidence: `_sdd/spec/auth.md:1`, `src/api/middleware/auth.ts:1`
+   - Impact: 요청이 어떻게 보호되고 왜 middleware-first 구조를 택했는지 파악하기 어렵다
+   - Recommendation: Bearer token 추출 -> 검증 -> 사용자 컨텍스트 주입 흐름과 설계 의도를 `Overview`에 추가한다
+
 ### Low
 
 1. `Open Questions`에 이미 해결된 Redis queue naming 이슈가 남아 있다
@@ -46,6 +51,11 @@
 - `Repository Map`은 있으나 jobs 관련 경로가 일부 누락되어 있다.
 - `Runtime Map`은 API 요청 중심이라 background job 흐름이 약하다.
 - `Environment & Dependencies` 상세가 짧지만, 현재 범위에서는 optional 누락으로 보지 않는다.
+
+## Explanation Quality Notes
+
+- 메인 `Runtime Map`은 화살표 흐름은 있으나 인증/worker 흐름의 사용자 관점 설명이 부족하다.
+- `auth.md`가 책임/경로/계약은 보여주지만, middleware-first 설계 의도를 설명하는 `Overview`가 없다.
 
 ## Changeability Notes
 
@@ -64,7 +74,7 @@
 
 ## Suggested Next Actions
 
-1. `/spec-update-done`으로 `Runtime Map`과 `Component Index`를 갱신한다.
+1. `/spec-update-done`으로 `Runtime Map`, `Component Index`, `auth.md > Overview`를 갱신한다.
 2. 권한 정책과 worker retry 변경 경로를 `Common Change Paths`에 추가한다.
 3. stale `Open Questions`를 정리한다.
 

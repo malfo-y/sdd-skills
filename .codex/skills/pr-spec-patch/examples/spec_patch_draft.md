@@ -23,6 +23,7 @@
 | `Goal` | 예 | 인증 기능이 핵심 기능으로 승격됨 |
 | `Architecture Overview > Runtime Map` | 예 | 로그인/토큰 갱신 플로우가 추가됨 |
 | `Component Details > Component Index` | 예 | Auth 관련 컴포넌트와 경로가 늘어남 |
+| `Component Details > Overview` | 예 | Auth 서비스와 middleware 분리 이유, 세션/토큰 책임 설명이 바뀜 |
 | `Usage Examples > Common Change Paths` | 예 | 인증 정책 변경 시 시작 지점이 생김 |
 | `Open Questions` | 예 | 토큰 만료 정책과 CORS 범위 확정 필요 |
 
@@ -94,6 +95,27 @@
   - `src/utils/password.py:8`
 
 ### Item 4
+- **Change Type**: Component Update
+- **Spec Update Classification**: `MUST update`
+- **Target Section**: `Component Details > Overview`
+- **Target File**: `_sdd/spec/auth.md`
+- **Affected Components**: `Auth API`, `Auth Middleware`, `Session Service`
+- **Related Paths / Symbols**:
+  - `src/routes/auth.py`
+  - `src/middleware/auth.py`
+  - `src/services/session_service.py`
+- **Current State**: 컴포넌트 설명이 경로 중심이라, 세션 수명 관리와 middleware/service 분리 의도가 충분히 드러나지 않는다.
+- **Proposed Spec Update**: 로그인/토큰 검증/세션 갱신 책임이 어떻게 분리되는지와 why-context를 `Overview`에 추가한다.
+- **Risks / Invariants**:
+  - middleware는 인증 컨텍스트 주입까지만 담당하고 비즈니스 정책은 service에 둔다는 경계를 문서화해야 함
+- **Test / Observability Notes**:
+  - `tests/test_auth_routes.py`
+  - `tests/test_refresh_token.py`
+- **PR Evidence**:
+  - `src/middleware/auth.py:12`
+  - `src/services/session_service.py:89`
+
+### Item 5
 - **Change Type**: Change Guide Update
 - **Spec Update Classification**: `CONSIDER`
 - **Target Section**: `Usage Examples > Common Change Paths`
@@ -112,7 +134,7 @@
   - `src/routes/auth.py:25`
   - `src/middleware/auth.py:12`
 
-### Item 5
+### Item 6
 - **Change Type**: Refactor
 - **Spec Update Classification**: `NO update`
 - **Target Section**: `Target Section TBD`
@@ -133,6 +155,7 @@
 
 1. 토큰 만료 시간과 갱신 정책을 메인 스펙에 둘지 `auth.md`에만 둘지 결정 필요
 2. CORS 설정 변경도 `Environment & Dependencies`에 반영해야 하는지 확인 필요
+3. `Auth Middleware`의 책임 경계를 메인 스펙 요약에 둘지 `auth.md` `Overview`에만 둘지 결정 필요
 
 ## Decision-Log Candidates
 

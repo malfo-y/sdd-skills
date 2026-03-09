@@ -1,7 +1,7 @@
 ---
 name: spec-update-done
 description: This skill should be used when the user asks to "update spec from code", "sync spec with implementation", "apply implementation changes to spec", "reflect completed work in spec", "refresh spec after implementation", "implementation done sync", or mentions spec document maintenance tied to completed code changes.
-version: 1.2.0
+version: 1.3.0
 ---
 
 # Spec Sync and Update
@@ -38,7 +38,7 @@ spec -> feature-draft -> implementation -> spec-update-done (this)
 5. **DECISION_LOG.md 최소화**: 중요한 방향/가정 변경만 `DECISION_LOG.md`에 기록한다.
 6. **앵커 섹션 보존**: 가능하면 `Goal`, `Architecture Overview`, `Component Details`, `Environment & Dependencies`, `Identified Issues & Improvements`, `Usage Examples`, `Open Questions` 구조를 유지한다.
 7. **실제 구현 우선**: 계획보다 코드와 검증 가능한 구현 상태를 우선한다.
-8. **탐색성 유지**: 동기화 결과는 `Repository Map`, `Runtime Map`, `Component Index`, `Common Change Paths`를 더 정확하게 만들어야 한다.
+8. **탐색성 유지**: 동기화 결과는 `Repository Map`, `Runtime Map`, `Component Index`, `Component Overview`, `Common Change Paths`를 더 정확하게 만들어야 한다.
 9. **추정은 분리**: 구현만으로 확정할 수 없는 사항은 `Open Questions`에 남긴다.
 10. **메타데이터 강제 금지**: version/date/changelog는 기존 문서가 이미 사용 중일 때만 갱신한다.
 11. **스펙 갱신 기준 우선**: 편집 전에 이번 구현이 `MUST update`, `NO update`, `CONSIDER` 중 어디에 속하는지 먼저 판정한다.
@@ -126,6 +126,8 @@ Look for drift in these areas:
 - planned features now implemented
 - changed flow, boundary, or ownership
 - changed component contracts
+- stale or missing component `Overview`
+- design intent changed but the spec still reflects the old why-context
 - new or resolved invariants
 
 #### Environment Drift
@@ -185,6 +187,7 @@ Present findings before edits.
 ### Behavior / Contract Updates
 - `실시간 알림` 기능 구현 완료
 - NotificationService 계약 구체화 필요
+- NotificationService `Overview`가 실제 동작/설계 의도를 반영해야 함
 
 ### Risks / Invariants
 - 알림 실패와 파이프라인 실패 상태 분리 유지
@@ -202,7 +205,7 @@ Update the spec to reflect actual implementation.
 Apply changes by section:
 - `Goal`: implemented user-visible capabilities and scope changes
 - `Architecture Overview`: actual system boundary, runtime map, repository map, invariants
-- `Component Details`: actual ownership, paths, symbols, contracts
+- `Component Details`: actual ownership, paths, symbols, contracts, overview
 - `Environment & Dependencies`: actual runtime/config/setup
 - `Identified Issues & Improvements`: resolved issues removed/updated, new real issues added
 - `Usage Examples`: run/test commands and common change/debug paths refreshed
@@ -226,6 +229,7 @@ Verify:
 - documented paths exist
 - `Repository Map` and `Component Index` reflect real code locations
 - `Runtime Map` still matches actual behavior
+- component `Overview` still matches actual behavior and design intent
 - `Common Change Paths` point to real maintenance entry points
 - resolved `Open Questions` are removed or updated
 - preserved content was not accidentally regressed

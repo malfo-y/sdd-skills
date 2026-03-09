@@ -11,8 +11,9 @@ Use this only when the rewrite is large enough that the normal completion summar
 ## What Became Easier to Understand
 
 - 메인 문서 첫 화면에서 프로젝트 목적, 시스템 경계, 핵심 흐름이 바로 보이도록 정리했다.
-- 분산되어 있던 아키텍처 설명을 `Repository Map`과 `Runtime Map`으로 재구성했다.
+- 분산되어 있던 아키텍처 설명을 `Repository Map`과 `Runtime Map`으로 재구성하고, 사용자 관점 흐름 설명을 추가했다.
 - 핵심 책임 단위를 `Component Index`로 요약해 전체 구조를 먼저 볼 수 있게 했다.
+- 주요 컴포넌트마다 `Overview`를 추가해 동작 개요와 설계 의도를 바로 읽을 수 있게 했다.
 
 ## What Became Easier to Change
 
@@ -35,6 +36,7 @@ _sdd/spec/
 - `Goal` 섹션을 `Project Snapshot`, `Key Features`, `Non-Goals` 중심으로 재구성
 - `Architecture Overview`에 `System Boundary`, `Repository Map`, `Runtime Map` 추가
 - `Component Details`에 `Component Index` 추가
+- 핵심 컴포넌트에 `Overview` 추가
 - `Usage Examples`에 `Common Change Paths` 추가
 - `Open Questions`로 미확인 사항 분리
 
@@ -59,5 +61,6 @@ _sdd/spec/
 - 메인 문서 길이: 1180줄 -> 290줄
 - Component Index: 추가됨
 - Repository Map: 추가됨
+- Component Overview: 추가됨
 - Common Change Paths: 추가됨
 - broken links: 0

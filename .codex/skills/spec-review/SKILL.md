@@ -1,7 +1,7 @@
 ---
 name: spec-review
 description: This skill should be used when the user asks to "review spec", "spec drift check", "verify spec accuracy", "audit spec quality", "review spec against code", "refresh spec review", "스펙 리뷰", "스펙 검토", "스펙 드리프트 점검", or wants a review-only analysis of spec quality and code-to-spec alignment without directly editing spec files.
-version: 1.2.0
+version: 1.3.0
 ---
 
 # Spec Review
@@ -11,6 +11,7 @@ version: 1.2.0
 이 스킬은 스펙을 수정하지 않는다. 대신 아래를 판단한다.
 
 - 이 스펙이 처음 보는 사람에게 5분 entry point 역할을 하는가
+- 이 스펙이 중요한 동작 개요와 설계 의도를 사람에게 설명하는가
 - 기능 변경 시 어디부터 봐야 하는지 알려주는가
 - 실제 코드 경로와 컴포넌트 책임이 연결되어 있는가
 - 코드와 문서가 drift 되었는가
@@ -41,20 +42,26 @@ version: 1.2.0
 - `Component Index`가 있는가
 - 실제 경로와 심볼이 연결되는가
 
-### 3. Changeability
+### 3. Explanation Quality
+
+- `Runtime Map`이 다이어그램만이 아니라 사용자/운영자 관점 흐름도 설명하는가
+- 주요 컴포넌트에 `Overview`가 있어 동작 개요와 설계 의도를 보여주는가
+- 설명이 코드 복사본이 아니라 why-context를 압축해 전달하는가
+
+### 4. Changeability
 
 - `Common Change Paths` 또는 동등 정보가 있는가
 - 변경 시 같이 봐야 할 테스트/로그/디버깅 포인트가 보이는가
 - 컴포넌트 책임과 비책임이 구분되는가
 
-### 4. Drift
+### 5. Drift
 
 - 구현과 문서의 기능 설명이 맞는가
 - 새 컴포넌트/경로/흐름이 문서에 빠져 있지 않은가
 - 오래된 `Open Questions`가 그대로 남아 있지 않은가
 - 결정 맥락이 달라졌는데 `DECISION_LOG.md` 제안이 필요한가
 
-### 5. Decision & Invariant Memory
+### 6. Decision & Invariant Memory
 
 - Cross-Cutting Invariants 또는 동등한 불변 조건이 보이는가
 - 비자명한 설계 결정이 스펙 본문이나 `DECISION_LOG.md`에 기록되어 있는가
@@ -90,12 +97,13 @@ version: 1.2.0
 - `Repository Map`
 - `Runtime Map`
 - `Component Index`
+- `Component Overview`
 - `Common Change Paths`
 - `Open Questions`
 
 판정 규칙:
 
-- `Project Snapshot`, `System Boundary`, `Repository Map`, `Runtime Map`, `Component Index`, `Open Questions`는 핵심 축으로 본다.
+- `Project Snapshot`, `System Boundary`, `Repository Map`, `Runtime Map`, `Component Index`, `Component Overview`, `Open Questions`는 핵심 축으로 본다.
 - `Environment & Dependencies`, `Usage Examples`, `Identified Issues & Improvements`는 프로젝트 규모와 도메인에 따라 optional일 수 있다.
 - optional 섹션이 비어 있거나 없더라도, 메인 탐색성과 변경 지원이 충분하면 finding으로 올리지 않는다.
 
@@ -116,6 +124,7 @@ version: 1.2.0
 - 새 컴포넌트가 구현에만 존재
 - 런타임 흐름이 바뀌었는데 `Runtime Map`이 낡음
 - 소유 경로가 달라졌는데 `Component Index`가 낡음
+- 컴포넌트 동작이나 설계 의도가 바뀌었는데 `Overview`가 낡음
 - 운영/디버깅 경로가 바뀌었는데 `Common Change Paths`가 없음
 - 이미 해결된 질문이 `Open Questions`에 남아 있거나, 새 질문이 문서에 없음
 
@@ -133,6 +142,7 @@ version: 1.2.0
 |-----------|-------|
 | Entry Point Quality | "이 저장소는 무엇을 하는가?" |
 | Navigation Quality | "기능 X는 어디에 있는가?" |
+| Explanation Quality | "컴포넌트 X는 어떻게 동작하고 왜 이렇게 나뉘어 있는가?" |
 | Changeability | "변경 Y는 어디서 시작해야 하는가?" |
 | Drift | "스펙과 코드가 현재도 일치하는가?" |
 | Decision & Invariant Memory | "왜 Z를 선택했고 무엇을 깨면 안 되는가?" |
@@ -151,12 +161,13 @@ version: 1.2.0
 2. Findings by Severity
 3. Dimension Verdicts (`PASS` / `WEAK` / `FAIL` + 근거)
 4. Entry Point / Navigation Notes
-5. Changeability Notes
-6. Spec-to-Code Drift Notes
-7. Open Questions
-8. Suggested Next Actions
-9. `DECISION_LOG.md` proposal (필요 시)
-10. LLM Efficiency Notes
+5. Explanation Quality Notes
+6. Changeability Notes
+7. Spec-to-Code Drift Notes
+8. Open Questions
+9. Suggested Next Actions
+10. `DECISION_LOG.md` proposal (필요 시)
+11. LLM Efficiency Notes
 
 `SYNC_REQUIRED`인 경우에는 바로 적용 가능한 spec update checklist를 함께 제시한다.
 

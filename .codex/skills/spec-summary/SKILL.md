@@ -1,7 +1,7 @@
 ---
 name: spec-summary
 description: This skill should be used when the user asks to "summarize spec", "spec summary", "show spec overview", "스펙 요약", "스펙 개요", "show spec status", "스펙 현황", "project overview", "프로젝트 개요", "what's the current state", "현재 상태는", or wants a human-readable summary of the current specification for quick understanding.
-version: 1.5.0
+version: 1.6.0
 ---
 
 # spec-summary: Exploration-First Spec Summary
@@ -28,7 +28,7 @@ version: 1.5.0
 1. `_sdd/spec/*.md`는 읽기 전용이다. 이 스킬이 수정하는 스펙 파일은 `SUMMARY.md`뿐이다.
 2. `README.md`는 사용자가 명시적으로 요청한 경우에만 갱신한다.
 3. 기존 `SUMMARY.md`가 있으면 `_sdd/spec/prev/PREV_SUMMARY_<timestamp>.md`로 백업 후 덮어쓴다.
-4. 요약은 `index-first`, `path-first`, `change-first` 원칙을 따라야 한다.
+4. 요약은 `index-first`, `path-first`, `change-first` 원칙을 따르되, 핵심 동작 개요와 설계 의도도 짧게 남겨야 한다.
 5. 정보가 불충분하면 추정으로 단정하지 말고 `Open Questions`에 남긴다.
 6. 구형 분할 규칙(`*_API.md`, `*_COMPONENTS.md`)에 의존하지 말고, 메인 스펙의 링크와 책임 기반 파일 구조를 우선 따른다.
 7. `MUST` 섹션만 있는 작은 스펙도 정상으로 간주한다. 없는 optional 섹션을 억지로 채워 넣지 않는다.
@@ -56,12 +56,12 @@ version: 1.5.0
 
 1. `Goal`에서 `Project Snapshot`, `Key Features`, `Non-Goals`
 2. `Architecture Overview`에서 `System Boundary`, `Repository Map`, `Runtime Map`
-3. `Component Details`에서 `Component Index`
+3. `Component Details`에서 `Component Index`와 `Overview` 핵심
 4. `Usage Examples` 또는 동등 섹션에서 `Common Change Paths`
 5. 진행 상태가 있다면 간단한 status snapshot
 6. `Identified Issues & Improvements`와 `Open Questions`
 
-좋은 요약은 "무엇을 하는가"와 함께 "어디를 보면 되는가"를 보여준다.
+좋은 요약은 "무엇을 하는가", "어떻게 동작하는가", "어디를 보면 되는가"를 함께 보여준다.
 선택 섹션이 없는 경우, 빈 헤더를 만들지 않고 남은 핵심 구조만 요약해도 충분하다.
 
 ## Process
@@ -85,6 +85,7 @@ version: 1.5.0
 - 시스템 경계와 외부 의존
 - 중요한 디렉터리/파일 지도
 - 주요 런타임 흐름
+- 핵심 컴포넌트의 동작 개요/설계 의도
 - 핵심 컴포넌트와 실제 경로
 - 자주 하는 변경의 시작 지점
 - 현재 상태를 보여주는 marker/implementation 정보
@@ -98,14 +99,15 @@ version: 1.5.0
 2. `System Boundary`
 3. `Repository Map`
 4. `Runtime Map`
-5. `Component Index`
-6. `Current Status`
-7. `Common Change Paths`
-8. `Risks / Improvements`
-9. `Open Questions`
-10. `Quick Reference`
+5. `Component Overview`
+6. `Component Index`
+7. `Current Status`
+8. `Common Change Paths`
+9. `Risks / Improvements`
+10. `Open Questions`
+11. `Quick Reference`
 
-자세한 narrative보다 탐색 가능한 정보와 실제 경로를 우선한다.
+자세한 narrative보다 탐색 가능한 정보와 실제 경로를 우선하되, 핵심 동작 설명이 사라질 정도로 압축하지 않는다.
 없는 optional 섹션은 요약에서 생략한다.
 
 ### Step 4: Optional README sync
@@ -131,6 +133,7 @@ version: 1.5.0
 
 - 실제 파일 경로
 - 주요 컴포넌트 이름과 책임
+- 주요 컴포넌트의 짧은 동작 개요 또는 설계 의도
 - `Runtime Map` 요약
 - `Common Change Paths`
 - 현재 리스크 또는 개선 포인트

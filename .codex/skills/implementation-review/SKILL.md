@@ -1,14 +1,14 @@
 ---
 name: implementation-review
 description: Use this skill to review implementation progress against the plan, verify acceptance criteria, identify issues, and determine next steps. Triggered by "review implementation", "check progress", "verify implementation", "what's done", "implementation status", or "audit the code".
-version: 1.2.0
+version: 1.3.0
 ---
 
 # Implementation Review
 
 구현 계획 대비 현재 구현 상태를 검증하고, 다음 작업과 필요한 스펙 동기화 포인트를 정리한다.
 
-이 스킬은 구현 리뷰를 하되, 결과를 탐색형 스펙과 연결해야 한다. 즉 "무엇이 구현되었는가"뿐 아니라 "어떤 스펙 섹션이 후속 업데이트 대상인가"까지 판단한다.
+이 스킬은 구현 리뷰를 하되, 결과를 탐색형 스펙과 연결해야 한다. 즉 "무엇이 구현되었는가"뿐 아니라 "어떤 스펙 섹션이 후속 업데이트 대상인가", "컴포넌트가 어떻게 동작하고 왜 그렇게 구성됐는지 설명이 달라졌는가"까지 판단한다.
 
 ## Hard Rules
 
@@ -49,6 +49,7 @@ version: 1.2.0
 - `Goal`
 - `Architecture Overview > Runtime Map`
 - `Component Details > Component Index`
+- `Component Details > Overview`
 - `Usage Examples > Common Change Paths`
 - `Environment & Dependencies`
 - `Open Questions`
@@ -94,14 +95,15 @@ version: 1.2.0
 구현 결과를 보고 아래를 묻는다.
 
 - 새 기능이 `Goal`에 반영되어야 하는가
-- 새 흐름이 `Runtime Map`에 반영되어야 하는가
+- 새 흐름과 사용자/운영자 관점 설명이 `Runtime Map`에 반영되어야 하는가
 - 새 컴포넌트/경로가 `Component Index`에 반영되어야 하는가
+- 컴포넌트 동작 개요나 설계 의도가 `Component Details > Overview`에 반영되어야 하는가
 - 새 운영/디버깅 시작점이 `Common Change Paths`에 반영되어야 하는가
 - 문서로 아직 확정하지 못한 항목이 `Open Questions`에 남아야 하는가
 
 각 follow-up은 아래로 분류한다.
 
-- `MUST update`: 구현 완료 후 문서 sync 없이는 탐색성/계약 이해가 깨짐
+- `MUST update`: 구현 완료 후 문서 sync 없이는 탐색성, 계약 이해, 또는 why-context 이해가 깨짐
 - `CONSIDER`: 있으면 좋은 보강이나 blocker는 아님
 - `NO update`: 내부 구현 차이만 있고 문서 수준 변화 없음
 

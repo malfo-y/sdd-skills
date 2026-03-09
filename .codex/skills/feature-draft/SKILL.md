@@ -1,7 +1,7 @@
 ---
 name: feature-draft
 description: This skill should be used when the user asks to "feature draft", "draft feature", "feature plan", "plan feature", "draft and plan", "feature draft parallel", "parallel feature draft", "병렬 기능 초안", "parallel feature plan", or wants to combine requirements gathering, spec patch drafting, and implementation planning with Target Files for parallel execution support.
-version: 1.2.0
+version: 1.3.0
 ---
 
 # Feature Draft - Exploration-First Spec Patch + Implementation Plan
@@ -31,8 +31,8 @@ spec -> feature-draft (this) -> implementation -> spec-update-done
 
 The spec philosophy used here:
 - `Goal` explains user-visible value and scope
-- `Architecture Overview` shows boundaries, repository/runtime maps, and invariants
-- `Component Details` shows component ownership, paths, and contracts
+- `Architecture Overview` shows boundaries, repository/runtime maps, invariants, and user-facing flow context
+- `Component Details` shows component ownership, paths, contracts, and `Overview` (동작 개요 + 설계 의도)
 - `Usage Examples` includes common operations and common change paths
 - `Open Questions` makes uncertainty explicit
 
@@ -52,7 +52,7 @@ Part 1 must preserve that shape. Do not generate patch drafts that depend on old
 3. **Write in Korean**: Output file content must be written in Korean.
 4. **spec-update-todo compatible**: Part 1 must follow the `Spec Update Input` format defined in `references/output-format.md`.
 5. **Target Files required**: Every task in Part 2 must include a `**Target Files**` field.
-6. **Anchor-aware drafting**: Part 1 should target stable spec anchors such as `Goal`, `Architecture Overview`, `Component Details`, `Environment & Dependencies`, `Identified Issues & Improvements`, `Usage Examples`, `Open Questions`.
+6. **Anchor-aware drafting**: Part 1 should target stable spec anchors such as `Goal`, `Architecture Overview`, `Component Details`, `Environment & Dependencies`, `Identified Issues & Improvements`, `Usage Examples`, `Open Questions`, and component-level `Overview` when behavior/intent changes matter.
 7. **Change-oriented output**: Part 1 must help later readers understand what changes, where it changes, and what risks or invariants matter.
 8. **Actual paths first**: Use real or strongly inferred components/paths whenever possible.
 9. **Unknowns are explicit**: Low-confidence assumptions belong in `Open Questions`.
@@ -119,7 +119,7 @@ Read the existing spec as a map, not just as prose.
 Prioritize extracting:
 - `Goal > Project Snapshot / Key Features / Non-Goals`
 - `Architecture Overview > System Boundary / Repository Map / Runtime Map`
-- `Component Details > Component Index`
+- `Component Details > Component Index / Overview`
 - `Usage Examples > Common Change Paths`
 - `Open Questions`
 
@@ -185,6 +185,7 @@ Classify the planned change and map it to spec impact.
 | User-visible feature | `Goal > Key Features` |
 | Scope/boundary change | `Architecture Overview > System Boundary` |
 | Flow/integration change | `Architecture Overview > Runtime Map` |
+| Component behavior/design intent change | `Component Details > Overview` |
 | New or changed component | `Component Details` or component spec file |
 | Config/dependency/runtime change | `Environment & Dependencies` |
 | Operational/debug path change | `Usage Examples > Common Change Paths` or `Common Operations` |
@@ -210,6 +211,7 @@ Minimum expectations:
 - state `Spec Update Classification`
 - every item includes `**Target Section**`
 - every meaningful item states affected components or paths
+- behavior/design intent changes identify whether `Component Details > Overview` should be added or updated
 - behavior changes include acceptance criteria
 - risky changes include `Risks / Invariants`
 - decision-log-worthy rationale stays in `Notes > Decision-Log Candidates`

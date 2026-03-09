@@ -138,6 +138,10 @@ If the correct value is `NO update`, the input may omit all change sections and 
 - 알림 전송
 - 메시지 포맷팅
 
+**Overview**:
+- 동작 개요: 파이프라인 이벤트를 채널 메시지로 변환해 전송한다.
+- 설계 의도: 알림 실패를 메인 파이프라인 상태와 분리한다.
+
 **Interfaces / Contracts**:
 - Inputs: 이벤트 타입, 메시지 데이터
 - Outputs: 전송 결과

@@ -50,6 +50,11 @@ section that materially helps maintenance.
 Client -> FastAPI route -> URLService -> URLRepository -> SQLite
 ```
 
+#### User-Facing Scenario
+- 사용자가 긴 URL을 제출하면 `src/routes/`가 입력을 검증한 뒤 `URLService.create_short_url()`로 전달한다.
+- 서비스는 중복/충돌 규칙을 적용하고 저장소에 단축 코드를 기록한다.
+- 이후 사용자가 짧은 코드를 열면 라우터 -> 서비스 -> 저장소 순으로 원본 URL을 조회하고 클릭 수를 갱신한다.
+
 #### Secondary / Batch Flows
 - 조회 시 Redis 캐시가 있으면 먼저 확인하고, 없으면 DB 조회 후 캐시를 갱신한다.
 
@@ -68,6 +73,15 @@ Client -> FastAPI route -> URLService -> URLRepository -> SQLite
 - 긴 URL을 받아 단축 코드를 생성한다.
 - 짧은 코드를 받아 원본 URL을 조회한다.
 - 클릭 수 업데이트를 조정한다.
+
+#### Overview
+**동작 개요**
+- `URLService.create_short_url()`는 입력 URL을 정규화하고 충돌 가능성을 확인한 뒤 저장소에 새 단축 코드를 기록한다.
+- `URLService.resolve_short_code()`는 캐시/저장소를 순서대로 조회해 원본 URL을 반환하고, 필요 시 클릭 수 갱신을 트리거한다.
+
+**설계 의도**
+- 라우터와 저장 로직 사이에 서비스 계층을 두어 생성 규칙, 캐시 정책, 클릭 수 갱신 규칙을 한 곳에서 유지한다.
+- 저장소 접근을 분리해 캐시/DB 전략이 바뀌어도 라우트 계약을 흔들지 않게 한다.
 
 #### Owned Paths
 - `src/services/url_service.py`

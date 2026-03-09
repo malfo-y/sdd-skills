@@ -49,6 +49,15 @@
 4. 저장은 `src/infra/db/taskRepository.ts`가 담당한다.
 5. 후속 알림은 `src/infra/notifications/`로 전달된다.
 
+> 사용자 관점에서는 "작업 생성 -> API 처리 -> 도메인 규칙 적용 -> 저장 -> 알림" 순으로 이해하면 충분하다.
+
+## Component Overview
+
+- **Task Domain**: 상태 전이와 의존 관계 검증을 중앙에서 수행한다.
+  - 설계 의도: UI/API에서 규칙 중복을 막고 변경 지점을 한 곳으로 모으기 위함이다.
+- **Notifications**: 도메인 이벤트를 메일/큐 처리로 변환한다.
+  - 설계 의도: 태스크 로직과 외부 전송 정책을 분리해 장애 전파 범위를 줄인다.
+
 ## Component Index
 
 | 컴포넌트 | 책임 | 주요 경로 | 관련 스펙 |

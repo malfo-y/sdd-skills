@@ -1,7 +1,7 @@
 ---
 name: pr-spec-patch
 description: This skill should be used when the user asks to "create spec patch from PR", "PR spec patch", "compare PR with spec", "PR to spec", "PR 스펙 패치", "PR 리뷰 준비", "스펙 패치 생성", "PR 변경사항 스펙 반영", or wants to generate a spec patch document by comparing a pull request against the current specification.
-version: 1.2.0
+version: 1.3.0
 ---
 
 # PR Spec Patch
@@ -13,6 +13,7 @@ PR 변경사항을 탐색형 스펙 기준으로 해석해 `_sdd/pr/spec_patch_d
 - 어떤 섹션이 바뀌어야 하는가
 - 어떤 컴포넌트와 경로가 영향받는가
 - `Repository Map`, `Runtime Map`, `Component Index`, `Common Change Paths`가 갱신되어야 하는가
+- `Component Details > Overview` 또는 why-context 설명이 갱신되어야 하는가
 - 구현은 되었지만 아직 문서화되지 않은 리스크나 미확인 사항이 있는가
 
 ## Hard Rules
@@ -44,6 +45,7 @@ PR 변경을 아래 축으로 먼저 분류한다.
 | 시스템 경계/구조 변화 | `Architecture Overview` |
 | 경로/디렉터리/런타임 흐름 변화 | `Repository Map`, `Runtime Map` |
 | 컴포넌트 책임/소유 경로 변화 | `Component Details`, 컴포넌트 스펙 |
+| 컴포넌트 동작 방식/설계 의도 변화 | `Component Details > Overview` |
 | 운영/디버깅/테스트 시작점 변화 | `Usage Examples` > `Common Change Paths` |
 | 설정/필수 서비스 변화 | `Environment & Dependencies` |
 | 미확정 설계/후속 검토 필요 | `Open Questions` |
@@ -78,6 +80,7 @@ PR 변경을 아래 축으로 먼저 분류한다.
 - `Repository Map`
 - `Runtime Map`
 - `Component Index`
+- `Component Overview`
 - `Common Change Paths`
 - `Open Questions`
 
@@ -111,8 +114,9 @@ PR 변경을 아래 축으로 먼저 분류한다.
 특히 다음은 별도로 확인한다.
 
 - 새 디렉터리/파일/엔트리포인트가 생겼는가
-- 기존 흐름에 새 단계가 추가되었는가
+- 기존 흐름에 새 단계나 사용자 관점 설명 변화가 추가되었는가
 - 컴포넌트 책임 경계가 달라졌는가
+- 컴포넌트가 어떻게 동작하는지 또는 왜 이런 구조를 택했는지 설명이 달라졌는가
 - 디버깅/운영 경로가 달라졌는가
 - 기존 `Open Questions`를 해소하거나 새 질문을 만드는가
 
@@ -149,7 +153,7 @@ PR 변경을 아래 축으로 먼저 분류한다.
 좋은 패치 초안은 아래를 만족한다.
 
 - 섹션명만이 아니라 실제 파일/컴포넌트까지 연결된다.
-- `Runtime Map`과 `Component Index` 반영 필요 여부가 드러난다.
+- `Runtime Map`, `Component Index`, `Component Details > Overview` 반영 필요 여부가 드러난다.
 - `Common Change Paths` 갱신 필요 여부가 보인다.
 - 구현은 되었지만 스펙상 불명확한 부분이 `Open Questions`로 분리된다.
 - evidence 없는 항목은 명시적으로 low-confidence 처리한다.

@@ -17,7 +17,9 @@ Checklist to reduce omissions when turning an existing spec into an exploration-
 - [ ] Is system boundary visible?
 - [ ] Is there a repository map?
 - [ ] Is there a runtime map?
+- [ ] Does the runtime map explain the user-facing/operator-facing flow, not only arrows?
 - [ ] Is there a component index?
+- [ ] Do major components include an `Overview` for behavior and design intent?
 - [ ] Are major components tied to real paths or symbols?
 - [ ] Are change/debug entry points visible?
 - [ ] Are invariants and risks visible?
@@ -30,6 +32,12 @@ Keep these in the main spec:
 - Architecture Overview -> System Boundary / Repository Map / Runtime Map
 - Component Details -> Component Index + brief component summaries
 - Open Questions
+
+Preserve these in component detail:
+- Responsibility
+- Overview (동작 개요 + 설계 의도)
+- Owned Paths / Key Symbols / Contracts
+- Change Recipes
 
 Add these only when materially relevant:
 - Architecture Overview -> Technology Stack / Cross-Cutting Invariants
@@ -70,7 +78,9 @@ Move out of the main flow only when necessary:
 - [ ] The main spec works as a 5-minute entry point
 - [ ] Repository Map exists
 - [ ] Runtime Map exists
+- [ ] Runtime Map includes a short user-facing scenario
 - [ ] Component Index exists
+- [ ] Important components include `Overview`
 - [ ] Common Change Paths exists (or equivalent change guide)
 - [ ] Important areas include real paths or symbols
 - [ ] Tests/logs/debug entry points are discoverable

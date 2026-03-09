@@ -25,12 +25,14 @@ This is an example sync report before applying spec updates.
 2. `Architecture Overview > Runtime Map`에 배치 종료 이벤트 -> NotificationService 흐름이 없음
 3. `Component Details > Component Index`에 `NotificationService`가 없음
 4. `Usage Examples > Common Change Paths`에 알림 기능 수정 시작점이 없음
+5. `Component Details > Overview`에 NotificationService의 실패 격리 의도가 반영되지 않음
 
 ## Behavior / Contract Updates
 
 1. `실시간 알림` 기능이 계획 상태가 아니라 구현 완료 상태임
 2. NotificationService는 실제로 Slack/Discord 채널 비활성화 fallback을 지원함
 3. 알림 실패가 파이프라인 종료 상태를 바꾸지 않는 invariant가 코드로 확인됨
+4. NotificationService 설명은 "웹훅 전송"까지만 있고, 실패 격리 설계 의도가 빠져 있음
 
 ## Environment Updates
 

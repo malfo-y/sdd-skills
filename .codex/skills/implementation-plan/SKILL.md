@@ -1,7 +1,7 @@
 ---
 name: implementation-plan
 description: This skill should be used when the user asks to "create an implementation plan", "plan the implementation", "break down this spec", "create a development roadmap", "analyze requirements and create tasks", "create a parallel implementation plan", "plan parallel implementation", "병렬 구현 계획", "create parallel development roadmap", or wants a structured implementation plan with Target Files for parallel execution support.
-version: 1.1.0
+version: 1.2.0
 ---
 
 # Implementation Plan Creation (Spec-Aware, Parallel-Ready)
@@ -15,7 +15,7 @@ Create structured, actionable implementation plans from user specifications — 
 ## Hard Rule: Spec Documents Are Read-Only
 
 - This skill may **read** the spec as input, but it **MUST NOT** modify any files under `_sdd/spec/`.
-- Read the spec as a navigation map first: `Goal`, `Architecture Overview`, `Component Details`, `Open Questions`를 우선 추출한다.
+- Read the spec as a navigation map first: `Goal`, `Architecture Overview` (`Repository Map`, `Runtime Map`), `Component Details` (`Component Index`, `Overview`), `Open Questions`를 우선 추출한다.
 - If the plan reveals missing or outdated spec information, classify it as:
   - `MUST update`: planning depends on missing behavior, boundary, flow, ownership, or environment context
   - `CONSIDER`: planning can proceed, but later spec sync will likely be needed
@@ -59,8 +59,8 @@ After processing `user_input.md`, rename it to `_processed_user_input.md` to mar
 Read and analyze the provided specification as an exploration-first map:
 
 - `Goal` → `Project Snapshot`, `Key Features`, `Non-Goals`
-- `Architecture Overview` → `System Boundary`, `Repository Map`, `Runtime Map`
-- `Component Details` → `Component Index`
+- `Architecture Overview` → `System Boundary`, `Repository Map`, `Runtime Map` (사용자/운영자 관점 서술 포함 시 우선)
+- `Component Details` → `Component Index`, `Overview`
 - `Usage Examples` → `Common Change Paths` (있으면)
 - `Open Questions`
 
@@ -68,7 +68,7 @@ Then derive:
 - **Core Requirements**: What must the system do?
 - **Technical Constraints**: Languages, frameworks, integrations, performance requirements
 - **Scope Boundaries**: What is explicitly in/out of scope?
-- **Spec Gaps**: What information is missing from the spec but needed for planning?
+- **Spec Gaps**: What information is missing from the spec but needed for planning? 특히 런타임 흐름 설명, 컴포넌트 동작 개요, 설계 의도 누락을 확인한다.
 - **Unknowns/Risks**: What needs clarification or research?
 
 If the specification is unclear or incomplete:
@@ -108,7 +108,7 @@ ELSE → 미파악 항목 추가 분석 후 재평가
 
 Break the system into logical components:
 
-- Start from the spec's `Component Index` when available
+- Start from the spec's `Component Index` and `Overview` when available
 - Group related functionality into modules
 - Identify shared utilities and common patterns
 - Note external dependencies and integrations
@@ -299,8 +299,9 @@ Present the final plan in this structure:
 
 ## Spec Inputs Used
 - **Goal**: [key feature / scope note]
-- **Runtime Map**: [relevant flow]
+- **Runtime Map**: [relevant flow + user-facing scenario]
 - **Component Index**: [relevant component/path]
+- **Component Overview**: [relevant behavior / design intent]
 - **Common Change Paths**: [if relevant]
 
 ## Implementation Phases
@@ -348,7 +349,7 @@ Present the final plan in this structure:
 ## Best Practices
 
 - **Be Specific**: Vague tasks lead to scope creep
-- **Spec-aware planning**: derive tasks from `Key Features`, `Runtime Map`, `Component Index`, and real paths
+- **Spec-aware planning**: derive tasks from `Key Features`, `Runtime Map`, `Component Index`, `Overview`, and real paths
 - **Include Infrastructure**: Don't forget CI/CD, environments, tooling
 - **Plan for Testing**: Include unit, integration, and E2E test tasks
 - **Consider Operations**: Monitoring, logging, deployment procedures

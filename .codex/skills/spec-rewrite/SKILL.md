@@ -1,7 +1,7 @@
 ---
 name: spec-rewrite
 description: This skill should be used when the user asks to "rewrite spec", "refactor spec", "simplify spec", "split spec into files", "clean up spec", or equivalent phrases indicating they want to reorganize an overly long or hard-to-navigate spec into an exploration-first, change-oriented structure.
-version: 1.2.0
+version: 1.3.0
 ---
 
 # Spec Rewrite - Rebuild Specs for Fast Understanding and Safe Change
@@ -11,6 +11,7 @@ Rewrite existing spec documents into an exploration-first structure.
 This skill does not exist merely to shorten or prettify documents.
 Its purpose is to turn a hard-to-navigate spec into a searchable map that helps people and LLMs:
 - understand what the repository does quickly
+- understand how important parts work and why the structure exists
 - find where a feature or responsibility lives
 - identify where to edit safely
 - preserve non-obvious decisions and invariants
@@ -23,7 +24,7 @@ This skill treats `_sdd/spec/` as a navigation and maintenance surface.
 Primary goals:
 1. Rebuild the main spec as a fast entry point
 2. Restore or create repository and component maps
-3. Make change paths, contracts, and invariants visible
+3. Make change paths, contracts, invariants, and explanation context visible
 4. Split by responsibility when one file is too dense
 5. Preserve rationale in `DECISION_LOG.md`
 6. Move uncertainty into `Open Questions`
@@ -74,6 +75,8 @@ First identify why the current spec is hard to use.
 Check for:
 - 프로젝트 목적과 시스템 경계가 빠르게 보이지 않음
 - `Repository Map`, `Runtime Map`, `Component Index`가 없음
+- `Runtime Map`은 있지만 사용자/운영자 관점 설명이 없음
+- 주요 컴포넌트에 `Overview`가 없어 동작 개요와 설계 의도를 파악하기 어려움
 - 기능 변경 시 어디부터 봐야 하는지 찾기 어려움
 - 계약, 상태 전이, 불변 조건이 묻혀 있음
 - 실제 경로/심볼 없이 일반론만 많음
@@ -162,6 +165,12 @@ Add optional sections only when they materially help maintenance:
 
 If `Usage Examples` is omitted, ensure common change entry points still appear in component `Change Recipes` or an equivalent change guide.
 
+For component detail blocks or split component specs, preserve:
+- `Responsibility`
+- `Overview` (동작 개요 + 설계 의도)
+- `Owned Paths`
+- `Key Symbols / Entry Points`
+
 ### Step 4.5: Prune and De-duplicate
 
 **Tools**: `Edit`, `Write`
@@ -173,6 +182,7 @@ Rules:
 - do not create appendix files by default; use them only if the detail is still worth keeping and does not belong in a component spec
 - prefer component-specific files over generic appendix dumps
 - prefer compact tables, file maps, and links over repeated prose
+- keep short explanatory prose when it preserves runtime understanding or design intent
 
 ### Step 5: Split by Responsibility, Not by Numbered Topic
 

@@ -31,6 +31,7 @@
 - [ ] 새 경로/디렉터리가 `Repository Map`에 반영되어야 하는지 확인
 - [ ] 새 요청/이벤트/배치 흐름이 `Runtime Map`에 반영되어야 하는지 확인
 - [ ] 새 컴포넌트/책임 변화가 `Component Index`에 반영되어야 하는지 확인
+- [ ] 컴포넌트 동작 개요/설계 의도 변화가 `Component Details > Overview`에 반영되어야 하는지 확인
 - [ ] 운영/디버깅 시작점 변화가 `Common Change Paths`에 반영되어야 하는지 확인
 - [ ] 새 미확정 사항이 `Open Questions`에 들어가야 하는지 확인
 - [ ] 중요한 설계 이유 변화가 `DECISION_LOG.md` 후보인지 확인

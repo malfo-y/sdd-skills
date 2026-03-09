@@ -23,6 +23,7 @@ Common drift patterns for exploration-first specs and how to resolve them.
 
 **Resolution**
 - update `Architecture Overview > Runtime Map`
+- add or refresh the short user-facing scenario when the flow explanation changed
 - add or adjust invariants if the flow change affects correctness
 
 ### Pattern: Missing or Outdated Component Index
@@ -34,6 +35,17 @@ Common drift patterns for exploration-first specs and how to resolve them.
 **Resolution**
 - update `Component Details > Component Index`
 - link to component-specific docs when appropriate
+
+### Pattern: Missing or Outdated Component Overview
+
+**Symptoms**
+- the component path and symbols are listed, but a reader still cannot tell how the component works
+- the documented design intent no longer matches the current implementation boundary
+
+**Resolution**
+- update `Component Details > Overview`
+- summarize current behavior and the reason for the current structure
+- keep implementation detail out of the prose dump
 
 ### Pattern: Stale Common Change Paths
 

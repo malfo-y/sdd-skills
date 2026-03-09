@@ -9,6 +9,7 @@ How to map planned requirements into the exploration-first spec structure.
 | New user-visible feature | `Goal > Key Features` |
 | Scope or ownership boundary change | `Architecture Overview > System Boundary` |
 | Runtime/data/event flow change | `Architecture Overview > Runtime Map` |
+| Component behavior/design intent change | `Component Details > Overview` |
 | New or changed component | `Component Details` |
 | New config/dependency/runtime change | `Environment & Dependencies` |
 | Operational or debugging workflow | `Usage Examples > Common Operations` or `Common Change Paths` |
@@ -44,6 +45,7 @@ When the input describes a new user-visible capability:
 When the input changes how the system is connected or how work moves:
 - update `Architecture Overview > System Boundary` if scope changes
 - update `Architecture Overview > Runtime Map` if request/event/batch flow changes
+- make the updated runtime map explain the user-facing or operator-facing flow, not only arrows
 - add `Cross-Cutting Invariants` only if the new plan introduces repository-wide guarantees that are worth preserving globally
 
 ### 3. Component Changes
@@ -52,6 +54,7 @@ When the input adds or changes a component:
 - update `Component Details`
 - add or refresh `Component Index`
 - include owned paths, key symbols, responsibility, and contracts when known
+- update `Component Details > Overview` when the plan changes how the component works or why the structure exists
 
 ### 4. Environment & Dependencies
 

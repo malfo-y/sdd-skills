@@ -54,6 +54,7 @@
 
 - `Runtime Map`: 로그인과 토큰 갱신 플로우가 추가되어야 한다.
 - `Component Index`: `Auth Middleware`와 `Auth Service` 경로가 더 분명히 적혀야 한다.
+- `Component Details > Overview`: middleware가 인증 컨텍스트 주입을 맡고 service가 세션/토큰 정책을 맡는 구조와 그 이유를 설명해야 한다.
 - `Common Change Paths`: "인증 정책 변경" 시작 지점이 필요하다.
 - `Open Questions`: 토큰 만료 정책, CORS 허용 범위가 아직 문서상 미확정이다.
 
@@ -84,9 +85,11 @@
    - Classification: `MUST update`
 2. `Component Details > Component Index` 갱신
    - Classification: `MUST update`
-3. `Usage Examples > Common Change Paths` 보강
+3. `Component Details > Overview` 갱신
+   - Classification: `MUST update`
+4. `Usage Examples > Common Change Paths` 보강
    - Classification: `CONSIDER`
-4. `src/utils/password.py` 내부 helper 분리
+5. `src/utils/password.py` 내부 helper 분리
    - Classification: `NO update`
    - Reason: 계약과 탐색성 변화 없음
 
@@ -94,8 +97,9 @@
 
 1. `Architecture Overview > Runtime Map` (`MUST update`)
 2. `Component Details > Component Index` (`MUST update`)
-3. `Usage Examples > Common Change Paths` (`CONSIDER`)
-4. `Open Questions` (`MUST update`)
+3. `Component Details > Overview` (`MUST update`)
+4. `Usage Examples > Common Change Paths` (`CONSIDER`)
+5. `Open Questions` (`MUST update`)
 
 ## Open Questions
 

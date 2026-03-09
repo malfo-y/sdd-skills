@@ -57,6 +57,11 @@ Use Korean for the final spec unless the repository already uses another languag
 Client -> Router -> Service -> Repository -> DB
 ```
 
+#### User-Facing Scenario
+- 사용자가 어떤 진입점에서 작업을 시작하는지
+- 중간 처리 단계에서 어떤 책임 경계를 통과하는지
+- 성공/실패 시 어떤 후속 동작이 이어지는지
+
 #### Secondary / Batch Flows
 - 배치 작업 또는 이벤트 흐름
 - 백그라운드 워커와 외부 연동
@@ -88,6 +93,15 @@ Client -> Router -> Service -> Repository -> DB
 #### Responsibility
 - 하는 일
 - 하지 않는 일
+
+#### Overview
+**동작 개요**
+- 이 컴포넌트가 입력을 받아 어떤 흐름으로 처리하는지
+- 주요 상태 전이 또는 외부 상호작용
+
+**설계 의도**
+- 왜 이 책임 경계를 택했는지
+- 강결합 회피, 테스트 용이성, 운영상 이유 등
 
 #### Owned Paths
 - `src/...`
@@ -224,6 +238,16 @@ project/
 ## Responsibility
 - 하는 일
 - 하지 않는 일
+
+## Overview
+
+### 동작 개요
+- 이 컴포넌트의 핵심 처리 흐름
+- 주요 상태 전이, 외부 호출, 이벤트 흐름
+
+### 설계 의도
+- 왜 이런 구조를 택했는지
+- 다른 컴포넌트와 어떤 경계로 분리했는지
 
 ## Owned Paths
 - `src/...`

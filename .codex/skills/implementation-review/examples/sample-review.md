@@ -57,20 +57,23 @@
 3. `Component Details > Component Index`
    - Classification: `MUST update`
    - `Auth Middleware`, `Auth Service` 경로를 보강해야 한다
-4. `Usage Examples > Common Change Paths`
+4. `Component Details > Overview`
+   - Classification: `MUST update`
+   - `Auth Service`가 세션 수명과 토큰 회전을 어떻게 관리하는지, 왜 middleware/service 분리를 택했는지 설명이 필요하다
+5. `Usage Examples > Common Change Paths`
    - Classification: `CONSIDER`
    - "인증 정책 변경" 시작 지점을 추가해야 한다
-5. `Open Questions`
+6. `Open Questions`
    - Classification: `MUST update`
    - 토큰 만료 정책과 refresh 정책 범위를 남겨야 한다
-6. `Rate limit helper refactor`
+7. `Rate limit helper refactor`
    - Classification: `NO update`
    - 내부 구조 변경만 있어 스펙 반영 불필요
 
 ## Recommended Spec Action
 
 - `spec-update-done`
-- 이유: 구현 완료 후 `Runtime Map`, `Component Index`, `Open Questions` 동기화가 필요함
+- 이유: 구현 완료 후 `Runtime Map`, `Component Index`, `Component Details > Overview`, `Open Questions` 동기화가 필요함
 
 ## Recommended Next Steps
 

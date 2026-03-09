@@ -54,6 +54,11 @@ multiple services, external contracts, and operational risk.
 Buyer -> API Gateway -> Catalog -> Order -> Payment -> Inventory -> Order status update
 ```
 
+#### User-Facing Scenario
+- 구매자가 주문을 생성하면 API Gateway가 요청을 `services/order/`로 전달하고, 주문 서비스는 카탈로그 정보와 입력 유효성을 확인한다.
+- 결제 승인이 완료되면 `services/payment/`가 결과를 이벤트로 발행하고, 주문/재고 서비스가 이를 받아 상태 전이와 재고 차감을 이어서 처리한다.
+- 실패나 보상 상황은 이벤트 흐름으로 전파되며, 운영자는 알림과 관리 화면을 통해 후속 조치를 수행한다.
+
 #### Secondary / Batch Flows
 - 결제 실패 재시도 작업이 스케줄러에서 실행된다.
 - 재고 정합성 점검 배치가 주기적으로 실행된다.
@@ -89,6 +94,15 @@ Buyer -> API Gateway -> Catalog -> Order -> Payment -> Inventory -> Order status
 #### Responsibility
 - 주문 생성, 상태 전이, 주문 조회를 담당한다.
 - 결제 결과와 재고 결과를 받아 최종 상태를 확정한다.
+
+#### Overview
+**동작 개요**
+- 주문 생성 요청이 들어오면 `OrderService.create_order()`가 입력 검증과 초기 상태 설정을 수행하고 주문 레코드를 생성한다.
+- 이후 결제/재고 이벤트를 소비하면서 `OrderStateMachine.transition()`이 주문 상태를 `pending -> paid -> fulfilled` 또는 보상 경로로 전이한다.
+
+**설계 의도**
+- 상태 전이 규칙을 `OrderStateMachine`으로 분리해 결제/재고 결과가 늘어나도 주문 규칙을 한 곳에서 검증하도록 한다.
+- 결제/재고와 직접 결합하지 않고 이벤트 계약을 통해 연결해 보상 로직과 운영 추적성을 높인다.
 
 #### Owned Paths
 - `services/order/app/`

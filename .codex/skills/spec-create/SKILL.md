@@ -1,7 +1,7 @@
 ---
 name: spec-create
 description: This skill should be used when the user asks to "create a spec", "write a spec document", "generate SDD", "create software design document", "document the project", "create spec for project", or mentions "_sdd" directory, specification documents, or project documentation needs.
-version: 1.2.0
+version: 1.3.0
 ---
 
 # Spec Document Creation and Management
@@ -10,6 +10,7 @@ Create exploration-first Software Design Description (SDD) documents.
 
 A good spec is not a copy of the code. It is a searchable map that helps people and LLMs:
 - understand what the repository does
+- understand how important parts work and why they are shaped that way
 - find where a feature or responsibility lives
 - decide where to edit safely
 - remember non-obvious decisions and invariants
@@ -60,10 +61,12 @@ Default output shape:
 7. **호환 가능한 앵커 섹션 유지**: 기본적으로 `Goal`, `Architecture Overview`, `Component Details`, `Environment & Dependencies`, `Identified Issues & Improvements`, `Usage Examples`, `Open Questions` 섹션명을 유지한다. 내부 구조는 탐색형으로 재구성한다.
 8. **실제 경로 우선**: 주요 컴포넌트와 변경 지점에는 가능하면 실제 파일/디렉토리 경로를 적는다.
 9. **추정은 명시**: 확인되지 않은 내용은 단정하지 말고 `Open Questions`에 기록한다.
-10. **요약 우선**: 코드 구조를 그대로 복사하지 말고 `의도`, `경계`, `계약`, `변경 지점`, `불변 조건`을 압축해서 정리한다.
+10. **설명-탐색 균형 유지**: 코드 구조를 그대로 복사하지 말고 `의도`, `동작 개요`, `경계`, `계약`, `변경 지점`, `불변 조건`, `결정 이유`를 압축해서 정리한다.
 11. **MUST/OPT 구분 유지**: `Goal`, `Architecture Overview`, `Component Details`, `Open Questions`만으로도 유효한 스펙이 되게 하고, 나머지 앵커 섹션은 필요할 때만 추가한다.
 12. **빈 선택 섹션 금지**: `Environment & Dependencies`, `Identified Issues & Improvements`, `Usage Examples`, 메타데이터 블록은 관련성이 없으면 만들지 않는다.
-13. **LLM 효율 우선**: 메인 스펙은 한 번에 훑을 수 있는 길이로 유지하고, 반복 설명보다 테이블, 경로 인덱스, 링크를 우선한다.
+13. **서술형 흐름 유지**: 메인 스펙의 `Runtime Map`은 다이어그램만 두지 말고, 사용자 관점의 짧은 동작 시나리오를 함께 남긴다.
+14. **컴포넌트 Overview 필수화**: 컴포넌트 스펙이나 메인 스펙 내 상세 컴포넌트 블록을 작성할 때는 `Responsibility`만으로 끝내지 말고 `Overview`에 동작 개요와 설계 의도를 함께 적는다.
+15. **LLM 효율 우선**: 메인 스펙은 한 번에 훑을 수 있는 길이로 유지하고, 반복 설명보다 테이블, 경로 인덱스, 링크를 우선한다.
 
 ## Directory Structure
 
@@ -142,7 +145,7 @@ Optional top-level sections when materially relevant:
 
 Required core inner content:
 - `Goal`: project snapshot, key features, non-goals
-- `Architecture Overview`: system boundary, repository map, runtime map
+- `Architecture Overview`: system boundary, repository map, runtime map (diagram + user-facing scenario)
 - `Component Details`: component index plus detailed entries or links to split component files
 
 Recommended optional inner content when relevant:
@@ -160,6 +163,7 @@ Create a separate component spec when a component:
 - owns an important contract or lifecycle
 - is a frequent change hotspot
 - has non-obvious invariants or operational risks
+- needs a dedicated `Overview` to explain behavior and design intent safely
 
 ### 3. Decision Log (optional)
 
@@ -219,6 +223,7 @@ Extract the minimum map needed to support understanding and change:
 | 런타임 흐름 | 요청/이벤트/배치 기준 주요 흐름 |
 | 저장소 구조 | 주요 디렉토리, 핵심 파일, 설정 위치 |
 | 컴포넌트 경계 | 책임 단위, 핵심 심볼, 소유 경로 |
+| 컴포넌트 설명 | 주요 컴포넌트가 어떻게 동작하는지와 왜 이런 구조인지 |
 | 변경 핫스팟 | 자주 수정하는 영역, 계약 변경 시 영향 범위 |
 | 불변 조건 | 전역 또는 컴포넌트 수준에서 깨지면 안 되는 계약, 순서, 상태 전이, 데이터 가정 |
 | 미확인 영역 | 정보 부족, 추정, 신뢰도 낮은 부분 |
@@ -306,6 +311,7 @@ If any answer is "no", continue exploration before drafting.
 #### Step 3-C: Writing Guidance
 
 - Start with the repository map and runtime map before writing detailed component prose.
+- `Runtime Map`에는 다이어그램과 함께 사용자 관점의 짧은 동작 시나리오를 포함한다.
 - Favor tables with actual paths over long narrative.
 - Omit empty optional sections and optional metadata blocks.
 - Prefer `_sdd/env.md` for long environment setup detail instead of repeating it in the main spec.
@@ -313,6 +319,7 @@ If any answer is "no", continue exploration before drafting.
 - Avoid restating the same component detail in both the main spec and split component specs.
 - For each important component, include:
   - responsibility
+  - overview (동작 개요 + 설계 의도)
   - owned paths
   - key symbols or entry points
   - interfaces or contracts
@@ -336,11 +343,13 @@ Validate:
    - `Open Questions`
 3. Optional sections appear only when materially relevant and are not left empty.
 4. `Architecture Overview` includes a repository map and runtime map.
-5. `Component Details` includes a component index with real paths or linked component spec files.
-6. Change/debug entry points are discoverable either in `Usage Examples` or in component `Change Recipes`.
-7. Bootstrap guidance files exist and contain required lines.
-8. `DECISION_LOG.md` exists if the drafting process introduced non-obvious decisions.
-9. The main spec is not bloated with duplicated detail; if it becomes too large or component count is high, split it.
+5. `Runtime Map` includes at least one short user-facing scenario, not only arrows or bullet fragments.
+6. `Component Details` includes a component index with real paths or linked component spec files.
+7. Component-specific detail blocks or split component specs include `Overview` when they explain actual component behavior.
+8. Change/debug entry points are discoverable either in `Usage Examples` or in component `Change Recipes`.
+9. Bootstrap guidance files exist and contain required lines.
+10. `DECISION_LOG.md` exists if the drafting process introduced non-obvious decisions.
+11. The main spec is not bloated with duplicated detail; if it becomes too large or component count is high, split it.
 
 ### Step 4.5: Self-Verification Gate
 
@@ -438,7 +447,7 @@ Subdirectory 규칙:
 ### Writing Quality
 
 - **Fast first read**: make the first 30 lines answer "what is this repo?"
-- **Change-oriented detail**: prioritize "where to edit" over exhaustive explanation
+- **Understand-then-change**: explain what the repository/component does before pointing only at edit locations
 - **Path-first references**: include concrete directories, files, commands, and symbols
 - **Trace unknowns**: uncertainty belongs in `Open Questions`, not hidden in confident prose
 - **Token-efficient structure**: prefer compact tables and linked component specs over repeated prose
@@ -506,7 +515,7 @@ Also summarize:
 ## Additional Resources
 
 ### Reference Files
-- `references/template-full.md` - index-first main spec and component spec templates
+- `references/template-full.md` - index-first main spec and component spec templates with `Overview`
 - `references/optional-sections.md` - optional appendices for APIs, data models, security, performance, deployment
 - `references/examples.md` - guidance on choosing and reading the examples
 
