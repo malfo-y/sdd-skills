@@ -1,283 +1,148 @@
 ---
 name: spec-review
 description: This skill should be used when the user asks to "review spec", "spec drift check", "verify spec accuracy", "audit spec quality", "review spec against code", "refresh spec review", "스펙 리뷰", "스펙 검토", "스펙 드리프트 점검", or wants a review-only analysis of spec quality and code-to-spec alignment without directly editing spec files.
-version: 1.0.0
+version: 1.2.0
 ---
 
-# Spec Review (Strict, Review-Only)
+# Spec Review
 
-Review SDD spec quality and spec-to-code alignment in strict review-only mode.  
-This skill generates findings and recommendations, but does not edit `_sdd/spec/*.md` (including `DECISION_LOG.md`).
+탐색형 스펙 기준으로 스펙 품질과 코드 정합성을 리뷰한다.
 
-## Hard Rule: No Spec Edits
+이 스킬은 스펙을 수정하지 않는다. 대신 아래를 판단한다.
 
-- This skill performs review and reporting only.
-- Never create, modify, rename, or delete spec files under `_sdd/spec/` (except the review report file defined below).
-- Never edit `_sdd/spec/DECISION_LOG.md` in this skill. Propose entries only.
-- If spec changes are needed, record them as actionable recommendations and hand off to `/spec-update-done` for actual edits.
+- 이 스펙이 처음 보는 사람에게 5분 entry point 역할을 하는가
+- 기능 변경 시 어디부터 봐야 하는지 알려주는가
+- 실제 코드 경로와 컴포넌트 책임이 연결되어 있는가
+- 코드와 문서가 drift 되었는가
 
-## Overview
+## Hard Rules
 
-This skill evaluates two dimensions:
+1. `_sdd/spec/` 아래 실제 스펙은 수정하지 않는다.
+2. `DECISION_LOG.md`도 직접 수정하지 않는다. 필요하면 제안만 남긴다.
+3. 산출물은 `_sdd/spec/SPEC_REVIEW_REPORT.md` 리뷰 리포트다.
+4. High / Medium finding에는 가능한 한 `file:line`, 테스트, diff 같은 구체적 근거를 붙인다.
+5. 불확실한 내용은 `Open Questions`에 남긴다.
+6. `MUST` 섹션과 `OPT` 섹션을 구분해서 평가한다. 선택 섹션 누락만으로 약한 스펙이라고 단정하지 않는다.
+7. 리뷰 자체도 token-efficient 해야 하며, 없는 선택 섹션을 억지로 보완 요구하지 않는다.
 
-1. **Spec-only quality review**  
-- Clarity, completeness, internal consistency, measurable acceptance criteria, structure quality.
+## Review Dimensions
 
-2. **Code-linked drift review**  
-- Whether implementation, tests, and runtime-facing behavior still match what the spec claims.
+### 1. Entry Point Quality
 
-## When to Use This Skill
+- `Goal`이 프로젝트 목적을 빠르게 설명하는가
+- `System Boundary`가 명확한가
+- 메인 스펙이 너무 장황하지 않은가
+- `MUST` 정보만으로도 5분 entry point 역할을 하는가
 
-- Before implementation planning to validate spec quality
-- After implementation/review cycles to detect drift
-- During periodic documentation governance
-- When a team wants findings first, and spec edits deferred to a follow-up sync step
+### 2. Navigation Quality
+
+- `Repository Map`이 있는가
+- `Runtime Map`이 있는가
+- `Component Index`가 있는가
+- 실제 경로와 심볼이 연결되는가
+
+### 3. Changeability
+
+- `Common Change Paths` 또는 동등 정보가 있는가
+- 변경 시 같이 봐야 할 테스트/로그/디버깅 포인트가 보이는가
+- 컴포넌트 책임과 비책임이 구분되는가
+
+### 4. Drift
+
+- 구현과 문서의 기능 설명이 맞는가
+- 새 컴포넌트/경로/흐름이 문서에 빠져 있지 않은가
+- 오래된 `Open Questions`가 그대로 남아 있지 않은가
+- 결정 맥락이 달라졌는데 `DECISION_LOG.md` 제안이 필요한가
 
 ## Inputs
 
-### Primary
-- `_sdd/spec/<project>.md` or `_sdd/spec/main.md`
-- Linked sub-spec files (if split spec structure exists)
-
-### Secondary
+- `_sdd/spec/main.md` 또는 `_sdd/spec/<project>.md`
+- 링크된 컴포넌트 스펙
+- `_sdd/spec/DECISION_LOG.md` (있으면)
 - `_sdd/implementation/IMPLEMENTATION_PLAN.md`
-- `_sdd/implementation/IMPLEMENTATION_PROGRESS.md`
 - `_sdd/implementation/IMPLEMENTATION_REVIEW.md`
-- `_sdd/spec/DECISION_LOG.md` (if present)
-- Recent code changes (`git diff`, `git log`, current workspace state)
-- Test artifacts (when available)
-- `_sdd/env.md` (when local runtime/test verification is needed)
+- 최근 코드 상태 (`git diff`, 현재 워크트리)
+- `_sdd/env.md` (로컬 검증 시)
 
-## Review Process
+## Process
 
-### Step 1: Scope and Source Selection
+### Step 1: Scope selection
 
-**Tools**: `Glob`, `Read`
+1. 메인 스펙 식별
+2. 링크된 컴포넌트 스펙 식별
+3. 생성물/백업 파일 제외
+4. 필요 시 `DECISION_LOG.md` 로드
+5. review scope를 `Spec-only` 또는 `Spec+Code`로 명시
 
-1. Identify main spec index file.
-2. Enumerate linked sub-spec files.
-3. Exclude generated/backup files (`SUMMARY.md`, `prev/PREV_*.md`) from primary analysis.
-4. Load `_sdd/spec/DECISION_LOG.md` if present.
-5. Define review scope:
-   - Spec-only
-   - Spec + code alignment (default)
-6. If local commands/tests will be run for evidence, read `_sdd/env.md` and apply required setup first.
+### Step 2: Audit the spec as a navigation surface
 
-### Step 2: Spec-Only Quality Audit
+아래를 우선 본다.
 
-**Tools**: `Read`
+- `Project Snapshot` 또는 동등 요약
+- `System Boundary`
+- `Repository Map`
+- `Runtime Map`
+- `Component Index`
+- `Common Change Paths`
+- `Open Questions`
 
-Assess the spec as a standalone design artifact:
+판정 규칙:
 
-- **Clarity**: ambiguous wording, undefined terms
-- **Completeness**: missing requirements, missing acceptance criteria
-- **Consistency**: conflicting statements across sections/files
-- **Testability**: whether requirements can be objectively verified
-- **Navigability**: structure, section discoverability, cross-links
-- **Ownership**: responsibility boundaries and decision ownership
+- `Project Snapshot`, `System Boundary`, `Repository Map`, `Runtime Map`, `Component Index`, `Open Questions`는 핵심 축으로 본다.
+- `Environment & Dependencies`, `Usage Examples`, `Identified Issues & Improvements`는 프로젝트 규모와 도메인에 따라 optional일 수 있다.
+- optional 섹션이 비어 있거나 없더라도, 메인 탐색성과 변경 지원이 충분하면 finding으로 올리지 않는다.
 
-#### Context Management (Step 1 후 적용)
+### Step 3: Audit changeability
 
-| 스펙 크기 | 전략 | 구체적 방법 |
-|-----------|------|-------------|
-| < 200줄 | 전체 읽기 | `Read`로 전체 파일 읽기 |
-| 200-500줄 | 전체 읽기 가능 | `Read`로 전체 읽기, 필요 시 섹션별 |
-| 500-1000줄 | TOC 먼저, 관련 섹션만 | 상위 50줄(TOC) 읽기 → 관련 섹션만 `Read(offset, limit)` |
-| > 1000줄 | 인덱스만, 타겟 최대 3개 | 인덱스/TOC만 읽기 → 타겟 섹션 최대 3개 선택적 읽기 |
+기능을 하나 바꾸려는 사람이 이 문서만 보고 시작점을 찾을 수 있는지 본다.
 
-| 코드베이스 크기 | 전략 | 구체적 방법 |
-|----------------|------|-------------|
-| < 50 파일 | 자유 탐색 | `Glob` + `Read` 자유롭게 사용 |
-| 50-200 파일 | 타겟 탐색 | `rg`/`Glob`/`Read`/`Bash`으로 후보 식별 → 타겟 `Read` |
-| > 200 파일 | 타겟 탐색 | `rg`/`Glob`/`Read`/`Bash` 위주 → 최소한의 `Read` |
+예시 질문:
 
-### Step 3: Code-Linked Drift Audit
+- 새 API 필드 추가 시 어디를 먼저 봐야 하는가
+- 권한 정책 변경 시 어디를 봐야 하는가
+- 배치/이벤트 흐름 문제를 디버깅할 때 어디를 봐야 하는가
 
-**Tools**: `rg`, `Glob`, `Read`, `Bash`, `Read`, `Bash (git diff, git log)`
+### Step 4: Audit code-linked drift
 
-Compare spec claims to implementation evidence:
+아래 drift를 찾는다.
 
-- **Architecture drift**: undocumented/new/removed components
-- **Feature drift**: planned vs implemented vs documented behavior
-- **API drift**: endpoint/method/schema changes
-- **Config drift**: env vars/defaults/dependency versions
-- **Issue drift**: resolved issues still open in spec, or new issues undocumented
-- **Decision-log drift**: implemented behavior/constraints diverge from recorded rationale
+- 새 컴포넌트가 구현에만 존재
+- 런타임 흐름이 바뀌었는데 `Runtime Map`이 낡음
+- 소유 경로가 달라졌는데 `Component Index`가 낡음
+- 운영/디버깅 경로가 바뀌었는데 `Common Change Paths`가 없음
+- 이미 해결된 질문이 `Open Questions`에 남아 있거나, 새 질문이 문서에 없음
 
-Require concrete evidence wherever possible:
-- `path:line` references
-- test names/status
-- commit or diff references
+### Step 5: Classify findings
 
-When local runtime/test execution is used to collect evidence, follow `_sdd/env.md`.
-If `_sdd/env.md` is missing/incomplete, apply deterministic defaults for environment details instead of guessing.
+| Severity | 의미 |
+|----------|------|
+| High | 잘못된 계약, 중요한 drift, 탐색 실패로 잘못 수정될 위험 |
+| Medium | 누락/모호함으로 작업 효율이 떨어짐 |
+| Low | 링크 위생, 표현 문제, 비핵심 개선 |
 
-### Step 3.5: Drift 발견 요약 (Internal Check)
+결론은 하나를 고른다.
 
-**Tools**: `deterministic defaults (non-interactive)`
+- `SPEC_OK`
+- `SYNC_REQUIRED`
+- `NEEDS_DISCUSSION`
 
-```
-1. Drift 발견 요약 테이블을 작업 로그로 제시:
-   | 카테고리 | High | Medium | Low |
-   |----------|------|--------|-----|
-   | Architecture drift | N | N | N |
-   | Feature drift | N | N | N |
-   | API drift | N | N | N |
-   | Config drift | N | N | N |
-   | Issue drift | N | N | N |
-   | Decision-log drift | N | N | N |
+### Step 6: Write report
 
-2. 내부 자동 처리:
-   - 평가를 바로 진행한다.
-   - 신뢰도 낮은 항목은 재점검 후 `Open Questions`에 기록한다.
-```
+리포트에는 아래가 있어야 한다.
 
-### Step 4: Severity and Decision
+1. Executive Summary
+2. Findings by Severity
+3. Entry Point / Navigation Notes
+4. Changeability Notes
+5. Spec-to-Code Drift Notes
+6. Open Questions
+7. Suggested Next Actions
+8. `DECISION_LOG.md` proposal (필요 시)
+9. LLM Efficiency Notes
 
-**Tools**: — (분석/분류, 도구 불필요)
+기존 리포트가 있으면 `_sdd/spec/prev/PREV_SPEC_REVIEW_REPORT_<timestamp>.md`로 백업한다.
 
-Classify findings:
-- `High`: architecture breaks, security/reliability risks, contradictory spec claims
-- `Medium`: behavior mismatch, missing acceptance criteria, important doc gaps
-- `Low`: style/organization/non-blocking documentation quality issues
+## References
 
-Assign one overall decision:
-- `SPEC_OK`: no material drift or quality blockers
-- `SYNC_REQUIRED`: spec updates are needed before next planning/release step
-- `NEEDS_DISCUSSION`: key ambiguities/trade-offs require product/architecture decisions
-
-### Step 5: Report and Handoff
-
-**Tools**: `Write`, `Bash (mkdir -p)`, `deterministic defaults (non-interactive)`
-
-1. Create/update strict review report.
-2. Do not edit actual spec content.
-3. If decision is `SYNC_REQUIRED`, include a ready-to-apply update checklist and recommend running `/spec-update-done`.
-4. If needed, include proposed `DECISION_LOG.md` entries in the report (proposal only).
-5. **Progressive Disclosure**:
-   ```
-   1. Severity별 요약 테이블 제시:
-      | Severity | 건수 | 주요 항목 |
-      |----------|------|----------|
-      | High | N | ... |
-      | Medium | N | ... |
-      | Low | N | ... |
-      | Decision | SPEC_OK / SYNC_REQUIRED / NEEDS_DISCUSSION |
-
-   2. 내부 자동 처리:
-      - 전체 리포트 출력
-      - High severity 별도 요약 출력
-      - `SPEC_REVIEW_REPORT.md` 저장
-   ```
-
-## Output
-
-### Report File
-
-- Default path: `_sdd/spec/SPEC_REVIEW_REPORT.md`
-- If the file already exists, archive it first:
-  - `_sdd/spec/prev/PREV_SPEC_REVIEW_REPORT_<timestamp>.md` (create `_sdd/spec/prev/` if missing)
-
-### Report Format
-
-```markdown
-# Spec Review Report (Strict)
-
-**Date**: YYYY-MM-DD
-**Reviewer**: Codex
-**Scope**: Spec-only | Spec+Code
-**Spec Files**: [list]
-**Code State**: <commit hash or workspace summary>
-**Decision**: SPEC_OK | SYNC_REQUIRED | NEEDS_DISCUSSION
-
-## Executive Summary
-- <one-paragraph summary>
-
-## Findings by Severity
-
-### High
-1. <finding>
-   - Evidence: `path:line`, tests, diff references
-   - Impact:
-   - Recommendation:
-
-### Medium
-...
-
-### Low
-...
-
-## Spec-Only Quality Notes
-- Clarity:
-- Completeness:
-- Consistency:
-- Testability:
-- Structure:
-
-## Spec-to-Code Drift Notes
-- Architecture:
-- Features:
-- API:
-- Configuration:
-- Issues/Technical debt:
-
-## Open Questions
-1. <question requiring decision>
-
-## Suggested Next Actions
-1. <action>
-2. <action>
-
-## Decision Log Follow-ups (Proposal Only)
-- Proposed entry: <title>
-  - Context:
-  - Decision:
-  - Rationale:
-  - Alternatives considered:
-  - Impact / follow-up:
-
-## Handoff for Spec Updates (if SYNC_REQUIRED)
-- Recommended command: `/spec-update-done`
-- Update priorities:
-  - P1:
-  - P2:
-  - P3:
-```
-
-## Guardrails
-
-- Do not present assumptions as facts; label unknowns clearly.
-- Prefer evidence-backed findings over broad statements.
-- Separate objective drift findings from subjective design suggestions.
-- Keep recommendations actionable and ordered by risk/impact.
-- Keep `DECISION_LOG.md` updates as recommendations only in this skill.
-- Keep artifact recommendations minimal: default to `DECISION_LOG.md` only unless the user asks for more.
-- Do not run local runtime/tests with inferred setup; use `_sdd/env.md` or skip runtime validation.
-
-## Error Handling
-
-| 상황 | 대응 |
-|------|------|
-| 스펙 파일 미발견 | `spec-create` 먼저 실행 권장 |
-| 코드베이스 접근 불가 | Spec-only 모드로 전환, 코드 drift 분석 생략 |
-| `_sdd/env.md` 미존재 | 로컬 테스트 건너뛰고 코드 분석만 수행 |
-| git 이력 없음 | 현재 코드 상태만으로 drift 분석 |
-| 다수 스펙 파일 존재 | 메인 스펙 자동 선택 규칙 적용 + 선택 근거 기록 |
-| Evidence 부족 | UNTESTED로 표시, 신뢰도 낮음 명시 |
-| 기존 리뷰 리포트 존재 | `prev/PREV_SPEC_REVIEW_REPORT_<timestamp>.md`로 아카이브 |
-| Decision Log 미존재 | Decision-log drift 분석 생략, 생성 제안 |
-
-## Integration with Other Skills
-
-- **spec-update-done**: apply approved spec updates and decision-log entries after this review
-- **spec-update-todo**: add planned requirements before implementation
-- **implementation-review**: verify plan/task completion against acceptance criteria
-- **spec-summary**: regenerate summary after approved updates are applied
-
-## Additional Resources
-
-### Reference Files
-- `references/review-checklist.md` - strict review checklist and decision rules
-
-### Example Files
-- `examples/spec-review-report.md` - sample strict review report output
+- 체크리스트: [`references/review-checklist.md`](references/review-checklist.md)
+- 예시: [`examples/spec-review-report.md`](examples/spec-review-report.md)

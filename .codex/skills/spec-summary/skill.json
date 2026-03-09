@@ -2,5 +2,5 @@
   "name": "spec-summary",
   "description": "This skill should be used when the user asks to \"summarize spec\", \"spec summary\", \"show spec overview\", \"show spec status\", \"project overview\", \"what's the current state\", or wants a human-readable summary of the current specification for quick understanding.",
   "instruction_file": "SKILL.md",
-  "version": "1.3.0"
+  "version": "1.5.0"
 }

@@ -1,74 +1,56 @@
-# Spec Review Checklist (Strict) / 스펙 리뷰 체크리스트 (Strict)
+# Spec Review Checklist
 
-Use this checklist for review-only spec validation.
-This checklist does not authorize direct spec edits.
+탐색형 스펙 기준의 review-only 체크리스트다.
 
-## 1) Scope Setup / 범위 설정
+## 1) Scope
 
-- [ ] Main spec index identified (`_sdd/spec/<project>.md` or `_sdd/spec/main.md`)
-- [ ] Linked sub-spec files identified
-- [ ] Generated/backup files excluded (`SUMMARY.md`, `prev/PREV_*.md`)
-- [ ] `_sdd/spec/DECISION_LOG.md` loaded if present
-- [ ] Review scope declared (Spec-only or Spec+Code)
-- [ ] If local runtime/test checks are planned, `_sdd/env.md` is checked and setup is applied first
+- [ ] 메인 스펙 식별
+- [ ] 링크된 컴포넌트 스펙 식별
+- [ ] 생성물/백업 파일 제외
+- [ ] `DECISION_LOG.md` 존재 여부 확인
+- [ ] review scope 명시
 
-## 2) Spec-Only Quality Checks / 스펙 품질 검증
+## 2) Entry Point Quality
 
-- [ ] Goals and scope are explicit and non-conflicting
-- [ ] Acceptance criteria are present and measurable
-- [ ] Terms and abbreviations are defined
-- [ ] No contradictory statements across sections/files
-- [ ] Component responsibilities and ownership boundaries are clear
-- [ ] Section flow is navigable and links are valid
+- [ ] 프로젝트 목적과 범위가 빠르게 보인다
+- [ ] `System Boundary`가 명확하다
+- [ ] 메인 스펙이 entry point 역할을 한다
+- [ ] `MUST` 정보만으로도 전체 구조 파악이 가능하다
 
-## 3) Code-Linked Drift Checks / 코드 연동 드리프트 검증
+## 3) Navigation Quality
 
-- [ ] Architecture claims match current code structure
-- [ ] Feature behavior claims match implementation
-- [ ] API endpoints/methods/schemas match runtime behavior
-- [ ] Config/env/dependency claims match actual project state
-- [ ] Issue status in spec reflects implementation/test reality
-- [ ] Decision-log assumptions/rationale still match implementation behavior
+- [ ] `Repository Map`이 있다
+- [ ] `Runtime Map`이 있다
+- [ ] `Component Index`가 있다
+- [ ] 실제 경로 또는 핵심 심볼이 연결되어 있다
+- [ ] missing optional 섹션을 과잉 패널티하지 않았다
 
-## 3.5) Drift Summary Presentation / 드리프트 요약 제시
+## 4) Changeability
 
-- [ ] Drift findings summarized in category x severity table before proceeding to severity classification
-- [ ] Table covers: Architecture, Feature, API, Config, Issue, Decision-log drift categories
+- [ ] `Common Change Paths` 또는 동등한 변경 가이드가 있다
+- [ ] 변경 시 같이 볼 테스트/로그/디버깅 포인트가 보인다
+- [ ] 컴포넌트 책임과 비책임이 구분된다
 
-## 4) Evidence Quality / 근거 품질
+## 5) Drift
 
-- [ ] Each high/medium finding has concrete evidence (`path:line`, test, diff, commit)
-- [ ] Unknowns are explicitly marked as unknown
-- [ ] Inference vs direct evidence is clearly distinguished
+- [ ] 새 컴포넌트/경로/흐름이 구현과 일치한다
+- [ ] 오래된 설명이 남아 있지 않다
+- [ ] 해결된/새로운 질문이 `Open Questions`에 적절히 반영된다
+- [ ] `DECISION_LOG.md` 제안이 필요한 drift를 식별했다
 
-## 5) Decision Rule / 판정 기준
+## 6) Evidence
 
-Choose one:
+- [ ] High / Medium finding에 구체적 근거가 있다
+- [ ] 추론과 직접 근거를 구분했다
+- [ ] 확신이 낮은 항목은 `Open Questions`로 남겼다
 
-- [ ] `SPEC_OK`
-  - No high findings
-  - No unresolved medium findings that block planning/release
+## 7) Report
 
-- [ ] `SYNC_REQUIRED`
-  - At least one high finding, or multiple medium findings requiring spec correction
-
-- [ ] `NEEDS_DISCUSSION`
-  - Core ambiguity/trade-off unresolved by available evidence
-
-## 6) Report Completeness / 리포트 완성도
-
-- [ ] Executive summary included
-- [ ] Findings grouped by severity
-- [ ] Spec-only quality notes included
-- [ ] Spec-to-code drift notes included
-- [ ] Open questions included
-- [ ] Prioritized next actions included
-- [ ] Decision-log follow-up proposals included when rationale drift is found
-- [ ] Handoff instructions included when `SYNC_REQUIRED`
-
-## 7) Strict Mode Validation / Strict 모드 검증
-
-- [ ] No spec file under `_sdd/spec/` was edited (other than report file)
-- [ ] `_sdd/spec/DECISION_LOG.md` was not edited directly in this skill
-- [ ] Report saved to `_sdd/spec/SPEC_REVIEW_REPORT.md`
-- [ ] Existing report archived as `_sdd/spec/prev/PREV_SPEC_REVIEW_REPORT_<timestamp>.md` if overwritten
+- [ ] Executive Summary 포함
+- [ ] Findings by Severity 포함
+- [ ] Entry Point / Navigation Notes 포함
+- [ ] Changeability Notes 포함
+- [ ] Spec-to-Code Drift Notes 포함
+- [ ] LLM Efficiency Notes 포함
+- [ ] Suggested Next Actions 포함
+- [ ] `SPEC_OK` / `SYNC_REQUIRED` / `NEEDS_DISCUSSION` 중 하나 판정

@@ -2,5 +2,5 @@
   "name": "implementation-review",
   "description": "Use this skill to review implementation progress against the plan, verify acceptance criteria, identify issues, and determine next steps. Triggered by \"review implementation\", \"check progress\", \"verify implementation\", \"what's done\", \"implementation status\", or \"audit the code\".",
   "instruction_file": "SKILL.md",
-  "version": "1.0.0"
+  "version": "1.2.0"
 }

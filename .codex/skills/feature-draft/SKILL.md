@@ -1,71 +1,87 @@
 ---
 name: feature-draft
 description: This skill should be used when the user asks to "feature draft", "draft feature", "feature plan", "plan feature", "draft and plan", "feature draft parallel", "parallel feature draft", "병렬 기능 초안", "parallel feature plan", or wants to combine requirements gathering, spec patch drafting, and implementation planning with Target Files for parallel execution support.
-version: 1.0.0
+version: 1.2.0
 ---
 
-# Feature Draft (Parallel) - Unified Spec Patch + Implementation Plan with Target Files
+# Feature Draft - Exploration-First Spec Patch + Implementation Plan
 
-Collects requirements from conversation/files/code context, then outputs a spec patch draft and implementation plan as a **single file** — with **Target Files** fields on every task to enable parallel execution via `implementation`.
+Collect requirements from conversation/files/code context, then output:
+- **Part 1**: a spec patch draft that fits the exploration-first SDD spec shape, or a minimal no-update note when spec changes are not needed
+- **Part 2**: an implementation plan with `Target Files` for parallel execution
+
+This skill does not edit `_sdd/spec/` directly. It produces a draft artifact for later application by `spec-update-todo` and later synchronization by `spec-update-done`.
 
 ## Simplified Workflow
 
-This skill is **Step 2 of 4** in the parallel SDD workflow:
+This skill is **Step 2 of 4** in the SDD workflow:
 
 ```
-spec → feature-draft (this) → implementation → spec-update-done
+spec -> feature-draft (this) -> implementation -> spec-update-done
 ```
 
 | Step | Skill | Purpose |
 |------|-------|---------|
-| 1 | spec-create | Create the initial spec document |
-| **2** | **feature-draft** | Draft feature spec patch + implementation plan (with Target Files) |
-| 3 | implementation | Execute the plan with parallel sub-agents |
-| 4 | spec-update-done | Sync spec with actual code |
+| 1 | spec-create | Create the initial index-first spec |
+| **2** | **feature-draft** | Draft planned spec changes + implementation plan |
+| 3 | implementation | Execute the plan |
+| 4 | spec-update-done | Sync actual implementation back to spec |
 
 ## Overview
 
-This skill integrates spec patch drafting + implementation planning into a single step.
-In a single conversation, it collects requirements and simultaneously generates a spec patch draft (Part 1) and an implementation plan with Target Files (Part 2).
-Actual spec document updates are handled by `spec-update-todo`.
+The spec philosophy used here:
+- `Goal` explains user-visible value and scope
+- `Architecture Overview` shows boundaries, repository/runtime maps, and invariants
+- `Component Details` shows component ownership, paths, and contracts
+- `Usage Examples` includes common operations and common change paths
+- `Open Questions` makes uncertainty explicit
 
-**This skill**: `feature-draft` (1 invocation, shared context)
+Part 1 must preserve that shape. Do not generate patch drafts that depend on old default sections such as `Security Considerations`, `API Reference`, `Testing`, or generic `Configuration` unless the existing spec already uses them and they are materially relevant.
 
 ## When to Use This Skill
 
-- When you want to plan a new feature and create a **parallel-ready** implementation plan all at once
-- When you want to write a spec patch and implementation plan simultaneously
-- When you want to save tokens while getting both a spec patch and implementation plan
-- When you want to handle spec patch + implementation plan in one step
-- When you expect the implementation to benefit from parallel sub-agent execution
+- When you want to plan a feature and draft the corresponding spec changes together
+- When you want a patch draft that points to the right spec sections before implementation
+- When you want a parallel-ready implementation plan with `Target Files`
+- When the feature spans multiple components and you need explicit change boundaries
 
 ## Hard Rules
 
-1. **No spec file modifications**: Files under `_sdd/spec/` are **read-only**. Never modify them.
-2. **Output location**: Save to `_sdd/drafts/` directory.
+1. **No spec file modifications**: Files under `_sdd/spec/` are read-only in this skill.
+2. **Output location**: Save to `_sdd/drafts/`.
 3. **Write in Korean**: Output file content must be written in Korean.
-4. **Multiple features supported**: Multiple features can be included in one file. Use deterministic defaults for grouping/splitting and record the rationale in `Open Questions` when ambiguous.
-5. **spec-update-todo compatible**: Part 1 must follow the "Spec Update Input" format so it can be directly used as input for `spec-update-todo`.
-6. **Target Files required**: Every task in Part 2 MUST include a `**Target Files**` field.
+4. **spec-update-todo compatible**: Part 1 must follow the `Spec Update Input` format defined in `references/output-format.md`.
+5. **Target Files required**: Every task in Part 2 must include a `**Target Files**` field.
+6. **Anchor-aware drafting**: Part 1 should target stable spec anchors such as `Goal`, `Architecture Overview`, `Component Details`, `Environment & Dependencies`, `Identified Issues & Improvements`, `Usage Examples`, `Open Questions`.
+7. **Change-oriented output**: Part 1 must help later readers understand what changes, where it changes, and what risks or invariants matter.
+8. **Actual paths first**: Use real or strongly inferred components/paths whenever possible.
+9. **Unknowns are explicit**: Low-confidence assumptions belong in `Open Questions`.
+10. **Multiple features allowed**: Multiple features may share one draft only when the grouping is coherent; record grouping rationale in `Open Questions` if needed.
+11. **스펙 갱신 기준 적용**: Part 1 시작 전에 각 변경을 `MUST update`, `NO update`, `CONSIDER`로 분류한다.
+12. **선택 섹션 최소화**: `Environment & Dependencies`, `Identified Issues & Improvements`, `Usage Examples` 등 선택 섹션은 실제 영향이 있을 때만 타겟으로 잡는다.
+13. **결정 로그 후보만 기록**: `DECISION_LOG.md`를 직접 쓰지 말고, 필요한 rationale은 draft 안의 `Decision-Log Candidates`로 남긴다.
+14. **Token-efficient drafting**: 빈 선택 섹션은 만들지 않고, 반복 설명보다 경로, 표, 짧은 불릿을 우선한다.
 
 ## Input Sources
 
-1. **User conversation (current session)**: Real-time requirements collection (primary)
-2. **Existing draft files**: `_sdd/spec/user_draft.md` or `_sdd/spec/user_spec.md`
-3. **Existing implementation input**: `_sdd/implementation/user_input.md`
-4. **User-modified code**: Analyze changes via git diff etc.
-5. **Other user-specified files**: Reference documents or notes
-6. **Existing decision log**: `_sdd/spec/DECISION_LOG.md` (if present)
+1. User conversation (primary)
+2. Existing draft files: `_sdd/spec/user_draft.md`, `_sdd/spec/user_spec.md`
+3. Existing implementation input: `_sdd/implementation/user_input.md`
+4. Current spec documents in `_sdd/spec/`
+5. Codebase context and changed files
+6. `_sdd/spec/DECISION_LOG.md` (if present)
 
 ## Output
 
 **File location**: `_sdd/drafts/feature_draft_<feature_name>.md`
 
-**File structure** (single file, 2 parts):
-- **Part 1**: Spec patch draft ("Spec Update Input" format + Target Section annotations)
-- **Part 2**: Implementation plan with **Target Files** (per-phase tasks, details, risks)
+**File structure**:
+- **Part 1**: Spec patch draft (`Spec Update Input` format)
+- **Part 2**: Implementation plan with `Target Files`
 
-**Optional output**: `_sdd/spec/DECISION_LOG.md` (only when new decisions/trade-offs arise)
+**Decision-log handling**:
+- keep possible rationale entries inside Part 1 `Notes > Decision-Log Candidates`
+- later skills may decide whether that content belongs in `_sdd/spec/DECISION_LOG.md`
 
 ## Process
 
@@ -73,566 +89,239 @@ Actual spec document updates are handled by `spec-update-todo`.
 
 **Tools**: `Read`, `Glob`, `Bash (git diff)`
 
-```
-1. Review user conversation content
-2. Check for existing files:
-   - Glob("_sdd/spec/user_draft.md") (사용자 작성 초안)
-   - Glob("_sdd/spec/user_spec.md") (user-authored)
-   - Glob("_sdd/implementation/user_input.md") (implementation input)
-3. Check code changes: Bash("git diff --name-only")
-4. Read discovered input files
-5. Consolidate requirements from all sources
-6. Determine input completeness level (internal rubric):
-   - HIGH: Feature name + description + acceptance criteria + priority all present
-   - MEDIUM: Feature name + description present but acceptance criteria or priority missing
-   - LOW: Vague idea level
-```
+Collect:
+1. user-stated feature intent
+2. existing draft/input files
+3. changed files from the working tree
+4. constraints, priorities, and acceptance criteria if available
 
-**Decision Gate 1→2**:
-```
-spec_exists = Glob("_sdd/spec/*.md") 중 프로젝트 스펙 파일 존재 여부
-  (user_draft.md, user_spec.md, DECISION_LOG.md 제외)
+Completeness rubric:
+- **High**: feature name, desired behavior, acceptance criteria, and likely scope all present
+- **Medium**: feature and behavior present, but criteria or constraints are partial
+- **Low**: idea-level request only
 
-IF spec_exists → Step 2 진행
-ELSE → deterministic defaults (non-interactive):
-  1. "spec-create 먼저 실행" — 스킬 종료
-  2. "Part 2만 생성" — Part 1 생략 모드로 진행
+**Decision Gate 1->2**:
+```
+spec_exists = project spec file exists under _sdd/spec/ (excluding user_* and DECISION_LOG)
+
+IF spec_exists -> Step 2
+ELSE -> deterministic defaults:
+  - recommend running spec-create first
+  - or proceed in Part 2 only mode if the user clearly wants implementation planning without spec patching
 ```
 
 ### Step 2: Context Gathering
 
 **Tools**: `rg`, `Glob`, `Read`, `Bash`
 
-```
-1. Read existing spec (read-only):
-   - Glob("_sdd/spec/*.md")로 스펙 파일 목록 확인
-   - Read로 스펙 읽기 (크기별 전략은 아래 Context Management 참조)
-   - If spec is split, follow links from the index
-2. Understand spec structure:
-   - Section list (to determine where patches go)
-   - Component list (to understand relationships with existing components)
-   - Existing feature list (to prevent duplication)
-   - Verify spec language/style (so patches match existing style)
-3. Check Glob("_sdd/spec/DECISION_LOG.md") (if present):
-   - Review existing decisions/rationale
-   - Ensure new feature doesn't conflict with existing decisions
-4. **Explore codebase** for Target Files:
-   - `rg`, `Glob`, `Read`, `Bash`: 프로젝트 구조, 기존 패턴 파악
-   - Glob: 소스/테스트/설정 파일 위치 확인
-   - Note naming conventions for new files
-   - Map which existing files will need modification
-```
+Read the existing spec as a map, not just as prose.
 
-#### Context Management (Step 2 후 적용)
+Prioritize extracting:
+- `Goal > Project Snapshot / Key Features / Non-Goals`
+- `Architecture Overview > System Boundary / Repository Map / Runtime Map`
+- `Component Details > Component Index`
+- `Usage Examples > Common Change Paths`
+- `Open Questions`
 
-스펙과 코드베이스 크기에 따라 읽기 전략을 조절한다.
+Also gather:
+- optional sections only when they already exist and look relevant
+- related component docs if the spec is already split
+- relevant decision-log entries
+- code paths and symbols that will likely be touched
+- existing conventions for naming, tests, and configuration
+
+### Step 3: Adaptive Completion (Non-Interactive)
+
+**Tools**: deterministic defaults (non-interactive)
+
+Apply deterministic completion based on input quality.
+
+Required completion checklist:
+- feature name and objective
+- spec update classification
+- requirement type
+- affected components
+- target spec areas
+- acceptance criteria
+- risks / invariants
+- likely target files
+- unresolved assumptions
+
+For medium/low-confidence inferences:
+- keep the draft deterministic
+- record assumptions in `Open Questions`
+
+### Step 4: Classify Spec Update Need
+
+**Tools**: deterministic defaults (non-interactive)
+
+Classify the planned change before drafting Part 1.
+
+- `MUST update`
+  - user-visible behavior changes
+  - system boundary, runtime flow, ownership, or contract changes
+  - new real change/debug entry points
+  - new environment requirements that affect setup or execution
+  - new enduring uncertainty that should be preserved in the spec
+- `NO update`
+  - tests-only changes
+  - comments-only or formatting-only changes
+  - internal refactors that do not change behavior, navigation, ownership, or contracts
+- `CONSIDER`
+  - performance tuning with little user-visible effect
+  - minor dependency updates
+  - internal reorganizations that may or may not matter to future navigation
+
+If the classification is `NO update`, Part 1 may be a minimal no-op note with rationale instead of a full patch.
+
+### Step 5: Feature Design
+
+**Tools**: `rg`, `Glob`, `Read`, `Bash`
+
+Classify the planned change and map it to spec impact.
+
+| Change Type | Preferred Target Section |
+|-------------|--------------------------|
+| User-visible feature | `Goal > Key Features` |
+| Scope/boundary change | `Architecture Overview > System Boundary` |
+| Flow/integration change | `Architecture Overview > Runtime Map` |
+| New or changed component | `Component Details` or component spec file |
+| Config/dependency/runtime change | `Environment & Dependencies` |
+| Operational/debug path change | `Usage Examples > Common Change Paths` or `Common Operations` |
+| Risk/technical debt | `Identified Issues & Improvements` |
+| Uncertainty | `Open Questions` |
+
+For each feature item, identify:
+- affected components
+- likely paths/symbols
+- required spec impact
+- user-visible acceptance criteria
+- risks, invariants, and observability needs
+
+For Part 2, map `Target Files` per task and minimize file overlap across tasks.
+
+### Step 6: Generate Part 1 (Spec Patch Draft)
+
+**Tools**: none
+
+Part 1 follows the `Spec Update Input` format from `references/output-format.md`.
+
+Minimum expectations:
+- state `Spec Update Classification`
+- every item includes `**Target Section**`
+- every meaningful item states affected components or paths
+- behavior changes include acceptance criteria
+- risky changes include `Risks / Invariants`
+- decision-log-worthy rationale stays in `Notes > Decision-Log Candidates`
+- unresolved assumptions are collected in `Open Questions`
+
+If classification is `NO update`:
+- keep Part 1 minimal
+- explain why the spec does not need to change
+- still record any follow-up uncertainty in `Open Questions`
+
+### Step 6.5: Internal Validation
+
+**Tools**: deterministic defaults (non-interactive)
+
+Check that Part 1 answers:
+- whether the spec should change at all
+- what changes
+- where it changes in the spec
+- which components are affected
+- what must not break
+- what remains uncertain
+
+If not, repair Part 1 before continuing.
+
+Also verify:
+- optional target sections are used only when materially relevant
+- empty optional sections are omitted
+- repeated prose is compressed into compact bullets or tables
+
+### Step 7: Generate Part 2 (Implementation Plan)
+
+**Tools**: none
+
+Create an implementation plan with:
+- concise overview
+- in-scope / out-of-scope
+- affected components
+- phased tasks
+- detailed tasks with `Target Files`
+- risks and mitigations
+- open questions
+- model recommendation
+
+Task rules:
+- each task should be completable in one focused work session
+- include tests and required setup when relevant
+- minimize file overlap to preserve parallelizability
+- when file overlap is unavoidable, call it out in the parallel summary
+
+See `references/output-format.md` and `references/target-files-spec.md`.
+
+### Step 8: Review, Save, and Finalize
+
+**Tools**: `Write`, `Bash (mkdir/mv)`, `Glob`
+
+Before saving:
+1. verify every task has `Target Files`
+2. verify `[M]` files exist or adjust markers
+3. verify `[C]` files are not already present or adjust markers
+4. detect overlaps and reflect them in the parallel summary
+5. ensure Part 1 and Part 2 are consistent
+
+Save rules:
+- create `_sdd/drafts/` if missing
+- archive existing same-name draft to `_sdd/drafts/prev/prev_feature_draft_<name>_<timestamp>.md`
+- save new file as `_sdd/drafts/feature_draft_<feature_name>.md`
+
+If input files were used, mark them as processed:
+- `_sdd/spec/user_draft.md` -> `_sdd/spec/_processed_user_draft.md`
+- `_sdd/spec/user_spec.md` -> `_sdd/spec/_processed_user_spec.md`
+- `_sdd/implementation/user_input.md` -> `_sdd/implementation/_processed_user_input.md`
+
+## Output Summary
+
+Completion output should summarize:
+- feature scope
+- spec update classification
+- planned spec impact
+- number of phases / tasks
+- major file conflict areas
+- open questions
+- next step: `spec-update-todo` then `implementation`
+
+## Context Management
 
 | 스펙 크기 | 전략 |
 |-----------|------|
 | < 200줄 | 전체 읽기 |
 | 200-500줄 | 전체 읽기 가능 |
 | 500-1000줄 | TOC 먼저, 관련 섹션만 읽기 |
-| > 1000줄 | 인덱스만, 타겟 섹션 최대 3개 |
+| > 1000줄 | 인덱스와 타겟 섹션 우선 |
 
 | 코드베이스 크기 | 전략 |
 |----------------|------|
 | < 50 파일 | `Glob` + `Read` 자유 탐색 |
 | 50-200 파일 | `rg`, `Glob`, `Read`, `Bash` + 타겟 `Read` |
-| > 200 파일 | `rg`, `Glob`, `Read`, `Bash` 위주 |
-
-### Step 3: Adaptive Completion (Non-Interactive)
-
-**Tools**: `deterministic defaults (non-interactive)`
-
-Apply deterministic completion strategies based on input completeness:
-
-**HIGH (detailed input)**: Proceed directly and summarize inferred constraints.
-
-**MEDIUM (partial input)**:
-- Infer priority from impact/risk keywords
-- Infer acceptance criteria from existing patterns/tests
-- Infer technical constraints from spec/codebase conventions
-
-**LOW (vague input)**:
-1. Infer requirement type (new feature/improvement/bug/component/configuration)
-2. Fill required fields using the internal checklist below
-3. Record low-confidence assumptions in `Open Questions`
-
-**Required completion checklist (non-interactive)**:
-- Feature name and concise objective
-- Requirement type (New Feature / Improvement / Bug / etc.)
-- Acceptance criteria (minimum 3 testable items when feasible)
-- Priority and risk level
-- Target components and `Target Files` candidates
-- Dependencies/constraints and unresolved assumptions (`Open Questions`)
-
-**Multiple features check**:
-- If multiple features are detected:
-  - Default to one draft file with separate feature subsections
-  - Split into multiple draft files only when boundaries are explicit (domain/module/owner)
-  - Record the grouping/splitting rationale in `Open Questions`
-
-**Decision Gate 3→4**:
-```
-has_feature_name = 기능명이 명확한가?
-has_description = 기능 설명이 충분한가?
-has_type = 유형 분류가 가능한가? (New Feature / Improvement / Bug / etc.)
-
-IF 모두 충족 → Step 4 진행
-ELSE → 미충족 항목에 대해 deterministic defaults (non-interactive) (최대 2라운드)
-  → 2라운드 후에도 미충족 시 → 가용 정보로 진행, 누락 항목은 Open Questions에 기록
-```
-
-### Step 4: Feature Design
-
-**Tools**: `rg`, `Glob`, `Read`, `Bash`
-
-```
-1. Classify requirements by type:
-   - New Features
-   - Improvements
-   - Bug Reports
-   - Component Changes
-   - Configuration Changes
-
-2. Map each item to target spec section:
-   | Type | Target Section |
-   |------|----------------|
-   | New Feature (Core) | Goal > Key Features |
-   | New Feature (Component) | Component Details |
-   | Improvement | Issues > Improvements |
-   | Bug Fix | Issues > Bugs |
-   | Performance | Issues > Performance |
-   | Security | Security Considerations |
-   | Configuration | Configuration |
-   | Dependency | Environment & Dependencies |
-   | API Change | API Reference |
-   | Test Addition | Testing |
-
-3. Identify implementation components:
-   - Group related features into modules
-   - Identify shared utilities/common patterns
-   - Check external dependencies and integration points
-   - Consider data model/storage requirements
-
-4. **Map Target Files per task**:
-   - For each task, identify which files will be created/modified/deleted
-   - `rg`: "이 기능과 관련된 기존 코드는?" 형태의 패턴 검색
-   - Glob: 후보 파일 경로 존재 여부 검증
-   - Verify no unnecessary file overlaps between tasks
-   - Apply Target Files markers: [C] Create, [M] Modify, [D] Delete
-```
-
-**Decision Gate 4→5**:
-```
-IF 요구사항 유형별 분류 완료
-   AND 각 항목에 Target Section 매핑 완료
-   AND Target Files 초안 작성 완료
-→ Step 5 진행
-ELSE → 미완료 항목 보완 후 재확인
-```
-
-### Step 5: Spec Patch Generation = Part 1
-
-**Tools**: — (출력 생성 단계, 도구 불필요)
-
-Part 1 follows the "Spec Update Input" format with `**Target Section**` annotations added to each item.
-
-**Format rules**:
-- Full compliance with "Spec Update Input" format (spec-update-todo compatible)
-- Add `**Target Section**` to each item (manual copy-paste location guide)
-- Use status marker: 📋 Planned
-- Match existing spec style/language
-- See `references/output-format.md` for detailed format
-
-```markdown
-# Part 1: Spec Patch Draft
-
-> This patch can be copy-pasted into the corresponding spec section,
-> or used as input for the `spec-update-todo` skill.
-
-# Spec Update Input
-
-**Date**: YYYY-MM-DD
-**Author**: [author]
-**Target Spec**: [target spec file]
-
-## New Features
-
-### Feature: [feature name]
-**Priority**: High/Medium/Low
-**Category**: [category]
-**Target Component**: [target component]
-**Target Section**: `_sdd/spec/xxx.md` > `Goal > Key Features`
-
-**Description**:
-[feature description]
-
-**Acceptance Criteria**:
-- [ ] criterion 1
-- [ ] criterion 2
-
-**Technical Notes**:
-[technical notes]
-
-**Dependencies**:
-[dependencies]
-
----
-
-## Improvements
-
-### Improvement: [improvement name]
-**Priority**: High/Medium/Low
-**Target Section**: `_sdd/spec/xxx.md` > `Issues > Improvements`
-**Current State**: [current state]
-**Proposed**: [proposed change]
-**Reason**: [reason]
-
----
-
-## Bug Reports
-
-### Bug: [bug name]
-**Severity**: High/Medium/Low
-**Target Section**: `_sdd/spec/xxx.md` > `Issues > Bugs`
-**Location**: [file:line]
-**Description**: [bug description]
-**Reproduction**: [steps]
-**Expected Behavior**: [expected]
-
----
-
-## Component Changes
-
-### New Component: [component name]
-**Target Section**: `_sdd/spec/xxx.md` > `Component Details`
-**Purpose**: [purpose]
-**Input**: [input]
-**Output**: [output]
-**Planned Methods**:
-- `method_name()` - description
-
----
-
-## Configuration Changes
-
-### New Config: [config name]
-**Target Section**: `_sdd/spec/xxx.md` > `Configuration`
-**Type**: Environment Variable / Config File
-**Required**: Yes/No
-**Default**: [default value]
-**Description**: [description]
-
----
-
-## Notes
-
-### Context
-[additional context]
-
-### Constraints
-[constraints]
-```
-
-> **상세 포맷**: 각 섹션의 전체 필드 목록과 선택/필수 구분은 `references/output-format.md`를 참고하세요.
-
-### Step 5.5: Part 1 Internal Validation
-
-**Tools**: `deterministic defaults (non-interactive)`
-
-Part 2 생성은 작업량이 크므로(태스크 상세, Target Files, 의존성 매핑), Part 1 스코프를 내부 검증으로 확정한 후 진행한다.
-
-```
-1. Part 1 요약 테이블을 내부 검증 로그로 생성:
-   | 섹션 | 항목 수 | 주요 내용 |
-   |------|---------|----------|
-   | New Features | N | ... |
-   | Improvements | N | ... |
-   | ... | ... | ... |
-
-2. 내부 자동 처리:
-   - 누락/충돌 항목 수정
-   - 수정 후 요약 테이블 재생성
-   - 최대 2라운드 반복 후 Step 6 진행
-```
-
-### Step 6: Implementation Plan Generation = Part 2
-
-**Tools**: — (출력 생성 단계, 도구 불필요)
-
-Reuse the components and analysis results from Step 4 to create the implementation plan.
-**Key requirement**: Every task includes a `**Target Files**` field.
-
-**Implementation plan structure**:
-
-```markdown
-# Part 2: Implementation Plan
-
-## Overview
-[summary of what to implement]
-
-## Scope
-### In Scope
-- [included items]
-
-### Out of Scope
-- [excluded items]
-
-## Components
-1. **[component name]**: description
-2. **[component name]**: description
-
-## Implementation Phases
-
-### Phase 1: [phase name]
-| ID | Task | Priority | Dependencies | Component |
-|----|------|----------|--------------|-----------|
-| 1  | ...  | P0       | -            | ...       |
-
-### Phase 2: [phase name]
-| ID | Task | Priority | Dependencies | Component |
-|----|------|----------|--------------|-----------|
-| 2  | ...  | P1       | 1            | ...       |
-
-## Task Details
-
-### Task 1: [clear, action-oriented title]
-**Component**: [parent component]
-**Priority**: [P0-Critical | P1-High | P2-Medium | P3-Low]
-**Type**: [Feature | Bug | Refactor | Research | Infrastructure | Test]
-
-**Description**:
-[detailed description of work to be done]
-
-**Acceptance Criteria**:
-- [ ] [specific, measurable criterion]
-- [ ] [additional criterion]
-
-**Target Files**:
-- [C] `src/services/new_service.py` -- 새 서비스 클래스
-- [M] `src/config/settings.py` -- 설정 항목 추가
-- [C] `tests/test_new_service.py` -- 단위 테스트
-
-**Technical Notes**:
-- [implementation hints, patterns to use]
-
-**Dependencies**: [blocking task ID list]
-
-## Risks and Mitigations
-| Risk | Impact | Mitigation |
-|------|--------|------------|
-| ...  | ...    | ...        |
-
-## Open Questions
-- [ ] [question needing clarification]
-
-## Model Recommendation
-[model recommendation based on implementation complexity]
-```
-
-**Conflict minimization patterns** (5+ tasks/phase이고 파일 겹침이 많을 때 적용 권장):
-
-| 패턴 | 상황 | 해결 |
-|------|------|------|
-| **Split-by-method** | 같은 파일에 독립 메서드 추가 | 별도 파일로 분리하여 각 태스크에 배정 |
-| **Shared-config 격리** | 여러 태스크가 settings.py 수정 | 설정 전용 태스크로 통합 |
-| **Test fixture 격리** | conftest.py 충돌 위험 | 디렉토리별 conftest 또는 setup 태스크 통합 |
-| **Interface-first** | 공유 계약(인터페이스) 필요 | 인터페이스 정의 태스크를 먼저 실행 |
-
-**Task definition rules**:
-- Each task should be completable in a single work session
-- Split into subtasks if too large
-- Include infrastructure/setup tasks (CI/CD, environment configuration, etc.)
-- Include test tasks (unit, integration, E2E)
-- Include documentation tasks
-- **Every task MUST have Target Files** (see `references/target-files-spec.md`)
-
-**Target Files guidelines**:
-- List ALL files the task will create, modify, or delete
-- Use exact file paths (project root relative)
-- Minimize overlap between tasks to maximize parallelization
-- When overlap is unavoidable, note it in Technical Notes
-
-**Dependency mapping**:
-- **Blocks**: Tasks that cannot start until this task is complete
-- **Related**: Shares context but no blocking relationship
-- **Parallel**: Can be worked on concurrently (when Target Files don't overlap)
-
-**Phase strategy** (choose based on complexity):
-- **MVP-First**: Foundation → MVP → Core → Nice-to-Have
-- **Risk-First**: High-risk items → Core → Low-risk items
-- **Dependency-Driven**: Foundation → Services → Integration → Polish
-
-**Model recommendation**:
-Estimate implementation scale and complexity to recommend an appropriate model.
-Use this fixed mapping:
-- `Opus` → `gpt-5.3-codex` (`reasoning effort: extra high`)
-- `Sonnet` → `gpt-5.3-codex` (`reasoning effort: high`)
-- `Haiku` → `gpt-5.3-codex` (`reasoning effort: medium`)
-
-**Decision Gate 6→7**:
-```
-IF Part 1 (또는 Part 2 only 모드) + Part 2 + 병렬 실행 요약 모두 생성 완료
-→ Step 7 진행
-ELSE → 미완료 파트 생성 후 재확인
-```
-
-### Step 7: Review & Finalize
-
-**Tools**: `Write`, `Bash (mkdir/mv)`, `deterministic defaults (non-interactive)`, `Glob`
-
-```
-1. 요약 테이블 제시 (Part 1 항목 수 + Part 2 Phase/Tasks/병렬도)
-2. 상세 섹션 자동 출력 (Part 1 / Part 2 / 전체)
-3. 누락/불일치 자동 보정 후 영향 섹션만 재생성
-4. **Verify Target Files** (Glob 기반 검증):
-   a. Every task has Target Files
-   b. [M] 파일: Glob으로 존재 확인 → 미존재 시 [C]로 변경 또는 경로 수정
-   c. [C] 파일: Glob으로 미존재 확인 → 이미 존재하면 [M]으로 변경
-   d. [C] 파일의 상위 디렉토리 존재 확인
-   e. 전체 Target Files 수집 → 중복 파일 감지 → 병렬 실행 요약에 반영
-   f. Review overlaps and note which tasks must be sequential
-
-5. Save file:
-   a. Create `_sdd/drafts/` directory (if it doesn't exist)
-   b. Archive existing file (if a file with the same name exists):
-      - `_sdd/drafts/prev/prev_feature_draft_<name>_<timestamp>.md`
-   c. Save: `_sdd/drafts/feature_draft_<feature_name>.md`
-
-6. Process input files (if used):
-   - `user_draft.md` → `_processed_user_draft.md`
-   - `user_spec.md` → `_processed_user_spec.md`
-   - `user_input.md` → `_processed_user_input.md`
-   Add processing metadata:
-   <!-- Processed: YYYY-MM-DD -->
-   <!-- Applied to: feature_draft_<name>.md -->
-
-7. Update Decision Log (optional):
-   - Only when significant decisions/trade-offs were made
-   - Add brief entry to `_sdd/spec/DECISION_LOG.md`
-
-8. Provide next steps guidance:
-```
-
-**Completion message template**:
-
-```markdown
-## Feature Draft Complete (Parallel-Ready)
-
-**File**: `_sdd/drafts/feature_draft_<name>.md`
-**Date**: YYYY-MM-DD
-
-### Contents
-| Part | Content | Item Count |
-|------|---------|------------|
-| Part 1 | Spec patch draft | N items |
-| Part 2 | Implementation plan (with Target Files) | N tasks (M phases) |
-
-### Parallel Execution Summary
-| Phase | Total Tasks | Max Parallel | Sequential (conflicts) |
-|-------|-------------|--------------|----------------------|
-| 1     | N           | N            | 0                    |
-| 2     | N           | N            | N                    |
-
-### Input Files Processed
-- [x] `user_draft.md` → `_processed_user_draft.md` (if used)
-- [x] `user_spec.md` → `_processed_user_spec.md` (if used)
-
-### Next Steps
-Apply spec patch (choose one):
-- **Method A (automatic)**: Run `spec-update-todo` → use Part 1 as input
-- **Method B (manual)**: Copy-paste each patch from Part 1 to the target section
-
-Execute implementation:
-- **Parallel**: Run `implementation` skill → use Part 2 as implementation plan
-- **Conflict-aware**: Run conflict-free groups in parallel, then run overlapping tasks sequentially
-
-### Model Recommendation
-[model recommendation for implementation]
-```
-
-## File Management Rules
-
-### Output Filename
-- Format: `feature_draft_<feature_name>.md`
-- `<feature_name>`: lowercase English, underscore-separated (e.g., `real_time_notification`)
-- For multiple features: use representative feature name or group name (e.g., `feature_draft_v2_features.md`)
-
-### Archive
-- Location: `_sdd/drafts/prev/`
-- Format: `prev_feature_draft_<name>_<timestamp>.md`
-- Archive only when a file with the same name already exists
-
-### File Size Management
-- When exceeding 25 tasks, suggest per-phase split option to user:
-  - Main file: `feature_draft_<name>.md` (index + Part 1)
-  - Phase files: `feature_draft_<name>_phase_1.md`, `feature_draft_<name>_phase_2.md`, ...
-
-## Best Practices
-
-### Effective Requirements Gathering
-- **Be specific**: Provide clear criteria rather than vague expressions
-- **Include examples**: Collect concrete usage examples when possible
-- **Specify priority**: Assign priority to all items
-- **Explain context**: Record why something is needed
-
-### Spec Patch Quality
-- **Style consistency**: Match the existing spec's language/format
-- **Section accuracy**: Target Section annotations must match the actual spec structure
-- **Status markers**: Use 📋 Planned marker
-- **Compatibility**: Full compliance with spec-update-todo input format
-
-### Implementation Plan Quality
-- **Specific tasks**: Vague tasks cause scope creep
-- **Include infrastructure**: CI/CD, environment configuration, tool setup
-- **Include tests**: Unit, integration, E2E test tasks
-- **Consider operations**: Monitoring, logging, deployment procedures
-- **Document decisions**: Record reasons for choosing specific approaches
-- **Identify MVP**: Mark tasks essential for initial release
-
-### Target Files Quality (Parallel-Specific)
-- **Be precise**: Use exact file paths, not directory names
-- **Minimize overlaps**: Design tasks to touch different files when possible
-- **Include tests**: Always list the test file alongside the source file
-- **Think about configs**: Don't forget shared config/settings files that multiple tasks may need
-- **Verify with codebase**: Check actual project structure before naming files
-
-## Error Handling
-
-| Situation | Response |
-|-----------|----------|
-| `_sdd/spec/` directory missing | Recommend running `spec-create` first |
-| Spec file missing | Can generate Part 2 only without spec (Part 1 requires spec) |
-| `_sdd/drafts/` directory missing | Create automatically |
-| Existing feature_draft file | Archive to `prev/` then create new |
-| Incomplete information | Supplement with repository heuristics and record assumptions in `Open Questions` |
-| User interrupts | Save content gathered so far |
-| Multiple features detected in input | Apply deterministic split policy (single draft if tightly coupled, otherwise split) and record rationale |
-| Cannot determine Target Files | Infer with `Glob`/`rg`; keep unresolved paths as `TBD` and log in `Open Questions` |
-
-## Workflow Integration
-
-```
-Parallel workflow:
-  feature-draft
-       ↓
-  _sdd/drafts/feature_draft_<name>.md
-       ↓                        ↓
-       ↓    spec-update-todo    ↓
-       ↓                        ↓
-  implementation ←─────┘
-       ↓
-  spec-update-done
-
-```
+| > 200 파일 | `rg`, `Glob`, `Bash` 위주, 최소 `Read` |
 
 ## Additional Resources
 
 ### Reference Files
-- **`references/output-format.md`** - Output file detailed format specification (with Target Files extension)
-- **`references/target-files-spec.md`** - Target Files field detailed specification
-> Note: execute only this SKILL's non-interactive contract even when older reference docs describe interactive flows.
+- `references/output-format.md` - Part 1 / Part 2 output shape
+- `references/target-files-spec.md` - exact `Target Files` rules
+- `references/tool-and-gates.md` - tool mapping and gates
+- `references/adaptive-questions.md` - deterministic completion rules
 
 ### Example Files
-- **`examples/feature_draft_parallel.md`** - Completed output example file with Target Files
+- `examples/feature_draft_parallel.md` - sample feature draft output
+
+## Integration with Other Skills
+
+- `spec-create` defines the spec shape Part 1 should target
+- `spec-update-todo` applies planned items to `_sdd/spec/`
+- `implementation` executes Part 2
+- `spec-update-done` syncs actual implementation back to spec

@@ -1,278 +1,51 @@
-# Implementation Review Checklists
+# Implementation Review Checklist
 
-## Pre-Review Checklist
+구현 리뷰와 스펙 후속 작업 연결을 위한 체크리스트다.
 
-Before starting the review:
+## 1) Preconditions
 
-```markdown
-- [ ] Implementation plan is located and readable
-- [ ] Codebase is accessible
-- [ ] `_sdd/env.md` is checked and required runtime/test setup is applied (conda/env vars/services)
-- [ ] Test suite can be run (or CI results available)
-- [ ] Clear on review scope (full review vs specific phase)
-```
+- [ ] 구현 계획 식별
+- [ ] 진행 문서 식별
+- [ ] 스펙 entry point 식별
+- [ ] 로컬 실행이 필요하면 `_sdd/env.md` 확인
 
-## Task Verification Checklist
+## 2) Task Verification
 
-For each task in the plan:
+- [ ] 각 task의 기대 산출물 확인
+- [ ] 구현 위치 확인
+- [ ] 상태를 `COMPLETE` / `PARTIAL` / `MISSING`으로 구분
 
-```markdown
-### Task [N]: [Title]
+## 3) Acceptance Criteria
 
-#### Code Verification
-- [ ] Expected files exist
-- [ ] Functions/classes mentioned in task are implemented
-- [ ] Code follows project patterns
-- [ ] No obvious bugs or issues
+- [ ] 각 criterion에 code evidence 연결
+- [ ] 각 criterion에 test evidence 연결
+- [ ] `MET` / `NOT MET` / `UNTESTED` 판정
 
-#### Test Verification
-- [ ] Test file exists
-- [ ] Tests cover each acceptance criterion
-- [ ] Tests are passing
-- [ ] Test names are descriptive
+## 4) Issues
 
-#### Acceptance Criteria
-For each criterion:
-- [ ] Criterion [1]: [Description]
-  - Evidence: [file:line]
-  - Test: [test name]
-  - Status: MET / NOT MET / UNTESTED
-```
+- [ ] Critical issue 식별
+- [ ] Quality issue 식별
+- [ ] Improvement 후보 식별
 
-## Code Quality Checklist
+## 5) Spec Sync Follow-ups
 
-When reviewing implementation code:
+- [ ] `Goal` 반영 필요 여부 확인
+- [ ] `Runtime Map` 반영 필요 여부 확인
+- [ ] `Component Index` 반영 필요 여부 확인
+- [ ] `Common Change Paths` 반영 필요 여부 확인
+- [ ] `Environment & Dependencies` 반영 필요 여부 확인
+- [ ] `Open Questions` 반영 필요 여부 확인
+- [ ] `DECISION_LOG.md` 제안 필요 여부 확인
+- [ ] 각 항목을 `MUST update` / `CONSIDER` / `NO update`로 분류
+- [ ] 기본 후속 액션이 `spec-update-done`인지 판단
 
-### Security
-```markdown
-- [ ] No SQL injection vulnerabilities (parameterized queries)
-- [ ] No XSS vulnerabilities (output encoding)
-- [ ] Authentication properly implemented
-- [ ] Authorization checks in place
-- [ ] Secrets not hardcoded
-- [ ] Input validation on all endpoints
-- [ ] CSRF protection where needed
-```
+## 6) Output
 
-### Error Handling
-```markdown
-- [ ] Errors are caught and handled appropriately
-- [ ] Error messages are helpful but not leaky
-- [ ] Consistent error response format
-- [ ] Logging for debugging
-- [ ] Graceful degradation where appropriate
-```
-
-### Code Patterns
-```markdown
-- [ ] Follows existing project conventions
-- [ ] Consistent naming
-- [ ] No code duplication
-- [ ] Appropriate abstraction level
-- [ ] Dependencies properly managed
-```
-
-### Performance
-```markdown
-- [ ] No obvious N+1 queries
-- [ ] Appropriate indexes in place
-- [ ] No blocking operations in async code
-- [ ] Resource cleanup (connections, files)
-```
-
-## Test Quality Checklist
-
-When reviewing tests:
-
-### Coverage
-```markdown
-- [ ] Happy path tested
-- [ ] Error cases tested
-- [ ] Edge cases tested
-- [ ] Boundary conditions tested
-```
-
-### Test Quality
-```markdown
-- [ ] Tests are independent (no shared state)
-- [ ] Tests are deterministic (no flaky tests)
-- [ ] Tests are fast (or appropriately marked slow)
-- [ ] Tests use appropriate assertions
-- [ ] Test names describe the behavior
-```
-
-### TDD Verification
-```markdown
-- [ ] Each acceptance criterion has a test
-- [ ] Tests would have failed before implementation
-- [ ] Tests aren't testing implementation details
-```
-
-## Issue Severity Classification
-
-### Critical (Must Fix)
-```markdown
-Criteria for Critical:
-- [ ] Security vulnerability
-- [ ] Data loss possible
-- [ ] Core functionality broken
-- [ ] Failing tests that block deployment
-- [ ] Missing required feature (P0 task)
-```
-
-### Quality (Should Fix)
-```markdown
-Criteria for Quality:
-- [ ] Missing tests for implemented code
-- [ ] Inconsistent behavior
-- [ ] Poor error handling
-- [ ] Non-blocking bugs
-- [ ] Technical debt that will grow
-```
-
-### Improvement (Could Fix)
-```markdown
-Criteria for Improvement:
-- [ ] Performance optimization opportunity
-- [ ] Code readability enhancement
-- [ ] Documentation improvement
-- [ ] Nice-to-have feature
-```
-
-## Review Output Checklist
-
-Before presenting findings:
-
-```markdown
-- [ ] All tasks have been verified
-- [ ] All acceptance criteria checked
-- [ ] Issues are categorized by severity
-- [ ] Each issue has:
-  - [ ] Clear description
-  - [ ] Location (file:line)
-  - [ ] Evidence/example
-  - [ ] Recommended action
-- [ ] Next steps are prioritized
-- [ ] Summary includes:
-  - [ ] Progress metrics
-  - [ ] Biggest risk
-  - [ ] Single most important action
-```
-
-## Quick Review Checklist
-
-For fast status checks:
-
-```markdown
-1. [ ] Count completed vs total tasks
-2. [ ] Run test suite - note failures
-3. [ ] Check for any P0 tasks incomplete
-4. [ ] Identify top 3 blockers
-5. [ ] State single next action
-```
-
-## Phase Sign-off Checklist
-
-Before marking a phase complete:
-
-```markdown
-### Phase [N]: [Name]
-
-#### Completion
-- [ ] All tasks in phase marked complete
-- [ ] All acceptance criteria met
-- [ ] All tests passing
-
-#### Quality
-- [ ] No critical issues open
-- [ ] Quality issues documented (if deferring)
-- [ ] Code review completed
-
-#### Documentation
-- [ ] API documentation updated
-- [ ] README updated if needed
-- [ ] Deployment notes if needed
-
-#### Sign-off
-- [ ] Ready for next phase: YES / NO
-- [ ] Blockers: [list or "none"]
-```
-
-## Common Issues to Look For
-
-### Authentication/Authorization
-```markdown
-- Missing auth checks on protected routes
-- Insecure token storage
-- Password requirements not enforced
-- Session fixation vulnerabilities
-- OAuth state parameter missing
-```
-
-### Data Handling
-```markdown
-- SQL injection (string interpolation in queries)
-- Missing input validation
-- Improper error messages exposing internals
-- Sensitive data in logs
-- Missing data sanitization
-```
-
-### API Design
-```markdown
-- Inconsistent status codes
-- Missing rate limiting
-- No pagination on list endpoints
-- Improper HTTP methods
-- Missing CORS configuration
-```
-
-### Testing Gaps
-```markdown
-- No tests for error paths
-- Missing edge case tests
-- Integration tests missing
-- No tests for async behavior
-- Flaky tests ignored
-```
-
-## Review Report Template
-
-```markdown
-# Implementation Review Report
-
-## Executive Summary
-- **Project**: [Name]
-- **Review Date**: [Date]
-- **Progress**: [X]% complete
-- **Status**: READY / NEEDS WORK / BLOCKED
-
-## Key Findings
-
-### What's Working Well
-1. [Positive finding]
-2. [Positive finding]
-
-### Critical Issues
-1. [Issue with action]
-2. [Issue with action]
-
-### Recommendations
-1. [Priority 1 action]
-2. [Priority 2 action]
-
-## Detailed Findings
-[Full assessment]
-
-## Metrics
-| Metric | Value |
-|--------|-------|
-| Tasks Complete | X/Y |
-| Criteria Met | X/Y |
-| Tests Passing | X/Y |
-| Coverage | X% |
-
-## Next Steps
-1. [ ] [Action item]
-2. [ ] [Action item]
-```
+- [ ] Progress Overview 포함
+- [ ] Acceptance Criteria Assessment 포함
+- [ ] Issues Found 포함
+- [ ] Test Status 포함
+- [ ] Spec Sync Follow-ups 포함
+- [ ] Recommended Spec Action 포함
+- [ ] Recommended Next Steps 포함
+- [ ] Open Questions 포함

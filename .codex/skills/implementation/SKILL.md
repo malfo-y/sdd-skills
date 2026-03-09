@@ -1,10 +1,10 @@
 ---
 name: implementation
 description: Use this skill when the user wants to execute an implementation plan, start implementing tasks from a plan, work through a development roadmap, says "implement the plan", "start implementation", "execute the plan", "work on the tasks", or explicitly asks for "implement parallel", "parallel implementation", "병렬 구현", "병렬로 구현". Uses conflict-aware parallel execution when Target Files are available.
-version: 1.0.0
+version: 1.1.0
 ---
 
-# Implementation Execution (Parallel TDD Approach)
+# Implementation Execution (Spec-Aware Parallel TDD)
 
 Execute implementation plans systematically using Test-Driven Development (TDD), with **parallel sub-agent dispatch** for independent tasks within each phase. Tasks without file conflicts are executed concurrently via parallel sub-agent calls.
 
@@ -29,8 +29,11 @@ spec → feature-draft → implementation (this) → spec-update-done
 
 - This skill **MUST NOT** create/edit/delete any spec documents under `<project_root>/_sdd/spec/`.
 - If implementation reveals spec drift, ambiguity, or missing requirements:
-  - Report it in the progress report / chat, and
-  - Recommend updating the spec via `spec-update-todo` (or running a spec audit via `spec-update-done`) and log unresolved items in `Open Questions`.
+  - Classify it as `MUST update`, `CONSIDER`, or `NO update`
+  - Report it in the progress report / chat
+  - Default to recommending `spec-update-done` after implementation
+  - Escalate to `spec-update-todo` only when the plan/scope must change before execution can continue
+  - Log unresolved items in `Open Questions`
 
 ## Core Principle: Test-Driven Development
 
@@ -78,7 +81,17 @@ If multiple plan files exist and the user did not specify a starting point:
    - **Testing framework and conventions** (critical for TDD)
    - Test file locations and naming conventions
 
-5. **Load the execution/test environment guide** before running any code or tests:
+5. **Load the current spec context** before execution:
+   - `<project_root>/_sdd/spec/main.md` or the primary project spec file
+   - Linked component spec files relevant to the current phase
+   - Focus on:
+     - `Goal` → `Project Snapshot / Key Features / Non-Goals`
+     - `Architecture Overview` → `System Boundary / Repository Map / Runtime Map`
+     - `Component Details` → `Component Index`
+     - `Usage Examples` → `Common Change Paths` (if present)
+     - `Open Questions`
+
+6. **Load the execution/test environment guide** before running any code or tests:
    - User-specified path
    - `<project_root>/_sdd/env.md` (source of environment variables, conda env, required setup commands)
    - Recent conversation context
@@ -87,15 +100,16 @@ If `_sdd/env.md` exists, apply its setup instructions first (for example: `conda
 
 ## Process Overview
 
-1. **Load the Plan** - Read and parse the implementation plan
+1. **Load Plan + Spec Context** - Read the implementation plan and the current exploration-first spec
 2. **Initialize Task Tracking** - Create tasks in the task system
-3. **Analyze Parallelization** - Build conflict graph, form parallel groups
-4. **Execute by Phase (Parallel)** - Dispatch sub-agents for each group
-5. **Integrate & Verify** - Post-group verification, handle failures
-6. **Phase Review** - Quality checks after each phase
-7. **Final Review & Report** - Comprehensive review and combined report
+3. **Assess Spec Sync Risk** - Identify likely `MUST update / CONSIDER / NO update`
+4. **Analyze Parallelization** - Build conflict graph, form parallel groups
+5. **Execute by Phase (Parallel)** - Dispatch sub-agents for each group
+6. **Integrate & Verify** - Post-group verification, handle failures
+7. **Phase Review** - Quality checks after each phase
+8. **Final Review & Report** - Comprehensive review and combined report
 
-## Step 1: Load the Plan
+## Step 1: Load Plan + Spec Context
 
 Read the implementation plan file and extract:
 
@@ -104,16 +118,35 @@ Read the implementation plan file and extract:
 - **Tasks**: Individual work items with details
 - **Dependencies**: Task relationships and blocking items
 - **Target Files**: Per-task file lists (for parallel scheduling)
+- **Spec Gaps**: Explicit gaps, ambiguity, or scope mismatches already recorded in the plan
+- **Expected Spec Sync Follow-ups**: Planned documentation follow-ups if present
 
 ```markdown
 Key sections to parse:
 - ## Components
 - ## Implementation Phases
 - ## Task Details (including Target Files)
+- ## Spec Inputs Used
+- ## Spec Gaps
+- ## Expected Spec Sync Follow-ups
 - ## Open Questions (address before proceeding)
 ```
 
 If the plan has **Open Questions**, apply deterministic defaults and continue. Record unresolved risk in `Open Questions`.
+
+Read the current spec as a navigation map, not as a prose dump:
+
+- `Goal` → `Project Snapshot / Key Features / Non-Goals`
+- `Architecture Overview` → `System Boundary / Repository Map / Runtime Map`
+- `Component Details` → `Component Index`
+- `Usage Examples` → `Common Change Paths` (if present)
+- `Open Questions`
+
+Derive from spec + plan:
+- which runtime flows will change
+- which components and file paths are most likely to be touched
+- whether the plan already conflicts with the current spec
+- which unknowns are safe to proceed with vs which block execution
 
 ## Step 2: Initialize Task Tracking
 
@@ -122,7 +155,7 @@ Initialize tracking in the plan/progress document for visibility:
 ```
 For each task in the plan:
 1. Add a tracking row in `_sdd/implementation/IMPLEMENTATION_PROGRESS.md`:
-   - task_id, title, phase, dependencies, status, owner/sub-agent, notes
+   - task_id, title, phase, dependencies, status, owner/sub-agent, spec_sync_classification, notes
 2. Set initial status:
    - BLOCKED (if dependencies exist)
    - READY (if no dependencies)
@@ -137,7 +170,30 @@ Plan ID 1 → Progress Row #1
 Plan ID 2 → Progress Row #2
 ```
 
-## Step 3: Analyze Parallelization
+## Step 3: Assess Spec Sync Risk
+
+Before scheduling tasks, classify likely documentation impact:
+
+```text
+MUST update:
+- runtime flow, system boundary, or component responsibility changes
+- new external contract / invariant / operator-facing behavior
+- planned feature meaningfully changes where future work should look
+
+CONSIDER:
+- notable debugging/testing/change-path guidance becomes outdated
+- a component spec gains a useful new recipe or caveat
+- implementation resolved or created an important `Open Question`
+
+NO update:
+- localized refactor with unchanged behavior and unchanged navigation value
+- test-only changes that do not alter spec-level understanding
+- internal cleanup that preserves current contracts and change paths
+```
+
+Use the current spec, the plan's `Spec Gaps`, and `Expected Spec Sync Follow-ups` to seed this classification. If a blocking `MUST update` gap means the current plan cannot be trusted, pause execution and recommend `spec-update-todo` before continuing.
+
+## Step 4: Analyze Parallelization
 
 This is the **key step** that differentiates parallel execution from sequential execution.
 
@@ -236,7 +292,7 @@ Before executing, show the user the parallel dispatch plan:
 예상 효율: 4 tasks → 2 groups (2x speedup)
 ```
 
-## Step 4: Execute by Phase (Parallel)
+## Step 5: Execute by Phase (Parallel)
 
 For each phase, execute parallel groups in order:
 
@@ -340,7 +396,7 @@ When tasks cannot be parallelized (conflicts or missing Target Files), execute t
 4. Update tracking table: status = "COMPLETED"
 ```
 
-## Step 5: Integrate & Verify (Post-Group)
+## Step 6: Integrate & Verify (Post-Group)
 
 After each parallel group completes:
 
@@ -393,7 +449,18 @@ For each task in the completed group:
   IF partial → Note incomplete criteria for follow-up
 ```
 
-## Step 6: Phase Review
+### 6.6 Check Spec Sync Candidates
+
+After each group:
+
+```text
+1. Compare actual touched files and behavior against the current spec
+2. Note newly confirmed `MUST update / CONSIDER / NO update`
+3. Record whether the recommended follow-up remains `spec-update-done`
+4. If execution uncovered a blocking spec error for future phases, pause and recommend `spec-update-todo`
+```
+
+## Step 7: Phase Review
 
 After completing all tasks in a phase, run a lightweight quality review.
 
@@ -441,7 +508,12 @@ ELSE:
 
 Save per-phase report under `<project-root>/_sdd/implementation/IMPLEMENTATION_REPORT_PHASE_<phase-number>.md`.
 
-## Step 7: Final Review & Report
+The per-phase report should also summarize:
+- newly confirmed `MUST update` items
+- `CONSIDER` items worth carrying forward
+- `NO update` items that were intentionally left out of spec sync
+
+## Step 8: Final Review & Report
 
 After all phases complete, run a comprehensive quality review across the **entire implementation**, then produce a combined report.
 
@@ -514,9 +586,38 @@ The combined report should include:
 #### Recommendations
 1. [recommendation]
 
+### Spec Sync Candidates
+| Item | Classification | Why | Recommended Action |
+|------|----------------|-----|--------------------|
+| [item] | MUST update / CONSIDER / NO update | [reason] | spec-update-done / spec-update-todo / none |
+
 ### Conclusion
 [Overall assessment: READY / NEEDS WORK / BLOCKED]
 ```
+
+### Recommended Spec Action
+
+- Default: run `spec-update-done`
+- Escalate to `spec-update-todo` only if the implementation exposed a plan/spec mismatch that should be resolved before more work continues
+- If every candidate is `NO update`, say so explicitly instead of generating unnecessary follow-up
+
+## Communication Rules
+
+- Keep execution updates token-efficient and operational
+- Summarize only the current phase, current blockers, and confirmed spec-sync impact
+- Do not repeat the full plan or full spec in every update
+
+## When to Record and Continue
+
+- `Open Questions` exists but does not block current phase
+- Target Files inference is low confidence for some tasks → run those sequentially
+- spec sync impact is ambiguous but not blocking → record as `CONSIDER`
+
+## Integration with Other Skills
+
+- `implementation-plan`: supplies tasks, target files, spec gaps, and expected spec sync follow-ups
+- `spec-update-done`: default follow-up when implementation changed navigation, contracts, runtime map, or change paths
+- `spec-update-todo`: use only when plan/spec mismatch blocks safe continuation
 
 ## TDD Guidelines
 

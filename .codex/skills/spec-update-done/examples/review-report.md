@@ -1,306 +1,42 @@
 # Example: Spec Sync Report
 
-This is an example of a spec sync report generated after analyzing implementation logs and code changes.
+This is an example sync report before applying spec updates.
 
 ---
 
 # Spec Sync Report: Instagram Data Pipeline
 
-**Review Date**: 2024-01-20
-**Reviewer**: Codex (gpt-5.3-codex)
-**Spec Version**: 1.2.0
-**Code Commit**: `abc1234` (main branch)
+**Review Date**: 2026-03-09
+**Reviewer**: Codex
+**Target Spec**: `_sdd/spec/apify_ig.md`
+**Spec Update Classification**: MUST update
+**Selected Strategy**: Planned-to-Actual Sync
 
-## Executive Summary
+## Summary
 
-Reviewed spec document against current codebase and implementation logs. Found **12 items** requiring updates across 4 categories.
+- 변경 파일: 2개
+- 주요 탐색 업데이트: 4개
+- 기능/계약 업데이트: 3개
+- 남는 Open Questions: 1개
 
-| Category | Updates Needed | Priority |
-|----------|---------------|----------|
-| Architecture | 2 | High |
-| Features | 5 | Medium |
-| Issues | 3 | Low |
-| Documentation | 2 | Low |
+## Navigation Updates
 
-## Input Sources Analyzed
+1. `Architecture Overview > Repository Map`에 `src/services/notification_service.py` 관련 경로가 없음
+2. `Architecture Overview > Runtime Map`에 배치 종료 이벤트 -> NotificationService 흐름이 없음
+3. `Component Details > Component Index`에 `NotificationService`가 없음
+4. `Usage Examples > Common Change Paths`에 알림 기능 수정 시작점이 없음
 
-### Implementation Logs
-- ✅ `IMPLEMENTATION_PLAN.md` - 15 tasks defined
-- ✅ `IMPLEMENTATION_PROGRESS.md` - 13/15 tasks complete
-- ✅ `IMPLEMENTATION_REVIEW.md` - Last reviewed 2024-01-19
-- ✅ `TEST_SUMMARY.md` - 47 tests, 45 passing
+## Behavior / Contract Updates
 
-### Code Changes
-- 23 commits since last spec update
-- 8 files added, 12 files modified
-- Key changes: video support, proxy rotation
+1. `실시간 알림` 기능이 계획 상태가 아니라 구현 완료 상태임
+2. NotificationService는 실제로 Slack/Discord 채널 비활성화 fallback을 지원함
+3. 알림 실패가 파이프라인 종료 상태를 바꾸지 않는 invariant가 코드로 확인됨
 
-### User Feedback
-- Request for video download documentation
-- Clarification on rate limiting behavior
+## Environment Updates
 
----
+1. `NOTIFICATION_WEBHOOK_SLACK`, `NOTIFICATION_WEBHOOK_DISCORD`, `NOTIFICATION_ENABLED` 환경 변수 문서화 필요
 
-## Detailed Findings
+## Issue / Unknown Updates
 
-### 1. Architecture Changes
-
-#### 1.1 New Component: Video Processor
-
-**Status**: 🔴 Not in Spec
-
-**Evidence:**
-- New file: `src/processors/video_processor.py` (commit `def5678`)
-- Referenced in `IMPLEMENTATION_PROGRESS.md` Task #8: "Implement video download"
-- Imported in `main.py` line 15
-
-**Current Spec Says:**
-> (No mention of video processing)
-
-**Actual State:**
-```python
-# src/processors/video_processor.py
-class VideoProcessor:
-    def download_video(self, url: str, output_path: Path) -> bool:
-        """Download video with quality selection and retry logic."""
-```
-
-**Recommended Update:**
-Add new component section for Video Processor with:
-- Purpose: Handle video/reel downloads
-- Input: Video URL, output path, quality preference
-- Output: Downloaded video file
-- Dependencies: ffmpeg, requests
-
----
-
-#### 1.2 Changed Component: Image Organizer
-
-**Status**: 🟡 Partially Outdated
-
-**Evidence:**
-- `src/image_organizer.py` modified in commits `ghi9012`, `jkl3456`
-- New methods: `organize_by_date()`, `create_thumbnails()`
-- IMPLEMENTATION_REVIEW.md notes: "Added date-based organization"
-
-**Current Spec Says:**
-> Image Organizer: Sorts images into folders by type
-
-**Actual State:**
-- Now supports organization by type AND date
-- Generates thumbnails for preview
-- Has new config options
-
-**Recommended Update:**
-Expand component description to include:
-- Date-based organization mode
-- Thumbnail generation feature
-- New configuration options
-
----
-
-### 2. Feature Changes
-
-#### 2.1 Video Download Support
-
-**Status**: 🔴 Not Documented
-
-**Evidence:**
-- IMPLEMENTATION_PROGRESS.md: Task #8 ✅ Complete
-- New CLI flag: `--include-videos`
-- Tests in `test_video_processor.py`
-
-**Recommended Update:**
-Add to Features section:
-- Video/Reel download capability
-- Quality selection options
-- Storage requirements note
-
----
-
-#### 2.2 Proxy Rotation
-
-**Status**: 🔴 Not Documented
-
-**Evidence:**
-- IMPLEMENTATION_PROGRESS.md: Task #11 ✅ Complete
-- `src/utils/proxy_manager.py` added
-- Config: `PROXY_ROTATION_INTERVAL`
-
-**Recommended Update:**
-Add to Configuration section:
-- Proxy settings documentation
-- Rotation behavior explanation
-- Example proxy configuration
-
----
-
-#### 2.3 Rate Limiting (Changed)
-
-**Status**: 🟡 Outdated
-
-**Current Spec Says:**
-> Rate limit: 30 requests per minute
-
-**Actual State:**
-```python
-# config.py
-RATE_LIMIT = {
-    "requests_per_minute": 20,  # Changed from 30
-    "burst_limit": 5,           # New
-    "retry_after_429": True,    # New
-}
-```
-
-**Recommended Update:**
-Update rate limiting documentation with new values and options.
-
----
-
-#### 2.4 Batch Processing
-
-**Status**: 🟢 Implemented as Documented
-
-No changes needed.
-
----
-
-#### 2.5 Export Formats
-
-**Status**: 🟡 Partially Documented
-
-**Current Spec Says:**
-> Exports to JSON and CSV
-
-**Actual State:**
-- Also supports Excel (.xlsx) export
-- Added in commit `mno7890`
-
-**Recommended Update:**
-Add Excel format to export options.
-
----
-
-### 3. Issue Updates
-
-#### 3.1 BUG-001: Memory Leak (Resolved)
-
-**Current Spec Says:**
-> 🔴 Open - Memory leak in long-running processes
-
-**Actual State:**
-- Fixed in PR #42 (commit `pqr1234`)
-- TEST_SUMMARY.md shows memory test passing
-- IMPLEMENTATION_REVIEW.md confirms resolution
-
-**Recommended Update:**
-Move to resolved issues or remove from Known Issues.
-
----
-
-#### 3.2 BUG-002: Unicode Filenames (Resolved)
-
-**Current Spec Says:**
-> 🔴 Open - Unicode characters in filenames cause errors
-
-**Actual State:**
-- Fixed in commit `stu5678`
-- Test `test_unicode_filenames` passing
-
-**Recommended Update:**
-Mark as resolved.
-
----
-
-#### 3.3 New Issue: Carousel Limit
-
-**Status**: 🔴 Not in Spec
-
-**Evidence:**
-- IMPLEMENTATION_REVIEW.md notes: "Carousel posts limited to 10 images"
-- TODO comment in `src/extractors/post_extractor.py:145`
-
-**Recommended Update:**
-Add to Known Issues:
-> Carousel posts with more than 10 images only download first 10
-
----
-
-### 4. Documentation Updates
-
-#### 4.1 Installation Instructions
-
-**Status**: 🟡 Outdated
-
-**Current Spec Says:**
-```bash
-pip install -r requirements.txt
-```
-
-**Actual State:**
-- Now uses `pyproject.toml`
-- Recommended: `pip install -e .`
-
-**Recommended Update:**
-Update installation commands.
-
----
-
-#### 4.2 Usage Examples
-
-**Status**: 🟡 Incomplete
-
-**Missing Examples:**
-- Video download command
-- Proxy configuration
-- Date-based organization
-
-**Recommended Update:**
-Add examples for new features.
-
----
-
-## Summary of Recommended Changes
-
-### High Priority
-1. Add Video Processor component section
-2. Document proxy rotation feature
-
-### Medium Priority
-3. Update Image Organizer description
-4. Add video download feature documentation
-5. Update rate limiting values
-6. Add Excel export option
-7. Mark BUG-001 as resolved
-
-### Low Priority
-8. Mark BUG-002 as resolved
-9. Add carousel limitation issue
-10. Update installation instructions
-11. Add new usage examples
-12. Update version and date
-
----
-
-## Version Recommendation
-
-Current: `1.2.0`
-Recommended: `1.3.0` (new features, no breaking changes)
-
----
-
-## Open Questions
-
-1. Should video processing be a separate component or part of existing extractor?
-2. Are there additional proxy configuration options to document?
-3. Should resolved issues be archived or removed entirely?
-
----
-
-## Next Steps
-
-1. [ ] Create backup of current spec
-2. [ ] Apply updates in order of priority
-3. [ ] Update version to 1.3.0
-4. [ ] Add changelog entry
-5. [ ] Record unresolved decisions in `Open Questions`
+1. 이메일 알림 범위는 아직 구현되지 않았으므로 `Open Questions` 유지
+2. 기존 `Open Questions` 중 “알림 실패 시 파이프라인 영향” 항목은 해결되어 제거 가능

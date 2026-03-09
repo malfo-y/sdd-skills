@@ -146,10 +146,10 @@ For each pair of non-conflicting (파일 수준) tasks:
 
 IF 의미적 충돌 발견:
   → 해당 task 쌍을 순차 실행으로 전환
-  → 또는 사용자에게 확인 후 병렬 허용
+  → 확신이 높아질 때까지 병렬 허용하지 않음
 ```
 
-**중요**: 의미적 충돌은 자동 감지가 불완전할 수 있습니다. 불확실한 경우 순차 실행이 안전합니다.
+**중요**: 의미적 충돌은 자동 감지가 불완전할 수 있습니다. 불확실한 경우 순차 실행이 안전합니다. 사용자 확인을 기본 흐름으로 두지 말고, low-confidence task는 순차 실행하고 근거를 기록합니다.
 
 ### 충돌 시 처리
 
@@ -294,8 +294,9 @@ IF 의미적 충돌 발견:
 IF 계획에 Target Files 필드가 없으면:
   1. 각 task의 Description, Technical Notes에서 파일 경로 추론
   2. 코드베이스를 탐색하여 관련 파일 식별
-  3. 추론한 Target Files를 사용자에게 확인 요청
-  4. 확인 못 받으면 해당 phase는 순차 실행
+  3. confidence가 높으면 병렬 그룹에 포함
+  4. confidence가 낮으면 해당 task 또는 phase는 순차 실행
+  5. 추론 근거는 진행 메모나 `Open Questions`에 기록
 ```
 
 ### 2. Sub-agent 실패
