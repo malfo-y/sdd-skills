@@ -54,6 +54,13 @@ version: 1.2.0
 - 오래된 `Open Questions`가 그대로 남아 있지 않은가
 - 결정 맥락이 달라졌는데 `DECISION_LOG.md` 제안이 필요한가
 
+### 5. Decision & Invariant Memory
+
+- Cross-Cutting Invariants 또는 동등한 불변 조건이 보이는가
+- 비자명한 설계 결정이 스펙 본문이나 `DECISION_LOG.md`에 기록되어 있는가
+- `Open Questions`에 실질적 미결 사항이 정리되어 있는가
+- "깨지면 안 되는 가정"을 스펙만 읽고 파악할 수 있는가
+
 ## Inputs
 
 - `_sdd/spec/main.md` 또는 `_sdd/spec/<project>.md`
@@ -117,8 +124,18 @@ version: 1.2.0
 | Severity | 의미 |
 |----------|------|
 | High | 잘못된 계약, 중요한 drift, 탐색 실패로 잘못 수정될 위험 |
-| Medium | 누락/모호함으로 작업 효율이 떨어짐 |
+| Medium | 누락/모호함, 자기검증 기준 부족으로 작업 효율이 떨어짐 |
 | Low | 링크 위생, 표현 문제, 비핵심 개선 |
+
+각 review dimension을 아래 probe로 `PASS` / `WEAK` / `FAIL` 판정한다.
+
+| Dimension | Probe |
+|-----------|-------|
+| Entry Point Quality | "이 저장소는 무엇을 하는가?" |
+| Navigation Quality | "기능 X는 어디에 있는가?" |
+| Changeability | "변경 Y는 어디서 시작해야 하는가?" |
+| Drift | "스펙과 코드가 현재도 일치하는가?" |
+| Decision & Invariant Memory | "왜 Z를 선택했고 무엇을 깨면 안 되는가?" |
 
 결론은 하나를 고른다.
 
@@ -132,13 +149,16 @@ version: 1.2.0
 
 1. Executive Summary
 2. Findings by Severity
-3. Entry Point / Navigation Notes
-4. Changeability Notes
-5. Spec-to-Code Drift Notes
-6. Open Questions
-7. Suggested Next Actions
-8. `DECISION_LOG.md` proposal (필요 시)
-9. LLM Efficiency Notes
+3. Dimension Verdicts (`PASS` / `WEAK` / `FAIL` + 근거)
+4. Entry Point / Navigation Notes
+5. Changeability Notes
+6. Spec-to-Code Drift Notes
+7. Open Questions
+8. Suggested Next Actions
+9. `DECISION_LOG.md` proposal (필요 시)
+10. LLM Efficiency Notes
+
+`SYNC_REQUIRED`인 경우에는 바로 적용 가능한 spec update checklist를 함께 제시한다.
 
 기존 리포트가 있으면 `_sdd/spec/prev/PREV_SPEC_REVIEW_REPORT_<timestamp>.md`로 백업한다.
 

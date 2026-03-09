@@ -302,6 +302,44 @@ Validate:
 8. `DECISION_LOG.md` exists if the drafting process introduced non-obvious decisions.
 9. The main spec is not bloated with duplicated detail; if it becomes too large or component count is high, split it.
 
+### Step 4.5: Self-Verification Gate
+
+구조 검증(Step 4) 통과 후, 아래 acceptance criteria로 스펙 초안을 다시 판정한다.
+이 단계는 **판정만** 수행한다. FAIL이 나오면 Step 3으로 돌아가 필요한 부분만 보강한 뒤 이 단계를 최대 1회 재실행한다.
+
+#### Acceptance Criteria
+
+| Criterion | Probe | PASS | WEAK | FAIL |
+|-----------|-------|------|------|------|
+| 저장소 이해 | "이 저장소는 무엇을 하고, 누구를 위한 것이며, 무엇을 하지 않는가?" | `Goal`만 읽고 목적, 핵심 사용자/사용 사례, 비목표를 구체적으로 답할 수 있다 | 답은 가능하지만 모호하거나 비목표가 흐릿하다 | `Goal`이 없거나 일반론만 있어 이 저장소의 목적을 파악할 수 없다 |
+| 기능 위치 탐색 | "주요 기능 X의 코드는 어디에 있는가?" | `Component Details` 또는 `Component Index`에서 실제 경로/심볼을 바로 찾을 수 있다 | 기능은 보이지만 경로/심볼 연결이 약하다 | 기능이 어느 컴포넌트/파일에 속하는지 스펙에서 알 수 없다 |
+| 안전한 수정 판단 | "변경 Y는 어디서 시작하고 무엇을 함께 봐야 하는가?" | `Usage Examples` 또는 컴포넌트 `Change Recipes`에서 변경 시작점과 검증 포인트를 찾을 수 있다 | 시작점은 보이지만 영향 범위/검증 포인트가 약하다 | 변경 가이드가 없어 코드를 직접 뒤져야 한다 |
+| 결정/불변 조건 기억 | "왜 Z를 선택했고 무엇을 깨면 안 되는가?" | 불변 조건, 위험, rationale이 스펙 본문·`Open Questions`·`DECISION_LOG.md` 중 한 곳 이상에 드러난다 | 일부만 기록되어 있다 | 비자명한 결정과 불변 조건이 보이지 않는다 |
+
+#### Self-Check Procedure
+
+1. 생성된 메인 스펙과 연결된 컴포넌트 스펙을 다시 읽는다.
+2. 위 네 개 probe를 실제로 답해 본다.
+3. 각 criterion을 `PASS` / `WEAK` / `FAIL`로 판정한다.
+4. 결과에 따라 행동한다:
+   - `ALL PASS`: 완료
+   - `WEAK`만 존재: 개선 포인트를 완료 보고에 포함하고 진행
+   - `FAIL` 존재: Step 3으로 돌아가 해당 부분만 보강 후 재판정
+   - 재판정 후에도 `FAIL`: 사용자에게 보고하고 판단을 맡긴다
+
+#### Completion Output
+
+완료 보고에 아래 표를 포함한다:
+
+| Criterion | Probe | 판정 | 근거 |
+|-----------|-------|------|------|
+| 저장소 이해 | "이 저장소는 무엇을 하는가?" | PASS | (구체적 근거) |
+| 기능 위치 탐색 | "X 기능은 어디에?" | PASS | (구체적 근거) |
+| 안전한 수정 판단 | "Y를 변경하려면?" | PASS | (구체적 근거) |
+| 결정/불변 조건 기억 | "왜 Z를 선택?" | PASS | (구체적 근거) |
+
+**종합**: `PASS` / `PASS WITH NOTES` / `FAIL -> FIX`
+
 ## Split Guidance
 
 Split the spec when any of the following is true:

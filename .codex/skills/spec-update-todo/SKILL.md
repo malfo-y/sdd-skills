@@ -220,6 +220,49 @@ If the updated content grows too large:
 - keep the main spec as the entry point
 - record the file map in `Open Questions` if the split is non-obvious
 
+### Step 7.5: Planned Update Quality Gate
+
+업데이트 적용 후, 이번 planned update가 실제로 탐색성과 변경 시작점을 강화했는지 acceptance criteria로 다시 판정한다.
+이 단계는 **판정만** 수행한다. FAIL이 나오면 Step 7로 돌아가 필요한 부분만 보강한 뒤 이 단계를 최대 1회 재실행한다.
+
+Scope rules:
+- 평가 대상은 **이번에 추가/수정한 planned items**다. 기존 스펙의 레거시 결함은 직접 평가 대상이 아니다.
+- 이번 변경 범위와 직접 무관해 판단 근거가 부족한 criterion은 `WEAK`로 기록하고 `FAIL`로 간주하지 않는다.
+- 판단의 중심은 "새 planned item이 어디에 붙고, 나중에 어디서 수정/검증을 시작해야 하는지"다.
+
+#### Acceptance Criteria
+
+| Criterion | Probe | PASS | WEAK | FAIL |
+|-----------|-------|------|------|------|
+| 저장소 이해 | "이번 planned update가 저장소 목적/범위를 흐리지 않는가?" | Goal이나 관련 설명이 이번 planned item과 충돌하지 않는다 | 기존 Goal과의 연결이 다소 약하다 | 이번 planned item이 저장소 목적/범위를 혼란스럽게 만든다 |
+| 기능 위치 탐색 | "이번에 추가한 planned item X는 어디에 붙는가?" | 새 planned item이 `Component Details`/`Component Index`/관련 경로에 명확히 연결된다 | 컴포넌트 수준 설명은 있으나 경로/심볼 연결이 약하다 | planned item의 소유 컴포넌트나 경로를 알 수 없다 |
+| 안전한 수정 판단 | "이 planned item을 구현하려면 어디서 시작해야 하는가?" | `Change Recipes` 또는 `Common Change Paths` 수준의 변경 시작점과 확인 포인트가 있다 | 시작점은 있으나 검증 포인트나 영향 범위가 약하다 | 구현 시작점과 변경 가이드가 없다 |
+| 결정/불변 조건 기억 | "이번 planned item으로 새로 생긴 결정/가정은 무엇인가?" | 새 결정, 제약, 미해결 사항이 `Open Questions` 또는 `DECISION_LOG.md` 등에 기록된다 | 기록은 있으나 불명확하다 | 새 결정/가정이 전혀 남지 않는다 |
+
+#### Self-Check Procedure
+
+1. 이번에 추가/수정한 planned items와 직접 영향받은 섹션만 다시 읽는다.
+2. 위 네 개 probe를 planned item 하나 이상에 대입해 본다.
+3. 각 criterion을 `PASS` / `WEAK` / `FAIL`로 판정한다.
+4. 결과에 따라 행동한다:
+   - `ALL PASS`: 완료
+   - `WEAK`만 존재: 개선 포인트를 완료 보고에 포함하고 진행
+   - `FAIL` 존재: Step 7로 돌아가 해당 부분만 보강 후 재판정
+   - 재판정 후에도 `FAIL`: 사용자에게 보고하고 판단을 맡긴다
+
+#### Completion Output
+
+완료 보고에 아래 표를 포함한다:
+
+| Criterion | Probe | 판정 | 근거 |
+|-----------|-------|------|------|
+| 저장소 이해 | "이번 planned update가 목적을 흐리지 않는가?" | PASS | (구체적 근거) |
+| 기능 위치 탐색 | "planned item X는 어디에?" | PASS | (구체적 근거) |
+| 안전한 수정 판단 | "구현 시작점은 어디인가?" | PASS | (구체적 근거) |
+| 결정/불변 조건 기억 | "새 결정/가정은 무엇인가?" | PASS | (구체적 근거) |
+
+**종합**: `PASS` / `PASS WITH NOTES` / `FAIL -> FIX`
+
 ### Step 8: Process Input Files
 
 **Tools**: `Bash (mv)`
@@ -243,6 +286,7 @@ After updating, summarize:
 - updated files
 - changed sections
 - planned items added
+- quality gate result
 - whether `DECISION_LOG.md` changed
 - processed input file status
 - remaining `Open Questions`

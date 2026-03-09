@@ -232,6 +232,48 @@ Verify:
 - optional sections that remain are still relevant
 - the synced spec stays compact enough for one focused read
 
+### Step 5.5: Sync Quality Gate
+
+구조 검증(Step 5) 통과 후, 이번 동기화 결과가 실제로 신뢰 가능한 change map이 되었는지 acceptance criteria로 다시 판정한다.
+이 단계는 **판정만** 수행한다. FAIL이 나오면 Step 4로 돌아가 필요한 부분만 보강한 뒤 이 단계를 최대 1회 재실행한다.
+
+Scope rules:
+- 평가 대상은 **이번에 변경/추가한 섹션**이다. 기존 레거시 결함은 직접 평가 대상이 아니다.
+- 이번 변경 범위와 직접 무관해 판단 근거가 부족한 criterion은 `WEAK`로 기록하고 `FAIL`로 간주하지 않는다.
+
+#### Acceptance Criteria
+
+| Criterion | Probe | PASS | WEAK | FAIL |
+|-----------|-------|------|------|------|
+| 저장소 이해 | "이번 동기화 후에도 이 저장소가 무엇을 하는지 빠르게 이해되는가?" | Goal/핵심 요약이 이번 구현 반영으로 더 명확해졌거나 유지된다 | Goal은 유지되지만 구현 반영이 다소 흐리다 | 구현 반영 후 목적/범위 설명이 모순되거나 불명확하다 |
+| 기능 위치 탐색 | "이번에 동기화한 기능 X는 어디에 있는가?" | 동기화된 컴포넌트/기능이 실제 경로와 심볼에 연결된다 | 기능은 보이지만 경로/심볼 연결이 약하다 | 이번에 반영한 기능의 소유 위치를 알 수 없다 |
+| 안전한 수정 판단 | "이제 변경 Y는 어디서 시작해야 하는가?" | `Common Change Paths`, `Usage Examples`, 컴포넌트 정보에서 시작점과 확인 포인트를 찾을 수 있다 | 시작점은 있으나 검증 포인트나 영향 범위가 약하다 | 동기화 후에도 변경 시작점이 보이지 않는다 |
+| 결정/불변 조건 기억 | "이번 구현으로 확정된 결정/가정은 기록되었는가?" | 새 불변 조건, 해결/잔존 질문, rationale이 관련 섹션 또는 `DECISION_LOG.md`에 반영된다 | 일부만 반영되었다 | 새 결정/불변 조건이 문서에 남지 않았다 |
+
+#### Self-Check Procedure
+
+1. 이번에 변경/추가한 섹션과 직접 연결된 컴포넌트 스펙만 다시 읽는다.
+2. 위 네 개 probe를 이번 동기화 범위에 대입해 본다.
+3. 각 criterion을 `PASS` / `WEAK` / `FAIL`로 판정한다.
+4. 결과에 따라 행동한다:
+   - `ALL PASS`: 완료
+   - `WEAK`만 존재: 개선 포인트를 완료 보고에 포함하고 진행
+   - `FAIL` 존재: Step 4로 돌아가 해당 부분만 보강 후 재판정
+   - 재판정 후에도 `FAIL`: 사용자에게 보고하고 판단을 맡긴다
+
+#### Completion Output
+
+완료 보고에 아래 표를 포함한다:
+
+| Criterion | Probe | 판정 | 근거 |
+|-----------|-------|------|------|
+| 저장소 이해 | "이번 동기화 후 저장소 목적이 명확한가?" | PASS | (구체적 근거) |
+| 기능 위치 탐색 | "동기화한 기능 X는 어디에?" | PASS | (구체적 근거) |
+| 안전한 수정 판단 | "변경 시작점은 어디인가?" | PASS | (구체적 근거) |
+| 결정/불변 조건 기억 | "새 결정/가정은 기록되었는가?" | PASS | (구체적 근거) |
+
+**종합**: `PASS` / `PASS WITH NOTES` / `FAIL -> FIX`
+
 ### Step 6: Archive Implementation Artifacts by Feature
 
 **Tools**: `Bash (cp, mkdir -p)`, `Write`, `Read`
@@ -256,6 +298,7 @@ After edits, summarize:
 - updated files
 - navigation improvements
 - behavior/contract changes reflected
+- quality gate result
 - remaining `Open Questions`
 - whether `DECISION_LOG.md` changed
 

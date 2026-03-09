@@ -212,13 +212,53 @@ Validate:
 - the main spec works as a 5-minute entry point
 - `Repository Map`, `Runtime Map`, and `Component Index` exist
 - key components have real paths or symbols
-- change/debug entry points exist
+- Change Recipes or equivalent change/debug entry points exist
+- anchor sections (`Goal`, `Architecture Overview`, `Component Details`, `Open Questions`) are preserved
 - optional sections appear only when relevant and are not empty
 - duplication is reduced
 - links are valid
 - rationale is preserved
 - unknowns are explicit
 - the rewritten main spec is token-efficient enough to scan in one focused read
+
+### Step 7.5: Self-Verification Gate
+
+구조 검증(Step 7) 통과 후, 리라이트 결과가 실제로 탐색성과 변경 가능성을 높였는지 acceptance criteria로 다시 판정한다.
+이 단계는 **판정만** 수행한다. FAIL이 나오면 Step 4-6으로 돌아가 필요한 부분만 보강한 뒤 이 단계를 최대 1회 재실행한다.
+기준은 Step 7보다 더 엄격하면 안 된다.
+
+#### Acceptance Criteria
+
+| Criterion | Probe | PASS | WEAK | FAIL |
+|-----------|-------|------|------|------|
+| 저장소 이해 | "이 저장소는 무엇을 하고 누구를 위한 것인가?" | `Goal`에서 목적, 사용자/사용 사례, 비목표를 빠르게 파악할 수 있다 | 목적은 보이지만 경계나 비목표가 흐리다 | 목적을 빠르게 파악할 수 없다 |
+| 기능 위치 탐색 | "기능 X는 어디에 있는가?" | `Component Details`/`Component Index`에서 실제 경로 **또는** 핵심 심볼을 찾을 수 있다 | 컴포넌트는 보이지만 경로/심볼 연결이 약하다 | 기능 위치를 스펙에서 알 수 없다 |
+| 안전한 수정 판단 | "변경 Y는 어디서 시작하는가?" | Change Recipes 또는 동등한 change/debug entry point가 있다 | 시작점은 있으나 영향 범위 설명이 약하다 | 변경 가이드가 없다 |
+| 결정/불변 조건 기억 | "왜 Z를 선택했고 무엇을 유지해야 하는가?" | rationale이나 invariants가 본문, `Open Questions`, `DECISION_LOG.md`에 보존되어 있다 | 일부 기록은 있으나 리라이트 과정에서 맥락 손실이 의심된다 | 결정 맥락이나 불변 조건이 유실되었다 |
+
+#### Self-Check Procedure
+
+1. 리라이트된 메인 스펙과 분리된 컴포넌트 스펙을 다시 읽는다.
+2. 위 네 개 probe를 실제 변경 시나리오에 대입해 본다.
+3. 각 criterion을 `PASS` / `WEAK` / `FAIL`로 판정한다.
+4. 결과에 따라 행동한다:
+   - `ALL PASS`: 완료
+   - `WEAK`만 존재: 개선 포인트를 완료 보고에 포함하고 진행
+   - `FAIL` 존재: Step 4-6으로 돌아가 해당 부분만 보강 후 재판정
+   - 재판정 후에도 `FAIL`: 사용자에게 보고하고 판단을 맡긴다
+
+#### Completion Output
+
+완료 보고에 아래 표를 포함한다:
+
+| Criterion | Probe | 판정 | 근거 |
+|-----------|-------|------|------|
+| 저장소 이해 | "이 저장소는 무엇을 하는가?" | PASS | (구체적 근거) |
+| 기능 위치 탐색 | "X 기능은 어디에?" | PASS | (구체적 근거) |
+| 안전한 수정 판단 | "Y를 변경하려면?" | PASS | (구체적 근거) |
+| 결정/불변 조건 기억 | "왜 Z를 선택?" | PASS | (구체적 근거) |
+
+**종합**: `PASS` / `PASS WITH NOTES` / `FAIL -> FIX`
 
 ## Output Format
 
@@ -254,12 +294,13 @@ If created, include:
 - Can a reader understand project purpose and boundary quickly from the main spec?
 - Does the main spec contain a repository map and runtime map?
 - Does `Component Details` include a component index?
-- Can a reader find likely edit points for common changes?
+- Can a reader find likely edit points for common changes (Change Recipes or equivalent)?
 - Are actual paths or symbols present for important areas?
 - Are tests, logs, or debugging starting points discoverable?
 - Are major invariants and risks visible?
 - Are unresolved ambiguities explicitly documented?
 - Is essential rationale preserved in `DECISION_LOG.md` when removed from the main spec?
+- Are anchor sections (`Goal`, `Architecture Overview`, `Component Details`, `Open Questions`) preserved?
 
 ## Language Preference
 
