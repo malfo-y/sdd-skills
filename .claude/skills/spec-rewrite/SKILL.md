@@ -89,13 +89,15 @@ Present a rewrite plan before making changes.
 ### 2) Move to Appendix
 - [Sections to move and rationale]
 
-### 3) Split Map (Hierarchical)
-- `_sdd/spec/<project>.md` (index)
-- `_sdd/spec/<project>/01-overview.md`
-- `_sdd/spec/<project>/02-architecture.md`
-- `_sdd/spec/<project>/03-components.md`
-- `_sdd/spec/<project>/04-api.md`
-- `_sdd/spec/<project>/appendix.md`
+### 3) Split Map (복잡도에 따라 선택)
+
+**중규모** (500–1500줄):
+- `_sdd/spec/main.md` (인덱스)
+- `_sdd/spec/<component>.md` (컴포넌트별 파일)
+
+**대규모** (1500줄+):
+- `_sdd/spec/main.md` (인덱스)
+- `_sdd/spec/<component>/overview.md` (컴포넌트 서브디렉토리)
 
 ### 4) Ambiguities / Risks to Resolve
 - [Ambiguous/conflicting/missing items]
@@ -145,25 +147,43 @@ If rewriting removes narrative sections that contain meaningful rationale:
 
 **Tools**: `Write`, `Bash (mkdir -p)`, `Glob`
 
-Default structure:
+프로젝트 복잡도에 따라 적절한 구조를 선택한다:
 
+| 규모 | 구조 | 기준 |
+|------|------|------|
+| 소규모 | `main.md` 단일 파일 | 스펙 500줄 이하 |
+| 중규모 | `main.md` (인덱스) + `<component>.md` | 스펙 500–1500줄 |
+| 대규모 | `main.md` (인덱스) + `<component>/` 서브디렉토리 | 스펙 1500줄 초과 |
+
+**중규모** — main.md + 컴포넌트 파일:
 ```
 _sdd/spec/
-├── <project>.md                  # index (summary + link hub)
-└── <project>/
-    ├── 01-overview.md
-    ├── 02-architecture.md
-    ├── 03-components.md
-    ├── 04-interfaces.md
-    ├── 05-operational-guides.md
-    └── appendix.md
+├── main.md              # 인덱스 (목표, 아키텍처 요약, 컴포넌트 링크)
+├── api.md
+├── database.md
+└── frontend.md
+```
+
+**대규모** — main.md + 컴포넌트 서브디렉토리:
+```
+_sdd/spec/
+├── main.md              # 인덱스
+├── api/
+│   ├── overview.md
+│   └── endpoints.md
+├── database/
+│   ├── overview.md
+│   └── schema.md
+└── frontend/
+    ├── overview.md
+    └── components.md
 ```
 
 Rules:
-- Keep only concise summaries and links in the index file
-- Each sub-file should have a single topic responsibility
-- Standardize relative links and fix all broken links
-- Keep section and filename naming conventions consistent
+- `main.md`는 항상 인덱스 역할 (목표, 아키텍처 요약, 컴포넌트 링크)
+- 각 컴포넌트 파일/디렉토리는 단일 주제 책임
+- 상대 링크 표준화 및 깨진 링크 수정
+- 파일명은 컴포넌트 이름 그대로 사용 (번호 접두사 불필요)
 
 ### Step 6: Ambiguity and Problem Reporting
 

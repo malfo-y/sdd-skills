@@ -54,24 +54,54 @@ Spec documents are stored in the `_sdd/spec/` directory within the project root.
 └── _sdd/
     ├── env.md            # 환경/실행 가이드 (없으면 생성)
     ├── spec/
-    │   ├── main.md             # Main spec document (or <project-name>.md)
-    │   ├── <component>.md      # Component-specific specs (for large projects)
+    │   ├── main.md             # 프로젝트 전체 스펙 (소규모) 또는 인덱스 (중/대규모)
+    │   ├── <component>.md      # 컴포넌트별 스펙 (중규모)
+    │   ├── <component>/        # 컴포넌트 서브디렉토리 (대규모)
+    │   │   ├── overview.md
+    │   │   └── ...
     │   ├── user_draft.md       # User requirements (if exists)
     │   └── DECISION_LOG.md     # Why/decision rationale log (optional, recommended)
     └── implementation/
         └── IMPLEMENTATION_PLAN.md  # Implementation plan (if exists)
 ```
 
-Legacy shorthand:
+### Spec Structure by Project Complexity
+
+| 규모 | 구조 | 기준 |
+|------|------|------|
+| 소규모 | `main.md` 단일 파일 | 스펙 500줄 이하 |
+| 중규모 | `main.md` (인덱스) + `<component>.md` | 스펙 500–1500줄 |
+| 대규모 | `main.md` (인덱스) + `<component>/` 서브디렉토리 | 스펙 1500줄 초과 |
+
+**소규모** — 단일 파일:
 ```
-_sdd/
-├── spec/
-│   ├── main.md             # Main spec document (or <project-name>.md)
-│   ├── <component>.md      # Component-specific specs (for large projects)
-│   ├── user_draft.md        # User requirements (if exists)
-│   └── DECISION_LOG.md      # Why/decision rationale log (optional, recommended)
-└── implementation/
-    └── IMPLEMENTATION_PLAN.md  # Implementation plan (if exists)
+_sdd/spec/
+└── main.md
+```
+
+**중규모** — main.md + 컴포넌트 파일:
+```
+_sdd/spec/
+├── main.md              # 인덱스 (목표, 아키텍처 요약, 컴포넌트 링크)
+├── api.md               # API 컴포넌트 스펙
+├── database.md          # DB 컴포넌트 스펙
+└── frontend.md          # 프론트엔드 컴포넌트 스펙
+```
+
+**대규모** — main.md + 컴포넌트 서브디렉토리:
+```
+_sdd/spec/
+├── main.md              # 인덱스 (목표, 아키텍처 요약, 컴포넌트 링크)
+├── api/                 # API 컴포넌트 디렉토리
+│   ├── overview.md
+│   ├── endpoints.md
+│   └── auth.md
+├── database/            # DB 컴포넌트 디렉토리
+│   ├── overview.md
+│   └── schema.md
+└── frontend/            # 프론트엔드 컴포넌트 디렉토리
+    ├── overview.md
+    └── components.md
 ```
 
 ## Spec Document Creation Process
@@ -337,16 +367,29 @@ Minimal decision log entry format:
 - Impact / follow-up:
 ```
 
-### Modular Specs for Large Projects
+### Modular Specs (중규모 이상)
 
-For large projects, split into multiple files:
+스펙이 500줄을 초과하면 컴포넌트별로 분할한다:
 
+**중규모** — `main.md` + 컴포넌트 파일:
 ```
 _sdd/spec/
-├── main.md              # Overview and cross-references
-├── api-spec.md          # API component spec
-├── database-spec.md     # Database component spec
-└── frontend-spec.md     # Frontend component spec
+├── main.md              # 인덱스 (목표, 아키텍처 요약, 컴포넌트 링크)
+├── api.md
+├── database.md
+└── frontend.md
+```
+
+**대규모** — `main.md` + 컴포넌트 서브디렉토리:
+```
+_sdd/spec/
+├── main.md              # 인덱스
+├── api/
+│   ├── overview.md
+│   └── endpoints.md
+└── database/
+    ├── overview.md
+    └── schema.md
 ```
 
 Reference sub-specs from main:
@@ -354,8 +397,8 @@ Reference sub-specs from main:
 ## Component Details
 
 See detailed specs:
-- `api-spec.md`
-- `database-spec.md`
+- `api.md` 또는 `api/overview.md`
+- `database.md` 또는 `database/overview.md`
 ```
 
 ## Best Practices
