@@ -1,6 +1,6 @@
 # Exploration-First Spec Template
 
-This template keeps the legacy top-level headings for downstream skill compatibility,
+This template keeps stable top-level headings for downstream skill compatibility,
 but structures each section as an index for understanding and safe change.
 
 Core MUST sections alone are enough for a valid spec.

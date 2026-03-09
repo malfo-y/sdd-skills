@@ -251,7 +251,7 @@ If any answer is "no", continue exploration before drafting.
 #### Step 3-B: Write Order
 
 1. **Write the main spec first** using `references/template-full.md`.
-2. **Keep legacy top-level headings** but structure them as an index:
+2. **Keep stable top-level headings for downstream skill compatibility** but structure them as an index:
    - `Goal` -> project snapshot and scope
    - `Architecture Overview` -> system boundary, repository map, runtime map
    - `Component Details` -> component index and change-oriented details
