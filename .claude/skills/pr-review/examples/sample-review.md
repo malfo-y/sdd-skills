@@ -2,7 +2,7 @@
 
 이 예제는 PR #42 (JWT 인증 시스템)에 대한 pr-review 스킬 실행 세션을 보여줍니다.
 
-> **중요**: `pr-review` 스킬은 `_sdd/spec/` 아래의 스펙 문서를 **절대** 생성/수정/삭제하지 않습니다. 스펙 변경이 필요하면 리포트에 “스펙 업데이트 필요”로만 기록하고, 실제 반영은 `/spec-update-todo`로 진행합니다.
+> **중요**: `pr-review` 스킬은 `_sdd/spec/` 아래의 스펙 문서를 **절대** 생성/수정/삭제하지 않습니다. 스펙 변경이 필요하면 리포트에 "스펙 업데이트 필요"로만 기록하고, 실제 반영은 `/spec-update-todo`로 진행합니다.
 
 ## Session Flow
 
@@ -37,6 +37,9 @@ Claude: PR 리뷰를 시작합니다.
 - 변경 규모: +847 -123, 12개 파일
 - 상태: OPEN
 - 커밋: 2개
+
+### 기존 스펙 탐색형 섹션 추출
+- Repository Map, Runtime Map, Component Index, Common Change Paths 확인 완료
 ```
 
 ### 2. 수용 기준 검증
@@ -108,7 +111,27 @@ Claude:
 없음
 ```
 
-### 4. 갭 분석
+### 4. Exploration-First Spec Impact
+
+```
+Claude:
+## Spec Impact Analysis
+
+### Exploration-First Spec Impact
+
+| Spec Section | Impact | Classification | Evidence |
+|-------------|--------|----------------|----------|
+| Repository Map | 새 파일 추가: auth.py, auth_service.py, password.py | MUST | `src/routes/auth.py`, `src/middleware/auth.py`, `src/utils/password.py` |
+| Runtime Map | 로그인/토큰갱신/로그아웃 플로우 추가 | MUST | `src/services/auth_service.py:45-125` |
+| Component Index | Auth Middleware, Auth Service 컴포넌트 추가 | MUST | `src/middleware/auth.py`, `src/services/auth_service.py` |
+| Common Change Paths | "인증 정책 변경" 시작점 추가 필요 | CONSIDER | `src/middleware/auth.py:24-38` |
+| Open Questions | 토큰 만료 정책, CORS 허용 범위 미확정 | CONSIDER | `config/settings.py:45-52` |
+| DECISION_LOG.md | 해당 없음 | NO | - |
+
+**Spec Update Classification**: MUST 3 / CONSIDER 2 / NO 1
+```
+
+### 5. 갭 분석
 
 ```
 Claude:
@@ -128,7 +151,7 @@ Claude:
 2. **토큰 갱신 만료 시간** - test_refresh_token 실패 중
 ```
 
-### 5. 판정 및 최종 리포트
+### 6. 판정 및 최종 리포트
 
 ```
 Claude:
@@ -172,6 +195,8 @@ Claude:
 | 부분 충족 (△) | 2 (17%) |
 | 스펙 위반 | 0 |
 | 테스트 통과율 | 95% (43/45) |
+| Spec sync MUST | 3 |
+| Spec sync CONSIDER | 2 |
 
 ---
 
@@ -238,6 +263,23 @@ Claude:
 
 ---
 
+## Spec Impact Analysis
+
+### Exploration-First Spec Impact
+
+| Spec Section | Impact | Classification | Evidence |
+|-------------|--------|----------------|----------|
+| Repository Map | 새 파일 추가: auth.py, auth_service.py, password.py | MUST | `src/routes/auth.py`, `src/middleware/auth.py`, `src/utils/password.py` |
+| Runtime Map | 로그인/토큰갱신/로그아웃 플로우 추가 | MUST | `src/services/auth_service.py:45-125` |
+| Component Index | Auth Middleware, Auth Service 컴포넌트 추가 | MUST | `src/middleware/auth.py`, `src/services/auth_service.py` |
+| Common Change Paths | "인증 정책 변경" 시작점 추가 필요 | CONSIDER | `src/middleware/auth.py:24-38` |
+| Open Questions | 토큰 만료 정책, CORS 허용 범위 미확정 | CONSIDER | `config/settings.py:45-52` |
+| DECISION_LOG.md | 해당 없음 | NO | - |
+
+**Spec Update Classification**: MUST 3 / CONSIDER 2 / NO 1
+
+---
+
 ## 갭 분석
 
 ### 패치 초안 vs PR 구현
@@ -280,11 +322,19 @@ Claude:
 
 ## 권장 사항
 
-### 머지 전 필수 (Blockers)
+### 머지 전 필수 (Pre-merge Blockers)
 | Priority | 항목 | 심각도 | 위치 | 조치 |
 |----------|------|--------|------|------|
 | 1 | 토큰 갱신 만료 시간 미갱신 | High | `auth_service.py:95` | refresh 시 새 exp 생성 |
 | 2 | 미들웨어 컨텍스트 주입 테스트 | Medium | `src/middleware/auth.py:47` | 테스트 추가 |
+
+### Post-Merge Spec Sync
+| Priority | Spec Section | Classification | Action |
+|----------|-------------|----------------|--------|
+| 1 | Architecture Overview > Runtime Map | MUST update | 로그인/토큰갱신/로그아웃 플로우 추가 |
+| 2 | Component Details > Component Index | MUST update | Auth Middleware, Auth Service 경로 추가 |
+| 3 | Open Questions | MUST update | 토큰 만료 정책, CORS 범위 추가 |
+| 4 | Usage Examples > Common Change Paths | CONSIDER | "인증 정책 변경" 시작점 추가 |
 
 ### 머지 전 권장 (Recommended)
 | Priority | 항목 | 심각도 | 조치 |
@@ -307,9 +357,12 @@ Claude:
 - `validate_session()`에 `allow_expired` 파라미터 추가는 하위 호환성을 유지하는 좋은 접근
 
 ### 스펙 업데이트 필요 항목
-- API 에러 응답 스키마 섹션 추가 필요
-- 보호된 엔드포인트 목록 문서화 필요
-- CORS 설정 변경사항 반영
+
+1. Architecture Overview > Runtime Map (`MUST update`) - 로그인/토큰갱신/로그아웃 플로우
+2. Component Details > Component Index (`MUST update`) - Auth Middleware, Auth Service
+3. Open Questions (`MUST update`) - 토큰 만료 정책, CORS 범위
+4. Usage Examples > Common Change Paths (`CONSIDER`) - 인증 정책 변경 시작점
+5. `src/utils/password.py` 내부 helper 분리 (`NO update`) - 계약과 탐색성 변화 없음
 
 ### 후속 작업 제안
 - 비밀번호 재설정 기능 (별도 PR)
@@ -404,6 +457,36 @@ Claude: PR 리뷰를 시작합니다.
 | 부분 충족 (△) | 0 (0%) |
 | 스펙 위반 | 0 |
 | 테스트 통과율 | 100% (47/47) |
+| Spec sync MUST | 3 |
+| Spec sync CONSIDER | 2 |
+
+---
+
+## Spec Impact Analysis (재확인)
+
+### Exploration-First Spec Impact
+
+| Spec Section | Impact | Classification | Evidence |
+|-------------|--------|----------------|----------|
+| Repository Map | 새 파일 추가 | MUST | `src/routes/auth.py`, `src/middleware/auth.py` |
+| Runtime Map | 인증 플로우 추가 | MUST | `src/services/auth_service.py` |
+| Component Index | Auth Middleware, Auth Service | MUST | `src/middleware/auth.py`, `src/services/auth_service.py` |
+| Common Change Paths | 인증 정책 변경 시작점 | CONSIDER | `src/middleware/auth.py` |
+| Open Questions | 토큰 만료 정책, CORS 범위 | CONSIDER | `config/settings.py` |
+| DECISION_LOG.md | 해당 없음 | NO | - |
+
+**Spec Update Classification**: MUST 3 / CONSIDER 2 / NO 1
+
+---
+
+## Post-Merge Spec Sync
+
+| Priority | Spec Section | Classification | Action |
+|----------|-------------|----------------|--------|
+| 1 | Architecture Overview > Runtime Map | MUST update | 로그인/토큰갱신/로그아웃 플로우 추가 |
+| 2 | Component Details > Component Index | MUST update | Auth Middleware, Auth Service 경로 추가 |
+| 3 | Open Questions | MUST update | 토큰 만료 정책, CORS 범위 추가 |
+| 4 | Usage Examples > Common Change Paths | CONSIDER | "인증 정책 변경" 시작점 추가 |
 
 ---
 
@@ -411,7 +494,7 @@ Claude: PR 리뷰를 시작합니다.
 
 1. [x] Verdict에 따른 조치 → APPROVE
 2. [ ] 머지 실행
-3. [ ] 머지 후 `/spec-update-todo` 실행하여 스펙 반영
+3. [ ] 머지 후 `/spec-update-todo` 실행하여 스펙 반영 (MUST 3건 우선)
 
 ---
 
@@ -498,6 +581,21 @@ Claude:
 
 스펙 위반 사항: 없음
 
+## Spec Impact Analysis
+
+### Exploration-First Spec Impact
+
+| Spec Section | Impact | Classification | Evidence |
+|-------------|--------|----------------|----------|
+| Repository Map | 기존 파일 수정만 | NO | - |
+| Runtime Map | 흐름 변화 없음 | NO | - |
+| Component Index | 변화 없음 | NO | - |
+| Common Change Paths | 변화 없음 | NO | - |
+| Open Questions | 해당 없음 | NO | - |
+| DECISION_LOG.md | 해당 없음 | NO | - |
+
+**Spec Update Classification**: MUST 0 / CONSIDER 0 / NO 6
+
 ## 갭 분석 (스펙 vs PR만 비교)
 - PR에 포함되었으나 스펙에 미기재: 없음
 - 테스트 갭: 없음
@@ -507,7 +605,7 @@ Claude:
 **APPROVE**
 
 **근거**: 보안 버그 수정이 올바르게 구현되었고, 모든 추론된 수용 기준이 충족되며,
-테스트가 통과합니다. 기존 스펙 위반 없음.
+테스트가 통과합니다. 기존 스펙 위반 없음. 스펙 문서 업데이트 불필요.
 
 ⚠️ 이 리뷰는 패치 초안 없이 수행되었으므로 정확도가 제한적입니다.
 수용 기준은 PR 설명에서 추론되었습니다.
@@ -536,6 +634,7 @@ Claude:
 - 만료 토큰 검증 로직 추가 완료
 - 관련 테스트 3건 모두 통과
 - 기존 스펙 위반 없음
+- Spec update 불필요 (NO 6건)
 
 ⚠️ Degraded mode: 패치 초안 없이 PR 설명 기반으로 수용 기준을 추론하여 리뷰함.
 정확도 향상을 위해 `/pr-spec-patch` 후 재리뷰 권장.
@@ -549,5 +648,7 @@ Claude:
 2. **증거 기반 판정**: 모든 판정에 `file:line` 참조 포함
 3. **테스트 연계**: 각 수용 기준에 대응하는 테스트 확인
 4. **갭 분석**: 패치 vs PR, PR vs 스펙 양방향 비교
-5. **재리뷰 흐름**: 기존 리뷰 아카이브 → 변경사항만 재검증 → 새 판정
-6. **판정 전환**: REQUEST CHANGES → 수정 후 → APPROVE
+5. **Exploration-First Spec Impact**: 탐색형 스펙 섹션별 MUST/CONSIDER/NO 분류
+6. **Pre-merge vs Post-merge 분리**: 기능적 블로커와 문서 sync를 구분
+7. **재리뷰 흐름**: 기존 리뷰 아카이브 → 변경사항만 재검증 → 새 판정
+8. **판정 전환**: REQUEST CHANGES → 수정 후 → APPROVE

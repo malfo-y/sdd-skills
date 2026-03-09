@@ -1,45 +1,66 @@
 ---
 name: feature-draft
 description: This skill should be used when the user asks to "feature draft", "draft feature", "feature plan", "plan feature", "draft and plan", "feature draft parallel", "parallel feature draft", "병렬 기능 초안", "parallel feature plan", or wants to combine requirements gathering, spec patch drafting, and implementation planning with Target Files for parallel execution support.
-version: 1.0.0
+version: 1.1.0
 ---
 
-# Feature Draft (Parallel) - Unified Spec Patch + Implementation Plan with Target Files
+# Feature Draft - Exploration-First Spec Patch + Implementation Plan
 
-Collects requirements through conversation with the user, then outputs a spec patch draft and implementation plan as a **single file** — with **Target Files** fields on every task to enable parallel execution via `implementation`.
+좋은 스펙은 코드를 복사한 것이 아니다. 사람과 LLM이 다음을 할 수 있게 돕는 **탐색 가능한 지도**이다:
+- 저장소가 무엇을 하는지 이해한다
+- 기능이나 책임이 어디에 있는지 찾는다
+- 어디를 안전하게 수정할 수 있는지 판단한다
+- 비자명한 결정과 불변 조건을 기억한다
 
-## Workflow Position
+이 스킬은 기존 스펙을 읽고, 계획된 변경을 분석하여, **스펙 패치 초안(Part 1)** + **구현 계획(Part 2)**을 하나의 파일로 생성한다. Part 2의 모든 태스크에는 **Target Files** 필드가 포함되어 병렬 실행을 지원한다.
 
-| Workflow | Position | When |
-|----------|----------|------|
-| Large | Step 1 of 6 | 스펙 패치 초안 + 구현 계획 생성 |
-| Medium | Step 1 of 3 | 스펙 패치 초안 + 구현 계획 생성 |
-| Small | — | 직접 구현 |
+## Simplified Workflow
+
+This skill is **Step 2 of 4** in the SDD workflow:
+
+```
+spec-create -> feature-draft (this) -> implementation -> spec-update-done
+```
+
+| Step | Skill | Purpose |
+|------|-------|---------|
+| 1 | spec-create | Create the initial index-first spec |
+| **2** | **feature-draft** | Draft planned spec changes + implementation plan |
+| 3 | implementation | Execute the plan |
+| 4 | spec-update-done | Sync actual implementation back to spec |
+
+> **Workflow**: spec-create -> feature-draft -> implementation -> spec-update-done
 
 ## Overview
 
-This skill integrates spec patch drafting + spec update + implementation planning into a single step.
-In a single conversation, it collects requirements and simultaneously generates a spec patch draft (Part 1) and an implementation plan with Target Files (Part 2).
+This skill integrates spec patch drafting + implementation planning into a single step.
+기존 스펙을 읽고 사용자 요구사항을 수집하여, 스펙 패치 초안(Part 1)과 Target Files가 포함된 구현 계획(Part 2)을 동시에 생성한다.
 
 **This skill**: `feature-draft` (1 invocation, shared context)
 
 ## When to Use This Skill
 
-- When you want to plan a new feature and create a **parallel-ready** implementation plan all at once
-- When you want to write a spec patch and implementation plan simultaneously
-- When you want to save tokens while getting both a spec patch and implementation plan
-- When you want to handle spec patch + implementation plan in one step
-- When you expect the implementation to benefit from parallel sub-agent execution
+- 새 기능을 계획하고 **병렬 실행 가능한** 구현 계획을 한 번에 만들고 싶을 때
+- 스펙 패치와 구현 계획을 동시에 작성하고 싶을 때
+- 스펙 패치 + 구현 계획을 하나의 단계로 처리하고 싶을 때
+- 구현이 병렬 서브 에이전트 실행의 이점을 얻을 것으로 예상될 때
 
 ## Hard Rules
 
 1. **No spec file modifications**: Files under `_sdd/spec/` are **read-only**. Never modify them.
 2. **Output location**: Save to `_sdd/drafts/` directory.
 3. **Write in Korean**: Output file content must be written in Korean.
-4. **Multiple features supported**: Multiple features can be included in one file, but always confirm with the user first.
-5. **spec-update-todo compatible**: Part 1 must follow the "Spec Update Input" format so it can be directly used as input for `spec-update-todo`.
+4. **Multiple features supported**: Multiple features can be included in one file, but always confirm with the user first. Grouping rationale은 `Open Questions`에 기록한다.
+5. **spec-update-todo compatible**: Part 1 must follow the `Spec Update Input` format defined in `references/output-format.md`.
 6. **Target Files required**: Every task in Part 2 MUST include a `**Target Files**` field.
 7. **[TBD] 허용**: Target Files에서 경로 미결정 시 `[TBD] <reason>` 마커를 사용할 수 있다.
+8. **앵커 인식 드래프팅**: Target Section은 SDD 앵커 섹션(`Goal`, `Architecture Overview`, `Component Details`, `Environment & Dependencies`, `Identified Issues & Improvements`, `Usage Examples`, `Open Questions`)을 참조해야 한다.
+9. **추정 명시**: 확인되지 않은 내용은 단정하지 않고 `Open Questions`에 기록한다.
+10. **스펙 갱신 기준 적용**: Part 1 시작 전에 각 변경을 `MUST update`, `NO update`, `CONSIDER`로 분류한다.
+11. **Change-oriented output**: Part 1 must help later readers understand what changes, where it changes, and what risks or invariants matter.
+12. **실제 경로 우선**: 주요 컴포넌트와 변경 지점에는 실제 또는 강하게 추론된 파일/디렉토리 경로를 적는다.
+13. **결정 로그 후보만 기록**: `DECISION_LOG.md`를 직접 쓰지 말고, 필요한 rationale은 draft 안의 `Decision-Log Candidates`로 남긴다.
+14. **Token-efficient drafting**: 빈 선택 섹션은 만들지 않고, 반복 설명보다 경로, 표, 짧은 불릿을 우선한다.
 
 ## Input Sources
 
@@ -58,7 +79,7 @@ In a single conversation, it collects requirements and simultaneously generates 
 - **Part 1**: Spec patch draft ("Spec Update Input" format + Target Section annotations)
 - **Part 2**: Implementation plan with **Target Files** (per-phase tasks, details, risks)
 
-**Optional output**: `_sdd/spec/DECISION_LOG.md` (only when new decisions/trade-offs arise)
+**Optional**: `Decision-Log Candidates`를 draft 파일 내 `Notes` 섹션에 포함 (직접 `DECISION_LOG.md` 수정하지 않음)
 
 ## Process
 
@@ -167,7 +188,22 @@ ELSE → 미충족 항목에 대해 AskUserQuestion (최대 2라운드)
   → 2라운드 후에도 미충족 시 → 가용 정보로 진행, 누락 항목은 Open Questions에 기록
 ```
 
-### Step 4: Feature Design
+### Step 4: Classify Spec Update Need
+
+**Tools**: deterministic defaults (non-interactive)
+
+Part 1 시작 전에 계획된 변경을 SDD §8 갱신 기준에 따라 분류한다.
+
+| 분류 | 기준 | 예시 |
+|------|------|------|
+| `MUST update` | 사용자 가시 동작, 시스템 경계, 런타임 흐름, 소유권/계약 변경 | 새 API, 새 컴포넌트, 환경 요구사항 추가 |
+| `NO update` | 내부 리팩토링, 테스트만 추가, 포맷팅/스타일 변경 | 함수 내부 로직 개선, lint 수정 |
+| `CONSIDER` | 성능 튜닝, 마이너 의존성 업데이트, 내부 재조직 | 캐시 추가, 패치 버전 업데이트 |
+
+- `NO update`인 경우, Part 1은 최소한의 no-op 노트(rationale 포함)로 대체할 수 있다.
+- `CONSIDER`인 경우, 외부 노출 여부를 기준으로 판단하고 판단 근거를 `Open Questions`에 남긴다.
+
+### Step 5: Feature Design
 
 **Tools**: `Grep`, `Glob`
 
@@ -177,21 +213,22 @@ ELSE → 미충족 항목에 대해 AskUserQuestion (최대 2라운드)
    - Improvements
    - Bug Reports
    - Component Changes
-   - Configuration Changes
+   - Environment & Dependency Changes
 
-2. Map each item to target spec section:
+2. Map each item to target spec section (SDD 앵커 섹션 기준):
    | Type | Target Section |
    |------|----------------|
    | New Feature (Core) | Goal > Key Features |
    | New Feature (Component) | Component Details |
-   | Improvement | Issues > Improvements |
-   | Bug Fix | Issues > Bugs |
-   | Performance | Issues > Performance |
-   | Security | Security Considerations |
-   | Configuration | Configuration |
+   | Architecture Change | Architecture Overview |
+   | Improvement | Identified Issues & Improvements |
+   | Bug Fix | Identified Issues & Improvements |
+   | Performance | Identified Issues & Improvements |
+   | Configuration | Environment & Dependencies |
    | Dependency | Environment & Dependencies |
-   | API Change | API Reference |
-   | Test Addition | Testing |
+   | API Change | Component Details > Interfaces |
+   | Test Addition | (no spec update needed) |
+   | Usage/Change Path | Usage Examples |
 
 3. Identify implementation components:
    - Group related features into modules
@@ -205,33 +242,47 @@ ELSE → 미충족 항목에 대해 AskUserQuestion (최대 2라운드)
    - Glob: 후보 파일 경로 존재 여부 검증
    - Verify no unnecessary file overlaps between tasks
    - Apply Target Files markers: [C] Create, [M] Modify, [D] Delete
-   - 충돌 최소화: 5+ tasks/phase이고 파일 겹침 시 Step 6의 Conflict minimization patterns 참조
+   - 충돌 최소화: 5+ tasks/phase이고 파일 겹침 시 Step 7의 Conflict minimization patterns 참조
 ```
 
-**Decision Gate 4→5**:
+**Decision Gate 5→6**:
 ```
 IF 요구사항 유형별 분류 완료
-   AND 각 항목에 Target Section 매핑 완료
+   AND 각 항목에 Target Section 매핑 완료 (SDD 앵커 섹션 기준)
    AND Target Files 초안 작성 완료
-→ Step 5 진행
+→ Step 6 진행
 ELSE → 미완료 항목 보완 후 재확인
 ```
 
-### Step 5: Spec Patch Generation = Part 1
+### Step 6: Spec Patch Generation = Part 1
 
 **Tools**: — (출력 생성 단계, 도구 불필요)
 
-Part 1 follows the "Spec Update Input" format with `**Target Section**` annotations added to each item.
+Part 1 follows the `Spec Update Input` format with `**Target Section**` annotations added to each item.
 Part 1의 시작과 끝에 호환성 마커를 포함한다:
 - 시작: `<!-- spec-update-todo-input-start -->`
 - 끝: `<!-- spec-update-todo-input-end -->`
 
 **Format rules**:
-- Full compliance with "Spec Update Input" format (spec-update-todo compatible)
-- Add `**Target Section**` to each item (manual copy-paste location guide)
-- Use status marker: 📋 Planned
+- Full compliance with `Spec Update Input` format (spec-update-todo compatible)
+- state `Spec Update Classification` (Step 4에서 결정한 MUST/NO/CONSIDER)
+- Add `**Target Section**` to each item (SDD 앵커 섹션 기준)
+- every meaningful item states affected components or paths
+- behavior changes include acceptance criteria
+- risky changes include `Risks / Invariants`
+- decision-log-worthy rationale stays in `Notes > Decision-Log Candidates`
+- unresolved assumptions are collected in `Open Questions`
 - Match existing spec style/language
 - See `references/output-format.md` for detailed format
+
+**Change Recipes / Component Index 영향 체크**:
+- 이 변경이 기존 Change Recipes에 영향을 주는가? → 해당 Change Recipe 업데이트 항목 추가
+- 새 컴포넌트가 추가되는가? → Component Index 업데이트 항목 추가
+
+If classification is `NO update`:
+- keep Part 1 minimal
+- explain why the spec does not need to change
+- still record any follow-up uncertainty in `Open Questions`
 
 ```markdown
 # Part 1: Spec Patch Draft
@@ -243,7 +294,8 @@ Part 1의 시작과 끝에 호환성 마커를 포함한다:
 
 **Date**: YYYY-MM-DD
 **Author**: [author]
-**Target Spec**: [target spec file]
+**Target Spec**: [target spec filename]
+**Spec Update Classification**: MUST update | NO update | CONSIDER
 
 ## New Features
 
@@ -272,7 +324,7 @@ Part 1의 시작과 끝에 호환성 마커를 포함한다:
 
 ### Improvement: [improvement name]
 **Priority**: High/Medium/Low
-**Target Section**: `_sdd/spec/xxx.md` > `Issues > Improvements`
+**Target Section**: `_sdd/spec/xxx.md` > `Identified Issues & Improvements`
 **Current State**: [current state]
 **Proposed**: [proposed change]
 **Reason**: [reason]
@@ -283,7 +335,7 @@ Part 1의 시작과 끝에 호환성 마커를 포함한다:
 
 ### Bug: [bug name]
 **Severity**: High/Medium/Low
-**Target Section**: `_sdd/spec/xxx.md` > `Issues > Bugs`
+**Target Section**: `_sdd/spec/xxx.md` > `Identified Issues & Improvements`
 **Location**: [file:line]
 **Description**: [bug description]
 **Reproduction**: [steps]
@@ -295,22 +347,33 @@ Part 1의 시작과 끝에 호환성 마커를 포함한다:
 
 ### New Component: [component name]
 **Target Section**: `_sdd/spec/xxx.md` > `Component Details`
-**Purpose**: [purpose]
-**Input**: [input]
-**Output**: [output]
-**Planned Methods**:
-- `method_name()` - description
+**Owned Paths**:
+- `src/...`
+- `tests/...`
+
+**Responsibility**:
+- [what it does]
+
+**Interfaces / Contracts**:
+- Inputs: ...
+- Outputs: ...
+
+**Change Recipes**:
+- [where future edits would begin]
 
 ---
 
-## Configuration Changes
+## Environment & Dependency Changes
 
-### New Config: [config name]
-**Target Section**: `_sdd/spec/xxx.md` > `Configuration`
-**Type**: Environment Variable / Config File
-**Required**: Yes/No
-**Default**: [default value]
-**Description**: [description]
+### Change: [name]
+**Target Section**: `_sdd/spec/xxx.md` > `Environment & Dependencies`
+**Type**: Dependency / Environment Variable / Runtime / Tooling / Setup Command
+
+**Description**:
+[what changes]
+
+**Impact**:
+- [setup/test/runtime impact]
 
 ---
 
@@ -321,11 +384,14 @@ Part 1의 시작과 끝에 호환성 마커를 포함한다:
 
 ### Constraints
 [constraints]
+
+### Decision-Log Candidates
+[rationale for non-obvious decisions]
 ```
 
 > **상세 포맷**: 각 섹션의 전체 필드 목록과 선택/필수 구분은 `references/output-format.md`를 참고하세요.
 
-### Step 5.5: Part 1 요약
+### Step 6.5: Part 1 요약
 
 Part 1 요약 테이블을 사용자에게 제시한 후 바로 Step 6으로 진행한다 (사용자 확인을 기다리지 않는다):
 
@@ -337,7 +403,7 @@ Part 1 요약 테이블을 사용자에게 제시한 후 바로 Step 6으로 진
 | ... | ... | ... |
 ```
 
-### Step 6: Implementation Plan Generation = Part 2
+### Step 7: Implementation Plan Generation = Part 2
 
 **Tools**: — (출력 생성 단계, 도구 불필요)
 
@@ -454,14 +520,14 @@ Reuse the components and analysis results from Step 4 to create the implementati
 Estimate implementation scale and complexity to recommend an appropriate model.
 See "Model aliases" at https://code.claude.com/docs/en/model-config.
 
-**Decision Gate 6→7**:
+**Decision Gate 7→8**:
 ```
 IF Part 1 (또는 Part 2 only 모드) + Part 2 + 병렬 실행 요약 모두 생성 완료
-→ Step 7 진행
+→ Step 8 진행
 ELSE → 미완료 파트 생성 후 재확인
 ```
 
-### Step 7: Review & Confirm
+### Step 8: Review, Save, and Finalize
 
 **Tools**: `Write`, `Bash (mkdir/mv)`, `Glob`
 
@@ -489,11 +555,7 @@ ELSE → 미완료 파트 생성 후 재확인
    <!-- Processed: YYYY-MM-DD -->
    <!-- Applied to: feature_draft_<name>.md -->
 
-7. Update Decision Log (optional):
-   - Only when significant decisions/trade-offs were made
-   - Add brief entry to `_sdd/spec/DECISION_LOG.md`
-
-8. Provide next steps guidance:
+7. Provide next steps guidance:
 ```
 
 **Completion message template**:
@@ -562,9 +624,10 @@ Execute implementation:
 
 ### Spec Patch Quality
 - **Style consistency**: Match the existing spec's language/format
-- **Section accuracy**: Target Section annotations must match the actual spec structure
+- **앵커 섹션 정확성**: Target Section은 SDD 앵커 섹션(`Goal`, `Architecture Overview`, `Component Details`, `Environment & Dependencies`, `Identified Issues & Improvements`, `Usage Examples`, `Open Questions`)을 기준으로 매핑
 - **Status markers**: Use 📋 Planned marker
 - **Compatibility**: Full compliance with spec-update-todo input format
+- **Change Recipes / Component Index**: 변경이 기존 Change Recipes에 영향을 주거나 새 컴포넌트가 추가되면 해당 업데이트 항목 포함
 
 ### Implementation Plan Quality
 - **Specific tasks**: Vague tasks cause scope creep
@@ -597,6 +660,8 @@ Execute implementation:
 ## Workflow Integration
 
 ```
+spec-create -> feature-draft -> implementation -> spec-update-done
+
 Parallel workflow:
   feature-draft
        ↓

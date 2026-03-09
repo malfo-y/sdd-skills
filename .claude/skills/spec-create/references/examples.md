@@ -1,385 +1,150 @@
 # Spec Document Examples
 
-Real-world examples of spec documents for different project types.
+Use the examples to choose document shape, not to copy every section blindly.
+
+## Which Example to Open
+
+- `examples/simple-project-spec.md`
+  - small project
+  - 1-3 major components
+  - one main spec is enough
+
+- `examples/complex-project-spec.md`
+  - larger repository
+  - multiple bounded components or services
+  - main spec should behave like an index and change map
+
+## What to Learn From the Examples
+
+- how the `Goal` section gives a fast repository summary
+- how `Architecture Overview` includes both repository map and runtime map
+- how `Component Details` starts with a component index before deeper detail
+- how `Usage Examples` includes change/debug entry points, not only run commands
+- how `Open Questions` keeps uncertainty explicit
+
+## What Not to Copy
+
+- do not duplicate code structure line by line
+- do not include optional sections unless they matter
+- do not write long narrative when a path table is clearer
+- do not hide weak assumptions; move them to `Open Questions`
+
+## Recommended Reading Order
+
+1. Open the simple example for the baseline structure.
+2. Open the complex example to see how index-first specs scale.
+3. Use `references/template-full.md` for the actual draft.
+4. Use `references/optional-sections.md` only when the project needs extra appendices.
 
 ---
 
-## Example 1: CLI Tool Spec
-
-```markdown
-# File Organizer CLI
-
-## Goal
-
-Automate file organization by moving files into categorized folders based on file type, date, or custom rules.
-
-### Key Features
-1. Organize by file extension (images, documents, videos)
-2. Organize by date (year/month structure)
-3. Custom rule support via config file
-4. Dry-run mode to preview changes
-5. Undo functionality
-
-### Target Users
-- Power users managing large download folders
-- Photographers organizing photo libraries
-- System administrators automating cleanup tasks
-
-## Architecture Overview
-
-```
-┌─────────────────────────────────────────┐
-│              CLI Interface               │
-│         (Click/Typer framework)          │
-└──────────────────┬──────────────────────┘
-                   │
-┌──────────────────┼──────────────────────┐
-│                  ▼                       │
-│  ┌────────────────────────────────┐     │
-│  │        Rule Engine             │     │
-│  │  - Extension rules             │     │
-│  │  - Date rules                  │     │
-│  │  - Custom regex rules          │     │
-│  └────────────────────────────────┘     │
-│                  │                       │
-│  ┌───────────────┼───────────────┐      │
-│  ▼               ▼               ▼      │
-│ ┌─────┐     ┌─────────┐    ┌────────┐  │
-│ │Scan │     │Organize │    │ Undo   │  │
-│ │Files│     │ Files   │    │ Stack  │  │
-│ └─────┘     └─────────┘    └────────┘  │
-└─────────────────────────────────────────┘
-```
-
-## Component Details
-
-### Component: Rule Engine
-
-| Aspect | Description |
-|--------|-------------|
-| **Purpose** | Match files to destination folders |
-| **Input** | File path, configuration rules |
-| **Output** | Target folder path or None |
-
-**Implementation:**
-- Uses chain of responsibility pattern
-- Each rule type is a separate handler
-- Rules evaluated in priority order
-
-### Component: File Scanner
-
-| Aspect | Description |
-|--------|-------------|
-| **Purpose** | Recursively scan directories |
-| **Input** | Source directory path |
-| **Output** | List of file paths with metadata |
-
-## Environment & Dependencies
-
-### Dependencies
-- Python 3.9+
-- click (CLI framework)
-- pathlib (file operations)
-
-### Configuration
-```yaml
-# config.yaml
-rules:
-  - name: images
-    extensions: [.jpg, .png, .gif]
-    destination: ~/Pictures/Organized
-  - name: documents
-    extensions: [.pdf, .doc, .docx]
-    destination: ~/Documents/Organized
-```
-
-## Usage Examples
-
-### Basic Usage
-```bash
-# Organize downloads folder
-file-organizer organize ~/Downloads
-
-# Dry run
-file-organizer organize ~/Downloads --dry-run
-
-# Undo last operation
-file-organizer undo
-```
-```
-
----
-
-## Example 2: Web API Spec
-
-```markdown
-# Task Management API
-
-## Goal
-
-RESTful API for managing tasks and projects with team collaboration features.
-
-### Key Features
-1. CRUD operations for tasks and projects
-2. User authentication and authorization
-3. Real-time notifications via WebSocket
-4. File attachments support
-5. Activity logging
-
-## Architecture Overview
-
-```
-┌─────────────────────────────────────────────────┐
-│                  API Gateway                     │
-│              (Rate limiting, Auth)               │
-└────────────────────┬────────────────────────────┘
-                     │
-┌────────────────────┼────────────────────────────┐
-│                    ▼                             │
-│  ┌──────────────────────────────────────┐       │
-│  │           FastAPI Router             │       │
-│  │  /tasks  /projects  /users  /auth    │       │
-│  └──────────────────────────────────────┘       │
-│                    │                             │
-│     ┌──────────────┼──────────────┐             │
-│     ▼              ▼              ▼             │
-│ ┌────────┐   ┌──────────┐   ┌─────────┐        │
-│ │ Task   │   │ Project  │   │  User   │        │
-│ │Service │   │ Service  │   │ Service │        │
-│ └───┬────┘   └────┬─────┘   └────┬────┘        │
-└─────┼─────────────┼──────────────┼──────────────┘
-      │             │              │
-      └─────────────┼──────────────┘
-                    │
-┌───────────────────┼─────────────────────────────┐
-│                   ▼                              │
-│  ┌────────────┐  ┌────────────┐  ┌───────────┐ │
-│  │ PostgreSQL │  │   Redis    │  │    S3     │ │
-│  │  (Data)    │  │  (Cache)   │  │ (Files)   │ │
-│  └────────────┘  └────────────┘  └───────────┘ │
-└─────────────────────────────────────────────────┘
-```
-
-## Component Details
-
-### Component: Task Service
-
-| Aspect | Description |
-|--------|-------------|
-| **Purpose** | Business logic for task operations |
-| **Input** | Task DTOs, user context |
-| **Output** | Task models, validation errors |
-
-**Key Operations:**
-- `create_task(data, user)` - Create with validation
-- `update_task(id, data, user)` - Update with permissions
-- `list_tasks(filters, pagination)` - Filtered listing
-- `assign_task(id, assignee)` - Assignment with notification
-
-## API Reference
-
-### Tasks
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | /api/v1/tasks | List tasks |
-| POST | /api/v1/tasks | Create task |
-| GET | /api/v1/tasks/{id} | Get task |
-| PUT | /api/v1/tasks/{id} | Update task |
-| DELETE | /api/v1/tasks/{id} | Delete task |
-
-### Example Request
-```http
-POST /api/v1/tasks
-Authorization: Bearer eyJ...
-Content-Type: application/json
-
-{
-  "title": "Implement login",
-  "description": "Add OAuth2 login flow",
-  "project_id": "proj_123",
-  "priority": "high",
-  "due_date": "2024-03-15"
-}
-```
-
-## Identified Issues & Improvements
-
-### Missing Features
-- [ ] Recurring tasks
-- [ ] Task templates
-- [ ] Bulk operations
-
-### Performance
-- [ ] Add query caching for list endpoints
-- [ ] Optimize N+1 queries in project listing
-```
-
----
-
-## Example 3: Data Pipeline Spec
-
-```markdown
-# Instagram Data Pipeline
-
-## Goal
-
-Extract, transform, and load Instagram profile and post data for analytics.
-
-### Key Features
-1. Profile metadata extraction
-2. Post/Reel content download
-3. Engagement metrics collection
-4. Scheduled batch processing
-5. Data quality validation
-
-## Architecture Overview
-
-```
-┌─────────────────────────────────────────────────────┐
-│                   Scheduler (Cron)                   │
-└────────────────────────┬────────────────────────────┘
-                         │
-┌────────────────────────┼────────────────────────────┐
-│                        ▼                             │
-│  ┌────────────────────────────────────────┐         │
-│  │            Pipeline Orchestrator        │         │
-│  │         (Apify/Prefect/Airflow)         │         │
-│  └────────────────────────────────────────┘         │
-│                        │                             │
-│     ┌──────────────────┼──────────────────┐         │
-│     ▼                  ▼                  ▼         │
-│ ┌────────┐       ┌──────────┐       ┌─────────┐    │
-│ │Extract │──────▶│Transform │──────▶│  Load   │    │
-│ │ Stage  │       │  Stage   │       │  Stage  │    │
-│ └────────┘       └──────────┘       └─────────┘    │
-│     │                  │                  │         │
-│     │                  │                  │         │
-└─────┼──────────────────┼──────────────────┼─────────┘
-      │                  │                  │
-      ▼                  ▼                  ▼
-┌──────────┐      ┌──────────┐       ┌──────────┐
-│Instagram │      │  Local   │       │ Database │
-│   API    │      │ Storage  │       │ / Cloud  │
-└──────────┘      └──────────┘       └──────────┘
-```
-
-## Component Details
-
-### Component: Extractor
-
-| Aspect | Description |
-|--------|-------------|
-| **Purpose** | Fetch data from Instagram |
-| **Input** | Profile URLs, credentials, config |
-| **Output** | Raw JSON data, media files |
-
-**Implementation:**
-- Handles rate limiting with exponential backoff
-- Proxy rotation for reliability
-- Session management for authentication
-
-### Component: Transformer
-
-| Aspect | Description |
-|--------|-------------|
-| **Purpose** | Clean and structure raw data |
-| **Input** | Raw JSON from extractor |
-| **Output** | Normalized data models |
-
-**Transformations:**
-- Timestamp normalization (UTC)
-- Engagement rate calculation
-- Media URL validation
-- Duplicate detection
-
-## Data Models
-
-### Profile
-```python
-@dataclass
-class Profile:
-    username: str
-    full_name: str
-    bio: str
-    follower_count: int
-    following_count: int
-    post_count: int
-    is_verified: bool
-    profile_pic_url: str
-    extracted_at: datetime
-```
-
-### Post
-```python
-@dataclass
-class Post:
-    shortcode: str
-    profile_username: str
-    caption: str
-    like_count: int
-    comment_count: int
-    media_type: str  # image, video, carousel
-    media_urls: List[str]
-    posted_at: datetime
-    extracted_at: datetime
-```
-
-## Environment & Dependencies
-
-### Dependencies
-- Python 3.10+
-- apify-client (data extraction)
-- pandas (data transformation)
-- sqlalchemy (database operations)
-
-### Configuration
-```python
-# config.py
-PROXY_CONFIG = {
-    "enabled": True,
-    "rotation_interval": 60,  # seconds
-}
-
-RATE_LIMIT = {
-    "requests_per_minute": 30,
-    "retry_attempts": 3,
-}
-```
-
-## Identified Issues & Improvements
-
-### Robustness
-- [ ] Handle Instagram API changes gracefully
-- [ ] Add data validation checksums
-- [ ] Implement dead letter queue for failures
-
-### Performance
-- [ ] Parallelize media downloads
-- [ ] Add incremental extraction mode
-```
-
----
-
-## Tips for Writing Good Specs
-
-### 1. Start with the Goal
-Always begin with WHY the project exists, not HOW it works.
-
-### 2. Use Diagrams
-ASCII diagrams are surprisingly effective:
-```
-Input → [Process] → Output
-```
-
-### 3. Be Concrete
-Bad: "The system handles errors"
-Good: "ValidationError returns HTTP 400 with field-specific messages"
-
-### 4. Keep it Updated
-Outdated specs are worse than no specs. Include "Last Updated" dates.
-
-### 5. Link to Code
-Reference actual file paths:
-- Entry point: `src/main.py:45`
-- Config: `config/settings.yaml`
+## Section Quality: Good vs Bad Examples
+
+Below are concrete examples showing the difference between weak and strong spec writing
+for each key section. Use these as a quality reference when drafting.
+
+### Repository Map
+
+**Bad** — 경로 없이 모호한 설명:
+
+~~~
+프로젝트는 서비스 레이어, 데이터 레이어, 프레젠테이션 레이어로 구성됩니다.
+서비스 레이어에서 비즈니스 로직을 처리하고, 데이터 레이어에서 DB 접근을 합니다.
+~~~
+
+**Good** — 실제 경로와 역할을 연결:
+
+~~~
+src/
+├── api/            # HTTP 엔드포인트 (Express 라우터)
+│   ├── routes/     # 라우트 정의
+│   └── middleware/  # 인증, 에러 핸들링
+├── domain/         # 비즈니스 로직 (프레임워크 무관)
+│   ├── order/      # 주문 생성, 상태 전이
+│   └── payment/    # 결제 처리, 환불
+├── infra/          # 외부 연동
+│   ├── db/         # Prisma 스키마, 마이그레이션
+│   └── external/   # PG사 API 클라이언트
+└── config/         # 환경별 설정
+~~~
+
+### Change Recipes
+
+**Bad** — 무엇을 바꾸라는지 알 수 없음:
+
+~~~
+새 API를 추가하려면 관련 파일을 수정하세요.
+~~~
+
+**Good** — 단계, 경로, 검증 포인트를 구체적으로 제공:
+
+~~~markdown
+### 새 REST 엔드포인트 추가
+
+1. `src/api/routes/`에 라우트 파일 추가
+2. `src/domain/`에 비즈니스 로직 함수 작성
+3. `src/api/routes/index.ts`에 라우트 등록
+4. `tests/api/`에 통합 테스트 추가
+
+검증: `npm test -- --grep "새 엔드포인트"` 통과
+주의: `src/api/middleware/auth.ts`의 권한 체크 미들웨어 적용 필수
+~~~
+
+### Interfaces / Contracts
+
+**Bad** — 구현을 그대로 복사:
+
+~~~
+// OrderService 클래스는 createOrder, cancelOrder, getOrderById,
+// updateOrderStatus, listOrders, getOrderHistory, validateOrder,
+// calculateTotal, applyDiscount, sendConfirmation 메서드를 가집니다.
+// createOrder는 userId, items, shippingAddress를 받아서...
+// (이하 200줄의 메서드별 설명)
+~~~
+
+**Good** — 외부에서 알아야 할 계약만 간결하게:
+
+~~~
+OrderService 핵심 계약:
+- createOrder(userId, items, address) → Order
+  - 불변: items가 비어있으면 거부
+  - 불변: 재고 차감은 이 함수 안에서 트랜잭션으로 처리
+  - 부작용: 주문 생성 후 `order.created` 이벤트 발행
+- cancelOrder(orderId) → void
+  - 불변: SHIPPED 이후 상태는 취소 불가
+  - 부작용: 재고 복원, `order.cancelled` 이벤트 발행
+~~~
+
+### Responsibility
+
+**Bad** — 책임만 있고 비책임이 없음:
+
+~~~
+PaymentService는 결제를 처리합니다.
+~~~
+
+**Good** — 경계가 명확:
+
+~~~
+PaymentService
+- 책임: PG사 API 호출, 결제 상태 추적, 환불 처리
+- 비책임: 주문 상태 변경(OrderService), 알림 발송(NotificationService)
+- 주의: 결제 상태와 주문 상태 동기화는 이벤트 기반. 직접 호출하지 않음.
+~~~
+
+### Open Questions
+
+**Bad** — 불확실성을 사실처럼 기술:
+
+~~~
+이 시스템은 초당 10,000건의 요청을 처리할 수 있습니다.
+~~~
+
+**Good** — 모르는 것을 명시:
+
+~~~
+## Open Questions
+- 현재 부하 테스트 미실시. 실제 처리량 미확인.
+- Redis 캐시 만료 정책이 비즈니스 요구사항과 맞는지 검증 필요.
+- `external/pg-client.ts`의 타임아웃 설정 근거 불명 (현재 30초).
+~~~

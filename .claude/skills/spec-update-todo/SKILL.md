@@ -1,103 +1,99 @@
 ---
 name: spec-update-todo
 description: This skill should be used when the user asks to "update spec with features", "add features to spec", "update spec from input", "add requirements to spec", "spec update", "expand spec", "add to-do to spec", "add to-implement to spec", or mentions adding new features, requirements, or planned improvements to an existing specification document.
-version: 1.0.0
+version: 1.1.0
 ---
 
-# Spec Update from User Input
+# Spec Update from Planned Input
 
-| Workflow | Position | When |
-|----------|----------|------|
-| Large | Step 2 of 6 | feature-draft 후 스펙에 사전 반영 (드리프트 방지) |
-| Medium | — | feature-draft가 통합 처리 |
-| Small | — | 직접 구현 |
+Apply planned requirements into an existing exploration-first spec.
 
-Update existing spec documents with new features, requirements, and planned improvements based on user input. This skill focuses on adding "to-add" or "to-implement" items to the spec.
+A good spec is not a copy of the code. It is a searchable map that helps people and LLMs:
+- understand what the repository does
+- find where a feature or responsibility lives
+- decide where to edit safely
+- remember non-obvious decisions and invariants
+
+This skill updates `_sdd/spec/` with planned or to-implement items.
+It does not implement code. It turns draft requirements into spec entries that help future readers understand:
+- what is planned
+- where the change affects the system
+- which components or paths are involved
+- what risks or unknowns remain
+
+## Simplified Workflow
+
+This skill sits between **feature-draft** and **implementation** in the SDD workflow:
+
+```
+spec-create -> feature-draft -> spec-update-todo (this) -> implementation -> spec-update-done
+```
+
+| Step | Skill | Purpose |
+|------|-------|---------|
+| 1 | spec-create | Create the initial index-first spec |
+| 2 | feature-draft | Draft feature spec patch + implementation plan |
+| **3** | **spec-update-todo** | Apply planned items into the spec |
+| 4 | implementation | Execute the implementation plan |
+| 5 | spec-update-done | Sync spec with actual code |
 
 ## Overview
 
-This skill processes user requirements and feature requests to update spec documents. Input can come from:
+Input can come from:
 1. **User conversation**: Direct discussion about new features
-2. **Input file**: `_sdd/spec/user_spec.md` or `_sdd/spec/user_draft.md` containing structured requirements
-3. **Decision log**: `_sdd/spec/DECISION_LOG.md` for existing rationale/constraints (if present)
+2. **Input file**: `_sdd/spec/user_spec.md` or `_sdd/spec/user_draft.md`
+3. **Part 1 of a `feature-draft` output**
+4. **Decision log**: `_sdd/spec/DECISION_LOG.md` as supporting rationale
 
-After processing input files, rename them to mark as processed:
-- `user_spec.md` → `_processed_user_spec.md`
-- `user_draft.md` → `_processed_user_draft.md`
+After processing input files, rename them with `_processed_`.
 
 ## When to Use This Skill
 
-- Adding new feature requirements to an existing spec
-- Expanding spec with planned improvements
-- Incorporating user feedback into documentation
-- Processing batched feature requests from input file
-- Updating "to-implement" or roadmap sections
+- Adding planned features to an existing spec
+- Reflecting feature-draft output into `_sdd/spec/`
+- Expanding roadmap or to-implement sections in a structured spec
+- Updating component, flow, environment, or change-path documentation before implementation
 
 ## Hard Rules
 
-1. **Always backup**: 스펙 파일 수정 전 반드시 `_sdd/spec/prev/PREV_<filename>_<timestamp>.md`로 백업한다.
-2. **Rename processed input files**: 처리된 입력 파일은 반드시 `_processed_` 접두사로 이름 변경한다.
-3. **언어 규칙**: 기존 스펙/문서의 언어를 따른다. 새 프로젝트(기존 스펙 없음)는 한국어 기본. 사용자 명시 지정 시 해당 언어 사용.
-4. **DECISION_LOG.md 최소화**: 결정 로그는 `DECISION_LOG.md`에만 기록하며, 추가 문서는 사용자 요청 시에만 생성한다.
-5. **스펙 구조 보존**: 기존 스펙의 구조와 스타일을 유지하며, 필요한 항목만 추가한다.
+1. **Always backup**: 수정 전 반드시 `_sdd/spec/prev/PREV_<filename>_<timestamp>.md`로 백업한다.
+2. **Rename processed input files**: 처리한 입력 파일은 `_processed_` 접두사로 이름 변경한다.
+3. **한국어 작성**: 추가 내용은 메인 스펙 언어를 따르되 기본은 한국어다.
+4. **DECISION_LOG.md 최소화**: 결정 로그는 `DECISION_LOG.md`에만 기록한다.
+5. **탐색형 구조 보존**: 업데이트 후에도 Change Recipes, Component Index, 실제 경로 참조가 유효해야 한다.
+6. **앵커 섹션 유지**: `Goal`, `Architecture Overview`, `Component Details`, `Environment & Dependencies`, `Identified Issues & Improvements`, `Usage Examples`, `Open Questions` 섹션명을 유지한다.
+7. **추정 명시**: 확인되지 않은 내용은 단정하지 않고 `Open Questions`에 기록한다.
+8. **갱신 필요성 판단**: SDD §8 기준에 따라 `MUST update` / `NO update` / `CONSIDER`를 분류한다.
+9. **책임 기반 분할 우선**: 분할이 필요하면 `main.md + <component>.md` 형태를 기본으로 한다.
+10. **메타데이터 강제 금지**: version/date/changelog는 기존 문서가 이미 그 메타데이터를 사용할 때만 갱신한다.
+11. **선택 섹션 최소화**: `Environment & Dependencies`, `Identified Issues & Improvements`, `Usage Examples` 등 선택 섹션은 실제 영향이 있을 때만 추가하거나 수정한다.
+12. **빈 선택 섹션 금지**: 비어 있는 선택 섹션, 메타데이터 블록, placeholder 표는 만들지 않는다.
+13. **Token-efficient update**: 반복 설명보다 기존 표, 경로 인덱스, 짧은 불릿 갱신을 우선한다.
+
+## SDD §8 갱신 기준 참조
+
+모든 코드 변경이 스펙 갱신을 요구하는 것은 아니다. 입력 항목을 아래 기준으로 분류한다.
+
+| 분류 | 조건 | 예시 |
+|------|------|------|
+| **MUST update** | 사용자 가시 기능/범위 변경, 새/변경된 런타임 흐름·소유권·계약·경로, 새 환경/셋업 요구사항, 지속적 리스크·불변 조건·미해결 질문 | 컴포넌트 추가/삭제, API 엔드포인트 변경, 아키텍처 구조 변경, 환경변수 추가 |
+| **NO update** | 테스트만, 주석만, 포맷팅만, 외부 동작·탐색 지점 불변인 내부 리팩터링 | 함수 내부 로직 개선, 버그 수정(계약 불변), 코드 스타일 수정 |
+| **CONSIDER** | 소규모 의존성 변경, 탐색 영향이 애매한 내부 재구성, 성능 튜닝(외부 영향 제한) | 내부 유틸 추가(공유 시 갱신), 에러 핸들링 변경(외부 노출 시 갱신), 메이저 의존성 업데이트 |
 
 ## Input Sources
 
 ### 1. User Conversation
+- feature descriptions
+- requirement discussions
+- improvement requests
+- bug reports to record as planned work
 
-Direct input from the current conversation:
-- Feature descriptions
-- Requirements discussions
-- Enhancement requests
-- Bug reports to document
+### 2. Input Files
+- `_sdd/spec/user_spec.md`
+- `_sdd/spec/user_draft.md`
 
-### 2. Input File (`_sdd/spec/user_spec.md` or `user_draft.md`)
-
-User input file for spec update. Two file types are supported:
-- **`user_spec.md`**: User-written specification input
-- **`user_draft.md`**: 사용자 작성 초안 (draft)
-
-If there are both `_sdd/spec/user_spec.md` or `_sdd/spec/user_draft.md` existing, ask user what to choose.
-
-Recommended format is a structured file format for batched updates, but any free-form text are accepted.
-
-Example structured file format:
-
-```markdown
-# Spec Update Input
-
-## New Features
-
-### Feature: [Feature Name]
-**Priority**: [High/Medium/Low]
-**Description**: [What it should do]
-**Acceptance Criteria**:
-- [ ] Criterion 1
-- [ ] Criterion 2
-
-### Feature: [Another Feature]
-...
-
-## Improvements
-
-- [Improvement 1]
-- [Improvement 2]
-
-## Bug Reports
-
-- [Bug description and expected fix]
-
-## Notes
-
-[Additional context or constraints]
-```
-
-### 3. Decision Log (`_sdd/spec/DECISION_LOG.md`, optional)
-
-If present, use it as a constraint/rationale source:
-- Prior decisions that limit solution space
-- Rejected alternatives to avoid reintroducing
-- Context needed to understand "why this requirement exists"
+### 3. Decision Log
+- `_sdd/spec/DECISION_LOG.md` when previous decisions constrain the planned change
 
 ## Update Process
 
@@ -105,337 +101,259 @@ If present, use it as a constraint/rationale source:
 
 **Tools**: `Glob`, `Read`
 
-```
-1. Check if user provided requirements in conversation
-2. Check if input files exist (in order of priority):
-   - `_sdd/spec/user_draft.md` (사용자 초안)
-   - `_sdd/spec/user_spec.md` (user-written)
-3. If multiple sources exist, process all (conversation first, then files)
-4. If no sources found, ask user for input
-```
+Load all applicable sources in this order:
+1. conversation
+2. `user_draft.md`
+3. `user_spec.md`
 
-**Decision Gate 1→2**:
-```
-input_found = (사용자 대화 OR user_draft.md OR user_spec.md) 중 하나 이상 존재
-
-IF input_found → Step 2 진행
-ELSE → AskUserQuestion: 업데이트할 요구사항 요청
-```
+If multiple sources exist, merge them and preserve conflicts or ambiguity in `Open Questions`.
 
 ### Step 2: Load Current Spec
 
-**Tools**: `Read`, `Glob`, `AskUserQuestion`
+**Tools**: `Read`, `Glob`, `Grep`
 
-```
-1. Locate the main spec document in `_sdd/spec/` with this priority:
-   - (1) `_sdd/spec/<project>.md` (프로젝트명 기반)
-   - (2) `_sdd/spec/main.md` (이전 프로젝트)
-   - (3) 단일 .md 파일만 존재하면 자동 선택
-   - (4) 2개 이상 후보 시에만 사용자에게 선택 요청
-2. If multiple plausible main spec files exist, ask the user which file to update (and treat as the index/main spec)
-3. If the spec is already split across multiple files, follow the index/links and update the appropriate file(s)
-4. Read current spec content (index + any referenced sub-specs that will be affected)
-5. If `_sdd/spec/DECISION_LOG.md` exists, read relevant entries before deciding how to insert/update requirements
-   - DECISION_LOG 충돌 처리: (1) Update Plan에 충돌 사항 명시 (2) DECISION_LOG에 새 항목으로 추가 (3) Summary에 포함
-6. Identify sections that will be updated:
-   - "목표" / "Goal" → for new features
-   - "발견된 이슈 및 개선 필요사항" / "Issues & Improvements" → for bugs/improvements
-   - "컴포넌트 상세" / "Component Details" → for component changes
-   - Create new sections if needed
-```
+Treat the spec as a navigation surface.
 
-### Step 3: Parse User Input
+Read:
+- the main spec (`_sdd/spec/<project>.md` or `_sdd/spec/main.md`)
+- linked component spec files that will be affected
+- `_sdd/spec/DECISION_LOG.md` if present
+
+Prioritize these target areas (앵커 섹션):
+- `Goal > Project Snapshot / Key Features / Non-Goals`
+- `Architecture Overview > System Boundary / Repository Map / Runtime Map`
+- `Component Details > Component Index`
+- `Environment & Dependencies`
+- `Identified Issues & Improvements`
+- `Usage Examples > Common Operations / Common Change Paths`
+- `Open Questions`
+
+If the spec lacks these anchors and the change is still local, add missing subsections minimally.
+If the spec shape is fundamentally poor, continue with minimal safe updates and note a `spec-rewrite` follow-up in `Open Questions`.
+
+### Step 3: Parse Input
 
 **Tools**: `Read`
 
-Extract structured information from input:
+Accepted input structure is defined in `references/input-format.md`.
 
-**From Conversation:**
-- Feature names and descriptions
-- Priority indicators
-- Technical requirements
-- Acceptance criteria
+Supported sections:
+- `New Features`
+- `Improvements`
+- `Bug Reports`
+- `Component Changes`
+- `Environment & Dependency Changes`
+- `Notes`
+- `Open Questions`
 
-**From Input File:**
-- Parse markdown structure
-- Extract features, improvements, bugs
-- Preserve priority and criteria
+Extract:
+- feature name and priority
+- spec update classification if provided
+- target section hints
+- affected components / paths
+- acceptance criteria
+- risks / invariants
+- dependencies and constraints
 
-### Step 4: Categorize Updates
+### Step 4: Classify Whether Spec Edits Are Needed
 
-**Tools**: — (분류/매핑, 도구 불필요)
+**Tools**: none
 
-| Category | Target Section | Update Type |
-|----------|---------------|-------------|
-| New Feature | 목표 > 주요 기능 | Add to list |
-| Enhancement | 개선 필요사항 > 개선 제안 | Add with priority |
-| Bug Fix | 발견된 이슈 > 버그 | Add to issues |
-| Component Change | 컴포넌트 상세 | Update/add section |
-| Configuration | 설정 | Add options |
-| API Change | API 레퍼런스 | Add endpoints |
+Apply SDD §8 갱신 기준:
 
-> 상세 섹션 매핑 규칙은 `references/section-mapping.md`를 참조한다.
+- `MUST update`
+  - user-visible feature or scope change
+  - new or changed runtime flow, ownership, contract, or repository path that affects navigation
+  - new environment/setup requirement that affects running or testing
+  - new enduring risk, invariant, or unresolved question worth preserving
+- `NO update`
+  - tests-only, comments-only, formatting-only changes
+  - internal refactors that do not change behavior, navigation, contracts, or maintenance entry points
+- `CONSIDER`
+  - minor dependency bumps
+  - internal reorganizations with unclear navigation impact
+  - performance tuning with limited user-visible impact
 
-### Step 5: Generate Update Plan
+If the input already includes `Spec Update Classification`, verify it against the above rules.
+If the correct classification is `NO update`, prepare a no-op summary and skip spec edits.
 
-**Tools**: `AskUserQuestion`
+### Step 5: Categorize and Map Updates
 
-Before modifying, present update plan:
+**Tools**: none
 
-```markdown
+Apply the mapping rules from `references/section-mapping.md`.
+
+Default mapping (앵커 섹션 기준):
+
+| Input Type | Preferred Target Section | Update Type |
+|------------|--------------------------|-------------|
+| New Feature (Core) | `Goal > Key Features` | Add to list |
+| New Feature (Component) | `Component Details` | Add component entry |
+| Architecture Change | `Architecture Overview` | Update structure |
+| Improvement | `Identified Issues & Improvements` | Add with priority |
+| Bug Fix | `Identified Issues & Improvements` | Add to issues |
+| Component Change | `Component Details` | Update/add section |
+| Environment/Config | `Environment & Dependencies` | Add options |
+| Usage/Change Path | `Usage Examples > Common Change Paths` | Add recipe |
+| Uncertainty | `Open Questions` | Add question |
+
+Important rule:
+one input item may require updates in **multiple** spec areas.
+
+Example:
+- a new feature may require `Goal > Key Features`
+- plus `Architecture Overview > Runtime Map`
+- plus `Component Details`
+- plus `Usage Examples > Common Change Paths`
+
+### Step 6: Generate Update Plan
+
+**Tools**: deterministic defaults (non-interactive)
+
+Before editing, present a concise update plan:
+
+~~~markdown
 ## Spec Update Plan
 
-**Spec File**: `_sdd/spec/apify_ig.md`
-**Input Source**: [conversation / user_spec.md / both]
+**Target Files**:
+- `_sdd/spec/main.md`
+- `_sdd/spec/notification.md`
 
-### Changes to Apply
+**Spec Update Classification**: MUST update
 
-#### Section: 목표 > 주요 기능
-- ADD: [New feature 1]
-- ADD: [New feature 2]
+### Planned Changes
+- Goal > Key Features: ADD `실시간 알림`
+- Architecture Overview > Runtime Map: UPDATE 알림 이벤트 흐름
+- Component Details: ADD `NotificationService`
+- Usage Examples > Common Change Paths: ADD 알림 관련 변경 시작점
+- Open Questions: ADD 이메일 알림 범위 미정
+~~~
 
-#### Section: 발견된 이슈 및 개선 필요사항
-- ADD: [Improvement 1] (Priority: High)
-- ADD: [Bug report 1]
+If classification is `NO update`, present a compact no-op plan instead.
 
-#### New Section: [Section Name] (if needed)
-- CREATE: [New section content]
-
-### Questions (if any)
-- [Clarification needed]
-```
-
-**Decision Gate 5→6**:
-```
-plan_presented = Update Plan을 사용자에게 제시 완료
-
-IF plan_presented → Step 6 진행 (사용자 확인을 기다리지 않는다)
-ELSE → Step 5 재실행
-```
-
-### Step 6: Apply Updates
+### Step 7: Apply Updates
 
 **Tools**: `Edit`, `Write`, `Bash (mkdir -p)`
 
-Update spec document:
+Apply planned changes directly to the relevant spec files.
 
-1. **Backup**: Before editing any spec file, save a versioned copy under `_sdd/spec/prev/`:
-   - `prev/PREV_<spec-file>_<timestamp>.md`
-   - If `_sdd/spec/prev/` does not exist, create it first
-   - If multiple spec files will be edited (because the spec is split), create one `prev/PREV_...` backup for each file being modified
-2. **Insert**: Add new items to appropriate sections
-3. **Format**: Match existing style and language
-4. **Version**: Increment patch version (X.Y.Z → X.Y.Z+1)
-5. **Date**: Update "최종 수정일" / "Last Updated"
-6. **Changelog**: Add an entry describing the update and referencing the `prev/PREV_...` backup(s)
-7. **Decision Log** (optional but recommended): if this update introduces or changes a key decision, append a concise entry to `_sdd/spec/DECISION_LOG.md`
+Rules:
+1. create a `prev/PREV_...` backup for every modified file
+2. preserve existing accurate content
+3. if classification is `NO update`, skip spec edits and report why
+4. add planned markers such as `📋 계획됨` only where they improve clarity
+5. update multiple sections when one feature affects multiple views of the system
+6. add or refresh `Component Index`, `Runtime Map`, or `Common Change Paths` when needed for planned changes
+7. add or update optional sections only when they materially help future navigation
+8. add/merge `Open Questions` for unresolved assumptions
+9. update `DECISION_LOG.md` only if the planned direction introduces a meaningful decision
+10. update version/date/changelog only if the current spec already uses them
 
-### Step 7: Process Input Files
+#### New Component Template
+
+When adding a new component, use the SDD component spec structure:
+
+~~~markdown
+### 컴포넌트: [이름]
+#### Responsibility
+[이 컴포넌트가 하는 일과 하지 않는 일]
+
+#### Owned Paths
+- `src/path/to/component/`
+- `tests/path/to/component/`
+
+#### Key Symbols / Entry Points
+- `ClassName.method()` — 설명
+
+#### Interfaces / Contracts
+- Inputs: [입력 설명]
+- Outputs: [출력 설명]
+- 불변 조건: [깨지면 안 되는 조건]
+
+#### Dependencies
+- upstream: [의존하는 컴포넌트]
+- downstream: [이 컴포넌트에 의존하는 것]
+
+#### Change Recipes
+- [변경 유형]: [시작 파일] → [검증 방법]
+~~~
+
+#### Post-Update Navigation Validation
+
+업데이트 적용 후 다음을 검증한다:
+- Change Recipes가 업데이트 후에도 유효한가?
+- Component Index가 새 컴포넌트를 반영하는가?
+- 스펙에 기재된 파일 경로가 실제로 존재하는가?
+
+If the updated content grows too large:
+- prefer splitting by responsibility (`auth.md`, `jobs.md`, `billing.md`)
+- keep the main spec as the entry point
+- record the file map in `Open Questions` if the split is non-obvious
+
+### Step 8: Process Input Files
 
 **Tools**: `Bash (mv)`
 
-Rename processed input files to mark as completed:
+Rename processed files:
+- `_sdd/spec/user_draft.md` -> `_sdd/spec/_processed_user_draft.md`
+- `_sdd/spec/user_spec.md` -> `_sdd/spec/_processed_user_spec.md`
 
-```bash
-# If user_draft.md was used
-mv _sdd/spec/user_draft.md _sdd/spec/_processed_user_draft.md
+Add processing metadata:
 
-# If user_spec.md was used (user-written)
-mv _sdd/spec/user_spec.md _sdd/spec/_processed_user_spec.md
-```
+~~~markdown
+<!-- Processed: YYYY-MM-DD -->
+<!-- Applied by: spec-update-todo -->
+<!-- Target Spec: main.md -->
+~~~
 
-Add processing metadata to each processed file:
-```markdown
-<!-- Processed: 2026-02-04 -->
-<!-- Applied to: apify_ig.md v1.0.1 -->
-```
+## Output Summary
 
-## Update Templates
-
-### Adding New Feature
-
-```markdown
-## 목표
-
-### 주요 기능
-
-1. **기존 기능 1**: 설명
-2. **기존 기능 2**: 설명
-3. **[NEW] 새 기능**: 설명  <!-- 추가됨: 2026-02-04 -->
-```
-
-### Adding Improvement
-
-```markdown
-## 발견된 이슈 및 개선 필요사항
-
-### 개선 제안
-
-1. **기능 확장** (우선순위: 높음)  <!-- 추가됨: 2026-02-04 -->
-   - 현재: [현재 상태]
-   - 제안: [제안 내용]
-   - 이유: [이유]
-```
-
-### Adding Component
-
-```markdown
-## 컴포넌트 상세
-
-### 컴포넌트: [새 컴포넌트 이름]  <!-- 추가됨: 2026-02-04 -->
-
-#### 개요
-
-[컴포넌트 설명]
-
-| 항목 | 설명 |
-|------|------|
-| **목적** | [목적] |
-| **입력** | [입력] |
-| **출력** | [출력] |
-| **상태** | 📋 계획됨 (To-Implement) |
-```
-
-### Status Indicators
-
-Use these status markers for planned items:
-
-| Marker | Meaning |
-|--------|---------|
-| 📋 계획됨 | Planned, not started |
-| 🚧 진행중 | In progress |
-| ✅ 완료 | Completed |
-| ⏸️ 보류 | On hold |
-
-## Output Format
-
-### Updated Spec
-
-Apply changes directly to spec file with:
-- Version increment
-- Date update
-- Changelog entry
-- Inline comments for new items (optional)
-
-### Update Summary
-
-After updating, provide summary:
-
-```markdown
-## Spec Update Complete
-
-**File**: `_sdd/spec/apify_ig.md`
-**Version**: 1.0.0 → 1.0.1
-**Date**: 2026-02-04
-
-### Applied Changes
-
-| Section | Change | Item |
-|---------|--------|------|
-| 주요 기능 | ADD | 새 기능 1 |
-| 개선 제안 | ADD | 개선 사항 1 |
-| 컴포넌트 | ADD | 새 컴포넌트 |
-
-### Input File Status
-- [x] `_sdd/spec/user_draft.md` → `_processed_user_draft.md` (if used)
-- [x] `_sdd/spec/user_spec.md` → `_processed_user_spec.md` (if used)
-
-### Decision Log
-- [x] `_sdd/spec/DECISION_LOG.md` updated (if a new/changed decision was identified)
-- [ ] No decision-log update needed
-
-### Next Steps
-- Run `/spec-update-done` after implementation to sync spec with code
-```
-
-## Best Practices
-
-### Input Quality
-
-- **Be Specific**: Include concrete requirements, not vague ideas
-- **Include Criteria**: Define what "done" looks like
-- **Set Priority**: Help prioritize implementation order
-- **Provide Context**: Explain why the feature is needed
-
-### Update Quality
-
-- **Match Style**: Follow existing spec's language and format
-- **Preserve Structure**: Don't reorganize existing content
-- **Mark New Items**: Use comments or markers for traceability
-- **Keep History**: Update changelog for significant additions
-- **Preserve Why**: Reuse/update `_sdd/spec/DECISION_LOG.md` when requirements depend on non-obvious rationale
-- **Keep Scope Tight**: Do not introduce additional side documents beyond `DECISION_LOG.md` unless requested
-
-### File Management
-
-- **Atomic Updates**: Complete all changes before saving
-- **Backup Explicitly**: Always create `prev/PREV_<spec-file>_<timestamp>.md` in `_sdd/spec/prev/` before updating a spec file (even if git history exists)
-- **Clean Up**: Rename processed input files
-- **Track Processing**: Add metadata to processed files
+After updating, summarize:
+- spec update classification
+- updated files
+- changed sections
+- planned items added
+- whether `DECISION_LOG.md` changed
+- processed input file status
+- remaining `Open Questions`
 
 ## Context Management
 
-| 스펙 크기 | 전략 | 구체적 방법 |
-|-----------|------|-------------|
-| < 200줄 | 전체 읽기 | `Read`로 전체 파일 읽기 |
-| 200-500줄 | 전체 읽기 가능 | `Read`로 전체 읽기, 필요 시 섹션별 |
-| 500-1000줄 | TOC 먼저, 관련 섹션만 | 상위 50줄(TOC) 읽기 → 관련 섹션만 `Read(offset, limit)` |
-| > 1000줄 | 인덱스만, 타겟 최대 3개 | 인덱스/TOC만 읽기 → 타겟 섹션 최대 3개 선택적 읽기 |
-
-| 코드베이스 크기 | 전략 | 구체적 방법 |
-|----------------|------|-------------|
-| < 50 파일 | 자유 탐색 | `Glob` + `Read` 자유롭게 사용 |
-| 50-200 파일 | 타겟 탐색 | `Grep`/`Glob`으로 후보 식별 → 타겟 `Read` |
-| > 200 파일 | 타겟 탐색 | `Grep`/`Glob` 위주 → 최소한의 `Read` |
-
-## Language Handling
-
-- **Follow Spec Language**: 기존 스펙/문서의 언어를 따른다
-- **Preserve Consistency**: 섹션 내 언어를 혼합하지 않는다
-- **Translate if Needed**: 입력을 스펙 언어로 변환한다
-- **New Project Default**: 새 프로젝트(기존 스펙 없음)는 한국어 기본
+| 스펙 크기 | 전략 |
+|-----------|------|
+| < 200줄 | 전체 읽기 |
+| 200-500줄 | 전체 읽기 가능 |
+| 500-1000줄 | TOC 먼저, 관련 섹션만 읽기 |
+| > 1000줄 | 인덱스와 타겟 섹션 우선 |
 
 ## Error Handling
 
 | Situation | Action |
 |-----------|--------|
-| Spec file not found | Suggest running `spec-create` first |
-| Ambiguous input | 최선의 해석으로 진행, 판단 불가 시 스펙에 Open Questions로 기록 |
-| Conflicting requirements | Flag and ask user to resolve |
-| Invalid input file format | Report parsing errors, suggest corrections |
-| 백업 디렉토리 미존재 | `mkdir -p _sdd/spec/prev/` 자동 생성 |
-| 다수 입력 파일 존재 | 사용자에게 선택 확인 |
-| 입력 파일과 스펙 섹션 매핑 불가 | 사용자에게 대상 섹션 확인 |
-
-### Post-Update Glob 검증
-
-```
-1. Glob("_sdd/spec/<project>.md") → 수정된 스펙 파일 존재 확인
-2. 변경 로그(Changelog) 항목 존재 확인
-3. 버전 번호 증가 확인
-4. prev/PREV_* 백업 파일 존재 확인
-5. 처리된 입력 파일 이름 변경 확인 (_processed_ 접두사)
-```
-
-## Integration with Other Skills
-
-```
-Large:    feature-draft → spec-update-todo → implementation-plan → implementation → implementation-review → spec-update-done
-Medium:   feature-draft → implementation → spec-update-done
-Small:    직접 구현 (→ implementation-review) (→ spec-update-done)
-```
-
-- **spec-create**: Create initial spec (run first if no spec exists)
-- **implementation-plan**: Plan implementation of new features
-- **implementation**: Implement the planned features
-- **spec-update-done**: Sync spec with actual code after implementation
+| Spec file not found | `spec-create` 먼저 실행 권장 |
+| Ambiguous input | deterministic defaults + `Open Questions` 기록 |
+| Conflicting requirements | 더 보수적인 해석 적용 후 `Open Questions` 기록 |
+| Backup dir missing | `mkdir -p _sdd/spec/prev/` |
+| Spec structure poor | 최소 안전 업데이트 후 `spec-rewrite` follow-up 기록 |
+| Split needed | 책임 기반 분할로 전환 |
 
 ## Additional Resources
 
 ### Reference Files
-- **`references/input-format.md`** - Detailed input file format guide
-- **`references/section-mapping.md`** - How to map inputs to spec sections
+- `references/input-format.md` - accepted input shape and MUST/NO/CONSIDER classification guide
+- `references/section-mapping.md` - how planned items map into SDD anchor sections
 
 ### Example Files
-- **`examples/user_spec.md`** - Sample input file
-- **`examples/update-summary.md`** - Sample update summary
+- `examples/user_spec.md` - example input file
+- `examples/update-summary.md` - example completion summary
+
+## Integration with Other Skills
+
+```
+spec-create -> feature-draft -> spec-update-todo -> implementation -> spec-update-done
+```
+
+- `spec-create`: creates the initial index-first spec
+- `feature-draft`: produces Part 1 that this skill can consume
+- `implementation`: executes planned work after this step
+- `spec-update-done`: syncs actual implementation back after completion

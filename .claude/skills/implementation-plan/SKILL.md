@@ -1,10 +1,12 @@
 ---
 name: implementation-plan
 description: This skill should be used when the user asks to "create an implementation plan", "plan the implementation", "break down this spec", "create a development roadmap", "analyze requirements and create tasks", "create a parallel implementation plan", "plan parallel implementation", "병렬 구현 계획", "create parallel development roadmap", or wants a structured implementation plan with Target Files for parallel execution support.
-version: 1.0.0
+version: 1.1.0
 ---
 
 # Implementation Plan Creation (Parallel-Ready)
+
+> **Simplified Workflow**: `spec-create → feature-draft → implementation → spec-update-done`
 
 | Workflow | Position | When |
 |----------|----------|------|
@@ -16,10 +18,14 @@ version: 1.0.0
 
 Create structured, actionable implementation plans from user specifications — with **Target Files** on every task to enable parallel execution via `implementation`.
 
-## Hard Rule: Spec Documents Are Read-Only
+## Hard Rules
 
-- This skill may **read** the spec as input, but it **MUST NOT** modify any files under `_sdd/spec/`.
-- If you think the spec should change, capture it as **Open Questions / Spec gaps** in the plan and direct the user to `spec-update-todo`.
+1. This skill may **read** the spec as input, but it **MUST NOT** modify any files under `_sdd/spec/`.
+2. If you think the spec should change, capture it as **Open Questions / Spec gaps** in the plan and direct the user to `spec-update-todo`.
+3. Spec gap은 `MUST update / CONSIDER / NO update`로 분류한다:
+   - `MUST update`: 구현 시작 전에 스펙에 반영하지 않으면 계약/탐색성이 깨지는 항목
+   - `CONSIDER`: 있으면 좋지만 구현 진행을 막지 않는 보강 항목
+   - `NO update`: 내부 구현 세부사항으로 스펙 수준 변화 없음
 
 ## Implementation spec
 
@@ -46,7 +52,9 @@ After processing `user_input.md`, rename it to `_processed_user_input.md` to mar
 
 **Tools**: `Read`, `Glob`, `AskUserQuestion`
 
-Read and analyze the provided specification thoroughly:
+Read and analyze the provided specification thoroughly.
+
+> 스펙의 `Component Details`와 `Change Recipes`(또는 `Common Change Paths`)를 참고하여 Task 분해에 활용한다. 기존 컴포넌트 경계와 책임 분리를 존중하면 병렬화가 쉬워진다.
 
 - **Core Requirements**: What must the system do?
 - **Technical Constraints**: Languages, frameworks, integrations, performance requirements

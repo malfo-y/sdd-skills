@@ -1,7 +1,7 @@
 ---
 name: spec-review
 description: This skill should be used when the user asks to "review spec", "spec drift check", "verify spec accuracy", "audit spec quality", "review spec against code", "refresh spec review", "스펙 리뷰", "스펙 검토", "스펙 드리프트 점검", or wants a review-only analysis of spec quality and code-to-spec alignment without directly editing spec files.
-version: 1.0.0
+version: 1.1.0
 ---
 
 # Spec Review (Strict, Review-Only)
@@ -11,25 +11,51 @@ version: 1.0.0
 | Large | Optional (after spec-update-done) | 대규모 업데이트 후 보조 검증 |
 | Any | On-demand | 이상 징후/모호함 발견 시 보조 검증 |
 
-Review SDD spec quality and spec-to-code alignment in strict review-only mode.  
+Review SDD spec quality and spec-to-code alignment in strict review-only mode.
 This skill generates findings and recommendations, but does not edit `_sdd/spec/*.md` (including `DECISION_LOG.md`).
 
-## Hard Rule: No Spec Edits
+A good spec is not a copy of the code. It is a searchable map that helps people and LLMs:
+- understand what the repository does
+- find where a feature or responsibility lives
+- decide where to edit safely
+- remember non-obvious decisions and invariants
 
-- This skill performs review and reporting only.
-- Never create, modify, rename, or delete spec files under `_sdd/spec/` (except the review report file defined below).
-- Never edit `_sdd/spec/DECISION_LOG.md` in this skill. Propose entries only.
-- If spec changes are needed, record them as actionable recommendations and hand off to `/spec-update-done` for actual edits.
+## Hard Rules
 
-## Overview
+1. `_sdd/spec/` 아래 실제 스펙은 수정하지 않는다.
+2. `DECISION_LOG.md`도 직접 수정하지 않는다. 필요하면 제안만 남긴다.
+3. 산출물은 `_sdd/spec/SPEC_REVIEW_REPORT.md` 리뷰 리포트다.
+4. High / Medium finding에는 가능한 한 `file:line`, 테스트, diff 같은 구체적 근거를 붙인다.
+5. 불확실한 내용은 `Open Questions`에 남긴다.
+6. `MUST` 섹션과 `OPT` 섹션을 구분해서 평가한다. 선택 섹션 누락만으로 약한 스펙이라고 단정하지 않는다.
+7. 리뷰 자체도 token-efficient 해야 하며, 없는 선택 섹션을 억지로 보완 요구하지 않는다.
 
-This skill evaluates two dimensions:
+## Overview: SDD 4 Review Dimensions
 
-1. **Spec-only quality review**  
-- Clarity, completeness, internal consistency, measurable acceptance criteria, structure quality.
+This skill evaluates four dimensions:
 
-2. **Code-linked drift review**  
-- Whether implementation, tests, and runtime-facing behavior still match what the spec claims.
+### 1. Entry Point Quality
+- `Goal`이 프로젝트 목적을 빠르게 설명하는가
+- `System Boundary`가 명확한가
+- 메인 스펙이 너무 장황하지 않은가
+- `MUST` 정보만으로도 5분 entry point 역할을 하는가
+
+### 2. Navigation Quality
+- `Repository Map`이 있는가
+- `Runtime Map`이 있는가
+- `Component Index`가 있는가
+- 실제 경로와 심볼이 연결되는가
+
+### 3. Changeability
+- `Common Change Paths` 또는 동등 정보가 있는가
+- 변경 시 같이 봐야 할 테스트/로그/디버깅 포인트가 보이는가
+- 컴포넌트 책임과 비책임이 구분되는가
+
+### 4. Drift
+- 구현과 문서의 기능 설명이 맞는가
+- 새 컴포넌트/경로/흐름이 문서에 빠져 있지 않은가
+- 오래된 `Open Questions`가 그대로 남아 있지 않은가
+- 결정 맥락이 달라졌는데 `DECISION_LOG.md` 제안이 필요한가
 
 ## When to Use This Skill
 
@@ -69,18 +95,21 @@ This skill evaluates two dimensions:
    - Spec + code alignment (default)
 6. If local commands/tests will be run for evidence, read `_sdd/env.md` and apply required setup first.
 
-### Step 2: Spec-Only Quality Audit
+### Step 2: Audit the spec as a navigation surface
 
 **Tools**: `Read`
 
-Assess the spec as a standalone design artifact:
+Assess the spec as a searchable map for people and LLMs. Focus on:
 
-- **Clarity**: ambiguous wording, undefined terms
-- **Completeness**: missing requirements, missing acceptance criteria
-- **Consistency**: conflicting statements across sections/files
-- **Testability**: whether requirements can be objectively verified
-- **Navigability**: structure, section discoverability, cross-links
-- **Ownership**: responsibility boundaries and decision ownership
+- **Project Snapshot / Goal**: 프로젝트 목적이 빠르게 파악되는가
+- **System Boundary**: 시스템 경계와 외부 의존이 명확한가
+- **Repository Map**: 디렉토리-역할 매핑이 있는가
+- **Runtime Map**: 요청/이벤트/데이터 흐름이 보이는가
+- **Component Index**: 컴포넌트별 책임/비책임/경로가 있는가
+- **Common Change Paths**: 자주 변경되는 시나리오별 진입점이 있는가
+- **Open Questions**: 미결 사항이 정리되어 있는가
+
+`MUST` 섹션과 `OPT` 섹션을 구분한다. 선택 섹션 누락만으로 감점하지 않는다.
 
 #### Context Management (Step 1 후 적용)
 
@@ -97,7 +126,18 @@ Assess the spec as a standalone design artifact:
 | 50-200 파일 | 타겟 탐색 | `Grep`/`Glob`으로 후보 식별 → 타겟 `Read` |
 | > 200 파일 | 타겟 탐색 | `Grep`/`Glob` 위주 → 최소한의 `Read` |
 
-### Step 3: Code-Linked Drift Audit
+### Step 3: Audit changeability
+
+**Tools**: `Read`, `Grep`
+
+Evaluate whether someone (person or LLM) can find where to start editing for a feature change:
+
+- `Common Change Paths` 또는 동등 정보가 있는가
+- 변경 시나리오에서 관련 테스트/로그/디버깅 포인트를 찾을 수 있는가
+- 컴포넌트 책임과 비책임이 구분되어 있어 안전한 편집 범위를 판단할 수 있는가
+- 변경 영향 범위(blast radius)를 스펙만으로 추정할 수 있는가
+
+### Step 4: Audit code-linked drift
 
 **Tools**: `Grep`, `Glob`, `Read`, `Bash (git diff, git log)`
 
@@ -110,6 +150,14 @@ Compare spec claims to implementation evidence:
 - **Issue drift**: resolved issues still open in spec, or new issues undocumented
 - **Decision-log drift**: implemented behavior/constraints diverge from recorded rationale
 
+#### Navigation Drift (Step 4 하위 범주)
+
+- 새 컴포넌트가 구현에만 존재하고 Component Index에 없음
+- 런타임 흐름이 바뀌었는데 Runtime Map이 낡음
+- 소유 경로가 달라졌는데 Component Index가 낡음
+- 운영/디버깅 경로가 바뀌었는데 Common Change Paths가 없음
+- 이미 해결된 질문이 Open Questions에 남아 있거나, 새 질문이 문서에 없음
+
 Require concrete evidence wherever possible:
 - `path:line` references
 - test names/status
@@ -118,9 +166,9 @@ Require concrete evidence wherever possible:
 When local runtime/test execution is used to collect evidence, follow `_sdd/env.md`.
 If `_sdd/env.md` is missing/incomplete, ask the user for environment details instead of guessing.
 
-### Step 3.5: Drift 발견 요약
+### Step 4.5: Drift 발견 요약
 
-Drift 발견 요약 테이블을 사용자에게 제시한 후 바로 Step 4로 진행한다 (사용자 확인을 기다리지 않는다):
+Drift 발견 요약 테이블을 사용자에게 제시한 후 바로 Step 5로 진행한다 (사용자 확인을 기다리지 않는다):
 
 ```
 | 카테고리 | High | Medium | Low |
@@ -131,9 +179,10 @@ Drift 발견 요약 테이블을 사용자에게 제시한 후 바로 Step 4로 
 | Config drift | N | N | N |
 | Issue drift | N | N | N |
 | Decision-log drift | N | N | N |
+| Navigation drift | N | N | N |
 ```
 
-### Step 4: Severity and Decision
+### Step 5: Severity and Decision
 
 **Tools**: — (분석/분류, 도구 불필요)
 
@@ -152,13 +201,14 @@ Classify findings:
 | Config | Low |
 | Issue | Low |
 | Decision-log | Medium |
+| Navigation | Medium |
 
 Assign one overall decision:
 - `SPEC_OK`: no material drift or quality blockers
 - `SYNC_REQUIRED`: spec updates are needed before next planning/release step
 - `NEEDS_DISCUSSION`: key ambiguities/trade-offs require product/architecture decisions
 
-### Step 5: Report and Handoff
+### Step 6: Report and Handoff
 
 **Tools**: `Write`, `Bash (mkdir -p)`, `AskUserQuestion`
 
@@ -216,13 +266,17 @@ Assign one overall decision:
 ### Low
 ...
 
-## Spec-Only Quality Notes
-- Clarity:
-- Completeness:
-- Consistency:
-- Testability:
-- Structure:
-- Ownership:
+## Entry Point / Navigation Notes
+- Goal clarity:
+- System Boundary:
+- Repository Map:
+- Runtime Map:
+- Component Index:
+
+## Changeability Notes
+- Common Change Paths:
+- Test/debug discoverability:
+- Responsibility boundaries:
 
 ## Spec-to-Code Drift Notes
 - Architecture:
@@ -230,6 +284,12 @@ Assign one overall decision:
 - API:
 - Configuration:
 - Issues/Technical debt:
+- Navigation drift:
+
+## LLM Efficiency Notes
+- Token cost of entry (spec 읽기만으로 맥락 파악이 되는가):
+- Navigation precision (경로/심볼이 정확해서 불필요한 탐색이 줄어드는가):
+- 선택 섹션 과잉 여부 (불필요한 OPT 섹션이 토큰을 낭비하는가):
 
 ## Open Questions
 1. <question requiring decision>
@@ -263,6 +323,7 @@ Assign one overall decision:
 - Keep `DECISION_LOG.md` updates as recommendations only in this skill.
 - Keep artifact recommendations minimal: default to `DECISION_LOG.md` only unless the user asks for more.
 - Do not run local runtime/tests with inferred setup; use `_sdd/env.md` or user-confirmed environment details.
+- `MUST` 섹션과 `OPT` 섹션을 구분해서 평가한다. 선택 섹션 누락만으로 약한 스펙이라고 단정하지 않는다.
 
 ## Error Handling
 
@@ -287,7 +348,7 @@ Assign one overall decision:
 ## Additional Resources
 
 ### Reference Files
-- `references/review-checklist.md` - strict review checklist and decision rules
+- `references/review-checklist.md` - SDD 4-dimension review checklist and decision rules
 
 ### Example Files
-- `examples/spec-review-report.md` - sample strict review report output
+- `examples/spec-review-report.md` - sample strict review report output with Navigation Drift and LLM Efficiency

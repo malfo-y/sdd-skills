@@ -1,10 +1,12 @@
 ---
 name: implementation
 description: Use this skill when the user wants to execute an implementation plan, start implementing tasks from a plan, work through a development roadmap, says "implement the plan", "start implementation", "execute the plan", "work on the tasks", or explicitly asks for "implement parallel", "parallel implementation", "병렬 구현", "병렬로 구현". Uses conflict-aware parallel execution when Target Files are available.
-version: 1.0.0
+version: 1.1.0
 ---
 
 # Implementation Execution (Parallel TDD Approach)
+
+> **Simplified Workflow**: `spec-create → feature-draft → implementation → spec-update-done`
 
 Execute implementation plans systematically using Test-Driven Development (TDD), with **parallel sub-agent dispatch** for independent tasks within each phase. Tasks without file conflicts are executed concurrently via the Task tool.
 
@@ -18,12 +20,15 @@ Execute implementation plans systematically using Test-Driven Development (TDD),
 
 > Plans without Target Files도 호환 (순차 실행으로 fallback).
 
-## Hard Rule: Never Modify Spec Files
+## Hard Rules
 
-- This skill **MUST NOT** create/edit/delete any spec documents under `<project_root>/_sdd/spec/`.
-- If implementation reveals spec drift, ambiguity, or missing requirements:
-  - Report it in the progress report / chat, and
-  - Ask the user to update the spec via `spec-update-todo` (or run a spec audit via `spec-update-done`).
+1. This skill **MUST NOT** create/edit/delete any spec documents under `<project_root>/_sdd/spec/`.
+2. If implementation reveals spec drift, ambiguity, or missing requirements:
+   - Report it in the progress report / chat, and
+   - Ask the user to update the spec via `spec-update-todo` (or run a spec audit via `spec-update-done`).
+3. Spec drift 보고 시 **어떤 앵커 섹션이 영향받는지** 명시한다:
+   - `Goal`, `Architecture Overview > Runtime Map`, `Component Details > Component Index`, `Usage Examples > Common Change Paths`, `Environment & Dependencies`, `Open Questions`
+4. Drift 항목은 `MUST update / CONSIDER / NO update`로 분류한다.
 
 ## Core Principle: Test-Driven Development
 
@@ -316,6 +321,8 @@ Each sub-agent receives:
 - 전체 통과: Yes/No
 ### Unplanned Dependencies (있는 경우)
 - UNPLANNED_DEPENDENCY: `path` - 설명
+### Spec Drift (있는 경우)
+- SPEC_DRIFT: [앵커 섹션] - 설명 - [MUST update / CONSIDER / NO update]
 ### 발견 사항
 - 특이사항
 ```

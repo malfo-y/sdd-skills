@@ -1,7 +1,7 @@
 ---
 name: pr-spec-patch
 description: This skill should be used when the user asks to "create spec patch from PR", "PR spec patch", "compare PR with spec", "PR to spec", "PR 스펙 패치", "PR 리뷰 준비", "스펙 패치 생성", "PR 변경사항 스펙 반영", or wants to generate a spec patch document by comparing a pull request against the current specification.
-version: 1.0.0
+version: 1.1.0
 ---
 
 # PR Spec Patch - PR-Based Spec Patch Draft Generation
@@ -12,15 +12,26 @@ version: 1.0.0
 
 Compares a PR (Pull Request) against the current spec, generates a structured spec patch draft, and refines it through conversation.
 
+A good spec is not a copy of the code. It is a searchable map that helps people and LLMs:
+- understand what the repository does
+- find where a feature or responsibility lives
+- decide where to edit safely
+- remember non-obvious decisions and invariants
+
 ## Overview
 
 This skill analyzes PR changes, compares them against the current spec documents, and generates a structured patch draft (`_sdd/pr/spec_patch_draft.md`) containing changes that should be reflected in the spec. The "Spec Patch Content" section of the output is compatible with the `spec-update-todo` skill's input format ("Spec Update Input"), so finalized patches can be directly applied via `spec-update-todo`.
 
-## Hard Rule: This skill does NOT modify specs (IMPORTANT)
+## Hard Rules
 
-- Spec files under `_sdd/spec/` are **never** created/modified/deleted.
-- The only output of this skill is `_sdd/pr/spec_patch_draft.md`.
-- Spec updates **must** be done via `/spec-update-todo`.
+1. `_sdd/spec/` 아래 실제 스펙은 수정하지 않는다.
+2. 이 스킬의 산출물은 `_sdd/pr/spec_patch_draft.md` 초안뿐이다.
+3. 초안은 `spec-update-todo`가 소비할 수 있는 구조를 유지해야 한다.
+4. 각 패치 항목에는 가능하면 `PR Evidence`(`file:line`)가 있어야 한다.
+5. 대상 섹션이 불명확하면 억지로 단정하지 말고 `Target Section TBD`와 `Open Questions`로 남긴다.
+6. 기본 언어는 한국어다.
+7. 모든 PR이 스펙 업데이트를 요구하는 것은 아니다. 항목별로 `MUST update / CONSIDER / NO update`를 명시한다.
+8. 빈 선택 섹션은 만들지 않는다. 초안은 token-efficient 해야 한다.
 
 ## When to Use This Skill
 
@@ -46,7 +57,7 @@ This skill analyzes PR changes, compares them against the current spec documents
 
 **File location**: `_sdd/pr/spec_patch_draft.md`
 
-**Format**: PR summary + "Spec Update Input" compatible patch content + questions and suggestions
+**Format**: PR summary + Exploration-First Spec Impact + "Spec Update Input" compatible patch content (with MUST/CONSIDER/NO per item) + Open Questions + Next Recommended Actions
 
 ## Process
 
@@ -107,15 +118,40 @@ ELSE → AskUserQuestion: 스펙 없이 진행 여부 확인
 
 #### Step 4: Analyze changes
 
-Map PR file changes to spec components:
+##### Spec Mapping Rules
 
-| Category | Detection Criteria | Examples |
-|----------|-------------------|----------|
-| New Features | New files/modules added, new endpoints, new classes | New service class, new API endpoint |
-| Improvements | Existing file modifications, performance improvements, refactoring | Function optimization, code cleanup |
-| Bug Fixes | Bug fix commits, error handling additions | Exception handling added, condition fix |
-| Component Changes | Component structure changes, interface changes | New method added, signature change |
-| Configuration Changes | Config file changes, environment variable additions | .env change, config file modification |
+PR 파일 변경을 SDD 앵커 섹션에 매핑한다:
+
+| 변경 유형 | 기본 타겟 섹션 |
+|----------|---------------|
+| 사용자 가치/기능 추가 | `Goal` |
+| 시스템 경계/구조 변화 | `Architecture Overview` |
+| 경로/디렉터리/런타임 흐름 변화 | `Repository Map`, `Runtime Map` |
+| 컴포넌트 책임/소유 경로 변화 | `Component Details`, 컴포넌트 스펙 |
+| 운영/디버깅/테스트 시작점 변화 | `Usage Examples` > `Common Change Paths` |
+| 설정/필수 서비스 변화 | `Environment & Dependencies` |
+| 미확정 설계/후속 검토 필요 | `Open Questions` |
+| 중요한 이유/트레이드오프 변화 | `DECISION_LOG.md` 제안 |
+
+##### Exploration-First Spec Impact Analysis
+
+PR diff를 기반으로 다음 질문에 답한다:
+
+- 새 디렉터리/파일/엔트리포인트가 생겼는가
+- 기존 흐름에 새 단계가 추가되었는가
+- 컴포넌트 책임 경계가 달라졌는가
+- 디버깅/운영 경로가 달라졌는가
+- 기존 Open Questions를 해소하거나 새 질문을 만드는가
+
+##### Spec Update Classification
+
+각 패치 항목에 다음 분류를 부여한다:
+
+| 분류 | 기준 |
+|------|------|
+| `MUST update` | 런타임 흐름, 시스템 경계, 컴포넌트 책임, 외부 계약, 변경 시작점이 달라짐 |
+| `CONSIDER` | 디버깅 경로, 테스트/관측 포인트, why-context가 더 있으면 유용함 |
+| `NO update` | 내부 리팩터링, 테스트 추가, 탐색성과 계약을 바꾸지 않는 변경 |
 
 **Decision Gate 4→5**:
 ```
@@ -130,13 +166,21 @@ ELSE → 미분류 항목 추가 분석
 
 Save the collected/analyzed information in structured form to `_sdd/pr/spec_patch_draft.md`.
 
+Draft structure:
+
+1. PR 요약
+2. 탐색형 스펙 영향 요약 (Exploration-First Spec Impact)
+3. Spec Update Input 호환 패치 항목 (with MUST/CONSIDER/NO per item)
+4. Open Questions
+5. Next Recommended Actions
+
 See the [Output Format](#output-format) section below for the output format.
 
 #### Step 5.5: 패치 항목 PR Evidence 검증
 
 ```
 패치 항목별 검증:
-  a. 각 Feature/Improvement/Bug Fix에 PR Evidence (file:line) 존재 확인
+  a. 각 패치 항목에 PR Evidence (file:line) 존재 확인
   b. PR Evidence의 파일 경로가 PR diff 파일 목록에 포함되는지 확인
   c. Evidence 누락 항목 → "Evidence 미확인" 표시
   d. 스펙 섹션 매핑 누락 항목 → "Target Section TBD" 표시
@@ -192,30 +236,43 @@ Update relevant sections based on user feedback:
 **PR URL**: <url>
 **Target Spec**: <spec filename>
 **Status**: Draft / Reviewed / Finalized
+**Spec Update Classification**: MUST N / CONSIDER N / NO N
 
 ---
 
-## PR Summary
+## PR 요약
 
-**Branch**: <head> → <base>
-**Change Scale**: +<additions> -<deletions>, <changedFiles> files
-**Key Changes**:
+**브랜치**: <head> → <base>
+**변경 규모**: +<additions> -<deletions>, <changedFiles> files
+**주요 변경사항**:
 - <change 1>
 - <change 2>
 - <change 3>
 
 ---
 
-## Spec Patch Content
+## 탐색형 스펙 영향 요약
 
-<!-- Compatible with spec-update-todo's "Spec Update Input" format -->
+| 질문 | 답변 | 영향 받는 섹션 |
+|------|------|---------------|
+| 새 디렉터리/파일/엔트리포인트? | Yes/No - <설명> | <타겟 섹션> |
+| 기존 흐름에 새 단계 추가? | Yes/No - <설명> | <타겟 섹션> |
+| 컴포넌트 책임 경계 변화? | Yes/No - <설명> | <타겟 섹션> |
+| 디버깅/운영 경로 변화? | Yes/No - <설명> | <타겟 섹션> |
+| Open Questions 해소/생성? | Yes/No - <설명> | <타겟 섹션> |
+
+---
+
+## 스펙 패치 내용
+
+<!-- spec-update-todo의 "Spec Update Input" 형식과 호환 -->
 
 ### New Features
 
 #### Feature: <feature name>
+**Spec Update Classification**: MUST/CONSIDER/NO
 **Priority**: High/Medium/Low
-**Category**: <category>
-**Target Component**: <target component>
+**Target Section**: <SDD anchor section> (e.g., `Goal > Key Features`, `Component Details > <name>`)
 **Source**: PR #<number>
 
 **Description**:
@@ -233,7 +290,9 @@ Update relevant sections based on user feedback:
 ### Improvements
 
 #### Improvement: <improvement name>
+**Spec Update Classification**: MUST/CONSIDER/NO
 **Priority**: High/Medium/Low
+**Target Section**: <SDD anchor section>
 **Current State**: <current state>
 **Proposed**: <proposed change>
 **Reason**: <reason for improvement>
@@ -247,7 +306,9 @@ Update relevant sections based on user feedback:
 ### Bug Reports
 
 #### Bug Fix: <bug fix name>
+**Spec Update Classification**: MUST/CONSIDER/NO
 **Severity**: High/Medium/Low
+**Target Section**: <SDD anchor section>
 **Location**: <file:line>
 **Source**: PR #<number>
 
@@ -265,6 +326,8 @@ Update relevant sections based on user feedback:
 ### Component Changes
 
 #### New Component: <component name>
+**Spec Update Classification**: MUST/CONSIDER/NO
+**Target Section**: `Component Details > <component name>`
 **Purpose**: <purpose>
 **Input**: <input>
 **Output**: <output>
@@ -274,6 +337,8 @@ Update relevant sections based on user feedback:
 - `method_name()` - description
 
 #### Update Component: <component name>
+**Spec Update Classification**: MUST/CONSIDER/NO
+**Target Section**: `Component Details > <component name>`
 **Change Type**: Enhancement/Refactor/Fix
 **Source**: PR #<number>
 
@@ -283,9 +348,11 @@ Update relevant sections based on user feedback:
 
 ---
 
-### Configuration Changes
+### Environment & Dependency Changes
 
 #### New Config: <config name>
+**Spec Update Classification**: MUST/CONSIDER/NO
+**Target Section**: `Environment & Dependencies`
 **Type**: Environment Variable / Config File
 **Required**: Yes/No
 **Default**: <default value>
@@ -304,37 +371,41 @@ Update relevant sections based on user feedback:
 
 ---
 
-## Questions and Suggestions
+## Open Questions
 
-### Items Requiring Confirmation
+### 확인 필요 사항
 
-1. **[Section: <spec section name>]** <question content>
-   - Context: <why this question is needed>
-   - Suggestion: <recommended approach>
+1. **[Target Section: <SDD anchor section>]** <question content>
+   - 맥락: <why this question is needed>
+   - 제안: <recommended approach>
 
-2. **[Section: <spec section name>]** <question content>
-   - Context: <why this question is needed>
-   - Suggestion: <recommended approach>
+### 스펙 갭
 
-### Spec Gaps
+| # | 설명 | 타겟 섹션 | PR Evidence | 제안 |
+|---|------|----------|-------------|------|
+| 1 | <gap description> | <SDD anchor section> | `<file>:<line>` | <suggestion> |
 
-| # | Description | Spec Section | PR Evidence | Suggestion |
-|---|------------|-------------|-------------|------------|
-| 1 | <gap description> | <related spec section> | `<file>:<line>` | <suggestion> |
-
-### Ambiguous Items
+### 모호한 사항
 
 - <ambiguity 1>
 - <ambiguity 2>
 
 ---
 
-## Metadata
+## Next Recommended Actions
 
-**Created**: YYYY-MM-DD HH:MM
-**Spec version**: <version>
-**PR commit**: <HEAD SHA>
-**Conversation round**: <count>
+1. <action 1>
+2. <action 2>
+3. <action 3>
+
+---
+
+## 메타데이터
+
+**생성일**: YYYY-MM-DD HH:MM
+**스펙 버전**: <version>
+**PR 커밋**: <HEAD SHA>
+**대화 라운드**: <count>
 ```
 
 ## Edge Cases
@@ -347,7 +418,7 @@ Update relevant sections based on user feedback:
 | Existing draft for a different PR | 기존 draft를 아카이브한 후 새로 생성 |
 | Already merged PR | Allow (retroactive spec maintenance), note merge status |
 | Large PR (50+ files) | Directory/component-level summary, focus on spec-related components |
-| No spec-related changes in PR | Notify user, generate minimal patch draft |
+| No spec-related changes in PR | Notify user, generate minimal patch draft with all items classified as `NO update` |
 
 ## Context Management
 
@@ -376,34 +447,6 @@ implementation → PR → pr-spec-patch → (user refinement) → spec-update-to
 1. **pr-spec-patch** (this skill): Compare PR against spec and generate patch draft
 2. **User refinement**: Review/modify/finalize draft through conversation
 3. **spec-update-todo**: Apply finalized patch to the main spec
-
-## Best Practices
-
-### Effective Patch Generation
-
-- **Cite PR evidence**: Include specific file:line references from the PR diff for all patch items
-- **Map to spec sections**: Clearly indicate which spec section each change corresponds to
-- **Set priorities**: Assign priorities based on the PR's change scale and impact
-- **Specific questions**: Include context and suggestions when asking for confirmation
-
-### Conversation-Based Refinement
-
-- **Iterative improvement**: Aim for iterative refinement rather than a perfect draft in one pass
-- **Resolve questions first**: Resolve outstanding questions before finalizing
-- **Track change history**: Manage revision history through conversation rounds
-
-### File Management
-
-- **Maintain single draft**: Keep one patch draft file per PR
-- **Archive**: Archive drafts for other PRs before creating new ones
-- **Post-finalization**: Apply finalized patches via `spec-update-todo` for management
-
-## Language Handling
-
-- **SKILL.md**: English (skill definition)
-- **Patch draft output**: Korean
-- **Follow spec language**: If the spec is in Korean, write the patch in Korean
-- **Preserve PR content**: Keep PR title/description as-is, provide translation alongside if needed
 
 ## Error Handling
 

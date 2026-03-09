@@ -1,7 +1,7 @@
 ---
 name: implementation-review
 description: Use this skill to review implementation progress against the plan, verify acceptance criteria, identify issues, and determine next steps. Triggered by "review implementation", "check progress", "verify implementation", "what's done", "implementation status", or "audit the code".
-version: 1.0.0
+version: 1.1.0
 ---
 
 # Implementation Review
@@ -12,13 +12,21 @@ version: 1.0.0
 | Small | Optional | 선택적 구현 검증 |
 | Any | Standalone audit | 독립적 코드 감사 |
 
-Review implementation progress against the implementation plan, verify acceptance criteria are met, identify issues and improvements, and provide actionable next steps.
+> **Simplified Workflow**: `spec-create → feature-draft → implementation → spec-update-done`
 
-## 하드 룰: 스펙은 절대 수정하지 않기 (중요)
+구현 계획 대비 현재 구현 상태를 검증하고, 다음 작업과 필요한 스펙 동기화 포인트를 정리한다.
 
-- 이 스킬은 **리뷰/검증 및 리포트 생성**만 수행합니다.
-- `_sdd/spec/` 아래의 스펙 파일은 **생성/수정/삭제하지 않습니다.**
-- 스펙 변경이 필요하면 리포트에 **"스펙 업데이트 필요"**로만 제안하고, 실제 반영은 `/spec-update-todo`(또는 `/spec-update-done`)로 진행하도록 안내합니다.
+이 스킬은 구현 리뷰를 하되, 결과를 탐색형 스펙과 연결해야 한다. 즉 "무엇이 구현되었는가"뿐 아니라 "어떤 스펙 섹션이 후속 업데이트 대상인가"까지 판단한다.
+
+## Hard Rules
+
+1. `_sdd/spec/` 아래 스펙은 직접 수정하지 않는다.
+2. 스펙 변경이 필요하면 리뷰 리포트의 `Spec Sync Follow-ups`에만 기록한다.
+3. acceptance criteria 검증은 가능한 한 코드 근거(`file:line`)와 테스트 근거로 연결한다.
+4. 로컬 실행이 필요하면 먼저 `_sdd/env.md`를 확인한다.
+5. 불확실한 항목은 `Open Questions`에 남긴다.
+6. 각 spec sync follow-up은 `MUST update / CONSIDER / NO update`로 분류한다.
+7. 기본 후속 액션은 `spec-update-done`이며, plan/scope 재정의가 필요할 때만 `spec-update-todo`를 권장한다.
 
 ## Language
 
@@ -58,6 +66,30 @@ If there are multiple phase plan/progress files (e.g. `IMPLEMENTATION_PLAN_PHASE
 
 If `_sdd/env.md` exists, apply its setup instructions first (for example: `conda activate ...`, required `export` variables, required local services).
 
+## Review Focus
+
+### 1. Plan Progress
+
+- 어떤 task가 complete / partial / missing 인가
+- 어떤 acceptance criteria가 met / not met / untested 인가
+
+### 2. Quality and Risk
+
+- blocker가 있는가
+- 테스트/에러 처리/보안/성능 리스크가 있는가
+
+### 3. Spec Sync Follow-up
+
+구현 결과가 아래 섹션 업데이트를 요구하는지 본다.
+
+- `Goal`
+- `Architecture Overview > Runtime Map`
+- `Component Details > Component Index`
+- `Usage Examples > Common Change Paths`
+- `Environment & Dependencies`
+- `Open Questions`
+- `DECISION_LOG.md` proposal
+
 ## Review Process Overview
 
 ```
@@ -69,6 +101,8 @@ If `_sdd/env.md` exists, apply its setup instructions first (for example: `conda
 │  3. ASSESSMENT: Are acceptance criteria met?            │
 │              ↓                                          │
 │  4. ISSUES: What problems or gaps exist?                │
+│              ↓                                          │
+│  4.5 SPEC SYNC: Which spec sections need updating?     │
 │              ↓                                          │
 │  5. SUMMARY: What should be done next?                  │
 └─────────────────────────────────────────────────────────┘
@@ -336,6 +370,44 @@ Suggestions that aren't blocking:
 ...
 ```
 
+## Step 4.5: Spec Sync Follow-ups
+
+**Tools**: `Read`, `Grep`
+
+구현 결과를 보고 아래를 묻는다.
+
+- 새 기능이 `Goal`에 반영되어야 하는가
+- 새 흐름이 `Runtime Map`에 반영되어야 하는가
+- 새 컴포넌트/경로가 `Component Index`에 반영되어야 하는가
+- 새 운영/디버깅 시작점이 `Common Change Paths`에 반영되어야 하는가
+- 환경/의존성 변경이 `Environment & Dependencies`에 반영되어야 하는가
+- 문서로 아직 확정하지 못한 항목이 `Open Questions`에 남아야 하는가
+- 비직관적 결정이 `DECISION_LOG.md`에 기록되어야 하는가
+
+각 follow-up은 아래로 분류한다.
+
+- `MUST update`: 구현 완료 후 문서 sync 없이는 탐색성/계약 이해가 깨짐
+- `CONSIDER`: 있으면 좋은 보강이나 blocker는 아님
+- `NO update`: 내부 구현 차이만 있고 문서 수준 변화 없음
+
+### Output Format
+```markdown
+## Spec Sync Follow-ups
+
+| Spec Section | Impact | Classification | Evidence |
+|-------------|--------|----------------|----------|
+| Goal | 새 기능 추가 | MUST | Task 3 완료 |
+| Runtime Map | 흐름 변화 없음 | NO | - |
+| Component Index | 새 컴포넌트 추가 | MUST | `src/services/new.py` |
+| Common Change Paths | 디버깅 경로 변경 | CONSIDER | `src/debug/` |
+| Environment | 새 환경변수 | MUST | `.env.example` |
+| Open Questions | 미확인 성능 요구사항 | CONSIDER | Task 5 노트 |
+| DECISION_LOG | 해당 없음 | NO | - |
+
+**Classification Summary**: MUST N / CONSIDER N / NO N
+**Recommended Spec Action**: `/spec-update-done`
+```
+
 ## Step 5: Summary and Next Steps
 
 **Tools**: `Write`, `Bash (mkdir -p)`, `AskUserQuestion`
@@ -469,7 +541,24 @@ Use this template for the final review output:
 
 ---
 
-## 5. Recommendations
+## 5. Spec Sync Follow-ups
+
+| Spec Section | Impact | Classification | Evidence |
+|-------------|--------|----------------|----------|
+| Goal | ... | MUST/CONSIDER/NO | ... |
+| Runtime Map | ... | MUST/CONSIDER/NO | ... |
+| Component Index | ... | MUST/CONSIDER/NO | ... |
+| Common Change Paths | ... | MUST/CONSIDER/NO | ... |
+| Environment | ... | MUST/CONSIDER/NO | ... |
+| Open Questions | ... | MUST/CONSIDER/NO | ... |
+| DECISION_LOG | ... | MUST/CONSIDER/NO | ... |
+
+**Classification Summary**: MUST N / CONSIDER N / NO N
+**Recommended Spec Action**: `/spec-update-done` (or `/spec-update-todo` if scope change needed)
+
+---
+
+## 6. Recommendations
 
 ### Must Do (Blockers)
 [Prioritized list]
@@ -482,7 +571,7 @@ Use this template for the final review output:
 
 ---
 
-## 6. Conclusion
+## 7. Conclusion
 
 [One paragraph summary: Is the implementation ready? What's the biggest risk? What's the single most important next action?]
 ```

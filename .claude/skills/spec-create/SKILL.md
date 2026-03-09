@@ -1,121 +1,180 @@
 ---
 name: spec-create
 description: This skill should be used when the user asks to "create a spec", "write a spec document", "generate SDD", "create software design document", "document the project", "create spec for project", or mentions "_sdd" directory, specification documents, or project documentation needs.
-version: 1.0.0
+version: 1.1.0
 ---
 
 # Spec Document Creation and Management
 
-Create and manage Software Design Description (SDD) spec documents for projects. Spec documents provide comprehensive technical documentation including goals, architecture, components, and usage examples.
-기존 스펙/문서의 언어를 따른다. 새 프로젝트는 한국어 기본.
+Create exploration-first Software Design Description (SDD) documents.
 
-## Workflow Position
+A good spec is not a copy of the code. It is a searchable map that helps people and LLMs:
+- understand what the repository does
+- find where a feature or responsibility lives
+- decide where to edit safely
+- remember non-obvious decisions and invariants
 
-| Workflow | Position | When |
-|----------|----------|------|
-| All | Pre-step | 스펙이 없을 때 먼저 실행 |
+Use Korean (한국어) for the spec document unless the user explicitly requests another language.
+
+## Simplified Workflow
+
+This skill is **Step 1 of 4** in the simplified SDD workflow:
+
+```
+spec (this) -> feature-draft -> implementation -> spec-update-done
+```
+
+| Step | Skill | Purpose |
+|------|-------|---------|
+| **1** | **spec-create** | Create the initial index-first spec |
+| 2 | feature-draft | Draft feature spec patch + implementation plan |
+| 3 | implementation | Execute the implementation plan (TDD) |
+| 4 | spec-update-done | Sync spec with actual code |
+
+> **Workflow**: spec -> feature-draft -> implementation -> spec-update-done
 
 ## Overview
 
-Spec documents are stored in the `_sdd/spec/` directory within the project root. They follow a standardized structure to ensure consistency and completeness across different projects.
+Spec documents are stored in the `_sdd/spec/` directory within the project root.
+
+Default output shape:
+- `main.md` (or `<project-name>.md`) as the main entry point
+- optional component spec files for complex or frequently changed areas
+- `DECISION_LOG.md` only when rationale needs to be preserved
 
 ## When to Use This Skill
 
-- Creating new spec documents for projects
-- Breaking down large projects into modular spec files
-- Generating documentation from existing code
+- Creating a new project spec from an existing codebase
+- Bootstrapping `_sdd/spec/` for a repository that lacks structured documentation
+- Producing a change-oriented map for a large project
+- Splitting an initial spec into a main index plus component specs
 
 ## Hard Rules
 
 1. **코드 파일 수정 금지**: `src/`, `tests/` 등 구현 코드 파일은 수정하지 않는다.
-2. **언어 규칙**: 기존 스펙/문서의 언어를 따른다. 새 프로젝트(기존 스펙 없음)는 한국어 기본. 사용자 명시 지정 시 해당 언어 사용.
+2. **한국어 작성**: 스펙 문서 내용은 한국어로 작성한다. 언어가 불명확하면 저장소 문서 기준 언어를 따르고, 판단 근거가 약하면 `Open Questions`에 남긴다.
 3. **출력 위치 준수**: 스펙은 `_sdd/spec/`에 저장하고, 초기 부트스트랩 파일은 `<project_root>/AGENTS.md`, `<project_root>/CLAUDE.md`, `<project_root>/_sdd/env.md`에만 생성한다.
 4. **기존 스펙 보존**: 이미 스펙 파일이 존재하면 덮어쓰기 전 반드시 `prev/PREV_<filename>_<timestamp>.md`로 백업한다.
-5. **부트스트랩 파일 최소 수정 원칙**: `AGENTS.md`, `CLAUDE.md`, `_sdd/env.md`가 이미 존재할 때 필수 안내 문구가 누락된 경우, 반드시 사용자 확인 후 필요한 문구만 최소 추가한다.
+5. **부트스트랩 파일 최소 수정 원칙**: `AGENTS.md`, `CLAUDE.md`, `_sdd/env.md`가 이미 존재할 때 필수 안내 문구가 누락된 경우, `AskUserQuestion`으로 사용자 승인 후 필요한 문구만 최소 추가한다.
 6. **DECISION_LOG.md 최소화**: 결정 로그는 `DECISION_LOG.md`에만 기록하며, 추가 거버넌스 문서는 사용자 요청 시에만 생성한다.
+7. **호환 가능한 앵커 섹션 유지**: 기본적으로 `Goal`, `Architecture Overview`, `Component Details`, `Environment & Dependencies`, `Identified Issues & Improvements`, `Usage Examples`, `Open Questions` 섹션명을 유지한다. 내부 구조는 탐색형으로 재구성한다.
+8. **실제 경로 우선**: 주요 컴포넌트와 변경 지점에는 가능하면 실제 파일/디렉토리 경로를 적는다.
+9. **추정은 명시**: 확인되지 않은 내용은 단정하지 말고 `Open Questions`에 기록한다.
+10. **요약 우선**: 코드 구조를 그대로 복사하지 말고 `의도`, `경계`, `계약`, `변경 지점`, `불변 조건`을 압축해서 정리한다.
 
 ## Directory Structure
 
 ```
 <project-root>/
-├── AGENTS.md             # Codex 작업 가이드 (없으면 생성)
-├── CLAUDE.md             # Claude Code 작업 가이드 (없으면 생성)
+├── AGENTS.md
+├── CLAUDE.md
 └── _sdd/
-    ├── env.md            # 환경/실행 가이드 (없으면 생성)
+    ├── env.md
     ├── spec/
-    │   ├── main.md             # Main spec document (or <project-name>.md)
-    │   ├── <component>.md      # Component-specific specs (for large projects)
-    │   ├── user_draft.md       # User requirements (if exists)
-    │   └── DECISION_LOG.md     # Why/decision rationale log (optional, recommended)
+    │   ├── main.md
+    │   ├── <project-name>.md
+    │   ├── <component>.md
+    │   ├── user_draft.md
+    │   └── DECISION_LOG.md
     └── implementation/
-        └── IMPLEMENTATION_PLAN.md  # Implementation plan (if exists)
+        └── IMPLEMENTATION_PLAN.md
 ```
 
-Legacy shorthand:
-```
-_sdd/
-├── spec/
-│   ├── main.md             # Main spec document (or <project-name>.md)
-│   ├── <component>.md      # Component-specific specs (for large projects)
-│   ├── user_draft.md        # User requirements (if exists)
-│   └── DECISION_LOG.md      # Why/decision rationale log (optional, recommended)
-└── implementation/
-    └── IMPLEMENTATION_PLAN.md  # Implementation plan (if exists)
-```
+## Required Deliverables
+
+### 1. Main Spec (required)
+
+The main spec must act as the repository entry point and change map.
+
+Required top-level sections:
+- `Goal`
+- `Architecture Overview`
+- `Component Details`
+- `Environment & Dependencies`
+- `Identified Issues & Improvements`
+- `Usage Examples`
+- `Open Questions`
+
+Required inner content:
+- `Goal`: project snapshot, key features, users/use cases, non-goals
+- `Architecture Overview`: system boundary, repository map, runtime map, technology stack, cross-cutting invariants
+- `Component Details`: component index plus detailed entries or links to split component files
+- `Usage Examples`: running commands, common operations, and common change/debug entry points
+
+### 2. Component Specs (optional but recommended for large projects)
+
+Create a separate component spec when a component:
+- spans multiple directories or layers
+- owns an important contract or lifecycle
+- is a frequent change hotspot
+- has non-obvious invariants or operational risks
+
+### 3. Decision Log (optional)
+
+Use `_sdd/spec/DECISION_LOG.md` only when the spec needs to preserve why a direction, trade-off, or constraint exists.
 
 ## Spec Document Creation Process
 
 ### Step 1: Gather Information
 
-**Tools**: `Read`, `Glob`, `AskUserQuestion`
+**Tools**: `Read`, `Glob`, `Grep`, `AskUserQuestion`
 
-Before creating a spec document, collect:
+Collect:
+1. **From User Input**: direct requirements, constraints, terminology
+2. **From Existing Docs**: README, docs, config comments, architecture notes
+3. **From Existing Spec Files**: `_sdd/spec/*.md`, especially `user_draft.md` and `DECISION_LOG.md`
+4. **From Code**: entry points, key directories, dominant flows, component boundaries
+5. **From Workspace Guidance**: `AGENTS.md`, `CLAUDE.md`, `_sdd/env.md` existence and completeness
 
-1. **From User Input**: Direct requirements and constraints
-2. **From Existing Code**: Analyze codebase structure and patterns
-3. **From Documentation**: Read existing README, comments, configs
-4. **From Decision Log**: Read `_sdd/spec/DECISION_LOG.md` if it exists
-5. **Clarification**: Use AskUserQuestion for ambiguous requirements
-6. **Bootstrap targets check**: `AGENTS.md`, `CLAUDE.md`, `_sdd/env.md` 존재 여부 확인
+User input includes the current conversation and user-specified files (default: `_sdd/spec/user_draft.md` if present).
 
-User input includes user conversation and user-specified files (defaults to `_sdd/spec/user_draft.md`).
-
-#### Context Management (Step 1 후 적용)
+#### Context Management (Step 1 after load)
 
 | 스펙 크기 | 전략 | 구체적 방법 |
 |-----------|------|-------------|
-| < 200줄 | 전체 읽기 | `Read`로 전체 파일 읽기 |
-| 200-500줄 | 전체 읽기 가능 | `Read`로 전체 읽기, 필요 시 섹션별 |
-| 500-1000줄 | TOC 먼저, 관련 섹션만 | 상위 50줄(TOC) 읽기 → 관련 섹션만 `Read(offset, limit)` |
-| > 1000줄 | 인덱스만, 타겟 최대 3개 | 인덱스/TOC만 읽기 → 타겟 섹션 최대 3개 선택적 읽기 |
+| < 200줄 | 전체 읽기 | 전체 파일 읽기 |
+| 200-500줄 | 전체 읽기 가능 | 전체 읽기 후 필요한 섹션 재확인 |
+| 500-1000줄 | TOC 먼저 | 상위 TOC 확인 후 관련 섹션만 읽기 |
+| > 1000줄 | 인덱스 우선 | 인덱스/TOC와 핵심 섹션만 읽기 |
 
 | 코드베이스 크기 | 전략 | 구체적 방법 |
 |----------------|------|-------------|
-| < 50 파일 | 자유 탐색 | `Glob` + `Read` 자유롭게 사용 |
-| 50-200 파일 | 타겟 탐색 | `Grep`/`Glob`으로 후보 식별 → 타겟 `Read` |
-| > 200 파일 | 시맨틱 위주 | `Grep`/`Glob` 위주 → 최소한의 `Read` |
+| < 50 파일 | 자유 탐색 | `Grep` + `Read` 중심 탐색 |
+| 50-200 파일 | 타겟 탐색 | 파일 후보 식별 후 필요한 파일만 읽기 |
+| > 200 파일 | 시맨틱 탐색 | `Grep`, 디렉토리 맵, 엔트리포인트, 핵심 경로 위주로 요약 |
 
-**Decision Gate 1→2**:
+**Decision Gate 1->2**:
 ```
 input_sufficient = (사용자 입력 OR user_draft.md OR 기존 문서) 중 하나 이상 존재
-project_readable = 프로젝트 코드/README 등 분석 가능한 소스 존재
+project_readable = 프로젝트 코드/README/설정 등 분석 가능한 소스 존재
 
-IF input_sufficient AND project_readable → Step 2 진행
-ELSE IF NOT input_sufficient → AskUserQuestion: 프로젝트 설명 요청
-ELSE IF NOT project_readable → AskUserQuestion: 프로젝트 경로/접근 방법 확인
+IF input_sufficient AND project_readable -> Step 2
+ELSE IF NOT input_sufficient -> AskUserQuestion: 프로젝트 설명 요청
+ELSE IF NOT project_readable -> AskUserQuestion: 프로젝트 경로/접근 방법 확인
 ```
 
 ### Step 2: Analyze the Project
 
 **Tools**: `Grep`, `Glob`, `Read`
 
-Explore the codebase to understand:
+Extract the minimum map needed to support understanding and change:
 
-- Project structure and file organization
-- Main entry points and components
-- Dependencies and external integrations
-- Data flow and architecture patterns
-- Known issues and limitations
+| 항목 | 반드시 파악할 내용 |
+|------|-------------------|
+| 프로젝트 목표 | 저장소가 해결하는 문제, 주요 사용자, 비목표 |
+| 시스템 경계 | 이 저장소가 책임지는 것 / 외부 시스템에 맡기는 것 |
+| 주요 진입점 | 앱 시작점, CLI 엔트리포인트, 라우터, 배치 시작점 |
+| 런타임 흐름 | 요청/이벤트/배치 기준 주요 흐름 |
+| 저장소 구조 | 주요 디렉토리, 핵심 파일, 설정 위치 |
+| 컴포넌트 경계 | 책임 단위, 핵심 심볼, 소유 경로 |
+| 변경 핫스팟 | 자주 수정하는 영역, 계약 변경 시 영향 범위 |
+| 불변 조건 | 깨지면 안 되는 계약, 순서, 상태 전이, 데이터 가정 |
+| 미확인 영역 | 정보 부족, 추정, 신뢰도 낮은 부분 |
+
+Prefer:
+- `Grep` for keyword and pattern discovery
+- targeted file reads instead of full-repo dumping
+- explicit path references over generic prose
 
 ### Step 2.5: 분석 결과 확인 (Checkpoint)
 
@@ -141,7 +200,7 @@ Explore the codebase to understand:
 
 - 질문: "분석 결과를 확인해 주세요. 스펙 작성을 진행할까요?"
 - "확인" → Step 3 진행
-- "수정/보완 필요" → 피드백 반영 후 테이블 재제시 (최대 2라운드)
+- "수정/보완 필요" → 피드백 반영 후 테이블 재제시
 
 **Decision Gate 2→3**:
 ```
@@ -157,12 +216,10 @@ ELSE → 미파악 항목에 대해 추가 탐색 또는 AskUserQuestion
 
 **Tools**: `Read`, `Edit`, `Write`, `Bash (mkdir -p)`
 
-Before writing the spec, bootstrap guidance files if missing:
-
-#### Step 3-A: Create missing workspace guidance files
+#### Step 3-A: Create Missing Workspace Guidance Files
 
 1. Ensure `_sdd/` and `_sdd/spec/` directories exist.
-2. If `<project_root>/AGENTS.md` is missing, create with:
+2. If `<project_root>/AGENTS.md` is missing, create:
 
 ```markdown
 # Workspace Guidance
@@ -171,7 +228,7 @@ Before writing the spec, bootstrap guidance files if missing:
 - 환경 관련 설정/실행 방법은 `_sdd/env.md`를 기준으로 확인합니다.
 ```
 
-3. If `<project_root>/CLAUDE.md` is missing, create with:
+3. If `<project_root>/CLAUDE.md` is missing, create:
 
 ```markdown
 # Workspace Guidance
@@ -180,7 +237,7 @@ Before writing the spec, bootstrap guidance files if missing:
 - 환경 관련 설정/실행 방법은 `_sdd/env.md`를 기준으로 확인합니다.
 ```
 
-4. If `<project_root>/_sdd/env.md` is missing, create with TODO comments:
+4. If `<project_root>/_sdd/env.md` is missing, create:
 
 ```markdown
 # Environment Setup Guide
@@ -200,251 +257,184 @@ Before writing the spec, bootstrap guidance files if missing:
 ```
 
 5. If files already exist:
-   - Check whether required guidance lines already exist:
-     - `AGENTS.md` / `CLAUDE.md`: `_sdd/spec/` 참조 + `_sdd/env.md` 참조 문구
-     - `_sdd/env.md`: 환경 정보 작성용 TODO 주석/섹션
-   - If required lines are missing, ask user via AskUserQuestion
-   - If user approves, append only the missing lines (minimal edit, preserve existing structure).
-   - If user declines, keep file unchanged and continue spec creation.
+   - verify required guidance lines exist
+   - if missing, use `AskUserQuestion` to ask user for approval
+   - if approved, append only missing lines
+   - if declined, keep file unchanged and continue spec creation
 
-Then write the spec document using the template structure below, adapting sections as needed:
+#### Step 3-B: Write Order
 
-```markdown
-# <Project Name>
+1. **Write the main spec first** using `references/template-full.md`.
+2. **Keep anchor section headings** and structure them as an index:
+   - `Goal` -> project snapshot and scope
+   - `Architecture Overview` -> system boundary, repository map, runtime map
+   - `Component Details` -> component index and change-oriented details
+3. **Split component specs only when needed**:
+   - use the component template in `references/template-full.md`
+   - link split files from the main spec
+4. **Add optional sections only when materially relevant**:
+   - use `references/optional-sections.md`
+   - examples: API surface, data models, security, performance, deployment
+5. **Record rationale separately** in `_sdd/spec/DECISION_LOG.md` when trade-offs matter.
 
-## Goal
+#### Step 3-C: Writing Guidance
 
-Describe project goals in detail:
-- Primary objective
-- Key features
-- Target users/use cases
-- Success criteria
+- Start with the repository map and runtime map before writing detailed component prose.
+- Favor tables with actual paths over long narrative.
+- For each important component, include:
+  - responsibility
+  - owned paths
+  - key symbols or entry points
+  - interfaces or contracts
+  - change recipes
+  - tests or observability pointers
+  - risks or invariants
+- Under `Usage Examples`, include:
+  - how to run
+  - how to test
+  - common operations
+  - common change/debug entry points
 
-## Architecture Overview
+### Step 4: Output Validation
 
-Describe project architecture:
-- High-level system design
-- Component interactions
-- Data flow diagrams (use text or ASCII art)
-- Technology stack
+Validate:
+1. Main spec file exists in `_sdd/spec/`.
+2. Required top-level sections exist:
+   - `Goal`
+   - `Architecture Overview`
+   - `Component Details`
+   - `Environment & Dependencies`
+   - `Identified Issues & Improvements`
+   - `Usage Examples`
+   - `Open Questions`
+3. `Architecture Overview` includes a repository map and runtime map.
+4. `Component Details` includes a component index with real paths or linked component spec files.
+5. `Usage Examples` includes run/test instructions and at least one change/debug entry point.
+6. Bootstrap guidance files exist and contain required lines.
+7. `DECISION_LOG.md` exists if the drafting process introduced non-obvious decisions.
+8. If the main spec becomes too large or component count is high, split it.
 
-## Component Details
+## Split Guidance
 
-### <Component Name>
+Split the spec when any of the following is true:
+- the main spec exceeds roughly 350 lines and feels dense
+- the repository has more than 7 major components
+- a component owns an important contract and needs its own change guide
+- one section starts turning into a mini-manual
 
-For each major component, include:
-
-| Aspect | Description |
-|--------|-------------|
-| **Purpose** | What this component does |
-| **Input** | Expected inputs and formats |
-| **Output** | Produced outputs and formats |
-| **Dependencies** | Other components or external deps |
-
-**Architecture Details:**
-- Implementation approach
-- Key classes/functions
-- Design patterns used
-
-**How to Use:**
-- API/interface examples
-- Configuration options
-
-**Known Issues:**
-- Current limitations
-- Planned improvements
-
-## Environment & Dependencies
-
-### Directory Structure
-```
-project/
-├── src/
-├── tests/
-└── ...
-```
-
-### Dependencies
-- Runtime dependencies
-- Development dependencies
-- Environment requirements
-
-### Configuration
-- Environment variables
-- Config files
-- Required credentials
-
-## Identified Issues & Improvements
-
-### Critical Bugs
-- [ ] Issue description and location
-
-### Code Quality Issues
-- [ ] Technical debt items
-
-### Missing Features
-- [ ] Feature gaps
-
-### Robustness & Reliability
-- [ ] Error handling improvements needed
-
-## Usage Examples
-
-### Running the Project
-```bash
-# Command to run
-```
-
-### Common Operations
-- Example 1: Description
-- Example 2: Description
-
-### Output Interpretation
-- How to interpret results
-```
-
-## Spec Management Operations
-
-### Creating a New Spec
-
-1. Create `_sdd/spec/` directory if not exists
-2. If missing, create `<project_root>/AGENTS.md` with `_sdd/spec` / `_sdd/env.md` reference lines
-3. If missing, create `<project_root>/CLAUDE.md` with `_sdd/spec` / `_sdd/env.md` reference lines
-4. If missing, create `<project_root>/_sdd/env.md` with TODO comments for environment details
-5. If existing `AGENTS.md` / `CLAUDE.md` / `_sdd/env.md` lack required guidance lines, ask user whether to add them; append only missing lines when approved
-6. Analyze project using explore agent or direct reading
-7. Write spec following template structure
-8. Save as `<project-name>.md` or `main.md`
-9. If decisions or trade-offs were made during drafting, create/update `_sdd/spec/DECISION_LOG.md`
-10. **출력 검증** (Glob 기반):
-   a. `Glob("_sdd/spec/<project>.md")` → 생성 파일 존재 확인
-   b. 필수 섹션 포함 확인: Goal, Architecture, Component Details, Environment
-   c. 500줄 초과 시 → 모듈 분할 제안
-   d. `DECISION_LOG.md` 생성 여부 확인 (결정 사항이 있었을 경우)
-   e. 링크/경로 유효성 확인
-   f. `AGENTS.md`, `CLAUDE.md`, `_sdd/env.md`의 필수 안내 문구 존재 확인 (생성 또는 사용자 승인 기반 최소 추가)
-
-Minimal decision log entry format:
-```markdown
-## YYYY-MM-DD - [Decision Title]
-- Context:
-- Decision:
-- Rationale:
-- Alternatives considered:
-- Impact / follow-up:
-```
-
-### Modular Specs for Large Projects
-
-For large projects, split into multiple files:
+Suggested split shape:
 
 ```
 _sdd/spec/
-├── main.md              # Overview and cross-references
-├── api-spec.md          # API component spec
-├── database-spec.md     # Database component spec
-└── frontend-spec.md     # Frontend component spec
+├── main.md
+├── auth.md
+├── billing.md
+├── jobs.md
+└── DECISION_LOG.md
 ```
 
-Reference sub-specs from main:
-```markdown
-## Component Details
-
-See detailed specs:
-- [API Specification](./api-spec.md)
-- [Database Specification](./database-spec.md)
-```
+`main.md` should remain the entry point and link to component files.
 
 ## Best Practices
 
 ### Writing Quality
 
-- **Be Specific**: Avoid vague descriptions
-- **Use Examples**: Include code snippets and usage examples
-- **Stay Current**: Update spec when code changes significantly
-- **Link to Code**: Reference file paths and line numbers when helpful
+- **Fast first read**: make the first 30 lines answer "what is this repo?"
+- **Change-oriented detail**: prioritize "where to edit" over exhaustive explanation
+- **Path-first references**: include concrete directories, files, commands, and symbols
+- **Trace unknowns**: uncertainty belongs in `Open Questions`, not hidden in confident prose
+
+### LLM Token Efficiency
+
+- **구조화된 포맷 선호**: 산문 나열보다 테이블과 리스트를 사용한다. LLM은 구조화된 포맷을 더 정확하게 파싱한다.
+- **경로/심볼은 코드블록**: 경로와 심볼은 `` ` ``로 감싸서 일반 텍스트와 구분한다.
+- **메인 스펙 분량 제한**: 메인 스펙은 LLM이 한 번에 읽고 전체 그림을 잡을 수 있는 분량이어야 한다. 상세는 컴포넌트 스펙으로 분리한다.
+- **중복 기술 금지**: 같은 정보를 여러 섹션에 반복하지 않는다. 참조 링크를 사용한다.
+
+### Anti-Pattern Reference
+
+| 안티패턴 | 왜 문제인가 | 대안 |
+|---------|------------|------|
+| 코드를 그대로 복사한 문서 | 코드가 바뀌면 즉시 불일치 | 계약과 의도만 남기고 구현은 코드에 맡긴다 |
+| 실제 경로/심볼이 없는 문서 | 검색 시작점이 없음 | Owned Paths, Key Symbols 명시 |
+| 변경 포인트가 없는 문서 | "어디를 고치지?"에 답 불가 | Change Recipes 섹션 추가 |
+| 불확실한 내용을 사실처럼 작성 | 잘못된 정보 신뢰 위험 | Open Questions로 분리 |
+| 모든 프로젝트에 보안/성능 무조건 포함 | 관련 없는 정보가 핵심을 가림 | 해당하는 항목만 포함 |
+| 메인 문서에 모든 것을 몰아넣음 | LLM 컨텍스트 초과, 사람도 길 잃음 | main + component spec 분할 |
 
 ### Organization
 
-- **Logical Flow**: Start with overview, then details
-- **Consistent Format**: Use same structure across components
-- **Table of Contents**: Include for documents over 500 lines
-
-### Completeness
-
-- **All Components**: Document every major component
-- **Error Cases**: Document error handling and edge cases
-- **Dependencies**: List all external dependencies
-- **Configuration**: Document all config options
+- Keep stable top-level headings for downstream skill compatibility
+- Put deep detail into component specs, not the main overview
+- Use tables and bullet lists where they reduce scanning time
 
 ### Decision Traceability
 
-- **Record Why**: Capture non-obvious decisions in `_sdd/spec/DECISION_LOG.md`
-- **Keep It Minimal**: A short rationale entry is enough; avoid verbose narrative
-- **Update on Change**: Add a new entry when direction/assumption changes
-- **Artifact Scope**: Default to `DECISION_LOG.md` only; do not create extra governance docs unless the user explicitly asks
+- Record only meaningful decisions in `_sdd/spec/DECISION_LOG.md`
+- Keep entries short and comparable over time
+- Add a new entry when assumptions or trade-offs change
 
 ## Language Preference
 
-Follow user's language preference for spec content:
-- Default to the language used in existing project documentation
-- If unclear, use AskUserQuestion to confirm preferred language
+Follow the user's language preference for spec content.
+- Default: Korean
+- If the repository is already documented in another language, align with that language
+- If ambiguous, choose one language consistently and explain the assumption in `Open Questions`
 
 ## Output Location
 
 Save spec documents to:
 - **Default**: `_sdd/spec/<project-name>.md` or `_sdd/spec/main.md`
-- **User Specified**: Any path the user requests
-- **Create directories**: Automatically create `_sdd/spec/` if needed
-- **Bootstrap docs**: `<project_root>/AGENTS.md`, `<project_root>/CLAUDE.md`, `<project_root>/_sdd/env.md` (없으면 생성, 기존 파일은 사용자 승인 시 누락 문구만 최소 추가)
-- **Decision log**: `_sdd/spec/DECISION_LOG.md` (when decisions/rationale need to be preserved)
+- **User specified**: any path the user explicitly asks for
+- **Bootstrap docs**: `<project_root>/AGENTS.md`, `<project_root>/CLAUDE.md`, `<project_root>/_sdd/env.md`
+- **Decision log**: `_sdd/spec/DECISION_LOG.md`
 
 ## Progressive Disclosure (완료 시)
 
-```
-완료 요약 테이블을 제시한 후 전체 문서 요약을 바로 출력한다 (사용자 확인을 기다리지 않는다):
+Report:
 
-1. 완료 요약 테이블 제시:
-   | 항목 | 내용 |
-   |------|------|
-   | 생성 파일 | `_sdd/spec/<project>.md` |
-   | 부트스트랩 파일 | `AGENTS.md` / `CLAUDE.md` / `_sdd/env.md` (신규 생성 또는 사용자 승인 기반 최소 추가) |
-   | 총 줄 수 | N줄 |
-   | 주요 섹션 | Goal, Architecture, Components, ... |
-   | Decision Log | 생성됨/미생성 |
+| 항목 | 내용 |
+|------|------|
+| 생성 파일 | `_sdd/spec/<project>.md`, component specs |
+| 부트스트랩 파일 | `AGENTS.md`, `CLAUDE.md`, `_sdd/env.md` |
+| 컴포넌트 수 | N개 |
+| 분할 여부 | 단일 문서 / 다중 문서 |
+| Open Questions | N개 |
+| Decision Log | 생성됨 / 미생성 |
 
-2. 전체 문서의 섹션별 요약 출력
-```
+Also summarize:
+- 프로젝트 목표와 경계
+- 핵심 컴포넌트와 변경 핫스팟
+- 남아 있는 불확실성
 
 ## Error Handling
 
 | 상황 | 대응 |
 |------|------|
-| `_sdd/spec/` 디렉토리 미존재 | 자동 생성 (`mkdir -p _sdd/spec/`) |
-| `AGENTS.md` / `CLAUDE.md` 미존재 | 표준 안내 문구로 새 파일 생성 |
-| `_sdd/env.md` 미존재 | TODO 주석이 포함된 템플릿 파일 생성 |
-| 기존 `AGENTS.md` / `CLAUDE.md` / `_sdd/env.md`에 필수 문구 누락 | AskUserQuestion으로 추가 여부 확인 후 승인 시 최소 추가 |
-| 기존 스펙 파일 존재 | `prev/PREV_<filename>_<timestamp>.md`로 백업 후 새로 생성 |
-| 프로젝트 코드 접근 불가 | 사용자에게 경로 확인 요청 |
-| user_draft.md 형식 오류 | 파싱 오류 위치 보고, 자유 형식으로 해석 시도 |
-| 불완전한 사용자 입력 | 가용 정보로 진행, 해결 불가 항목은 스펙에 Open Questions로 기록 |
-| 대형 프로젝트 (200+ 파일) | `Grep`/`Glob` 위주 탐색, 핵심 컴포넌트만 문서화 |
-| 다국어 혼재 | 사용자에게 언어 선호도 확인 |
+| `_sdd/spec/` 디렉토리 미존재 | 자동 생성 |
+| `AGENTS.md` / `CLAUDE.md` / `_sdd/env.md` 미존재 | 표준 파일 생성 |
+| 기존 가이드 파일에 필수 문구 누락 | `AskUserQuestion`으로 추가 여부 확인 후 승인 시 최소 추가 |
+| 기존 스펙 파일 존재 | `prev/PREV_<filename>_<timestamp>.md`로 백업 후 생성 |
+| 프로젝트 코드 접근 불가 | `AskUserQuestion`으로 프로젝트 경로/접근 방법 확인 |
+| 대형 프로젝트 | 핵심 경로와 컴포넌트 위주로 요약, 필요 시 분할 |
+| 신뢰도 낮은 추정 | `Open Questions`에 분리 기록 |
 | DECISION_LOG.md 충돌 | 기존 항목 보존, 새 항목만 추가 |
 
 ## Additional Resources
 
 ### Reference Files
-- **`references/template-full.md`** - Complete template with all sections
-- **`references/examples.md`** - Real-world spec examples
+- `references/template-full.md` - index-first main spec and component spec templates
+- `references/optional-sections.md` - optional appendices for APIs, data models, security, performance, deployment
+- `references/examples.md` - guidance on choosing and reading the examples, plus section-level good/bad quality comparisons
 
 ### Example Files
-- **`examples/simple-project-spec.md`** - Minimal spec for small projects
-- **`examples/complex-project-spec.md`** - Full spec for large projects
+- `examples/simple-project-spec.md` - small project example with one main spec
+- `examples/complex-project-spec.md` - large project example with index-first structure
 
 ## Integration with Other Skills
 
 This skill works well with:
-- **feature-draft**: Draft feature spec patch + implementation plan (next step in simplified workflow)
-- **implementation**: Implement features based on spec
-- **spec-update-done**: Sync spec with actual code after implementation
+- **feature-draft**: uses `Goal > Key Features` and `Component Details` as patch targets
+- **implementation**: implements against the spec
+- **spec-update-done**: updates the spec after completed implementation
+- **spec-summary**: summarizes the stable top-level sections created here
