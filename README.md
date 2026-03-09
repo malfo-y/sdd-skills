@@ -2,7 +2,7 @@
 
 Spec-Driven Development (SDD) workflow skills for Claude Code and Codex.
 
-15 skills: spec-create, spec-review, spec-rewrite, spec-summary, spec-update-done, spec-update-todo, implementation-plan, implementation, implementation-review, feature-draft, pr-review, pr-spec-patch, discussion, ralph-loop-init, sdd-upgrade
+16 skills: spec-create, spec-review, spec-rewrite, spec-summary, spec-update-done, spec-update-todo, spec-snapshot, implementation-plan, implementation, implementation-review, feature-draft, pr-review, pr-spec-patch, discussion, ralph-loop-init, sdd-upgrade
 
 ## Installation
 
