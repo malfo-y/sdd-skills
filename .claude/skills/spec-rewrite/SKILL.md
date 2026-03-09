@@ -130,11 +130,12 @@ Present the rewrite target shape before editing. 리라이트의 목표는 **탐
 - Usage Examples -> Running / Common Operations / Common Change Paths
 - Open Questions
 
-### Split by Responsibility
+### Split by Responsibility (플랫 분할 기본)
 - `_sdd/spec/main.md`
 - `_sdd/spec/auth.md`
 - `_sdd/spec/jobs.md`
 - `_sdd/spec/billing.md`
+(Subdirectory 분할은 조건 2개 이상 충족 시에만 — Step 5 참조)
 
 ### Move Out of Main
 - 긴 로그
@@ -199,7 +200,9 @@ Rules:
 
 **Tools**: `Write`, `Glob`
 
-Preferred default structure:
+#### 플랫 분할 (기본값)
+
+플랫 분할(`main.md + auth.md + billing.md`)이 기본값이다:
 
 ```
 _sdd/spec/
@@ -210,12 +213,44 @@ _sdd/spec/
 └── DECISION_LOG.md
 ```
 
-Rules:
-- main spec remains the entry point
-- split files should be responsibility-based
-- every split file must be reachable from the main spec
-- keep filename patterns consistent
-- if the existing repository already has a stable hierarchical structure, normalize only where it materially improves navigation
+플랫 분할 규칙:
+- main spec은 항상 entry point
+- 분할 파일은 책임 기반
+- 모든 분할 파일은 main spec에서 도달 가능해야 한다
+- 파일명 패턴 일관성 유지
+- 기존 구조가 안정적이면 최소 수정으로 유지
+
+#### Subdirectory 분할 (조건부)
+
+Subdirectory는 플랫 분할로 관리가 어려워질 때만 도입한다. 아래 조건 중 **2개 이상** 해당하면 고려한다:
+
+| 조건 | 설명 |
+|------|------|
+| **컴포넌트 내부 분할** | 한 컴포넌트가 2개 이상의 스펙 파일을 필요로 한다 |
+| **파일 수 과다** | `_sdd/spec/` 아래 컴포넌트 스펙 파일이 10개를 넘는다 |
+| **도메인 경계 존재** | 컴포넌트들이 명확한 도메인 그룹을 형성한다 |
+| **독립 변경 단위** | subdirectory 내 파일들이 함께 변경되고, 다른 subdirectory와는 독립적이다 |
+
+```
+_sdd/spec/
+├── main.md                      # 항상 최상위 entry point
+├── DECISION_LOG.md              # 항상 최상위
+├── auth/
+│   ├── auth.md                  # 도메인 entry point
+│   ├── oauth-providers.md
+│   └── session-management.md
+└── billing/
+    ├── billing.md
+    └── subscription.md
+```
+
+Subdirectory 규칙:
+- `main.md`와 `DECISION_LOG.md`는 항상 루트에 둔다
+- 각 subdirectory에는 디렉토리명과 동일한 entry point를 둔다 (`auth/auth.md`)
+- `main.md`의 Component Index에서 subdirectory entry point로 링크한다
+- 2단계 이상 중첩 금지 (`auth/oauth/google.md` 불가)
+- 파일이 1개뿐인 subdirectory는 만들지 않는다 — 루트에 둔다
+- subdirectory 분할만을 위해 기존 플랫 구조를 강제 마이그레이션하지 않는다
 
 ### Step 6: Preserve Rationale and Unknowns
 

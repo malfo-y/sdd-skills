@@ -64,6 +64,10 @@ Default output shape:
 
 ## Directory Structure
 
+기본 구조는 플랫 분할이다. Subdirectory는 플랫 분할로 관리가 어려워질 때만 도입한다.
+
+### 기본 (플랫) 구조
+
 ```
 <project-root>/
 ├── AGENTS.md
@@ -72,13 +76,49 @@ Default output shape:
     ├── env.md
     ├── spec/
     │   ├── main.md
-    │   ├── <project-name>.md
     │   ├── <component>.md
     │   ├── user_draft.md
     │   └── DECISION_LOG.md
     └── implementation/
         └── IMPLEMENTATION_PLAN.md
 ```
+
+### Subdirectory 구조 (조건 충족 시)
+
+아래 조건 중 **2개 이상** 해당하면 subdirectory 분할을 고려한다:
+
+| 조건 | 설명 |
+|------|------|
+| **컴포넌트 내부 분할** | 한 컴포넌트가 2개 이상의 스펙 파일을 필요로 한다 (예: auth → `auth.md`, `oauth-providers.md`, `session.md`) |
+| **파일 수 과다** | `_sdd/spec/` 아래 컴포넌트 스펙 파일이 10개를 넘어 탐색이 어렵다 |
+| **도메인 경계 존재** | 컴포넌트들이 명확한 도메인 그룹을 형성한다 (예: payments 도메인 아래 결제, 구독, 정산이 각각 독립 계약을 가짐) |
+| **독립 변경 단위** | subdirectory 내 파일들이 함께 변경되는 경향이 있고, 다른 subdirectory와는 독립적으로 변경된다 |
+
+```
+<project-root>/
+└── _sdd/
+    └── spec/
+        ├── main.md                      # 항상 최상위 entry point
+        ├── DECISION_LOG.md              # 항상 최상위
+        ├── auth/
+        │   ├── auth.md                  # 도메인 entry point
+        │   ├── oauth-providers.md
+        │   └── session-management.md
+        ├── billing/
+        │   ├── billing.md
+        │   ├── subscription.md
+        │   └── payment-gateway.md
+        └── jobs/
+            └── jobs.md
+```
+
+Subdirectory 규칙:
+- `main.md`와 `DECISION_LOG.md`는 항상 `_sdd/spec/` 루트에 둔다
+- 각 subdirectory에는 디렉토리명과 동일한 entry point 파일을 둔다 (`auth/auth.md`)
+- `main.md`의 Component Index에서 subdirectory entry point로 링크한다
+- 단일 파일로 충분한 컴포넌트는 subdirectory 없이 루트에 둬도 된다
+- 2단계 이상 중첩하지 않는다 (`auth/oauth/google.md` 같은 구조 금지)
+- 파일이 1개뿐인 subdirectory는 만들지 않는다 — 루트에 둔다
 
 ## Required Deliverables
 
@@ -390,13 +430,13 @@ Validate:
 
 ## Split Guidance
 
-Split the spec when any of the following is true:
-- the main spec exceeds roughly 350 lines and feels dense
-- the repository has more than 7 major components
-- a component owns an important contract and needs its own change guide
-- one section starts turning into a mini-manual
+### 플랫 분할 (기본값)
 
-Suggested split shape:
+플랫 분할(`main.md + auth.md + billing.md`)이 기본값이다. 아래 조건 중 하나 이상이면 분할한다:
+- 메인 스펙이 약 350줄을 넘으며 밀도가 높다
+- 저장소에 주요 컴포넌트가 7개를 넘는다
+- 한 컴포넌트가 독립적인 계약이나 변경 가이드를 필요로 한다
+- 한 섹션이 미니 매뉴얼 수준으로 길어진다
 
 ```
 _sdd/spec/
@@ -407,7 +447,39 @@ _sdd/spec/
 └── DECISION_LOG.md
 ```
 
-`main.md` should remain the entry point and link to component files.
+`main.md`는 항상 entry point이며 컴포넌트 파일로 링크한다.
+
+### Subdirectory 분할 (조건부)
+
+Subdirectory는 플랫 분할로 관리가 어려워질 때만 도입한다. 아래 조건 중 **2개 이상** 해당하면 고려한다:
+
+| 조건 | 설명 |
+|------|------|
+| **컴포넌트 내부 분할** | 한 컴포넌트가 2개 이상의 스펙 파일을 필요로 한다 |
+| **파일 수 과다** | `_sdd/spec/` 아래 컴포넌트 스펙 파일이 10개를 넘는다 |
+| **도메인 경계 존재** | 컴포넌트들이 명확한 도메인 그룹을 형성한다 |
+| **독립 변경 단위** | subdirectory 내 파일들이 함께 변경되고, 다른 subdirectory와는 독립적이다 |
+
+```
+_sdd/spec/
+├── main.md
+├── DECISION_LOG.md
+├── auth/
+│   ├── auth.md
+│   ├── oauth-providers.md
+│   └── session-management.md
+└── billing/
+    ├── billing.md
+    └── subscription.md
+```
+
+Subdirectory 규칙:
+- `main.md`와 `DECISION_LOG.md`는 항상 루트에 둔다
+- 각 subdirectory에는 디렉토리명과 동일한 entry point를 둔다
+- `main.md`의 Component Index에서 subdirectory entry point로 링크한다
+- 2단계 이상 중첩 금지 (`auth/oauth/google.md` 불가)
+- 파일이 1개뿐인 subdirectory는 만들지 않는다 — 루트에 둔다
+- subdirectory 분할만을 위해 기존 플랫 구조를 강제 마이그레이션하지 않는다
 
 ## Best Practices
 
