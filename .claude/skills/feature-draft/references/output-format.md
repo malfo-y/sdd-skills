@@ -38,7 +38,6 @@ Output format specification for feature-draft, with **Target Files** fields in P
 **Date**: YYYY-MM-DD
 **Author**: [author]
 **Target Spec**: [target spec filename, e.g.: project.md]
-**Spec Update Classification**: MUST update | NO update | CONSIDER
 **Status**: Draft
 ```
 
@@ -91,8 +90,8 @@ For multiple features:
 ## Component Changes
 [component items...]
 
-## Environment & Dependency Changes
-[environment/dependency items...]
+## Configuration Changes
+[configuration items...]
 
 ## Notes
 [additional context...]
@@ -144,7 +143,7 @@ Minimal format (required fields only):
 
 ### Improvement: [improvement name]
 **Priority**: High/Medium/Low
-**Target Section**: `_sdd/spec/xxx.md` > `Identified Issues & Improvements`
+**Target Section**: `_sdd/spec/xxx.md` > `Issues > Improvements`
 **Current State**: [current state]
 **Proposed**: [proposed change]
 **Reason**: [reason for improvement]
@@ -154,8 +153,8 @@ Simple format:
 ```markdown
 ## Improvements
 
-- **High**: [improvement description] → Target: `xxx.md` > `Identified Issues & Improvements`
-- **Medium**: [improvement description] → Target: `xxx.md` > `Identified Issues & Improvements`
+- **High**: [improvement description] → Target: `xxx.md` > `Issues > Improvements`
+- **Medium**: [improvement description] → Target: `xxx.md` > `Issues > Improvements`
 ```
 
 #### Bug Reports
@@ -165,7 +164,7 @@ Simple format:
 
 ### Bug: [bug name]
 **Severity**: High/Medium/Low
-**Target Section**: `_sdd/spec/xxx.md` > `Identified Issues & Improvements`
+**Target Section**: `_sdd/spec/xxx.md` > `Issues > Bugs`
 **Location**: [file:line]
 
 **Description**:
@@ -205,20 +204,17 @@ Simple format:
 - change 2
 ```
 
-#### Environment & Dependency Changes
+#### Configuration Changes
 
 ```markdown
-## Environment & Dependency Changes
+## Configuration Changes
 
-### Change: [name]
-**Target Section**: `_sdd/spec/xxx.md` > `Environment & Dependencies`
-**Type**: Dependency / Environment Variable / Runtime / Tooling / Setup Command
-
-**Description**:
-[what changes]
-
-**Impact**:
-- [setup/test/runtime impact]
+### New Config: [config name]
+**Target Section**: `_sdd/spec/xxx.md` > `Configuration`
+**Type**: Environment Variable / Config File / CLI Argument
+**Required**: Yes/No
+**Default**: [default value]
+**Description**: [description]
 ```
 
 #### Notes
@@ -236,27 +232,24 @@ Simple format:
 [reference links]
 ```
 
-### Target Section Annotation Rules (SDD Anchor Sections)
+### Target Section Annotation Rules
 
-| Planned Change | Preferred Target Section |
-|----------------|--------------------------|
-| New user-visible capability | `_sdd/spec/xxx.md` > `Goal > Key Features` |
-| Boundary or integration scope change | `_sdd/spec/xxx.md` > `Architecture Overview > System Boundary` |
-| Runtime/data/event flow change | `_sdd/spec/xxx.md` > `Architecture Overview > Runtime Map` |
-| New or changed component | `_sdd/spec/xxx.md` > `Component Details` |
-| Config/dependency/runtime change | `_sdd/spec/xxx.md` > `Environment & Dependencies` |
-| Operational or debugging entry point | `_sdd/spec/xxx.md` > `Usage Examples > Common Change Paths` |
-| Planned risk/debt/improvement | `_sdd/spec/xxx.md` > `Identified Issues & Improvements` |
-| Uncertainty or unresolved dependency | `_sdd/spec/xxx.md` > `Open Questions` |
-| API contract change | `_sdd/spec/xxx.md` > `Component Details > Interfaces` |
-| Test Addition | (no spec update needed) |
+| Input Type | Target Section Value |
+|------------|---------------------|
+| New Feature (Core) | `_sdd/spec/xxx.md` > `Goal > Key Features` |
+| New Feature (Component) | `_sdd/spec/xxx.md` > `Component Details` |
+| Improvement | `_sdd/spec/xxx.md` > `Issues > Improvements` |
+| Bug Report | `_sdd/spec/xxx.md` > `Issues > Bugs` |
+| Performance | `_sdd/spec/xxx.md` > `Issues > Performance` |
+| Security | `_sdd/spec/xxx.md` > `Security Considerations` |
+| Configuration | `_sdd/spec/xxx.md` > `Configuration` |
+| Dependency | `_sdd/spec/xxx.md` > `Environment & Dependencies` |
+| API Change | `_sdd/spec/xxx.md` > `API Reference` |
+| Test Addition | `_sdd/spec/xxx.md` > `Testing` |
 
 For split specs, use actual filenames:
+- `_sdd/spec/project_API.md` > `API Reference`
 - `_sdd/spec/project_COMPONENTS.md` > `Component Details`
-
-**Change Recipes / Component Index 영향 체크**:
-- 이 변경이 기존 Change Recipes에 영향을 주는가? → 해당 Change Recipe 업데이트 항목 추가
-- 새 컴포넌트가 추가되는가? → Component Index 업데이트 항목 추가
 
 ---
 

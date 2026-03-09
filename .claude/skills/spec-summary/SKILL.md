@@ -1,7 +1,7 @@
 ---
 name: spec-summary
 description: This skill should be used when the user asks to "summarize spec", "spec summary", "show spec overview", "스펙 요약", "스펙 개요", "show spec status", "스펙 현황", "project overview", "프로젝트 개요", "what's the current state", "현재 상태는", or wants a human-readable summary of the current specification for quick understanding.
-version: 1.4.0
+version: 1.3.0
 ---
 
 # spec-summary: Specification Summary Generator
@@ -13,23 +13,15 @@ version: 1.4.0
 
 ## Overview
 
-현재 스펙을 빠르게 이해하고, 어디를 봐야 하는지 찾을 수 있게 요약한다.
+The **spec-summary** skill generates human-readable summaries of SDD (Spec-Driven Development) specification documents. It creates a layered, scannable document that helps both technical and non-technical stakeholders quickly understand:
 
-이 스킬의 목적은 스펙을 다시 길게 설명하는 것이 아니다. 사람과 LLM이 다음 질문에 빠르게 답할 수 있는 요약을 만드는 것이다.
-
-- 이 저장소는 무엇을 하는가?
-- 시스템 경계는 어디까지인가?
-- 어떤 컴포넌트가 어디에 있는가?
-- 특정 변경은 어디서 시작해야 하는가?
-- 지금 남아 있는 리스크와 미확인 사항은 무엇인가?
-
-### Exploration-First Principles
-
-요약은 `index-first`, `path-first`, `understand-then-change` 원칙을 따른다.
-
-- **index-first**: 모든 것을 길게 설명하기보다, 어디에 무엇이 있는지 빠르게 찾게 해 준다
-- **path-first**: 모호한 설명보다 실제 파일/디렉토리 경로를 우선한다
-- **understand-then-change**: "어디를 바꾸면 되는가" 앞에 "어떻게 동작하는가"를 먼저 이해해야 한다
+- **Project motivation and goals** (What and Why)
+- **Key features explained clearly** (feature-by-feature plain text paragraphs)
+- **High-level architecture** (key components, bird's-eye view)
+- **Current status and progress** (completion percentage, feature dashboard)
+- **Open issues and improvements** (prioritized by impact)
+- **Recommended next steps** (immediate, short-term, long-term)
+- **Project README snapshot** (optional, marker-based update on request)
 
 ### Output
 
@@ -45,24 +37,6 @@ version: 1.4.0
 2. **README sync on explicit request only**: README 업데이트는 사용자가 명시적으로 요청할 때만 수행한다.
 3. **언어 규칙**: 기존 스펙/문서의 언어를 따른다. 새 프로젝트(기존 스펙 없음)는 한국어 기본. 사용자 명시 지정 시 해당 언어 사용.
 4. **백업 후 덮어쓰기**: 기존 `SUMMARY.md` 존재 시 `prev/PREV_SUMMARY_<timestamp>.md`로 백업 후 새로 생성한다.
-5. 요약은 `index-first`, `path-first`, `understand-then-change` 원칙을 따라야 한다.
-6. 정보가 불충분하면 추정으로 단정하지 말고 `Open Questions`에 남긴다.
-7. `MUST` 섹션만 있는 작은 스펙도 정상으로 간주한다. 없는 optional 섹션을 억지로 채워 넣지 않는다.
-8. 요약은 token-efficient 해야 하며, 비어 있는 optional 섹션은 생략한다.
-
-## Summary Shape
-
-요약은 아래 우선순위를 따른다.
-
-1. `Goal`에서 `Project Snapshot`, `Key Features`, `Non-Goals`
-2. `Architecture Overview`에서 `System Boundary`, `Repository Map`, `Runtime Map`
-3. `Component Details`에서 `Component Index`
-4. `Usage Examples` 또는 동등 섹션에서 `Common Change Paths`
-5. 진행 상태가 있다면 간단한 status snapshot
-6. `Identified Issues & Improvements`와 `Open Questions`
-
-좋은 요약은 "무엇을 하는가"와 함께 "어디를 보면 되는가"를 보여준다.
-선택 섹션이 없는 경우, 빈 헤더를 만들지 않고 남은 핵심 구조만 요약해도 충분하다.
 
 ## When to Use This Skill
 
@@ -202,7 +176,7 @@ ELSE → 오류 메시지 출력 후 중지: "스펙 파일에 접근할 수 없
    ```
 
 5. **Architecture Overview** → Core Components
-   - Extract component names, overview (동작 개요, 1 sentence), and purposes
+   - Extract component names and purposes
    - **Limit to key components** (not all details)
    - Identify relationships between components
    - Extract tech stack information
@@ -211,14 +185,6 @@ ELSE → 오류 메시지 출력 후 중지: "스펙 파일에 접근할 수 없
    - Parse 발견된 이슈 및 개선 필요사항 section
    - Categorize: Bug, Enhancement, Tech Debt
    - Infer priority from spec order or keywords
-
-7. **Component Index** → Component Map
-   - 이름, 책임, 경로, 스펙 링크
-   - Extract from `Component Details` > `Component Index` in spec
-
-8. **Common Change Paths** → Change Entry Points
-   - 변경 유형별 시작점, 관련 영역, 검증 포인트
-   - Extract from `Usage Examples` > `Common Change Paths` or component-level `Change Recipes`
 
 #### From Implementation Files (If Exist)
 
@@ -402,32 +368,16 @@ Component A ──> Component B
      └──> Component C
 ```
 
-| Component | Overview | Purpose | Status |
-|-----------|----------|---------|--------|
-| Component A | [동작 개요] | [What it does] | ✅ / 🚧 / 📋 |
-| Component B | [동작 개요] | [What it does] | ✅ / 🚧 / 📋 |
-| Component C | [동작 개요] | [What it does] | ✅ / 🚧 / 📋 |
+| Component | Purpose | Status |
+|-----------|---------|--------|
+| Component A | [What it does] | ✅ / 🚧 / 📋 |
+| Component B | [What it does] | ✅ / 🚧 / 📋 |
+| Component C | [What it does] | ✅ / 🚧 / 📋 |
 
 ### Tech Stack
 - **Language** (언어): [주 언어]
 - **Framework** (프레임워크): [주요 프레임워크]
 - **Key Libraries** (핵심 라이브러리): [핵심 라이브러리 3개 이하]
-
----
-
-## 🗂️ Component Index (컴포넌트 인덱스)
-
-| Component | Responsibility | Key Paths | Spec Link |
-|-----------|---------------|-----------|-----------|
-| [Name] | [1-line responsibility] | `path/` | [spec link] |
-
----
-
-## 🔄 Common Change Paths (주요 변경 경로)
-
-| 변경 유형 | 시작점 | 관련 영역 | 검증 포인트 |
-|----------|--------|----------|------------|
-| [변경 유형] | `path` | [components] | [test/check] |
 
 ---
 
@@ -773,11 +723,6 @@ A good summary should:
 
 ## Version History
 
-- **1.4.0** (2026-03): Added exploration-first principles and priority
-  - Added `index-first`, `path-first`, `understand-then-change` principles
-  - Added Summary Shape priority order
-  - Added Component Index and Common Change Paths sections to output
-  - Added token-efficiency and empty section omission rules
 - **1.3.0** (2026-02): Added optional README create/update flow
   - Added explicit README trigger phrases and optional output target
   - Added marker-based README sync strategy (`<!-- spec-summary:start/end -->`)

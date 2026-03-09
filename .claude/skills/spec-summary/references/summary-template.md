@@ -32,8 +32,6 @@ Some sections should only appear if data is available:
 | High Priority Issues | Any high-priority items | Show "No high-priority issues" |
 | Architecture Diagram | 2+ components | Generate ASCII diagram |
 | Key Feature Explanations | Feature/goal details exist in spec | Explain representative features in subsection form; if details are weak, mark status as "Unknown" and state assumptions |
-| Component Index | `Component Index` exists in spec | Omit "Component Index" subsection |
-| Common Change Paths | `Common Change Paths` or `Change Recipes` exist | Omit "Common Change Paths" subsection |
 | README Sync (Optional) | User explicitly asks for README create/update | Update only marker block; if absent, insert safely after first H1 or append |
 
 ## Full Template
@@ -112,10 +110,10 @@ Database       Cache (Redis)
 
 [IF 1 component: Skip diagram]
 
-| Component | Overview | Purpose | Status |
-|-----------|----------|---------|--------|
-| [Component Name] | [1 sentence: 동작 개요] | [1 sentence: what it does] | [✅/🚧/📋 from spec] |
-| [Component Name] | [1 sentence: 동작 개요] | [1 sentence: what it does] | [✅/🚧/📋] |
+| Component | Overview (동작 개요) | Purpose | Status |
+|-----------|---------------------|---------|--------|
+| [Component Name] | [1-2 sentences: how it works from user perspective] | [1 sentence: what it does] | [✅/🚧/📋 from spec] |
+| [Component Name] | [1-2 sentences: how it works] | [1 sentence: what it does] | [✅/🚧/📋] |
 | ... | ... | ... | ... |
 
 [RULES for component extraction:]
@@ -123,7 +121,6 @@ Database       Cache (Redis)
 - Choose most important: user-facing, data layer, core logic
 - Extract from "아키텍처 개요" or "컴포넌트 상세" section
 - Simplify: group related modules into single component
-- Overview: 1 sentence describing how the component operates (동작 개요) — keep brief
 
 ### Tech Stack
 - **Language** (언어): [Primary language from spec]
@@ -132,39 +129,6 @@ Database       Cache (Redis)
 
 [Extract from "환경 및 의존성" section]
 [IF no dependency section: Mark as "Not specified"]
-
----
-
-## 🗂️ Component Index (컴포넌트 인덱스)
-
-[IF Component Index exists in spec]
-
-| Component | Responsibility | Key Paths | Spec Link |
-|-----------|---------------|-----------|-----------|
-| [Component Name] | [1 sentence] | `path/to/component/` | [link if split spec] |
-
-[RULES:]
-- Extract from `Component Details` > `Component Index` in spec
-- Include actual file paths
-- Link to component spec if split spec structure exists
-- Maximum 8 components (key ones only)
-
----
-
-## 🔄 Common Change Paths (주요 변경 경로)
-
-[IF Common Change Paths or Change Recipes exist in spec]
-
-| 변경 유형 | 시작점 | 관련 영역 | 검증 포인트 |
-|----------|--------|----------|------------|
-| [Change type] | `path/to/start` | [Related components] | [Test/verification] |
-
-[RULES:]
-- Extract from `Usage Examples` > `Common Change Paths` or component-level `Change Recipes`
-- Focus on top 3-5 most common change types
-- Include actual file paths as starting points
-- Include verification/test commands when available
-- IF no change path info in spec: OMIT this section entirely
 
 ---
 

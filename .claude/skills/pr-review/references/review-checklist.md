@@ -17,20 +17,6 @@ Verification checklist used by the `pr-review` skill.
 
 ---
 
-## Exploration-First Spec Impact / 탐색형 스펙 영향 검증
-
-```markdown
-- [ ] 새 디렉터리/파일이 Repository Map에 반영 필요한지 확인
-- [ ] 런타임 흐름 변경이 Runtime Map에 반영 필요한지 확인
-- [ ] 컴포넌트 추가/변경이 Component Index에 반영 필요한지 확인
-- [ ] 변경/디버깅 시작점이 Common Change Paths에 반영 필요한지 확인
-- [ ] 새 미확정 사항이 Open Questions에 추가 필요한지 확인
-- [ ] 비직관적 결정이 DECISION_LOG.md에 기록 필요한지 확인
-- [ ] 각 spec update 항목에 MUST/CONSIDER/NO 분류가 있는지 확인
-```
-
----
-
 ## Patch Draft Verification / 패치 초안 검증
 
 ```markdown
@@ -121,21 +107,4 @@ If any of the following apply:
 - [ ] Requirements with ambiguous scope
 - [ ] New architectural decision needed
 - [ ] Significant changes not covered in the patch draft
-```
-
----
-
-## Report Completeness / 리포트 완성도 체크리스트
-
-```markdown
-- [ ] Verdict와 근거 포함
-- [ ] Metrics Summary 포함
-- [ ] Acceptance Criteria Verification 포함
-- [ ] Spec Compliance Verification 포함
-- [ ] Exploration-First Spec Impact 포함 (MUST/CONSIDER/NO 분류)
-- [ ] Gap Analysis 포함
-- [ ] Pre-merge Blockers 포함
-- [ ] Post-Merge Spec Sync 포함
-- [ ] Items Requiring Spec Update 포함
-- [ ] Next Steps 포함
 ```

@@ -1,64 +1,22 @@
 ---
 name: pr-review
 description: This skill should be used when the user asks to "review PR", "PR review", "review PR against spec", "PR 리뷰", "PR 검증", "스펙 기반 PR 리뷰", "PR 승인 검토", or wants to verify a pull request's implementation against the specification and spec patch draft.
-version: 1.1.0
+version: 1.0.0
 ---
 
 # PR Review - Spec-Based PR Verification and Verdict
 
-Verifies PR implementation against the current spec documents (`_sdd/spec/`) and the spec patch draft (`_sdd/pr/spec_patch_draft.md`), producing a structured review report that includes acceptance criteria fulfillment, spec compliance status, gap analysis results, and a final verdict (Approve / Request Changes / Needs Discussion).
+Verifies PR implementation against the original spec and spec patch draft, then generates a structured review report (`_sdd/pr/PR_REVIEW.md`).
 
 ## Overview
 
 This skill verifies PR implementation against the current spec documents (`_sdd/spec/`) and the spec patch draft (`_sdd/pr/spec_patch_draft.md`), producing a structured review report that includes acceptance criteria fulfillment, spec compliance status, gap analysis results, and a final verdict (Approve / Request Changes / Needs Discussion).
 
-이 스킬은 기능 구현 여부만 보는 리뷰가 아니다. 탐색형 스펙 관점에서 아래도 함께 검토한다.
+## Hard Rule: This skill does NOT modify specs (IMPORTANT)
 
-- 새 흐름이 `Runtime Map`에 반영되어야 하는가
-- 새 컴포넌트/경로가 `Component Index`에 반영되어야 하는가
-- 운영/디버깅 경로가 `Common Change Paths`에 반영되어야 하는가
-- 구현이 스펙의 불변 조건과 결정 맥락을 깨지 않는가
-
-## Hard Rules
-
-1. `_sdd/spec/` 아래 스펙은 직접 수정하지 않는다.
-2. 산출물은 `_sdd/pr/PR_REVIEW.md` 리뷰 리포트다.
-3. 스펙 수정 필요 사항은 리포트의 `Items Requiring Spec Update`에만 기록한다.
-4. 가능한 한 모든 핵심 판단은 `file:line`, 테스트명, diff 근거와 연결한다.
-5. 기본 출력 언어는 한국어다.
-6. spec update 판단은 항목별로 `MUST update / CONSIDER / NO update`로 분류한다.
-7. 리뷰 리포트는 merge blocker와 post-merge spec sync를 분리해서 보여준다.
-
-## Review Axes
-
-The PR review evaluates 4 axes:
-
-### 1. Acceptance Criteria
-
-패치 초안에 있는 각 Feature / Improvement / Bug Fix가 실제로 구현되었는지 본다.
-
-### 2. Spec Compliance
-
-현재 스펙의 핵심 계약과 불변 조건을 PR이 어기지 않는지 본다.
-
-### 3. Exploration-First Spec Impact
-
-PR이 아래를 바꿨는지 본다:
-
-- `Repository Map` - 새 디렉터리/파일/엔트리포인트
-- `Runtime Map` - 요청/이벤트/배치 흐름 변경
-- `Component Index` - 컴포넌트 책임/소유 경로 변경
-- `Common Change Paths` - 변경/디버깅 시작점 변경
-- `Open Questions` - 새 미확정 사항
-- `DECISION_LOG.md` 후보 - 비직관적 결정
-
-### 4. Gap Analysis
-
-세 가지 갭을 분석한다:
-
-- 패치 초안에는 있는데 PR에 없는 것
-- PR에는 있는데 패치 초안/스펙에 없는 것
-- 테스트/문서화/관측성 갭
+- Spec files under `_sdd/spec/` are **never** created/modified/deleted.
+- This skill only produces the review report (`_sdd/pr/PR_REVIEW.md`).
+- If spec updates are needed, they are recorded in the report as "Items Requiring Spec Update" and the user is directed to use `/spec-update-todo` for actual changes.
 
 ## Workflow Position
 
@@ -108,7 +66,7 @@ Report the model used at the beginning of the review.
 
 **File location**: `_sdd/pr/PR_REVIEW.md`
 
-**Format**: Verdict + metrics summary + acceptance criteria verification + spec compliance verification + exploration-first spec impact + gap analysis + merge blockers + post-merge spec sync + recommendations
+**Format**: Verdict + metrics summary + acceptance criteria verification + spec compliance verification + gap analysis + recommendations
 
 ## Process
 
@@ -136,7 +94,6 @@ Report the model used at the beginning of the review.
 2. Read patch draft → extract Acceptance Criteria
 3. Collect PR metadata (gh pr view)
 4. Collect PR diff (gh pr diff)
-5. Extract existing spec's Repository Map, Runtime Map, Component Index, Common Change Paths
 ```
 
 See `pr-spec-patch/references/gh-commands.md` for PR data collection commands:
@@ -179,22 +136,6 @@ For each Acceptance Criterion:
 4. Check for API contract changes
 ```
 
-#### Step 4.5: Exploration-First Spec Impact
-
-PR을 아래 관점으로 분석한다:
-
-- 새 디렉터리/파일/엔트리포인트가 생겼는가
-- 기존 요청/이벤트/배치 흐름이 달라졌는가
-- 컴포넌트 책임 경계가 바뀌었는가
-- 변경/디버깅 시작점이 달라졌는가
-- 새 미확정 사항이 생겼는가
-
-각 항목은 아래로 분류한다:
-
-- `MUST update`: 머지 후 스펙 sync 없이는 문서 탐색성이 깨짐
-- `CONSIDER`: 문서가 더 좋아지지만 blocker는 아님
-- `NO update`: 문서 갱신 불필요
-
 #### Step 5: Gap analysis
 
 Three-perspective gap analysis:
@@ -233,7 +174,6 @@ Three-perspective gap analysis:
       | Spec Violations | N개 |
       | Test Pass Rate | N% |
       | Pre-merge Blockers | N개 |
-      | Spec Sync MUST | N개 |
 
    2. 전체 리포트를 출력하고 `_sdd/pr/PR_REVIEW.md`로 저장한다 (사용자 확인을 기다리지 않는다).
    ```
@@ -271,7 +211,7 @@ Warning message:
 - Report's "Patch Draft" field: "Not Found"
 - Explicitly note lower confidence overall
 
-Steps 4, 4.5, 6, and 7 proceed identically.
+Steps 4, 6, and 7 proceed identically.
 
 ## Context Management
 
@@ -323,8 +263,6 @@ Steps 4, 4.5, 6, and 7 proceed identically.
 | Partially met (△) | C (D%) |
 | Spec violations | E |
 | Test pass rate | F% |
-| Spec sync MUST | G |
-| Spec sync CONSIDER | H |
 
 ---
 
@@ -352,23 +290,6 @@ Steps 4, 4.5, 6, and 7 proceed identically.
 
 ### Spec Violations
 (List or "None")
-
----
-
-## Spec Impact Analysis
-
-### Exploration-First Spec Impact
-
-| Spec Section | Impact | Classification | Evidence |
-|-------------|--------|----------------|----------|
-| Repository Map | 새 파일/디렉터리 추가 | MUST / CONSIDER / NO | `path` |
-| Runtime Map | 흐름 변화 여부 | MUST / CONSIDER / NO | `path` |
-| Component Index | 컴포넌트 추가/변경 | MUST / CONSIDER / NO | `path` |
-| Common Change Paths | 디버깅 경로 변경 | MUST / CONSIDER / NO | `path` |
-| Open Questions | 새 미확정 사항 | MUST / CONSIDER / NO | - |
-| DECISION_LOG.md | 비직관적 결정 | MUST / CONSIDER / NO | - |
-
-**Spec Update Classification**: MUST N / CONSIDER N / NO N
 
 ---
 
@@ -405,10 +326,6 @@ Steps 4, 4.5, 6, and 7 proceed identically.
 | Priority | Item | Severity | Location | Action |
 |----------|------|----------|----------|--------|
 
-### Post-Merge Spec Sync
-| Priority | Spec Section | Classification | Action |
-|----------|-------------|----------------|--------|
-
 ### Pre-merge Recommended
 | Priority | Item | Severity | Action |
 |----------|------|----------|--------|
@@ -423,11 +340,6 @@ Steps 4, 4.5, 6, and 7 proceed identically.
 
 ### Design Decisions
 ### Items Requiring Spec Update
-
-Each item includes MUST/CONSIDER/NO classification:
-
-1. <spec section> (`MUST update` / `CONSIDER` / `NO update`)
-
 ### Suggested Follow-up Work
 
 ---
@@ -472,14 +384,12 @@ Each item includes MUST/CONSIDER/NO classification:
 - **Acceptance criteria-focused**: Systematically verify each acceptance criterion from the patch draft one by one
 - **Verify against spec**: Check not only new features but also whether existing spec requirements are violated
 - **Test linkage**: Verify existence and pass status of tests corresponding to each acceptance criterion
-- **Spec impact awareness**: Always evaluate exploration-first spec sections for potential updates
 
 ### Verdict Guidelines
 
 - **Conservative verdicts**: When uncertain, verdict as NEEDS DISCUSSION
 - **Clarify blockers**: When issuing REQUEST CHANGES, always provide a specific list of blockers
 - **Separate design discussions**: Distinguish functional issues from design decisions in the report
-- **Separate blockers from sync**: Pre-merge blockers (functional) and post-merge spec sync (documentation) are distinct concerns
 
 ### File Management
 

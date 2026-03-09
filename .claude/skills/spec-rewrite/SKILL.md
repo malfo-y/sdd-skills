@@ -1,76 +1,41 @@
 ---
 name: spec-rewrite
-description: This skill should be used when the user asks to "rewrite spec", "refactor spec", "simplify spec", "split spec into files", "clean up spec", or equivalent phrases indicating they want to reorganize an overly long or hard-to-navigate spec into an exploration-first, change-oriented structure.
-version: 1.1.0
+description: This skill should be used when the user asks to "rewrite spec", "refactor spec", "simplify spec", "split spec into files", "clean up spec", "review spec quality", or equivalent phrases indicating they want to reorganize an overly long/complex spec by pruning noise, splitting into hierarchical files, and explicitly listing ambiguities/problems.
+version: 1.0.0
 ---
 
-# Spec Rewrite - Rebuild Specs for Fast Understanding and Safe Change
+# Spec Rewrite - Restructure Long or Complex Specs
 
-Rewrite existing spec documents into an exploration-first structure.
+| Workflow | Position | When |
+|----------|----------|------|
+| Any | Standalone | 스펙이 비대해졌을 때 정리/재구성 |
+| Any | Before implementation-plan | 구현 전 스펙 품질 정리 |
 
-A good spec is not a copy of the code. It is a searchable map that helps people and LLMs:
-- understand what the repository does quickly
-- find where a feature or responsibility lives
-- identify where to edit safely
-- preserve non-obvious decisions and invariants
-- separate unknowns explicitly
-
-This skill does not exist merely to shorten or prettify documents.
-Its purpose is to turn a hard-to-navigate spec into a **탐색형 지도** that makes understanding and change fast.
-
-## Simplified Workflow
-
-This skill is a **maintenance utility** that can be invoked at any point:
-
-```
-spec-create -> feature-draft -> implementation -> spec-update-done
-                                                       ↑
-                                              spec-rewrite (anytime)
-```
-
-| Step | Skill | Purpose |
-|------|-------|---------|
-| 1 | spec-create | Create the initial index-first spec |
-| 2 | feature-draft | Draft feature spec patch + implementation plan |
-| 3 | implementation | Execute the implementation plan (TDD) |
-| 4 | spec-update-done | Sync spec with actual code |
-| **—** | **spec-rewrite** | **Rebuild spec as exploration-first map** |
+Rewrite long or complex specs into a clearer structure by pruning unnecessary content (delete or move to appendix), splitting into hierarchical files, and explicitly documenting ambiguities and quality issues.
 
 ## Overview
 
-This skill treats `_sdd/spec/` as a navigation and maintenance surface.
+This skill treats `_sdd/spec/` as a documentation refactoring target, not a feature-expansion task.
 
 Primary goals:
-1. Rebuild the main spec as a fast entry point
-2. Restore or create repository and component maps
-3. Make change paths, contracts, and invariants visible
-4. Split by responsibility when one file is too dense
-5. Preserve rationale in `DECISION_LOG.md`
-6. Move uncertainty into `Open Questions`
+1. Remove low-value content or move it to appendices
+2. Split content into multiple files with a clear hierarchy
+3. Explicitly report ambiguities, conflicts, and missing decisions
 
 ## When to Use This Skill
 
-- The spec is too long, noisy, or hard to scan
-- Main ideas are buried under logs, history, or duplicated detail
-- A reader cannot quickly find where a feature lives or where to edit
-- The main spec should become an index plus focused component docs
-- The spec needs cleanup before feature planning or implementation work
+- The spec is too long to scan and maintain effectively
+- Core sections are mixed with logs, verbose historical notes, or repeated details
+- Topic-based separation is needed, but the current file layout is flat or unclear
+- Spec quality needs cleanup before implementation planning starts
 
 ## Hard Rules
 
 1. **Always backup**: 수정 전 반드시 `_sdd/spec/prev/PREV_<filename>_<timestamp>.md`로 백업한다.
-2. **호환 가능한 앵커 섹션 보존**: `Goal`, `Overview`, `Architecture Overview`, `Component Details`, `Environment & Dependencies`, `Identified Issues & Improvements`, `Usage Examples`, `Open Questions` 섹션명을 유지한다. 내부 구조는 탐색형으로 재구성한다. `Overview`(동작 개요 + 설계 의도)는 재작성 시에도 기존 내용을 보존한다.
-3. **탐색 우선**: 리라이트 결과는 프로젝트 이해와 변경 탐색을 더 쉽게 만들어야 한다.
-4. **실제 경로 우선**: 주요 컴포넌트, 변경 지점, 검증 지점에는 실제 파일/디렉토리 경로 또는 핵심 심볼을 포함한다.
-5. **요약 우선**: 코드를 그대로 복사하지 말고 의도, 경계, 계약, 변경 지점, 불변 조건을 압축해서 정리한다.
-6. **변경 지향성 유지**: 메인 스펙 또는 컴포넌트 스펙에는 Change Recipes 또는 변경 가이드 성격의 정보가 포함되어야 한다.
-7. **Preserve decision context**: 삭제하거나 축약하는 과정에서 중요한 "why" 컨텍스트가 사라지면 `DECISION_LOG.md`에 보존한다.
-8. **추정 명시**: 확인되지 않은 내용은 단정하지 않고 `Open Questions`에 기록한다.
-9. **탐색형 구조 강화**: 리라이트 결과는 탐색 가능한 지도(Change Recipes, Component Index, 실제 경로)를 반드시 포함해야 한다.
-10. **한국어 작성**: 수정 내용은 한국어로 작성한다. 기존 문서가 다른 언어라면 메인 문서 언어에 맞추되, 혼재 시 하나로 정리하고 근거가 약하면 `Open Questions`에 남긴다.
-11. **최소 산출물**: `DECISION_LOG.md` 외 추가 거버넌스 문서는 사용자 요청 시에만 생성한다.
-12. **분할 기본값**: 번호형 토픽 분할보다 책임 기반 분할(`main.md + auth.md + jobs.md`)을 기본으로 한다. 기존 구조가 이미 일관되면 최소 수정으로 유지한다.
-13. **LLM 효율 유지**: 리라이트 결과는 한 번에 읽기 쉬운 길이와 밀도를 목표로 하며, 중복 서술보다 표, 경로, 링크를 우선한다.
+2. **Preserve decision context**: 삭제하는 섹션에 중요한 "why" 컨텍스트가 있으면 `DECISION_LOG.md`에 보존한다.
+3. **사용자 확인 우선**: 대규모 구조 변경(파일 분할, 대량 이동) 전에 반드시 사용자 확인을 받는다.
+4. **언어 규칙**: 기존 스펙/문서의 언어를 따른다. 새 프로젝트(기존 스펙 없음)는 한국어 기본. 사용자 명시 지정 시 해당 언어 사용.
+5. **최소 산출물**: `DECISION_LOG.md` 외 추가 거버넌스 문서는 사용자 요청 시에만 생성한다.
 
 ## Input Sources
 
@@ -78,337 +43,213 @@ Primary goals:
 - `_sdd/spec/main.md` or `_sdd/spec/<project>.md`
 
 ### Secondary
-- linked sub-spec files
-- `_sdd/spec/DECISION_LOG.md`
-- `_sdd/env.md` (run/test/context validation)
-- code/config paths only when needed to verify outdated or ambiguous claims
+- Sub-spec files linked from the main spec
+- `_sdd/implementation/` outputs (plan/progress/review) for ambiguity validation
+- `_sdd/spec/DECISION_LOG.md` (if present, for preserving rationale context)
 
 ## Rewrite Process
 
-### Step 1: Diagnose Navigation and Changeability
+### Step 1: Diagnose Document Quality
 
-**Tools**: `Read`, `Glob`, `Grep`
+**Tools**: `Read`, `Glob`
 
-First identify why the current spec is hard to use.
+First identify structural quality issues in the current spec.
 
-Check for:
-- 프로젝트 목적과 시스템 경계가 빠르게 보이지 않음
-- `Repository Map`, `Runtime Map`, `Component Index`가 없음
-- 기능 변경 시 어디부터 봐야 하는지 찾기 어려움 (탐색 가능성 부재)
-- 계약, 상태 전이, 불변 조건이 묻혀 있음 (계약 가시화 부재)
-- 실제 경로/심볼 없이 일반론만 많음
-- Change Recipes 또는 변경 진입점이 없음 (변경 지향성 부재)
-- 긴 로그, 참고용 예시, 역사 서술이 메인 흐름을 방해함
-- 중복 표, 중복 설명, 깨진 링크가 많음
-- 미확인 정보가 사실처럼 섞여 있음
+- Section length imbalance (single section dominates document size)
+- Duplicated explanations, tables, or checklists
+- Out-of-scope content (ops logs, temporary notes, long historical narratives)
+- Broken links, inconsistent filenames, missing references
+- Ambiguous wording ("as needed", "fast", "appropriately")
+- Missing acceptance or completion criteria
 
-**Decision Gate 1->2**:
+**Decision Gate 1→2**:
 ```
-navigation_issues_identified = 탐색성 저하 원인 식별 완료
-rewrite_scope_clear = 리라이트 범위와 대상 문서 명확
+quality_issues_identified = 구조적 품질 이슈 식별 완료
+scope_clear = 리라이트 범위 명확
 
-IF navigation_issues_identified AND rewrite_scope_clear -> Step 2
-ELSE -> 추가 진단 후 범위 보정
+IF quality_issues_identified AND scope_clear → Step 2 진행
+ELSE IF NOT quality_issues_identified → 추가 진단 수행
+ELSE → AskUserQuestion: 리라이트 범위 확인
 ```
 
-### Step 2: Propose Rewrite Target Shape First
+### Step 2: Propose Rewrite Plan First
 
-**Tools**: deterministic defaults (non-interactive)
+**Tools**: `AskUserQuestion`
 
-Present the rewrite target shape before editing. 리라이트의 목표는 **탐색형 지도로 재구성**하는 것이다.
+Present a rewrite plan before making changes.
 
 ```markdown
 ## Spec Rewrite Plan
 
 **Target**: `_sdd/spec/<project>.md`
-**Rewrite Goal**: 탐색형 지도로 재구성
 
-### Keep in Main
-- Goal -> Project Snapshot / Key Features / Non-Goals
-- Architecture Overview -> System Boundary / Repository Map / Runtime Map
-- Component Details -> Component Index + 핵심 컴포넌트 요약
-- Usage Examples -> Running / Common Operations / Common Change Paths
-- Open Questions
+### 1) Keep in Main
+- [Core goal/scope/architecture summary]
 
-### Split by Responsibility (플랫 분할 기본)
-- `_sdd/spec/main.md`
-- `_sdd/spec/auth.md`
-- `_sdd/spec/jobs.md`
-- `_sdd/spec/billing.md`
-(Subdirectory 분할은 조건 2개 이상 충족 시에만 — Step 5 참조)
+### 2) Move to Appendix
+- [Sections to move and rationale]
 
-### Move Out of Main
-- 긴 로그
-- 반복 표
-- 참고용 상세 예시
-- 현재 판단에 영향이 적은 역사 서술
+### 3) Split Map (Hierarchical)
+- `_sdd/spec/<project>.md` (index)
+- `_sdd/spec/<project>/01-overview.md`
+- `_sdd/spec/<project>/02-architecture.md`
+- `_sdd/spec/<project>/03-components.md`
+- `_sdd/spec/<project>/04-api.md`
+- `_sdd/spec/<project>/appendix.md`
 
-### Preserve Separately
-- 중요한 rationale -> `DECISION_LOG.md`
-
-### Risks / Unknowns
-- [item]
+### 4) Ambiguities / Risks to Resolve
+- [Ambiguous/conflicting/missing items]
 ```
 
-The plan is good only if it clearly improves understanding and changeability, not just brevity.
+For large structural changes (file splits and bulk moves), get user confirmation first.
+
+**Decision Gate 2→3**:
+```
+plan_presented = 리라이트 계획을 사용자에게 제시 완료
+user_approved = 사용자가 계획 승인
+
+IF plan_presented AND user_approved → Step 3 진행
+ELSE IF NOT plan_presented → Step 2 재실행
+ELSE → 사용자 피드백 반영 후 계획 수정 (최대 2라운드)
+  → 2라운드 후에도 거부 시 진단 결과를 REWRITE_REPORT.md에 저장하고 종료
+```
 
 ### Step 3: Create Safety Backups
 
-**Tools**: `Bash (mkdir -p, cp)`
+> Steps 3-5는 실제 파일 수정 단계이다. `Edit`, `Write`, `Bash` 도구를 사용한다.
 
-For every modified file, create a backup under `_sdd/spec/prev/`.
+**Tools**: `Bash (mkdir -p, cp)`, `Write`
 
-### Step 4: Rewrite the Main Spec as an Entry Point
+For every existing file you modify, create a backup under `_sdd/spec/prev/` using `prev/PREV_<filename>_<timestamp>.md` (create `_sdd/spec/prev/` first if missing).
 
-**Tools**: `Read`, `Edit`, `Write`
+### Step 4: Prune and Appendix Migration
 
-The rewritten main spec should answer these quickly:
-- 이 저장소는 무엇을 하는가?
-- 어디가 시스템 경계인가?
-- 어떤 컴포넌트가 어디에 있는가?
-- 어떤 변경은 어디부터 시작하는가?
-- 무엇을 깨면 안 되는가?
-- 아직 무엇이 불확실한가?
-
-Core target shape for the main spec:
-- `Goal` -> `Project Snapshot`, `Key Features`, `Non-Goals`
-- `Architecture Overview` -> `System Boundary`, `Repository Map`, `Runtime Map`
-- `Component Details` -> `Component Index` + 핵심 컴포넌트 요약 또는 링크
-- `Open Questions`
-
-Add optional sections only when they materially help maintenance:
-- `Architecture Overview` -> `Technology Stack`, `Cross-Cutting Invariants`
-- `Environment & Dependencies`
-- `Identified Issues & Improvements`
-- `Usage Examples` -> `Running the Project`, `Common Operations`, `Common Change Paths`
-
-If `Usage Examples` is omitted, ensure common change entry points still appear in component `Change Recipes` or an equivalent change guide.
-
-### Step 4.5: Prune and De-duplicate
-
-**Tools**: `Edit`, `Write`
+**Tools**: `Edit`, `Write`, `Read`
 
 Rules:
-- keep decision-driving and execution-critical content in the main spec
-- move long logs, duplicated tables, and reference-only detail out of the main flow only when needed
-- remove empty optional sections and low-value metadata instead of preserving placeholders
-- do not create appendix files by default; use them only if the detail is still worth keeping and does not belong in a component spec
-- prefer component-specific files over generic appendix dumps
-- prefer compact tables, file maps, and links over repeated prose
+- Keep only decision-driving and execution-critical content in the main document
+- Move long examples, verbose logs, and reference-only material to appendix (`appendix.md` or `<project>_APPENDIX.md`)
+- Keep one canonical version of repeated content and replace duplicates with links
+- Do not drop important "why" context silently; preserve it in `_sdd/spec/DECISION_LOG.md` when needed
 
-### Step 5: Split by Responsibility, Not by Numbered Topic
-
-**Tools**: `Write`, `Glob`
-
-#### 플랫 분할 (기본값)
-
-플랫 분할(`main.md + auth.md + billing.md`)이 기본값이다:
-
-```
-_sdd/spec/
-├── main.md
-├── auth.md
-├── billing.md
-├── jobs.md
-└── DECISION_LOG.md
-```
-
-플랫 분할 규칙:
-- main spec은 항상 entry point
-- 분할 파일은 책임 기반
-- 모든 분할 파일은 main spec에서 도달 가능해야 한다
-- 파일명 패턴 일관성 유지
-- 기존 구조가 안정적이면 최소 수정으로 유지
-
-#### Subdirectory 분할 (조건부)
-
-Subdirectory는 플랫 분할로 관리가 어려워질 때만 도입한다. 아래 조건 중 **2개 이상** 해당하면 고려한다:
-
-| 조건 | 설명 |
-|------|------|
-| **컴포넌트 내부 분할** | 한 컴포넌트가 2개 이상의 스펙 파일을 필요로 한다 |
-| **파일 수 과다** | `_sdd/spec/` 아래 컴포넌트 스펙 파일이 10개를 넘는다 |
-| **도메인 경계 존재** | 컴포넌트들이 명확한 도메인 그룹을 형성한다 |
-| **독립 변경 단위** | subdirectory 내 파일들이 함께 변경되고, 다른 subdirectory와는 독립적이다 |
-
-```
-_sdd/spec/
-├── main.md                      # 항상 최상위 entry point
-├── DECISION_LOG.md              # 항상 최상위
-├── auth/
-│   ├── auth.md                  # 도메인 entry point
-│   ├── oauth-providers.md
-│   └── session-management.md
-└── billing/
-    ├── billing.md
-    └── subscription.md
-```
-
-Subdirectory 규칙:
-- `main.md`와 `DECISION_LOG.md`는 항상 루트에 둔다
-- 각 subdirectory에는 디렉토리명과 동일한 entry point를 둔다 (`auth/auth.md`)
-- `main.md`의 Component Index에서 subdirectory entry point로 링크한다
-- 2단계 이상 중첩 금지 (`auth/oauth/google.md` 불가)
-- 파일이 1개뿐인 subdirectory는 만들지 않는다 — 루트에 둔다
-- subdirectory 분할만을 위해 기존 플랫 구조를 강제 마이그레이션하지 않는다
-
-### Step 6: Preserve Rationale and Unknowns
+### Step 4.5: Preserve Decision Context
 
 **Tools**: `Read`, `Edit`
 
-If the rewrite removes narrative sections that contain meaningful rationale:
-- add a concise entry to `_sdd/spec/DECISION_LOG.md`
-- keep the main spec concise
-- keep unresolved ambiguity in `Open Questions`
+If rewriting removes narrative sections that contain meaningful rationale:
+- Add a concise entry to `_sdd/spec/DECISION_LOG.md`
+- Keep the rewritten main spec concise, and keep detailed rationale in the decision log
+- Do not create additional side documents by default; keep rationale tracking in `DECISION_LOG.md`
 
-### Step 7: Validate the Rewrite
+### Step 5: Hierarchical Split
+
+**Tools**: `Write`, `Bash (mkdir -p)`, `Glob`
+
+Default structure:
+
+```
+_sdd/spec/
+├── <project>.md                  # index (summary + link hub)
+└── <project>/
+    ├── 01-overview.md
+    ├── 02-architecture.md
+    ├── 03-components.md
+    ├── 04-interfaces.md
+    ├── 05-operational-guides.md
+    └── appendix.md
+```
+
+Rules:
+- Keep only concise summaries and links in the index file
+- Each sub-file should have a single topic responsibility
+- Standardize relative links and fix all broken links
+- Keep section and filename naming conventions consistent
+
+### Step 6: Ambiguity and Problem Reporting
+
+**Tools**: `Write`
+
+Always call out these issue types explicitly.
+
+- **Ambiguous Requirement**: requirement has multiple valid interpretations
+- **Missing Acceptance Criteria**: no clear done condition
+- **Conflicting Statements**: contradictory rules inside the spec
+- **Undefined Ownership**: no clear owner/team/component responsibility
+- **Outdated Claim**: statement no longer matches code or recent decisions
+
+If needed, add `## Open Questions` to the index and keep detailed items in the report file.
+
+### Step 7: Validation
 
 **Tools**: `Glob`, `Read`
 
-Validate:
-- the main spec works as a 5-minute entry point
-- `Repository Map`, `Runtime Map`, and `Component Index` exist
-- key components have real paths or symbols
-- Change Recipes 또는 변경 진입점이 존재
-- 앵커 섹션(`Goal`, `Overview`, `Architecture Overview`, `Component Details`, `Open Questions`)이 보존됨
-- optional sections appear only when relevant and are not empty
-- duplication is reduced
-- links are valid
-- rationale is preserved
-- unknowns are explicit
-- the rewritten main spec is token-efficient enough to scan in one focused read
+Quality Checklist를 검증 스텝으로 실행한다:
 
-### Step 7.5: Quality Gate (LLM-as-Judge)
-
-구조 검증(Step 7) 통과 후, 리라이트된 스펙이 본래 목적을 달성하는지 자체 평가한다.
-이 단계는 **판정만** 수행한다. FAIL 시 보강은 이전 작성 단계(Step 4-6)로 돌아가 수행한다.
-기준은 기존 리라이트 체크리스트(Step 7)와 정합하며, 그보다 과도한 요구를 하지 않는다.
-
-#### 검증 기준 (4 Criteria)
-
-**Criterion 1 — 저장소 이해 (Understand)**
-> Probe: "이 저장소는 무엇을 하고, 누구를 위한 것이며, 무엇을 하지 않는가?"
-
-| 판정 | 기준 |
-|------|------|
-| **PASS** | Goal 섹션만 읽고 프로젝트 목적, 주요 사용자, 비목표를 구체적으로 답할 수 있다 |
-| **WEAK** | 답할 수 있지만 모호하거나 비목표가 누락되어 있다 |
-| **FAIL** | Goal이 없거나 일반론만 있어 이 저장소만의 목적을 파악할 수 없다 |
-
-**Criterion 2 — 기능 위치 탐색 (Locate)**
-> Probe: "X 기능의 코드는 어디에 있는가?" (X = 스펙에 기술된 주요 기능 중 하나)
-
-| 판정 | 기준 |
-|------|------|
-| **PASS** | Component Details/Component Index에서 실제 파일 경로 또는 핵심 심볼을 찾을 수 있다 |
-| **WEAK** | 컴포넌트는 기술되어 있으나 경로도 심볼도 부족하다 |
-| **FAIL** | 기능이 어느 컴포넌트/파일에 속하는지 스펙에서 알 수 없다 |
-
-**Criterion 3 — 안전한 수정 판단 (Change)**
-> Probe: "Y를 변경하려면 어디를 수정하고 무엇을 주의해야 하는가?" (Y = 대표적 변경 시나리오)
-
-| 판정 | 기준 |
-|------|------|
-| **PASS** | Change Recipes, 변경 핫스팟, 또는 변경 진입점이 있다 |
-| **WEAK** | 변경 시작점은 있으나 주의사항(불변 조건, 영향 범위)이 부족하다 |
-| **FAIL** | 변경 가이드가 전혀 없어 코드를 직접 탐색해야 한다 |
-
-**Criterion 4 — 비자명한 결정 기억 (Remember)**
-> Probe: "이 설계에서 왜 Z를 선택했는가?" 또는 "깨지면 안 되는 가정은 무엇인가?"
-
-| 판정 | 기준 |
-|------|------|
-| **PASS** | Open Questions에 실질적 미결 사항이 있거나, 불변 조건/DECISION_LOG에 내용이 있다 |
-| **WEAK** | 일부 기록은 있으나 리라이트 과정에서 삭제된 rationale이 보존되지 않았을 수 있다 |
-| **FAIL** | Open Questions도 비어 있고, 리라이트 전에 있던 결정 맥락이 유실되었다 |
-
-#### 검증 프로세스
-
-1. 리라이트된 스펙 전체를 다시 읽는다
-2. 각 criterion에 대해 probe 질문을 시도한다
-   - Criterion 1: Goal 섹션에서 프로젝트 목적, 사용자, 비목표를 찾는다
-   - Criterion 2: 주요 기능 1개를 골라 해당 경로 또는 심볼을 찾는다
-   - Criterion 3: 대표적 변경 시나리오 1개를 설정하고 변경 진입점을 찾는다
-   - Criterion 4: 불변 조건, 설계 결정, Open Questions를 찾는다
-3. 각 criterion을 PASS / WEAK / FAIL로 판정한다
-4. 결과에 따라 행동한다:
-
-| 결과 | 행동 |
-|------|------|
-| ALL PASS | 검증 통과, 다음 단계 진행 |
-| WEAK만 존재 (FAIL 없음) | 개선 포인트를 사용자에게 알리되 진행 허용 |
-| FAIL 1개 이상 | FAIL 항목과 근거를 기록 → Step 4-6으로 돌아가 해당 부분만 보강 → 이 단계를 재실행 (최대 1회) |
-| 재검증 후에도 FAIL | 사용자에게 보고하고 판단을 맡긴다 |
-
-#### 판정 결과 출력
-
-스펙 작업 완료 시 아래 테이블을 텍스트로 출력한다:
-
-| Criterion | Probe | 판정 | 근거 |
-|-----------|-------|------|------|
-| 저장소 이해 | "이 저장소는 무엇을 하는가?" | PASS | (구체적 근거) |
-| 기능 위치 탐색 | "X 기능은 어디에?" | PASS | (구체적 근거) |
-| 안전한 수정 판단 | "Y를 변경하려면?" | PASS | (구체적 근거) |
-| 비자명한 결정 기억 | "왜 Z를 선택?" | PASS | (구체적 근거) |
-
-**종합**: PASS / PASS WITH NOTES / FAIL → FIX
+- [ ] 인덱스에서 목표/범위/완료 기준을 빠르게 파악할 수 있는가?
+- [ ] 상세 섹션이 토픽별 전용 파일로 분리되었는가?
+- [ ] 링크와 경로가 유효한가? (`Glob`으로 확인)
+- [ ] 모호성/충돌/누락 항목이 명시적으로 문서화되었는가?
+- [ ] 불필요한 중복이 제거되었는가?
+- [ ] 필수 근거(rationale)가 스펙 또는 `DECISION_LOG.md`에 보존되었는가?
 
 ## Output Format
 
 ### 1) Rewritten Spec Files
 
-- list of rewritten files
-- list of newly created split files
-- list of sections moved out of the main flow
+- List of rewritten files
+- List of newly created sub-files
+- List of sections moved to appendix
 
-### 2) Rewrite Summary
+### 2) Rewrite Report
 
-Provide a concise summary in the completion output:
-- what became easier to understand
-- what became easier to change
-- what was split out and why
-- what remains uncertain
+Create or update `_sdd/spec/REWRITE_REPORT.md` with:
 
-### 3) Optional Rewrite Report
+```markdown
+## Rewrite Summary
+- Target document:
+- Execution timestamp:
+- Key changes:
 
-Create `_sdd/spec/REWRITE_REPORT.md` only if:
-- the user explicitly asks for it, or
-- the rewrite is large enough that inline summary is insufficient
+## What Was Pruned or Moved
+- [item] -> [appendix/file]
 
-If created, include:
-- target document
-- split map
-- key navigation changes
-- unresolved issues
-- decision-log additions
+## File Split Map
+- [index + sub-file tree]
+
+## Ambiguities and Issues
+- [Priority] [Type] description
+- Suggested resolution
+
+## Decision Log Additions
+- [Entry title] (if any)
+- Why this was recorded
+```
 
 ## Quality Checklist
 
-- Can a reader understand project purpose and boundary quickly from the main spec?
-- Does the main spec contain a repository map and runtime map?
-- Does `Component Details` include a component index?
-- Can a reader find likely edit points for common changes (Change Recipes)?
-- Are actual paths or symbols present for important areas?
-- Are tests, logs, or debugging starting points discoverable?
-- Are major invariants and risks visible?
-- Are unresolved ambiguities explicitly documented?
-- Is essential rationale preserved in `DECISION_LOG.md` when removed from the main spec?
-- Are anchor sections (`Goal`, `Overview`, `Architecture Overview`, `Component Details`, `Open Questions`) preserved?
+> Step 7 (Validation)에서 검증 스텝으로 실행된다. 상세 항목은 Step 7 참조.
 
 ## Language Preference
 
-- Follow the main spec language by default
-- For mixed-language specs, normalize toward the main spec language
-- If that choice is uncertain, record the assumption in `Open Questions`
+- 기존 스펙/문서의 언어를 따른다
+- 혼합 언어 스펙의 경우 인덱스 문서 언어를 따른다
+- 새 프로젝트(기존 스펙 없음)는 한국어 기본
+- 사용자 명시 지정 시 해당 언어 사용
 
 ## Context Management
 
 | 스펙 크기 | 전략 | 구체적 방법 |
 |-----------|------|-------------|
-| < 200줄 | 전체 읽기 | 전체 파일 읽기 |
-| 200-500줄 | 전체 읽기 가능 | 전체 읽기 후 필요한 섹션 재확인 |
-| 500-1000줄 | TOC 먼저 | 상위 TOC 확인 후 관련 섹션만 읽기 |
-| > 1000줄 | 인덱스 우선 | 메인 인덱스와 타겟 섹션만 선택적으로 읽기 |
+| < 200줄 | 전체 읽기 | `Read`로 전체 파일 읽기 |
+| 200-500줄 | 전체 읽기 가능 | `Read`로 전체 읽기, 필요 시 섹션별 |
+| 500-1000줄 | TOC 먼저, 관련 섹션만 | 상위 50줄(TOC) 읽기 → 관련 섹션만 `Read(offset, limit)` |
+| > 1000줄 | 인덱스만, 타겟 최대 3개 | 인덱스/TOC만 읽기 → 타겟 섹션 최대 3개 선택적 읽기 |
+
+| 코드베이스 크기 | 전략 | 구체적 방법 |
+|----------------|------|-------------|
+| < 50 파일 | 자유 탐색 | `Glob` + `Read` 자유롭게 사용 |
+| 50-200 파일 | 타겟 탐색 | `Grep`/`Glob`으로 후보 식별 → 타겟 `Read` |
+| > 200 파일 | 타겟 탐색 | `Grep`/`Glob` 위주 → 최소한의 `Read` |
 
 ## Error Handling
 
@@ -416,23 +257,22 @@ If created, include:
 |------|------|
 | 스펙 파일 미발견 | `spec-create` 먼저 실행 권장 |
 | 백업 디렉토리 미존재 | `mkdir -p _sdd/spec/prev/` 자동 생성 |
-| 스펙이 이미 탐색형으로 잘 구조화됨 | 불필요한 리라이트를 지양하고 작업 로그에 보고 |
-| 분할 후 링크 깨짐 | 경로 검증 후 자동 수정 |
+| 스펙이 이미 잘 구조화됨 | 불필요한 리라이트 지양, 사용자에게 보고 |
+| 분할 후 링크 깨짐 | Glob으로 경로 검증, 자동 수정 |
 | DECISION_LOG.md 미존재 | 필요 시 새로 생성 |
-| 대형 스펙 (1000줄+) | 메인 인덱스와 핵심 섹션 위주로 점진 처리 |
-| 추정 신뢰도 낮음 | `Open Questions`로 분리 |
+| 사용자가 계획 거부 | 피드백 반영 후 수정안 제시 (최대 2라운드) |
+| 대형 스펙 (1000줄+) | 인덱스 기반 점진적 읽기, 섹션별 처리 |
 
 ## Additional Resources
 
 ### Reference Files
-- `references/rewrite-checklist.md` - rewrite exit criteria and diagnostics
+- `references/rewrite-checklist.md` - diagnosis/splitting/report checklist
 
 ### Example Files
-- `examples/rewrite-report.md` - optional rewrite summary example
+- `examples/rewrite-report.md` - sample rewrite result report
 
 ## Integration with Other Skills
 
-- **spec-create**: target shape reference for exploration-first specs
-- **feature-draft**: benefits from stable `Goal` and `Component Details`
-- **spec-summary**: benefits from preserved top-level anchors
-- **spec-update-done**: sync rewritten spec with actual implementation state
+- **spec-update-done**: validate against code-level reality
+- **spec-summary**: regenerate summary after rewrite
+- **implementation-plan**: plan implementation from cleaned spec

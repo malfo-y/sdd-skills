@@ -1,97 +1,66 @@
 # Spec Rewrite Checklist
 
-Checklist to reduce omissions when turning an existing spec into an exploration-first spec.
+Checklist to reduce omissions during spec rewrite work.
 
 ## 1) Pre-Check
 
 - [ ] Identify the main target spec file (`_sdd/spec/main.md` or `_sdd/spec/<project>.md`)
-- [ ] Collect linked sub-spec files
+- [ ] Collect the list of linked sub-spec files
 - [ ] Confirm backup policy (`_sdd/spec/prev/PREV_<filename>_<timestamp>.md`)
 - [ ] Load `_sdd/spec/DECISION_LOG.md` if present
-- [ ] Check whether the main spec already uses stable anchors (`Goal`, `Architecture Overview`, `Component Details`, `Open Questions`)
-- [ ] Check whether the current spec is hard to navigate, not merely long
+- [ ] Confirm with the user before large-scale file splitting
 
-## 2) Navigation Diagnosis (SDD 탐색 품질 기준)
+## 2) Prune / Appendix Decision Rules
 
-- [ ] Can a newcomer understand the project purpose within 5 minutes?
-- [ ] Is system boundary visible?
-- [ ] Is there a repository map?
-- [ ] Is there a runtime map?
-- [ ] Is there a component index?
-- [ ] Are major components tied to real paths or symbols?
-- [ ] Are change/debug entry points visible?
-- [ ] Are Change Recipes present (변경 지향성)?
-- [ ] Are invariants and risks visible (계약 가시화)?
-- [ ] Are unknowns separated into `Open Questions`?
-- [ ] 탐색 가능성: 기능이나 책임이 어디에 있는지 빠르게 찾을 수 있는가?
-- [ ] 변경 지향성: 변경 시작 지점과 영향 범위가 명확한가?
-- [ ] 계약 가시화: 계약, 상태 전이, 불변 조건이 묻혀 있지 않은가?
+Prioritize moving these items to appendix:
 
-## 3) 앵커 섹션 검증
+- Long execution logs or historical records
+- Overly long code blocks used only as detailed examples
+- Legacy explanation with low impact on current decisions
+- Repeated tables or checklists in the main body
 
-- [ ] `Goal` 섹션이 존재하고 Project Snapshot / Key Features / Non-Goals를 포함하는가?
-- [ ] `Architecture Overview` 섹션이 존재하고 System Boundary / Repository Map / Runtime Map을 포함하는가?
-- [ ] `Component Details` 섹션이 존재하고 Component Index를 포함하는가?
-- [ ] `Open Questions` 섹션이 존재하고 미확인 사항이 분리되어 있는가?
-- [ ] Overview 섹션(동작 개요 + 설계 의도)이 포함되었는가?
-- [ ] 선택 섹션(`Environment & Dependencies`, `Identified Issues & Improvements`, `Usage Examples`)은 가치가 있을 때만 유지되는가?
+Keep these items in the main index:
 
-## 4) Rewrite Target Shape
+- Goal, Scope, and Non-Goals
+- Core architecture summary
+- Primary component responsibilities
+- **Component Overview sections** (동작 개요 + 설계 의도 — 반드시 보존)
+- Acceptance or completion criteria
+- Link hub for sub-documents
 
-Keep these in the main spec:
-- Goal -> Project Snapshot / Key Features / Non-Goals
-- Overview -> 동작 개요 / 설계 의도 (기존 Overview 내용은 재작성 시에도 보존한다)
-- Architecture Overview -> System Boundary / Repository Map / Runtime Map
-- Component Details -> Component Index + brief component summaries
-- Open Questions
+## 3) Hierarchical Split Rules
 
-Add these only when materially relevant:
-- Architecture Overview -> Technology Stack / Cross-Cutting Invariants
-- Environment & Dependencies
-- Identified Issues & Improvements
-- Usage Examples -> Running / Common Operations / Common Change Paths
+- [ ] Index file: `_sdd/spec/<project>.md`
+- [ ] Sub-directory: `_sdd/spec/<project>/`
+- [ ] Consistent filename pattern (`01-overview.md`, `02-architecture.md`, ...)
+- [ ] Each sub-file follows single-topic responsibility
+- [ ] Every sub-file is reachable from the index
+- [ ] Zero broken links
 
-Split out by responsibility when needed:
-- auth
-- billing
-- jobs
-- ingestion
-- api
+## 4) Ambiguity Detection Checklist
 
-Move out of the main flow only when necessary:
-- long execution logs
-- repeated tables
-- reference-only detail
-- low-value historical narrative
+- [ ] Requirements without measurable criteria (for example: "quickly", "appropriately")
+- [ ] Conflicting rules or procedures
+- [ ] Missing exception or failure scenarios
+- [ ] Undefined terms or abbreviations
+- [ ] Unclear ownership (team/component responsibility)
+- [ ] Missing acceptance criteria
 
-## 5) Split Rules
+## 5) Report Structure
 
-- [ ] Prefer `main.md + <component>.md` over numbered topic files
-- [ ] Each split file has one responsibility
-- [ ] Every split file is reachable from the main spec
-- [ ] Links are valid
-- [ ] Naming is consistent
-- [ ] Appendix files exist only when truly useful
+Include at least the following in `_sdd/spec/REWRITE_REPORT.md`:
 
-## 6) Rationale and Unknowns
+- Target document and execution timestamp
+- Removed/moved-to-appendix items with rationale
+- File split map
+- Ambiguities and issues list
+- Priority-based recommended resolutions
+- Decision-log additions (when rationale was moved out of main body)
 
-- [ ] Important removed rationale is preserved in `_sdd/spec/DECISION_LOG.md`
-- [ ] Unverified claims are moved to `Open Questions`
-- [ ] No uncertain statement is left as confident prose
+## 6) Exit Criteria
 
-## 7) Exit Criteria (SDD 품질 포함)
-
-- [ ] The main spec works as a 5-minute entry point
-- [ ] Repository Map exists
-- [ ] Runtime Map exists
-- [ ] Component Index exists
-- [ ] Change Recipes 또는 변경 진입점이 존재
-- [ ] Important areas include real paths or symbols
-- [ ] Tests/logs/debug entry points are discoverable
-- [ ] Duplication is reduced
-- [ ] Main risks and invariants are visible
-- [ ] Empty optional sections and low-value metadata were removed
-- [ ] The main spec stays compact enough for one focused read
-- [ ] The rewritten spec is easier to understand and easier to modify against
-- [ ] 앵커 섹션(`Goal`, `Overview`, `Architecture Overview`, `Component Details`, `Open Questions`)이 보존됨
-- [ ] 실제 경로가 주요 컴포넌트에 연결되어 있음
+- [ ] Core decisions are understandable from the main index alone
+- [ ] Detailed content is discoverable through topic-based sub-files
+- [ ] Cross-document duplication is minimized
+- [ ] Unresolved ambiguities remain explicitly documented
+- [ ] Essential rationale is preserved in `_sdd/spec/DECISION_LOG.md` when removed from main spec
