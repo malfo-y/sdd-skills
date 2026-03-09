@@ -233,6 +233,35 @@ Create or update `_sdd/spec/REWRITE_REPORT.md` with:
 - Is unnecessary duplication removed?
 - Is essential rationale preserved (in spec or `_sdd/spec/DECISION_LOG.md`)?
 
+## Best Practices
+
+### Writing Quality
+
+- **Be Specific**: 모호한 표현("적절히", "필요에 따라") 제거, 구체적 기준으로 대체
+- **Use Examples**: 코드 스니펫과 사용 예시 포함
+- **Stay Current**: 코드와 맞지 않는 내용 발견 시 수정
+- **Link to Code**: 파일 경로와 라인 번호 참조
+
+### Organization
+
+- **Logical Flow**: 개요 → 상세 순서 유지
+- **Consistent Format**: 컴포넌트 간 동일한 구조 사용
+- **Table of Contents**: 500줄 이상 문서에 목차 포함
+
+### Completeness
+
+- **All Components**: 모든 주요 컴포넌트 문서화
+- **Error Cases**: 에러 처리와 엣지 케이스 문서화
+- **Dependencies**: 모든 외부 의존성 기재
+- **Configuration**: 모든 설정 옵션 문서화
+
+### Decision Traceability
+
+- **Record Why**: 비자명한 결정은 `_sdd/spec/DECISION_LOG.md`에 기록
+- **Keep It Minimal**: 짧은 근거 항목으로 충분; 장문 서술 지양
+- **Update on Change**: 방향/가정 변경 시 새 항목 추가
+- **Artifact Scope**: 기본은 `DECISION_LOG.md`만; 추가 거버넌스 문서는 사용자 요청 시에만
+
 ## Language Preference
 
 - Keep the existing spec language by default
