@@ -1,53 +1,36 @@
 ---
 name: spec-rewrite
-description: This skill should be used when the user asks to "rewrite spec", "refactor spec", "simplify spec", "split spec into files", "clean up spec", or equivalent phrases indicating they want to reorganize an overly long or hard-to-navigate spec into an exploration-first, change-oriented structure.
-version: 1.4.0
+description: This skill should be used when the user asks to "rewrite spec", "refactor spec", "simplify spec", "split spec into files", "clean up spec", or equivalent phrases indicating they want to reorganize an overly long/complex spec by pruning noise, splitting into hierarchical files, and explicitly listing ambiguities/problems.
+version: 1.0.0
 ---
 
-# Spec Rewrite - Rebuild Specs for Fast Understanding and Safe Change
+# Spec Rewrite - Restructure Long or Complex Specs
 
-Rewrite existing spec documents into an exploration-first structure.
-
-This skill does not exist merely to shorten or prettify documents.
-Its purpose is to turn a hard-to-navigate spec into a searchable map that helps people and LLMs:
-- understand what the repository does quickly
-- find where a feature or responsibility lives
-- identify where to edit safely
-- preserve non-obvious decisions and invariants
-- separate unknowns explicitly
+Rewrite long or complex specs into a clearer structure by pruning unnecessary content (delete or move to appendix), splitting into hierarchical files, and explicitly documenting ambiguities and quality issues.
 
 ## Overview
 
-This skill treats `_sdd/spec/` as a navigation and maintenance surface.
+This skill treats `_sdd/spec/` as a documentation refactoring target, not a feature-expansion task.
 
 Primary goals:
-1. Rebuild the main spec as a fast entry point
-2. Restore or create repository and component maps
-3. Make change paths, contracts, invariants, and component behavior summaries visible
-4. Split by responsibility when one file is too dense
-5. Preserve rationale in `DECISION_LOG.md`
-6. Move uncertainty into `Open Questions`
+1. Remove low-value content or move it to appendices
+2. Split content into multiple files with a clear hierarchy
+3. Explicitly report ambiguities, conflicts, and missing decisions
 
 ## When to Use This Skill
 
-- The spec is too long, noisy, or hard to scan
-- Main ideas are buried under logs, history, or duplicated detail
-- A reader cannot quickly find where a feature lives or where to edit
-- The main spec should become an index plus focused component docs
-- The spec needs cleanup before feature planning or implementation work
+- The spec is too long to scan and maintain effectively
+- Core sections are mixed with logs, verbose historical notes, or repeated details
+- Topic-based separation is needed, but the current file layout is flat or unclear
+- Spec quality needs cleanup before implementation planning starts
 
 ## Hard Rules
 
 1. **Always backup**: 수정 전 반드시 `_sdd/spec/prev/PREV_<filename>_<timestamp>.md`로 백업한다.
-2. **호환 가능한 앵커 섹션 유지**: 가능하면 `Goal`, `Architecture Overview`, `Component Details`, `Environment & Dependencies`, `Identified Issues & Improvements`, `Usage Examples`, `Open Questions` 상위 섹션명을 유지한다.
-3. **탐색 우선**: 리라이트 결과는 프로젝트 이해와 변경 탐색을 더 쉽게 만들어야 한다.
-4. **실제 경로 우선**: 주요 컴포넌트, 변경 지점, 검증 지점에는 가능하면 실제 파일/디렉토리 경로 또는 핵심 심볼을 적는다.
-5. **변경 지향성 유지**: 메인 스펙 또는 컴포넌트 스펙에는 change guide 또는 change recipe 성격의 정보가 포함되어야 한다.
-6. **Preserve decision context**: 삭제하거나 축약하는 과정에서 중요한 "why" 컨텍스트가 사라지면 `DECISION_LOG.md`에 보존한다.
-7. **추정은 분리**: 신뢰도가 낮은 내용은 단정하지 말고 `Open Questions`에 기록한다.
-8. **한국어 작성**: 수정 내용은 한국어로 작성한다. 기존 문서가 다른 언어라면 메인 문서 언어에 맞추되, 혼재 시 하나로 정리하고 근거가 약하면 `Open Questions`에 남긴다.
-9. **최소 산출물**: `DECISION_LOG.md` 외 추가 거버넌스 문서는 사용자 요청 시에만 생성한다.
-10. **분할 기본값**: 번호형 토픽 분할보다 책임 기반 분할(`main.md + auth.md + jobs.md`)을 기본으로 한다. 기존 구조가 이미 일관되면 최소 수정으로 유지한다.
+2. **Preserve decision context**: 삭제하는 섹션에 중요한 "why" 컨텍스트가 있으면 `DECISION_LOG.md`에 보존한다.
+3. **자동 검증 우선**: 대규모 구조 변경(파일 분할, 대량 이동) 전에 반드시 자동 검증을 받는다.
+4. **한국어 작성**: 추가/수정 내용은 한국어로 작성한다 (기존 언어 유지).
+5. **최소 산출물**: `DECISION_LOG.md` 외 추가 거버넌스 문서는 사용자 요청 시에만 생성한다.
 
 ## Input Sources
 
@@ -55,218 +38,201 @@ Primary goals:
 - `_sdd/spec/main.md` or `_sdd/spec/<project>.md`
 
 ### Secondary
-- linked sub-spec files
-- `_sdd/spec/DECISION_LOG.md`
-- `_sdd/env.md` (run/test/context validation)
-- code/config paths only when needed to verify outdated or ambiguous claims
+- Sub-spec files linked from the main spec
+- `_sdd/implementation/` outputs (plan/progress/review) for ambiguity validation
+- `_sdd/spec/DECISION_LOG.md` (if present, for preserving rationale context)
 
 ## Rewrite Process
 
-### Step 1: Diagnose Navigation and Changeability
+### Step 1: Diagnose Document Quality
 
-**Tools**: `Read`, `Glob`, `rg`
+**Tools**: `Read`, `Glob`
 
-First identify why the current spec is hard to use.
+First identify structural quality issues in the current spec.
 
-Check for:
-- 프로젝트 목적과 시스템 경계가 빠르게 보이지 않음
-- `Repository Map`, `Runtime Map`, `Component Index`가 없음
-- `Runtime Map`이 화살표만 있고 사용자/운영자 관점 설명이 약함
-- 주요 컴포넌트에 `Overview`가 없어 동작 개요와 설계 의도를 파악하기 어려움
-- 기능 변경 시 어디부터 봐야 하는지 찾기 어려움
-- 계약, 상태 전이, 불변 조건이 묻혀 있음
-- 실제 경로/심볼 없이 일반론만 많음
-- 긴 로그, 참고용 예시, 역사 서술이 메인 흐름을 방해함
-- 중복 표, 중복 설명, 깨진 링크가 많음
-- 미확인 정보가 사실처럼 섞여 있음
+- Section length imbalance (single section dominates document size)
+- Duplicated explanations, tables, or checklists
+- Out-of-scope content (ops logs, temporary notes, long historical narratives)
+- Broken links, inconsistent filenames, missing references
+- Ambiguous wording ("as needed", "fast", "appropriately")
+- Missing acceptance or completion criteria
 
-**Decision Gate 1->2**:
+**Decision Gate 1→2**:
 ```
-navigation_issues_identified = 탐색성 저하 원인 식별 완료
-rewrite_scope_clear = 리라이트 범위와 대상 문서 명확
+quality_issues_identified = 구조적 품질 이슈 식별 완료
+scope_clear = 리라이트 범위 명확
 
-IF navigation_issues_identified AND rewrite_scope_clear -> Step 2
-ELSE -> 추가 진단 후 범위 보정
+IF quality_issues_identified AND scope_clear → Step 2 진행
+ELSE IF NOT quality_issues_identified → 추가 진단 수행
+ELSE → deterministic defaults (non-interactive): 리라이트 범위 확인
 ```
 
-### Step 2: Propose Rewrite Target Shape First
+### Step 2: Propose Rewrite Plan First
 
-**Tools**: deterministic defaults (non-interactive)
+**Tools**: `deterministic defaults (non-interactive)`
 
-Present the rewrite target shape before editing.
+Present a rewrite plan before making changes.
 
 ```markdown
 ## Spec Rewrite Plan
 
 **Target**: `_sdd/spec/<project>.md`
 
-### Keep in Main
-- Goal -> Project Snapshot / Key Features / Non-Goals
-- Architecture Overview -> System Boundary / Repository Map / Runtime Map
-- Component Details -> Component Index + 핵심 컴포넌트 요약
-- Usage Examples -> Running / Common Operations / Common Change Paths
-- Open Questions
+### 1) Keep in Main
+- [Core goal/scope/architecture summary]
 
-### Split by Responsibility
-- `_sdd/spec/main.md`
-- `_sdd/spec/auth.md`
-- `_sdd/spec/jobs.md`
-- `_sdd/spec/billing.md`
+### 2) Move to Appendix
+- [Sections to move and rationale]
 
-### Move Out of Main
-- 긴 로그
-- 반복 표
-- 참고용 상세 예시
-- 현재 판단에 영향이 적은 역사 서술
+### 3) Split Map (Hierarchical)
+- `_sdd/spec/<project>.md` (index)
+- `_sdd/spec/<project>/01-overview.md`
+- `_sdd/spec/<project>/02-architecture.md`
+- `_sdd/spec/<project>/03-components.md`
+- `_sdd/spec/<project>/04-api.md`
+- `_sdd/spec/<project>/appendix.md`
 
-### Preserve Separately
-- 중요한 rationale -> `DECISION_LOG.md`
-
-### Risks / Unknowns
-- [item]
+### 4) Ambiguities / Risks to Resolve
+- [Ambiguous/conflicting/missing items]
 ```
 
-The plan is good only if it clearly improves understanding and changeability, not just brevity.
+For large structural changes (file splits and bulk moves), run automatic safety checks first.
+
+**Decision Gate 2→3**:
+```
+plan_presented = 리라이트 계획을 작업 로그로 제시 완료
+plan_validated = 자동 일관성/안전성 검증 통과
+
+IF plan_presented AND plan_validated → Step 3 진행
+ELSE IF NOT plan_presented → Step 2 재실행
+ELSE → 자동 보정 후 계획 수정 (최대 2라운드)
+```
 
 ### Step 3: Create Safety Backups
 
-**Tools**: `Bash (mkdir -p, cp)`
+**Tools**: `Bash (mkdir -p, cp)`, `Write`
 
-For every modified file, create a backup under `_sdd/spec/prev/`.
+For every existing file you modify, create a backup under `_sdd/spec/prev/` using `prev/PREV_<filename>_<timestamp>.md` (create `_sdd/spec/prev/` first if missing).
 
-### Step 4: Rewrite the Main Spec as an Entry Point
+### Step 4: Prune and Appendix Migration
 
-**Tools**: `Read`, `Edit`, `Write`
-
-The rewritten main spec should answer these quickly:
-- 이 저장소는 무엇을 하는가?
-- 어디가 시스템 경계인가?
-- 어떤 컴포넌트가 어디에 있는가?
-- 어떤 변경은 어디부터 시작하는가?
-- 무엇을 깨면 안 되는가?
-- 아직 무엇이 불확실한가?
-
-Required target shape for the main spec:
-- `Goal` -> `Project Snapshot`, `Key Features`, `Target Users / Use Cases`, `Non-Goals`
-- `Architecture Overview` -> `System Boundary`, `Repository Map`, `Runtime Map`, `Technology Stack`, `Cross-Cutting Invariants`
-- `Component Details` -> `Component Index` + 핵심 컴포넌트 요약 또는 링크 + `Overview`
-- `Environment & Dependencies`
-- `Identified Issues & Improvements`
-- `Usage Examples` -> `Running the Project`, `Common Operations`, `Common Change Paths`
-- `Open Questions`
-
-### Step 4.5: Prune and De-duplicate
-
-**Tools**: `Edit`, `Write`
+**Tools**: `Edit`, `Write`, `Read`
 
 Rules:
-- keep decision-driving and execution-critical content in the main spec
-- move long logs, duplicated tables, and reference-only detail out of the main flow only when needed
-- do not create appendix files by default; use them only if the detail is still worth keeping and does not belong in a component spec
-- prefer component-specific files over generic appendix dumps
+- Keep only decision-driving and execution-critical content in the main document
+- Move long examples, verbose logs, and reference-only material to appendix (`appendix.md` or `<project>_APPENDIX.md`)
+- Keep one canonical version of repeated content and replace duplicates with links
+- Do not drop important "why" context silently; preserve it in `_sdd/spec/DECISION_LOG.md` when needed
 
-### Step 5: Split by Responsibility, Not by Numbered Topic
-
-**Tools**: `Write`, `Glob`
-
-Preferred default structure:
-
-```
-_sdd/spec/
-├── main.md
-├── auth.md
-├── billing.md
-├── jobs.md
-└── DECISION_LOG.md
-```
-
-Rules:
-- main spec remains the entry point
-- split files should be responsibility-based
-- every split file must be reachable from the main spec
-- keep filename patterns consistent
-- if the existing repository already has a stable hierarchical structure, normalize only where it materially improves navigation
-
-### Step 6: Preserve Rationale and Unknowns
+### Step 4.5: Preserve Decision Context
 
 **Tools**: `Read`, `Edit`
 
-If the rewrite removes narrative sections that contain meaningful rationale:
-- add a concise entry to `_sdd/spec/DECISION_LOG.md`
-- keep the main spec concise
-- keep unresolved ambiguity in `Open Questions`
+If rewriting removes narrative sections that contain meaningful rationale:
+- Add a concise entry to `_sdd/spec/DECISION_LOG.md`
+- Keep the rewritten main spec concise, and keep detailed rationale in the decision log
+- Do not create additional side documents by default; keep rationale tracking in `DECISION_LOG.md`
 
-### Step 7: Validate the Rewrite
+### Step 5: Hierarchical Split
 
-**Tools**: `Glob`, `Read`
+**Tools**: `Write`, `Bash (mkdir -p)`, `Glob`
 
-Validate:
-- the main spec works as a 5-minute entry point
-- `Repository Map`, `Runtime Map`, and `Component Index` exist
-- `Runtime Map` includes at least a short user/operator-facing scenario
-- key components have `Overview` that explains behavior and design intent
-- key components have real paths or symbols
-- change/debug entry points exist
-- duplication is reduced
-- links are valid
-- rationale is preserved
-- unknowns are explicit
+Default structure:
+
+```
+_sdd/spec/
+├── <project>.md                  # index (summary + link hub)
+└── <project>/
+    ├── 01-overview.md
+    ├── 02-architecture.md
+    ├── 03-components.md
+    ├── 04-interfaces.md
+    ├── 05-operational-guides.md
+    └── appendix.md
+```
+
+Rules:
+- Keep only concise summaries and links in the index file
+- Each sub-file should have a single topic responsibility
+- Standardize relative links and fix all broken links
+- Keep section and filename naming conventions consistent
+
+### Step 6: Ambiguity and Problem Reporting
+
+**Tools**: `Write`
+
+Always call out these issue types explicitly.
+
+- **Ambiguous Requirement**: requirement has multiple valid interpretations
+- **Missing Acceptance Criteria**: no clear done condition
+- **Conflicting Statements**: contradictory rules inside the spec
+- **Undefined Ownership**: no clear owner/team/component responsibility
+- **Outdated Claim**: statement no longer matches code or recent decisions
+
+If needed, add `## Open Questions` to the index and keep detailed items in the report file.
 
 ## Output Format
 
 ### 1) Rewritten Spec Files
 
-- list of rewritten files
-- list of newly created split files
-- list of sections moved out of the main flow
+- List of rewritten files
+- List of newly created sub-files
+- List of sections moved to appendix
 
-### 2) Rewrite Summary
+### 2) Rewrite Report
 
-Provide a concise summary in the completion output:
-- what became easier to understand
-- what became easier to change
-- what was split out and why
-- what remains uncertain
+Create or update `_sdd/spec/REWRITE_REPORT.md` with:
 
-### 3) Optional Rewrite Report
+```markdown
+## Rewrite Summary
+- Target document:
+- Execution timestamp:
+- Key changes:
 
-Create `_sdd/spec/REWRITE_REPORT.md` only if:
-- the user explicitly asks for it, or
-- the rewrite is large enough that inline summary is insufficient
+## What Was Pruned or Moved
+- [item] -> [appendix/file]
 
-If created, include:
-- target document
-- split map
-- key navigation changes
-- unresolved issues
-- decision-log additions
+## File Split Map
+- [index + sub-file tree]
+
+## Ambiguities and Issues
+- [Priority] [Type] description
+- Suggested resolution
+
+## Decision Log Additions
+- [Entry title] (if any)
+- Why this was recorded
+```
 
 ## Quality Checklist
 
-- Can a reader understand project purpose and boundary quickly from the main spec?
-- Does the main spec contain a repository map and runtime map?
-- Does `Component Details` include a component index?
-- Can a reader find likely edit points for common changes?
-- Are actual paths or symbols present for important areas?
-- Are tests, logs, or debugging starting points discoverable?
-- Are major invariants and risks visible?
-- Are unresolved ambiguities explicitly documented?
-- Is essential rationale preserved in `DECISION_LOG.md` when removed from the main spec?
+- Can a reader understand goal/scope/acceptance criteria quickly from the index?
+- Are detailed sections separated by topic into dedicated files?
+- Are links and paths valid?
+- Are ambiguities/conflicts/missing items explicitly documented?
+- Is unnecessary duplication removed?
+- Is essential rationale preserved (in spec or `_sdd/spec/DECISION_LOG.md`)?
 
 ## Language Preference
 
-- Follow the main spec language by default
-- For mixed-language specs, normalize toward the main spec language
-- If that choice is uncertain, record the assumption in `Open Questions`
+- Keep the existing spec language by default
+- For mixed-language specs, follow the index document language
+- If requested by the user, normalize output to a single language
 
 ## Context Management
 
 | 스펙 크기 | 전략 | 구체적 방법 |
 |-----------|------|-------------|
-| < 200줄 | 전체 읽기 | 전체 파일 읽기 |
-| 200-500줄 | 전체 읽기 가능 | 전체 읽기 후 필요한 섹션 재확인 |
-| 500-1000줄 | TOC 먼저 | 상위 TOC 확인 후 관련 섹션만 읽기 |
-| > 1000줄 | 인덱스 우선 | 메인 인덱스와 타겟 섹션만 선택적으로 읽기 |
+| < 200줄 | 전체 읽기 | `Read`로 전체 파일 읽기 |
+| 200-500줄 | 전체 읽기 가능 | `Read`로 전체 읽기, 필요 시 섹션별 |
+| 500-1000줄 | TOC 먼저, 관련 섹션만 | 상위 50줄(TOC) 읽기 → 관련 섹션만 `Read(offset, limit)` |
+| > 1000줄 | 인덱스만, 타겟 최대 3개 | 인덱스/TOC만 읽기 → 타겟 섹션 최대 3개 선택적 읽기 |
+
+| 코드베이스 크기 | 전략 | 구체적 방법 |
+|----------------|------|-------------|
+| < 50 파일 | 자유 탐색 | `Glob` + `Read` 자유롭게 사용 |
+| 50-200 파일 | 타겟 탐색 | `rg`/`Glob`/`Read`/`Bash`으로 후보 식별 → 타겟 `Read` |
+| > 200 파일 | 타겟 탐색 | `rg`/`Glob`/`Read`/`Bash` 위주 → 최소한의 `Read` |
 
 ## Error Handling
 
@@ -274,23 +240,22 @@ If created, include:
 |------|------|
 | 스펙 파일 미발견 | `spec-create` 먼저 실행 권장 |
 | 백업 디렉토리 미존재 | `mkdir -p _sdd/spec/prev/` 자동 생성 |
-| 스펙이 이미 탐색형으로 잘 구조화됨 | 불필요한 리라이트를 지양하고 작업 로그에 보고 |
-| 분할 후 링크 깨짐 | 경로 검증 후 자동 수정 |
+| 스펙이 이미 잘 구조화됨 | 불필요한 리라이트 지양, 작업 로그에 보고 |
+| 분할 후 링크 깨짐 | Glob으로 경로 검증, 자동 수정 |
 | DECISION_LOG.md 미존재 | 필요 시 새로 생성 |
-| 대형 스펙 (1000줄+) | 메인 인덱스와 핵심 섹션 위주로 점진 처리 |
-| 추정 신뢰도 낮음 | `Open Questions`로 분리 |
+| 계획 검증 실패 | 자동 보정 후 수정안 생성 (최대 2라운드) |
+| 대형 스펙 (1000줄+) | 인덱스 기반 점진적 읽기, 섹션별 처리 |
 
 ## Additional Resources
 
 ### Reference Files
-- `references/rewrite-checklist.md` - rewrite exit criteria and diagnostics
+- `references/rewrite-checklist.md` - diagnosis/splitting/report checklist
 
 ### Example Files
-- `examples/rewrite-report.md` - optional rewrite summary example
+- `examples/rewrite-report.md` - sample rewrite result report
 
 ## Integration with Other Skills
 
-- **spec-create**: target shape reference for exploration-first specs
-- **feature-draft**: benefits from stable `Goal` and `Component Details`
-- **spec-summary**: benefits from preserved top-level anchors
-- **spec-update-done**: sync rewritten spec with actual implementation state
+- **spec-update-done**: validate against code-level reality
+- **spec-summary**: regenerate summary after rewrite
+- **implementation-plan**: plan implementation from cleaned spec

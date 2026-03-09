@@ -1,115 +1,235 @@
 # Task Management - Specification Summary
 
-**생성일**: 2026-03-09 10:20
-**메인 스펙**: `_sdd/spec/main.md`
-**참고 구현 문서**: `_sdd/implementation/IMPLEMENTATION_REVIEW.md`
+**생성일** (Generated): 2026-02-07 14:30
+**스펙 버전** (Spec Version): 2.1.0
+**최종 업데이트** (Last Updated): 2026-02-06
 
 ---
 
+## 🎯 Executive Summary (비기술 담당자용)
+
+### What (무엇을)
+A web service that helps teams organize, track, and complete their work by providing a central place to create and manage tasks with deadlines, assignments, and status tracking.
+
+### Why (왜)
+Replaces scattered task tracking across email, spreadsheets, and chat tools with a single organized system, reducing missed deadlines and improving team coordination.
+
+### Status (현재 상태)
+- **전체 진행률** (Overall Progress): 65%
+- **완료된 기능** (Completed): 13개
+- **진행중인 기능** (In Progress): 4개
+- **계획된 기능** (Planned): 3개
+
+---
+
+## ✨ Key Feature Explanations (기능별 상세 설명)
+
+### 1. Collaborative Task Lifecycle
+**Status**: ✅  
+This feature gives teams a single flow to create tasks, assign owners, update progress, and close work without switching tools. Users can track ownership and due dates from the same workspace, which reduces handoff errors. The feature is fully implemented for core CRUD, assignment, and status updates.
+
+### 2. Reliable Team Coordination
+**Status**: ✅  
+This feature keeps collaborators aligned through comments, notifications, and deadline visibility tied to each task. Team members receive context where work happens instead of relying on separate chat or email threads. It improves day-to-day execution by reducing missed updates and duplicated communication.
+
+### 3. Adaptive Planning & Execution
+**Status**: 🚧  
+This feature expands planning depth with dependencies and recurring tasks so teams can model real delivery sequences. Work can be ordered by prerequisite tasks and repeated automatically on defined schedules. Core concepts are working, but advanced dependency handling and recurrence edge cases are still in progress.
+
+### 4. Secure Access Control
+**Status**: 🚧  
+This feature protects project data through authentication and role-based permissions. It defines who can view, modify, or administer tasks based on team responsibility. Basic login and permission scaffolding exist, while fine-grained role policies are still being completed.
+
+---
+
+## 🏗️ Architecture at a Glance (아키텍처 개요)
+
+### Core Components (key components only)
+
+```
+React Frontend
+     |
+     v
+REST API (Express) ──> Authentication Service
+     |                         |
+     v                         v
+PostgreSQL Database      Redis Cache
+```
+
+| Component | Purpose | Status |
+|-----------|---------|--------|
+| React Frontend | User interface for creating and viewing tasks | ✅ |
+| REST API | Handles task operations, authentication, and business logic | 🚧 |
+| PostgreSQL Database | Stores task data, users, and relationships | ✅ |
+| Authentication Service | Manages user login, sessions, and permissions | 🚧 |
+| Redis Cache | Speeds up frequent queries and stores session data | 📋 |
+
+### Tech Stack
+- **Language** (언어): TypeScript
+- **Framework** (프레임워크): Express.js (backend), React (frontend)
+- **Key Libraries** (핵심 라이브러리): Prisma (database), JWT (auth), React Query (data fetching)
+
+---
+
+## 📊 Feature Status Dashboard
+
+### Completed Features ✅
+- **Basic task CRUD** - Create, read, update, and delete tasks via API
+- **User authentication** - Login and registration with email/password
+- **Task assignment** - Assign tasks to team members
+- **Due date tracking** - Set and display task deadlines
+- **Status updates** - Change task status (todo/in-progress/done)
+- **Task filtering** - Filter tasks by status, assignee, or date
+- **Task search** - Full-text search across task titles and descriptions
+- **User profiles** - View and edit user information
+- **Team management** - Create teams and add/remove members
+- **Task comments** - Add discussion threads to tasks
+- **File attachments** - Upload files to tasks (images, PDFs, documents)
+- **Email notifications** - Send emails for task assignments and deadlines
+- **Mobile-responsive UI** - Works on phones and tablets
+
+### In Progress 🚧
+- **Real-time updates** - Live task updates without page refresh (WebSocket) - 75% complete
+- **Task dependencies** - Link tasks that must be completed in order - 40% complete
+- **Recurring tasks** - Auto-create tasks on a schedule (daily/weekly/monthly) - 60% complete
+- **Advanced permissions** - Role-based access control (admin/member/viewer) - 30% complete
+
+### Planned 📋
+- **Task templates** - Reusable task structures for common workflows
+- **Time tracking** - Log hours spent on tasks
+- **Kanban board view** - Drag-and-drop task organization
+
+---
+
+## ⚠️ Open Issues & Improvements (우선순위순)
+
+### High Priority 🔴
+
+1. **Database query performance degradation** (Category: Performance)
+   - **Impact** (영향): Task list loading takes 3-5 seconds for users with 100+ tasks, causing frustration and timeouts
+   - **Location** (위치): `src/api/tasks/repository.ts` - list query without pagination
+   - **Suggested Fix** (해결 방안): Add pagination, indexing on status and assignee fields, and implement cursor-based pagination
+
+2. **Authentication token expiration handling** (Category: Bug)
+   - **Impact** (영향): Users get logged out unexpectedly, losing unsaved work
+   - **Location** (위치): `src/api/auth/middleware.ts` - no token refresh logic
+   - **Suggested Fix** (해결 방안): Implement refresh token flow with automatic token renewal before expiration
+
+3. **Missing input validation on task creation** (Category: Security)
+   - **Impact** (영향): Allows malformed data to enter database, potential XSS vulnerability via task descriptions
+   - **Location** (위치): `src/api/tasks/controller.ts` - createTask endpoint
+   - **Suggested Fix** (해결 방안): Add Zod schema validation for all input fields, sanitize HTML in descriptions
+
+### Medium Priority 🟡
+
+1. **Email notification delays** (Category: Enhancement)
+   - **Impact** (영향): Notifications arrive 5-10 minutes late, reducing urgency awareness
+   - **Location** (위치): `src/services/email/sender.ts` - synchronous email sending
+   - **Suggested Fix** (해결 방안): Use background job queue (Bull/BullMQ) for asynchronous email processing
+
+2. **Frontend bundle size too large** (Category: Performance)
+   - **Impact** (영향): Initial page load takes 8 seconds on slow connections
+   - **Location** (위치): `frontend/src/` - importing entire icon library, no code splitting
+   - **Suggested Fix** (해결 방안): Implement route-based code splitting, tree-shake icon library, use dynamic imports
+
+3. **Inconsistent error messages** (Category: Usability)
+   - **Impact** (영향): Users confused by technical error messages ("FK constraint violation")
+   - **Location** (위치): Various API endpoints - raw database errors exposed to frontend
+   - **Suggested Fix** (해결 방안): Create error translation layer to convert technical errors to user-friendly messages
+
+### Low Priority 🟢
+
+1. **API response format inconsistency** (Category: Tech Debt)
+   - **Impact** (영향): Frontend needs different parsing logic for different endpoints
+   - **Location** (위치): Multiple API controllers - some use `{ data, meta }`, others use flat structure
+   - **Suggested Fix** (해결 방안): Standardize all responses to follow JSend or similar convention
+
+2. **Missing TypeScript types for API responses** (Category: Tech Debt)
+   - **Impact** (영향): No compile-time safety for API data, requires runtime validation
+   - **Location** (위치): `frontend/src/api/` - using `any` types
+   - **Suggested Fix** (해결 방안): Generate types from OpenAPI spec or use tRPC for end-to-end type safety
+
+3. **Dark mode color contrast issues** (Category: Accessibility)
+   - **Impact** (영향): Some text hard to read in dark mode (WCAG AA contrast ratio not met)
+   - **Location** (위치): `frontend/src/styles/theme.ts` - secondary text colors
+   - **Suggested Fix** (해결 방안): Audit all colors against WCAG guidelines, adjust secondary text to #B0B0B0
+
+---
+
+## 🚀 Recommended Next Steps
+
+Based on current spec state and progress:
+
+### 1. Immediate Actions (이번 주)
+
+- [ ] **Fix database query performance** - Blocking user experience for large task lists (high-priority issue)
+- [ ] **Add input validation** - Critical security issue, must address before production
+- [ ] **Complete real-time updates feature** - At 75%, final push for delivery this sprint
+- [ ] **Implement token refresh flow** - Prevents user frustration from unexpected logouts
+
+### 2. Short-term Goals (이번 달)
+
+- [ ] **Complete task dependencies feature** - Next highest-value feature for project management
+- [ ] **Optimize frontend bundle size** - Improve user experience on slow connections
+- [ ] **Finish recurring tasks feature** - High user demand from feedback surveys
+- [ ] **Add integration tests for API** - Improve test coverage to 80% before adding more features
+
+### 3. Long-term Roadmap (분기/연간)
+
+- [ ] **Launch mobile app** - Target: Q2 2026 (high user request from roadmap survey)
+- [ ] **Implement task templates** - Target: Q2 2026 (enables advanced workflow automation)
+- [ ] **Add time tracking** - Target: Q3 2026 (requested by enterprise customers)
+- [ ] **Migrate to microservices** - Target: Q4 2026 (scalability improvement as user base grows)
+
+---
+
+## 📚 Quick Reference
+
+### Key Files
+- **Spec Index** (메인 스펙): `_sdd/spec/task_management.md`
+- **Sub-specs** (분할된 스펙, 선택): `_sdd/spec/task_management_API.md`
+- **Implementation Plan** (구현 계획): `_sdd/implementation/IMPLEMENTATION_PLAN.md`
+- **Implementation Progress** (구현 진행): `_sdd/implementation/IMPLEMENTATION_PROGRESS.md`
+- **Implementation Progress (Latest Phase)** (구현 진행 - 최신 phase): `_sdd/implementation/IMPLEMENTATION_PROGRESS_PHASE_2.md` (if present)
+- **Latest Review** (최근 리뷰): `_sdd/implementation/IMPLEMENTATION_REVIEW.md`
+
+### Related Commands
+- `/spec-update-todo` - Add new features to spec
+- `/implementation-plan` - Create implementation plan from spec
+- `/spec-update-done` - Sync spec with code changes
+- `/spec-summary` - Regenerate this summary
+
+---
+
+**Summary 생성 방법**: `/spec-summary`를 실행하면 이 파일이 자동 생성/갱신됩니다.
+**How to Generate**: Run `/spec-summary` to automatically create/update this file.
+
+**Note**: Regenerating this summary should first create `_sdd/spec/prev/PREV_SUMMARY_<timestamp>.md` (create `_sdd/spec/prev/` if needed) if an existing `_sdd/spec/SUMMARY.md` is being overwritten.
+
+---
+
+## Optional README Sync Output
+
+When user requests README update, only this marker block is managed:
+
+```markdown
+<!-- spec-summary:start -->
 ## Project Snapshot
 
-- **무엇을 하는가**: 팀이 작업을 생성, 배정, 추적, 완료할 수 있게 해 주는 태스크 관리 서비스다.
-- **핵심 사용자/대상**: 내부 운영팀, 프로젝트 매니저, 협업 팀원
-- **핵심 기능**:
-  - 작업 생성/수정/상태 전이
-  - 담당자 배정과 마감일 관리
-  - 댓글, 알림, 검색
-  - 반복 작업과 의존 관계
-- **Non-Goals**:
-  - 회계/정산 기능
-  - 장기 문서 협업 편집
+### What
+Task Management helps teams plan, execute, and track collaborative work in one place.
 
-## System Boundary
+### Current Status
+- Overall Progress: 65%
+- Completed / In Progress / Planned: 13 / 4 / 3
 
-- **이 저장소가 책임지는 것**:
-  - 태스크 도메인 로직
-  - 웹 API와 프론트엔드 UI
-  - 사용자 인증과 권한
-- **외부 시스템/서비스**:
-  - PostgreSQL
-  - Redis
-  - 이메일 전송 서비스
+### Key Feature Explanations
+### 1. Collaborative Task Lifecycle
+Teams can create, assign, track, and complete tasks in a single workflow with clear ownership and deadlines.
 
-## Repository Map
+### 2. Adaptive Planning & Execution
+Dependencies and recurring-task logic support realistic delivery planning, though some edge-case handling is still in progress.
 
-| 경로 | 역할 | 메모 |
-|------|------|------|
-| `frontend/src/` | 사용자 UI | 보드/리스트/상세 화면 |
-| `src/api/` | HTTP 엔드포인트 | 인증, 태스크, 팀 API |
-| `src/domain/` | 핵심 비즈니스 로직 | 태스크 상태 전이, 의존 관계 |
-| `src/infra/` | DB/외부 연동 | Prisma, Redis, 메일 |
-| `tests/` | 통합/단위 테스트 | API와 도메인 검증 |
-
-## Runtime Map
-
-### Primary Flow
-1. 사용자가 `frontend/src/features/tasks/`에서 작업을 생성한다.
-2. 요청은 `src/api/routes/tasks.ts`로 들어간다.
-3. 비즈니스 로직은 `src/domain/task/TaskService.ts`에서 수행된다.
-4. 저장은 `src/infra/db/taskRepository.ts`가 담당한다.
-5. 후속 알림은 `src/infra/notifications/`로 전달된다.
-
-> 사용자 관점에서는 "작업 생성 -> API 처리 -> 도메인 규칙 적용 -> 저장 -> 알림" 순으로 이해하면 충분하다.
-
-## Component Index
-
-| 컴포넌트 | 책임 | 주요 경로 | 관련 스펙 |
-|---------|------|----------|----------|
-| Task API | 태스크 HTTP 계약 | `src/api/routes/tasks.ts` | `_sdd/spec/task-api.md` |
-| Task Domain | 상태 전이와 규칙 | `src/domain/task/` | `_sdd/spec/task-domain.md` |
-| Auth | 인증/권한 | `src/api/routes/auth.ts`, `src/domain/auth/` | `_sdd/spec/auth.md` |
-| Notifications | 메일/이벤트 알림 | `src/infra/notifications/` | `_sdd/spec/notifications.md` |
-
-## Component Overview
-
-- **Task Domain**
-  - 동작 개요: 태스크 생성, 상태 전이, 의존 관계 검증을 한곳에서 처리한다.
-  - 설계 의도: UI/API에서 규칙 중복을 막고 변경 지점을 한 곳으로 모으기 위함이다.
-- **Notifications**
-  - 동작 개요: 도메인 이벤트를 메일/알림 채널에 맞는 메시지로 변환해 전달한다.
-  - 설계 의도: 태스크 로직과 외부 전송 정책을 분리해 장애 전파 범위를 줄인다.
-
-## Current Status
-
-- **완료/진행/계획 요약**: 기본 CRUD, 댓글, 검색은 완료. 반복 작업과 의존 관계는 진행 중.
-- **현재 집중 영역**: 의존 관계 edge case와 권한 정책 정리
-- **주요 리스크**:
-  - 대량 태스크 조회 성능
-  - 토큰 갱신 UX
-  - 고급 권한 정책 테스트 부족
-
-## Common Change Paths
-
-### 새 태스크 필드 추가
-- 먼저 볼 곳: `src/domain/task/Task.ts`, `src/api/routes/tasks.ts`
-- 같이 확인할 곳: `frontend/src/features/tasks/`, `tests/api/tasks.test.ts`
-- 검증 포인트: API contract test, 프론트 폼 검증
-
-### 권한 정책 변경
-- 먼저 볼 곳: `src/domain/auth/Policy.ts`
-- 같이 확인할 곳: `src/api/middleware/auth.ts`, `tests/auth/`
-- 검증 포인트: role별 접근 테스트, 401/403 응답 확인
-
-### 알림 동작 수정
-- 먼저 볼 곳: `src/infra/notifications/`
-- 같이 확인할 곳: `src/domain/task/TaskService.ts`
-- 검증 포인트: 이벤트 발행 여부, 메일 큐 처리 로그
-
-## Risks / Improvements
-
-- 태스크 목록 조회에 pagination과 인덱스 전략이 더 필요하다.
-- 반복 작업 스케줄링 규칙이 문서상 일부만 정의되어 있다.
-- 프론트와 API 에러 응답 형식이 아직 완전히 표준화되지 않았다.
-
-## Open Questions
-
-- 반복 작업의 시간대 기준은 사용자별인지 워크스페이스별인지 확정이 필요하다.
-- 의존 관계가 순환될 때 UX와 API 에러 코드를 어떻게 통일할지 결정이 필요하다.
-
-## Quick Reference
-
-- **메인 스펙**: `_sdd/spec/main.md`
-- **컴포넌트 스펙**: `_sdd/spec/task-domain.md`, `_sdd/spec/auth.md`
-- **환경 문서**: `_sdd/env.md`
-- **구현 계획**: `_sdd/implementation/IMPLEMENTATION_PLAN.md`
-- **최신 구현 리뷰**: `_sdd/implementation/IMPLEMENTATION_REVIEW.md`
+More details: [`_sdd/spec/SUMMARY.md`](_sdd/spec/SUMMARY.md)
+<!-- spec-summary:end -->
+```

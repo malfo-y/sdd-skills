@@ -36,13 +36,6 @@ All 12 tasks have Target Files — parallel execution enabled.
 - Framework: pytest
 - Test location: tests/
 - Naming convention: test_*.py
-
-### Spec Context Loaded
-- Goal: 인증 시스템과 OAuth 로그인 지원
-- Runtime Map: 회원가입/로그인 요청이 auth routes → auth service → models/session 으로 흐름
-- Component Index: Auth Core, OAuth Module, Security Layer
-- Common Change Paths: 인증 규칙 변경은 `routes/auth.py`, `services/auth_service.py`, 관련 middleware 부터 확인
-- Initial Spec Sync Risk: `CONSIDER` 1건, `MUST update` 후보 1건
 ```
 
 ### Step 2: Initialize Task Tracking
@@ -234,11 +227,6 @@ Running all tests... 27 tests, ALL PASSING ✓
 | Unplanned dependencies | 0 |
 | Sub-agent failures | 0 |
 
-### Spec Sync Check
-- `MUST update`: refresh token 만료 정책이 Runtime Map/Change Paths 에 반영 필요
-- `CONSIDER`: rate limiter 디버깅 포인트를 Usage Examples 에 추가할 가치 있음
-- `NO update`: bcrypt 내부 리팩터링은 spec sync 불필요
-
 All Phase 1 tasks complete. Running Phase Review...
 ```
 
@@ -333,21 +321,11 @@ Claude:
 |---|----------|-------------|--------|
 | 1 | Quality | Rate limiter raw string format | Documented |
 
-#### Spec Sync Candidates
-| Item | Classification | Why | Recommended Action |
-|------|----------------|-----|--------------------|
-| Refresh token policy | MUST update | 운영/변경 경로에 영향 | spec-update-done |
-| Rate limiter debugging notes | CONSIDER | 반복 디버깅 포인트 | spec-update-done |
-| Internal bcrypt refactor | NO update | 탐색성/계약 변화 없음 | none |
-
 ### Conclusion
 READY — All tasks complete with full test coverage. 1 quality item documented.
 98 tests passing. Parallel execution achieved ~2.5x speedup.
 
 Saved to: _sdd/implementation/IMPLEMENTATION_REPORT.md
-
-### Recommended Spec Action
-Run `spec-update-done` to sync Runtime Map and Common Change Paths.
 ```
 
 ## Key Parallel Patterns Demonstrated

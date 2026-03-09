@@ -40,14 +40,6 @@ In a single conversation, it collects requirements and simultaneously generates 
 5. **spec-update-todo compatible**: Part 1 must follow the "Spec Update Input" format so it can be directly used as input for `spec-update-todo`.
 6. **Target Files required**: Every task in Part 2 MUST include a `**Target Files**` field.
 7. **[TBD] 허용**: Target Files에서 경로 미결정 시 `[TBD] <reason>` 마커를 사용할 수 있다.
-8. **앵커 인식 드래프팅**: Part 1의 Target Section은 SDD 앵커 섹션을 참조해야 한다:
-   - `Goal`, `Architecture Overview`, `Component Details`, `Environment & Dependencies`, `Identified Issues & Improvements`, `Usage Examples`, `Open Questions`
-9. **실제 경로 우선**: 주요 컴포넌트와 변경 포인트에는 추상적 표현 대신 실제 파일/디렉토리 경로를 사용한다.
-10. **스펙 갱신 기준 적용**: Part 1 작성 전 각 변경 항목을 아래 기준으로 분류한다:
-    - **MUST update**: 스펙과 코드가 불일치하여 오해 위험이 있는 경우 → Part 1에 포함
-    - **CONSIDER**: 보완하면 이해도가 높아지는 경우 → Part 1에 포함, 우선순위 표시
-    - **NO update**: 구현 세부사항 → Part 1에서 제외, Notes에 기록
-11. **결정 로그 후보만 기록**: 설계 결정의 rationale은 드래프트의 `Decision-Log Candidates`에 기록하고, `DECISION_LOG.md`에 직접 쓰지 않는다.
 
 ## Input Sources
 
@@ -304,9 +296,6 @@ Part 1의 시작과 끝에 호환성 마커를 포함한다:
 ### New Component: [component name]
 **Target Section**: `_sdd/spec/xxx.md` > `Component Details`
 **Purpose**: [purpose]
-**Overview**:
-- 동작 개요: [이 컴포넌트가 어떻게 동작하는지 간결한 설명]
-- 설계 의도: [왜 이 컴포넌트가 필요한지, 어떤 문제를 해결하는지]
 **Input**: [input]
 **Output**: [output]
 **Planned Methods**:

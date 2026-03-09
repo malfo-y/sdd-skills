@@ -1,23 +1,21 @@
 ---
 name: implementation-plan
 description: This skill should be used when the user asks to "create an implementation plan", "plan the implementation", "break down this spec", "create a development roadmap", "analyze requirements and create tasks", "create a parallel implementation plan", "plan parallel implementation", "병렬 구현 계획", "create parallel development roadmap", or wants a structured implementation plan with Target Files for parallel execution support.
-version: 1.3.0
+version: 1.0.0
 ---
 
 # Implementation Plan Creation (Parallel-Ready)
+
+> **Workflow Note**: In the simplified 4-step workflow, `feature-draft` is the default
+> when you want requirement clarification + spec patch drafting + planning in one run.
+> Use this skill when planning should be executed as a standalone step.
 
 Create structured, actionable implementation plans from user specifications — with **Target Files** on every task to enable parallel execution via `implementation`.
 
 ## Hard Rule: Spec Documents Are Read-Only
 
 - This skill may **read** the spec as input, but it **MUST NOT** modify any files under `_sdd/spec/`.
-- Read the spec as a navigation map first: `Goal`, `Architecture Overview` (`Repository Map`, `Runtime Map`), `Component Details` (`Component Index`, `Overview`), `Open Questions`를 우선 추출한다.
-- If the plan reveals missing or outdated spec information, classify it as:
-  - `MUST update`: planning depends on missing behavior, boundary, flow, ownership, or environment context
-  - `CONSIDER`: planning can proceed, but later spec sync will likely be needed
-  - `NO update`: implementation planning is unaffected
-- If a `MUST update` spec gap blocks safe planning, record it under `Spec Gaps` and recommend `spec-update-todo` before execution.
-- If planning can proceed, keep the gap in `Open Questions` / `Spec Gaps` and continue with deterministic defaults.
+- If you think the spec should change, capture it as **Open Questions / Spec gaps** in the plan and direct the user to `spec-update-todo`.
 
 ## Implementation spec
 
@@ -52,19 +50,12 @@ After processing `user_input.md`, rename it to `_processed_user_input.md` to mar
 
 **Tools**: `Read`, `Glob`, `rg`, `Bash`
 
-Read and analyze the provided specification as an exploration-first map:
+Read and analyze the provided specification thoroughly:
 
-- `Goal` → `Project Snapshot`, `Key Features`, `Non-Goals`
-- `Architecture Overview` → `System Boundary`, `Repository Map`, `Runtime Map` (사용자/운영자 관점 서술 포함 시 우선)
-- `Component Details` → `Component Index`, `Overview`
-- `Usage Examples` → `Common Change Paths` (있으면)
-- `Open Questions`
-
-Then derive:
 - **Core Requirements**: What must the system do?
 - **Technical Constraints**: Languages, frameworks, integrations, performance requirements
 - **Scope Boundaries**: What is explicitly in/out of scope?
-- **Spec Gaps**: What information is missing from the spec but needed for planning? 특히 런타임 흐름 설명, 컴포넌트 동작 개요, 설계 의도 누락을 확인한다.
+- **Success Criteria**: How will completion be measured?
 - **Unknowns/Risks**: What needs clarification or research?
 
 If the specification is unclear or incomplete:
@@ -102,7 +93,6 @@ ELSE → 미파악 항목 추가 분석 후 재평가
 
 Break the system into logical components:
 
-- Start from the spec's `Component Index` and `Overview` when available
 - Group related functionality into modules
 - Identify shared utilities and common patterns
 - Note external dependencies and integrations
@@ -290,13 +280,6 @@ Present the final plan in this structure:
 1. **[Component Name]**: [Brief description]
 2. **[Component Name]**: [Brief description]
 
-## Spec Inputs Used
-- **Goal**: [key feature / scope note]
-- **Runtime Map**: [relevant flow + user-facing scenario]
-- **Component Index**: [relevant component/path]
-- **Component Overview**: [relevant behavior / design intent]
-- **Common Change Paths**: [if relevant]
-
 ## Implementation Phases
 
 ### Phase 1: [Foundation/Setup]
@@ -326,12 +309,6 @@ Present the final plan in this structure:
 |------|--------|------------|
 | ...  | ...    | ...        |
 
-## Spec Gaps
-- [ ] [planning에 영향 있는 spec gap]
-
-## Expected Spec Sync Follow-ups
-- `MUST update` / `CONSIDER`: [section] - [why]
-
 ## Open Questions
 - [ ] [Question requiring clarification]
 
@@ -342,7 +319,6 @@ Present the final plan in this structure:
 ## Best Practices
 
 - **Be Specific**: Vague tasks lead to scope creep
-- **Spec-aware planning**: derive tasks from `Key Features`, `Runtime Map`, `Component Index`, `Overview`, and real paths
 - **Include Infrastructure**: Don't forget CI/CD, environments, tooling
 - **Plan for Testing**: Include unit, integration, and E2E test tasks
 - **Consider Operations**: Monitoring, logging, deployment procedures

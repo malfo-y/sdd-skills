@@ -16,16 +16,10 @@ version: 1.0.0
 
 Create structured, actionable implementation plans from user specifications — with **Target Files** on every task to enable parallel execution via `implementation`.
 
-## Hard Rules
+## Hard Rule: Spec Documents Are Read-Only
 
-1. This skill may **read** the spec as input, but it **MUST NOT** modify any files under `_sdd/spec/`.
-2. If you think the spec should change, capture it as **Open Questions / Spec gaps** in the plan and direct the user to `spec-update-todo`.
-3. 스펙과 코드 사이의 갭을 발견하면 아래 기준으로 분류한다:
-   - **MUST update**: 스펙과 코드가 불일치하여 스펙을 읽는 사람이 오해할 위험이 있는 경우
-   - **CONSIDER**: 스펙이 틀리진 않지만 보완하면 이해도가 높아지는 경우
-   - **NO update**: 구현 세부사항이라 스펙에 반영할 필요 없는 경우
-4. 갭 보고 시 영향받는 **앵커 섹션**을 명시한다:
-   - `Goal`, `Architecture Overview`, `Component Details`, `Environment & Dependencies`, `Identified Issues`, `Usage Examples`, `Open Questions`
+- This skill may **read** the spec as input, but it **MUST NOT** modify any files under `_sdd/spec/`.
+- If you think the spec should change, capture it as **Open Questions / Spec gaps** in the plan and direct the user to `spec-update-todo`.
 
 ## Implementation spec
 

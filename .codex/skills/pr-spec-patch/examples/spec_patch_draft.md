@@ -1,170 +1,207 @@
 # PR Spec Patch Draft
 
-**Date**: 2026-03-09
+**Date**: 2026-02-06
 **PR**: #42 - 사용자 인증 시스템 구현 및 세션 관리 버그 수정
 **PR Author**: developer-kim
 **PR URL**: https://github.com/example/project/pull/42
-**Baseline Spec**: `_sdd/spec/main.md`
-**Status**: Draft
+**Target Spec**: project-api.md
+**Status**: 초안
 
-> 이 파일은 스펙 자체가 아니라 스펙 반영 초안이다. 실제 반영은 `/spec-update-todo` 또는 구현 완료 후 `/spec-update-done`로 진행한다.
+> **중요**: `pr-spec-patch`는 `_sdd/spec/` 스펙을 직접 수정하지 않습니다. 이 파일(`_sdd/pr/spec_patch_draft.md`)은 **초안**만 생성하며, 스펙 반영은 `/spec-update-todo`로 진행합니다.
 
-## PR Summary
+---
 
-- 새 JWT 인증 플로우 추가
-- 인증 미들웨어 도입
-- 세션 갱신 버그 수정
-- 관련 환경변수와 에러 응답 형식 일부 변경
+## PR 요약
 
-## Exploration-First Spec Impact
+**브랜치**: feature/auth-system → main
+**변경 규모**: +847 -123, 12개 파일
+**주요 변경사항**:
+- JWT 기반 사용자 인증 시스템 신규 구현
+- 로그인/회원가입 API 엔드포인트 추가
+- 세션 만료 시 토큰 갱신 로직 버그 수정
+- 인증 미들웨어 추가로 보호된 라우트 구현
+- 비밀번호 해싱 유틸리티 추가
 
-| 영역 | 반영 필요 | 이유 |
-|------|-----------|------|
-| `Goal` | 예 | 인증 기능이 핵심 기능으로 승격됨 |
-| `Architecture Overview > Runtime Map` | 예 | 로그인/토큰 갱신 플로우가 추가됨 |
-| `Component Details > Component Index` | 예 | Auth 관련 컴포넌트와 경로가 늘어남 |
-| `Component Details > Overview` | 예 | Auth 서비스와 middleware 분리 이유, 세션/토큰 책임 설명이 바뀜 |
-| `Usage Examples > Common Change Paths` | 예 | 인증 정책 변경 시 시작 지점이 생김 |
-| `Open Questions` | 예 | 토큰 만료 정책과 CORS 범위 확정 필요 |
+---
 
-## Spec Update Classification
+## 스펙 패치 내용
 
-- `MUST update`: 3
-- `CONSIDER`: 1
-- `NO update`: 1
+<!-- spec-update-todo의 "Spec Update Input" 형식과 호환 -->
 
-## Spec Update Input
+### New Features
 
-### Item 1
-- **Change Type**: Feature
-- **Spec Update Classification**: `MUST update`
-- **Target Section**: `Goal > Key Features`
-- **Target File**: `_sdd/spec/main.md`
-- **Affected Components**: `Auth API`, `Auth Domain`
-- **Related Paths / Symbols**:
-  - `src/routes/auth.py`
-  - `src/services/auth_service.py`
-  - `AuthService`
-- **Current State**: 메인 스펙에는 기본 세션 인증만 간단히 언급되어 있다.
-- **Proposed Spec Update**: JWT 기반 로그인, 회원가입, 토큰 갱신, 로그아웃을 핵심 기능으로 명시한다.
-- **Risks / Invariants**:
-  - 리프레시 토큰 무효화 규칙을 함께 적어야 함
-  - 비밀번호 해싱이 bcrypt라는 점을 불변 조건으로 남길지 검토 필요
-- **Test / Observability Notes**:
-  - `tests/test_auth_routes.py`
-  - `tests/test_refresh_token.py`
-- **PR Evidence**:
-  - `src/routes/auth.py:1`
-  - `src/services/auth_service.py:1`
+#### Feature: JWT 기반 사용자 인증
+**Priority**: High
+**Category**: Core Feature
+**Target Component**: auth_service.py
+**Source**: PR #42
 
-### Item 2
-- **Change Type**: Architecture Update
-- **Spec Update Classification**: `MUST update`
-- **Target Section**: `Architecture Overview > Runtime Map`
-- **Target File**: `_sdd/spec/main.md`
-- **Affected Components**: `Auth Middleware`
-- **Related Paths / Symbols**:
-  - `src/middleware/auth.py`
-  - `require_auth`
-- **Current State**: 요청 인증 흐름이 메인 스펙의 런타임 맵에 없다.
-- **Proposed Spec Update**: 보호된 요청이 `Bearer token 추출 -> 토큰 검증 -> 사용자 컨텍스트 주입 -> 핸들러 실행` 순서로 흐른다는 점을 추가한다.
-- **Risks / Invariants**:
-  - 401/403 경계가 명확해야 함
-- **Test / Observability Notes**:
-  - 인증 실패 로그 위치 확인 필요
-- **PR Evidence**:
-  - `src/middleware/auth.py:12`
+**Description**:
+JWT(JSON Web Token) 기반의 사용자 인증 시스템. 액세스 토큰과 리프레시 토큰을 사용한 이중 토큰 방식 구현. 토큰 만료 시 리프레시 토큰으로 자동 갱신 지원.
 
-### Item 3
-- **Change Type**: Component Update
-- **Spec Update Classification**: `MUST update`
-- **Target Section**: `Component Details > Component Index`
-- **Target File**: `_sdd/spec/auth.md`
-- **Affected Components**: `Auth API`, `Session Service`
-- **Related Paths / Symbols**:
-  - `src/services/session_service.py`
-  - `src/utils/password.py`
-- **Current State**: `auth.md`에 세션 서비스만 있고 JWT 관련 경로가 빠져 있다.
-- **Proposed Spec Update**: 소유 경로, 핵심 심볼, 토큰 검증 책임을 추가한다.
-- **Risks / Invariants**:
-  - 세션 만료와 토큰 갱신의 관계를 명시해야 함
-- **Test / Observability Notes**:
-  - `test_refresh_expired_session`
-- **PR Evidence**:
-  - `src/services/session_service.py:89`
-  - `src/utils/password.py:8`
+**Acceptance Criteria**:
+- [ ] 이메일/비밀번호 기반 회원가입
+- [ ] 로그인 시 JWT 액세스 토큰 + 리프레시 토큰 발급
+- [ ] 액세스 토큰 만료 시 리프레시 토큰으로 갱신
+- [ ] 로그아웃 시 리프레시 토큰 무효화
+- [ ] 비밀번호 bcrypt 해싱
 
-### Item 4
-- **Change Type**: Component Update
-- **Spec Update Classification**: `MUST update`
-- **Target Section**: `Component Details > Overview`
-- **Target File**: `_sdd/spec/auth.md`
-- **Affected Components**: `Auth API`, `Auth Middleware`, `Session Service`
-- **Related Paths / Symbols**:
-  - `src/routes/auth.py`
-  - `src/middleware/auth.py`
-  - `src/services/session_service.py`
-- **Current State**: 컴포넌트 설명이 경로 중심이라, 세션 수명 관리와 middleware/service 분리 의도가 충분히 드러나지 않는다.
-- **Proposed Spec Update**: 로그인/토큰 검증/세션 갱신 책임이 어떻게 분리되는지와 why-context를 `Overview`에 추가한다.
-- **Risks / Invariants**:
-  - middleware는 인증 컨텍스트 주입까지만 담당하고 비즈니스 정책은 service에 둔다는 경계를 문서화해야 함
-- **Test / Observability Notes**:
-  - `tests/test_auth_routes.py`
-  - `tests/test_refresh_token.py`
-- **PR Evidence**:
-  - `src/middleware/auth.py:12`
-  - `src/services/session_service.py:89`
+**PR 근거**:
+- `src/services/auth_service.py:1-145` - AuthService 클래스 신규 구현
+- `src/routes/auth.py:1-89` - 인증 API 엔드포인트 (/login, /register, /refresh)
+- `src/utils/password.py:1-32` - 비밀번호 해싱 유틸리티
 
-### Item 5
-- **Change Type**: Change Guide Update
-- **Spec Update Classification**: `CONSIDER`
-- **Target Section**: `Usage Examples > Common Change Paths`
-- **Target File**: `_sdd/spec/main.md`
-- **Affected Components**: `Auth`
-- **Related Paths / Symbols**:
-  - `src/routes/auth.py`
-  - `src/middleware/auth.py`
-- **Current State**: 인증 정책 변경 시 어디부터 봐야 하는지 안내가 없다.
-- **Proposed Spec Update**: "권한/인증 정책 변경" 변경 경로를 추가한다.
-- **Risks / Invariants**:
-  - 환경변수와 토큰 만료 정책을 같이 확인해야 함
-- **Test / Observability Notes**:
-  - `tests/auth/`
-- **PR Evidence**:
-  - `src/routes/auth.py:25`
-  - `src/middleware/auth.py:12`
+---
 
-### Item 6
-- **Change Type**: Refactor
-- **Spec Update Classification**: `NO update`
-- **Target Section**: `Target Section TBD`
-- **Target File**: -
-- **Affected Components**: `Password Utility`
-- **Related Paths / Symbols**:
-  - `src/utils/password.py`
-- **Current State**: 내부 helper 분리만 일어났다.
-- **Proposed Spec Update**: 없음. 탐색성과 계약 변화가 없다.
-- **Risks / Invariants**:
-  - bcrypt 사용 invariant는 기존과 동일
-- **Test / Observability Notes**:
-  - `tests/test_password_utils.py`
-- **PR Evidence**:
-  - `src/utils/password.py:1`
+#### Feature: 인증 미들웨어
+**Priority**: High
+**Category**: Core Feature
+**Target Component**: middleware/auth.py
+**Source**: PR #42
 
-## Open Questions
+**Description**:
+보호된 API 라우트에 인증을 적용하는 미들웨어. 요청 헤더의 Bearer 토큰을 검증하고 사용자 정보를 요청 컨텍스트에 주입.
 
-1. 토큰 만료 시간과 갱신 정책을 메인 스펙에 둘지 `auth.md`에만 둘지 결정 필요
-2. CORS 설정 변경도 `Environment & Dependencies`에 반영해야 하는지 확인 필요
-3. `Auth Middleware`의 책임 경계를 메인 스펙 요약에 둘지 `auth.md` `Overview`에만 둘지 결정 필요
+**Acceptance Criteria**:
+- [ ] Authorization 헤더에서 Bearer 토큰 추출
+- [ ] 토큰 유효성 검증 (서명, 만료)
+- [ ] 인증 실패 시 401 응답
+- [ ] 인증된 사용자 정보를 요청 컨텍스트에 주입
 
-## Decision-Log Candidates
+**PR 근거**:
+- `src/middleware/auth.py:1-67` - 인증 미들웨어 구현
+- `src/routes/protected.py:12-15` - 미들웨어 적용 예시
 
-1. JWT 기반 인증을 canonical auth flow로 승격
-   - Why: 앞으로 인증 관련 변경 시작점이 middleware/service 중심으로 이동함
-   - Evidence: `src/routes/auth.py:1`, `src/middleware/auth.py:12`
+---
 
-## Next Recommended Actions
+### Improvements
 
-1. `/pr-review`로 acceptance criteria와 문서 영향 검증
-2. 머지 전 스펙 패치 초안 정리
-3. 머지 후 `/spec-update-done`으로 실제 스펙 동기화
+#### Improvement: API 에러 응답 표준화
+**Priority**: Medium
+**Current State**: 엔드포인트별 다른 에러 응답 형식
+**Proposed**: 통일된 에러 응답 스키마 (code, message, details)
+**Reason**: 인증 에러를 포함한 모든 API 에러의 일관된 처리
+**Source**: PR #42
+
+**PR 근거**:
+- `src/utils/errors.py:1-45` - 표준 에러 응답 클래스 추가
+- `src/routes/auth.py:34,56,78` - 표준 에러 응답 사용
+
+---
+
+### Bug Reports
+
+#### Bug Fix: 세션 만료 시 토큰 갱신 실패
+**Severity**: High
+**Location**: src/services/session_service.py:89
+**Source**: PR #42
+
+**Description**:
+세션이 만료된 후 리프레시 토큰으로 새 액세스 토큰을 요청할 때, 세션 상태 확인 로직이 만료된 세션을 유효하지 않은 것으로 처리하여 갱신이 실패하는 버그.
+
+**Fix Approach**:
+세션 만료 상태와 토큰 유효성을 분리하여 검증. 세션이 만료되었더라도 리프레시 토큰이 유효하면 새 세션 생성 허용.
+
+**PR 근거**:
+- `src/services/session_service.py:89-102` - 세션 검증 로직 수정
+- `tests/test_session_service.py:45-78` - 관련 테스트 추가
+
+---
+
+### Component Changes
+
+#### New Component: AuthService
+**Purpose**: 사용자 인증 및 토큰 관리
+**Input**: 사용자 자격 증명 (이메일, 비밀번호), 토큰
+**Output**: JWT 토큰 쌍, 사용자 정보, 인증 결과
+**Source**: PR #42
+
+**Planned Methods**:
+- `register(email, password)` - 사용자 등록
+- `login(email, password)` - 로그인 및 토큰 발급
+- `refresh_token(refresh_token)` - 액세스 토큰 갱신
+- `logout(refresh_token)` - 로그아웃 (토큰 무효화)
+- `verify_token(token)` - 토큰 검증
+
+#### Update Component: SessionService
+**Change Type**: Fix
+**Source**: PR #42
+
+**Changes**:
+- 세션 만료 상태와 토큰 유효성 분리 검증
+- `validate_session()` 메서드에 `allow_expired` 파라미터 추가
+
+---
+
+### Configuration Changes
+
+#### New Config: JWT_SECRET_KEY
+**Type**: Environment Variable
+**Required**: Yes
+**Default**: None (필수 설정)
+**Description**: JWT 토큰 서명에 사용되는 비밀 키
+**Source**: PR #42
+
+#### New Config: JWT_ACCESS_TOKEN_EXPIRE_MINUTES
+**Type**: Environment Variable
+**Required**: No
+**Default**: 30
+**Description**: 액세스 토큰 만료 시간 (분)
+**Source**: PR #42
+
+#### New Config: JWT_REFRESH_TOKEN_EXPIRE_DAYS
+**Type**: Environment Variable
+**Required**: No
+**Default**: 7
+**Description**: 리프레시 토큰 만료 시간 (일)
+**Source**: PR #42
+
+---
+
+### Notes
+
+#### Context
+사용자 인증은 프로젝트 로드맵의 Phase 2 핵심 기능으로, 이후 역할 기반 접근 제어(RBAC) 구현의 기반이 됨.
+
+#### Constraints
+- JWT 비밀 키는 환경 변수로만 관리 (코드에 하드코딩 금지)
+- 리프레시 토큰은 데이터베이스에 저장하여 무효화 가능하도록 설계
+
+---
+
+## 질문 및 제안
+
+### 확인 필요 사항
+
+1. **[섹션: 보안 고려사항]** 리프레시 토큰 저장 방식이 스펙에 명시되어 있지 않습니다. 현재 구현은 데이터베이스 저장 방식인데, Redis 기반 저장도 고려해야 하나요?
+   - 맥락: PR에서 PostgreSQL에 리프레시 토큰을 저장하지만, 대규모 사용자 환경에서 Redis가 더 적합할 수 있음
+   - 제안: 현재 PostgreSQL 방식 유지, 추후 성능 이슈 발생 시 Redis 전환 검토
+
+2. **[섹션: API 레퍼런스]** 토큰 갱신 엔드포인트(`/auth/refresh`)의 응답에 사용자 정보를 포함해야 하는지 스펙에 미정의됨
+   - 맥락: 현재 구현은 새 토큰만 반환하지만, 프론트엔드에서 사용자 정보도 필요할 수 있음
+   - 제안: 토큰만 반환하는 현재 방식 유지 (사용자 정보는 별도 `/me` 엔드포인트 사용)
+
+3. **[섹션: 목표 > 주요 기능]** 비밀번호 재설정 기능이 이 PR에 포함되지 않았습니다. 별도 PR로 구현 예정인가요?
+   - 맥락: 인증 시스템의 완성도를 위해 비밀번호 재설정은 필수 기능
+   - 제안: 별도 PR로 구현하고, 스펙에 📋 계획됨으로 추가
+
+### 스펙 갭
+
+| # | 설명 | 스펙 섹션 | PR 근거 | 제안 |
+|---|------|----------|---------|------|
+| 1 | API 에러 응답 표준 스키마가 스펙에 미정의 | API 레퍼런스 | `src/utils/errors.py:1-45` | 에러 응답 스키마 섹션 추가 |
+| 2 | 인증 미들웨어 적용 라우트 목록이 스펙에 미정의 | 컴포넌트 상세 | `src/middleware/auth.py:1-67` | 보호된 엔드포인트 목록 섹션 추가 |
+
+### 모호한 사항
+
+- 소셜 로그인(OAuth) 지원 여부가 스펙에서 불명확. 현재 PR은 이메일/비밀번호만 지원.
+- 동시 로그인 세션 수 제한 정책이 정의되지 않음. 현재 구현은 무제한 세션 허용.
+
+---
+
+## 메타데이터
+
+**생성일**: 2026-02-06 14:30
+**스펙 버전**: 1.2.0
+**PR 커밋**: abc1234
+**대화 라운드**: 1

@@ -1,257 +1,469 @@
 # Complex Project Spec Example
 
-Use this example for a large project where the main spec acts as an index and
-component files would usually hold the deeper details.
+Use this template for larger projects with multiple components, integrations, and teams.
 
 ---
 
 # E-Commerce Platform
 
-> 상품 탐색, 주문, 결제를 처리하는 멀티서비스 전자상거래 플랫폼
+**Version**: 2.0.0
+**Last Updated**: 2024-01-15
+**Status**: In Development
 
 ## Goal
 
-### Project Snapshot
-- 사용자가 상품을 탐색하고 주문을 생성하며 결제를 완료할 수 있게 한다.
-- 운영자는 카탈로그, 주문 상태, 결제 이슈를 관리한다.
-- 여러 서비스가 분리되어 있지만 main spec에서 전체 흐름을 빠르게 파악할 수 있어야 한다.
+Build a scalable e-commerce platform supporting multi-vendor marketplace operations with real-time inventory, order management, and payment processing.
 
 ### Key Features
-1. 상품 카탈로그 조회와 검색
-2. 장바구니 및 주문 생성
-3. 결제 승인과 실패 처리
-4. 재고 차감 및 주문 상태 전이
-5. 운영자용 주문/환불 관리
+1. Multi-vendor marketplace with vendor onboarding
+2. Real-time inventory synchronization
+3. Multi-currency payment processing
+4. Order lifecycle management
+5. Customer reviews and ratings
+6. Search with faceted filtering
+7. Recommendation engine
+8. Admin dashboard
 
-### Target Users / Use Cases
-| 사용자 | 사용 사례 | 우선순위 |
-|--------|-----------|----------|
-| 구매자 | 상품 탐색, 주문, 결제 | High |
-| 운영자 | 주문 문제 처리, 환불, 재고 확인 | High |
-| 내부 개발자 | 서비스별 기능 확장 | Medium |
+### Target Users
+
+| User Type | Use Case |
+|-----------|----------|
+| Customers | Browse, purchase, track orders |
+| Vendors | List products, manage inventory, fulfill orders |
+| Admins | Platform management, analytics, support |
 
 ### Success Criteria
-- [ ] 주문 생성부터 결제 완료까지의 주요 흐름이 문서에서 한 번에 보인다.
-- [ ] 신규 기능 담당자가 관련 서비스 시작 지점을 찾을 수 있다.
-- [ ] 주문 상태 전이와 재고 차감 계약이 문서에 명시된다.
+- [ ] Handle 10,000 concurrent users
+- [ ] 99.9% uptime SLA
+- [ ] <200ms API response time (p95)
+- [ ] PCI-DSS compliance for payments
 
-### Non-Goals (Out of Scope)
-- 마켓플레이스 셀러 정산
-- 개인화 추천 모델 설명
+### Non-Goals
+- Physical store POS integration
+- B2B wholesale features
+- Subscription/recurring billing
 
 ## Architecture Overview
 
-### System Boundary
-| In Scope | Out of Scope | Notes |
-|----------|--------------|-------|
-| 상품, 주문, 결제, 재고, 운영자 워크플로우 | 외부 PG 내부 동작, 물류 시스템 구현 | 외부 시스템과의 계약만 문서화 |
+### System Diagram
 
-### Repository Map
-| 경로 | 역할 | 변경 시 왜 중요한가 |
-|------|------|--------------------|
-| `services/catalog/` | 상품 조회와 검색 | 검색/정렬 변경 시작점 |
-| `services/order/` | 주문 생성과 상태 전이 | 비즈니스 규칙 핵심 |
-| `services/payment/` | 결제 승인/실패 처리 | 외부 PG 계약과 연결 |
-| `services/inventory/` | 재고 예약과 차감 | 주문 성공 조건과 연결 |
-| `libs/contracts/` | 서비스 간 DTO/이벤트 | 계약 변경 영향 범위 큼 |
-| `ops/` | 배포/운영 스크립트 | 장애 대응과 운영 흐름 |
-| `tests/` | 통합/E2E 검증 | 회귀 검증 기준 |
-
-### Runtime Map
-
-#### Primary Flow
-```text
-Buyer -> API Gateway -> Catalog -> Order -> Payment -> Inventory -> Order status update
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                          Client Layer                                │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐              │
+│  │   Web App    │  │  Mobile App  │  │  Vendor App  │              │
+│  │   (React)    │  │   (React     │  │   (React)    │              │
+│  │              │  │    Native)   │  │              │              │
+│  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘              │
+└─────────┼─────────────────┼─────────────────┼───────────────────────┘
+          │                 │                 │
+          └─────────────────┼─────────────────┘
+                            │
+┌───────────────────────────┼─────────────────────────────────────────┐
+│                           ▼                                          │
+│  ┌─────────────────────────────────────────────────────┐            │
+│  │              API Gateway (Kong)                      │            │
+│  │    Rate Limiting │ Auth │ Load Balancing            │            │
+│  └─────────────────────────────────────────────────────┘            │
+│                           │                                          │
+│            ┌──────────────┼──────────────┐                          │
+│            ▼              ▼              ▼                          │
+│     ┌────────────┐ ┌────────────┐ ┌────────────┐                   │
+│     │  Product   │ │   Order    │ │   User     │                   │
+│     │  Service   │ │  Service   │ │  Service   │                   │
+│     │  (Python)  │ │  (Python)  │ │  (Python)  │                   │
+│     └─────┬──────┘ └─────┬──────┘ └─────┬──────┘                   │
+│           │              │              │                           │
+│     ┌─────┴──────┐ ┌─────┴──────┐ ┌─────┴──────┐                   │
+│     │  Payment   │ │ Inventory  │ │Notification│                   │
+│     │  Service   │ │  Service   │ │  Service   │                   │
+│     │  (Python)  │ │  (Python)  │ │  (Python)  │                   │
+│     └────────────┘ └────────────┘ └────────────┘                   │
+└─────────────────────────────────────────────────────────────────────┘
+                            │
+┌───────────────────────────┼─────────────────────────────────────────┐
+│                           ▼                                          │
+│  ┌────────────┐  ┌────────────┐  ┌────────────┐  ┌────────────┐   │
+│  │ PostgreSQL │  │   Redis    │  │Elasticsearch│ │    S3      │   │
+│  │  (Orders,  │  │  (Cache,   │  │  (Search)   │ │  (Media)   │   │
+│  │   Users)   │  │  Sessions) │  │             │ │            │   │
+│  └────────────┘  └────────────┘  └────────────┘  └────────────┘   │
+│                                                                      │
+│  ┌────────────┐  ┌────────────┐                                     │
+│  │   Kafka    │  │ TimescaleDB│                                     │
+│  │  (Events)  │  │ (Analytics)│                                     │
+│  └────────────┘  └────────────┘                                     │
+└─────────────────────────────────────────────────────────────────────┘
 ```
 
-#### User-Facing Scenario
-- 구매자는 상품 탐색 후 주문을 생성하고 결제를 시도한다.
-- 주문 서비스는 결제와 재고 결과를 받아 상태를 갱신하고, 운영자는 주문 상태 전이와 실패 원인을 추적한다.
-- 실패 시 결제/재고 이벤트와 보상 로직을 함께 확인해야 하므로 운영 흐름도 메인 스펙에서 바로 보이도록 유지한다.
+### Service Communication
 
-#### Secondary / Batch Flows
-- 결제 실패 재시도 작업이 스케줄러에서 실행된다.
-- 재고 정합성 점검 배치가 주기적으로 실행된다.
-- 주문 상태 변경 이벤트가 운영자 알림으로 전달된다.
+| Source | Destination | Protocol | Purpose |
+|--------|-------------|----------|---------|
+| Gateway | All Services | REST/gRPC | API requests |
+| Services | Kafka | Async | Event publishing |
+| Services | Redis | TCP | Caching, sessions |
+| Order | Payment | gRPC | Payment processing |
 
 ### Technology Stack
-| Layer | Technology | Purpose |
-|-------|------------|---------|
-| Services | Python / FastAPI | 서비스 구현 |
-| Messaging | Kafka | 이벤트 전달 |
-| Storage | PostgreSQL | 주문/카탈로그 저장 |
-| Cache | Redis | 조회 성능 및 세션 |
-| Operations | Kubernetes | 배포 및 운영 |
 
-### Cross-Cutting Invariants
-- 주문은 결제가 승인되기 전 `paid` 상태가 되면 안 된다.
-- 재고 차감은 주문 승인 흐름과 원자적으로 맞물려야 한다.
-- 서비스 간 이벤트 스키마는 `libs/contracts/`와 일치해야 한다.
+| Layer | Technology | Version | Purpose |
+|-------|------------|---------|---------|
+| Frontend | React | 18.x | Web application |
+| Mobile | React Native | 0.72 | iOS/Android apps |
+| Gateway | Kong | 3.x | API management |
+| Backend | Python/FastAPI | 3.11/0.100 | Microservices |
+| Database | PostgreSQL | 15 | Primary data store |
+| Cache | Redis | 7.x | Caching, sessions |
+| Search | Elasticsearch | 8.x | Product search |
+| Queue | Kafka | 3.x | Event streaming |
+| Storage | S3 | - | Media files |
 
 ## Component Details
 
-### Component Index
-| 컴포넌트 | 책임 | 주요 경로 | 핵심 심볼 / 진입점 | 관련 스펙 |
-|---------|------|----------|--------------------|----------|
-| Catalog | 상품 조회/검색 | `services/catalog/` | `catalog_router`, `CatalogService` | `catalog.md` |
-| Order | 주문 생성/상태 전이 | `services/order/` | `OrderService`, `OrderStateMachine` | `order.md` |
-| Payment | 결제 승인/실패 처리 | `services/payment/` | `PaymentService`, `PGClient` | `payment.md` |
-| Inventory | 재고 예약/차감 | `services/inventory/` | `InventoryService` | `inventory.md` |
-| Shared Contracts | DTO/이벤트 정의 | `libs/contracts/` | `OrderCreated`, `PaymentApproved` | main only |
-
-### Component: Order
-
-#### Responsibility
-- 주문 생성, 상태 전이, 주문 조회를 담당한다.
-- 결제 결과와 재고 결과를 받아 최종 상태를 확정한다.
+### Component: Product Service
 
 #### Overview
-**동작 개요**
-- 주문 생성 요청을 받아 상태 머신 규칙에 맞는 초기 주문을 만든 뒤, 결제/재고 이벤트를 소비해 최종 상태를 확정한다.
-- 상태 전이 과정에서 이벤트 발행과 조회 API 응답이 같은 계약을 공유하도록 `libs/contracts/`와 함께 움직인다.
+Manages product catalog, categories, and vendor listings.
 
-**설계 의도**
-- 주문 상태 전이를 한곳에서 통제해 결제/재고 서비스와의 경계를 명확히 하고, 운영 장애 추적 시 시작점을 줄인다.
-- 상태 머신과 계약 정의를 분리해 이벤트 스키마 변화가 있어도 핵심 비즈니스 규칙을 독립적으로 검증할 수 있게 한다.
+#### Responsibilities
+- CRUD operations for products
+- Category management
+- Vendor product association
+- Price and inventory sync triggers
 
-#### Owned Paths
-- `services/order/app/`
-- `services/order/domain/`
-- `services/order/tests/`
-- `libs/contracts/order/`
+#### Interface
 
-#### Key Symbols / Entry Points
-- `OrderService.create_order()`
-- `OrderService.mark_paid()`
-- `OrderStateMachine.transition()`
-- `POST /orders`
+**Endpoints:**
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | /products | List products (paginated) |
+| POST | /products | Create product |
+| GET | /products/{id} | Get product details |
+| PUT | /products/{id} | Update product |
+| DELETE | /products/{id} | Delete product |
+| GET | /products/search | Search products |
+| POST | /products/{id}/images | Upload images |
 
-#### Interfaces / Contracts
-**Inputs**
-- 구매자 주문 요청
-- `PaymentApproved`, `PaymentFailed`
-- `InventoryReserved`, `InventoryRejected`
+**Events Published:**
+- `product.created` - New product added
+- `product.updated` - Product modified
+- `product.deleted` - Product removed
+- `product.price_changed` - Price update
 
-**Outputs**
-- 주문 레코드 생성
-- 주문 상태 변경 이벤트 발행
+#### Implementation Details
 
-**External Surfaces**
-- 주문 생성/조회 API
-- Kafka 주문 상태 이벤트
+**Key Files:**
+- `services/product/src/main.py` - FastAPI app
+- `services/product/src/models/` - SQLAlchemy models
+- `services/product/src/api/` - Route handlers
+- `services/product/src/events/` - Kafka publishers
+
+**Design Patterns:**
+- Repository pattern for data access
+- CQRS for read/write separation
+- Event sourcing for audit trail
 
 #### Dependencies
-| Dependency | Direction | Why it matters |
-|------------|-----------|----------------|
-| Catalog | upstream | 상품 정보 검증 |
-| Payment | downstream | 결제 결과에 따라 상태 전이 |
-| Inventory | downstream | 재고 확보 실패 시 주문 취소 |
-| `libs/contracts/` | shared | 이벤트/DTO 계약 유지 |
 
-#### Change Recipes
-##### 새로운 기능 추가
-- 주문 요청 필드를 추가하면 `libs/contracts/` -> API 스키마 -> `OrderService` -> 통합 테스트 순서로 본다.
+| Service | Type | Purpose |
+|---------|------|---------|
+| PostgreSQL | Database | Product storage |
+| Elasticsearch | Search | Full-text search |
+| S3 | Storage | Product images |
+| Kafka | Queue | Event publishing |
+| Inventory Service | Internal | Stock levels |
 
-##### 기존 동작 변경
-- 상태 전이 규칙을 바꾸면 `OrderStateMachine`과 결제/재고 이벤트 처리, 운영자 화면 의존성을 함께 본다.
+#### Error Handling
 
-##### 장애 추적
-- 주문이 `pending`에서 멈추면 상태 전이 로그, 결제 이벤트 소비 상태, 재고 이벤트 수신 여부를 순서대로 확인한다.
+| Error | HTTP | Handling |
+|-------|------|----------|
+| ProductNotFound | 404 | Return error with ID |
+| ValidationError | 400 | Return field errors |
+| DuplicateSKU | 409 | Conflict response |
 
-#### Tests / Observability
-- `services/order/tests/unit/`
-- `services/order/tests/integration/`
-- 주문 상태 전이 로그, 이벤트 컨슈머 lag, 실패 DLQ를 운영 지표로 본다.
+---
 
-#### Risks / Invariants
-- 중복 결제 승인 이벤트가 와도 주문 상태는 한 번만 확정되어야 한다.
-- 재고 실패 후 결제 성공 보상 로직이 누락되면 정합성이 깨진다.
+### Component: Order Service
 
-#### Known Issues
-- 주문 생성 API의 멱등성 정책이 문서로 완전히 정리되어 있지 않다.
-- 일부 운영자 수동 처리 흐름이 코드와 문서에서 분산되어 있다.
+#### Overview
+Handles order lifecycle from creation to fulfillment.
+
+#### Responsibilities
+- Order creation and validation
+- Payment orchestration
+- Fulfillment coordination
+- Refund processing
+
+#### Order State Machine
+
+```
+┌────────┐    ┌─────────┐    ┌───────────┐    ┌─────────┐
+│ Draft  │───▶│ Pending │───▶│ Confirmed │───▶│ Shipped │
+└────────┘    └─────────┘    └───────────┘    └─────────┘
+                  │                │               │
+                  ▼                ▼               ▼
+              ┌────────┐    ┌───────────┐   ┌───────────┐
+              │Cancelled│   │  Failed   │   │ Delivered │
+              └────────┘    └───────────┘   └───────────┘
+```
+
+#### Implementation Details
+
+**Saga Pattern for Order Creation:**
+1. Reserve inventory
+2. Process payment
+3. Confirm order
+4. Notify vendor
+5. (Compensate on failure)
+
+---
+
+### Component: Payment Service
+
+#### Overview
+PCI-DSS compliant payment processing with multiple gateway support.
+
+#### Supported Gateways
+- Stripe (primary)
+- PayPal
+- Local payment methods (region-specific)
+
+#### Security Measures
+- No card data stored (tokenization)
+- All PCI data in isolated subnet
+- Audit logging for all transactions
+- 3D Secure for high-risk transactions
+
+---
+
+## Data Models
+
+### Product
+
+```python
+class Product(Base):
+    __tablename__ = "products"
+
+    id: UUID = Column(UUID, primary_key=True)
+    vendor_id: UUID = Column(UUID, ForeignKey("vendors.id"))
+    sku: str = Column(String(50), unique=True)
+    name: str = Column(String(255))
+    description: str = Column(Text)
+    base_price: Decimal = Column(Numeric(10, 2))
+    currency: str = Column(String(3), default="USD")
+    status: str = Column(String(20))  # draft, active, archived
+    created_at: datetime = Column(DateTime, default=utcnow)
+    updated_at: datetime = Column(DateTime, onupdate=utcnow)
+
+    # Relationships
+    vendor: Vendor = relationship("Vendor")
+    categories: List[Category] = relationship(secondary="product_categories")
+    variants: List[ProductVariant] = relationship("ProductVariant")
+    images: List[ProductImage] = relationship("ProductImage")
+```
+
+### Order
+
+```python
+class Order(Base):
+    __tablename__ = "orders"
+
+    id: UUID = Column(UUID, primary_key=True)
+    customer_id: UUID = Column(UUID, ForeignKey("users.id"))
+    status: str = Column(String(20))
+    subtotal: Decimal = Column(Numeric(10, 2))
+    tax: Decimal = Column(Numeric(10, 2))
+    shipping: Decimal = Column(Numeric(10, 2))
+    total: Decimal = Column(Numeric(10, 2))
+    currency: str = Column(String(3))
+
+    # Relationships
+    items: List[OrderItem] = relationship("OrderItem")
+    shipping_address: Address = relationship("Address")
+    payments: List[Payment] = relationship("Payment")
+```
+
+---
 
 ## Environment & Dependencies
 
 ### Directory Structure
-```text
-ecommerce/
+
+```
+ecommerce-platform/
 ├── services/
-│   ├── catalog/
+│   ├── product/
+│   │   ├── src/
+│   │   ├── tests/
+│   │   ├── Dockerfile
+│   │   └── pyproject.toml
 │   ├── order/
+│   ├── user/
 │   ├── payment/
-│   └── inventory/
-├── libs/
-│   └── contracts/
-├── ops/
-└── tests/
+│   ├── inventory/
+│   └── notification/
+├── shared/
+│   ├── proto/           # gRPC definitions
+│   ├── events/          # Event schemas
+│   └── libs/            # Shared libraries
+├── infra/
+│   ├── k8s/             # Kubernetes manifests
+│   ├── terraform/       # Infrastructure as code
+│   └── docker-compose/  # Local development
+├── gateway/
+│   └── kong.yaml        # API gateway config
+└── docs/
+    └── api/             # OpenAPI specs
 ```
 
-### Runtime / Tooling
-- Python 3.11
-- Poetry
-- PostgreSQL
-- Redis
-- Kafka
-- Kubernetes
+### Environment Variables
 
-### Setup Commands
-```bash
-poetry install
-docker compose up -d postgres redis kafka
-make dev
-```
+| Variable | Service | Description |
+|----------|---------|-------------|
+| DATABASE_URL | All | PostgreSQL connection |
+| REDIS_URL | All | Redis connection |
+| KAFKA_BROKERS | All | Kafka broker list |
+| STRIPE_SECRET_KEY | Payment | Stripe API key |
+| AWS_ACCESS_KEY_ID | Product | S3 access |
+| ELASTICSEARCH_URL | Product | Search cluster |
 
-### Test Commands
-```bash
-make test-unit
-make test-integration
-make test-e2e
-```
-
-### Configuration / Secrets
-| 항목 | 필수 여부 | 설명 |
-|------|-----------|------|
-| `DATABASE_URL` | Yes | 주문/카탈로그 DB |
-| `KAFKA_BROKERS` | Yes | 이벤트 브로커 |
-| `PG_API_KEY` | Yes | 외부 PG 인증 |
-| `REDIS_URL` | Yes | 캐시/세션 |
+---
 
 ## Identified Issues & Improvements
 
-### Current Risks
-- [ ] 주문/결제/재고 간 보상 흐름이 한 문단에 요약되어 있지만 세부 runbook은 분리 필요하다.
-- [ ] 일부 이벤트 스키마 변경 이력이 `DECISION_LOG.md` 없이 PR에만 남아 있다.
+### Critical Bugs
+- [ ] **BUG-142**: Race condition in inventory reservation
+  - Location: `services/inventory/src/services/reservation.py:89`
+  - Impact: Overselling during flash sales
+  - Status: Fix in review
+
+### Code Quality
+- [ ] Inconsistent error response formats across services
+- [ ] Missing OpenTelemetry instrumentation in payment service
+- [ ] Test coverage below 70% in order service
+
+### Missing Features
+- [ ] Wishlist functionality
+- [ ] Product comparison
+- [ ] Multi-language support
+- [ ] Guest checkout
+
+### Performance
+- [ ] Add read replicas for product queries
+- [ ] Implement GraphQL for mobile app
+- [ ] Add CDN for product images
 
 ### Technical Debt
-- [ ] 서비스 간 계약 테스트가 부분적으로만 자동화되어 있다.
-- [ ] 운영자 수동 복구 절차가 `ops/`와 위키에 분산되어 있다.
+- [ ] Migrate from REST to gRPC for inter-service calls
+- [ ] Implement circuit breakers
+- [ ] Add distributed tracing
 
-### Missing Coverage / Unknowns
-- [ ] 주문 멱등성 정책의 서비스별 구현 차이가 완전히 정리되지 않았다.
-- [ ] PG 장애 시 재시도 한계와 운영 개입 기준이 명확하지 않다.
-
-### Planned Improvements
-- [ ] `order.md`, `payment.md`, `inventory.md`로 컴포넌트 스펙 분리
-- [ ] 공통 이벤트 계약과 상태 전이 표를 자동 생성
+---
 
 ## Usage Examples
 
-### Running the Project
+### Local Development
+
 ```bash
-make dev
+# Start all services
+docker-compose up -d
+
+# Run migrations
+make migrate-all
+
+# Seed test data
+make seed-dev
+
+# Run tests
+make test
 ```
 
-### Common Operations
-- 로컬에서 전체 서비스 기동
-- 계약 테스트 실행
-- 특정 서비스만 재시작
+### API Examples
 
-### Common Change Paths
-- 새 주문 필드를 추가할 때: `libs/contracts/` -> `services/order/` -> `services/payment/` -> 통합 테스트
-- 결제 실패 정책을 바꿀 때: `services/payment/` -> `services/order/` 상태 전이 -> 운영자 처리 흐름 -> E2E 테스트
-- 재고 불일치 장애를 볼 때: `services/inventory/` 로그 -> 주문 이벤트 -> 보상 처리 -> 배치 정합성 점검 순서 확인
+**Create Product:**
+```bash
+curl -X POST http://localhost:8000/api/v1/products \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Wireless Headphones",
+    "sku": "WH-001",
+    "base_price": 99.99,
+    "category_ids": ["cat_electronics", "cat_audio"]
+  }'
+```
 
-## Open Questions
-- 주문 멱등성 키의 표준 저장 위치가 서비스별로 통일되어 있는지 확인이 더 필요하다.
-- 운영자 수동 환불 절차를 main spec에 둘지 `payment.md`로 분리할지 결정이 필요하다.
+**Create Order:**
+```bash
+curl -X POST http://localhost:8000/api/v1/orders \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "items": [
+      {"product_id": "prod_123", "variant_id": "var_456", "quantity": 2}
+    ],
+    "shipping_address_id": "addr_789",
+    "payment_method_id": "pm_stripe_abc"
+  }'
+```
+
+---
+
+## Testing
+
+### Test Pyramid
+
+| Level | Coverage Target | Run Time |
+|-------|----------------|----------|
+| Unit | 80% | <5 min |
+| Integration | 60% | <15 min |
+| E2E | Critical paths | <30 min |
+
+### Running Tests
+
+```bash
+# Unit tests
+pytest services/product/tests/unit/
+
+# Integration tests (requires Docker)
+pytest services/product/tests/integration/
+
+# E2E tests
+pytest tests/e2e/
+```
+
+---
+
+## Deployment
+
+### Environments
+
+| Environment | Purpose | URL |
+|-------------|---------|-----|
+| Development | Local testing | localhost:8000 |
+| Staging | Pre-production | staging.example.com |
+| Production | Live | api.example.com |
+
+### Deployment Pipeline
+
+```
+┌─────────┐   ┌──────┐   ┌─────────┐   ┌────────┐   ┌──────────┐
+│  Push   │──▶│Build │──▶│  Test   │──▶│ Deploy │──▶│Production│
+│ to main │   │Image │   │(staging)│   │(canary)│   │(100%)    │
+└─────────┘   └──────┘   └─────────┘   └────────┘   └──────────┘
+```
+
+---
+
+## Changelog
+
+### [2.0.0] - 2024-01-15
+- Added multi-vendor marketplace support
+- Migrated to microservices architecture
+- Implemented event-driven inventory sync
+
+### [1.5.0] - 2023-09-01
+- Added Elasticsearch for product search
+- Implemented real-time order tracking
+- Added mobile app API support

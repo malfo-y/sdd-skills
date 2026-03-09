@@ -10,7 +10,6 @@ How to map user input categories to spec document sections.
 |------------|----------------------|------------------------|
 | New Feature (Core) | 목표 > 주요 기능 | Goal > Key Features |
 | New Feature (Component) | 컴포넌트 상세 | Component Details |
-| Component Overview | 컴포넌트 상세 > [컴포넌트] > 개요 | Component Details > [Component] > Overview |
 | Enhancement | 개선 필요사항 > 개선 제안 | Issues > Improvements |
 | Bug Report | 발견된 이슈 > 버그 | Issues > Bugs |
 | Performance | 개선 필요사항 > 성능 | Issues > Performance |

@@ -18,19 +18,12 @@ Execute implementation plans systematically using Test-Driven Development (TDD),
 
 > Plans without Target Files도 호환 (순차 실행으로 fallback).
 
-## Hard Rules
+## Hard Rule: Never Modify Spec Files
 
-1. This skill **MUST NOT** create/edit/delete any spec documents under `<project_root>/_sdd/spec/`.
-2. If implementation reveals spec drift, ambiguity, or missing requirements:
-   - Report it in the progress report / chat, and
-   - Ask the user to update the spec via `spec-update-todo` (or run a spec audit via `spec-update-done`).
-3. Spec drift 보고 시 **어떤 앵커 섹션이 영향받는지** 명시한다:
-   - `Goal`, `Architecture Overview > Runtime Map`, `Component Details > Component Index`, `Usage Examples > Common Change Paths`, `Environment & Dependencies`, `Open Questions`
-4. Drift 항목은 아래 기준으로 분류한다:
-   - **MUST update**: 스펙과 코드가 불일치하여 스펙을 읽는 사람이 오해할 위험이 있는 경우
-   - **CONSIDER**: 스펙이 틀리진 않지만 보완하면 이해도가 높아지는 경우
-   - **NO update**: 구현 세부사항이라 스펙에 반영할 필요 없는 경우
-5. Drift 보고 시 **evidence 링크**를 포함한다: `file:line`, 테스트명, diff 근거 등
+- This skill **MUST NOT** create/edit/delete any spec documents under `<project_root>/_sdd/spec/`.
+- If implementation reveals spec drift, ambiguity, or missing requirements:
+  - Report it in the progress report / chat, and
+  - Ask the user to update the spec via `spec-update-todo` (or run a spec audit via `spec-update-done`).
 
 ## Core Principle: Test-Driven Development
 

@@ -399,34 +399,12 @@ git log --oneline --grep="decision\|chose\|trade-off\|alternative" | head -20
 
 ---
 
-## 9. Overview Drift
-
-### Pattern: Missing or Stale Overview
-
-**Detection:**
-- Check if component sections have an Overview subsection
-- Compare Overview descriptions with actual component behavior
-- Verify design rationale still matches implementation
-
-**Symptoms:**
-- Component section jumps straight to interfaces/implementation without context
-- Overview describes behavior that no longer matches the code
-- Design rationale references constraints that no longer exist
-
-**Resolution:**
-- Add Overview section with 동작 개요 + 설계 의도
-- Use prose (narrative) style, not code-centric descriptions
-- 2-3 paragraphs maximum per component
-
----
-
 ## Resolution Priority
 
 | Drift Type | User Impact | Priority |
 |------------|-------------|----------|
 | API breaking changes | High | P0 - Immediate |
 | Missing features | High | P1 - Same day |
-| Missing/stale Overview | Medium | P1 - Same day |
 | Wrong examples | Medium | P2 - This week |
 | Config changes | Medium | P2 - This week |
 | Resolved issues | Low | P3 - When convenient |

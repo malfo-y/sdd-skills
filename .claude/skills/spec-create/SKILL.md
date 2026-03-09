@@ -303,37 +303,6 @@ project/
 - How to interpret results
 ```
 
-### Step 4: Quality Gate (LLM-as-Judge)
-
-스펙 작성 완료 후, 아래 4개 기준으로 품질을 자가 검증한다.
-
-| Criterion | Probe | PASS | WEAK | FAIL |
-|-----------|-------|------|------|------|
-| **저장소 이해** (Understand) | "이 저장소는 무엇을 하고, 누구를 위한 것이며, 무엇을 하지 않는가?" | Goal 섹션만 읽고 프로젝트 목적, 주요 사용자, 비목표를 구체적으로 답할 수 있다 | 답할 수 있지만 모호하거나 비목표가 누락 | Goal이 없거나 일반론만 있어 이 저장소만의 목적을 파악할 수 없다 |
-| **기능 위치 탐색** (Locate) | "X 기능의 코드는 어디에 있는가?" | Component Details에서 실제 파일 경로와 핵심 심볼을 즉시 찾을 수 있다 | 컴포넌트는 기술되어 있으나 실제 경로나 심볼이 부족 | 기능이 어느 컴포넌트/파일에 속하는지 스펙에서 알 수 없다 |
-| **안전한 수정 판단** (Change) | "Y를 변경하려면 어디를 수정하고 무엇을 주의해야 하는가?" | Change Recipes 또는 변경 진입점이 있고, 관련 불변 조건/계약이 명시 | 변경 시작점은 있으나 주의사항이 부족 | 변경 가이드가 전혀 없어 코드를 직접 탐색해야 한다 |
-| **비자명한 결정 기억** (Remember) | "이 설계에서 왜 Z를 선택했는가?" | Design Decisions, Open Questions, 또는 DECISION_LOG에 실질적 내용이 있다 | 일부 결정/가정이 기록되어 있으나 핵심 불변 조건 누락 | 비자명한 결정이나 불변 조건이 전혀 기록되지 않았다 |
-
-**검증 프로세스**:
-
-| 결과 | 행동 |
-|------|------|
-| ALL PASS | 검증 통과, 완료 보고 진행 |
-| WEAK만 존재 (FAIL 없음) | 개선 포인트를 사용자에게 알리되 진행 허용 |
-| FAIL 1개 이상 | FAIL 항목과 근거를 기록 → Step 3로 돌아가 해당 부분만 보강 → 이 단계를 재실행 (최대 1회) |
-| 재검증 후에도 FAIL | 사용자에게 보고하고 판단을 맡긴다 |
-
-**검증 결과 출력 형식**:
-
-| Criterion | Probe | 판정 | 근거 |
-|-----------|-------|------|------|
-| 저장소 이해 | "이 저장소는 무엇을 하는가?" | PASS | (구체적 근거) |
-| 기능 위치 탐색 | "X 기능은 어디에?" | PASS | (구체적 근거) |
-| 안전한 수정 판단 | "Y를 변경하려면?" | PASS | (구체적 근거) |
-| 비자명한 결정 기억 | "왜 Z를 선택?" | PASS | (구체적 근거) |
-
-**종합**: PASS / PASS WITH NOTES / FAIL → FIX
-
 ## Spec Management Operations
 
 ### Creating a New Spec
@@ -394,9 +363,6 @@ See detailed specs:
 - **Use Examples**: Include code snippets and usage examples
 - **Stay Current**: Update spec when code changes significantly
 - **Link to Code**: Reference file paths and line numbers when helpful
-- **Overview First**: 컴포넌트 섹션은 Overview(동작 개요 + 설계 의도)로 시작한다; Overview는 서술형(prose)이 권장되는 유일한 MUST 섹션이다 (2-3 문단 이내)
-- **Understand-then-Change**: 독자가 먼저 동작을 이해(Overview)한 후 변경 방법(Change Recipes)을 찾을 수 있도록 구성한다
-- **Favor tables with actual paths over long narrative** — **except** in Overview sections, where prose is encouraged
 
 ### Organization
 

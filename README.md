@@ -2,7 +2,7 @@
 
 Spec-Driven Development (SDD) workflow skills for Claude Code and Codex.
 
-16 skills: spec-create, spec-review, spec-rewrite, spec-summary, spec-update-done, spec-update-todo, spec-snapshot, implementation-plan, implementation, implementation-review, feature-draft, pr-review, pr-spec-patch, discussion, ralph-loop-init, sdd-upgrade
+14 skills: spec-create, spec-review, spec-rewrite, spec-summary, spec-update-done, spec-update-todo, implementation-plan, implementation, implementation-review, feature-draft, pr-review, pr-spec-patch, discussion, ralph-loop-init
 
 ## Installation
 
@@ -14,16 +14,6 @@ Spec-Driven Development (SDD) workflow skills for Claude Code and Codex.
 ```
 
 > **Note**: 플러그인 설치 후 스킬을 활성화하려면 Claude Code를 재시작해야 합니다.
-
-## Upgrade
-
-Claude Code에서 아래 명령어로 최신 버전으로 업데이트할 수 있습니다:
-
-```
-/sdd-skills:sdd-upgrade
-```
-
-> 업데이트 후 Claude Code를 재시작해야 변경사항이 적용됩니다.
 
 ### Codex
 

@@ -1,164 +1,487 @@
 ---
 name: pr-spec-patch
 description: This skill should be used when the user asks to "create spec patch from PR", "PR spec patch", "compare PR with spec", "PR to spec", "PR 스펙 패치", "PR 리뷰 준비", "스펙 패치 생성", "PR 변경사항 스펙 반영", or wants to generate a spec patch document by comparing a pull request against the current specification.
-version: 1.3.0
+version: 1.0.0
 ---
 
-# PR Spec Patch
+# PR Spec Patch - PR-Based Spec Patch Draft Generation
 
-PR 변경사항을 탐색형 스펙 기준으로 해석해 `_sdd/pr/spec_patch_draft.md` 초안을 만든다.
+Compares a PR (Pull Request) against the current spec, generates a structured spec patch draft, and refines it through conversation.
 
-이 스킬의 목적은 "무엇이 바뀌었는가"만 적는 것이 아니라, 아래를 스펙 관점에서 정리하는 것이다.
+## Overview
 
-- 어떤 섹션이 바뀌어야 하는가
-- 어떤 컴포넌트와 경로가 영향받는가
-- `Repository Map`, `Runtime Map`, `Component Index`, `Common Change Paths`가 갱신되어야 하는가
-- `Component Details > Overview` 또는 why-context 설명이 갱신되어야 하는가
-- 구현은 되었지만 아직 문서화되지 않은 리스크나 미확인 사항이 있는가
+This skill analyzes PR changes, compares them against the current spec documents, and generates a structured patch draft (`_sdd/pr/spec_patch_draft.md`) containing changes that should be reflected in the spec. The "Spec Patch Content" section of the output is compatible with the `spec-update-todo` skill's input format ("Spec Update Input"), so finalized patches can be directly applied via `spec-update-todo`.
 
-## Hard Rules
+## Hard Rule: This skill does NOT modify specs (IMPORTANT)
 
-1. `_sdd/spec/` 아래 실제 스펙은 수정하지 않는다.
-2. 이 스킬의 산출물은 `_sdd/pr/spec_patch_draft.md` 초안뿐이다.
-3. 초안은 `spec-update-todo`가 소비할 수 있는 구조를 유지해야 한다.
-4. 각 패치 항목에는 가능하면 `PR Evidence`(`file:line`)가 있어야 한다.
-5. 대상 섹션이 불명확하면 억지로 단정하지 말고 `Target Section TBD`와 `Open Questions`로 남긴다.
-6. 기본 언어는 한국어다.
-7. 모든 PR이 스펙 업데이트를 요구하는 것은 아니다. 항목별로 `MUST update / CONSIDER / NO update`를 명시한다.
-8. 빈 선택 섹션은 만들지 않는다. 초안은 token-efficient 해야 한다.
+- Spec files under `_sdd/spec/` are **never** created/modified/deleted.
+- The only output of this skill is `_sdd/pr/spec_patch_draft.md`.
+- Spec updates **must** be done via `/spec-update-todo`.
 
-## Inputs
+## When to Use This Skill
 
-- 현재 스펙: `_sdd/spec/main.md` 또는 `_sdd/spec/<project>.md`
-- 링크된 컴포넌트 스펙
-- 필요 시 `_sdd/spec/DECISION_LOG.md`
-- PR 메타데이터와 diff (`gh`)
-- 기존 `_sdd/pr/spec_patch_draft.md` (있으면 update mode)
+- When generating a spec patch draft from a PR
+- When organizing changes from a spec perspective before PR review
+- When refining PR changes through conversation for spec integration
+- When retroactively reflecting an already-merged PR into the spec
 
-## Spec Mapping Rules
+## Prerequisites
 
-PR 변경을 아래 축으로 먼저 분류한다.
+- `gh` CLI authenticated (`gh auth status` to verify)
+- Spec documents exist in `_sdd/spec/` directory (recommended, not required)
+- GitHub repository with an existing PR
 
-| 변경 유형 | 기본 타겟 섹션 |
-|----------|---------------|
-| 사용자 가치/기능 추가 | `Goal` |
-| 시스템 경계/구조 변화 | `Architecture Overview` |
-| 경로/디렉터리/런타임 흐름 변화 | `Repository Map`, `Runtime Map` |
-| 컴포넌트 책임/소유 경로 변화 | `Component Details`, 컴포넌트 스펙 |
-| 컴포넌트 동작 방식/설계 의도 변화 | `Component Details > Overview` |
-| 운영/디버깅/테스트 시작점 변화 | `Usage Examples` > `Common Change Paths` |
-| 설정/필수 서비스 변화 | `Environment & Dependencies` |
-| 미확정 설계/후속 검토 필요 | `Open Questions` |
-| 중요한 이유/트레이드오프 변화 | `DECISION_LOG.md` 제안 |
+## Input Sources
+
+1. **Current spec (`_sdd/spec/`)**: Main spec document used as comparison baseline
+2. **PR data (`gh` CLI)**: PR metadata, changed files, diff
+3. **User conversation (current session)**: Patch draft refinement and finalization
+4. **Existing draft (`_sdd/pr/spec_patch_draft.md`)**: If a prior draft exists, enter update mode
+
+## Output
+
+**File location**: `_sdd/pr/spec_patch_draft.md`
+
+**Format**: PR summary + "Spec Update Input" compatible patch content + questions and suggestions
 
 ## Process
 
-### Step 1: Verify prerequisites
+### Mode 1: Initial generation (no existing draft)
 
-1. `gh auth status` 확인
-2. `_sdd/pr/` 디렉터리 준비
-3. PR 번호 자동 감지
-4. 메인 스펙 존재 여부 확인
+#### Step 1: Verify prerequisites
 
-스펙이 없으면:
-- 경고를 남기고 baseline 없이 진행
-- 패치 초안에 `No baseline`을 명시
-- `Open Questions`에 `/spec-create` 권장 메모 추가
+**Tools**: `Bash (gh auth status)`, `Glob`, `Bash (mkdir -p)`, `deterministic defaults (non-interactive)`
 
-### Step 2: Load baseline spec context
+```
+1. Run `gh auth status` to check authentication
+2. Search for spec files in `_sdd/spec/` directory
+3. Create `_sdd/pr/` directory if it doesn't exist
+```
 
-1. `_sdd/spec/main.md`를 우선 읽는다.
-2. 없으면 `_sdd/spec/<project>.md`를 읽는다.
-3. 메인 스펙 링크를 따라 관련 컴포넌트 스펙만 읽는다.
-4. 생성물/백업 파일은 제외한다.
-5. 필요한 경우 `DECISION_LOG.md`를 읽어 why-context를 확인한다.
+**When no spec file exists:**
+- Record warning: "No spec document found. Recommend creating one first with `/spec-create`."
+- Continue without a comparison baseline (mark output as `no baseline`) and add follow-up to `Open Questions`
 
-핵심적으로 아래를 추출한다.
+**Decision Gate 1→2**:
+```
+prerequisites_checked = gh 인증 + 작업 디렉토리 준비 완료
 
-- `Goal`
-- `Architecture Overview`
-- `Repository Map`
-- `Runtime Map`
-- `Component Index`
-- `Component Overview`
-- `Common Change Paths`
-- `Open Questions`
+IF prerequisites_checked → Step 2 진행
+ELSE → 누락 항목 보완
+```
 
-### Step 3: Collect PR evidence
+#### Step 2: Read current spec
 
-기본 명령은 [`references/gh-commands.md`](references/gh-commands.md)를 따른다.
+**Tools**: `Read`, `Glob`, `deterministic defaults (non-interactive)`
 
-수집할 정보:
+```
+1. Load main spec file from `_sdd/spec/`
+2. If multiple spec files exist, select one deterministically using the global fallback order and log alternatives in `Open Questions`
+3. Understand the spec's component, feature, and section structure
+```
 
-- PR 제목, 작성자, 브랜치, 상태
-- changed files 목록
-- 핵심 diff
-- 테스트/CI 상태가 보이면 함께 기록
+**Decision Gate 2→3**:
+```
+spec_baseline_ready = 비교 대상 스펙(또는 baseline 없음 합의) 확정
 
-### Step 4: Map PR changes to spec impact
+IF spec_baseline_ready → Step 3 진행
+ELSE → 대상 스펙 재선정
+```
 
-각 변경에 대해 아래를 정리한다.
+#### Step 3: Collect PR data
 
-- `Change Type`: Feature / Improvement / Bug Fix / Refactor / Infra
-- `Spec Update Classification`: `MUST update` / `CONSIDER` / `NO update`
-- `Target Section`
-- `Target File`
-- `Affected Components`
-- `Related Paths / Symbols`
-- `Current State`
-- `Proposed Spec Update`
-- `Risks / Invariants`
-- `Test / Observability Notes`
-- `PR Evidence`
+**Tools**: `Bash (gh pr view, gh pr diff)`, `Read`
 
-특히 다음은 별도로 확인한다.
+If no PR number is specified, auto-detect from the current branch:
 
-- 새 디렉터리/파일/엔트리포인트가 생겼는가
-- 기존 흐름에 새 단계나 사용자 관점 설명 변화가 추가되었는가
-- 컴포넌트 책임 경계가 달라졌는가
-- 컴포넌트가 어떻게 동작하는지 또는 왜 이런 구조를 택했는지 설명이 달라졌는가
-- 디버깅/운영 경로가 달라졌는가
-- 기존 `Open Questions`를 해소하거나 새 질문을 만드는가
+```bash
+# Auto-detect PR number (based on current branch)
+gh pr view --json number --jq '.number'
 
-분류 기준:
+# Collect PR metadata
+gh pr view [PR_NUMBER] --json title,body,author,state,url,additions,deletions,changedFiles,headRefName,baseRefName,commits,comments,reviews
 
-- `MUST update`: 런타임 흐름, 시스템 경계, 컴포넌트 책임, 외부 계약, 변경 시작점이 달라짐
-- `CONSIDER`: 디버깅 경로, 테스트/관측 포인트, why-context가 더 있으면 유용함
-- `NO update`: 내부 리팩터링, 테스트 추가, 탐색성과 계약을 바꾸지 않는 변경
+# Collect PR diff
+gh pr diff [PR_NUMBER]
 
-### Step 5: Write patch draft
+# List changed files
+gh pr diff [PR_NUMBER] --name-only
+```
 
-초안은 아래 레이어를 가진다.
+**Handling large PRs (changedFiles > 50):**
+- Switch to directory/component-level summary
+- Focus on components documented in the spec
+- Inform user about the large PR and proceed with key changes only
 
-1. PR 요약
-2. 탐색형 스펙 영향 요약
-3. `Spec Update Input` 호환 패치 항목
-4. `Open Questions`
-5. `Next Recommended Actions`
+**Decision Gate 3→4**:
+```
+spec_loaded = 스펙 문서 읽기 완료 (또는 baseline 없이 진행 확인)
+pr_data_collected = PR 메타데이터 + diff 수집 완료
 
-모든 항목이 `NO update`라면, no-op 초안을 허용한다. 이 경우 왜 스펙 갱신이 불필요한지 근거를 남긴다.
+IF spec_loaded AND pr_data_collected → Step 4 진행
+ELSE IF NOT pr_data_collected → PR 데이터 재수집 시도
+ELSE → baseline 없이 진행하고 리스크를 `Open Questions`에 기록
+```
 
-### Step 6: Update mode
+#### Step 4: Analyze changes
 
-기존 초안이 있으면 아래 중 하나로 처리한다.
+**Tools**: `Read`, `rg`, `Glob`
 
-- refine: 항목 표현 수정
-- add: 누락된 PR 영향 추가
-- remove: 잘못된 항목 제거
-- regenerate: PR 데이터를 다시 읽고 전체 재생성
-- finalize: 현재 초안을 확정 상태로 정리
+Map PR file changes to spec components:
 
-## Output Requirements
+| Category | Detection Criteria | Examples |
+|----------|-------------------|----------|
+| New Features | New files/modules added, new endpoints, new classes | New service class, new API endpoint |
+| Improvements | Existing file modifications, performance improvements, refactoring | Function optimization, code cleanup |
+| Bug Fixes | Bug fix commits, error handling additions | Exception handling added, condition fix |
+| Component Changes | Component structure changes, interface changes | New method added, signature change |
+| Configuration Changes | Config file changes, environment variable additions | .env change, config file modification |
 
-좋은 패치 초안은 아래를 만족한다.
+**Decision Gate 4→5**:
+```
+changes_categorized = PR 변경사항 카테고리 분류 완료
+spec_mapping_done = 스펙 컴포넌트 매핑 완료
 
-- 섹션명만이 아니라 실제 파일/컴포넌트까지 연결된다.
-- `Runtime Map`, `Component Index`, `Component Details > Overview` 반영 필요 여부가 드러난다.
-- `Common Change Paths` 갱신 필요 여부가 보인다.
-- 구현은 되었지만 스펙상 불명확한 부분이 `Open Questions`로 분리된다.
-- evidence 없는 항목은 명시적으로 low-confidence 처리한다.
-- `DECISION_LOG.md`로 보낼 가치가 있는 이유 변화는 `Decision-Log Candidates`로 분리한다.
+IF changes_categorized AND spec_mapping_done → Step 5 진행
+ELSE → 미분류 항목 추가 분석
+```
 
-## Example
+#### Step 5: Generate patch draft
 
-예시는 [`examples/spec_patch_draft.md`](examples/spec_patch_draft.md)를 따른다.
+**Tools**: `Write`, `Bash (mkdir -p)`
+
+Save the collected/analyzed information in structured form to `_sdd/pr/spec_patch_draft.md`.
+
+See the [Output Format](#output-format) section below for the output format.
+
+#### Step 5.5: 패치 항목 PR Evidence 검증
+
+**Tools**: `Read`, `rg`, `Glob`
+
+```
+패치 항목별 검증:
+  a. 각 Feature/Improvement/Bug Fix에 PR Evidence (file:line) 존재 확인
+  b. PR Evidence의 파일 경로가 PR diff 파일 목록에 포함되는지 확인
+  c. Evidence 누락 항목 → "Evidence 미확인" 표시
+  d. 스펙 섹션 매핑 누락 항목 → "Target Section TBD" 표시
+```
+
+**Decision Gate 5.5→6**:
+```
+evidence_checked = 패치 항목별 PR Evidence 검증 완료
+
+IF evidence_checked → Step 6 진행
+ELSE → 누락 항목 보완 후 재검증
+```
+
+#### Step 6: Finalize Output
+
+**Tools**: `deterministic defaults (non-interactive)`
+
+1. Generate summary of the patch draft
+2. Highlight key items from the questions and suggestions section
+3. Write deterministic next steps in the draft metadata
+
+**Progressive Disclosure**:
+```
+1. 패치 요약 테이블 제시:
+   | 항목 | 수량 |
+   |------|------|
+   | New Features | N |
+   | Improvements | N |
+   | Bug Fixes | N |
+   | Open Questions | N |
+   | Evidence Missing | N |
+
+2. 내부 자동 처리:
+   - 전체 패치 출력
+   - Questions and Suggestions 별도 요약
+   - 초안 파일 저장 및 다음 단계 안내
+```
+
+### Mode 2: Conversation-based update (existing draft)
+
+#### Step 1: Load existing draft
+
+**Tools**: `Read`, `deterministic defaults (non-interactive)`
+
+```
+1. Read contents of `_sdd/pr/spec_patch_draft.md`
+2. Compare the draft's PR number with the current request
+3. If the draft is for a different PR: use deterministic defaults (non-interactive) to determine handling
+   - Archive existing draft and create new one
+   - Abort operation
+```
+
+#### Step 2: Determine Intent Deterministically
+
+**Tools**: `deterministic defaults (non-interactive)`
+
+Use deterministic defaults (non-interactive) to determine the operation type:
+
+- **Refine content**: Modify/supplement existing patch content
+- **Resolve questions**: Answer items in the questions and suggestions section
+- **Add items**: Add new changes
+- **Remove items**: Delete unnecessary items
+- **Regenerate**: Re-collect PR data and regenerate draft
+- **Finalize**: Confirm current draft as final
+
+#### Step 3: Apply changes
+
+**Tools**: `Edit`, `Write`, `Read`
+
+Update relevant sections based on user feedback:
+- Modify/add/remove patch content
+- Mark questions as resolved
+- Update spec gaps
+
+#### Step 4: Save
+
+**Tools**: `Write`, `Bash (mkdir -p, cp)`
+
+- Update draft file
+- Increment conversation round in metadata
+- Update timestamp
+
+## Output Format
+
+```markdown
+# PR Spec Patch Draft
+
+**Date**: YYYY-MM-DD
+**PR**: #<number> - <title>
+**PR Author**: <author>
+**PR URL**: <url>
+**Target Spec**: <spec filename>
+**Status**: Draft / Reviewed / Finalized
+
+---
+
+## PR Summary
+
+**Branch**: <head> → <base>
+**Change Scale**: +<additions> -<deletions>, <changedFiles> files
+**Key Changes**:
+- <change 1>
+- <change 2>
+- <change 3>
+
+---
+
+## Spec Patch Content
+
+<!-- Compatible with spec-update-todo's "Spec Update Input" format -->
+
+### New Features
+
+#### Feature: <feature name>
+**Priority**: High/Medium/Low
+**Category**: <category>
+**Target Component**: <target component>
+**Source**: PR #<number>
+
+**Description**:
+<feature description>
+
+**Acceptance Criteria**:
+- [ ] Criterion 1
+- [ ] Criterion 2
+
+**PR Evidence**:
+- `<file>:<line>` - <change summary>
+
+---
+
+### Improvements
+
+#### Improvement: <improvement name>
+**Priority**: High/Medium/Low
+**Current State**: <current state>
+**Proposed**: <proposed change>
+**Reason**: <reason for improvement>
+**Source**: PR #<number>
+
+**PR Evidence**:
+- `<file>:<line>` - <change summary>
+
+---
+
+### Bug Reports
+
+#### Bug Fix: <bug fix name>
+**Severity**: High/Medium/Low
+**Location**: <file:line>
+**Source**: PR #<number>
+
+**Description**:
+<bug description>
+
+**Fix Approach**:
+<fix method>
+
+**PR Evidence**:
+- `<file>:<line>` - <change summary>
+
+---
+
+### Component Changes
+
+#### New Component: <component name>
+**Purpose**: <purpose>
+**Input**: <input>
+**Output**: <output>
+**Source**: PR #<number>
+
+**Planned Methods**:
+- `method_name()` - description
+
+#### Update Component: <component name>
+**Change Type**: Enhancement/Refactor/Fix
+**Source**: PR #<number>
+
+**Changes**:
+- Change 1
+- Change 2
+
+---
+
+### Configuration Changes
+
+#### New Config: <config name>
+**Type**: Environment Variable / Config File
+**Required**: Yes/No
+**Default**: <default value>
+**Description**: <description>
+**Source**: PR #<number>
+
+---
+
+### Notes
+
+#### Context
+<PR background and context>
+
+#### Constraints
+<constraints>
+
+---
+
+## Questions and Suggestions
+
+### Items Requiring Confirmation
+
+1. **[Section: <spec section name>]** <question content>
+   - Context: <why this question is needed>
+   - Suggestion: <recommended approach>
+
+2. **[Section: <spec section name>]** <question content>
+   - Context: <why this question is needed>
+   - Suggestion: <recommended approach>
+
+### Spec Gaps
+
+| # | Description | Spec Section | PR Evidence | Suggestion |
+|---|------------|-------------|-------------|------------|
+| 1 | <gap description> | <related spec section> | `<file>:<line>` | <suggestion> |
+
+### Ambiguous Items
+
+- <ambiguity 1>
+- <ambiguity 2>
+
+---
+
+## Metadata
+
+**Created**: YYYY-MM-DD HH:MM
+**Spec version**: <version>
+**PR commit**: <HEAD SHA>
+**Conversation round**: <count>
+```
+
+## Edge Cases
+
+| Situation | Response |
+|-----------|----------|
+| No spec file | Record warning, recommend `/spec-create`, generate without baseline automatically |
+| No PR / `gh` not authenticated | Detect error, guide `gh auth login` |
+| Multiple spec files exist | Use deterministic defaults (non-interactive) to select comparison target |
+| Existing draft for a different PR | deterministic defaults (non-interactive): archive and create new / abort |
+| Already merged PR | Allow (retroactive spec maintenance), note merge status |
+| Large PR (50+ files) | Directory/component-level summary, focus on spec-related components |
+| No spec-related changes in PR | Notify user, generate minimal patch draft |
+
+## Context Management
+
+| 스펙 크기 | 전략 | 구체적 방법 |
+|-----------|------|-------------|
+| < 200줄 | 전체 읽기 | `Read`로 전체 파일 읽기 |
+| 200-500줄 | 전체 읽기 가능 | `Read`로 전체 읽기, 필요 시 섹션별 |
+| 500-1000줄 | TOC 먼저, 관련 섹션만 | 상위 50줄(TOC) 읽기 → 관련 섹션만 `Read(offset, limit)` |
+| > 1000줄 | 인덱스만, 타겟 최대 3개 | 인덱스/TOC만 읽기 → 타겟 섹션 최대 3개 선택적 읽기 |
+
+| PR 크기 | 전략 | 구체적 방법 |
+|---------|------|-------------|
+| < 10 files | 전체 diff 분석 | `gh pr diff` 전체 읽기 |
+| 10-50 files | 파일별 분석 | `gh pr diff --name-only` → 관련 파일만 diff 확인 |
+| > 50 files | 디렉토리/컴포넌트 수준 | 디렉토리별 요약, 스펙 관련 컴포넌트만 상세 분석 |
+
+## Workflow Integration
+
+```
+implementation → PR → pr-spec-patch → (user refinement) → spec-update-todo
+                          ↑                                    │
+                     current spec                        main spec update
+                  (_sdd/spec/)                         (_sdd/spec/)
+```
+
+1. **pr-spec-patch** (this skill): Compare PR against spec and generate patch draft
+2. **User refinement**: Review/modify/finalize draft through conversation
+3. **spec-update-todo**: Apply finalized patch to the main spec
+
+## Best Practices
+
+### Effective Patch Generation
+
+- **Cite PR evidence**: Include specific file:line references from the PR diff for all patch items
+- **Map to spec sections**: Clearly indicate which spec section each change corresponds to
+- **Set priorities**: Assign priorities based on the PR's change scale and impact
+- **Specific follow-ups**: Include context and suggestions in `Questions and Suggestions`
+
+### Conversation-Based Refinement
+
+- **Iterative improvement**: Aim for iterative refinement rather than a perfect draft in one pass
+- **Resolve questions first**: Resolve outstanding questions before finalizing
+- **Track change history**: Manage revision history through conversation rounds
+
+### File Management
+
+- **Maintain single draft**: Keep one patch draft file per PR
+- **Archive**: Archive drafts for other PRs before creating new ones
+- **Post-finalization**: Apply finalized patches via `spec-update-todo` for management
+
+## Language Handling
+
+- **SKILL.md**: English (skill definition)
+- **Patch draft output**: Korean
+- **Follow spec language**: If the spec is in Korean, write the patch in Korean
+- **Preserve PR content**: Keep PR title/description as-is, provide translation alongside if needed
+
+## Error Handling
+
+| Situation | Response |
+|-----------|----------|
+| `gh` CLI not installed | Guide installation: `brew install gh` |
+| `gh auth` failure | Guide running `gh auth login` |
+| Wrong PR number | Re-detect from current branch/ref; if unresolved, continue with `PR_NUMBER=UNKNOWN` and log in `Open Questions` |
+| Network error | Guide retry |
+| Spec file parsing failure | Record parse error location, continue with readable sections only, and log unresolved sections in `Open Questions` |
+| `_sdd/pr/` directory missing | Create automatically |
+
+## Additional Resources
+
+### Reference Files
+- **`references/gh-commands.md`** - `gh` CLI command reference
+
+### Example Files
+- **`examples/spec_patch_draft.md`** - Patch draft output example

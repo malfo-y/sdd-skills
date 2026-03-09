@@ -29,14 +29,6 @@
 4. **Email Service**: 인증, 비밀번호 재설정 이메일
 5. **Security Layer**: 레이트 제한, CSRF 보호, 입력 검증
 
-## Spec Inputs Used
-
-- **Goal**: 이메일/비밀번호 로그인, OAuth, RBAC가 핵심 기능으로 정의되어 있다.
-- **Runtime Map**: 로그인 -> 토큰 발급 -> 보호된 요청 -> 권한 검사 흐름이 구현 대상이며, 사용자 관점에서는 "로그인 후 보호된 화면 접근" 시나리오가 기준이다.
-- **Component Index**: `Auth Core`, `OAuth`, `Security` 관련 경로가 이미 나뉘어 있다.
-- **Component Overview**: `Auth Core`는 인증 상태 전환과 세션 수명 관리를 담당하고, `Security`는 정책 검증과 방어선 역할을 맡는 구조다.
-- **Common Change Paths**: 인증 정책 변경 시 `routes/auth`, `middleware`, `Policy`를 함께 보게 되어 있다.
-
 ## 구현 단계
 
 ### Phase 1: 기반 설정
@@ -415,16 +407,6 @@ GitHub OAuth 인증 플로우를 구현합니다.
 | 토큰 보안 취약점 | High | Medium | 보안 리뷰, 검증된 라이브러리 사용, 짧은 토큰 수명 |
 | 이메일 전송 실패 | Medium | Medium | 검증된 이메일 서비스 사용, 재시도 로직 |
 | auth.py 병렬 충돌 | Medium | High | Task 5, 6, 7 순차 실행 또는 라우트별 파일 분리 |
-
-## Spec Gaps
-
-- [ ] refresh token 만료/회전 정책의 canonical 위치가 메인 스펙인지 `auth.md`인지 불명확하다.
-
-## Expected Spec Sync Follow-ups
-
-- `MUST update`: `Architecture Overview > Runtime Map` - OAuth callback과 refresh flow가 구체화될 가능성이 크다.
-- `MUST update`: `Component Details > Overview` - `Auth Core`, `OAuth Module`의 동작 개요와 설계 의도가 구현 세부에 맞춰 보강되어야 한다.
-- `CONSIDER`: `Environment & Dependencies` - OAuth provider 설정과 mail provider 설정이 실제 구현에 따라 달라질 수 있다.
 
 ## 미해결 질문
 

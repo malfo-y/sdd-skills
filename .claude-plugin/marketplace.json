@@ -28,9 +28,7 @@
         "./.claude/skills/spec-rewrite",
         "./.claude/skills/spec-summary",
         "./.claude/skills/spec-update-done",
-        "./.claude/skills/spec-update-todo",
-        "./.claude/skills/sdd-upgrade",
-        "./.claude/skills/spec-snapshot"
+        "./.claude/skills/spec-update-todo"
       ]
     }
   ]

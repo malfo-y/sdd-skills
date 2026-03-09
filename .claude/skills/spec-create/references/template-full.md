@@ -125,13 +125,9 @@ Record significant decisions in `_sdd/spec/DECISION_LOG.md` as well, so rational
 
 ### Component: <Name>
 
-#### Overview (MUST — prose 권장)
+#### Overview
 
-이 컴포넌트의 동작 개요와 설계 의도를 서술형으로 작성한다. Overview는 서술형(prose)이 권장되는 유일한 MUST 섹션이다 (2-3 문단 이내).
-
-**동작 개요**: 사용자 관점에서 이 컴포넌트가 어떤 흐름으로 동작하는지 설명한다.
-
-**설계 의도**: 왜 이 설계를 선택했는지, 어떤 문제를 해결하는지 근거를 설명한다.
+Brief description of what this component does.
 
 #### Responsibility
 

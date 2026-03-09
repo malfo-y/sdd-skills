@@ -1,313 +1,517 @@
-# Exploration-First Spec Template
+# Complete Spec Document Template
 
-This template keeps the legacy top-level headings for downstream skill compatibility,
-but structures each section as an index for understanding and safe change.
-
-Use Korean for the final spec unless the repository already uses another language.
+This is the full template with all possible sections. Adapt as needed for each project.
 
 ---
 
-# Main Spec Template
-
-~~~markdown
 # <Project Name>
 
-> 이 저장소가 무엇을 하는지 한 줄로 설명
+> One-line description of what this project does
 
 **Version**: X.Y.Z
 **Last Updated**: YYYY-MM-DD
 **Status**: [Draft | In Review | Approved | Deprecated]
 
+## Table of Contents
+
+- [Goal](#goal)
+- [Architecture Overview](#architecture-overview)
+- [Component Details](#component-details)
+- [Data Models](#data-models)
+- [API Reference](#api-reference)
+- [Environment & Dependencies](#environment--dependencies)
+- [Configuration](#configuration)
+- [Security Considerations](#security-considerations)
+- [Performance Considerations](#performance-considerations)
+- [Identified Issues & Improvements](#identified-issues--improvements)
+- [Usage Examples](#usage-examples)
+- [Testing](#testing)
+- [Deployment](#deployment)
+- [Changelog](#changelog)
+
+---
+
 ## Goal
 
-### Project Snapshot
-- 해결하는 문제
-- 주요 사용자 또는 운영자
-- 핵심 가치
+### Primary Objective
+
+[Clear statement of what the project aims to achieve]
 
 ### Key Features
-1. 기능 1
-2. 기능 2
-3. 기능 3
+
+1. **Feature 1**: Description
+2. **Feature 2**: Description
+3. **Feature 3**: Description
 
 ### Target Users / Use Cases
-| 사용자 | 대표 사용 사례 | 우선순위 |
-|--------|----------------|----------|
-| 개발자 | ... | High |
-| 운영자 | ... | Medium |
+
+| User Type | Use Case | Priority |
+|-----------|----------|----------|
+| Developer | ... | High |
+| Admin | ... | Medium |
 
 ### Success Criteria
-- [ ] 성공 기준 1
-- [ ] 성공 기준 2
+
+- [ ] Criterion 1
+- [ ] Criterion 2
+- [ ] Criterion 3
 
 ### Non-Goals (Out of Scope)
-- 범위 밖 항목 1
-- 범위 밖 항목 2
+
+- Item 1
+- Item 2
+
+---
 
 ## Architecture Overview
 
-### System Boundary
-| In Scope | Out of Scope | Notes |
-|----------|--------------|-------|
-| 저장소가 책임지는 것 | 외부 시스템에 맡기는 것 | 경계 메모 |
+### System Diagram
 
-### Repository Map
-| 경로 | 역할 | 변경 시 왜 중요한가 |
-|------|------|--------------------|
-| `src/app/` | 애플리케이션 진입점 | 요청 흐름 시작 |
-| `src/domain/` | 핵심 도메인 로직 | 규칙 변경 영향 큼 |
-| `tests/` | 회귀 검증 | 수정 후 우선 확인 |
-
-### Runtime Map
-
-#### Primary Flow
-```text
-Client -> Router -> Service -> Repository -> DB
+```
+┌─────────────────────────────────────────────────────┐
+│                    Client Layer                      │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐          │
+│  │   Web    │  │  Mobile  │  │   CLI    │          │
+│  └────┬─────┘  └────┬─────┘  └────┬─────┘          │
+└───────┼─────────────┼─────────────┼─────────────────┘
+        │             │             │
+        └─────────────┼─────────────┘
+                      │
+┌─────────────────────┼───────────────────────────────┐
+│                     ▼                                │
+│              ┌─────────────┐                         │
+│              │  API Layer  │                         │
+│              └──────┬──────┘                         │
+│                     │                                │
+│         ┌───────────┼───────────┐                   │
+│         ▼           ▼           ▼                   │
+│   ┌──────────┐ ┌──────────┐ ┌──────────┐           │
+│   │ Service  │ │ Service  │ │ Service  │           │
+│   │    A     │ │    B     │ │    C     │           │
+│   └────┬─────┘ └────┬─────┘ └────┬─────┘           │
+└────────┼────────────┼────────────┼──────────────────┘
+         │            │            │
+         └────────────┼────────────┘
+                      │
+┌─────────────────────┼───────────────────────────────┐
+│                     ▼                                │
+│              ┌─────────────┐                         │
+│              │  Database   │                         │
+│              └─────────────┘                         │
+└─────────────────────────────────────────────────────┘
 ```
 
-#### User-Facing Scenario
-- 사용자가 어떤 진입점에서 작업을 시작하는지
-- 중간 처리 단계에서 어떤 책임 경계를 통과하는지
-- 성공/실패 시 어떤 후속 동작이 이어지는지
-
-#### Secondary / Batch Flows
-- 배치 작업 또는 이벤트 흐름
-- 백그라운드 워커와 외부 연동
-
 ### Technology Stack
-| Layer | Technology | Purpose |
-|-------|------------|---------|
-| Runtime | ... | ... |
-| Framework | ... | ... |
-| Storage | ... | ... |
 
-### Cross-Cutting Invariants
-- 항상 지켜야 하는 계약
-- 상태 전이 제약
-- 외부 API와의 호환 조건
+| Layer | Technology | Version | Purpose |
+|-------|------------|---------|---------|
+| Runtime | Python | 3.11+ | Primary language |
+| Framework | FastAPI | 0.100+ | Web framework |
+| Database | PostgreSQL | 15+ | Data storage |
+| Cache | Redis | 7+ | Caching layer |
+
+### Design Decisions
+
+| Decision | Rationale | Alternatives Considered |
+|----------|-----------|------------------------|
+| Use async | Performance for I/O-bound tasks | Sync (rejected: blocking) |
+| PostgreSQL | ACID compliance, JSON support | MongoDB (rejected: consistency) |
+
+Record significant decisions in `_sdd/spec/DECISION_LOG.md` as well, so rationale remains traceable when the main spec is later split or simplified.
+
+---
 
 ## Component Details
 
-### Component Index
-| 컴포넌트 | 책임 | 주요 경로 | 핵심 심볼 / 진입점 | 관련 스펙 |
-|---------|------|----------|--------------------|----------|
-| Auth | 로그인/세션 | `src/auth/` | `AuthService`, `auth_router` | `auth.md` |
-| Billing | 결제 처리 | `src/billing/` | `BillingService` | `billing.md` |
-
 ### Component: <Name>
 
-#### Responsibility
-- 하는 일
-- 하지 않는 일
-
 #### Overview
-**동작 개요**
-- 이 컴포넌트가 입력을 받아 어떤 흐름으로 처리하는지
-- 주요 상태 전이 또는 외부 상호작용
 
-**설계 의도**
-- 왜 이 책임 경계를 택했는지
-- 테스트 용이성, 운영 안정성, 결합도 제어 이유 등
+Brief description of what this component does.
 
-#### Owned Paths
-- `src/...`
-- `tests/...`
+#### Responsibility
 
-#### Key Symbols / Entry Points
-- `ClassName.method()` - 설명
-- `function_name()` - 설명
+- Primary: What it does
+- Secondary: Supporting functions
 
-#### Interfaces / Contracts
-**Inputs**
-- 입력 데이터 또는 호출 형태
+#### Interface
 
-**Outputs**
-- 출력 데이터 또는 부작용
+**Input:**
+```python
+# Input type/schema
+class InputModel:
+    field1: str
+    field2: int
+```
 
-**External Surfaces**
-- 공개 API
-- 이벤트
-- 스키마
+**Output:**
+```python
+# Output type/schema
+class OutputModel:
+    result: str
+    status: str
+```
+
+#### Implementation Details
+
+**Key Files:**
+- `src/components/name/main.py` - Entry point
+- `src/components/name/utils.py` - Helper functions
+- `src/components/name/models.py` - Data models
+
+**Key Classes/Functions:**
+- `ClassName.method()` - Description
+- `function_name()` - Description
+
+**Design Patterns Used:**
+- Strategy pattern for...
+- Factory pattern for...
 
 #### Dependencies
-| Dependency | Direction | Why it matters |
-|------------|-----------|----------------|
-| DB | downstream | 영속화 |
-| Auth middleware | upstream | 사용자 컨텍스트 |
 
-#### Change Recipes
-##### 새로운 기능 추가
-- 보통 여기서 시작
-- 함께 확인할 테스트/설정
+| Dependency | Type | Purpose |
+|------------|------|---------|
+| ComponentB | Internal | Data processing |
+| redis | External | Caching |
 
-##### 기존 동작 변경
-- 영향 범위 확인 포인트
-- 계약이 깨질 수 있는 지점
+#### Error Handling
 
-##### 장애 추적
-- 로그/메트릭/재현 시작점
-
-#### Tests / Observability
-- 관련 테스트 파일
-- 로그/메트릭/트레이싱 포인트
-
-#### Risks / Invariants
-- 이 컴포넌트에서 특히 조심할 점
+| Error | Cause | Handling |
+|-------|-------|----------|
+| ValidationError | Invalid input | Return 400 with details |
+| TimeoutError | Slow downstream | Retry with backoff |
 
 #### Known Issues
-- 현재 제한사항
-- 예정된 개선
 
-> 프로젝트가 큰 경우 main spec에는 `Component Index`와 짧은 요약만 두고,
-> 상세 내용은 별도 컴포넌트 스펙 파일로 분리한다.
+- **Issue 1**: Description (Workaround: ...)
+- **Issue 2**: Description (Planned fix: ...)
+
+---
+
+## Data Models
+
+### Model: <EntityName>
+
+```python
+class EntityName:
+    id: UUID
+    created_at: datetime
+    updated_at: datetime
+
+    # Core fields
+    name: str
+    status: Enum['active', 'inactive']
+
+    # Relationships
+    parent_id: Optional[UUID]
+    children: List[EntityName]
+```
+
+**Constraints:**
+- `name` must be unique within scope
+- `status` defaults to 'active'
+
+**Indexes:**
+- Primary: `id`
+- Unique: `(scope_id, name)`
+- Index: `created_at`
+
+---
+
+## API Reference
+
+### Endpoint: `GET /api/v1/resource`
+
+**Description:** Retrieve list of resources
+
+**Request:**
+```
+GET /api/v1/resource?page=1&limit=20
+Authorization: Bearer <token>
+```
+
+**Response:**
+```json
+{
+  "data": [
+    {"id": "...", "name": "..."}
+  ],
+  "pagination": {
+    "page": 1,
+    "limit": 20,
+    "total": 100
+  }
+}
+```
+
+**Error Responses:**
+| Status | Reason |
+|--------|--------|
+| 401 | Invalid token |
+| 403 | Insufficient permissions |
+
+---
 
 ## Environment & Dependencies
 
 ### Directory Structure
-```text
+
+```
 project/
 ├── src/
+│   ├── __init__.py
+│   ├── main.py           # Application entry point
+│   ├── config.py         # Configuration management
+│   ├── components/       # Core components
+│   │   ├── __init__.py
+│   │   └── component_a/
+│   ├── models/           # Data models
+│   ├── services/         # Business logic
+│   └── utils/            # Shared utilities
 ├── tests/
+│   ├── unit/
+│   ├── integration/
+│   └── e2e/
+├── docs/
 ├── scripts/
-└── ...
+├── .env.example
+├── pyproject.toml
+└── README.md
 ```
 
-### Runtime / Tooling
-- 런타임 버전
-- 패키지 매니저
-- 필수 서비스
+### Dependencies
 
-### Setup Commands
-```bash
-# install
-# bootstrap
+**Runtime:**
+```toml
+[project.dependencies]
+python = "^3.11"
+fastapi = "^0.100.0"
+pydantic = "^2.0"
 ```
 
-### Test Commands
-```bash
-# unit tests
-# integration tests
+**Development:**
+```toml
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "black",
+    "mypy",
+]
 ```
 
-### Configuration / Secrets
-| 항목 | 필수 여부 | 설명 |
-|------|-----------|------|
-| `DATABASE_URL` | Yes | DB 연결 |
-| `REDIS_URL` | No | 캐시 |
+### System Requirements
+
+- Python 3.11+
+- PostgreSQL 15+
+- Redis 7+
+- 2GB RAM minimum
+
+---
+
+## Configuration
+
+### Environment Variables
+
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| DATABASE_URL | Yes | - | PostgreSQL connection string |
+| REDIS_URL | No | localhost:6379 | Redis connection |
+| LOG_LEVEL | No | INFO | Logging verbosity |
+
+### Configuration Files
+
+**config.yaml:**
+```yaml
+server:
+  host: 0.0.0.0
+  port: 8000
+  workers: 4
+
+database:
+  pool_size: 10
+  max_overflow: 5
+```
+
+---
+
+## Security Considerations
+
+### Authentication
+
+- JWT-based authentication
+- Token expiry: 1 hour
+- Refresh token: 7 days
+
+### Authorization
+
+| Role | Permissions |
+|------|-------------|
+| admin | All operations |
+| user | Read, create own |
+| viewer | Read only |
+
+### Data Protection
+
+- Passwords hashed with bcrypt
+- Sensitive data encrypted at rest
+- HTTPS enforced in production
+
+---
+
+## Performance Considerations
+
+### Benchmarks
+
+| Operation | Target | Current |
+|-----------|--------|---------|
+| List (100 items) | <100ms | 85ms |
+| Create | <50ms | 42ms |
+| Search | <200ms | 180ms |
+
+### Optimization Strategies
+
+- Database query optimization
+- Redis caching for hot data
+- Connection pooling
+
+### Scaling Considerations
+
+- Horizontal scaling via container orchestration
+- Database read replicas for heavy read loads
+- CDN for static assets
+
+---
 
 ## Identified Issues & Improvements
 
-### Current Risks
-- [ ] 현재 운영/구조상 위험
+### Critical Bugs
+
+- [ ] **BUG-001**: Memory leak in long-running processes
+  - Location: `src/services/processor.py:145`
+  - Impact: High
+  - Status: Investigating
+
+### Code Quality Issues
+
+- [ ] Missing type hints in legacy modules
+- [ ] Inconsistent error handling patterns
+- [ ] Duplicate code in utils
+
+### Missing Features
+
+- [ ] Batch operations API
+- [ ] Export functionality
+- [ ] Audit logging
 
 ### Technical Debt
-- [ ] 리팩터링 필요 지점
 
-### Missing Coverage / Unknowns
-- [ ] 테스트/문서 부족 영역
+- [ ] Migrate from deprecated library X
+- [ ] Refactor monolithic service
+- [ ] Add comprehensive test coverage
 
-### Planned Improvements
-- [ ] 다음 개선 후보
+---
 
 ## Usage Examples
 
-### Running the Project
+### Installation
+
 ```bash
-# dev server
+# Clone repository
+git clone https://github.com/org/project.git
+cd project
+
+# Install dependencies
+pip install -e ".[dev]"
+
+# Set up environment
+cp .env.example .env
+# Edit .env with your configuration
+```
+
+### Running Locally
+
+```bash
+# Start dependencies
+docker-compose up -d db redis
+
+# Run migrations
+python scripts/migrate.py
+
+# Start development server
+python -m src.main
 ```
 
 ### Common Operations
-- 자주 수행하는 작업
-- 운영자가 자주 쓰는 명령
 
-### Common Change Paths
-- 새 API 추가 시: 먼저 볼 디렉토리와 테스트
-- 기존 규칙 변경 시: 함께 봐야 하는 계약과 검증 지점
-- 장애 분석 시: 로그/메트릭/재현 진입점
+**Creating a resource:**
+```bash
+curl -X POST http://localhost:8000/api/v1/resource \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"name": "example"}'
+```
 
-## Open Questions
-- 확인되지 않은 사항
-- 신뢰도가 낮은 추정
-- 사용자 확인이 필요한 결정
-~~~
-
----
-
-# Component Spec Template
-
-~~~markdown
-# <Component Name>
-
-## Responsibility
-- 하는 일
-- 하지 않는 일
-
-## Overview
-
-### 동작 개요
-- 입력이 어떤 흐름으로 처리되는지
-- 주요 상태 전이 또는 외부 상호작용
-
-### 설계 의도
-- 왜 이 책임 경계와 구조를 선택했는지
-- 테스트/운영/결합도 측면의 이유
-
-## Owned Paths
-- `src/...`
-- `tests/...`
-
-## Key Symbols / Entry Points
-- `...`
-
-## Interfaces / Contracts
-
-### Inputs
-- ...
-
-### Outputs
-- ...
-
-### External Surfaces
-- API / 이벤트 / 메시지 / 파일 포맷
-
-## Dependencies
-| Dependency | Direction | Why it matters |
-|------------|-----------|----------------|
-| ... | upstream/downstream | ... |
-
-## Change Recipes
-
-### Add a feature
-- 어디서 시작하는가
-
-### Change existing behavior
-- 어떤 계약과 테스트를 함께 확인하는가
-
-### Debug a failure
-- 로그/메트릭/트레이싱 시작점
-
-## Tests / Observability
-- 관련 테스트 경로
-- 운영 관측 포인트
-
-## Risks / Invariants
-- 깨지면 안 되는 조건
-
-## Known Issues
-- 현재 문제점
-
-## Open Questions
-- 확인이 필요한 내용
-~~~
+**Querying resources:**
+```bash
+curl http://localhost:8000/api/v1/resource?status=active \
+  -H "Authorization: Bearer $TOKEN"
+```
 
 ---
 
-# Optional Extensions
+## Testing
 
-If the project truly needs them, append concise sections from
-`references/optional-sections.md`:
-- Data Models
-- API Surface
-- Security
-- Performance
-- Deployment / Operations
+### Running Tests
+
+```bash
+# All tests
+pytest
+
+# Unit tests only
+pytest tests/unit/
+
+# With coverage
+pytest --cov=src --cov-report=html
+```
+
+### Test Coverage Goals
+
+| Module | Target | Current |
+|--------|--------|---------|
+| Core | 90% | 85% |
+| Services | 80% | 72% |
+| Utils | 70% | 68% |
+
+---
+
+## Deployment
+
+### Production Checklist
+
+- [ ] Environment variables configured
+- [ ] Database migrations applied
+- [ ] SSL certificates installed
+- [ ] Monitoring configured
+- [ ] Backup strategy in place
+
+### Deployment Commands
+
+```bash
+# Build container
+docker build -t project:latest .
+
+# Deploy
+kubectl apply -f k8s/
+```
+
+---
+
+## Changelog
+
+### [Unreleased]
+- Feature: ...
+- Fix: ...
+
+### [1.0.0] - YYYY-MM-DD
+- Initial release
+- Core functionality implemented

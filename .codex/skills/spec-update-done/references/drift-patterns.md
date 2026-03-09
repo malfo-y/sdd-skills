@@ -1,152 +1,411 @@
 # Common Spec Drift Patterns
 
-Common drift patterns for exploration-first specs and how to resolve them.
+This document describes common patterns of spec drift and how to detect and resolve them.
 
-## 1. Navigation Drift
+---
 
-### Pattern: Stale Repository Map
+## 1. Architecture Drift
 
-**Symptoms**
-- important directories moved but the map still points to old paths
-- a newcomer opens the spec and follows dead or misleading paths
+### Pattern: Undocumented Components
 
-**Resolution**
-- update `Architecture Overview > Repository Map`
-- remove dead paths
-- add new important paths
+**Detection:**
+```bash
+# Find new Python modules not in spec
+find src -name "*.py" -type f | grep -v __pycache__ | sort > actual_modules.txt
+# Compare against spec's component list
+```
 
-### Pattern: Stale Runtime Map
+**Symptoms:**
+- New directories in `src/` not mentioned in spec
+- Import statements referencing undocumented modules
+- New service/class definitions
 
-**Symptoms**
-- the documented request/event/batch flow no longer matches implementation
-- new service hops or event steps are missing
-- the arrows remain, but the user/operator-facing scenario no longer matches reality
+**Resolution:**
+- Add new component section to spec
+- Document purpose, interface, dependencies
+- Update architecture diagram
 
-**Resolution**
-- update `Architecture Overview > Runtime Map`
-- add or adjust invariants if the flow change affects correctness
+### Pattern: Removed Components
 
-### Pattern: Missing or Outdated Component Overview
+**Detection:**
+```bash
+# Check if documented files still exist
+grep -oP 'src/[a-zA-Z_/]+\.py' spec.md | while read f; do
+  [ ! -f "$f" ] && echo "Missing: $f"
+done
+```
 
-**Symptoms**
-- a component path and symbol are documented, but how it works is still opaque
-- implementation changed the component flow or design intent, but the spec still describes the old rationale
+**Symptoms:**
+- Spec references files that don't exist
+- Import errors when following spec
+- Dead links in documentation
 
-**Resolution**
-- update `Component Details > Overview`
-- keep behavior summary and design intent aligned with actual ownership boundaries
+**Resolution:**
+- Remove or archive component section
+- Update architecture diagram
+- Note removal in changelog
 
-### Pattern: Missing or Outdated Component Index
+### Pattern: Changed Dependencies
 
-**Symptoms**
-- a new component exists in code but is absent from the spec
-- component names in the spec no longer match actual code ownership
+**Detection:**
+```bash
+# Compare spec dependencies vs actual
+diff <(grep -oP '\w+==[\d.]+' spec.md | sort) \
+     <(pip freeze | sort)
+```
 
-**Resolution**
-- update `Component Details > Component Index`
-- link to component-specific docs when appropriate
+**Symptoms:**
+- Version mismatches
+- New packages not documented
+- Removed packages still listed
 
-### Pattern: Stale Common Change Paths
+**Resolution:**
+- Update dependency table
+- Note breaking changes
+- Document migration if needed
 
-**Symptoms**
-- a maintainer cannot tell where to start for a common change
-- the spec points to old files or old entry points
+---
 
-**Resolution**
-- update `Usage Examples > Common Change Paths`
-- include real paths and symbols
+## 2. Feature Drift
 
-## 2. Planned vs Actual Drift
+### Pattern: Implemented but Undocumented
 
-### Pattern: Planned but Implemented
+**Detection:**
+- Review IMPLEMENTATION_PROGRESS.md for completed tasks
+- Check git log for feature commits
+- Look for new API endpoints
 
-**Symptoms**
-- spec still says `📋 계획됨`
-- code and tests show the behavior exists
+**Symptoms:**
+- Features work but aren't in spec
+- Users discover undocumented capabilities
+- Test files reference unknown features
 
-**Resolution**
-- replace planned wording with actual behavior
-- update related component and flow sections
+**Resolution:**
+- Add feature to spec
+- Document API/interface
+- Add usage examples
 
-### Pattern: Planned but Changed in Delivery
+### Pattern: Planned but Not Implemented
 
-**Symptoms**
-- implementation differs from original draft
-- same feature exists but with different boundaries or contracts
+**Detection:**
+- Cross-reference spec features with code
+- Check for stub implementations
+- Review test coverage
 
-**Resolution**
-- sync the actual behavior
-- update `DECISION_LOG.md` if rationale changed materially
-- keep unresolved mismatch in `Open Questions` if needed
+**Symptoms:**
+- Spec describes features that don't work
+- Tests fail for documented features
+- Users report missing functionality
 
-## 3. Contract Drift
+**Resolution:**
+- Mark as "Planned" or "Not Implemented"
+- Move to "Missing Features" section
+- Update status indicators
 
-### Pattern: Component Contract Changed
+### Pattern: Behavior Changes
 
-**Symptoms**
-- inputs/outputs/events changed
-- downstream callers or tests reflect new assumptions
+**Detection:**
+- Compare spec examples with actual output
+- Review test changes
+- Check error message changes
 
-**Resolution**
-- update `Component Details`
-- update `Component Details > Overview` if the contract change alters how the component works
-- update `Architecture Overview > Runtime Map` if the contract affects flow
+**Symptoms:**
+- Examples in spec don't work
+- Different output format than documented
+- Changed error handling
 
-### Pattern: Invariant Drift
+**Resolution:**
+- Update examples and descriptions
+- Document breaking changes
+- Note migration steps if needed
 
-**Symptoms**
-- code now relies on a new assumption not documented
-- an old invariant is no longer true
+---
 
-**Resolution**
-- update `Cross-Cutting Invariants` or component-specific `Risks / Invariants`
+## 3. API Drift
 
-## 4. Environment Drift
+### Pattern: Endpoint Changes
 
-### Pattern: Setup / Test Command Drift
+**Detection:**
+```bash
+# Extract routes from code
+grep -r "@app\.\(get\|post\|put\|delete\)" src/ | \
+  grep -oP '"/[^"]+' | sort
+# Compare with spec's API section
+```
 
-**Symptoms**
-- documented commands no longer run
-- new services or env vars are required
+**Symptoms:**
+- 404 errors following spec
+- Different URL patterns
+- Changed HTTP methods
 
-**Resolution**
-- update `Environment & Dependencies`
-- update `Usage Examples` if the run/debug flow changed
+**Resolution:**
+- Update API reference section
+- Document old → new mapping
+- Note deprecations
 
-### Pattern: Dependency or Config Drift
+### Pattern: Request/Response Schema Changes
 
-**Symptoms**
-- new runtime dependency or env var exists
-- docs still show old setup
+**Detection:**
+- Compare Pydantic models with spec
+- Run API tests against spec examples
+- Check OpenAPI/Swagger if available
 
-**Resolution**
-- update runtime/config sections
-- mention operational implications if relevant
+**Symptoms:**
+- Validation errors with spec examples
+- Missing required fields
+- Changed field types
 
-## 5. Issue and Unknown Drift
+**Resolution:**
+- Update schema documentation
+- Provide migration examples
+- Version the API if breaking
 
-### Pattern: Resolved Issue Still Listed
+---
 
-**Symptoms**
-- issue is fixed in code but still shown as open
+## 4. Configuration Drift
 
-**Resolution**
-- remove or mark resolved in `Identified Issues & Improvements`
+### Pattern: New Environment Variables
 
-### Pattern: New Real Issue Not Documented
+**Detection:**
+```bash
+# Find env var usage in code
+grep -rhoP 'os\.environ\[?\.?get\(?"(\w+)"' src/ | sort -u
+grep -rhoP 'settings\.(\w+)' src/ | sort -u
+# Compare with spec's config section
+```
 
-**Symptoms**
-- implementation review or tests expose a limitation not in the spec
+**Symptoms:**
+- App fails with missing config
+- Undocumented settings affect behavior
+- Defaults not matching spec
 
-**Resolution**
-- add it to `Identified Issues & Improvements`
-- include affected component/path if known
+**Resolution:**
+- Add to environment variables table
+- Document defaults and valid values
+- Update .env.example
 
-### Pattern: Open Question Now Resolved
+### Pattern: Changed Defaults
 
-**Symptoms**
-- a previous uncertainty is now settled by code or decision
+**Detection:**
+- Compare default values in code vs spec
+- Review config class definitions
+- Check recent commits to config files
 
-**Resolution**
-- remove it from `Open Questions`
-- move the answer into the proper section if it is enduring knowledge
+**Symptoms:**
+- Different behavior than documented
+- Users confused by unexpected defaults
+- Tests assume wrong values
+
+**Resolution:**
+- Update default values in spec
+- Note behavioral implications
+- Document upgrade path
+
+---
+
+## 5. Issue Drift
+
+### Pattern: Resolved Issues Still Listed
+
+**Detection:**
+- Cross-reference issues with git log
+- Check PR/commit messages
+- Review test additions
+
+**Symptoms:**
+- Fixed bugs still in "Known Issues"
+- Completed improvements still pending
+- Outdated status information
+
+**Resolution:**
+- Move to "Resolved" or remove
+- Add to changelog
+- Update status indicators
+
+### Pattern: New Issues Not Documented
+
+**Detection:**
+- Review IMPLEMENTATION_REVIEW.md
+- Check TEST_SUMMARY.md for failures
+- Look for TODO/FIXME comments
+
+```bash
+grep -rn "TODO\|FIXME\|XXX\|HACK" src/
+```
+
+**Symptoms:**
+- Known problems not in spec
+- Test failures not documented
+- Technical debt accumulating silently
+
+**Resolution:**
+- Add to "Identified Issues" section
+- Categorize by severity
+- Link to relevant code locations
+
+---
+
+## 6. Documentation Drift
+
+### Pattern: Stale Examples
+
+**Detection:**
+- Run examples from spec
+- Compare output with expected
+- Check file paths still exist
+
+**Symptoms:**
+- Examples fail or produce different output
+- Referenced files moved or deleted
+- Outdated command syntax
+
+**Resolution:**
+- Update or replace examples
+- Test all code snippets
+- Add output verification comments
+
+### Pattern: Broken Links
+
+**Detection:**
+```bash
+# Find internal links
+grep -oP '\[.*?\]\(\.?/?[^)]+\)' spec.md | \
+  grep -oP '\([^)]+\)' | tr -d '()' | \
+  while read link; do
+    [ ! -f "$link" ] && echo "Broken: $link"
+  done
+```
+
+**Symptoms:**
+- 404 when clicking links
+- References to moved content
+- Outdated cross-references
+
+**Resolution:**
+- Fix or remove broken links
+- Update paths after restructuring
+- Add link validation to CI
+
+---
+
+## 7. Environment Configuration Drift (`env.md`)
+
+### Pattern: Undocumented Environment Changes
+
+**Detection:**
+```bash
+# Find env var usage in code not documented in env.md
+grep -rhoP 'os\.environ\[?"(\w+)"\]?' src/ | sort -u > code_env_vars.txt
+grep -oP '`\w+`' _sdd/env.md | tr -d '`' | sort -u > doc_env_vars.txt
+diff code_env_vars.txt doc_env_vars.txt
+```
+
+**Symptoms:**
+- New environment variables added in code but not in `_sdd/env.md`
+- conda/venv setup commands changed but `env.md` not updated
+- Required services (DB, Redis) added but not documented in env.md
+- Port numbers or service URLs changed
+
+**Resolution:**
+- Update `_sdd/env.md` with new environment variables
+- Sync conda/venv setup instructions
+- Document new required services and startup commands
+
+### Pattern: Stale Setup Instructions
+
+**Detection:**
+- Run `_sdd/env.md` setup commands and check for failures
+- Compare documented Python/Node version with actual project requirements
+- Check if documented conda environment name matches actual environment
+
+**Symptoms:**
+- Setup commands fail (package not found, version conflict)
+- Documented conda env doesn't exist or has different packages
+- Tests fail due to missing environment setup
+
+**Resolution:**
+- Regenerate setup instructions from current working environment
+- Update version requirements
+- Test setup instructions from scratch
+
+---
+
+## 8. Decision Log Drift (`DECISION_LOG.md`)
+
+### Pattern: Outdated Decision Rationale
+
+**Detection:**
+- Cross-reference `_sdd/spec/DECISION_LOG.md` entries with current implementation
+- Check if alternatives listed in decisions were later adopted instead
+- Verify that constraints cited in decisions still hold
+
+**Symptoms:**
+- Decision rationale references constraints that no longer exist
+- Chosen approach was later replaced but decision log not updated
+- New decisions contradict earlier logged decisions without noting the change
+
+**Resolution:**
+- Add "Superseded by" note on outdated decisions
+- Update status field (Active → Superseded / Revisited)
+- Link to new decision if approach changed
+
+### Pattern: Missing Decisions
+
+**Detection:**
+- Look for significant architectural patterns in code without corresponding decision log entries
+- Check git log for major refactors without decision documentation
+- Review PR descriptions for design discussions not captured in decision log
+
+```bash
+# Find commits mentioning design decisions
+git log --oneline --grep="decision\|chose\|trade-off\|alternative" | head -20
+```
+
+**Symptoms:**
+- Team members ask "why was X done this way?" with no documented answer
+- New contributors make changes that unknowingly reverse past decisions
+- Repeated discussions about already-decided topics
+
+**Resolution:**
+- Add retroactive decision entries with available context
+- Mark as "Retroactive" to distinguish from real-time decisions
+- Include git commit references as evidence
+
+---
+
+## Detection Checklist
+
+### Quick Review (5 minutes)
+- [ ] `git status` - any uncommitted changes?
+- [ ] `git log --oneline -10` - recent changes?
+- [ ] Key files exist as documented?
+- [ ] Main entry point works?
+
+### Standard Review (30 minutes)
+- [ ] All components in spec exist in code
+- [ ] All code components documented in spec
+- [ ] Dependencies match
+- [ ] API endpoints match
+- [ ] Config options documented
+- [ ] Examples work
+
+### Deep Review (2+ hours)
+- [ ] Full architecture comparison
+- [ ] All features tested against spec
+- [ ] Issue status verified
+- [ ] Performance claims validated
+- [ ] Security considerations current
+- [ ] Deployment docs accurate
+
+---
+
+## Resolution Priority
+
+| Drift Type | User Impact | Priority |
+|------------|-------------|----------|
+| API breaking changes | High | P0 - Immediate |
+| Missing features | High | P1 - Same day |
+| Wrong examples | Medium | P2 - This week |
+| Config changes | Medium | P2 - This week |
+| Resolved issues | Low | P3 - When convenient |
+| Style/formatting | Low | P4 - Batch updates |

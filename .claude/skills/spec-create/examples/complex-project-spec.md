@@ -186,11 +186,8 @@ Manages product catalog, categories, and vendor listings.
 
 ### Component: Order Service
 
-#### Overview (MUST — prose 권장)
-
-주문이 생성되면 Order Service는 Saga 패턴을 통해 재고 예약 → 결제 처리 → 주문 확정 → 판매자 알림의 4단계를 순차 실행한다. 어느 단계에서든 실패하면 이전 단계를 역순으로 보상(compensate)하여 데이터 정합성을 보장한다. 주문 상태는 Draft → Pending → Confirmed → Shipped → Delivered의 상태 머신으로 관리되며, 각 전이마다 Kafka 이벤트를 발행해 다른 서비스(Inventory, Notification)가 비동기로 반응할 수 있게 한다.
-
-이 설계를 선택한 이유는 두 가지다. 첫째, 마이크로서비스 간 분산 트랜잭션에서 2PC(Two-Phase Commit)는 성능 병목과 단일 장애점을 만들지만, Saga는 각 서비스가 독립적으로 커밋/롤백할 수 있어 가용성을 유지한다. 둘째, 상태 머신 기반 관리는 유효하지 않은 상태 전이를 컴파일/런타임에 차단하여, "결제 완료 전 배송" 같은 논리적 오류를 구조적으로 방지한다.
+#### Overview
+Handles order lifecycle from creation to fulfillment.
 
 #### Responsibilities
 - Order creation and validation

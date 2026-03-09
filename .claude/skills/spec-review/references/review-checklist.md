@@ -19,8 +19,6 @@ This checklist does not authorize direct spec edits.
 - [ ] Terms and abbreviations are defined
 - [ ] No contradictory statements across sections/files
 - [ ] Component responsibilities and ownership boundaries are clear
-- [ ] Each component has an Overview section (동작 개요 + 설계 의도, prose 형태)
-- [ ] Overview sections explain *how it works* and *why this design*, not just code-level details
 - [ ] Section flow is navigable and links are valid
 
 ## 3) Code-Linked Drift Checks / 코드 연동 드리프트 검증

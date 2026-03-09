@@ -40,12 +40,6 @@ After processing input files, rename them to mark as processed:
 3. **언어 규칙**: 기존 스펙/문서의 언어를 따른다. 새 프로젝트(기존 스펙 없음)는 한국어 기본. 사용자 명시 지정 시 해당 언어 사용.
 4. **DECISION_LOG.md 최소화**: 결정 로그는 `DECISION_LOG.md`에만 기록하며, 추가 문서는 사용자 요청 시에만 생성한다.
 5. **스펙 구조 보존**: 기존 스펙의 구조와 스타일을 유지하며, 필요한 항목만 추가한다.
-6. **앵커 섹션 인식**: 추가 항목을 배치할 때 아래 상위 앵커 섹션을 기준으로 삼는다:
-   - `Goal`, `Architecture Overview`, `Component Details`, `Usage Examples`, `Environment & Dependencies`, `Identified Issues & Improvements`, `Open Questions`
-7. **스펙 갱신 기준 적용**: 추가 항목이 기존 스펙 내용과 관계될 때 아래 기준으로 분류하여 Update Plan에 명시한다:
-   - `MUST update` — 기존 스펙과 모순되거나 수정 없이는 오해를 유발하는 경우
-   - `CONSIDER` — 기존 스펙에 없지만 추가하면 유용한 정보
-   - `NO update` — 기존 스펙이 이미 정확하여 변경 불필요
 
 ## Input Sources
 

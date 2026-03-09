@@ -23,13 +23,6 @@ Review and update Software Design Description (SDD) spec documents based on code
 3. **Copy-only archive**: 구현 산출물은 복사만 하며 원본을 이동/삭제하지 않는다.
 4. **언어 규칙**: 기존 스펙/문서의 언어를 따른다. 새 프로젝트(기존 스펙 없음)는 한국어 기본. 사용자 명시 지정 시 해당 언어 사용.
 5. **DECISION_LOG.md 최소화**: 결정 로그는 `DECISION_LOG.md`에만 기록하며, 추가 거버넌스 문서는 사용자 요청 시에만 생성한다.
-6. **앵커 섹션 기준 드리프트 분류**: 드리프트 항목을 보고할 때 영향받는 앵커 섹션을 명시한다:
-   - `Goal`, `Architecture Overview > Runtime Map`, `Component Details > Component Index`, `Usage Examples > Common Change Paths`, `Environment & Dependencies`, `Identified Issues & Improvements`, `Open Questions`
-7. **드리프트 갱신 기준 적용**: 각 드리프트 항목을 아래 기준으로 분류한다:
-   - `MUST update` — 스펙이 코드와 모순되거나 독자를 오도하는 경우
-   - `CONSIDER` — 스펙에 없지만 유용한 정보, 또는 표현 개선이 필요한 경우
-   - `NO update` — 코드 변경이 스펙 범위 밖이거나 스펙이 이미 정확한 경우
-8. **근거 링크 첨부**: `MUST update` 항목에는 반드시 코드 근거(`path:line`, diff, commit)를 함께 제시한다.
 
 ## Overview
 

@@ -45,7 +45,7 @@ Input is idea-level and lacks concrete scope.
    - Improvement
    - Bug
    - Component Change
-   - Environment / Dependency Change
+   - Configuration Change
 2. Expand into minimum executable draft fields.
 3. Continue generation with conservative defaults.
 4. Record unresolved assumptions in `Open Questions`.
@@ -85,8 +85,8 @@ Use this checklist to complete missing fields non-interactively:
 - Clarify whether additive or breaking.
 - Map affected interfaces and downstream consumers.
 
-### Environment / Dependency Change
-- Define whether it affects env vars, runtime, setup commands, or dependencies.
+### Configuration Change
+- Define source (`env`, config file, CLI arg).
 - Define default behavior and rollback behavior.
 
 ---

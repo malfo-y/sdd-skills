@@ -110,11 +110,11 @@ Database       Cache (Redis)
 
 [IF 1 component: Skip diagram]
 
-| Component | Overview (동작 개요) | Purpose | Status |
-|-----------|---------------------|---------|--------|
-| [Component Name] | [1-2 sentences: how it works from user perspective] | [1 sentence: what it does] | [✅/🚧/📋 from spec] |
-| [Component Name] | [1-2 sentences: how it works] | [1 sentence: what it does] | [✅/🚧/📋] |
-| ... | ... | ... | ... |
+| Component | Purpose | Status |
+|-----------|---------|--------|
+| [Component Name] | [1 sentence: what it does] | [✅/🚧/📋 from spec] |
+| [Component Name] | [1 sentence: what it does] | [✅/🚧/📋] |
+| ... | ... | ... |
 
 [RULES for component extraction:]
 - Maximum 5 components

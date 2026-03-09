@@ -24,7 +24,6 @@ Keep these items in the main index:
 - Goal, Scope, and Non-Goals
 - Core architecture summary
 - Primary component responsibilities
-- **Component Overview sections** (동작 개요 + 설계 의도 — 반드시 보존)
 - Acceptance or completion criteria
 - Link hub for sub-documents
 

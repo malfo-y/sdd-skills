@@ -44,12 +44,6 @@ Create a simple URL shortening service that converts long URLs into short, share
 
 ### Component: URL Service
 
-#### Overview
-
-사용자가 긴 URL을 제출하면 Base62 인코딩으로 6자리 단축 코드를 생성하고 SQLite에 저장한다. 단축 URL로 접속하면 Redis 캐시를 먼저 확인하고, 캐시 미스 시 DB에서 원본 URL을 조회하여 301 리다이렉트한다. 동시에 클릭 카운트를 비동기로 증가시킨다.
-
-캐시 우선(cache-first) 전략을 채택한 이유는 읽기(리다이렉트)가 쓰기(생성)보다 압도적으로 많은 트래픽 패턴 때문이다. Repository 패턴으로 저장소를 분리하여 SQLite에서 PostgreSQL로의 전환을 용이하게 했다.
-
 | Aspect | Description |
 |--------|-------------|
 | **Purpose** | Generate and resolve short URLs |
