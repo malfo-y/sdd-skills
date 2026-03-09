@@ -1,4 +1,4 @@
-# Spec Document Examples
+# Additional Spec Examples
 
 Real-world examples of spec documents for different project types.
 
@@ -358,28 +358,3 @@ RATE_LIMIT = {
 - [ ] Parallelize media downloads
 - [ ] Add incremental extraction mode
 ```
-
----
-
-## Tips for Writing Good Specs
-
-### 1. Start with the Goal
-Always begin with WHY the project exists, not HOW it works.
-
-### 2. Use Diagrams
-ASCII diagrams are surprisingly effective:
-```
-Input → [Process] → Output
-```
-
-### 3. Be Concrete
-Bad: "The system handles errors"
-Good: "ValidationError returns HTTP 400 with field-specific messages"
-
-### 4. Keep it Updated
-Outdated specs are worse than no specs. Include "Last Updated" dates.
-
-### 5. Link to Code
-Reference actual file paths:
-- Entry point: `src/main.py:45`
-- Config: `config/settings.yaml`

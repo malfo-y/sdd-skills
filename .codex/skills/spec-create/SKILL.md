@@ -501,11 +501,11 @@ Save spec documents to:
 
 ### Reference Files
 - **`references/template-full.md`** - Complete template with all sections
-- **`references/examples.md`** - Real-world spec examples
 
 ### Example Files
 - **`examples/simple-project-spec.md`** - Minimal spec for small projects
 - **`examples/complex-project-spec.md`** - Full spec for large projects
+- **`examples/additional-specs.md`** - CLI, Web API, Data Pipeline spec examples
 
 ## Integration with Other Skills
 
