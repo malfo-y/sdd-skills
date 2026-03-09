@@ -20,9 +20,9 @@
 - `.claude/skills/spec-update-todo/`
 - `.codex/skills/spec-update-done/`
 - `.claude/skills/spec-update-done/`
-- `SDD_SPEC_REQUIREMENTS.md`
-- `SDD_WORKFLOW.md`
-- `SDD_CONCEPT.md`
+- `docs/SDD_SPEC_REQUIREMENTS.md`
+- `docs/SDD_WORKFLOW.md`
+- `docs/SDD_CONCEPT.md`
 
 ## Key Symbols / Entry Points
 
@@ -71,9 +71,9 @@
 
 ### Upstream
 
-- `SDD_SPEC_REQUIREMENTS.md`
-- `SDD_WORKFLOW.md`
-- `SDD_CONCEPT.md`
+- `docs/SDD_SPEC_REQUIREMENTS.md`
+- `docs/SDD_WORKFLOW.md`
+- `docs/SDD_CONCEPT.md`
 - 사용자 프로젝트의 `_sdd/spec/` 구조
 
 ### Downstream
@@ -89,7 +89,7 @@
 
 ### 스펙 철학을 바꿀 때
 
-1. `SDD_SPEC_REQUIREMENTS.md`에서 기준 문구를 먼저 바꾼다.
+1. `docs/SDD_SPEC_REQUIREMENTS.md`에서 기준 문구를 먼저 바꾼다.
 2. `.codex/skills/spec-create/`와 `.claude/skills/spec-create/` 템플릿/예시를 먼저 맞춘다.
 3. `spec-rewrite`, `spec-summary`, `spec-review`, `spec-update-*`를 양 플랫폼에서 같은 기준으로 정렬한다.
 4. 그 다음 `feature-draft`, `implementation*`, `pr*`가 이 앵커와 분류를 어떻게 읽는지 확인한다.

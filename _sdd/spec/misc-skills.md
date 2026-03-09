@@ -42,7 +42,7 @@
 ### Upstream
 
 - `README.md`
-- `SDD_WORKFLOW.md`
+- `docs/SDD_WORKFLOW.md`
 - `_sdd/discussion/` 메모
 
 ### Downstream
@@ -55,7 +55,7 @@
 ### discussion 스킬을 바꿀 때
 
 1. `.claude/skills/discussion/SKILL.md`를 먼저 수정한다.
-2. `README.md`, `SDD_WORKFLOW.md`에 토론 게이트 설명이 맞는지 확인한다.
+2. `README.md`, `docs/SDD_WORKFLOW.md`에 토론 게이트 설명이 맞는지 확인한다.
 3. `_sdd/discussion/`의 개념 메모가 여전히 유효한지 점검한다.
 
 ### ralph-loop-init 스킬을 바꿀 때
@@ -66,7 +66,7 @@
 
 ## Tests / Observability
 
-- `rg "discussion|ralph" .claude/skills .codex/skills README.md SDD_WORKFLOW.md`
+- `rg "discussion|ralph" .claude/skills .codex/skills README.md docs/SDD_WORKFLOW.md`
 - Claude 전용 스킬 여부와 Codex/Claude 공통 스킬 여부가 문서에 일관되게 적혀 있는지 확인
 - `_sdd/discussion/` 문서가 실제 워크플로우 설명과 모순되지 않는지 검토
 

@@ -51,9 +51,9 @@
 | `_sdd/implementation/` | 이 저장소를 정리할 때 사용한 계획/리뷰 문서 | 스킬 정렬 기록 포함 |
 | `_sdd/discussion/` | 개념 토론 메모 | spec 철학과 구조 논의 |
 | `README.md` | 설치/개요 진입점 | 플랫폼별 설치 안내 포함 |
-| `SDD_WORKFLOW.md` | SDD 전체 워크플로우 설명 | 스킬 관계와 규모별 경로 정리 |
-| `SDD_CONCEPT.md` | 두 단계 스펙 구조 개념 설명 | 글로벌/임시 스펙 개념 |
-| `SDD_SPEC_REQUIREMENTS.md` | 현재 스펙 문서 요구사항 기준 | 탐색형 스펙의 canonical 요구사항 |
+| `docs/SDD_WORKFLOW.md` | SDD 전체 워크플로우 설명 | 스킬 관계와 규모별 경로 정리 |
+| `docs/SDD_CONCEPT.md` | 두 단계 스펙 구조 개념 설명 | 글로벌/임시 스펙 개념 |
+| `docs/SDD_SPEC_REQUIREMENTS.md` | 현재 스펙 문서 요구사항 기준 | 탐색형 스펙의 canonical 요구사항 |
 | `docs/sdd.md` | SDD 배경과 철학 설명 | AI 에이전트 시대의 문제 정의 |
 
 ### Runtime Map
@@ -68,9 +68,9 @@
 
 #### Repository Maintenance Flow
 
-1. 철학/요구사항 변경은 주로 `SDD_SPEC_REQUIREMENTS.md`, `SDD_WORKFLOW.md`, `SDD_CONCEPT.md`에서 먼저 정의된다.
+1. 철학/요구사항 변경은 주로 `docs/SDD_SPEC_REQUIREMENTS.md`, `docs/SDD_WORKFLOW.md`, `docs/SDD_CONCEPT.md`에서 먼저 정의된다.
 2. 변경 영향이 있는 스킬 그룹을 찾아 `.codex/skills/<skill>/`와 `.claude/skills/<skill>/`의 대응 파일을 함께 점검한다.
-3. 한 플랫폼에만 존재하는 스킬은 해당 플랫폼 경로만 수정하되, `README.md`와 `SDD_WORKFLOW.md`의 인벤토리 설명도 같이 확인한다.
+3. 한 플랫폼에만 존재하는 스킬은 해당 플랫폼 경로만 수정하되, `README.md`와 `docs/SDD_WORKFLOW.md`의 인벤토리 설명도 같이 확인한다.
 4. 변경 후 `git diff --check`, `rg`, `git status`로 구조적 드리프트를 확인한다.
 
 > 이 저장소는 서비스 요청을 처리하는 애플리케이션이 아니라, “문서화된 워크플로우 자산”을 유지하는 저장소다. 따라서 Runtime Map은 코드 실행 흐름보다 스킬 사용/유지보수 흐름에 가깝다.
@@ -94,7 +94,7 @@
 - `.codex/skills/`와 `.claude/skills/`는 모두 사용자에게 노출되는 실제 배포 타깃이다.
 - 대부분의 핵심 SDD 스킬은 두 트리에 모두 존재하지만, `discussion`처럼 Claude 전용 스킬도 있다.
 - 현재는 두 트리의 정렬이 수동이어서, 같은 이름의 스킬이라도 버전/문구/예시가 완전히 같지 않을 수 있다.
-- `README.md`와 `SDD_WORKFLOW.md`는 사용자에게 보이는 설치/워크플로우 진입점이므로, 스킬 구성 변경 시 함께 점검해야 한다.
+- `README.md`와 `docs/SDD_WORKFLOW.md`는 사용자에게 보이는 설치/워크플로우 진입점이므로, 스킬 구성 변경 시 함께 점검해야 한다.
 
 ## Environment & Dependencies
 
@@ -123,7 +123,7 @@
 
 #### 스펙 철학을 바꿀 때
 
-- 먼저 볼 곳: `SDD_SPEC_REQUIREMENTS.md`
+- 먼저 볼 곳: `docs/SDD_SPEC_REQUIREMENTS.md`
 - 같이 확인할 곳: `.codex/skills/spec-*/`, `.claude/skills/spec-*/`, `feature-draft`, `implementation*`, `pr*` 대응 스킬
 - 검증 포인트: 양쪽 플랫폼 스킬의 예시와 참조 템플릿까지 같이 바뀌었는지, 소비자 스킬이 같은 앵커를 읽는지
 
@@ -136,7 +136,7 @@
 #### 배포 구조와 설치 안내를 바꿀 때
 
 - 먼저 볼 곳: `README.md`
-- 같이 확인할 곳: `SDD_WORKFLOW.md`, `.codex/skills/`, `.claude/skills/`
+- 같이 확인할 곳: `docs/SDD_WORKFLOW.md`, `.codex/skills/`, `.claude/skills/`
 - 검증 포인트: 실제 존재하는 스킬 목록과 문서상의 목록이 일치하는지
 
 ## Open Questions
