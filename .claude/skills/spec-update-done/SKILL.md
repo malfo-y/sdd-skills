@@ -249,6 +249,7 @@ Choose the appropriate strategy based on Step 2.5 classification:
 #### Apply changes by section:
 - `Goal`: implemented user-visible capabilities and scope changes
 - `Architecture Overview`: actual system boundary, runtime map, repository map, invariants
+- `Overview` (component spec MUST section): actual component purpose, scope, and behavior; add if missing
 - `Component Details`: actual ownership, paths, symbols, contracts
 - `Environment & Dependencies`: actual runtime/config/setup
 - `Identified Issues & Improvements`: resolved issues removed/updated, new real issues added

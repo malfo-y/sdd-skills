@@ -33,12 +33,14 @@ Checklist to reduce omissions when turning an existing spec into an exploration-
 - [ ] `Architecture Overview` 섹션이 존재하고 System Boundary / Repository Map / Runtime Map을 포함하는가?
 - [ ] `Component Details` 섹션이 존재하고 Component Index를 포함하는가?
 - [ ] `Open Questions` 섹션이 존재하고 미확인 사항이 분리되어 있는가?
+- [ ] Overview 섹션(동작 개요 + 설계 의도)이 포함되었는가?
 - [ ] 선택 섹션(`Environment & Dependencies`, `Identified Issues & Improvements`, `Usage Examples`)은 가치가 있을 때만 유지되는가?
 
 ## 4) Rewrite Target Shape
 
 Keep these in the main spec:
 - Goal -> Project Snapshot / Key Features / Non-Goals
+- Overview -> 동작 개요 / 설계 의도 (기존 Overview 내용은 재작성 시에도 보존한다)
 - Architecture Overview -> System Boundary / Repository Map / Runtime Map
 - Component Details -> Component Index + brief component summaries
 - Open Questions
@@ -91,5 +93,5 @@ Move out of the main flow only when necessary:
 - [ ] Empty optional sections and low-value metadata were removed
 - [ ] The main spec stays compact enough for one focused read
 - [ ] The rewritten spec is easier to understand and easier to modify against
-- [ ] 앵커 섹션(`Goal`, `Architecture Overview`, `Component Details`, `Open Questions`)이 보존됨
+- [ ] 앵커 섹션(`Goal`, `Overview`, `Architecture Overview`, `Component Details`, `Open Questions`)이 보존됨
 - [ ] 실제 경로가 주요 컴포넌트에 연결되어 있음

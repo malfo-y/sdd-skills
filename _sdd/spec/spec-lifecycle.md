@@ -105,6 +105,25 @@
 1. `spec-update-todo`, `spec-update-done`를 먼저 바꾼다.
 2. `.codex/skills/`와 `.claude/skills/`의 `feature-draft`, `implementation`, `implementation-review`, `pr-spec-patch`, `pr-review`가 같은 분류를 쓰는지 확인한다.
 
+### Overview 섹션 추가/수정
+
+1. 아래 파일을 순서대로 확인·수정한다.
+   - `.claude/skills/spec-create/references/template-full.md` (원본 템플릿)
+   - `.claude/skills/spec-review/references/review-checklist.md` (검증 체크리스트)
+   - `.claude/skills/spec-rewrite/references/rewrite-checklist.md` (재작성 체크리스트)
+   - `.claude/skills/spec-update-done/references/drift-patterns.md` (드리프트 패턴)
+   - `.claude/skills/spec-update-todo/references/section-mapping.md` (섹션 매핑)
+   - `.claude/skills/spec-summary/references/summary-template.md` (요약 템플릿)
+   - `.claude/skills/feature-draft/SKILL.md` (기능 초안)
+2. 검증 포인트
+   - 템플릿(`template-full.md`)에 Overview 섹션이 올바른 위치에 존재하는지 확인한다.
+   - 리뷰 체크리스트가 Overview 섹션 유무·품질을 점검 항목으로 포함하는지 확인한다.
+   - 재작성 체크리스트가 Overview를 보존/재구성 대상으로 인식하는지 확인한다.
+   - 드리프트 패턴에 Overview 누락·불일치 케이스가 정의되어 있는지 확인한다.
+   - 섹션 매핑에서 Overview가 올바른 상위 앵커에 연결되는지 확인한다.
+   - 요약 템플릿이 Overview를 요약 범위에 포함하는지 확인한다.
+   - `feature-draft`가 Overview 정보를 입력으로 참조하는지 확인한다.
+
 ## Tests / Observability
 
 - `git diff --check`로 문서 위생 확인

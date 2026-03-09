@@ -354,6 +354,10 @@ If classification is `NO update`:
 **Responsibility**:
 - [what it does]
 
+**Overview**:
+- 동작 개요: [이 컴포넌트가 어떻게 동작하는지 간결한 설명]
+- 설계 의도: [왜 이 컴포넌트가 필요한지, 어떤 문제를 해결하는지]
+
 **Interfaces / Contracts**:
 - Inputs: ...
 - Outputs: ...

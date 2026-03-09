@@ -53,6 +53,25 @@ Common drift patterns for exploration-first specs and how to resolve them.
 - include real paths and symbols
 - verify each listed path exists in the current codebase
 
+### Pattern: Missing or Stale Overview
+
+**Severity**: High (Overview is a MUST section for component specs)
+
+**Symptoms**
+- a component spec has no Overview section at all
+- the Overview exists but its description does not match actual implementation behavior or design
+- Overview references outdated responsibilities, removed capabilities, or planned-only descriptions after implementation
+
+**Detection Hints**
+- check whether an `Overview` heading exists in each component spec
+- compare the Overview description against actual behavior observed in code (entry points, public API, runtime role)
+- look for planned-only language (`📋 계획됨`) that should have been replaced with actual behavior
+
+**Resolution**
+- add an Overview section if missing
+- rewrite the Overview to reflect the component's actual purpose, scope, and behavior
+- remove or replace planned-only wording with implemented reality
+
 ## 2. Planned vs Actual Drift
 
 ### Pattern: Planned but Implemented

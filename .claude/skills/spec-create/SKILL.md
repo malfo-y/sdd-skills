@@ -320,9 +320,11 @@ ELSE → 미파악 항목에 대해 추가 탐색 또는 AskUserQuestion
 #### Step 3-C: Writing Guidance
 
 - Start with the repository map and runtime map before writing detailed component prose.
-- Favor tables with actual paths over long narrative.
+- Favor tables with actual paths over long narrative — **except** in Overview sections, where prose is encouraged.
+- Follow the **understand-then-change** principle: help readers understand how things work (Overview) before guiding where to change (Change Recipes).
 - For each important component, include:
   - responsibility
+  - **overview** (동작 개요 + 설계 의도; prose encouraged, 2-3 paragraphs max)
   - owned paths
   - key symbols or entry points
   - interfaces or contracts

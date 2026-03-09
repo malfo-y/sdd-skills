@@ -193,6 +193,7 @@ Default mapping (앵커 섹션 기준):
 | Improvement | `Identified Issues & Improvements` | Add with priority |
 | Bug Fix | `Identified Issues & Improvements` | Add to issues |
 | Component Change | `Component Details` | Update/add section |
+| Behavior / Design Intent Change | `Component Spec > Overview` | Update overview |
 | Environment/Config | `Environment & Dependencies` | Add options |
 | Usage/Change Path | `Usage Examples > Common Change Paths` | Add recipe |
 | Uncertainty | `Open Questions` | Add question |
@@ -255,6 +256,9 @@ When adding a new component, use the SDD component spec structure:
 
 ~~~markdown
 ### 컴포넌트: [이름]
+#### Overview
+[이 컴포넌트의 동작 방식과 설계 의도]
+
 #### Responsibility
 [이 컴포넌트가 하는 일과 하지 않는 일]
 

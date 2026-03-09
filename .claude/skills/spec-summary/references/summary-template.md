@@ -112,17 +112,18 @@ Database       Cache (Redis)
 
 [IF 1 component: Skip diagram]
 
-| Component | Purpose | Status |
-|-----------|---------|--------|
-| [Component Name] | [1 sentence: what it does] | [✅/🚧/📋 from spec] |
-| [Component Name] | [1 sentence: what it does] | [✅/🚧/📋] |
-| ... | ... | ... |
+| Component | Overview | Purpose | Status |
+|-----------|----------|---------|--------|
+| [Component Name] | [1 sentence: 동작 개요] | [1 sentence: what it does] | [✅/🚧/📋 from spec] |
+| [Component Name] | [1 sentence: 동작 개요] | [1 sentence: what it does] | [✅/🚧/📋] |
+| ... | ... | ... | ... |
 
 [RULES for component extraction:]
 - Maximum 5 components
 - Choose most important: user-facing, data layer, core logic
 - Extract from "아키텍처 개요" or "컴포넌트 상세" section
 - Simplify: group related modules into single component
+- Overview: 1 sentence describing how the component operates (동작 개요) — keep brief
 
 ### Tech Stack
 - **Language** (언어): [Primary language from spec]

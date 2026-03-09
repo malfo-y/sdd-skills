@@ -59,7 +59,7 @@ Primary goals:
 ## Hard Rules
 
 1. **Always backup**: 수정 전 반드시 `_sdd/spec/prev/PREV_<filename>_<timestamp>.md`로 백업한다.
-2. **호환 가능한 앵커 섹션 보존**: `Goal`, `Architecture Overview`, `Component Details`, `Environment & Dependencies`, `Identified Issues & Improvements`, `Usage Examples`, `Open Questions` 섹션명을 유지한다. 내부 구조는 탐색형으로 재구성한다.
+2. **호환 가능한 앵커 섹션 보존**: `Goal`, `Overview`, `Architecture Overview`, `Component Details`, `Environment & Dependencies`, `Identified Issues & Improvements`, `Usage Examples`, `Open Questions` 섹션명을 유지한다. 내부 구조는 탐색형으로 재구성한다. `Overview`(동작 개요 + 설계 의도)는 재작성 시에도 기존 내용을 보존한다.
 3. **탐색 우선**: 리라이트 결과는 프로젝트 이해와 변경 탐색을 더 쉽게 만들어야 한다.
 4. **실제 경로 우선**: 주요 컴포넌트, 변경 지점, 검증 지점에는 실제 파일/디렉토리 경로 또는 핵심 심볼을 포함한다.
 5. **요약 우선**: 코드를 그대로 복사하지 말고 의도, 경계, 계약, 변경 지점, 불변 조건을 압축해서 정리한다.
@@ -270,7 +270,7 @@ Validate:
 - `Repository Map`, `Runtime Map`, and `Component Index` exist
 - key components have real paths or symbols
 - Change Recipes 또는 변경 진입점이 존재
-- 앵커 섹션(`Goal`, `Architecture Overview`, `Component Details`, `Open Questions`)이 보존됨
+- 앵커 섹션(`Goal`, `Overview`, `Architecture Overview`, `Component Details`, `Open Questions`)이 보존됨
 - optional sections appear only when relevant and are not empty
 - duplication is reduced
 - links are valid
@@ -393,7 +393,7 @@ If created, include:
 - Are major invariants and risks visible?
 - Are unresolved ambiguities explicitly documented?
 - Is essential rationale preserved in `DECISION_LOG.md` when removed from the main spec?
-- Are anchor sections (`Goal`, `Architecture Overview`, `Component Details`, `Open Questions`) preserved?
+- Are anchor sections (`Goal`, `Overview`, `Architecture Overview`, `Component Details`, `Open Questions`) preserved?
 
 ## Language Preference
 

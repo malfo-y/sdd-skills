@@ -90,6 +90,22 @@ Client -> FastAPI route -> URLService -> URLRepository -> SQLite
 - 짧은 코드를 받아 원본 URL을 조회한다.
 - 클릭 수 업데이트를 조정한다.
 
+#### Overview
+
+##### 동작 개요
+사용자가 긴 URL을 전달하면 고유한 단축 코드를 생성하여 저장하고,
+짧은 URL을 반환한다. 이후 단축 코드로 접근하면 원본 URL로
+리다이렉트하며, 이 과정에서 클릭 수를 자동으로 집계한다.
+조회 시에는 Redis 캐시를 먼저 확인하고, 캐시 미스 시 DB에서
+조회한 뒤 캐시를 갱신한다.
+
+##### 설계 의도
+- 캐시 우선 조회: 리다이렉트는 읽기 빈도가 쓰기보다 압도적으로 높으므로,
+  Redis 캐시를 앞단에 두어 DB 부하를 줄인다.
+- 저장소 분리: `URLRepository`를 별도 계층으로 분리하여
+  SQLite에서 다른 DB로 교체할 때 서비스 로직 변경 없이 저장소만
+  교체할 수 있도록 한다.
+
 #### Owned Paths
 - `src/services/url_service.py`
 - `src/repositories/url_repository.py`

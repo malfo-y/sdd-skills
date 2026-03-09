@@ -44,6 +44,7 @@ This skill evaluates four dimensions:
 - `Repository Map`이 있는가
 - `Runtime Map`이 있는가
 - `Component Index`가 있는가
+- 컴포넌트 스펙에 `Overview` 섹션(동작 개요 + 설계 의도)이 있는가 **(MUST)**
 - 실제 경로와 심볼이 연결되는가
 
 ### 3. Changeability
@@ -112,6 +113,7 @@ Assess the spec as a searchable map for people and LLMs. Focus on:
 - **Repository Map**: 디렉토리-역할 매핑이 있는가
 - **Runtime Map**: 요청/이벤트/데이터 흐름이 보이는가
 - **Component Index**: 컴포넌트별 책임/비책임/경로가 있는가
+- **Component Overview**: 컴포넌트 스펙에 Overview 섹션(동작 개요 + 설계 의도)이 있는가 **(MUST — High if missing)**
 - **Common Change Paths**: 자주 변경되는 시나리오별 진입점이 있는가
 - **Open Questions**: 미결 사항이 정리되어 있는가
 

@@ -25,6 +25,8 @@ This checklist does not authorize direct spec edits.
 - [ ] `Repository Map`이 존재하고 실제 디렉토리 구조와 일치하는가
 - [ ] `Runtime Map`이 존재하고 주요 요청/이벤트/데이터 흐름을 보여주는가
 - [ ] `Component Index`가 존재하고 컴포넌트별 책임/비책임/경로가 있는가
+- [ ] 컴포넌트 스펙에 Overview 섹션(동작 개요 + 설계 의도)이 있는가 **(MUST — High if missing)**
+- [ ] Overview가 코드 구현 복사가 아닌, 사용자 관점의 동작 설명과 설계 근거를 담고 있는가
 - [ ] 실제 경로와 심볼이 정확히 연결되는가 (깨진 참조 없음)
 - [ ] Section flow is navigable and cross-links are valid
 

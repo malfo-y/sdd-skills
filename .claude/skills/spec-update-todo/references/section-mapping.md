@@ -12,6 +12,7 @@ Map each planned item to the appropriate SDD anchor section:
 | Scope or ownership boundary change | `Architecture Overview > System Boundary` |
 | Runtime/data/event flow change | `Architecture Overview > Runtime Map` |
 | New or changed component | `Component Details` |
+| Behavior change / design intent change | `Component Spec > Overview` |
 | New config/dependency/runtime change | `Environment & Dependencies` |
 | Operational or debugging workflow | `Usage Examples > Common Operations` or `Common Change Paths` |
 | Planned risk or technical debt | `Identified Issues & Improvements` |

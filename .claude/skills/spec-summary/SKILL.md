@@ -25,11 +25,11 @@ version: 1.4.0
 
 ### Exploration-First Principles
 
-요약은 `index-first`, `path-first`, `change-first` 원칙을 따른다.
+요약은 `index-first`, `path-first`, `understand-then-change` 원칙을 따른다.
 
 - **index-first**: 모든 것을 길게 설명하기보다, 어디에 무엇이 있는지 빠르게 찾게 해 준다
 - **path-first**: 모호한 설명보다 실제 파일/디렉토리 경로를 우선한다
-- **change-first**: "어떻게 동작하는가" 설명도 중요하지만, "어디를 바꾸면 되는가"가 더 중요하다
+- **understand-then-change**: "어디를 바꾸면 되는가" 앞에 "어떻게 동작하는가"를 먼저 이해해야 한다
 
 ### Output
 
@@ -45,7 +45,7 @@ version: 1.4.0
 2. **README sync on explicit request only**: README 업데이트는 사용자가 명시적으로 요청할 때만 수행한다.
 3. **언어 규칙**: 기존 스펙/문서의 언어를 따른다. 새 프로젝트(기존 스펙 없음)는 한국어 기본. 사용자 명시 지정 시 해당 언어 사용.
 4. **백업 후 덮어쓰기**: 기존 `SUMMARY.md` 존재 시 `prev/PREV_SUMMARY_<timestamp>.md`로 백업 후 새로 생성한다.
-5. 요약은 `index-first`, `path-first`, `change-first` 원칙을 따라야 한다.
+5. 요약은 `index-first`, `path-first`, `understand-then-change` 원칙을 따라야 한다.
 6. 정보가 불충분하면 추정으로 단정하지 말고 `Open Questions`에 남긴다.
 7. `MUST` 섹션만 있는 작은 스펙도 정상으로 간주한다. 없는 optional 섹션을 억지로 채워 넣지 않는다.
 8. 요약은 token-efficient 해야 하며, 비어 있는 optional 섹션은 생략한다.
@@ -202,7 +202,7 @@ ELSE → 오류 메시지 출력 후 중지: "스펙 파일에 접근할 수 없
    ```
 
 5. **Architecture Overview** → Core Components
-   - Extract component names and purposes
+   - Extract component names, overview (동작 개요, 1 sentence), and purposes
    - **Limit to key components** (not all details)
    - Identify relationships between components
    - Extract tech stack information
@@ -402,11 +402,11 @@ Component A ──> Component B
      └──> Component C
 ```
 
-| Component | Purpose | Status |
-|-----------|---------|--------|
-| Component A | [What it does] | ✅ / 🚧 / 📋 |
-| Component B | [What it does] | ✅ / 🚧 / 📋 |
-| Component C | [What it does] | ✅ / 🚧 / 📋 |
+| Component | Overview | Purpose | Status |
+|-----------|----------|---------|--------|
+| Component A | [동작 개요] | [What it does] | ✅ / 🚧 / 📋 |
+| Component B | [동작 개요] | [What it does] | ✅ / 🚧 / 📋 |
+| Component C | [동작 개요] | [What it does] | ✅ / 🚧 / 📋 |
 
 ### Tech Stack
 - **Language** (언어): [주 언어]
@@ -774,7 +774,7 @@ A good summary should:
 ## Version History
 
 - **1.4.0** (2026-03): Added exploration-first principles and priority
-  - Added `index-first`, `path-first`, `change-first` principles
+  - Added `index-first`, `path-first`, `understand-then-change` principles
   - Added Summary Shape priority order
   - Added Component Index and Common Change Paths sections to output
   - Added token-efficiency and empty section omission rules
