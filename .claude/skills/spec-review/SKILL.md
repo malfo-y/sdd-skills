@@ -57,6 +57,12 @@ This skill evaluates four dimensions:
 - 오래된 `Open Questions`가 그대로 남아 있지 않은가
 - 결정 맥락이 달라졌는데 `DECISION_LOG.md` 제안이 필요한가
 
+### 5. Decision & Invariant Memory
+- Cross-Cutting Invariants 또는 불변 조건이 명시되어 있는가
+- 비자명한 설계 결정이 `DECISION_LOG.md` 또는 스펙 본문에 기록되어 있는가
+- `Open Questions`에 실질적 미결 사항이 정리되어 있는가
+- "깨지면 안 되는 가정"을 스펙만 읽고 파악할 수 있는가
+
 ## When to Use This Skill
 
 - Before implementation planning to validate spec quality
@@ -202,6 +208,18 @@ Classify findings:
 | Issue | Low |
 | Decision-log | Medium |
 | Navigation | Medium |
+
+#### Dimension별 판정
+
+각 dimension을 PASS / WEAK / FAIL로 판정하고 결과 테이블을 제시한다:
+
+| Dimension | Probe | 판정 | 근거 |
+|-----------|-------|------|------|
+| Entry Point Quality | "이 저장소는 무엇을 하는가?" | PASS | (구체적 근거) |
+| Navigation Quality | "X 기능은 어디에?" | PASS | (구체적 근거) |
+| Changeability | "Y를 변경하려면?" | PASS | (구체적 근거) |
+| Drift | "스펙과 코드가 일치하는가?" | PASS | (구체적 근거) |
+| Decision & Invariant Memory | "왜 Z를 선택? 깨지면 안 되는 가정은?" | PASS | (구체적 근거) |
 
 Assign one overall decision:
 - `SPEC_OK`: no material drift or quality blockers

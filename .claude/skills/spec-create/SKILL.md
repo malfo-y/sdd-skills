@@ -314,6 +314,80 @@ Validate:
 7. `DECISION_LOG.md` exists if the drafting process introduced non-obvious decisions.
 8. If the main spec becomes too large or component count is high, split it.
 
+### Step 4.5: Quality Gate (LLM-as-Judge)
+
+구조 검증(Step 4) 통과 후, 스펙이 본래 목적을 달성하는지 자체 평가한다.
+이 단계는 **판정만** 수행한다. FAIL 시 보강은 이전 작성 단계(Step 3)로 돌아가 수행한다.
+
+#### 검증 기준 (4 Criteria)
+
+**Criterion 1 — 저장소 이해 (Understand)**
+> Probe: "이 저장소는 무엇을 하고, 누구를 위한 것이며, 무엇을 하지 않는가?"
+
+| 판정 | 기준 |
+|------|------|
+| **PASS** | Goal 섹션만 읽고 프로젝트 목적, 주요 사용자, 비목표를 구체적으로 답할 수 있다 |
+| **WEAK** | 답할 수 있지만 모호하거나 비목표가 누락되어 있다 |
+| **FAIL** | Goal이 없거나 일반론만 있어 이 저장소만의 목적을 파악할 수 없다 |
+
+**Criterion 2 — 기능 위치 탐색 (Locate)**
+> Probe: "X 기능의 코드는 어디에 있는가?" (X = 스펙에 기술된 주요 기능 중 하나)
+
+| 판정 | 기준 |
+|------|------|
+| **PASS** | Component Details/Component Index에서 실제 파일 경로와 핵심 심볼을 즉시 찾을 수 있다 |
+| **WEAK** | 컴포넌트는 기술되어 있으나 실제 경로나 심볼이 부족하다 |
+| **FAIL** | 기능이 어느 컴포넌트/파일에 속하는지 스펙에서 알 수 없다 |
+
+**Criterion 3 — 안전한 수정 판단 (Change)**
+> Probe: "Y를 변경하려면 어디를 수정하고 무엇을 주의해야 하는가?" (Y = 대표적 변경 시나리오)
+
+| 판정 | 기준 |
+|------|------|
+| **PASS** | Change Recipes, 변경 핫스팟, 또는 변경 진입점이 있고, 관련 불변 조건/계약이 명시되어 있다 |
+| **WEAK** | 변경 시작점은 있으나 주의사항(불변 조건, 영향 범위)이 부족하다 |
+| **FAIL** | 변경 가이드가 전혀 없어 코드를 직접 탐색해야 한다 |
+
+**Criterion 4 — 비자명한 결정 기억 (Remember)**
+> Probe: "이 설계에서 왜 Z를 선택했는가?" 또는 "깨지면 안 되는 가정은 무엇인가?"
+
+| 판정 | 기준 |
+|------|------|
+| **PASS** | Cross-Cutting Invariants, Open Questions, 또는 DECISION_LOG에 실질적 내용이 있다 |
+| **WEAK** | 일부 결정/가정이 기록되어 있으나 핵심 불변 조건이 누락되어 있다 |
+| **FAIL** | 비자명한 결정이나 불변 조건이 전혀 기록되지 않았다 |
+
+#### 검증 프로세스
+
+1. 생성된 스펙 전체를 다시 읽는다
+2. 각 criterion에 대해 probe 질문을 시도한다
+   - Criterion 1: Goal 섹션에서 프로젝트 목적, 사용자, 비목표를 찾는다
+   - Criterion 2: 주요 기능 1개를 골라 해당 경로/심볼을 찾는다
+   - Criterion 3: 대표적 변경 시나리오 1개를 설정하고 변경 가이드를 찾는다
+   - Criterion 4: 불변 조건, 설계 결정, Open Questions를 찾는다
+3. 각 criterion을 PASS / WEAK / FAIL로 판정한다
+4. 결과에 따라 행동한다:
+
+| 결과 | 행동 |
+|------|------|
+| ALL PASS | 검증 통과, 다음 단계 진행 |
+| WEAK만 존재 (FAIL 없음) | 개선 포인트를 사용자에게 알리되 진행 허용 |
+| FAIL 1개 이상 | FAIL 항목과 근거를 기록 → Step 3로 돌아가 해당 부분만 보강 → 이 단계를 재실행 (최대 1회) |
+| 재검증 후에도 FAIL | 사용자에게 보고하고 판단을 맡긴다 |
+
+#### 판정 결과 출력
+
+스펙 작업 완료 시 아래 테이블을 텍스트로 출력한다:
+
+| Criterion | Probe | 판정 | 근거 |
+|-----------|-------|------|------|
+| 저장소 이해 | "이 저장소는 무엇을 하는가?" | PASS | (구체적 근거) |
+| 기능 위치 탐색 | "X 기능은 어디에?" | PASS | (구체적 근거) |
+| 안전한 수정 판단 | "Y를 변경하려면?" | PASS | (구체적 근거) |
+| 비자명한 결정 기억 | "왜 Z를 선택?" | PASS | (구체적 근거) |
+
+**종합**: PASS / PASS WITH NOTES / FAIL → FIX
+
 ## Split Guidance
 
 Split the spec when any of the following is true:
