@@ -167,6 +167,13 @@ class OutputModel:
 - Strategy pattern for...
 - Factory pattern for...
 
+<!-- Include Source field only when documenting an existing codebase -->
+#### Source
+
+| **Source** | `src/components/name/main.py`: ClassName.method(), entry_point() |
+|            | `src/components/name/utils.py`: helper_function(), parse_input() |
+|            | `src/components/name/models.py`: InputModel, OutputModel |
+
 #### Dependencies
 
 | Dependency | Type | Purpose |

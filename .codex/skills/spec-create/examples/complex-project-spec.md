@@ -164,6 +164,14 @@ Manages product catalog, categories, and vendor listings.
 - CQRS for read/write separation
 - Event sourcing for audit trail
 
+#### Source
+
+| **Source** | `services/product/src/main.py`: create_app(), configure_routes() |
+|            | `services/product/src/api/products.py`: list_products(), create_product(), get_product(), update_product(), delete_product() |
+|            | `services/product/src/api/search.py`: search_products(), build_query() |
+|            | `services/product/src/models/product.py`: Product, ProductVariant, ProductImage |
+|            | `services/product/src/events/publishers.py`: publish_product_event() |
+
 #### Dependencies
 
 | Service | Type | Purpose |
@@ -194,6 +202,13 @@ Handles order lifecycle from creation to fulfillment.
 - Payment orchestration
 - Fulfillment coordination
 - Refund processing
+
+#### Source
+
+| **Source** | `services/order/src/api/orders.py`: create_order(), cancel_order(), get_order_status() |
+|            | `services/order/src/services/saga.py`: OrderCreationSaga, compensate() |
+|            | `services/order/src/services/fulfillment.py`: FulfillmentCoordinator, process_refund() |
+|            | `services/order/src/models/order.py`: Order, OrderItem, OrderStatus |
 
 #### Order State Machine
 

@@ -185,6 +185,41 @@ See [MIGRATION.md](./MIGRATION.md) for detailed steps.
 
 ---
 
+## Changelog Entry with Source Field Updates
+
+```markdown
+## [1.5.0] - 2024-02-10
+
+### Source Field Updates
+- **Auth Module** (`src/auth/`)
+  - Added Source field: `src/auth/handler.py`: AuthHandler, login(), logout()
+  - Added Source field: `src/auth/token.py`: TokenManager, verify_token()
+- **Database Layer** (`src/db/`)
+  - Updated Source field: `src/db/connection.py`: ConnectionPool → ConnectionManager (renamed)
+  - Added new function to Source: `src/db/queries.py`: batch_insert()
+- **API Layer** (`src/api/`)
+  - Added Source field: `src/api/router.py`: APIRouter, register_routes()
+  - Removed from Source: `src/api/legacy.py` (file deleted)
+
+### Added
+- **Auth Module** (`src/auth/`)
+  - Token-based authentication with JWT support
+  - | **Source** | `src/auth/token.py`: verify_token(), decode_jwt() |
+  - |            | `src/auth/handler.py`: AuthHandler |
+
+### Changed
+- **Database Layer** (`src/db/`)
+  - Renamed ConnectionPool to ConnectionManager for clarity
+  - | **Source** | `src/db/connection.py`: ConnectionManager, get_pool(), release() |
+  - |            | `src/db/queries.py`: execute_query(), batch_insert() |
+
+### Documentation
+- Updated all affected spec components with Source fields
+- Added Source field to 4 previously undocumented components
+```
+
+---
+
 ## Linking Changelog to Spec
 
 In the main spec document, reference the changelog:

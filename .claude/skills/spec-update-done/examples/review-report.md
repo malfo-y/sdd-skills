@@ -260,6 +260,74 @@ Add examples for new features.
 
 ---
 
+### 5. Source Drift
+
+#### 5.1 Missing Source File
+
+**Status**: 🔴 Source Drift
+
+**Current Spec Says:**
+> | **Source** | `src/utils/cache_manager.py`: CacheManager, invalidate() |
+
+**Actual State:**
+- File `src/utils/cache_manager.py` no longer exists
+- Functionality moved to `src/core/cache.py` in commit `uvw9012`
+
+**Recommended Update:**
+Update Source field to:
+> | **Source** | `src/core/cache.py`: CacheManager, invalidate(), warm_up() |
+
+---
+
+#### 5.2 Function Renamed
+
+**Status**: 🟡 Source Drift
+
+**Current Spec Says:**
+> | **Source** | `src/extractors/profile_extractor.py`: extract_profile(), parse_bio() |
+
+**Actual State:**
+- `parse_bio()` renamed to `parse_biography()` in commit `xyz3456`
+- `extract_profile()` still exists unchanged
+
+**Recommended Update:**
+Update Source field to:
+> | **Source** | `src/extractors/profile_extractor.py`: extract_profile(), parse_biography() |
+
+---
+
+#### 5.3 Missing Source Field
+
+**Status**: 🔴 Source Field Missing
+
+**Evidence:**
+- Component "Proxy Manager" has no Source field in spec
+- Implementation exists at `src/utils/proxy_manager.py`
+- Contains: ProxyRotator, rotate(), health_check(), get_proxy()
+
+**Recommended Update:**
+Add Source field to Proxy Manager component:
+> | **Source** | `src/utils/proxy_manager.py`: ProxyRotator, rotate(), health_check() |
+
+---
+
+#### 5.4 Outdated Source (New Functions Added)
+
+**Status**: 🟡 Source Drift
+
+**Current Spec Says:**
+> | **Source** | `src/exporters/csv_exporter.py`: CSVExporter, export() |
+
+**Actual State:**
+- New methods added: `export_batch()`, `validate_schema()`
+- Added in commits `abc4567`, `def8901`
+
+**Recommended Update:**
+Update Source field to:
+> | **Source** | `src/exporters/csv_exporter.py`: CSVExporter, export(), export_batch(), validate_schema() |
+
+---
+
 ## Summary of Recommended Changes
 
 ### High Priority

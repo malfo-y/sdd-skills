@@ -103,6 +103,10 @@ Compare spec claims to implementation evidence:
 - **Config drift**: env vars/defaults/dependency versions
 - **Issue drift**: resolved issues still open in spec, or new issues undocumented
 - **Decision-log drift**: implemented behavior/constraints diverge from recorded rationale
+- **Source-field drift**: Source field references stale/missing files, renamed classes/functions, or components lacking Source fields despite having implementation code
+  - Verify files listed in Source fields actually exist (Glob)
+  - Verify classes/functions listed in Source fields exist in the referenced files (Grep)
+  - Identify implemented components that have no Source field
 
 Require concrete evidence wherever possible:
 - `path:line` references
@@ -126,6 +130,7 @@ If `_sdd/env.md` is missing/incomplete, apply deterministic defaults for environ
    | Config drift | N | N | N |
    | Issue drift | N | N | N |
    | Decision-log drift | N | N | N |
+   | Source-field drift | N | N | N |
 
 2. 내부 자동 처리:
    - 평가를 바로 진행한다.
@@ -140,6 +145,18 @@ Classify findings:
 - `High`: architecture breaks, security/reliability risks, contradictory spec claims
 - `Medium`: behavior mismatch, missing acceptance criteria, important doc gaps
 - `Low`: style/organization/non-blocking documentation quality issues
+
+Drift Type → Default Severity Mapping:
+
+| Drift Type | Default Severity |
+|------------|-----------------|
+| Architecture | High |
+| Feature | Medium |
+| API | Medium |
+| Config | Low |
+| Issue | Low |
+| Decision-log | Medium |
+| Source-field | Low |
 
 Assign one overall decision:
 - `SPEC_OK`: no material drift or quality blockers

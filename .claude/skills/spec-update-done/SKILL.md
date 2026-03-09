@@ -162,6 +162,11 @@ Compare spec against reality to find discrepancies:
 - Configuration changes
 - Directory structure changes
 
+**Source Drift:**
+- Components with implementation but no Source field
+- Source field references outdated files/classes/functions
+- Renamed or moved files not reflected in Source field
+
 ### Step 3: Generate Change Report
 
 **Tools**: — (분석 결과 정리, 도구 불필요)
@@ -222,6 +227,29 @@ Update spec document with identified changes:
 4. Archive or remove obsolete content
 5. Add changelog entry
 6. If behavior/architecture intent changed, append a concise entry to `_sdd/spec/DECISION_LOG.md`
+
+**Source Field Update (Hybrid approach):**
+1. Extract file paths from implementation artifacts:
+   - Implementation plan's Target Files field
+   - Implementation report's changed file list
+   - git diff results
+2. For each component in spec, match implementation files to Source field:
+   - New components: Add Source field with key files/classes/functions
+   - Existing components: Update Source field (reflect file renames, new functions, removed functions)
+3. Supplement with code exploration (Grep/Glob):
+   - Verify extracted paths still exist
+   - Discover additional relevant files not in implementation artifacts
+4. Skip Source field for components without implementation code
+
+Source field format reference:
+```markdown
+| **Source** | `src/auth/token.py`: verify_token(), decode_jwt() |
+|            | `src/auth/handler.py`: AuthHandler |
+```
+- Wrap file paths in backticks
+- Group by file, one file per line
+- Separate classes/functions in the same file with commas
+- Use relative paths from project root
 
 **Versioning:**
 - Increment patch version for minor updates
@@ -394,6 +422,7 @@ Incremental updates during development:
 - **Preserve context**: Don't remove valuable explanations
 - **Maintain structure**: Follow existing spec organization
 - **Version control**: Increment version appropriately
+- **Preserve Source mappings**: Keep existing Source fields accurate; update rather than remove when code changes
 
 ### Communication
 

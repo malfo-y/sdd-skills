@@ -31,6 +31,7 @@ Primary goals:
 3. **자동 검증 우선**: 대규모 구조 변경(파일 분할, 대량 이동) 전에 반드시 자동 검증을 받는다.
 4. **한국어 작성**: 추가/수정 내용은 한국어로 작성한다 (기존 언어 유지).
 5. **최소 산출물**: `DECISION_LOG.md` 외 추가 거버넌스 문서는 사용자 요청 시에만 생성한다.
+6. **Preserve Source fields**: 기존 컴포넌트 테이블의 `Source` 필드가 있으면 반드시 보존한다. 섹션 이동/재구성 시에도 Source 매핑 정보를 유지한다.
 
 ## Input Sources
 
@@ -232,6 +233,7 @@ Create or update `_sdd/spec/REWRITE_REPORT.md` with:
 - Are ambiguities/conflicts/missing items explicitly documented?
 - Is unnecessary duplication removed?
 - Is essential rationale preserved (in spec or `_sdd/spec/DECISION_LOG.md`)?
+- [ ] Verify all existing Source fields from the original spec are preserved in the rewritten output
 
 ## Best Practices
 

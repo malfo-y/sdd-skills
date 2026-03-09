@@ -50,6 +50,11 @@ Create a simple URL shortening service that converts long URLs into short, share
 | **Input** | Long URL or short code |
 | **Output** | Short URL or redirect target |
 
+**Source:**
+
+| **Source** | `src/services/url_service.py`: generate_short_code(), resolve_url(), track_click() |
+|            | `src/models/url.py`: URLModel, URLCreate |
+
 **Key Files:**
 - `src/services/url_service.py` - Core logic
 - `src/models/url.py` - URL model

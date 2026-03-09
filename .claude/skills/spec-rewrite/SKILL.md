@@ -36,6 +36,7 @@ Primary goals:
 3. **사용자 확인 우선**: 대규모 구조 변경(파일 분할, 대량 이동) 전에 반드시 사용자 확인을 받는다.
 4. **언어 규칙**: 기존 스펙/문서의 언어를 따른다. 새 프로젝트(기존 스펙 없음)는 한국어 기본. 사용자 명시 지정 시 해당 언어 사용.
 5. **최소 산출물**: `DECISION_LOG.md` 외 추가 거버넌스 문서는 사용자 요청 시에만 생성한다.
+6. **Preserve Source fields**: 기존 컴포넌트 테이블의 `Source` 필드가 있으면 반드시 보존한다. 섹션 이동/재구성 시에도 Source 매핑 정보를 유지한다.
 
 ## Input Sources
 
@@ -211,6 +212,7 @@ Quality Checklist를 검증 스텝으로 실행한다:
 - [ ] 모호성/충돌/누락 항목이 명시적으로 문서화되었는가?
 - [ ] 불필요한 중복이 제거되었는가?
 - [ ] 필수 근거(rationale)가 스펙 또는 `DECISION_LOG.md`에 보존되었는가?
+- [ ] Verify all existing Source fields from the original spec are preserved in the rewritten output
 
 ## Output Format
 

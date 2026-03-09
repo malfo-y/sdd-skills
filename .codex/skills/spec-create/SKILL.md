@@ -150,6 +150,15 @@ ELSE IF NOT project_readable → deterministic defaults (non-interactive): 프�
 
 **Tools**: `rg`, `Glob`, `Read`, `Bash`, `Read`
 
+#### Codebase Existence Check
+
+Determine whether an actual codebase exists for this project. A codebase is considered **present** when implementation source files (e.g., `*.py`, `*.ts`, `*.java`, `*.go`, `*.rs`, etc.) are found in the project directory via `Glob`. A project with only documentation, config stubs, or empty scaffolding is treated as **no codebase**.
+
+- **Codebase exists** → populate `Source` fields in component tables during Step 3.
+- **No codebase** (spec-only / greenfield project) → omit `Source` fields entirely from component tables.
+
+#### Exploration
+
 Explore the codebase to understand:
 
 - Project structure and file organization
@@ -273,6 +282,7 @@ For each major component, include:
 | **Input** | Expected inputs and formats |
 | **Output** | Produced outputs and formats |
 | **Dependencies** | Other components or external deps |
+| **Source** | _(Include only when codebase exists)_ Mapped source files, classes, and functions. See Source field format in Best Practices > Writing Quality. |
 
 **Architecture Details:**
 - Implementation approach
@@ -408,7 +418,16 @@ See detailed specs:
 - **Be Specific**: Avoid vague descriptions
 - **Use Examples**: Include code snippets and usage examples
 - **Stay Current**: Update spec when code changes significantly
-- **Link to Code**: Reference file paths and line numbers when helpful
+- **Link to Code**: Reference file paths and line numbers when helpful. When a codebase exists, use the **Source** field in component tables to map each component to its implementation files. Source field format:
+  ```
+  | **Source** | `<relative/path/to/file>`: ClassName, function_name() |
+  |            | `<relative/path/to/other>`: AnotherClass              |
+  ```
+  - Wrap file paths in backticks.
+  - Use project-root-relative paths.
+  - Group classes/functions by file; separate items within the same file with commas.
+  - Use a new table row (`|            |`) per file for readability.
+  - Omit the Source field entirely for spec-only / greenfield projects with no codebase (see Step 2 Codebase Existence Check).
 
 ### Organization
 

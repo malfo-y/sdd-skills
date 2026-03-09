@@ -109,6 +109,10 @@ Compare spec claims to implementation evidence:
 - **Config drift**: env vars/defaults/dependency versions
 - **Issue drift**: resolved issues still open in spec, or new issues undocumented
 - **Decision-log drift**: implemented behavior/constraints diverge from recorded rationale
+- **Source-field drift**: Source field references stale/missing files, renamed classes/functions, or components lacking Source fields despite having implementation code
+  - Verify files listed in Source fields actually exist (Glob)
+  - Verify classes/functions listed in Source fields exist in the referenced files (Grep)
+  - Identify implemented components that have no Source field
 
 Require concrete evidence wherever possible:
 - `path:line` references
@@ -152,6 +156,7 @@ Classify findings:
 | Config | Low |
 | Issue | Low |
 | Decision-log | Medium |
+| Source-field | Low |
 
 Assign one overall decision:
 - `SPEC_OK`: no material drift or quality blockers
