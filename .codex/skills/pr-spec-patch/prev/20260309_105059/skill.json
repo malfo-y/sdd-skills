@@ -1,6 +1,0 @@
-{
-  "name": "pr-spec-patch",
-  "description": "This skill should be used when the user asks to \"create spec patch from PR\", \"PR spec patch\", \"compare PR with spec\", \"PR to spec\", or wants to generate a spec patch document by comparing a pull request against the current specification.",
-  "instruction_file": "SKILL.md",
-  "version": "1.1.0"
-}
