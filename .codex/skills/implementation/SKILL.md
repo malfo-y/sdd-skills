@@ -8,23 +8,6 @@ version: 1.1.0
 
 Execute implementation plans systematically using Test-Driven Development (TDD), with **parallel sub-agent dispatch** for independent tasks within each phase. Tasks without file conflicts are executed concurrently via parallel sub-agent calls.
 
-## Simplified Workflow
-
-This skill is **Step 3 of 4** in the parallel SDD workflow:
-
-```
-spec → feature-draft → implementation (this) → spec-update-done
-```
-
-| Step | Skill | Purpose |
-|------|-------|---------|
-| 1 | spec-create | Create the initial spec document |
-| 2 | feature-draft | Draft feature spec patch + implementation plan (with Target Files) |
-| **3** | **implementation** | Execute the plan with parallel sub-agents (TDD) |
-| 4 | spec-update-done | Sync spec with actual code |
-
-> Also compatible with plans without Target Files (falls back to sequential execution).
-
 ## Hard Rule: Never Modify Spec Files
 
 - This skill **MUST NOT** create/edit/delete any spec documents under `<project_root>/_sdd/spec/`.
@@ -74,7 +57,7 @@ If multiple plan files exist and the user did not specify a starting point:
 
 3. **Check for Target Files**: Examine whether tasks have `**Target Files**` fields.
    - **Present**: Enable parallel execution (this skill's main advantage)
-   - **Absent**: Fall back to sequential mode with optional Target Files inference (see Step 3)
+   - **Absent**: Fall back to sequential mode with optional Target Files inference (see Step 4)
 
 4. **Understand the Codebase**: Use `rg`/`Glob` exploration to understand:
    - Existing code patterns
@@ -87,7 +70,7 @@ If multiple plan files exist and the user did not specify a starting point:
    - Focus on:
      - `Goal` → `Project Snapshot / Key Features / Non-Goals`
      - `Architecture Overview` → `System Boundary / Repository Map / Runtime Map`
-     - `Component Details` → `Component Index`
+     - `Component Details` → `Component Index / Overview`
      - `Usage Examples` → `Common Change Paths` (if present)
      - `Open Questions`
 
@@ -138,7 +121,7 @@ Read the current spec as a navigation map, not as a prose dump:
 
 - `Goal` → `Project Snapshot / Key Features / Non-Goals`
 - `Architecture Overview` → `System Boundary / Repository Map / Runtime Map`
-- `Component Details` → `Component Index`
+- `Component Details` → `Component Index / Overview`
 - `Usage Examples` → `Common Change Paths` (if present)
 - `Open Questions`
 
@@ -197,7 +180,7 @@ Use the current spec, the plan's `Spec Gaps`, and `Expected Spec Sync Follow-ups
 
 This is the **key step** that differentiates parallel execution from sequential execution.
 
-### 3.1 Check Target Files Availability
+### 4.1 Check Target Files Availability
 
 ```
 IF all tasks have Target Files:
@@ -205,10 +188,10 @@ IF all tasks have Target Files:
 ELSE IF some tasks have Target Files:
     → Parallel for tasks with Target Files, sequential for others
 ELSE (no Target Files at all):
-    → Attempt inference (see 3.2) or fall back to sequential
+    → Attempt inference (see 4.2) or fall back to sequential
 ```
 
-### 3.2 Target Files Inference (when absent)
+### 4.2 Target Files Inference (when absent)
 
 If a plan lacks Target Files:
 
@@ -223,7 +206,7 @@ Use inferred Target Files with confidence scoring:
   - low confidence: execute that task sequentially and log rationale in `Open Questions`
 ```
 
-### 3.3 Build Conflict Graph
+### 4.3 Build Conflict Graph
 
 For each pair of unblocked tasks in a phase, check **both** file-level and semantic conflicts:
 
@@ -250,7 +233,7 @@ For task_a, task_b in unblocked_tasks:
 
 > **Note**: 의미적 충돌은 Acceptance Criteria, Technical Notes, Description에서 추론합니다. 불확실한 경우 순차 실행이 안전합니다. 상세 규칙은 `references/parallel-execution.md`의 "의미적 충돌" 섹션을 참조하세요.
 
-### 3.4 Form Parallel Groups
+### 4.4 Form Parallel Groups
 
 See `references/parallel-execution.md` for the full algorithm.
 
@@ -274,7 +257,7 @@ function buildParallelGroups(unblockedTasks):
     return groups
 ```
 
-### 3.5 Report Parallelization Plan
+### 4.5 Report Parallelization Plan
 
 Before executing, show the user the parallel dispatch plan:
 
@@ -298,17 +281,17 @@ For each phase, execute parallel groups in order:
 
 ```
 For each phase:
-  1. Compute parallel groups (Step 3)
+  1. Compute parallel groups (Step 4)
   2. For each group:
      a. Dispatch sub-agents via parallel sub-agent calls (concurrent)
      b. Wait for all sub-agents in group to complete
-     c. Run post-group verification (Step 5)
+     c. Run post-group verification (Step 6)
      d. Handle failures and unplanned dependencies
   3. Proceed to next group
-  4. When all groups complete → Phase Review (Step 6)
+  4. When all groups complete → Phase Review (Step 7)
 ```
 
-### 4.1 Sub-Agent Dispatch
+### 5.1 Sub-Agent Dispatch
 
 For each task in a parallel group, call sub-agents **simultaneously**:
 
@@ -323,7 +306,7 @@ Task(
 
 **Call all tasks in the same group as parallel sub-agent calls in a single message.**
 
-### 4.2 Sub-Agent Prompt Template
+### 5.2 Sub-Agent Prompt Template
 
 Each sub-agent receives:
 
@@ -385,7 +368,7 @@ Each sub-agent receives:
 - 특이사항
 ```
 
-### 4.3 Sequential Fallback
+### 5.3 Sequential Fallback
 
 When tasks cannot be parallelized (conflicts or missing Target Files), execute them sequentially using the same TDD approach as sequential execution:
 
@@ -400,7 +383,7 @@ When tasks cannot be parallelized (conflicts or missing Target Files), execute t
 
 After each parallel group completes:
 
-### 5.1 Run Full Test Suite
+### 6.1 Run Full Test Suite
 
 ```
 1. Execute all tests (new + existing)
@@ -410,7 +393,7 @@ After each parallel group completes:
    b. Fix or re-run that task sequentially
 ```
 
-### 5.2 Process Unplanned Dependencies
+### 6.2 Process Unplanned Dependencies
 
 ```
 1. Collect UNPLANNED_DEPENDENCY reports from all sub-agents
@@ -421,7 +404,7 @@ After each parallel group completes:
 3. Re-run affected tests after resolution
 ```
 
-### 5.3 Handle Sub-Agent Failures
+### 6.3 Handle Sub-Agent Failures
 
 ```
 IF a sub-agent reports FAILED or PARTIAL:
@@ -431,7 +414,7 @@ IF a sub-agent reports FAILED or PARTIAL:
   4. If retry also fails: report to user, skip task
 ```
 
-### 5.4 Verify File Integrity
+### 6.4 Verify File Integrity
 
 ```
 1. Check that no sub-agent modified files outside their Target Files
@@ -440,7 +423,7 @@ IF a sub-agent reports FAILED or PARTIAL:
    b. Re-run the task sequentially with stricter instructions
 ```
 
-### 5.5 Update Task Status
+### 6.5 Update Task Status
 
 ```
 For each task in the completed group:
@@ -464,7 +447,7 @@ After each group:
 
 After completing all tasks in a phase, run a lightweight quality review.
 
-### 6.1 Collect Phase Context
+### 7.1 Collect Phase Context
 
 Reuse data already tracked during TDD — **no re-discovery needed**:
 - Files created/modified during this phase (from all sub-agents)
@@ -472,7 +455,7 @@ Reuse data already tracked during TDD — **no re-discovery needed**:
 - Acceptance criteria met
 - Any notes or blockers encountered
 
-### 6.2 Cross-Cutting Quality Checks
+### 7.2 Cross-Cutting Quality Checks
 
 Run the following checks on all files touched in this phase. Reference `references/review-checklist.md` for detailed criteria.
 
@@ -486,13 +469,13 @@ Run the following checks on all files touched in this phase. Reference `referenc
 | **Cross-Task Integration** | Tasks within this phase work together correctly |
 | **Parallel Integration** | Sub-agent outputs are consistent with each other |
 
-### 6.3 Categorize Issues
+### 7.3 Categorize Issues
 
 - **Critical**: Security vulnerability, data loss risk, core functionality broken → **must fix before next phase**
 - **Quality**: Missing edge-case tests, inconsistent error handling → document, proceed
 - **Improvement**: Performance optimization, readability enhancement → note for later
 
-### 6.4 Decision Gate
+### 7.4 Decision Gate
 
 ```
 IF critical issues found:
@@ -504,7 +487,7 @@ ELSE:
     Phase is clean — proceed
 ```
 
-### 6.5 Phase Review Output
+### 7.5 Phase Review Output
 
 Save per-phase report under `<project-root>/_sdd/implementation/IMPLEMENTATION_REPORT_PHASE_<phase-number>.md`.
 
@@ -517,19 +500,19 @@ The per-phase report should also summarize:
 
 After all phases complete, run a comprehensive quality review across the **entire implementation**, then produce a combined report.
 
-### 7.1 Comprehensive Quality Review
+### 8.1 Comprehensive Quality Review
 
-Apply the same checklists from Step 6.2 but with **cross-phase scope**:
+Apply the same checklists from Step 7.2 but with **cross-phase scope**:
 - Do modules from different phases integrate correctly?
 - Are there inconsistent patterns between early and late phases?
 - Do security boundaries hold across the full system?
 - Are there performance issues that only appear at full scale?
 
-### 7.2 Final Decision Gate
+### 8.2 Final Decision Gate
 
-Same rules as Step 6.4. Critical issues must be fixed with TDD before declaring completion.
+Same rules as Step 7.4. Critical issues must be fixed with TDD before declaring completion.
 
-### 7.3 Generate Combined Report
+### 8.3 Generate Combined Report
 
 Save the report under a user-specified file (default: `<project-root>/_sdd/implementation/IMPLEMENTATION_REPORT.md`).
 - If the file already exists, archive it as `<project-root>/_sdd/implementation/prev/PREV_IMPLEMENTATION_REPORT_<timestamp>.md` (create `prev/` if needed) and create a new one.
@@ -606,18 +589,6 @@ The combined report should include:
 - Keep execution updates token-efficient and operational
 - Summarize only the current phase, current blockers, and confirmed spec-sync impact
 - Do not repeat the full plan or full spec in every update
-
-## When to Record and Continue
-
-- `Open Questions` exists but does not block current phase
-- Target Files inference is low confidence for some tasks → run those sequentially
-- spec sync impact is ambiguous but not blocking → record as `CONSIDER`
-
-## Integration with Other Skills
-
-- `implementation-plan`: supplies tasks, target files, spec gaps, and expected spec sync follow-ups
-- `spec-update-done`: default follow-up when implementation changed navigation, contracts, runtime map, or change paths
-- `spec-update-todo`: use only when plan/spec mismatch blocks safe continuation
 
 ## TDD Guidelines
 
@@ -750,25 +721,29 @@ Use deterministic defaults and continue (record unresolved items in `Open Questi
 
 ## Integration with Other Skills
 
-- **implementation-plan**: Creates plans with Target Files that this skill consumes
+- **implementation-plan**: Creates plans with Target Files, spec gaps, and expected spec sync follow-ups that this skill consumes
 - **feature-draft**: Also produces plans with Target Files (Part 2: 구현 계획)
-- Plans without Target Files → sequential fallback
+- Plans without Target Files -> sequential fallback
 - **implementation-review**: Standard phase validation step in large workflows, also available for standalone audits
+- **spec-update-done**: Default post-implementation sync step
+- **spec-update-todo**: Use only when the implementation exposed a blocking spec/plan mismatch
 
 ## Quick Start
 
 When user says "implement the plan in parallel":
 
 1. Acquire implementation plan (from `feature-draft`, `implementation-plan`, or existing plan files)
-2. Parse the plan and check for Target Files
-3. If Target Files absent: infer → confidence-check → or fall back to sequential
-4. Create task tracking
-5. **Identify testing framework** used in the project
-6. For each phase:
+2. Load the current spec entry point and relevant component specs
+3. Parse the plan, check for Target Files, and classify likely spec sync impact
+4. If Target Files absent: infer -> confidence-check -> or fall back to sequential
+5. Create task tracking
+6. **Identify testing framework** used in the project
+7. For each phase:
    a. Build parallel groups from unblocked tasks + Target Files
    b. Show dispatch plan to user
    c. **Dispatch sub-agents for each group** (parallel sub-agent calls)
    d. After each group: **run full test suite**, handle failures
    e. After all groups in phase: **run phase review**
    f. Fix any **critical issues** (using TDD)
-7. After all phases: Run **final review**, generate `IMPLEMENTATION_REPORT.md`
+   g. Record confirmed `MUST update / CONSIDER / NO update`
+8. After all phases: Run **final review**, generate `IMPLEMENTATION_REPORT.md`

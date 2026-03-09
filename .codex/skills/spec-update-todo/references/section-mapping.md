@@ -16,21 +16,6 @@ How to map planned requirements into the exploration-first spec structure.
 | Planned risk or technical debt | `Identified Issues & Improvements` |
 | Uncertainty / missing detail | `Open Questions` |
 
-## Update Need Triage
-
-- `MUST update`
-  - user-visible capability changes
-  - boundary, flow, ownership, or contract changes
-  - new environment/setup requirements
-  - new common change/debug entry points
-- `NO update`
-  - tests-only or comment-only changes
-  - internal refactors with no behavior or navigation impact
-- `CONSIDER`
-  - minor dependency/runtime adjustments
-  - performance tuning with low documentation impact
-  - internal reorganizations whose maintenance impact is still unclear
-
 ## Detailed Rules
 
 ### 1. New Features
@@ -46,7 +31,7 @@ When the input changes how the system is connected or how work moves:
 - update `Architecture Overview > System Boundary` if scope changes
 - update `Architecture Overview > Runtime Map` if request/event/batch flow changes
 - make the updated runtime map explain the user-facing or operator-facing flow, not only arrows
-- add `Cross-Cutting Invariants` only if the new plan introduces repository-wide guarantees that are worth preserving globally
+- add `Cross-Cutting Invariants` if the new plan introduces important guarantees
 
 ### 3. Component Changes
 

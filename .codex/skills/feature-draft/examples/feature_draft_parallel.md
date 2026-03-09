@@ -38,7 +38,6 @@
 - Goal: 운영자가 작업 결과를 즉시 확인할 수 있다.
 - Architecture/Flow: 배치 종료/실패 이벤트가 NotificationService로 전달된다.
 - Usage/Change Paths: 알림 동작 변경 시 `PipelineHooks`와 `NotificationService`부터 확인한다.
-- Tests/Observability: 구조화된 로그와 알림 테스트 위치를 문서에서 바로 찾을 수 있어야 한다.
 
 **Risks / Invariants**:
 - 알림 실패가 수집 성공/실패 상태를 왜곡하면 안 된다.
@@ -124,9 +123,6 @@ Slack/Discord 웹훅과 전역 알림 활성화 스위치를 추가한다.
 ### Constraints
 - 알림 실패가 수집 파이프라인을 중단시키면 안 된다.
 - 웹훅 URL은 코드가 아닌 환경 변수에서 관리한다.
-
-### Decision-Log Candidates
-- 알림 실패와 파이프라인 성공/실패 상태를 분리하는 정책은 이후 구현이 달라져도 유지해야 한다.
 
 ## Open Questions
 - 이메일 알림을 이번 범위에 포함할지 후속 단계로 미룰지 미정이다.

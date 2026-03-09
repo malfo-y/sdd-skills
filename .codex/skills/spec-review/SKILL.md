@@ -1,7 +1,7 @@
 ---
 name: spec-review
 description: This skill should be used when the user asks to "review spec", "spec drift check", "verify spec accuracy", "audit spec quality", "review spec against code", "refresh spec review", "스펙 리뷰", "스펙 검토", "스펙 드리프트 점검", or wants a review-only analysis of spec quality and code-to-spec alignment without directly editing spec files.
-version: 1.3.0
+version: 1.4.0
 ---
 
 # Spec Review
@@ -23,8 +23,6 @@ version: 1.3.0
 3. 산출물은 `_sdd/spec/SPEC_REVIEW_REPORT.md` 리뷰 리포트다.
 4. High / Medium finding에는 가능한 한 `file:line`, 테스트, diff 같은 구체적 근거를 붙인다.
 5. 불확실한 내용은 `Open Questions`에 남긴다.
-6. `MUST` 섹션과 `OPT` 섹션을 구분해서 평가한다. 선택 섹션 누락만으로 약한 스펙이라고 단정하지 않는다.
-7. 리뷰 자체도 token-efficient 해야 하며, 없는 선택 섹션을 억지로 보완 요구하지 않는다.
 
 ## Review Dimensions
 
@@ -33,7 +31,6 @@ version: 1.3.0
 - `Goal`이 프로젝트 목적을 빠르게 설명하는가
 - `System Boundary`가 명확한가
 - 메인 스펙이 너무 장황하지 않은가
-- `MUST` 정보만으로도 5분 entry point 역할을 하는가
 
 ### 2. Navigation Quality
 
@@ -60,13 +57,6 @@ version: 1.3.0
 - 새 컴포넌트/경로/흐름이 문서에 빠져 있지 않은가
 - 오래된 `Open Questions`가 그대로 남아 있지 않은가
 - 결정 맥락이 달라졌는데 `DECISION_LOG.md` 제안이 필요한가
-
-### 6. Decision & Invariant Memory
-
-- Cross-Cutting Invariants 또는 동등한 불변 조건이 보이는가
-- 비자명한 설계 결정이 스펙 본문이나 `DECISION_LOG.md`에 기록되어 있는가
-- `Open Questions`에 실질적 미결 사항이 정리되어 있는가
-- "깨지면 안 되는 가정"을 스펙만 읽고 파악할 수 있는가
 
 ## Inputs
 
@@ -101,11 +91,7 @@ version: 1.3.0
 - `Common Change Paths`
 - `Open Questions`
 
-판정 규칙:
-
-- `Project Snapshot`, `System Boundary`, `Repository Map`, `Runtime Map`, `Component Index`, `Component Overview`, `Open Questions`는 핵심 축으로 본다.
-- `Environment & Dependencies`, `Usage Examples`, `Identified Issues & Improvements`는 프로젝트 규모와 도메인에 따라 optional일 수 있다.
-- optional 섹션이 비어 있거나 없더라도, 메인 탐색성과 변경 지원이 충분하면 finding으로 올리지 않는다.
+없거나 약한 부분은 quality finding으로 기록한다.
 
 ### Step 3: Audit changeability
 
@@ -133,19 +119,8 @@ version: 1.3.0
 | Severity | 의미 |
 |----------|------|
 | High | 잘못된 계약, 중요한 drift, 탐색 실패로 잘못 수정될 위험 |
-| Medium | 누락/모호함, 자기검증 기준 부족으로 작업 효율이 떨어짐 |
+| Medium | 누락/모호함으로 작업 효율이 떨어짐 |
 | Low | 링크 위생, 표현 문제, 비핵심 개선 |
-
-각 review dimension을 아래 probe로 `PASS` / `WEAK` / `FAIL` 판정한다.
-
-| Dimension | Probe |
-|-----------|-------|
-| Entry Point Quality | "이 저장소는 무엇을 하는가?" |
-| Navigation Quality | "기능 X는 어디에 있는가?" |
-| Explanation Quality | "컴포넌트 X는 어떻게 동작하고 왜 이렇게 나뉘어 있는가?" |
-| Changeability | "변경 Y는 어디서 시작해야 하는가?" |
-| Drift | "스펙과 코드가 현재도 일치하는가?" |
-| Decision & Invariant Memory | "왜 Z를 선택했고 무엇을 깨면 안 되는가?" |
 
 결론은 하나를 고른다.
 
@@ -159,17 +134,12 @@ version: 1.3.0
 
 1. Executive Summary
 2. Findings by Severity
-3. Dimension Verdicts (`PASS` / `WEAK` / `FAIL` + 근거)
-4. Entry Point / Navigation Notes
-5. Explanation Quality Notes
-6. Changeability Notes
-7. Spec-to-Code Drift Notes
-8. Open Questions
-9. Suggested Next Actions
-10. `DECISION_LOG.md` proposal (필요 시)
-11. LLM Efficiency Notes
-
-`SYNC_REQUIRED`인 경우에는 바로 적용 가능한 spec update checklist를 함께 제시한다.
+3. Entry Point / Navigation Notes
+4. Changeability Notes
+5. Spec-to-Code Drift Notes
+6. Open Questions
+7. Suggested Next Actions
+8. `DECISION_LOG.md` proposal (필요 시)
 
 기존 리포트가 있으면 `_sdd/spec/prev/PREV_SPEC_REVIEW_REPORT_<timestamp>.md`로 백업한다.
 

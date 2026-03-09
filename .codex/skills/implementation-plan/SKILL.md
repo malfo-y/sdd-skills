@@ -1,14 +1,10 @@
 ---
 name: implementation-plan
 description: This skill should be used when the user asks to "create an implementation plan", "plan the implementation", "break down this spec", "create a development roadmap", "analyze requirements and create tasks", "create a parallel implementation plan", "plan parallel implementation", "병렬 구현 계획", "create parallel development roadmap", or wants a structured implementation plan with Target Files for parallel execution support.
-version: 1.2.0
+version: 1.3.0
 ---
 
-# Implementation Plan Creation (Spec-Aware, Parallel-Ready)
-
-> **Workflow Note**: In the simplified 4-step workflow, `feature-draft` is the default
-> when you want requirement clarification + spec patch drafting + planning in one run.
-> Use this skill when planning should be executed as a standalone step.
+# Implementation Plan Creation (Parallel-Ready)
 
 Create structured, actionable implementation plans from user specifications — with **Target Files** on every task to enable parallel execution via `implementation`.
 
@@ -94,10 +90,8 @@ If the specification is unclear or incomplete:
 spec_loaded = 스펙 문서 읽기 완료
 requirements_clear = 핵심 요구사항 파악 완료
 scope_defined = 스코프 경계 정의 완료
-blocking_spec_gap = planning을 막는 `MUST update` spec gap 존재 여부
 
-IF spec_loaded AND requirements_clear AND scope_defined AND NOT blocking_spec_gap → Step 2 진행
-ELSE IF blocking_spec_gap → Spec Gaps에 기록하고 `spec-update-todo` 선행 권장
+IF spec_loaded AND requirements_clear AND scope_defined → Step 2 진행
 ELSE IF NOT requirements_clear → 가정으로 진행하고 Open Questions에 미확정 항목 기록
 ELSE → 미파악 항목 추가 분석 후 재평가
 ```
@@ -114,7 +108,6 @@ Break the system into logical components:
 - Note external dependencies and integrations
 - Consider data models and storage requirements
 - Map user-facing features vs internal services
-- Tie each component back to real paths from `Repository Map`
 
 ## Step 3: Task Definition with Target Files
 
@@ -357,7 +350,6 @@ Present the final plan in this structure:
 - **Identify MVP**: Mark which tasks are essential for initial release
 - **Minimize File Overlaps**: Design tasks to touch different files when possible
 - **Verify Target Files**: Check file paths against actual codebase structure
-- **Token-efficient output**: use compact tables and path-first bullets instead of long repeated prose
 - **Glob 기반 Target Files 검증**:
   a. 모든 Task에 Target Files 필드 존재 확인
   b. `[M]` 파일: `Glob`으로 존재 확인 → 미존재 시 `[C]`로 변경 또는 경로 수정
@@ -426,7 +418,6 @@ Output format selection rule:
 | 상황 | 대응 |
 |------|------|
 | 스펙 파일 미발견 | `spec-create` 먼저 실행 권장 |
-| planning을 막는 spec gap | `Spec Gaps`에 `MUST update`로 기록하고 `spec-update-todo` 선행 권장 |
 | 스펙 내용 모호 | 가정으로 진행 + `Open Questions` 기록 |
 | Target Files 경로 확인 불가 | 휴리스틱 추론 후 `TBD` + `Open Questions` 기록 |
 | 순환 의존성 발견 | Task 분할로 해소, 해소 불가 시 `Open Questions`에 의사결정 필요 항목 기록 |

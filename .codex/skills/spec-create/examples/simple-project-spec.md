@@ -1,8 +1,6 @@
 # Simple Project Spec Example
 
 Use this example for a small project where one main spec file is enough.
-This version stays close to the MUST sections and keeps only one optional
-section that materially helps maintenance.
 
 ---
 
@@ -22,6 +20,17 @@ section that materially helps maintenance.
 2. 짧은 코드 조회 및 리다이렉트
 3. 클릭 수 증가 및 조회
 4. API 중심 사용 방식
+
+### Target Users / Use Cases
+| 사용자 | 사용 사례 | 우선순위 |
+|--------|-----------|----------|
+| 백엔드 개발자 | 다른 서비스에서 단축 URL 생성 API 호출 | High |
+| 콘텐츠 운영자 | 공유 링크 추적 | Medium |
+
+### Success Criteria
+- [ ] 중복 없는 짧은 코드 생성
+- [ ] 리다이렉트 성공률 유지
+- [ ] 기본 조회 API 응답 제공
 
 ### Non-Goals (Out of Scope)
 - 사용자별 대시보드
@@ -51,12 +60,24 @@ Client -> FastAPI route -> URLService -> URLRepository -> SQLite
 ```
 
 #### User-Facing Scenario
-- 사용자가 긴 URL을 제출하면 `src/routes/`가 입력을 검증한 뒤 `URLService.create_short_url()`로 전달한다.
-- 서비스는 중복/충돌 규칙을 적용하고 저장소에 단축 코드를 기록한다.
-- 이후 사용자가 짧은 코드를 열면 라우터 -> 서비스 -> 저장소 순으로 원본 URL을 조회하고 클릭 수를 갱신한다.
+- 사용자는 `POST /api/shorten`으로 긴 URL을 전달해 짧은 링크를 생성한다.
+- 생성된 링크를 방문하면 라우터가 `URLService`를 호출해 원본 URL을 해석하고 리다이렉트한다.
+- 실패 시 입력 검증 오류 또는 미존재 코드 오류가 응답되고, 운영자는 요청 로그와 캐시 조회 여부를 함께 본다.
 
 #### Secondary / Batch Flows
 - 조회 시 Redis 캐시가 있으면 먼저 확인하고, 없으면 DB 조회 후 캐시를 갱신한다.
+
+### Technology Stack
+| Layer | Technology | Purpose |
+|-------|------------|---------|
+| Runtime | Python 3.11 | 서비스 구현 |
+| Framework | FastAPI | HTTP API |
+| Storage | SQLite | 기본 영속화 |
+| Cache | Redis | 조회 캐시 |
+
+### Cross-Cutting Invariants
+- 단축 코드는 한 번 발급되면 재사용 규칙이 명확해야 한다.
+- 리다이렉트 응답은 원본 URL 검증 규칙을 우회하면 안 된다.
 
 ## Component Details
 
@@ -76,12 +97,12 @@ Client -> FastAPI route -> URLService -> URLRepository -> SQLite
 
 #### Overview
 **동작 개요**
-- `URLService.create_short_url()`는 입력 URL을 정규화하고 충돌 가능성을 확인한 뒤 저장소에 새 단축 코드를 기록한다.
-- `URLService.resolve_short_code()`는 캐시/저장소를 순서대로 조회해 원본 URL을 반환하고, 필요 시 클릭 수 갱신을 트리거한다.
+- 라우터에서 전달한 입력을 검증 규칙에 맞게 정리한 뒤 저장소와 캐시를 사용해 단축 코드 생성/조회 흐름을 수행한다.
+- 조회 시 캐시 조회와 저장소 조회를 순차적으로 처리하고, 성공 시 클릭 수 업데이트를 조정한다.
 
 **설계 의도**
-- 라우터와 저장 로직 사이에 서비스 계층을 두어 생성 규칙, 캐시 정책, 클릭 수 갱신 규칙을 한 곳에서 유지한다.
-- 저장소 접근을 분리해 캐시/DB 전략이 바뀌어도 라우트 계약을 흔들지 않게 한다.
+- 요청 계약은 라우터에, 핵심 규칙은 `URLService`에, 영속화는 저장소 계층에 두어 변경 지점을 분리한다.
+- 캐시 여부와 저장소 정책을 서비스 내부에서 조정해 호출자가 저장 전략 세부를 몰라도 되게 한다.
 
 #### Owned Paths
 - `src/services/url_service.py`
@@ -134,6 +155,60 @@ Client -> FastAPI route -> URLService -> URLRepository -> SQLite
 #### Known Issues
 - 커스텀 코드 기능이 없다.
 - 만료 정책이 없다.
+
+## Environment & Dependencies
+
+### Directory Structure
+```text
+url-shortener/
+├── src/
+│   ├── main.py
+│   ├── routes/
+│   ├── services/
+│   ├── repositories/
+│   └── models/
+├── tests/
+└── requirements.txt
+```
+
+### Runtime / Tooling
+- Python 3.11
+- pip
+- Redis (optional in local dev)
+
+### Setup Commands
+```bash
+pip install -r requirements.txt
+uvicorn src.main:app --reload
+```
+
+### Test Commands
+```bash
+pytest
+pytest tests/test_url_service.py
+```
+
+### Configuration / Secrets
+| 항목 | 필수 여부 | 설명 |
+|------|-----------|------|
+| `DATABASE_URL` | Yes | DB 연결 |
+| `REDIS_URL` | No | 조회 캐시 |
+| `BASE_URL` | Yes | 생성 URL의 호스트 |
+
+## Identified Issues & Improvements
+
+### Current Risks
+- [ ] 단축 코드 충돌 처리 정책이 문서로 명확하지 않다.
+
+### Technical Debt
+- [ ] 저장소 계층과 서비스 계층의 에러 구분이 약하다.
+
+### Missing Coverage / Unknowns
+- [ ] 캐시 비활성화 환경 테스트가 부족하다.
+
+### Planned Improvements
+- [ ] 만료 링크
+- [ ] 커스텀 단축 코드
 
 ## Usage Examples
 

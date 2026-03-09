@@ -4,14 +4,14 @@ Strategies for syncing exploration-first specs with actual implementation.
 
 ## Strategy Selection Matrix
 
-| Scenario | Update Need | Strategy | Scope | Risk |
-|----------|-------------|----------|-------|------|
-| Internal refactor, no documented behavior change | `NO update` | Skip Update | none | low |
-| Small config/path correction | `MUST update` | Targeted Sync | one section | low |
-| Planned feature now implemented | `MUST update` | Planned-to-Actual Sync | multiple linked sections | medium |
-| New component or ownership shift | `MUST update` | Component Map Refresh | component + maps | medium |
-| Major architecture or navigation drift | `MUST update` | Full Navigation Refresh | main spec + split files | high |
-| Ongoing phased delivery | `CONSIDER` or `MUST update` | Staged Sync | incremental | medium |
+| Scenario | Strategy | Scope | Risk |
+|----------|----------|-------|------|
+| Internal refactor, no documented behavior change | Skip Update | none | low |
+| Small config/path correction | Targeted Sync | one section | low |
+| Planned feature now implemented | Planned-to-Actual Sync | multiple linked sections | medium |
+| New component or ownership shift | Component Map Refresh | component + maps | medium |
+| Major architecture or navigation drift | Full Navigation Refresh | main spec + split files | high |
+| Ongoing phased delivery | Staged Sync | incremental | medium |
 
 ## 1. Skip Update
 
@@ -48,7 +48,9 @@ Use when:
 Action:
 - update `Goal` if the feature is user-visible
 - update `Architecture Overview` if flows or boundaries changed
-- update `Component Details` with actual paths/symbols/contracts/overview
+- update the `Runtime Map` narrative if the user/operator flow changed
+- update `Component Details` with actual paths/symbols/contracts
+- update `Component Details > Overview` if behavior summary or design intent changed
 - refresh `Usage Examples > Common Change Paths`
 - remove or replace stale planned markers
 
@@ -62,7 +64,6 @@ Use when:
 Action:
 - update `Component Index`
 - update or create the component spec file
-- refresh `Overview` when behavior or design intent changed materially
 - ensure paths and symbols are real
 
 ## 5. Full Navigation Refresh
@@ -93,9 +94,6 @@ Action:
 - paths exist
 - component names match real code
 - runtime flow description matches implementation
-- component overview reflects actual behavior and why-context
 - common change paths point to real edit/debug entry points
 - planned vs actual state is consistent
 - `Open Questions` is current
-- optional sections that remain are still relevant
-- duplicated prose was not reintroduced during sync

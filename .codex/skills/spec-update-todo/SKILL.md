@@ -1,7 +1,7 @@
 ---
 name: spec-update-todo
 description: This skill should be used when the user asks to "update spec with features", "add features to spec", "update spec from input", "add requirements to spec", "spec update", "expand spec", "add to-do to spec", "add to-implement to spec", or mentions adding new features, requirements, or planned improvements to an existing specification document.
-version: 1.3.0
+version: 1.4.0
 ---
 
 # Spec Update from Planned Input
@@ -11,7 +11,6 @@ Apply planned requirements into an existing exploration-first spec.
 This skill updates `_sdd/spec/` with planned or to-implement items.
 It does not implement code. It turns draft requirements into spec entries that help future readers understand:
 - what is planned
-- how important components are expected to behave and why
 - where the change affects the system
 - which components or paths are involved
 - what risks or unknowns remain
@@ -45,10 +44,7 @@ After processing input files, rename them with `_processed_`.
 8. **추정은 분리**: 신뢰도 낮은 내용은 `Open Questions`로 보낸다.
 9. **책임 기반 분할 우선**: 분할이 필요하면 `main.md + <component>.md` 형태를 기본으로 한다.
 10. **메타데이터 강제 금지**: version/date/changelog는 기존 문서가 이미 그 메타데이터를 사용할 때만 갱신한다.
-11. **스펙 갱신 기준 우선**: 편집 전에 각 입력 항목을 `MUST update`, `NO update`, `CONSIDER`로 분류한다.
-12. **선택 섹션 최소화**: `Environment & Dependencies`, `Identified Issues & Improvements`, `Usage Examples` 등 선택 섹션은 실제 영향이 있을 때만 추가하거나 수정한다.
-13. **빈 선택 섹션 금지**: 비어 있는 선택 섹션, 메타데이터 블록, placeholder 표는 만들지 않는다.
-14. **Token-efficient update**: 반복 설명보다 기존 표, 경로 인덱스, 짧은 불릿 갱신을 우선한다.
+11. **갱신 필요도 분류**: 입력 항목마다 `MUST update / CONSIDER / NO update` 관점으로 문서 영향도를 판단한다.
 
 ## Input Sources
 
@@ -91,7 +87,7 @@ Read:
 
 Prioritize these target areas:
 - `Goal > Project Snapshot / Key Features / Non-Goals`
-- `Architecture Overview > System Boundary / Repository Map / Runtime Map`
+- `Architecture Overview > System Boundary / Repository Map / Runtime Map / Cross-Cutting Invariants`
 - `Component Details > Component Index / Overview`
 - `Environment & Dependencies`
 - `Identified Issues & Improvements`
@@ -118,35 +114,13 @@ Supported sections:
 
 Extract:
 - feature name and priority
-- spec update classification if provided
 - target section hints
 - affected components / paths
 - acceptance criteria
 - risks / invariants
 - dependencies and constraints
 
-### Step 4: Classify Whether Spec Edits Are Needed
-
-**Tools**: none
-
-Classification rules:
-- `MUST update`
-  - user-visible feature or scope change
-  - new or changed runtime flow, ownership, contract, or repository path that affects navigation
-  - new environment/setup requirement that affects running or testing
-  - new enduring risk, invariant, or unresolved question worth preserving
-- `NO update`
-  - tests-only, comments-only, formatting-only changes
-  - internal refactors that do not change behavior, navigation, contracts, or maintenance entry points
-- `CONSIDER`
-  - minor dependency bumps
-  - internal reorganizations with unclear navigation impact
-  - performance tuning with limited user-visible impact
-
-If the input already includes `Spec Update Classification`, verify it against the above rules.
-If the correct classification is `NO update`, prepare a no-op summary and skip spec edits.
-
-### Step 5: Categorize and Map Updates
+### Step 4: Categorize and Map Updates
 
 **Tools**: none
 
@@ -174,7 +148,7 @@ Example:
 - plus `Component Details`
 - plus `Usage Examples > Common Change Paths`
 
-### Step 6: Generate Update Plan
+### Step 5: Generate Update Plan
 
 **Tools**: deterministic defaults (non-interactive)
 
@@ -187,8 +161,6 @@ Before editing, present a concise update plan:
 - `_sdd/spec/main.md`
 - `_sdd/spec/notification.md`
 
-**Spec Update Classification**: MUST update
-
 ### Planned Changes
 - Goal > Key Features: ADD `실시간 알림`
 - Architecture Overview > Runtime Map: UPDATE 알림 이벤트 흐름
@@ -197,9 +169,7 @@ Before editing, present a concise update plan:
 - Open Questions: ADD 이메일 알림 범위 미정
 ~~~
 
-If classification is `NO update`, present a compact no-op plan instead.
-
-### Step 7: Apply Updates
+### Step 6: Apply Updates
 
 **Tools**: `Edit`, `Write`, `Bash (mkdir -p)`
 
@@ -208,11 +178,11 @@ Apply planned changes directly to the relevant spec files.
 Rules:
 1. create a `prev/PREV_...` backup for every modified file
 2. preserve existing accurate content
-3. if classification is `NO update`, skip spec edits and report why
-4. add planned markers such as `📋 계획됨` only where they improve clarity
-5. update multiple sections when one feature affects multiple views of the system
-6. add or refresh `Component Index`, component `Overview`, `Runtime Map`, or `Common Change Paths` when needed for planned changes
-7. add or update optional sections only when they materially help future navigation
+3. add planned markers such as `📋 계획됨` only where they improve clarity
+4. update multiple sections when one feature affects multiple views of the system
+5. add or refresh `Component Index`, `Runtime Map`, or `Common Change Paths` when needed for planned changes
+6. update `Component Details > Overview` when the plan changes how a component works or why the structure exists
+7. make the updated `Runtime Map` explain user-facing or operator-facing flow, not only arrows
 8. add/merge `Open Questions` for unresolved assumptions
 9. update `DECISION_LOG.md` only if the planned direction introduces a meaningful decision
 10. update version/date/changelog only if the current spec already uses them
@@ -222,50 +192,7 @@ If the updated content grows too large:
 - keep the main spec as the entry point
 - record the file map in `Open Questions` if the split is non-obvious
 
-### Step 7.5: Planned Update Quality Gate
-
-업데이트 적용 후, 이번 planned update가 실제로 탐색성과 변경 시작점을 강화했는지 acceptance criteria로 다시 판정한다.
-이 단계는 **판정만** 수행한다. FAIL이 나오면 Step 7로 돌아가 필요한 부분만 보강한 뒤 이 단계를 최대 1회 재실행한다.
-
-Scope rules:
-- 평가 대상은 **이번에 추가/수정한 planned items**다. 기존 스펙의 레거시 결함은 직접 평가 대상이 아니다.
-- 이번 변경 범위와 직접 무관해 판단 근거가 부족한 criterion은 `WEAK`로 기록하고 `FAIL`로 간주하지 않는다.
-- 판단의 중심은 "새 planned item이 어디에 붙고, 나중에 어디서 수정/검증을 시작해야 하는지"다.
-
-#### Acceptance Criteria
-
-| Criterion | Probe | PASS | WEAK | FAIL |
-|-----------|-------|------|------|------|
-| 저장소 이해 | "이번 planned update가 저장소 목적/범위를 흐리지 않는가?" | Goal이나 관련 설명이 이번 planned item과 충돌하지 않는다 | 기존 Goal과의 연결이 다소 약하다 | 이번 planned item이 저장소 목적/범위를 혼란스럽게 만든다 |
-| 기능 위치 탐색 | "이번에 추가한 planned item X는 어디에 붙는가?" | 새 planned item이 `Component Details`/`Component Index`/`Overview`/관련 경로에 명확히 연결된다 | 컴포넌트 수준 설명은 있으나 경로/심볼 연결이 약하다 | planned item의 소유 컴포넌트나 경로를 알 수 없다 |
-| 안전한 수정 판단 | "이 planned item을 구현하려면 어디서 시작해야 하는가?" | `Change Recipes` 또는 `Common Change Paths` 수준의 변경 시작점과 확인 포인트가 있다 | 시작점은 있으나 검증 포인트나 영향 범위가 약하다 | 구현 시작점과 변경 가이드가 없다 |
-| 결정/불변 조건 기억 | "이번 planned item으로 새로 생긴 결정/가정은 무엇인가?" | 새 결정, 제약, 미해결 사항이 `Open Questions` 또는 `DECISION_LOG.md` 등에 기록된다 | 기록은 있으나 불명확하다 | 새 결정/가정이 전혀 남지 않는다 |
-
-#### Self-Check Procedure
-
-1. 이번에 추가/수정한 planned items와 직접 영향받은 섹션만 다시 읽는다.
-2. 위 네 개 probe를 planned item 하나 이상에 대입해 본다.
-3. 각 criterion을 `PASS` / `WEAK` / `FAIL`로 판정한다.
-4. 결과에 따라 행동한다:
-   - `ALL PASS`: 완료
-   - `WEAK`만 존재: 개선 포인트를 완료 보고에 포함하고 진행
-   - `FAIL` 존재: Step 7로 돌아가 해당 부분만 보강 후 재판정
-   - 재판정 후에도 `FAIL`: 사용자에게 보고하고 판단을 맡긴다
-
-#### Completion Output
-
-완료 보고에 아래 표를 포함한다:
-
-| Criterion | Probe | 판정 | 근거 |
-|-----------|-------|------|------|
-| 저장소 이해 | "이번 planned update가 목적을 흐리지 않는가?" | PASS | (구체적 근거) |
-| 기능 위치 탐색 | "planned item X는 어디에?" | PASS | (구체적 근거) |
-| 안전한 수정 판단 | "구현 시작점은 어디인가?" | PASS | (구체적 근거) |
-| 결정/불변 조건 기억 | "새 결정/가정은 무엇인가?" | PASS | (구체적 근거) |
-
-**종합**: `PASS` / `PASS WITH NOTES` / `FAIL -> FIX`
-
-### Step 8: Process Input Files
+### Step 7: Process Input Files
 
 **Tools**: `Bash (mv)`
 
@@ -284,11 +211,9 @@ Add processing metadata:
 ## Output Summary
 
 After updating, summarize:
-- spec update classification
 - updated files
 - changed sections
 - planned items added
-- quality gate result
 - whether `DECISION_LOG.md` changed
 - processed input file status
 - remaining `Open Questions`

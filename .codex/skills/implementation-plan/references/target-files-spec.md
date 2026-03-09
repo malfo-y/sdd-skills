@@ -120,14 +120,14 @@ Sub-agent는 코드베이스의 다른 파일을 참조(read)할 수 있지만, 
 `implementation` 스킬은 이 경우 다음과 같이 처리합니다:
 
 1. **코드베이스에서 추론**: Task의 Description, Technical Notes, Acceptance Criteria를 분석하여 예상 파일 목록 추론
-2. **신뢰도 판정**: 추론 결과를 high / low confidence로 나눈다
-3. **불확실하면 순차 실행**: low confidence면 해당 task들은 순차로 실행하고 근거를 `Open Questions`나 plan note에 남긴다
+2. **사용자 확인**: 추론한 Target Files를 사용자에게 보여주고 확인 요청
+3. **불확실하면 순차 실행**: 추론에 확신이 없으면 해당 task들은 순차로 실행
 
 ```
 IF Target Files 존재:
     → 병렬화 알고리즘 적용
 ELSE IF 코드베이스에서 추론 가능:
-    → high confidence면 병렬화, low confidence면 순차 실행
+    → 사용자 확인 후 병렬화
 ELSE:
     → 순차 실행 폴백
 ```

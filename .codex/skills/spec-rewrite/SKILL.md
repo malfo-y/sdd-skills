@@ -1,7 +1,7 @@
 ---
 name: spec-rewrite
 description: This skill should be used when the user asks to "rewrite spec", "refactor spec", "simplify spec", "split spec into files", "clean up spec", or equivalent phrases indicating they want to reorganize an overly long or hard-to-navigate spec into an exploration-first, change-oriented structure.
-version: 1.3.0
+version: 1.4.0
 ---
 
 # Spec Rewrite - Rebuild Specs for Fast Understanding and Safe Change
@@ -11,7 +11,6 @@ Rewrite existing spec documents into an exploration-first structure.
 This skill does not exist merely to shorten or prettify documents.
 Its purpose is to turn a hard-to-navigate spec into a searchable map that helps people and LLMs:
 - understand what the repository does quickly
-- understand how important parts work and why the structure exists
 - find where a feature or responsibility lives
 - identify where to edit safely
 - preserve non-obvious decisions and invariants
@@ -24,7 +23,7 @@ This skill treats `_sdd/spec/` as a navigation and maintenance surface.
 Primary goals:
 1. Rebuild the main spec as a fast entry point
 2. Restore or create repository and component maps
-3. Make change paths, contracts, invariants, and explanation context visible
+3. Make change paths, contracts, invariants, and component behavior summaries visible
 4. Split by responsibility when one file is too dense
 5. Preserve rationale in `DECISION_LOG.md`
 6. Move uncertainty into `Open Questions`
@@ -49,9 +48,6 @@ Primary goals:
 8. **한국어 작성**: 수정 내용은 한국어로 작성한다. 기존 문서가 다른 언어라면 메인 문서 언어에 맞추되, 혼재 시 하나로 정리하고 근거가 약하면 `Open Questions`에 남긴다.
 9. **최소 산출물**: `DECISION_LOG.md` 외 추가 거버넌스 문서는 사용자 요청 시에만 생성한다.
 10. **분할 기본값**: 번호형 토픽 분할보다 책임 기반 분할(`main.md + auth.md + jobs.md`)을 기본으로 한다. 기존 구조가 이미 일관되면 최소 수정으로 유지한다.
-11. **MUST/OPT 인지 리라이트**: `Goal`, `Architecture Overview`, `Component Details`, `Open Questions`만으로도 유효한 메인 스펙이 되게 하고, 선택 섹션은 필요할 때만 유지한다.
-12. **선택 섹션 축약 허용**: `Environment & Dependencies`, `Identified Issues & Improvements`, `Usage Examples`, 메타데이터 블록은 가치가 낮거나 비어 있으면 삭제하거나 압축한다.
-13. **LLM 효율 유지**: 리라이트 결과는 한 번에 읽기 쉬운 길이와 밀도를 목표로 하며, 중복 서술보다 표, 경로, 링크를 우선한다.
 
 ## Input Sources
 
@@ -75,7 +71,7 @@ First identify why the current spec is hard to use.
 Check for:
 - 프로젝트 목적과 시스템 경계가 빠르게 보이지 않음
 - `Repository Map`, `Runtime Map`, `Component Index`가 없음
-- `Runtime Map`은 있지만 사용자/운영자 관점 설명이 없음
+- `Runtime Map`이 화살표만 있고 사용자/운영자 관점 설명이 약함
 - 주요 컴포넌트에 `Overview`가 없어 동작 개요와 설계 의도를 파악하기 어려움
 - 기능 변경 시 어디부터 봐야 하는지 찾기 어려움
 - 계약, 상태 전이, 불변 조건이 묻혀 있음
@@ -111,12 +107,11 @@ Present the rewrite target shape before editing.
 - Usage Examples -> Running / Common Operations / Common Change Paths
 - Open Questions
 
-### Split by Responsibility (플랫 분할 기본)
+### Split by Responsibility
 - `_sdd/spec/main.md`
 - `_sdd/spec/auth.md`
 - `_sdd/spec/jobs.md`
 - `_sdd/spec/billing.md`
-(Subdirectory 분할은 조건 2개 이상 충족 시에만 — Step 5 참조)
 
 ### Move Out of Main
 - 긴 로그
@@ -151,25 +146,14 @@ The rewritten main spec should answer these quickly:
 - 무엇을 깨면 안 되는가?
 - 아직 무엇이 불확실한가?
 
-Core target shape for the main spec:
-- `Goal` -> `Project Snapshot`, `Key Features`, `Non-Goals`
-- `Architecture Overview` -> `System Boundary`, `Repository Map`, `Runtime Map`
-- `Component Details` -> `Component Index` + 핵심 컴포넌트 요약 또는 링크
-- `Open Questions`
-
-Add optional sections only when they materially help maintenance:
-- `Architecture Overview` -> `Technology Stack`, `Cross-Cutting Invariants`
+Required target shape for the main spec:
+- `Goal` -> `Project Snapshot`, `Key Features`, `Target Users / Use Cases`, `Non-Goals`
+- `Architecture Overview` -> `System Boundary`, `Repository Map`, `Runtime Map`, `Technology Stack`, `Cross-Cutting Invariants`
+- `Component Details` -> `Component Index` + 핵심 컴포넌트 요약 또는 링크 + `Overview`
 - `Environment & Dependencies`
 - `Identified Issues & Improvements`
 - `Usage Examples` -> `Running the Project`, `Common Operations`, `Common Change Paths`
-
-If `Usage Examples` is omitted, ensure common change entry points still appear in component `Change Recipes` or an equivalent change guide.
-
-For component detail blocks or split component specs, preserve:
-- `Responsibility`
-- `Overview` (동작 개요 + 설계 의도)
-- `Owned Paths`
-- `Key Symbols / Entry Points`
+- `Open Questions`
 
 ### Step 4.5: Prune and De-duplicate
 
@@ -178,19 +162,14 @@ For component detail blocks or split component specs, preserve:
 Rules:
 - keep decision-driving and execution-critical content in the main spec
 - move long logs, duplicated tables, and reference-only detail out of the main flow only when needed
-- remove empty optional sections and low-value metadata instead of preserving placeholders
 - do not create appendix files by default; use them only if the detail is still worth keeping and does not belong in a component spec
 - prefer component-specific files over generic appendix dumps
-- prefer compact tables, file maps, and links over repeated prose
-- keep short explanatory prose when it preserves runtime understanding or design intent
 
 ### Step 5: Split by Responsibility, Not by Numbered Topic
 
 **Tools**: `Write`, `Glob`
 
-#### 플랫 분할 (기본값)
-
-플랫 분할(`main.md + auth.md + billing.md`)이 기본값이다:
+Preferred default structure:
 
 ```
 _sdd/spec/
@@ -201,44 +180,12 @@ _sdd/spec/
 └── DECISION_LOG.md
 ```
 
-플랫 분할 규칙:
-- main spec은 항상 entry point
-- 분할 파일은 책임 기반
-- 모든 분할 파일은 main spec에서 도달 가능해야 한다
-- 파일명 패턴 일관성 유지
-- 기존 구조가 안정적이면 최소 수정으로 유지
-
-#### Subdirectory 분할 (조건부)
-
-Subdirectory는 플랫 분할로 관리가 어려워질 때만 도입한다. 아래 조건 중 **2개 이상** 해당하면 고려한다:
-
-| 조건 | 설명 |
-|------|------|
-| **컴포넌트 내부 분할** | 한 컴포넌트가 2개 이상의 스펙 파일을 필요로 한다 |
-| **파일 수 과다** | `_sdd/spec/` 아래 컴포넌트 스펙 파일이 10개를 넘는다 |
-| **도메인 경계 존재** | 컴포넌트들이 명확한 도메인 그룹을 형성한다 |
-| **독립 변경 단위** | subdirectory 내 파일들이 함께 변경되고, 다른 subdirectory와는 독립적이다 |
-
-```
-_sdd/spec/
-├── main.md                      # 항상 최상위 entry point
-├── DECISION_LOG.md              # 항상 최상위
-├── auth/
-│   ├── auth.md                  # 도메인 entry point
-│   ├── oauth-providers.md
-│   └── session-management.md
-└── billing/
-    ├── billing.md
-    └── subscription.md
-```
-
-Subdirectory 규칙:
-- `main.md`와 `DECISION_LOG.md`는 항상 루트에 둔다
-- 각 subdirectory에는 디렉토리명과 동일한 entry point를 둔다 (`auth/auth.md`)
-- `main.md`의 Component Index에서 subdirectory entry point로 링크한다
-- 2단계 이상 중첩 금지 (`auth/oauth/google.md` 불가)
-- 파일이 1개뿐인 subdirectory는 만들지 않는다 — 루트에 둔다
-- subdirectory 분할만을 위해 기존 플랫 구조를 강제 마이그레이션하지 않는다
+Rules:
+- main spec remains the entry point
+- split files should be responsibility-based
+- every split file must be reachable from the main spec
+- keep filename patterns consistent
+- if the existing repository already has a stable hierarchical structure, normalize only where it materially improves navigation
 
 ### Step 6: Preserve Rationale and Unknowns
 
@@ -256,54 +203,14 @@ If the rewrite removes narrative sections that contain meaningful rationale:
 Validate:
 - the main spec works as a 5-minute entry point
 - `Repository Map`, `Runtime Map`, and `Component Index` exist
+- `Runtime Map` includes at least a short user/operator-facing scenario
+- key components have `Overview` that explains behavior and design intent
 - key components have real paths or symbols
-- Change Recipes or equivalent change/debug entry points exist
-- anchor sections (`Goal`, `Architecture Overview`, `Component Details`, `Open Questions`) are preserved
-- optional sections appear only when relevant and are not empty
+- change/debug entry points exist
 - duplication is reduced
 - links are valid
 - rationale is preserved
 - unknowns are explicit
-- the rewritten main spec is token-efficient enough to scan in one focused read
-
-### Step 7.5: Self-Verification Gate
-
-구조 검증(Step 7) 통과 후, 리라이트 결과가 실제로 탐색성과 변경 가능성을 높였는지 acceptance criteria로 다시 판정한다.
-이 단계는 **판정만** 수행한다. FAIL이 나오면 Step 4-6으로 돌아가 필요한 부분만 보강한 뒤 이 단계를 최대 1회 재실행한다.
-기준은 Step 7보다 더 엄격하면 안 된다.
-
-#### Acceptance Criteria
-
-| Criterion | Probe | PASS | WEAK | FAIL |
-|-----------|-------|------|------|------|
-| 저장소 이해 | "이 저장소는 무엇을 하고 누구를 위한 것인가?" | `Goal`에서 목적, 사용자/사용 사례, 비목표를 빠르게 파악할 수 있다 | 목적은 보이지만 경계나 비목표가 흐리다 | 목적을 빠르게 파악할 수 없다 |
-| 기능 위치 탐색 | "기능 X는 어디에 있는가?" | `Component Details`/`Component Index`에서 실제 경로 **또는** 핵심 심볼을 찾을 수 있다 | 컴포넌트는 보이지만 경로/심볼 연결이 약하다 | 기능 위치를 스펙에서 알 수 없다 |
-| 안전한 수정 판단 | "변경 Y는 어디서 시작하는가?" | Change Recipes 또는 동등한 change/debug entry point가 있다 | 시작점은 있으나 영향 범위 설명이 약하다 | 변경 가이드가 없다 |
-| 결정/불변 조건 기억 | "왜 Z를 선택했고 무엇을 유지해야 하는가?" | rationale이나 invariants가 본문, `Open Questions`, `DECISION_LOG.md`에 보존되어 있다 | 일부 기록은 있으나 리라이트 과정에서 맥락 손실이 의심된다 | 결정 맥락이나 불변 조건이 유실되었다 |
-
-#### Self-Check Procedure
-
-1. 리라이트된 메인 스펙과 분리된 컴포넌트 스펙을 다시 읽는다.
-2. 위 네 개 probe를 실제 변경 시나리오에 대입해 본다.
-3. 각 criterion을 `PASS` / `WEAK` / `FAIL`로 판정한다.
-4. 결과에 따라 행동한다:
-   - `ALL PASS`: 완료
-   - `WEAK`만 존재: 개선 포인트를 완료 보고에 포함하고 진행
-   - `FAIL` 존재: Step 4-6으로 돌아가 해당 부분만 보강 후 재판정
-   - 재판정 후에도 `FAIL`: 사용자에게 보고하고 판단을 맡긴다
-
-#### Completion Output
-
-완료 보고에 아래 표를 포함한다:
-
-| Criterion | Probe | 판정 | 근거 |
-|-----------|-------|------|------|
-| 저장소 이해 | "이 저장소는 무엇을 하는가?" | PASS | (구체적 근거) |
-| 기능 위치 탐색 | "X 기능은 어디에?" | PASS | (구체적 근거) |
-| 안전한 수정 판단 | "Y를 변경하려면?" | PASS | (구체적 근거) |
-| 결정/불변 조건 기억 | "왜 Z를 선택?" | PASS | (구체적 근거) |
-
-**종합**: `PASS` / `PASS WITH NOTES` / `FAIL -> FIX`
 
 ## Output Format
 
@@ -339,13 +246,12 @@ If created, include:
 - Can a reader understand project purpose and boundary quickly from the main spec?
 - Does the main spec contain a repository map and runtime map?
 - Does `Component Details` include a component index?
-- Can a reader find likely edit points for common changes (Change Recipes or equivalent)?
+- Can a reader find likely edit points for common changes?
 - Are actual paths or symbols present for important areas?
 - Are tests, logs, or debugging starting points discoverable?
 - Are major invariants and risks visible?
 - Are unresolved ambiguities explicitly documented?
 - Is essential rationale preserved in `DECISION_LOG.md` when removed from the main spec?
-- Are anchor sections (`Goal`, `Architecture Overview`, `Component Details`, `Open Questions`) preserved?
 
 ## Language Preference
 

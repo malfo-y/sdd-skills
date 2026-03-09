@@ -1,11 +1,7 @@
 # Exploration-First Spec Template
 
-This template keeps stable top-level headings for downstream skill compatibility,
+This template keeps the legacy top-level headings for downstream skill compatibility,
 but structures each section as an index for understanding and safe change.
-
-Core MUST sections alone are enough for a valid spec.
-Only include optional sections when they materially improve navigation or maintenance.
-Omit empty optional sections and metadata blocks.
 
 Use Korean for the final spec unless the repository already uses another language.
 
@@ -18,7 +14,9 @@ Use Korean for the final spec unless the repository already uses another languag
 
 > 이 저장소가 무엇을 하는지 한 줄로 설명
 
-<!-- Optional metadata: include only if this repository already uses spec version/date/status. -->
+**Version**: X.Y.Z
+**Last Updated**: YYYY-MM-DD
+**Status**: [Draft | In Review | Approved | Deprecated]
 
 ## Goal
 
@@ -31,6 +29,16 @@ Use Korean for the final spec unless the repository already uses another languag
 1. 기능 1
 2. 기능 2
 3. 기능 3
+
+### Target Users / Use Cases
+| 사용자 | 대표 사용 사례 | 우선순위 |
+|--------|----------------|----------|
+| 개발자 | ... | High |
+| 운영자 | ... | Medium |
+
+### Success Criteria
+- [ ] 성공 기준 1
+- [ ] 성공 기준 2
 
 ### Non-Goals (Out of Scope)
 - 범위 밖 항목 1
@@ -66,7 +74,6 @@ Client -> Router -> Service -> Repository -> DB
 - 배치 작업 또는 이벤트 흐름
 - 백그라운드 워커와 외부 연동
 
-<!-- Optional: include only if stack choice materially affects navigation, setup, or change risk. -->
 ### Technology Stack
 | Layer | Technology | Purpose |
 |-------|------------|---------|
@@ -74,7 +81,6 @@ Client -> Router -> Service -> Repository -> DB
 | Framework | ... | ... |
 | Storage | ... | ... |
 
-<!-- Optional: include only for repository-wide guarantees. Component-local rules belong in component specs. -->
 ### Cross-Cutting Invariants
 - 항상 지켜야 하는 계약
 - 상태 전이 제약
@@ -101,7 +107,7 @@ Client -> Router -> Service -> Repository -> DB
 
 **설계 의도**
 - 왜 이 책임 경계를 택했는지
-- 강결합 회피, 테스트 용이성, 운영상 이유 등
+- 테스트 용이성, 운영 안정성, 결합도 제어 이유 등
 
 #### Owned Paths
 - `src/...`
@@ -155,7 +161,6 @@ Client -> Router -> Service -> Repository -> DB
 > 프로젝트가 큰 경우 main spec에는 `Component Index`와 짧은 요약만 두고,
 > 상세 내용은 별도 컴포넌트 스펙 파일로 분리한다.
 
-<!-- Optional: include only if `_sdd/env.md` alone is not enough. -->
 ## Environment & Dependencies
 
 ### Directory Structure
@@ -190,7 +195,6 @@ project/
 | `DATABASE_URL` | Yes | DB 연결 |
 | `REDIS_URL` | No | 캐시 |
 
-<!-- Optional: include only if enduring risks or planned work need to stay visible. -->
 ## Identified Issues & Improvements
 
 ### Current Risks
@@ -205,7 +209,6 @@ project/
 ### Planned Improvements
 - [ ] 다음 개선 후보
 
-<!-- Optional: include only if run/ops/change entry points materially help maintainers. -->
 ## Usage Examples
 
 ### Running the Project
@@ -242,12 +245,12 @@ project/
 ## Overview
 
 ### 동작 개요
-- 이 컴포넌트의 핵심 처리 흐름
-- 주요 상태 전이, 외부 호출, 이벤트 흐름
+- 입력이 어떤 흐름으로 처리되는지
+- 주요 상태 전이 또는 외부 상호작용
 
 ### 설계 의도
-- 왜 이런 구조를 택했는지
-- 다른 컴포넌트와 어떤 경계로 분리했는지
+- 왜 이 책임 경계와 구조를 선택했는지
+- 테스트/운영/결합도 측면의 이유
 
 ## Owned Paths
 - `src/...`
@@ -287,15 +290,12 @@ project/
 - 관련 테스트 경로
 - 운영 관측 포인트
 
-<!-- Optional: include only if the component has meaningful safety constraints. -->
 ## Risks / Invariants
 - 깨지면 안 되는 조건
 
-<!-- Optional: include only if known limitations are worth preserving. -->
 ## Known Issues
 - 현재 문제점
 
-<!-- Optional: include only if uncertainty remains after drafting. -->
 ## Open Questions
 - 확인이 필요한 내용
 ~~~

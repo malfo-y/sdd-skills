@@ -12,7 +12,6 @@ This is an example summary after applying planned updates into an exploration-fi
 
 **Input Source**: `_sdd/spec/user_spec.md`
 **Date**: 2026-03-09
-**Spec Update Classification**: MUST update
 
 ## Applied Changes
 

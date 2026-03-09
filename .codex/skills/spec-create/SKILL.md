@@ -1,7 +1,7 @@
 ---
 name: spec-create
 description: This skill should be used when the user asks to "create a spec", "write a spec document", "generate SDD", "create software design document", "document the project", "create spec for project", or mentions "_sdd" directory, specification documents, or project documentation needs.
-version: 1.3.0
+version: 1.4.0
 ---
 
 # Spec Document Creation and Management
@@ -10,29 +10,11 @@ Create exploration-first Software Design Description (SDD) documents.
 
 A good spec is not a copy of the code. It is a searchable map that helps people and LLMs:
 - understand what the repository does
-- understand how important parts work and why they are shaped that way
 - find where a feature or responsibility lives
 - decide where to edit safely
 - remember non-obvious decisions and invariants
 
 Use Korean (한국어) for the spec document unless the user explicitly requests another language.
-
-## Simplified Workflow
-
-This skill is **Step 1 of 4** in the simplified SDD workflow:
-
-```
-spec (this) -> feature-draft -> implementation -> spec-update-done
-```
-
-| Step | Skill | Purpose |
-|------|-------|---------|
-| **1** | **spec-create** | Create the initial index-first spec |
-| 2 | feature-draft | Draft feature spec patch + implementation plan |
-| 3 | implementation | Execute the implementation plan (TDD) |
-| 4 | spec-update-done | Sync spec with actual code |
-
-> **Workflow**: spec -> feature-draft -> implementation -> spec-update-done
 
 ## Overview
 
@@ -61,18 +43,12 @@ Default output shape:
 7. **호환 가능한 앵커 섹션 유지**: 기본적으로 `Goal`, `Architecture Overview`, `Component Details`, `Environment & Dependencies`, `Identified Issues & Improvements`, `Usage Examples`, `Open Questions` 섹션명을 유지한다. 내부 구조는 탐색형으로 재구성한다.
 8. **실제 경로 우선**: 주요 컴포넌트와 변경 지점에는 가능하면 실제 파일/디렉토리 경로를 적는다.
 9. **추정은 명시**: 확인되지 않은 내용은 단정하지 말고 `Open Questions`에 기록한다.
-10. **설명-탐색 균형 유지**: 코드 구조를 그대로 복사하지 말고 `의도`, `동작 개요`, `경계`, `계약`, `변경 지점`, `불변 조건`, `결정 이유`를 압축해서 정리한다.
-11. **MUST/OPT 구분 유지**: `Goal`, `Architecture Overview`, `Component Details`, `Open Questions`만으로도 유효한 스펙이 되게 하고, 나머지 앵커 섹션은 필요할 때만 추가한다.
-12. **빈 선택 섹션 금지**: `Environment & Dependencies`, `Identified Issues & Improvements`, `Usage Examples`, 메타데이터 블록은 관련성이 없으면 만들지 않는다.
-13. **서술형 흐름 유지**: 메인 스펙의 `Runtime Map`은 다이어그램만 두지 말고, 사용자 관점의 짧은 동작 시나리오를 함께 남긴다.
-14. **컴포넌트 Overview 필수화**: 컴포넌트 스펙이나 메인 스펙 내 상세 컴포넌트 블록을 작성할 때는 `Responsibility`만으로 끝내지 말고 `Overview`에 동작 개요와 설계 의도를 함께 적는다.
-15. **LLM 효율 우선**: 메인 스펙은 한 번에 훑을 수 있는 길이로 유지하고, 반복 설명보다 테이블, 경로 인덱스, 링크를 우선한다.
+10. **요약 우선**: 코드 구조를 그대로 복사하지 말고 `의도`, `경계`, `계약`, `변경 지점`, `불변 조건`을 압축해서 정리한다.
+11. **설명-탐색 균형 유지**: 템플릿을 채울 때 path-first 구조를 유지하되, 주요 흐름과 설계 의도를 짧게 설명한다.
+12. **서술형 흐름 유지**: `Runtime Map`은 화살표만 두지 말고 사용자 또는 운영자 관점의 짧은 시나리오를 함께 남긴다.
+13. **Component Overview 필수화**: 핵심 컴포넌트에는 `Responsibility`만 두지 말고 `Overview`에 동작 개요와 설계 의도를 함께 적는다.
 
 ## Directory Structure
-
-기본 구조는 플랫 분할이다. Subdirectory는 플랫 분할로 관리가 어려워질 때만 도입한다.
-
-### 기본 (플랫) 구조
 
 ```
 <project-root>/
@@ -82,6 +58,7 @@ Default output shape:
     ├── env.md
     ├── spec/
     │   ├── main.md
+    │   ├── <project-name>.md
     │   ├── <component>.md
     │   ├── user_draft.md
     │   └── DECISION_LOG.md
@@ -89,72 +66,26 @@ Default output shape:
         └── IMPLEMENTATION_PLAN.md
 ```
 
-### Subdirectory 구조 (조건 충족 시)
-
-아래 조건 중 **2개 이상** 해당하면 subdirectory 분할을 고려한다:
-
-| 조건 | 설명 |
-|------|------|
-| **컴포넌트 내부 분할** | 한 컴포넌트가 2개 이상의 스펙 파일을 필요로 한다 (예: auth → `auth.md`, `oauth-providers.md`, `session.md`) |
-| **파일 수 과다** | `_sdd/spec/` 아래 컴포넌트 스펙 파일이 10개를 넘어 탐색이 어렵다 |
-| **도메인 경계 존재** | 컴포넌트들이 명확한 도메인 그룹을 형성한다 (예: payments 도메인 아래 결제, 구독, 정산이 각각 독립 계약을 가짐) |
-| **독립 변경 단위** | subdirectory 내 파일들이 함께 변경되는 경향이 있고, 다른 subdirectory와는 독립적으로 변경된다 |
-
-```
-<project-root>/
-└── _sdd/
-    └── spec/
-        ├── main.md                      # 항상 최상위 entry point
-        ├── DECISION_LOG.md              # 항상 최상위
-        ├── auth/
-        │   ├── auth.md                  # 도메인 entry point
-        │   ├── oauth-providers.md
-        │   └── session-management.md
-        ├── billing/
-        │   ├── billing.md
-        │   ├── subscription.md
-        │   └── payment-gateway.md
-        └── jobs/
-            └── jobs.md
-```
-
-Subdirectory 규칙:
-- `main.md`와 `DECISION_LOG.md`는 항상 `_sdd/spec/` 루트에 둔다
-- 각 subdirectory에는 디렉토리명과 동일한 entry point 파일을 둔다 (`auth/auth.md`)
-- `main.md`의 Component Index에서 subdirectory entry point로 링크한다
-- 단일 파일로 충분한 컴포넌트는 subdirectory 없이 루트에 둬도 된다
-- 2단계 이상 중첩하지 않는다 (`auth/oauth/google.md` 같은 구조 금지)
-- 파일이 1개뿐인 subdirectory는 만들지 않는다 — 루트에 둔다
-
 ## Required Deliverables
 
 ### 1. Main Spec (required)
 
 The main spec must act as the repository entry point and change map.
 
-Required core top-level sections:
+Required top-level sections:
 - `Goal`
 - `Architecture Overview`
 - `Component Details`
-- `Open Questions`
-
-Optional top-level sections when materially relevant:
 - `Environment & Dependencies`
 - `Identified Issues & Improvements`
 - `Usage Examples`
+- `Open Questions`
 
-Required core inner content:
-- `Goal`: project snapshot, key features, non-goals
-- `Architecture Overview`: system boundary, repository map, runtime map (diagram + user-facing scenario)
-- `Component Details`: component index plus detailed entries or links to split component files
-
-Recommended optional inner content when relevant:
-- `Architecture Overview`: technology stack, cross-cutting invariants
-- `Environment & Dependencies`: setup/test commands, configuration, required services
-- `Identified Issues & Improvements`: enduring risks, debt, missing coverage
-- `Usage Examples`: running commands, common operations, common change/debug entry points
-
-A small project may stop at the required core sections if the spec is already searchable and safe to update against.
+Required inner content:
+- `Goal`: project snapshot, key features, users/use cases, non-goals
+- `Architecture Overview`: system boundary, repository map, runtime map, user-facing or operator-facing flow context, technology stack, cross-cutting invariants
+- `Component Details`: component index plus detailed entries or links to split component files, including `Overview`
+- `Usage Examples`: running commands, common operations, and common change/debug entry points
 
 ### 2. Component Specs (optional but recommended for large projects)
 
@@ -163,7 +94,6 @@ Create a separate component spec when a component:
 - owns an important contract or lifecycle
 - is a frequent change hotspot
 - has non-obvious invariants or operational risks
-- needs a dedicated `Overview` to explain behavior and design intent safely
 
 ### 3. Decision Log (optional)
 
@@ -217,15 +147,14 @@ Extract the minimum map needed to support understanding and change:
 
 | 항목 | 반드시 파악할 내용 |
 |------|-------------------|
-| 프로젝트 목표 | 저장소가 해결하는 문제, 핵심 기능, 비목표 |
+| 프로젝트 목표 | 저장소가 해결하는 문제, 주요 사용자, 비목표 |
 | 시스템 경계 | 이 저장소가 책임지는 것 / 외부 시스템에 맡기는 것 |
 | 주요 진입점 | 앱 시작점, CLI 엔트리포인트, 라우터, 배치 시작점 |
 | 런타임 흐름 | 요청/이벤트/배치 기준 주요 흐름 |
 | 저장소 구조 | 주요 디렉토리, 핵심 파일, 설정 위치 |
 | 컴포넌트 경계 | 책임 단위, 핵심 심볼, 소유 경로 |
-| 컴포넌트 설명 | 주요 컴포넌트가 어떻게 동작하는지와 왜 이런 구조인지 |
 | 변경 핫스팟 | 자주 수정하는 영역, 계약 변경 시 영향 범위 |
-| 불변 조건 | 전역 또는 컴포넌트 수준에서 깨지면 안 되는 계약, 순서, 상태 전이, 데이터 가정 |
+| 불변 조건 | 깨지면 안 되는 계약, 순서, 상태 전이, 데이터 가정 |
 | 미확인 영역 | 정보 부족, 추정, 신뢰도 낮은 부분 |
 
 Prefer:
@@ -238,9 +167,10 @@ Prefer:
 Before writing, check:
 1. 신규 기여자가 이 문서만 보고 5분 안에 프로젝트의 목적과 큰 구조를 이해할 수 있는가?
 2. 특정 기능 변경 시 어디부터 찾아야 하는지 시작 지점을 제시할 수 있는가?
-3. 주요 컴포넌트에 실제 경로 또는 심볼이 연결되어 있는가?
-4. 불변 조건과 외부 계약이 드러나는가?
-5. 확신이 낮은 내용이 `Open Questions`에 분리되어 있는가?
+3. `Runtime Map`이 화살표 나열을 넘어서 사용자/운영자 관점의 흐름을 설명하는가?
+4. 주요 컴포넌트에 실제 경로 또는 심볼과 함께 `Overview`가 연결되어 있는가?
+5. 불변 조건과 외부 계약이 드러나는가?
+6. 확신이 낮은 내용이 `Open Questions`에 분리되어 있는가?
 
 If any answer is "no", continue exploration before drafting.
 
@@ -296,10 +226,10 @@ If any answer is "no", continue exploration before drafting.
 #### Step 3-B: Write Order
 
 1. **Write the main spec first** using `references/template-full.md`.
-2. **Keep stable top-level headings for downstream skill compatibility** but structure them as an index:
+2. **Keep legacy top-level headings** but structure them as an index:
    - `Goal` -> project snapshot and scope
-   - `Architecture Overview` -> system boundary, repository map, runtime map
-   - `Component Details` -> component index and change-oriented details
+   - `Architecture Overview` -> system boundary, repository map, runtime map + user-facing scenario
+   - `Component Details` -> component index, overview, and change-oriented details
 3. **Split component specs only when needed**:
    - use the component template in `references/template-full.md`
    - link split files from the main spec
@@ -311,12 +241,8 @@ If any answer is "no", continue exploration before drafting.
 #### Step 3-C: Writing Guidance
 
 - Start with the repository map and runtime map before writing detailed component prose.
-- `Runtime Map`에는 다이어그램과 함께 사용자 관점의 짧은 동작 시나리오를 포함한다.
 - Favor tables with actual paths over long narrative.
-- Omit empty optional sections and optional metadata blocks.
-- Prefer `_sdd/env.md` for long environment setup detail instead of repeating it in the main spec.
-- Keep the main spec within one focused read; split by responsibility before it becomes a mini-manual.
-- Avoid restating the same component detail in both the main spec and split component specs.
+- Keep prose token-efficient: prefer short bullets/tables over repeated narrative.
 - For each important component, include:
   - responsibility
   - overview (동작 개요 + 설계 의도)
@@ -336,68 +262,30 @@ If any answer is "no", continue exploration before drafting.
 
 Validate:
 1. Main spec file exists in `_sdd/spec/`.
-2. Required core top-level sections exist:
+2. Required top-level sections exist:
    - `Goal`
    - `Architecture Overview`
    - `Component Details`
+   - `Environment & Dependencies`
+   - `Identified Issues & Improvements`
+   - `Usage Examples`
    - `Open Questions`
-3. Optional sections appear only when materially relevant and are not left empty.
-4. `Architecture Overview` includes a repository map and runtime map.
-5. `Runtime Map` includes at least one short user-facing scenario, not only arrows or bullet fragments.
-6. `Component Details` includes a component index with real paths or linked component spec files.
-7. Component-specific detail blocks or split component specs include `Overview` when they explain actual component behavior.
-8. Change/debug entry points are discoverable either in `Usage Examples` or in component `Change Recipes`.
-9. Bootstrap guidance files exist and contain required lines.
-10. `DECISION_LOG.md` exists if the drafting process introduced non-obvious decisions.
-11. The main spec is not bloated with duplicated detail; if it becomes too large or component count is high, split it.
-
-### Step 4.5: Self-Verification Gate
-
-구조 검증(Step 4) 통과 후, 아래 acceptance criteria로 스펙 초안을 다시 판정한다.
-이 단계는 **판정만** 수행한다. FAIL이 나오면 Step 3으로 돌아가 필요한 부분만 보강한 뒤 이 단계를 최대 1회 재실행한다.
-
-#### Acceptance Criteria
-
-| Criterion | Probe | PASS | WEAK | FAIL |
-|-----------|-------|------|------|------|
-| 저장소 이해 | "이 저장소는 무엇을 하고, 누구를 위한 것이며, 무엇을 하지 않는가?" | `Goal`만 읽고 목적, 핵심 사용자/사용 사례, 비목표를 구체적으로 답할 수 있다 | 답은 가능하지만 모호하거나 비목표가 흐릿하다 | `Goal`이 없거나 일반론만 있어 이 저장소의 목적을 파악할 수 없다 |
-| 기능 위치 탐색 | "주요 기능 X의 코드는 어디에 있는가?" | `Component Details` 또는 `Component Index`에서 실제 경로/심볼을 바로 찾을 수 있다 | 기능은 보이지만 경로/심볼 연결이 약하다 | 기능이 어느 컴포넌트/파일에 속하는지 스펙에서 알 수 없다 |
-| 안전한 수정 판단 | "변경 Y는 어디서 시작하고 무엇을 함께 봐야 하는가?" | `Usage Examples` 또는 컴포넌트 `Change Recipes`에서 변경 시작점과 검증 포인트를 찾을 수 있다 | 시작점은 보이지만 영향 범위/검증 포인트가 약하다 | 변경 가이드가 없어 코드를 직접 뒤져야 한다 |
-| 결정/불변 조건 기억 | "왜 Z를 선택했고 무엇을 깨면 안 되는가?" | 불변 조건, 위험, rationale이 스펙 본문·`Open Questions`·`DECISION_LOG.md` 중 한 곳 이상에 드러난다 | 일부만 기록되어 있다 | 비자명한 결정과 불변 조건이 보이지 않는다 |
-
-#### Self-Check Procedure
-
-1. 생성된 메인 스펙과 연결된 컴포넌트 스펙을 다시 읽는다.
-2. 위 네 개 probe를 실제로 답해 본다.
-3. 각 criterion을 `PASS` / `WEAK` / `FAIL`로 판정한다.
-4. 결과에 따라 행동한다:
-   - `ALL PASS`: 완료
-   - `WEAK`만 존재: 개선 포인트를 완료 보고에 포함하고 진행
-   - `FAIL` 존재: Step 3으로 돌아가 해당 부분만 보강 후 재판정
-   - 재판정 후에도 `FAIL`: 사용자에게 보고하고 판단을 맡긴다
-
-#### Completion Output
-
-완료 보고에 아래 표를 포함한다:
-
-| Criterion | Probe | 판정 | 근거 |
-|-----------|-------|------|------|
-| 저장소 이해 | "이 저장소는 무엇을 하는가?" | PASS | (구체적 근거) |
-| 기능 위치 탐색 | "X 기능은 어디에?" | PASS | (구체적 근거) |
-| 안전한 수정 판단 | "Y를 변경하려면?" | PASS | (구체적 근거) |
-| 결정/불변 조건 기억 | "왜 Z를 선택?" | PASS | (구체적 근거) |
-
-**종합**: `PASS` / `PASS WITH NOTES` / `FAIL -> FIX`
+3. `Architecture Overview` includes a repository map, runtime map, and a short user-facing or operator-facing flow note.
+4. `Component Details` includes a component index plus `Overview` for major components or linked component spec files that contain it.
+5. `Usage Examples` includes run/test instructions and at least one change/debug entry point.
+6. Bootstrap guidance files exist and contain required lines.
+7. `DECISION_LOG.md` exists if the drafting process introduced non-obvious decisions.
+8. If the main spec becomes too large or component count is high, split it.
 
 ## Split Guidance
 
-### 플랫 분할 (기본값)
+Split the spec when any of the following is true:
+- the main spec exceeds roughly 350 lines and feels dense
+- the repository has more than 7 major components
+- a component owns an important contract and needs its own change guide
+- one section starts turning into a mini-manual
 
-플랫 분할(`main.md + auth.md + billing.md`)이 기본값이다. 아래 조건 중 하나 이상이면 분할한다:
-- 메인 스펙이 약 350줄을 넘으며 밀도가 높다
-- 저장소에 주요 컴포넌트가 7개를 넘는다
-- 한 컴포넌트가 독립적인 계약이나 변경 가이드를 필요로 한다
-- 한 섹션이 미니 매뉴얼 수준으로 길어진다
+Suggested split shape:
 
 ```
 _sdd/spec/
@@ -408,57 +296,23 @@ _sdd/spec/
 └── DECISION_LOG.md
 ```
 
-`main.md`는 항상 entry point이며 컴포넌트 파일로 링크한다.
-
-### Subdirectory 분할 (조건부)
-
-Subdirectory는 플랫 분할로 관리가 어려워질 때만 도입한다. 아래 조건 중 **2개 이상** 해당하면 고려한다:
-
-| 조건 | 설명 |
-|------|------|
-| **컴포넌트 내부 분할** | 한 컴포넌트가 2개 이상의 스펙 파일을 필요로 한다 |
-| **파일 수 과다** | `_sdd/spec/` 아래 컴포넌트 스펙 파일이 10개를 넘는다 |
-| **도메인 경계 존재** | 컴포넌트들이 명확한 도메인 그룹을 형성한다 |
-| **독립 변경 단위** | subdirectory 내 파일들이 함께 변경되고, 다른 subdirectory와는 독립적이다 |
-
-```
-_sdd/spec/
-├── main.md
-├── DECISION_LOG.md
-├── auth/
-│   ├── auth.md
-│   ├── oauth-providers.md
-│   └── session-management.md
-└── billing/
-    ├── billing.md
-    └── subscription.md
-```
-
-Subdirectory 규칙:
-- `main.md`와 `DECISION_LOG.md`는 항상 루트에 둔다
-- 각 subdirectory에는 디렉토리명과 동일한 entry point를 둔다
-- `main.md`의 Component Index에서 subdirectory entry point로 링크한다
-- 2단계 이상 중첩 금지 (`auth/oauth/google.md` 불가)
-- 파일이 1개뿐인 subdirectory는 만들지 않는다 — 루트에 둔다
-- subdirectory 분할만을 위해 기존 플랫 구조를 강제 마이그레이션하지 않는다
+`main.md` should remain the entry point and link to component files.
 
 ## Best Practices
 
 ### Writing Quality
 
 - **Fast first read**: make the first 30 lines answer "what is this repo?"
-- **Understand-then-change**: explain what the repository/component does before pointing only at edit locations
+- **Change-oriented detail**: prioritize "where to edit" over exhaustive explanation
 - **Path-first references**: include concrete directories, files, commands, and symbols
 - **Trace unknowns**: uncertainty belongs in `Open Questions`, not hidden in confident prose
-- **Token-efficient structure**: prefer compact tables and linked component specs over repeated prose
+- **Token efficiency**: use concise bullets, tables, and links instead of repeating the same explanation in multiple sections
 
 ### Organization
 
 - Keep stable top-level headings for downstream skill compatibility
-- Required core sections are enough; add optional anchors only when they increase clarity
 - Put deep detail into component specs, not the main overview
 - Use tables and bullet lists where they reduce scanning time
-- Remove empty optional sections rather than keeping placeholders
 
 ### Decision Traceability
 
@@ -515,7 +369,7 @@ Also summarize:
 ## Additional Resources
 
 ### Reference Files
-- `references/template-full.md` - index-first main spec and component spec templates with `Overview`
+- `references/template-full.md` - index-first main spec and component spec templates
 - `references/optional-sections.md` - optional appendices for APIs, data models, security, performance, deployment
 - `references/examples.md` - guidance on choosing and reading the examples
 

@@ -51,13 +51,6 @@
 
 > 사용자 관점에서는 "작업 생성 -> API 처리 -> 도메인 규칙 적용 -> 저장 -> 알림" 순으로 이해하면 충분하다.
 
-## Component Overview
-
-- **Task Domain**: 상태 전이와 의존 관계 검증을 중앙에서 수행한다.
-  - 설계 의도: UI/API에서 규칙 중복을 막고 변경 지점을 한 곳으로 모으기 위함이다.
-- **Notifications**: 도메인 이벤트를 메일/큐 처리로 변환한다.
-  - 설계 의도: 태스크 로직과 외부 전송 정책을 분리해 장애 전파 범위를 줄인다.
-
 ## Component Index
 
 | 컴포넌트 | 책임 | 주요 경로 | 관련 스펙 |
@@ -67,6 +60,15 @@
 | Auth | 인증/권한 | `src/api/routes/auth.ts`, `src/domain/auth/` | `_sdd/spec/auth.md` |
 | Notifications | 메일/이벤트 알림 | `src/infra/notifications/` | `_sdd/spec/notifications.md` |
 
+## Component Overview
+
+- **Task Domain**
+  - 동작 개요: 태스크 생성, 상태 전이, 의존 관계 검증을 한곳에서 처리한다.
+  - 설계 의도: UI/API에서 규칙 중복을 막고 변경 지점을 한 곳으로 모으기 위함이다.
+- **Notifications**
+  - 동작 개요: 도메인 이벤트를 메일/알림 채널에 맞는 메시지로 변환해 전달한다.
+  - 설계 의도: 태스크 로직과 외부 전송 정책을 분리해 장애 전파 범위를 줄인다.
+
 ## Current Status
 
 - **완료/진행/계획 요약**: 기본 CRUD, 댓글, 검색은 완료. 반복 작업과 의존 관계는 진행 중.
@@ -75,8 +77,6 @@
   - 대량 태스크 조회 성능
   - 토큰 갱신 UX
   - 고급 권한 정책 테스트 부족
-
-> 이 예시는 구현 문서가 있어 `Current Status`를 포함한다. 작은 프로젝트에서 해당 정보가 없으면 이 섹션은 생략해도 된다.
 
 ## Common Change Paths
 

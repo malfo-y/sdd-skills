@@ -1,31 +1,16 @@
 ---
 name: feature-draft
 description: This skill should be used when the user asks to "feature draft", "draft feature", "feature plan", "plan feature", "draft and plan", "feature draft parallel", "parallel feature draft", "병렬 기능 초안", "parallel feature plan", or wants to combine requirements gathering, spec patch drafting, and implementation planning with Target Files for parallel execution support.
-version: 1.3.0
+version: 1.4.0
 ---
 
 # Feature Draft - Exploration-First Spec Patch + Implementation Plan
 
 Collect requirements from conversation/files/code context, then output:
-- **Part 1**: a spec patch draft that fits the exploration-first SDD spec shape, or a minimal no-update note when spec changes are not needed
+- **Part 1**: a spec patch draft that fits the exploration-first SDD spec shape
 - **Part 2**: an implementation plan with `Target Files` for parallel execution
 
 This skill does not edit `_sdd/spec/` directly. It produces a draft artifact for later application by `spec-update-todo` and later synchronization by `spec-update-done`.
-
-## Simplified Workflow
-
-This skill is **Step 2 of 4** in the SDD workflow:
-
-```
-spec -> feature-draft (this) -> implementation -> spec-update-done
-```
-
-| Step | Skill | Purpose |
-|------|-------|---------|
-| 1 | spec-create | Create the initial index-first spec |
-| **2** | **feature-draft** | Draft planned spec changes + implementation plan |
-| 3 | implementation | Execute the plan |
-| 4 | spec-update-done | Sync actual implementation back to spec |
 
 ## Overview
 
@@ -59,8 +44,8 @@ Part 1 must preserve that shape. Do not generate patch drafts that depend on old
 10. **Multiple features allowed**: Multiple features may share one draft only when the grouping is coherent; record grouping rationale in `Open Questions` if needed.
 11. **스펙 갱신 기준 적용**: Part 1 시작 전에 각 변경을 `MUST update`, `NO update`, `CONSIDER`로 분류한다.
 12. **선택 섹션 최소화**: `Environment & Dependencies`, `Identified Issues & Improvements`, `Usage Examples` 등 선택 섹션은 실제 영향이 있을 때만 타겟으로 잡는다.
-13. **결정 로그 후보만 기록**: `DECISION_LOG.md`를 직접 쓰지 말고, 필요한 rationale은 draft 안의 `Decision-Log Candidates`로 남긴다.
-14. **Token-efficient drafting**: 빈 선택 섹션은 만들지 않고, 반복 설명보다 경로, 표, 짧은 불릿을 우선한다.
+13. **결정 로그 후보만 기록**: `DECISION_LOG.md`를 직접 쓰지 말고 필요한 rationale은 draft 안의 `Decision-Log Candidates`로 남긴다.
+14. **Token-efficient drafting**: 빈 선택 섹션은 만들지 않고 반복 설명보다 경로, 표, 짧은 불릿을 우선한다.
 
 ## Input Sources
 
@@ -124,7 +109,6 @@ Prioritize extracting:
 - `Open Questions`
 
 Also gather:
-- optional sections only when they already exist and look relevant
 - related component docs if the spec is already split
 - relevant decision-log entries
 - code paths and symbols that will likely be touched

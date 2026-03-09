@@ -20,11 +20,21 @@ Common drift patterns for exploration-first specs and how to resolve them.
 **Symptoms**
 - the documented request/event/batch flow no longer matches implementation
 - new service hops or event steps are missing
+- the arrows remain, but the user/operator-facing scenario no longer matches reality
 
 **Resolution**
 - update `Architecture Overview > Runtime Map`
-- add or refresh the short user-facing scenario when the flow explanation changed
 - add or adjust invariants if the flow change affects correctness
+
+### Pattern: Missing or Outdated Component Overview
+
+**Symptoms**
+- a component path and symbol are documented, but how it works is still opaque
+- implementation changed the component flow or design intent, but the spec still describes the old rationale
+
+**Resolution**
+- update `Component Details > Overview`
+- keep behavior summary and design intent aligned with actual ownership boundaries
 
 ### Pattern: Missing or Outdated Component Index
 
@@ -35,17 +45,6 @@ Common drift patterns for exploration-first specs and how to resolve them.
 **Resolution**
 - update `Component Details > Component Index`
 - link to component-specific docs when appropriate
-
-### Pattern: Missing or Outdated Component Overview
-
-**Symptoms**
-- the component path and symbols are listed, but a reader still cannot tell how the component works
-- the documented design intent no longer matches the current implementation boundary
-
-**Resolution**
-- update `Component Details > Overview`
-- summarize current behavior and the reason for the current structure
-- keep implementation detail out of the prose dump
 
 ### Pattern: Stale Common Change Paths
 
@@ -90,6 +89,7 @@ Common drift patterns for exploration-first specs and how to resolve them.
 
 **Resolution**
 - update `Component Details`
+- update `Component Details > Overview` if the contract change alters how the component works
 - update `Architecture Overview > Runtime Map` if the contract affects flow
 
 ### Pattern: Invariant Drift
@@ -99,8 +99,7 @@ Common drift patterns for exploration-first specs and how to resolve them.
 - an old invariant is no longer true
 
 **Resolution**
-- update `Cross-Cutting Invariants` only if the assumption is repository-wide
-- otherwise update component-specific `Risks / Invariants`
+- update `Cross-Cutting Invariants` or component-specific `Risks / Invariants`
 
 ## 4. Environment Drift
 

@@ -2,5 +2,5 @@
   "name": "spec-rewrite",
   "description": "This skill should be used when the user asks to \"rewrite spec\", \"refactor spec\", \"simplify spec\", \"split spec into files\", \"clean up spec\", or wants to reorganize an overly long or hard-to-navigate spec into an exploration-first, change-oriented structure.",
   "instruction_file": "SKILL.md",
-  "version": "1.3.0"
+  "version": "1.4.0"
 }

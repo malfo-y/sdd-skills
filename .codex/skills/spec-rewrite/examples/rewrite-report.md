@@ -35,8 +35,7 @@ _sdd/spec/
 
 - `Goal` 섹션을 `Project Snapshot`, `Key Features`, `Non-Goals` 중심으로 재구성
 - `Architecture Overview`에 `System Boundary`, `Repository Map`, `Runtime Map` 추가
-- `Component Details`에 `Component Index` 추가
-- 핵심 컴포넌트에 `Overview` 추가
+- `Component Details`에 `Component Index`와 `Overview` 추가
 - `Usage Examples`에 `Common Change Paths` 추가
 - `Open Questions`로 미확인 사항 분리
 
@@ -60,7 +59,7 @@ _sdd/spec/
 
 - 메인 문서 길이: 1180줄 -> 290줄
 - Component Index: 추가됨
-- Repository Map: 추가됨
 - Component Overview: 추가됨
+- Repository Map: 추가됨
 - Common Change Paths: 추가됨
 - broken links: 0

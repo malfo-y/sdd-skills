@@ -48,14 +48,6 @@ _sdd/
 [entries...]
 ~~~
 
-## Classification Guide
-
-- `MUST update`: 기능, 경계, 흐름, 계약, 환경 요구사항, 변경 시작점이 바뀌는 경우
-- `NO update`: 테스트만 변경, 주석만 변경, 외부 동작과 탐색 지점이 그대로인 내부 리팩터링
-- `CONSIDER`: 성능 튜닝, 소규모 의존성 변경, 탐색 영향이 애매한 내부 재구성
-
-If the correct value is `NO update`, the input may omit all change sections and keep only `Notes` plus `Open Questions`.
-
 ## Section Formats
 
 ### New Features
@@ -170,12 +162,6 @@ Slack/Discord 웹훅 URL 설정 추가
 
 ### Constraints
 [constraints]
-
-### Decision-Log Candidates
-- [if any]
-
-### No Spec Change Reason
-[only when classification is `NO update`]
 
 ## Open Questions
 - 이메일 알림 범위 포함 여부 미정

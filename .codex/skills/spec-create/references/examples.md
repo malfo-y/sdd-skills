@@ -8,20 +8,17 @@ Use the examples to choose document shape, not to copy every section blindly.
   - small project
   - 1-3 major components
   - one main spec is enough
-  - mostly MUST sections, with optional sections omitted unless clearly useful
 
 - `examples/complex-project-spec.md`
   - larger repository
   - multiple bounded components or services
   - main spec should behave like an index and change map
-  - includes selected OPT sections because they materially help navigation
 
 ## What to Learn From the Examples
 
 - how the `Goal` section gives a fast repository summary
-- how `Architecture Overview` includes both repository map and runtime map
-- how `Component Details` starts with a component index before deeper detail
-- how optional sections appear only when they add real maintenance value
+- how `Architecture Overview` includes both repository map and runtime map plus a short user-facing scenario
+- how `Component Details` starts with a component index before deeper detail and uses `Overview` to explain behavior/intent
 - how `Usage Examples` includes change/debug entry points, not only run commands
 - how `Open Questions` keeps uncertainty explicit
 
@@ -29,8 +26,8 @@ Use the examples to choose document shape, not to copy every section blindly.
 
 - do not duplicate code structure line by line
 - do not include optional sections unless they matter
-- do not keep empty metadata or placeholder optional sections
 - do not write long narrative when a path table is clearer
+- do not repeat the same explanation across sections when a short cross-reference is enough
 - do not hide weak assumptions; move them to `Open Questions`
 
 ## Recommended Reading Order

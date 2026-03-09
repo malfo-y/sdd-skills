@@ -82,9 +82,6 @@ Slack/Discord 웹훅 URL 환경 변수 추가
 ### Constraints
 - 알림 실패는 메인 파이프라인 성공 여부를 바꾸면 안 된다.
 
-### Decision-Log Candidates
-- 알림 실패와 메인 파이프라인 상태를 분리하는 정책은 이후에도 유지해야 한다.
-
 ## Open Questions
 
 - 이메일 알림을 같은 컴포넌트에 포함할지 별도 후속으로 둘지 미정

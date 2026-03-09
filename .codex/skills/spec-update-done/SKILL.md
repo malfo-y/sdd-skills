@@ -1,7 +1,7 @@
 ---
 name: spec-update-done
 description: This skill should be used when the user asks to "update spec from code", "sync spec with implementation", "apply implementation changes to spec", "reflect completed work in spec", "refresh spec after implementation", "implementation done sync", or mentions spec document maintenance tied to completed code changes.
-version: 1.3.0
+version: 1.4.0
 ---
 
 # Spec Sync and Update
@@ -13,21 +13,6 @@ This skill compares planned documentation against code, implementation logs, and
 - easy to understand
 - easy to navigate for future changes
 - explicit about risks, invariants, and unresolved items
-
-## Simplified Workflow
-
-This skill is **Step 4 of 4** in the SDD workflow:
-
-```
-spec -> feature-draft -> implementation -> spec-update-done (this)
-```
-
-| Step | Skill | Purpose |
-|------|-------|---------|
-| 1 | spec-create | Create the initial index-first spec |
-| 2 | feature-draft | Draft planned spec changes |
-| 3 | implementation | Execute the plan |
-| **4** | **spec-update-done** | Sync actual implementation back to spec |
 
 ## Hard Rules
 
@@ -41,10 +26,6 @@ spec -> feature-draft -> implementation -> spec-update-done (this)
 8. **탐색성 유지**: 동기화 결과는 `Repository Map`, `Runtime Map`, `Component Index`, `Component Overview`, `Common Change Paths`를 더 정확하게 만들어야 한다.
 9. **추정은 분리**: 구현만으로 확정할 수 없는 사항은 `Open Questions`에 남긴다.
 10. **메타데이터 강제 금지**: version/date/changelog는 기존 문서가 이미 사용 중일 때만 갱신한다.
-11. **스펙 갱신 기준 우선**: 편집 전에 이번 구현이 `MUST update`, `NO update`, `CONSIDER` 중 어디에 속하는지 먼저 판정한다.
-12. **선택 섹션 최소화**: `Environment & Dependencies`, `Identified Issues & Improvements`, `Usage Examples` 등 선택 섹션은 실제 드리프트가 있을 때만 추가하거나 수정한다.
-13. **빈 선택 섹션 금지**: 비어 있는 선택 섹션, 메타데이터 블록, placeholder 표는 남기지 않는다.
-14. **Token-efficient sync**: 구현 반영은 반복 서술보다 경로, 표, 짧은 불릿 위주로 갱신한다.
 
 ## Routing Guard
 
@@ -120,14 +101,13 @@ Look for drift in these areas:
 - stale `Repository Map`
 - stale `Runtime Map`
 - missing or outdated `Component Index`
+- missing or outdated `Component Overview`
 - `Common Change Paths` no longer pointing at the right files or symbols
 
 #### Behavior / Contract Drift
 - planned features now implemented
 - changed flow, boundary, or ownership
 - changed component contracts
-- stale or missing component `Overview`
-- design intent changed but the spec still reflects the old why-context
 - new or resolved invariants
 
 #### Environment Drift
@@ -140,29 +120,6 @@ Look for drift in these areas:
 - newly discovered issues not listed
 - `Open Questions` now resolved or newly introduced
 
-### Step 2.5: Select Sync Need and Strategy
-
-**Tools**: deterministic defaults (non-interactive)
-
-Classify the implementation impact before editing:
-
-- `MUST update`
-  - actual user-visible behavior changed
-  - runtime flow, ownership, contracts, paths, or change/debug entry points changed
-  - environment/setup requirements changed
-  - an `Open Questions` item was resolved or newly introduced by implementation
-- `NO update`
-  - tests-only, comments-only, formatting-only work
-  - internal refactors with no behavior, navigation, contract, or maintenance-path impact
-- `CONSIDER`
-  - minor dependency bumps
-  - low-visibility performance tuning
-  - internal reorganizations whose navigation impact is limited
-
-Then choose a strategy from `references/update-strategies.md`.
-
-If classification is `NO update`, use `Skip Update`, provide the report, and stop before spec edits.
-
 ### Step 3: Generate Change Report
 
 **Tools**: none
@@ -174,8 +131,6 @@ Present findings before edits.
 
 ### Summary
 - 변경 파일: N개
-- 스펙 갱신 분류: MUST update
-- 선택 전략: Planned-to-Actual Sync
 - 주요 탐색 업데이트: N개
 - 기능/계약 업데이트: N개
 - 남는 Open Questions: N개
@@ -187,7 +142,6 @@ Present findings before edits.
 ### Behavior / Contract Updates
 - `실시간 알림` 기능 구현 완료
 - NotificationService 계약 구체화 필요
-- NotificationService `Overview`가 실제 동작/설계 의도를 반영해야 함
 
 ### Risks / Invariants
 - 알림 실패와 파이프라인 실패 상태 분리 유지
@@ -218,8 +172,6 @@ Important rules:
 4. update `Common Change Paths` when maintenance entry points changed
 5. update `DECISION_LOG.md` only when rationale changed, not for every code diff
 6. update version/date/changelog only if the spec already uses them
-7. update optional sections only when the implementation changed them materially
-8. remove empty optional sections or placeholder bullets instead of keeping stale shells
 
 ### Step 5: Validate Updates
 
@@ -229,54 +181,10 @@ Verify:
 - documented paths exist
 - `Repository Map` and `Component Index` reflect real code locations
 - `Runtime Map` still matches actual behavior
-- component `Overview` still matches actual behavior and design intent
+- `Component Overview` still matches actual behavior and design intent
 - `Common Change Paths` point to real maintenance entry points
 - resolved `Open Questions` are removed or updated
 - preserved content was not accidentally regressed
-- optional sections that remain are still relevant
-- the synced spec stays compact enough for one focused read
-
-### Step 5.5: Sync Quality Gate
-
-구조 검증(Step 5) 통과 후, 이번 동기화 결과가 실제로 신뢰 가능한 change map이 되었는지 acceptance criteria로 다시 판정한다.
-이 단계는 **판정만** 수행한다. FAIL이 나오면 Step 4로 돌아가 필요한 부분만 보강한 뒤 이 단계를 최대 1회 재실행한다.
-
-Scope rules:
-- 평가 대상은 **이번에 변경/추가한 섹션**이다. 기존 레거시 결함은 직접 평가 대상이 아니다.
-- 이번 변경 범위와 직접 무관해 판단 근거가 부족한 criterion은 `WEAK`로 기록하고 `FAIL`로 간주하지 않는다.
-
-#### Acceptance Criteria
-
-| Criterion | Probe | PASS | WEAK | FAIL |
-|-----------|-------|------|------|------|
-| 저장소 이해 | "이번 동기화 후에도 이 저장소가 무엇을 하는지 빠르게 이해되는가?" | Goal/핵심 요약이 이번 구현 반영으로 더 명확해졌거나 유지된다 | Goal은 유지되지만 구현 반영이 다소 흐리다 | 구현 반영 후 목적/범위 설명이 모순되거나 불명확하다 |
-| 기능 위치 탐색 | "이번에 동기화한 기능 X는 어디에 있는가?" | 동기화된 컴포넌트/기능이 실제 경로와 심볼에 연결된다 | 기능은 보이지만 경로/심볼 연결이 약하다 | 이번에 반영한 기능의 소유 위치를 알 수 없다 |
-| 안전한 수정 판단 | "이제 변경 Y는 어디서 시작해야 하는가?" | `Common Change Paths`, `Usage Examples`, 컴포넌트 정보에서 시작점과 확인 포인트를 찾을 수 있다 | 시작점은 있으나 검증 포인트나 영향 범위가 약하다 | 동기화 후에도 변경 시작점이 보이지 않는다 |
-| 결정/불변 조건 기억 | "이번 구현으로 확정된 결정/가정은 기록되었는가?" | 새 불변 조건, 해결/잔존 질문, rationale이 관련 섹션 또는 `DECISION_LOG.md`에 반영된다 | 일부만 반영되었다 | 새 결정/불변 조건이 문서에 남지 않았다 |
-
-#### Self-Check Procedure
-
-1. 이번에 변경/추가한 섹션과 직접 연결된 컴포넌트 스펙만 다시 읽는다.
-2. 위 네 개 probe를 이번 동기화 범위에 대입해 본다.
-3. 각 criterion을 `PASS` / `WEAK` / `FAIL`로 판정한다.
-4. 결과에 따라 행동한다:
-   - `ALL PASS`: 완료
-   - `WEAK`만 존재: 개선 포인트를 완료 보고에 포함하고 진행
-   - `FAIL` 존재: Step 4로 돌아가 해당 부분만 보강 후 재판정
-   - 재판정 후에도 `FAIL`: 사용자에게 보고하고 판단을 맡긴다
-
-#### Completion Output
-
-완료 보고에 아래 표를 포함한다:
-
-| Criterion | Probe | 판정 | 근거 |
-|-----------|-------|------|------|
-| 저장소 이해 | "이번 동기화 후 저장소 목적이 명확한가?" | PASS | (구체적 근거) |
-| 기능 위치 탐색 | "동기화한 기능 X는 어디에?" | PASS | (구체적 근거) |
-| 안전한 수정 판단 | "변경 시작점은 어디인가?" | PASS | (구체적 근거) |
-| 결정/불변 조건 기억 | "새 결정/가정은 기록되었는가?" | PASS | (구체적 근거) |
-
-**종합**: `PASS` / `PASS WITH NOTES` / `FAIL -> FIX`
 
 ### Step 6: Archive Implementation Artifacts by Feature
 
@@ -298,11 +206,9 @@ Provide a concise report before edits.
 ### Sync Summary
 
 After edits, summarize:
-- spec update classification and selected strategy
 - updated files
 - navigation improvements
 - behavior/contract changes reflected
-- quality gate result
 - remaining `Open Questions`
 - whether `DECISION_LOG.md` changed
 

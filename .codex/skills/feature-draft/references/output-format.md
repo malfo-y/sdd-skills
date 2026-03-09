@@ -10,9 +10,10 @@ Part 1 should reflect the exploration-first spec philosophy:
 - user-visible value goes to `Goal`
 - boundary/flow changes go to `Architecture Overview`
 - ownership/contracts go to `Component Details`
+- behavior/design intent changes go to `Component Details > Overview`
 - run/test/change guidance goes to `Usage Examples`
 - uncertainty goes to `Open Questions`
-- optional sections appear only when they materially help
+ - optional sections appear only when they materially help
 
 ## File Structure Overview
 
@@ -134,7 +135,6 @@ Part 1 should reflect the exploration-first spec philosophy:
 - Goal: [what becomes newly true for users]
 - Architecture/Flow: [if relevant]
 - Usage/Change Paths: [if relevant]
-- Tests/Observability: [if relevant]
 
 **Risks / Invariants**:
 - [what must remain true]
@@ -255,9 +255,6 @@ Part 1 should reflect the exploration-first spec philosophy:
 ### Constraints
 [constraints]
 
-### Decision-Log Candidates
-- [if any]
-
 ### References
 [references]
 
@@ -286,7 +283,7 @@ Part 1 should reflect the exploration-first spec philosophy:
 # Part 2: Implementation Plan
 
 ## Overview
-[summary including user-facing flow and design intent when useful]
+[summary]
 
 ## Scope
 

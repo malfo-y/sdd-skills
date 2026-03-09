@@ -15,7 +15,6 @@
 - [ ] 프로젝트 목적과 범위가 빠르게 보인다
 - [ ] `System Boundary`가 명확하다
 - [ ] 메인 스펙이 entry point 역할을 한다
-- [ ] `MUST` 정보만으로도 전체 구조 파악이 가능하다
 
 ## 3) Navigation Quality
 
@@ -23,14 +22,12 @@
 - [ ] `Runtime Map`이 있다
 - [ ] `Component Index`가 있다
 - [ ] 실제 경로 또는 핵심 심볼이 연결되어 있다
-- [ ] missing optional 섹션을 과잉 패널티하지 않았다
 
 ## 4) Explanation Quality
 
-- [ ] `Runtime Map`이 사용자/운영자 관점 흐름을 설명한다
+- [ ] `Runtime Map`이 사용자/운영자 관점의 흐름까지 설명한다
 - [ ] 주요 컴포넌트에 `Overview`가 있다
 - [ ] `Overview`가 동작 개요와 설계 의도를 함께 담는다
-- [ ] 설명이 코드 복사본으로 무너지지 않았다
 
 ## 5) Changeability
 
@@ -41,8 +38,8 @@
 ## 6) Drift
 
 - [ ] 새 컴포넌트/경로/흐름이 구현과 일치한다
-- [ ] `Overview`가 실제 동작/설계 의도와 일치한다
 - [ ] 오래된 설명이 남아 있지 않다
+- [ ] `Overview`가 실제 동작/설계 의도와 일치한다
 - [ ] 해결된/새로운 질문이 `Open Questions`에 적절히 반영된다
 - [ ] `DECISION_LOG.md` 제안이 필요한 drift를 식별했다
 
@@ -57,9 +54,7 @@
 - [ ] Executive Summary 포함
 - [ ] Findings by Severity 포함
 - [ ] Entry Point / Navigation Notes 포함
-- [ ] Explanation Quality Notes 포함
 - [ ] Changeability Notes 포함
 - [ ] Spec-to-Code Drift Notes 포함
-- [ ] LLM Efficiency Notes 포함
 - [ ] Suggested Next Actions 포함
 - [ ] `SPEC_OK` / `SYNC_REQUIRED` / `NEEDS_DISCUSSION` 중 하나 판정
