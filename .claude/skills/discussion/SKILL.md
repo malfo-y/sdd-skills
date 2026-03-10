@@ -26,7 +26,7 @@ version: 1.0.0
 1. **코드 수정 금지**: `Edit`, `Bash`(mutation 명령) 사용을 금지한다. 읽기 전용 도구만 사용한다.
 2. **파일 생성은 Step 4에서만 허용**: Step 1-3에서는 파일을 생성하지 않는다. Step 4 (토론 정리)에서만 `Write`로 요약 파일을 저장할 수 있다. `mkdir -p _sdd/discussion/` 디렉토리 생성은 허용한다.
 3. **읽기 전용 도구만 허용 (Step 1-3)**: `Read`, `Glob`, `Grep`, `AskUserQuestion`, `Agent`(sub-agent)만 사용 가능하다. Step 4에서는 `Write` 추가 허용.
-4. **언어 규칙**: 기존 스펙/문서의 언어를 따른다. 새 프로젝트(기존 스펙 없음)는 한국어 기본. 사용자 명시 지정 시 해당 언어 사용.
+4. **언어 규칙**: 사용자가 토론을 시작한 언어를 따른다. 영어로 호출하면 영어로, 한국어로 호출하면 한국어로 진행한다. 토론 중 사용자가 언어를 전환하면 따라간다.
 5. **토론 종료 옵션 항상 포함**: Step 3의 매 질문에 "토론 종료 / 정리해줘" 옵션을 반드시 포함한다.
 6. **AskUserQuestion 도구 필수**: Step 3 토론 루프에서 사용자에게 질문할 때 반드시 `AskUserQuestion` 도구를 사용한다. 일반 텍스트로 질문하지 않는다.
 
@@ -154,6 +154,7 @@ IF NOT topic_still_valid → Step 1로 돌아가 토픽 재조정
   decisions = []       # 결정 사항
   open_questions = []  # 미결 질문
   action_items = []    # 실행 항목
+  conversation_log = [] # 대화 로그 (질문, 옵션, 응답, 후속 분석)
   round = 0
   MAX_ROUNDS = 10      # 안전 제한
 
@@ -164,7 +165,8 @@ WHILE round < MAX_ROUNDS:
   2. AskUserQuestion으로 질문 제시 (옵션 3개 + "토론 종료")
   3. 사용자 응답 분석
   4. key_points/decisions/open_questions/action_items 업데이트
-  5. 필요 시 mid-discussion sub-agent 리서치 수행
+  5. conversation_log에 {question, options, answer, follow_up} 기록
+  6. 필요 시 mid-discussion sub-agent 리서치 수행
 
   IF 사용자가 "토론 종료" 선택 OR "정리해줘" 입력:
     → Step 4 진행
@@ -240,7 +242,10 @@ Agent(subagent_type="general-purpose", prompt="다음 사항에 대한 리서치
 
 #### 파일명 생성 규칙
 - 소문자, 특수문자는 `_`로 대체, 최대 50자
-- 한국어 토픽은 영문 요약으로 변환 (예: "인증 시스템 설계" → `discussion_auth_system_design.md`)
+- 파일명은 항상 영문 (예: "인증 시스템 설계" → `discussion_auth_system_design.md`)
+
+#### 요약 언어 규칙
+- 토론에서 사용된 언어로 요약을 작성한다 (사용자 입력 언어 기준)
 
 #### 요약 출력 형식
 
@@ -275,6 +280,22 @@ Agent(subagent_type="general-purpose", prompt="다음 사항에 대한 리서치
 ## 토론 흐름 (Discussion Flow)
 Round 1: [주제] → [결론/방향]
 Round 2: [주제] → [결론/방향]
+...
+
+## 부록: 대화 로그 (Conversation Log)
+
+### Round 1
+**Q**: [질문 내용]
+**Options**: 1) ... 2) ... 3) ... 4) 토론 종료
+**A**: [사용자 응답 요약]
+**Follow-up**: [AI 분석/코멘트 요약]
+
+### Round 2
+**Q**: ...
+**Options**: ...
+**A**: ...
+**Follow-up**: ...
+
 ...
 ```
 
