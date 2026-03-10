@@ -290,9 +290,12 @@ PR 생성 → pr-spec-patch → pr-review → (merge 후) spec-update-done
 ```
 sdd_skills/
 ├── README.md                    # 프로젝트 소개 + 설치 가이드
-├── SDD_QUICK_START.md           # 빠른 참조 가이드
-├── SDD_WORKFLOW.md              # 종합 워크플로우 가이드 (~992줄)
 ├── CLAUDE.md                    # Claude Code 워크스페이스 안내
+│
+├── docs/
+│   ├── SDD_CONCEPT.md           # SDD 핵심 개념 설명
+│   ├── SDD_QUICK_START.md       # 빠른 참조 가이드
+│   └── SDD_WORKFLOW.md          # 종합 워크플로우 가이드 (~992줄)
 │
 ├── .claude/
 │   └── skills/                  # Claude Code 스킬 (14개)
@@ -459,7 +462,7 @@ version: <semver>
 
 7. **docs/sdd.md가 독립 개념서**
    - 현황: SDD 개념 설명 문서이나 스킬과 직접 연결되지 않음
-   - 제안: SDD_WORKFLOW.md에서 참조 링크 추가
+   - 제안: docs/SDD_WORKFLOW.md에서 참조 링크 추가
 
 ---
 
