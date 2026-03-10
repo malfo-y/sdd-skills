@@ -1,0 +1,6 @@
+{
+  "name": "git",
+  "description": "Smart Git workflow automation. Use this skill whenever the user says \"/git\", \"커밋해줘\", \"푸시해줘\", \"git 정리\", \"브랜치 만들어\", \"git status\", or any request related to committing, pushing, branching, rebasing, or managing git history. Also trigger when the user mentions messy git history, wants to clean up commits, or asks to push their current work. This skill analyzes staged/unstaged changes, semantically groups them into logical commits with Conventional Commits messages, auto-creates branches when changes are too large, and maintains a clean git graph via rebase.",
+  "instruction_file": "SKILL.md",
+  "version": "1.0.0"
+}
