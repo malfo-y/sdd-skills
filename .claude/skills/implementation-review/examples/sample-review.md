@@ -1,8 +1,14 @@
-# Sample Implementation Review Session
+# Sample Implementation Review Sessions
 
-This example shows how the implementation-review skill audits an authentication system implementation against its plan.
+This document shows examples for each review tier.
 
 > **Important**: The `implementation-review` skill must **never** create/edit/delete spec documents under `_sdd/spec/`. If spec changes are needed, record them as “spec update needed” and direct the user to `spec-update-todo` (or `spec-update-done`).
+
+---
+
+# Tier 1: Plan-Based Review
+
+This example shows how the skill audits an authentication system implementation against its plan.
 
 ## Session Flow
 
@@ -371,7 +377,7 @@ Would you like me to:
 3. Do a deeper review of any specific area?
 ```
 
-## Key Review Patterns Demonstrated
+## Key Tier 1 Patterns
 
 1. **Systematic Inventory**: Loading all tasks and criteria from the plan
 2. **Evidence-Based Verification**: Finding actual code locations for each criterion
@@ -379,3 +385,229 @@ Would you like me to:
 4. **Issue Categorization**: Critical vs Quality vs Improvements
 5. **Actionable Recommendations**: Prioritized next steps with specific locations
 6. **Clear Summary**: Progress metrics and single most important action
+
+---
+
+# Tier 2: Spec-Based Review
+
+This example shows how the skill reviews a REST API implementation when only a spec exists (no implementation plan).
+
+## Session Flow
+
+### 1. Tier Detection
+
+```
+User: review implementation
+
+Claude: 구현 계획을 탐색합니다...
+
+❌ _sdd/implementation/IMPLEMENTATION_PLAN*.md — 미발견
+✓ _sdd/spec/ — 3개 파일 발견
+  - spec/overview.md
+  - spec/api_endpoints.md
+  - spec/data_model.md
+
+**Review Mode**: Tier 2 — Spec-based review (Plan not found)
+
+Spec 구조를 분석합니다...
+```
+
+### 2. Spec Analysis
+
+```
+Claude:
+## Tier 2 Step 1: Spec Analysis
+
+**Spec 구조**: 구조화 (명확한 endpoint/모델 정의 존재)
+**추출된 요구사항 수**: 12
+
+| # | 요구사항 | 출처 | 유형 |
+|---|---------|------|------|
+| 1 | GET /api/users — 사용자 목록 반환 | spec/api_endpoints.md:## Users | 기능 |
+| 2 | POST /api/users — 사용자 생성 | spec/api_endpoints.md:## Users | 기능 |
+| 3 | User 모델: id, email, name, created_at | spec/data_model.md:## User | 데이터 |
+| 4 | 인증: JWT Bearer token | spec/overview.md:## Authentication | 아키텍처 |
+| 5 | 페이지네이션: offset/limit 방식 | spec/api_endpoints.md:## Pagination | 기능 |
+| ... | ... | ... | ... |
+
+Spec에서 12개 요구사항을 추출했습니다. 구현 상태를 검증합니다...
+```
+
+### 3. Verification & Alignment
+
+```
+Claude:
+## Tier 2 Step 2-3: Verification & Alignment
+
+### Spec Alignment
+| # | 요구사항 | 구현 상태 | 테스트 | Status |
+|---|---------|----------|-------|--------|
+| 1 | GET /api/users | routes/users.py:15 | test_list_users | ALIGNED |
+| 2 | POST /api/users | routes/users.py:42 | test_create_user | ALIGNED |
+| 3 | User 모델 필드 | models/user.py:8 | - | DRIFT (name 필드 누락) |
+| 4 | JWT 인증 | middleware/auth.py:12 | test_jwt_auth | ALIGNED |
+| 5 | 페이지네이션 | - | - | MISSING |
+| ... | ... | ... | ... | ... |
+
+**요약**: 12개 요구사항 중 8 aligned, 2 drift, 2 missing
+```
+
+### 4. Summary
+
+```
+Claude:
+# Implementation Review: REST API
+
+**Review Date**: 2026-03-11
+**Review Mode**: Tier 2 — Spec-based review (Plan not found)
+**Reference**: _sdd/spec/ (3 files)
+**Reviewer**: Claude
+
+## Progress Overview
+- **Spec Requirements**: 12 total
+- **Aligned**: 8 (67%)
+- **Drift**: 2 (17%)
+- **Missing**: 2 (17%)
+
+## Issues Summary
+### Critical (1)
+1. **User 모델에 name 필드 누락** — Spec에서 필수 필드로 정의, 구현 누락
+
+### Quality (2)
+1. 페이지네이션 미구현 — Spec 요구사항
+2. 일부 endpoint에 인증 미적용
+
+## Recommended Next Steps
+1. [ ] User 모델에 name 필드 추가 + 마이그레이션
+2. [ ] 페이지네이션 구현
+3. [ ] 모든 endpoint에 인증 미들웨어 적용
+
+## Conclusion
+Spec 대비 67% 정합성. name 필드 누락이 가장 시급한 이슈.
+구현 계획이 필요하면 `implementation-plan` 스킬 사용을 권장합니다.
+```
+
+## Key Tier 2 Patterns
+
+1. **Spec Structure Detection**: 구조화/비구조화 자동 판별
+2. **Requirement Extraction**: Spec에서 검증 가능한 요구사항 추출
+3. **Alignment Assessment**: ALIGNED / DRIFT / MISSING 3단계 판정
+4. **Graceful Fallback**: Plan 없이도 유의미한 리뷰 제공
+
+---
+
+# Tier 3: Code Quality Review
+
+This example shows how the skill reviews code quality when no plan or spec exists.
+
+## Session Flow
+
+### 1. Tier Detection
+
+```
+User: review implementation
+
+Claude: 구현 계획을 탐색합니다...
+
+❌ _sdd/implementation/IMPLEMENTATION_PLAN*.md — 미발견
+❌ _sdd/spec/ — 디렉토리 미존재 또는 비어있음
+
+**Review Mode**: Tier 3 — Code quality review (no Plan or Spec)
+
+최근 변경 사항을 분석합니다...
+```
+
+### 2. Scope Identification
+
+```
+Claude:
+## Tier 3 Step 1: Review Scope
+
+**모드**: 최근 변경 중심 코드 품질 리뷰
+**기간**: 2026-02-25 ~ 2026-03-11 (최근 2주)
+**변경 파일 수**: 8
+**핵심 변경 영역**: src/services/, src/routes/
+
+| # | 파일 | 변경 유형 | 변경량 |
+|---|------|----------|-------|
+| 1 | src/services/payment.py | Modified | +120/-15 |
+| 2 | src/routes/checkout.py | Created | +85 |
+| 3 | src/models/order.py | Modified | +30/-5 |
+| 4 | tests/test_payment.py | Created | +60 |
+| 5 | src/utils/currency.py | Created | +25 |
+| ... | ... | ... | ... |
+```
+
+### 3. Code & Test Review
+
+```
+Claude:
+## Tier 3 Step 2: Code Review
+
+### 보안
+- ⚠️ src/services/payment.py:45 — API 키가 하드코딩됨
+- ✓ 입력 검증 적절히 수행
+- ✓ SQL injection 위험 없음
+
+### 에러 처리
+- ✓ payment.py — try/except로 결제 실패 처리
+- ⚠️ checkout.py:32 — 외부 API 타임아웃 처리 누락
+
+### 코드 패턴
+- ✓ 프로젝트 컨벤션 준수
+- ⚠️ currency.py — 유사 함수 3개가 중복 로직 포함
+
+## Tier 3 Step 3: Test Review
+
+- test_payment.py: 8 tests, all passing
+- test_checkout.py: 미존재 ⚠️
+- test_currency.py: 미존재 ⚠️
+- 변경된 코드의 테스트 커버리지: 약 40% (payment만 커버)
+```
+
+### 4. Summary
+
+```
+Claude:
+# Implementation Review: Recent Changes
+
+**Review Date**: 2026-03-11
+**Review Mode**: Tier 3 — Code quality review (no Plan or Spec)
+**Reference**: Codebase — git log (2026-02-25 ~ 2026-03-11, 8 files)
+**Reviewer**: Claude
+
+## Assumptions
+- Plan/Spec 미존재로 인해 최근 변경 중심 코드 품질 리뷰 수행
+- 리뷰 범위: 최근 2주간 변경된 8개 파일
+- 기능 요구사항 대비 검증은 수행하지 않음 (Plan/Spec 필요)
+
+## Issues Summary
+
+### Critical (1)
+1. **API 키 하드코딩** — src/services/payment.py:45
+   - 환경변수로 이동 필요
+
+### Quality (3)
+1. checkout.py에 외부 API 타임아웃 처리 누락
+2. checkout.py, currency.py 테스트 미존재
+3. currency.py 내 중복 로직
+
+### Improvements (1)
+1. currency.py 중복 함수를 공통 헬퍼로 리팩토링
+
+## Recommended Next Steps
+1. [ ] payment.py의 하드코딩된 API 키를 환경변수로 이동
+2. [ ] checkout.py에 타임아웃 + 재시도 로직 추가
+3. [ ] test_checkout.py, test_currency.py 작성
+
+## Conclusion
+최근 변경의 핵심 이슈는 API 키 하드코딩 (보안). 테스트 커버리지가 40%로 낮음.
+Spec이나 구현 계획이 필요하면 `spec-create` 또는 `implementation-plan` 스킬을 권장합니다.
+```
+
+## Key Tier 3 Patterns
+
+1. **Git-Based Scoping**: git log/diff로 리뷰 범위 자동 결정
+2. **Non-Interactive**: 기본값(최근 변경)으로 자동 진행, 가정사항 명시
+3. **Quality-Focused**: 보안, 에러 처리, 패턴, 테스트 커버리지 중심
+4. **Upgrade Path**: Spec/Plan 생성을 위한 후속 스킬 안내
