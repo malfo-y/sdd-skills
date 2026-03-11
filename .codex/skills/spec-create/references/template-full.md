@@ -129,6 +129,10 @@ Record significant decisions in `_sdd/spec/DECISION_LOG.md` as well, so rational
 
 Brief description of what this component does.
 
+#### Why
+
+Why this component exists — what problem it solves, why it's a separate component rather than part of something else. Include design motivation and context (e.g., "Separated from X because Y", "Needed to solve Z problem").
+
 #### Responsibility
 
 - Primary: What it does
@@ -176,10 +180,10 @@ class OutputModel:
 
 #### Dependencies
 
-| Dependency | Type | Purpose |
-|------------|------|---------|
-| ComponentB | Internal | Data processing |
-| redis | External | Caching |
+| Dependency | Type | Purpose | Why |
+|------------|------|---------|-----|
+| ComponentB | Internal | Data processing | Separated processing logic to allow independent scaling and testing |
+| redis | External | Caching | In-memory store needed for sub-millisecond lookups; chosen over local cache for multi-instance consistency |
 
 #### Error Handling
 

@@ -126,6 +126,9 @@ Build a scalable e-commerce platform supporting multi-vendor marketplace operati
 #### Overview
 Manages product catalog, categories, and vendor listings.
 
+#### Why
+Separated as an independent service because product catalog operations (search, browse, CRUD) have fundamentally different scaling and caching requirements from order/payment flows. Decoupling allows Elasticsearch indexing and S3 media handling without impacting transactional services.
+
 #### Responsibilities
 - CRUD operations for products
 - Category management
@@ -174,13 +177,13 @@ Manages product catalog, categories, and vendor listings.
 
 #### Dependencies
 
-| Service | Type | Purpose |
-|---------|------|---------|
-| PostgreSQL | Database | Product storage |
-| Elasticsearch | Search | Full-text search |
-| S3 | Storage | Product images |
-| Kafka | Queue | Event publishing |
-| Inventory Service | Internal | Stock levels |
+| Service | Type | Purpose | Why |
+|---------|------|---------|-----|
+| PostgreSQL | Database | Product storage | ACID compliance needed for catalog consistency; JSON column support for flexible attributes |
+| Elasticsearch | Search | Full-text search | Relational DB full-text too slow at scale; ES provides faceted filtering and relevance scoring |
+| S3 | Storage | Product images | Object storage for cost-effective, CDN-friendly media serving |
+| Kafka | Queue | Event publishing | Async event propagation to decouple services; chosen over RabbitMQ for replay and partition support |
+| Inventory Service | Internal | Stock levels | Inventory has its own consistency domain; direct DB access would break service boundaries |
 
 #### Error Handling
 
@@ -196,6 +199,9 @@ Manages product catalog, categories, and vendor listings.
 
 #### Overview
 Handles order lifecycle from creation to fulfillment.
+
+#### Why
+Order processing requires strong consistency guarantees (saga pattern, compensating transactions) that conflict with the eventual-consistency model used in product/search. Isolated as a service to enforce transactional boundaries and enable independent failure handling.
 
 #### Responsibilities
 - Order creation and validation
@@ -238,6 +244,9 @@ Handles order lifecycle from creation to fulfillment.
 
 #### Overview
 PCI-DSS compliant payment processing with multiple gateway support.
+
+#### Why
+PCI-DSS compliance requires strict network isolation and audit logging. Separating payment into its own service confines the compliance boundary — only this service handles tokenized card data, reducing the PCI scope for the rest of the platform.
 
 #### Supported Gateways
 - Stripe (primary)

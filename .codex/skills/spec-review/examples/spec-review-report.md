@@ -1,7 +1,7 @@
 # Spec Review Report (Strict)
 
 **Date**: 2026-02-07  
-**Reviewer**: Codex (gpt-5.3-codex)  
+**Reviewer**: Codex  
 **Scope**: Spec+Code  
 **Spec Files**:
 - `_sdd/spec/apify_ig.md`
@@ -48,6 +48,7 @@ The spec remains mostly aligned with project intent, but multiple high-confidenc
 
 - Clarity: mostly clear, but retry and fallback language is ambiguous
 - Completeness: core architecture present; config/options coverage incomplete
+- Explainability: most components have Purpose only; 2 of 5 components lack Why/rationale explaining design motivation and existence reason
 - Consistency: two conflicting statements found for API throughput
 - Testability: several requirements are testable; retry/failure handling is not fully measurable
 - Structure: index split is good; minor link hygiene issues remain

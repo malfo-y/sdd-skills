@@ -134,6 +134,7 @@ Rules:
 - Move long examples, verbose logs, and reference-only material to appendix (`appendix.md` or `<project>_APPENDIX.md`)
 - Keep one canonical version of repeated content and replace duplicates with links
 - Do not drop important "why" context silently; preserve it in `_sdd/spec/DECISION_LOG.md` when needed
+- **Preserve component-level "why"**: Each component's Why field (existence reason, design motivation) must remain in the component section — do not prune it into DECISION_LOG. The Why field is execution-critical context, not supplementary rationale
 
 ### Step 4.5: Preserve Decision Context
 

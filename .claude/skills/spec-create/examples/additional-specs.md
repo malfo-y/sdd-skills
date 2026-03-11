@@ -58,6 +58,7 @@ Automate file organization by moving files into categorized folders based on fil
 | Aspect | Description |
 |--------|-------------|
 | **Purpose** | Match files to destination folders |
+| **Why** | Separated from file operations to allow rules to be tested, extended, and configured independently. Chain of responsibility pattern enables adding new rule types (regex, size-based) without modifying scanner or mover logic |
 | **Input** | File path, configuration rules |
 | **Output** | Target folder path or None |
 
@@ -71,6 +72,7 @@ Automate file organization by moving files into categorized folders based on fil
 | Aspect | Description |
 |--------|-------------|
 | **Purpose** | Recursively scan directories |
+| **Why** | Decoupled from rule engine so scanning can handle symlinks, permission errors, and large directory trees independently. Also allows swapping scan strategies (recursive vs flat) without affecting rule evaluation |
 | **Input** | Source directory path |
 | **Output** | List of file paths with metadata |
 
@@ -167,6 +169,7 @@ RESTful API for managing tasks and projects with team collaboration features.
 | Aspect | Description |
 |--------|-------------|
 | **Purpose** | Business logic for task operations |
+| **Why** | Extracted from route handlers to keep API layer thin and testable. Centralizes permission checks, validation, and notification triggers so that multiple entry points (REST, WebSocket, CLI) share the same business rules |
 | **Input** | Task DTOs, user context |
 | **Output** | Task models, validation errors |
 
@@ -271,6 +274,7 @@ Extract, transform, and load Instagram profile and post data for analytics.
 | Aspect | Description |
 |--------|-------------|
 | **Purpose** | Fetch data from Instagram |
+| **Why** | Isolated from transform/load stages because extraction involves rate limiting, proxy rotation, and session management — concerns orthogonal to data processing. Separation allows retrying extraction independently without re-processing already-fetched data |
 | **Input** | Profile URLs, credentials, config |
 | **Output** | Raw JSON data, media files |
 
@@ -284,6 +288,7 @@ Extract, transform, and load Instagram profile and post data for analytics.
 | Aspect | Description |
 |--------|-------------|
 | **Purpose** | Clean and structure raw data |
+| **Why** | Raw API responses change frequently and contain inconsistent formats. A dedicated transform stage absorbs API schema changes without affecting extraction or loading logic, and provides a single place for data quality validation |
 | **Input** | Raw JSON from extractor |
 | **Output** | Normalized data models |
 

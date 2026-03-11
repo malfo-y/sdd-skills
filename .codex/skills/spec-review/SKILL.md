@@ -6,6 +6,11 @@ version: 1.0.0
 
 # Spec Review (Strict, Review-Only)
 
+| Workflow | Position | When |
+|----------|----------|------|
+| Large | Optional (after spec-update-done) | 대규모 업데이트 후 보조 검증 |
+| Any | On-demand | 이상 징후/모호함 발견 시 보조 검증 |
+
 Review SDD spec quality and spec-to-code alignment in strict review-only mode.  
 This skill generates findings and recommendations, but does not edit `_sdd/spec/*.md` (including `DECISION_LOG.md`).
 
@@ -31,7 +36,7 @@ This skill evaluates two dimensions:
 - Before implementation planning to validate spec quality
 - After implementation/review cycles to detect drift
 - During periodic documentation governance
-- When a team wants findings first, and spec edits deferred to a follow-up sync step
+- When a team wants findings first, and spec edits only after approval
 
 ## Inputs
 
@@ -58,6 +63,7 @@ This skill evaluates two dimensions:
 2. Enumerate linked sub-spec files.
 3. Exclude generated/backup files (`SUMMARY.md`, `prev/PREV_*.md`) from primary analysis.
 4. Load `_sdd/spec/DECISION_LOG.md` if present.
+4.5. Capture code state: `git rev-parse --short HEAD` + uncommitted changes count (`git status --porcelain | wc -l`)
 5. Define review scope:
    - Spec-only
    - Spec + code alignment (default)
@@ -71,6 +77,7 @@ Assess the spec as a standalone design artifact:
 
 - **Clarity**: ambiguous wording, undefined terms
 - **Completeness**: missing requirements, missing acceptance criteria
+- **Explainability**: each component should explain _why_ it exists (design motivation, problem solved), not just _what_ it does. Flag components with only Purpose but no Why/rationale
 - **Consistency**: conflicting statements across sections/files
 - **Testability**: whether requirements can be objectively verified
 - **Navigability**: structure, section discoverability, cross-links
@@ -88,12 +95,12 @@ Assess the spec as a standalone design artifact:
 | 코드베이스 크기 | 전략 | 구체적 방법 |
 |----------------|------|-------------|
 | < 50 파일 | 자유 탐색 | `Glob` + `Read` 자유롭게 사용 |
-| 50-200 파일 | 타겟 탐색 | `rg`/`Glob`/`Read`/`Bash`으로 후보 식별 → 타겟 `Read` |
-| > 200 파일 | 타겟 탐색 | `rg`/`Glob`/`Read`/`Bash` 위주 → 최소한의 `Read` |
+| 50-200 파일 | 타겟 탐색 | `Grep`/`Glob`으로 후보 식별 → 타겟 `Read` |
+| > 200 파일 | 타겟 탐색 | `Grep`/`Glob` 위주 → 최소한의 `Read` |
 
 ### Step 3: Code-Linked Drift Audit
 
-**Tools**: `rg`, `Glob`, `Read`, `Bash`, `Read`, `Bash (git diff, git log)`
+**Tools**: `Grep`, `Glob`, `Read`, `Bash (git diff, git log)`
 
 Compare spec claims to implementation evidence:
 
@@ -114,27 +121,21 @@ Require concrete evidence wherever possible:
 - commit or diff references
 
 When local runtime/test execution is used to collect evidence, follow `_sdd/env.md`.
-If `_sdd/env.md` is missing/incomplete, apply deterministic defaults for environment details instead of guessing.
+If `_sdd/env.md` is missing/incomplete, ask the user for environment details instead of guessing.
 
-### Step 3.5: Drift 발견 요약 (Internal Check)
+### Step 3.5: Drift 발견 요약
 
-**Tools**: `deterministic defaults (non-interactive)`
+Drift 발견 요약 테이블을 사용자에게 제시한 후 바로 Step 4로 진행한다 (사용자 확인을 기다리지 않는다):
 
 ```
-1. Drift 발견 요약 테이블을 작업 로그로 제시:
-   | 카테고리 | High | Medium | Low |
-   |----------|------|--------|-----|
-   | Architecture drift | N | N | N |
-   | Feature drift | N | N | N |
-   | API drift | N | N | N |
-   | Config drift | N | N | N |
-   | Issue drift | N | N | N |
-   | Decision-log drift | N | N | N |
-   | Source-field drift | N | N | N |
-
-2. 내부 자동 처리:
-   - 평가를 바로 진행한다.
-   - 신뢰도 낮은 항목은 재점검 후 `Open Questions`에 기록한다.
+| 카테고리 | High | Medium | Low |
+|----------|------|--------|-----|
+| Architecture drift | N | N | N |
+| Feature drift | N | N | N |
+| API drift | N | N | N |
+| Config drift | N | N | N |
+| Issue drift | N | N | N |
+| Decision-log drift | N | N | N |
 ```
 
 ### Step 4: Severity and Decision
@@ -146,13 +147,13 @@ Classify findings:
 - `Medium`: behavior mismatch, missing acceptance criteria, important doc gaps
 - `Low`: style/organization/non-blocking documentation quality issues
 
-Drift Type → Default Severity Mapping:
+#### Drift Type → Default Severity Mapping
 
 | Drift Type | Default Severity |
 |------------|-----------------|
 | Architecture | High |
 | Feature | Medium |
-| API | Medium |
+| API | High |
 | Config | Low |
 | Issue | Low |
 | Decision-log | Medium |
@@ -165,7 +166,7 @@ Assign one overall decision:
 
 ### Step 5: Report and Handoff
 
-**Tools**: `Write`, `Bash (mkdir -p)`, `deterministic defaults (non-interactive)`
+**Tools**: `Write`, `Bash (mkdir -p)`, `AskUserQuestion`
 
 1. Create/update strict review report.
 2. Do not edit actual spec content.
@@ -181,10 +182,7 @@ Assign one overall decision:
       | Low | N | ... |
       | Decision | SPEC_OK / SYNC_REQUIRED / NEEDS_DISCUSSION |
 
-   2. 내부 자동 처리:
-      - 전체 리포트 출력
-      - High severity 별도 요약 출력
-      - `SPEC_REVIEW_REPORT.md` 저장
+   2. 전체 리포트를 출력하고 `_sdd/spec/SPEC_REVIEW_REPORT.md`로 저장한다 (사용자 확인을 기다리지 않는다).
    ```
 
 ## Output
@@ -230,6 +228,7 @@ Assign one overall decision:
 - Consistency:
 - Testability:
 - Structure:
+- Ownership:
 
 ## Spec-to-Code Drift Notes
 - Architecture:
@@ -269,7 +268,7 @@ Assign one overall decision:
 - Keep recommendations actionable and ordered by risk/impact.
 - Keep `DECISION_LOG.md` updates as recommendations only in this skill.
 - Keep artifact recommendations minimal: default to `DECISION_LOG.md` only unless the user asks for more.
-- Do not run local runtime/tests with inferred setup; use `_sdd/env.md` or skip runtime validation.
+- Do not run local runtime/tests with inferred setup; use `_sdd/env.md` or user-confirmed environment details.
 
 ## Error Handling
 
@@ -279,7 +278,7 @@ Assign one overall decision:
 | 코드베이스 접근 불가 | Spec-only 모드로 전환, 코드 drift 분석 생략 |
 | `_sdd/env.md` 미존재 | 로컬 테스트 건너뛰고 코드 분석만 수행 |
 | git 이력 없음 | 현재 코드 상태만으로 drift 분석 |
-| 다수 스펙 파일 존재 | 메인 스펙 자동 선택 규칙 적용 + 선택 근거 기록 |
+| 다수 스펙 파일 존재 | 사용자에게 리뷰 범위 확인 |
 | Evidence 부족 | UNTESTED로 표시, 신뢰도 낮음 명시 |
 | 기존 리뷰 리포트 존재 | `prev/PREV_SPEC_REVIEW_REPORT_<timestamp>.md`로 아카이브 |
 | Decision Log 미존재 | Decision-log drift 분석 생략, 생성 제안 |

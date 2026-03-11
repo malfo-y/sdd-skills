@@ -24,6 +24,7 @@ Keep these items in the main index:
 - Goal, Scope, and Non-Goals
 - Core architecture summary
 - Primary component responsibilities
+- **Component-level "Why" fields** (existence reason, design motivation — these are execution-critical, not supplementary rationale)
 - Acceptance or completion criteria
 - Link hub for sub-documents
 
@@ -63,3 +64,4 @@ Include at least the following in `_sdd/spec/REWRITE_REPORT.md`:
 - [ ] Cross-document duplication is minimized
 - [ ] Unresolved ambiguities remain explicitly documented
 - [ ] Essential rationale is preserved in `_sdd/spec/DECISION_LOG.md` when removed from main spec
+- [ ] Component-level Why fields are preserved inline (not moved to DECISION_LOG or appendix)

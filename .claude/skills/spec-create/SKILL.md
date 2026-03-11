@@ -276,13 +276,14 @@ For each major component, include:
 | Aspect | Description |
 |--------|-------------|
 | **Purpose** | What this component does |
+| **Why** | Why this component exists — what problem it solves, why it's a separate component rather than part of something else. Include design motivation and context (e.g., "Separated from X because Y", "Needed to solve Z problem") |
 | **Input** | Expected inputs and formats |
 | **Output** | Produced outputs and formats |
-| **Dependencies** | Other components or external deps |
+| **Dependencies** | Other components or external deps — include _why_ the dependency exists (e.g., "Depends on Tokenizer because raw text must be split before embedding") |
 | **Source** | _(Include only when codebase exists)_ Mapped source files, classes, and functions. See Source field format in Best Practices > Writing Quality. |
 
 **Architecture Details:**
-- Implementation approach
+- Implementation approach and _why this approach was chosen_ (briefly note key alternatives considered if relevant)
 - Key classes/functions
 - Design patterns used
 

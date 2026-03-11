@@ -60,3 +60,4 @@ _sdd/spec/
 - Link check: pass (0 broken links)
 - Duplicate sections: reduced from 6 to 1
 - Main document length: reduced from 1200 lines to 280 lines
+- Component Why fields: all preserved inline (not moved to appendix or DECISION_LOG)

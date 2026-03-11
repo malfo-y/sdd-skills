@@ -19,6 +19,7 @@ This checklist does not authorize direct spec edits.
 - [ ] Terms and abbreviations are defined
 - [ ] No contradictory statements across sections/files
 - [ ] Component responsibilities and ownership boundaries are clear
+- [ ] Each component explains _why_ it exists (design motivation, problem solved), not just _what_ it does — flag components with only Purpose but no Why/rationale
 - [ ] Section flow is navigable and links are valid
 
 ## 3) Code-Linked Drift Checks / 코드 연동 드리프트 검증

@@ -1,10 +1,15 @@
 ---
 name: spec-rewrite
-description: This skill should be used when the user asks to "rewrite spec", "refactor spec", "simplify spec", "split spec into files", "clean up spec", or equivalent phrases indicating they want to reorganize an overly long/complex spec by pruning noise, splitting into hierarchical files, and explicitly listing ambiguities/problems.
+description: This skill should be used when the user asks to "rewrite spec", "refactor spec", "simplify spec", "split spec into files", "clean up spec", "review spec quality", or equivalent phrases indicating they want to reorganize an overly long/complex spec by pruning noise, splitting into hierarchical files, and explicitly listing ambiguities/problems.
 version: 1.0.0
 ---
 
 # Spec Rewrite - Restructure Long or Complex Specs
+
+| Workflow | Position | When |
+|----------|----------|------|
+| Any | Standalone | 스펙이 비대해졌을 때 정리/재구성 |
+| Any | Before implementation-plan | 구현 전 스펙 품질 정리 |
 
 Rewrite long or complex specs into a clearer structure by pruning unnecessary content (delete or move to appendix), splitting into hierarchical files, and explicitly documenting ambiguities and quality issues.
 
@@ -28,8 +33,8 @@ Primary goals:
 
 1. **Always backup**: 수정 전 반드시 `_sdd/spec/prev/PREV_<filename>_<timestamp>.md`로 백업한다.
 2. **Preserve decision context**: 삭제하는 섹션에 중요한 "why" 컨텍스트가 있으면 `DECISION_LOG.md`에 보존한다.
-3. **자동 검증 우선**: 대규모 구조 변경(파일 분할, 대량 이동) 전에 반드시 자동 검증을 받는다.
-4. **한국어 작성**: 추가/수정 내용은 한국어로 작성한다 (기존 언어 유지).
+3. **사용자 확인 우선**: 대규모 구조 변경(파일 분할, 대량 이동) 전에 반드시 사용자 확인을 받는다.
+4. **언어 규칙**: 기존 스펙/문서의 언어를 따른다. 새 프로젝트(기존 스펙 없음)는 한국어 기본. 사용자 명시 지정 시 해당 언어 사용.
 5. **최소 산출물**: `DECISION_LOG.md` 외 추가 거버넌스 문서는 사용자 요청 시에만 생성한다.
 6. **Preserve Source fields**: 기존 컴포넌트 테이블의 `Source` 필드가 있으면 반드시 보존한다. 섹션 이동/재구성 시에도 Source 매핑 정보를 유지한다.
 
@@ -65,12 +70,12 @@ scope_clear = 리라이트 범위 명확
 
 IF quality_issues_identified AND scope_clear → Step 2 진행
 ELSE IF NOT quality_issues_identified → 추가 진단 수행
-ELSE → deterministic defaults (non-interactive): 리라이트 범위 확인
+ELSE → AskUserQuestion: 리라이트 범위 확인
 ```
 
 ### Step 2: Propose Rewrite Plan First
 
-**Tools**: `deterministic defaults (non-interactive)`
+**Tools**: `AskUserQuestion`
 
 Present a rewrite plan before making changes.
 
@@ -99,19 +104,22 @@ Present a rewrite plan before making changes.
 - [Ambiguous/conflicting/missing items]
 ```
 
-For large structural changes (file splits and bulk moves), run automatic safety checks first.
+For large structural changes (file splits and bulk moves), get user confirmation first.
 
 **Decision Gate 2→3**:
 ```
-plan_presented = 리라이트 계획을 작업 로그로 제시 완료
-plan_validated = 자동 일관성/안전성 검증 통과
+plan_presented = 리라이트 계획을 사용자에게 제시 완료
+user_approved = 사용자가 계획 승인
 
-IF plan_presented AND plan_validated → Step 3 진행
+IF plan_presented AND user_approved → Step 3 진행
 ELSE IF NOT plan_presented → Step 2 재실행
-ELSE → 자동 보정 후 계획 수정 (최대 2라운드)
+ELSE → 사용자 피드백 반영 후 계획 수정 (최대 2라운드)
+  → 2라운드 후에도 거부 시 진단 결과를 REWRITE_REPORT.md에 저장하고 종료
 ```
 
 ### Step 3: Create Safety Backups
+
+> Steps 3-5는 실제 파일 수정 단계이다. `Edit`, `Write`, `Bash` 도구를 사용한다.
 
 **Tools**: `Bash (mkdir -p, cp)`, `Write`
 
@@ -126,6 +134,7 @@ Rules:
 - Move long examples, verbose logs, and reference-only material to appendix (`appendix.md` or `<project>_APPENDIX.md`)
 - Keep one canonical version of repeated content and replace duplicates with links
 - Do not drop important "why" context silently; preserve it in `_sdd/spec/DECISION_LOG.md` when needed
+- **Preserve component-level "why"**: Each component's Why field (existence reason, design motivation) must remain in the component section — do not prune it into DECISION_LOG. The Why field is execution-critical context, not supplementary rationale
 
 ### Step 4.5: Preserve Decision Context
 
@@ -192,6 +201,20 @@ Always call out these issue types explicitly.
 
 If needed, add `## Open Questions` to the index and keep detailed items in the report file.
 
+### Step 7: Validation
+
+**Tools**: `Glob`, `Read`
+
+Quality Checklist를 검증 스텝으로 실행한다:
+
+- [ ] 인덱스에서 목표/범위/완료 기준을 빠르게 파악할 수 있는가?
+- [ ] 상세 섹션이 토픽별 전용 파일로 분리되었는가?
+- [ ] 링크와 경로가 유효한가? (`Glob`으로 확인)
+- [ ] 모호성/충돌/누락 항목이 명시적으로 문서화되었는가?
+- [ ] 불필요한 중복이 제거되었는가?
+- [ ] 필수 근거(rationale)가 스펙 또는 `DECISION_LOG.md`에 보존되었는가?
+- [ ] Verify all existing Source fields from the original spec are preserved in the rewritten output
+
 ## Output Format
 
 ### 1) Rewritten Spec Files
@@ -227,13 +250,7 @@ Create or update `_sdd/spec/REWRITE_REPORT.md` with:
 
 ## Quality Checklist
 
-- Can a reader understand goal/scope/acceptance criteria quickly from the index?
-- Are detailed sections separated by topic into dedicated files?
-- Are links and paths valid?
-- Are ambiguities/conflicts/missing items explicitly documented?
-- Is unnecessary duplication removed?
-- Is essential rationale preserved (in spec or `_sdd/spec/DECISION_LOG.md`)?
-- [ ] Verify all existing Source fields from the original spec are preserved in the rewritten output
+> Step 7 (Validation)에서 검증 스텝으로 실행된다. 상세 항목은 Step 7 참조.
 
 ## Best Practices
 
@@ -266,9 +283,10 @@ Create or update `_sdd/spec/REWRITE_REPORT.md` with:
 
 ## Language Preference
 
-- Keep the existing spec language by default
-- For mixed-language specs, follow the index document language
-- If requested by the user, normalize output to a single language
+- 기존 스펙/문서의 언어를 따른다
+- 혼합 언어 스펙의 경우 인덱스 문서 언어를 따른다
+- 새 프로젝트(기존 스펙 없음)는 한국어 기본
+- 사용자 명시 지정 시 해당 언어 사용
 
 ## Context Management
 
@@ -282,8 +300,8 @@ Create or update `_sdd/spec/REWRITE_REPORT.md` with:
 | 코드베이스 크기 | 전략 | 구체적 방법 |
 |----------------|------|-------------|
 | < 50 파일 | 자유 탐색 | `Glob` + `Read` 자유롭게 사용 |
-| 50-200 파일 | 타겟 탐색 | `rg`/`Glob`/`Read`/`Bash`으로 후보 식별 → 타겟 `Read` |
-| > 200 파일 | 타겟 탐색 | `rg`/`Glob`/`Read`/`Bash` 위주 → 최소한의 `Read` |
+| 50-200 파일 | 타겟 탐색 | `Grep`/`Glob`으로 후보 식별 → 타겟 `Read` |
+| > 200 파일 | 타겟 탐색 | `Grep`/`Glob` 위주 → 최소한의 `Read` |
 
 ## Error Handling
 
@@ -291,10 +309,10 @@ Create or update `_sdd/spec/REWRITE_REPORT.md` with:
 |------|------|
 | 스펙 파일 미발견 | `spec-create` 먼저 실행 권장 |
 | 백업 디렉토리 미존재 | `mkdir -p _sdd/spec/prev/` 자동 생성 |
-| 스펙이 이미 잘 구조화됨 | 불필요한 리라이트 지양, 작업 로그에 보고 |
+| 스펙이 이미 잘 구조화됨 | 불필요한 리라이트 지양, 사용자에게 보고 |
 | 분할 후 링크 깨짐 | Glob으로 경로 검증, 자동 수정 |
 | DECISION_LOG.md 미존재 | 필요 시 새로 생성 |
-| 계획 검증 실패 | 자동 보정 후 수정안 생성 (최대 2라운드) |
+| 사용자가 계획 거부 | 피드백 반영 후 수정안 제시 (최대 2라운드) |
 | 대형 스펙 (1000줄+) | 인덱스 기반 점진적 읽기, 섹션별 처리 |
 
 ## Additional Resources

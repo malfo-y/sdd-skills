@@ -77,6 +77,7 @@ Assess the spec as a standalone design artifact:
 
 - **Clarity**: ambiguous wording, undefined terms
 - **Completeness**: missing requirements, missing acceptance criteria
+- **Explainability**: each component should explain _why_ it exists (design motivation, problem solved), not just _what_ it does. Flag components with only Purpose but no Why/rationale
 - **Consistency**: conflicting statements across sections/files
 - **Testability**: whether requirements can be objectively verified
 - **Navigability**: structure, section discoverability, cross-links

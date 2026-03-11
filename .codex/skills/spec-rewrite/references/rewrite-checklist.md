@@ -8,7 +8,7 @@ Checklist to reduce omissions during spec rewrite work.
 - [ ] Collect the list of linked sub-spec files
 - [ ] Confirm backup policy (`_sdd/spec/prev/PREV_<filename>_<timestamp>.md`)
 - [ ] Load `_sdd/spec/DECISION_LOG.md` if present
-- [ ] For large-scale splitting, apply deterministic split policy and record rationale in `Open Questions`
+- [ ] Confirm with the user before large-scale file splitting
 
 ## 2) Prune / Appendix Decision Rules
 
@@ -24,6 +24,7 @@ Keep these items in the main index:
 - Goal, Scope, and Non-Goals
 - Core architecture summary
 - Primary component responsibilities
+- **Component-level "Why" fields** (existence reason, design motivation — these are execution-critical, not supplementary rationale)
 - Acceptance or completion criteria
 - Link hub for sub-documents
 
@@ -63,3 +64,4 @@ Include at least the following in `_sdd/spec/REWRITE_REPORT.md`:
 - [ ] Cross-document duplication is minimized
 - [ ] Unresolved ambiguities remain explicitly documented
 - [ ] Essential rationale is preserved in `_sdd/spec/DECISION_LOG.md` when removed from main spec
+- [ ] Component-level Why fields are preserved inline (not moved to DECISION_LOG or appendix)

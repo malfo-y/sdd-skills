@@ -47,6 +47,7 @@ Create a simple URL shortening service that converts long URLs into short, share
 | Aspect | Description |
 |--------|-------------|
 | **Purpose** | Generate and resolve short URLs |
+| **Why** | Core service encapsulating URL generation, resolution, and tracking in one place — separated from API layer to allow reuse across REST/CLI interfaces and independent testing of shortening logic |
 | **Input** | Long URL or short code |
 | **Output** | Short URL or redirect target |
 
