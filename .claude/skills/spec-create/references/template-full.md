@@ -131,7 +131,7 @@ Brief description of what this component does.
 
 #### Why
 
-Why this component exists — what problem it solves, why it's a separate component rather than part of something else. Include design motivation and context (e.g., "Separated from X because Y", "Needed to solve Z problem").
+Why this component exists — what problem it solves, why it's a separate component rather than part of something else. Write as natural prose, NOT as a label pattern like "~의 이유: ..." (e.g., "Separated from X because Y to enable independent scaling").
 
 #### Responsibility
 

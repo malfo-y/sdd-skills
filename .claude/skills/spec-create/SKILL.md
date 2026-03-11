@@ -276,10 +276,10 @@ For each major component, include:
 | Aspect | Description |
 |--------|-------------|
 | **Purpose** | What this component does |
-| **Why** | Why this component exists — what problem it solves, why it's a separate component rather than part of something else. Include design motivation and context (e.g., "Separated from X because Y", "Needed to solve Z problem") |
+| **Why** | Why this component exists — what problem it solves, why it's a separate component rather than part of something else. Include design motivation and context. Write as natural prose, NOT as a label (e.g., write "인증 로직을 API 레이어에서 분리하여 독립 테스트와 재사용이 가능하도록 했다", NOT "인증 서비스의 이유: ..."). English example: "Separated from X because Y" |
 | **Input** | Expected inputs and formats |
 | **Output** | Produced outputs and formats |
-| **Dependencies** | Other components or external deps — include _why_ the dependency exists (e.g., "Depends on Tokenizer because raw text must be split before embedding") |
+| **Dependencies** | Other components or external deps — include _why_ the dependency exists as natural prose (e.g., "Tokenizer에 의존 — 임베딩 전 원문 분리가 필요하기 때문" / "Depends on Tokenizer because raw text must be split before embedding") |
 | **Source** | _(Include only when codebase exists)_ Mapped source files, classes, and functions. See Source field format in Best Practices > Writing Quality. |
 
 **Architecture Details:**
