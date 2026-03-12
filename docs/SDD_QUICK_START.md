@@ -32,6 +32,7 @@
 | `/implementation-review` | 계획 대비 구현 검증 (대규모 phase별 검증) |
 | `/ralph-loop-init` | ML 자동 트레이닝 디버그 루프 생성 |
 | `/discussion` | 구조화 의사결정 토론: 맥락 수집 + 선택지 비교 + 결정/미결/실행항목 정리 |
+| `/guide-create` | 스펙+코드 기반 기능별 구현/리뷰 가이드 문서 생성 |
 
 > (caveat) `/discussion` 스킬은 Claude Code에서만 지원합니다.
 
@@ -181,7 +182,17 @@ flowchart LR
 **중요 규칙(스킬 기준)**: PR에서 나온 스펙 변경사항 반영은 **반드시** `/spec-update-todo`로 진행합니다.
 (`_sdd/pr/spec_patch_draft.md` 내용을 `_sdd/spec/user_draft.md` 또는 `_sdd/spec/user_spec.md`로 옮겨서 실행)
 
-### 8. 스펙 현황 파악
+### 8. 기능 가이드 생성
+
+```bash
+/guide-create
+# 스펙과 코드를 분석하여 기능별 구현/리뷰 가이드 문서 생성
+# 출력: _sdd/guides/guide_<slug>.md
+```
+
+> 스펙이 있으면 스펙 기반으로, 코드만 있으면 Low 신뢰도로 가이드를 생성합니다.
+
+### 9. 스펙 현황 파악
 
 ```bash
 /spec-summary
@@ -220,6 +231,10 @@ _sdd/
 ├── drafts/                      # feature-draft 출력
 │   ├── feature_draft_*.md       # 스펙 패치 + 구현 계획 통합 파일
 │   └── prev/                    # 아카이브
+│
+├── guides/                      # guide-create 출력
+│   ├── guide_<slug>.md          # 기능별 구현/리뷰 가이드
+│   └── prev/                    # PREV_* 백업
 │
 └── env.md                       # 환경 설정
 ```
