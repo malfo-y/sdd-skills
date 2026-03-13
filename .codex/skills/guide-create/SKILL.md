@@ -1,23 +1,32 @@
 ---
 name: guide-create
 description: This skill should be used when the user asks to "guide create", "create guide", "feature guide", "write guide", "가이드 작성", "기능 가이드", "가이드 문서 만들어줘", or wants to generate an implementation/review guide document for a specific feature from spec and code context.
-version: 1.0.0
+version: 2.0.0
 ---
 
-# Guide Create - Feature Guide Generator
+# Guide Create - Feature Technical Report Generator
+
+| Workflow | Position | When |
+|----------|----------|------|
+| Any | Standalone | 기능별 기술 보고서 생성 |
+| Any | Post-spec-create | 스펙 작성 후 구현 착수 전 기능 deep-dive 정리 |
 
 ## Overview
 
-The `guide-create` skill generates a feature-focused guide document for implementation and review work.
-It reads `_sdd/spec/` as the primary source of truth, inspects related code as supporting evidence, and writes a practical guide under `_sdd/guides/`.
+The `guide-create` skill generates a feature-focused **technical report** aligned with the SDD whitepaper philosophy (`docs/SDD_SPEC_DEFINITION.md`).
 
-This v1 scope is intentionally narrow:
+글로벌 스펙이 프로젝트 전체의 SSOT 화이트페이퍼라면, 기능 가이드는 **단일 기능에 대한 deep-dive 기술 보고서**다. 기능의 배경과 설계 서사를 포함하되, **시나리오별 사용 가이드**와 **API 레퍼런스**를 구체적이고 자세하게 작성하는 데 특화한다.
+
+| | 글로벌 스펙 | 기능 가이드 |
+|---|---|---|
+| 범위 | 프로젝트 전체 | 단일 기능 deep-dive |
+| 성격 | SSOT 화이트페이퍼 | 기능별 기술 보고서 |
+| 강점 | 설계 서사 + 전체 구조 | **시나리오 가이드 + API 상세** |
+| 독자 | 설계 이해 | 구현자 / 사용자 / 리뷰어 |
 
 - **Target type**: feature only
 - **Mode**: non-interactive by default
-- **Primary use**: implementation/review guidance, not spec editing
-
-Use this skill when the user wants a document that explains how a feature should be built, checked, and referenced without modifying the spec itself.
+- **Primary use**: feature deep-dive report with scenario guides and API reference
 
 ## Hard Rules
 
@@ -31,15 +40,15 @@ Use this skill when the user wants a document that explains how a feature should
 6. **No fake certainty**: If evidence is incomplete, state assumptions or unknowns explicitly in the guide.
 7. **Per-feature output**: If multiple features are detected, generate one guide file per feature instead of combining them into a single document.
 8. **Backup before overwrite**: If the target guide already exists, create a timestamped backup in `_sdd/guides/prev/` before writing the new file.
-9. **Language rule**: Follow the user's active language. If unclear, follow the spec language. If still unclear, write in Korean.
+9. **Language rule**: 기존 스펙/문서의 언어를 따른다. 사용자 명시 지정 시 해당 언어 사용. 새 프로젝트(기존 스펙 없음)는 한국어 기본.
 
 ## When to Use This Skill
 
-- When the user wants a **feature implementation guide**
-- When the user wants a **feature review checklist document**
-- When a feature exists in spec but needs a clearer execution document
-- When a team wants a derived guide without changing the SSOT spec
-- When implementation or review work would benefit from a feature-specific rules/checklist/example document
+- When the user wants a **feature-focused technical report**
+- When a feature needs a **deep-dive document** with scenario guides and API reference
+- When the user wants a **feature implementation/review guide** with design context
+- When a feature exists in spec but needs a detailed usage guide and API documentation
+- When a team wants a derived deep-dive without changing the SSOT spec
 
 ### Trigger Phrases
 
@@ -88,7 +97,7 @@ Examples of requests that should trigger this skill:
 
 ### Step 1: Identify the Target Feature
 
-**Tools**: `Read`, `Glob`, `rg`, `Bash (read-only)`
+**Tools**: `Read`, `Glob`, `Grep`, `Bash (read-only)`
 
 1. Parse the user request and detect target feature candidates.
 2. If multiple features are requested, keep all candidates and plan one output file per feature.
@@ -97,20 +106,19 @@ Examples of requests that should trigger this skill:
 
 ### Step 2: Locate and Validate Spec Context
 
-**Tools**: `Read`, `Glob`, `rg`
+**Tools**: `Read`, `Glob`, `Grep`
 
 1. Find the main spec in `_sdd/spec/`.
 2. If the spec is split, follow linked or convention-based sub-specs relevant to the feature.
 3. Extract the most relevant feature description, related sections, constraints, and acceptance-style language.
 4. If no usable spec exists:
-   - stop guide generation
-   - explain briefly that `spec-create` or a prior spec update is needed first
+   - `AskUserQuestion`으로 사용자에게 선택지 제공 (spec-create 실행 / 스펙 없이 Low 신뢰도로 계속)
 
 > **Decision Gate 2→3**: See `references/tool-and-gates.md` § Gate 2→3: Spec Grounding
 
 ### Step 3: Gather Code Evidence
 
-**Tools**: `rg`, `Glob`, `Read`, `Bash (read-only)`
+**Tools**: `Grep`, `Glob`, `Read`, `Bash (read-only)`
 
 1. Search for related implementation files, tests, interfaces, schemas, and symbols.
 2. Capture only evidence that helps make the guide actionable:
@@ -136,7 +144,7 @@ When information is missing, fill gaps conservatively:
 
 Never invent confirmed behavior that is unsupported by spec or code.
 
-### Step 5: Generate the Guide Document
+### Step 5: Generate the Technical Report
 
 **Tools**: write output only
 
@@ -144,22 +152,29 @@ Write one guide per feature using the required structure from `references/output
 
 Required sections:
 
-1. **설명 / Explanation**
-   - feature purpose
-   - user value
-   - scope
-   - prerequisites or dependencies
-2. **규칙 / Rules**
-   - implementation rules
-   - interface/API rules
-   - state/error/data handling rules
-3. **체크리스트 / Checklist**
-   - before implementation
-   - during implementation
-   - before review or completion
-4. **예시 / Examples**
-   - at least one positive example
-   - include anti-patterns when evidence supports them
+1. **배경 및 동기 / Background & Motivation**
+   - 이 기능이 해결하는 문제
+   - 왜 이 접근을 택했는가
+   - 대안 대비 선택 이유 (스펙에서 확인 가능한 경우)
+2. **핵심 설계 / Core Design**
+   - 기능의 핵심 아이디어 또는 알고리즘
+   - 설계 결정과 그 이유
+   - 코드 citation (파일:심볼 형식)
+3. **사용 시나리오 가이드 / Usage Scenario Guide** ★특화
+   - 시나리오별 end-to-end 사용 흐름
+   - 각 시나리오: 전제 조건 → 입력 → 처리 흐름 → 기대 결과
+   - 정상 시나리오 + 예외/에러 시나리오
+   - 가능하면 구체적 데이터 예시 포함
+4. **API 레퍼런스 / API Reference** ★특화
+   - 엔드포인트/함수/인터페이스 상세
+   - 파라미터 (이름, 타입, 필수/선택, 설명)
+   - 리턴값/응답 구조
+   - 에러 코드 및 에러 응답
+   - 코드 예시 (요청/응답 또는 호출 예시)
+5. **구현 가이드 / Implementation Guide**
+   - 핵심 구현 규칙 및 제약
+   - 체크리스트 (구현 전/중/후)
+   - 안티패턴
 
 Optional appendix:
 
@@ -169,7 +184,7 @@ Optional appendix:
 
 ### Step 6: Save with Backup Semantics
 
-**Tools**: `Bash (mkdir -p, cp/mv)`, `Write` or `apply_patch` equivalent
+**Tools**: `Bash (mkdir -p, cp/mv)`, `Write`
 
 For each feature guide:
 
@@ -189,23 +204,26 @@ For each feature guide:
 ### Required Document Schema
 
 ```markdown
-# 기능 가이드: <feature>
+# 기능 기술 보고서: <feature>
 
 **생성일**: YYYY-MM-DD
 **입력 소스**: [conversation/spec/code]
 **대상 기능**: <feature>
 **신뢰도**: High/Medium/Low
 
-## 설명
+## 1. 배경 및 동기
 ...
 
-## 규칙
+## 2. 핵심 설계
 ...
 
-## 체크리스트
+## 3. 사용 시나리오 가이드
 ...
 
-## 예시
+## 4. API 레퍼런스
+...
+
+## 5. 구현 가이드
 ...
 
 ## 부록 (선택)
@@ -218,13 +236,13 @@ Full formatting details, slug rules, backup rules, and reference notation rules 
 
 | Situation | Response |
 |----------|----------|
-| `_sdd/spec/` missing | Stop and direct the user to `spec-create` first |
-| Main spec not found | Stop and explain that a main/index spec is required |
+| `_sdd/spec/` missing | `AskUserQuestion`으로 사용자에게 선택지 제공 (spec-create 실행 / 스펙 없이 Low 신뢰도로 계속) |
+| Main spec not found | `AskUserQuestion`으로 사용자에게 선택지 제공 (spec-create 실행 / 스펙 없이 Low 신뢰도로 계속) |
 | Feature is too ambiguous | Use the strongest available spec phrasing and record assumptions |
-| Code evidence is missing | Generate a spec-grounded guide and mark code references as unavailable |
+| Code evidence is missing | Generate a spec-grounded report and mark code references as unavailable |
 | Multiple features requested | Generate separate guide files per feature |
 | Existing guide file found | Backup to `_sdd/guides/prev/` before overwriting |
-| Mixed language signals | Prefer user language, then spec language, then Korean |
+| Mixed language signals | 기존 스펙/문서의 언어를 따른다. 사용자 명시 지정 시 해당 언어 사용. 새 프로젝트는 한국어 기본. |
 
 ## Additional Resources
 
