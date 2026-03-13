@@ -2,5 +2,5 @@
   "name": "spec-upgrade",
   "description": "This skill should be used when the user asks to \"upgrade spec\", \"convert spec to whitepaper\", \"migrate spec format\", \"spec upgrade\", \"스펙 업그레이드\", \"스펙 변환\", \"스펙 마이그레이션\", \"whitepaper 형식으로 변환\", or wants to convert old-format spec documents to the whitepaper-style \u00a71-\u00a78 structure defined in SDD_SPEC_DEFINITION.md.",
   "instruction_file": "SKILL.md",
-  "version": "1.1.0"
+  "version": "1.2.0"
 }

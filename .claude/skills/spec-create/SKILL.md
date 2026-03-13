@@ -1,7 +1,7 @@
 ---
 name: spec-create
 description: This skill should be used when the user asks to "create a spec", "write a spec document", "generate SDD", "create software design document", "document the project", "create spec for project", or mentions "_sdd" directory, specification documents, or project documentation needs.
-version: 1.1.0
+version: 1.2.0
 ---
 
 # Spec Document Creation and Management
@@ -158,7 +158,7 @@ Explore the codebase to understand:
 
 ### Step 2.5: 분석 결과 확인 (Checkpoint)
 
-**Tools**: `AskUserQuestion`
+**Tools**: — (보고 단계), `AskUserQuestion` (only if critical ambiguity remains)
 
 분석 완료 후 반드시 다음 두 단계를 순서대로 수행한다:
 
@@ -176,11 +176,13 @@ Explore the codebase to understand:
 | 이슈/개선사항 | N개 발견 |
 ```
 
-**② 테이블 출력 직후 AskUserQuestion으로 확인을 요청한다:**
+**② 테이블 출력 직후 진행 규칙을 적용한다:**
 
-- 질문: "분석 결과를 확인해 주세요. 스펙 작성을 진행할까요?"
-- "확인" → Step 3 진행
-- "수정/보완 필요" → 피드백 반영 후 테이블 재제시 (최대 2라운드)
+- 기본 동작은 보고 후 자동 진행이다.
+- 아래 경우에만 `AskUserQuestion`으로 최소 확인한다:
+  - 프로젝트 목표/범위가 두 가지 이상으로 해석되어 스펙 방향이 크게 달라지는 경우
+  - canonical output structure (`<project>.md` vs `main.md` vs split spec) 판단 근거가 약한 경우
+  - 기존 문서/코드/사용자 입력 사이에 핵심 충돌이 있는 경우
 
 **Decision Gate 2→3**:
 ```
@@ -189,7 +191,7 @@ has_architecture = 아키텍처 구조 파악 완료
 has_components = 주요 컴포넌트 식별 완료
 
 IF has_goal AND has_architecture AND has_components → Step 3 진행
-ELSE → 미파악 항목에 대해 추가 탐색 또는 AskUserQuestion
+ELSE → 미파악 항목에 대해 추가 탐색 또는 Open Questions 기록
 ```
 
 ### Step 2.7: Generation Strategy Decision
@@ -426,13 +428,14 @@ Scenario-based usage with expected results:
 7. Write spec following template structure
 8. Save as `<project-name>.md` or `main.md`
 9. If decisions or trade-offs were made during drafting, create/update `_sdd/spec/DECISION_LOG.md`
-10. **출력 검증** (Glob 기반):
-   a. `Glob("_sdd/spec/<project>.md")` → 생성 파일 존재 확인
-   b. 필수 섹션 포함 확인: Background & Motivation, Core Design, Architecture, Component Details, Environment
-   c. 500줄 초과 시 → 모듈 분할 제안
-   d. `DECISION_LOG.md` 생성 여부 확인 (결정 사항이 있었을 경우)
-   e. 링크/경로 유효성 확인
-   f. `AGENTS.md`, `CLAUDE.md`, `_sdd/env.md`의 필수 안내 문구 존재 확인 (생성 또는 사용자 승인 기반 최소 추가)
+10. **출력 검증** (실제 target path 기준):
+   a. 생성된 canonical spec 파일 또는 index 파일 존재 확인 (`_sdd/spec/<project>.md` 또는 `_sdd/spec/main.md`)
+   b. split spec인 경우 linked sub-spec 파일 존재 확인
+   c. 필수 섹션 포함 확인: Background & Motivation, Core Design, Architecture, Component Details, Environment
+   d. 500줄 초과 시 → 모듈 분할 제안
+   e. `DECISION_LOG.md` 생성 여부 확인 (결정 사항이 있었을 경우)
+   f. 링크/경로 유효성 확인
+   g. `AGENTS.md`, `CLAUDE.md`, `_sdd/env.md`의 필수 안내 문구 존재 확인 (생성 또는 사용자 승인 기반 최소 추가)
 
 Minimal decision log entry format:
 ```markdown

@@ -1,7 +1,7 @@
 ---
 name: spec-rewrite
 description: This skill should be used when the user asks to "rewrite spec", "refactor spec", "simplify spec", "split spec into files", "clean up spec", "review spec quality", or equivalent phrases indicating they want to reorganize an overly long/complex spec by pruning noise, splitting into hierarchical files, and explicitly listing ambiguities/problems.
-version: 1.1.0
+version: 1.2.0
 ---
 
 # Spec Rewrite - Restructure Long or Complex Specs
@@ -171,7 +171,8 @@ IF spec_lines >= 300 → 2-페이즈 (골조 먼저 생성 → 내용 채우기)
    - 상호 의존성이 있어 순서대로 작성한다.
    - 각 섹션 작성 시 골조 전체 + 기존 스펙 원문 + 코드베이스를 참조한다.
 2. **병렬 실행**: §4 Component Details ~ §8 Environment
-   - 골조만 있으면 독립 작성 가능. `Agent` 도구로 병렬 처리한다.
+   - 골조만 있으면 독립 작성 가능. `multi_tool_use.parallel`로 독립 섹션 초안을 병렬 작성한다.
+   - 각 병렬 작업에는 골조 전체 + 기존 스펙 원문 + 해당 섹션 관련 코드/문서만 제공한다.
 
 Phase 2 완료 후 `<!-- Phase 2에서 상세 작성 -->` 주석을 모두 제거한다.
 

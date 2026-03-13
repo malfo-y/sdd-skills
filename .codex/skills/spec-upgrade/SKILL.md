@@ -1,7 +1,7 @@
 ---
 name: spec-upgrade
 description: This skill should be used when the user asks to "upgrade spec", "convert spec to whitepaper", "migrate spec format", "spec upgrade", "스펙 업그레이드", "스펙 변환", "스펙 마이그레이션", "whitepaper 형식으로 변환", or wants to convert old-format spec documents to the whitepaper-style §1-§8 structure defined in SDD_SPEC_DEFINITION.md.
-version: 1.2.0
+version: 1.3.0
 ---
 
 # Spec Upgrade - 구 형식 스펙을 Whitepaper 형식으로 변환
@@ -239,7 +239,8 @@ IF spec_lines >= 300 → 2-페이즈 (골조 먼저 생성 → 내용 채우기)
    - 상호 의존성이 있어 순서대로 작성한다.
    - 기존 스펙 내용의 재배치 + 새 서사 생성을 함께 수행한다.
 2. **병렬 실행**: §4 Component Details ~ §8 Environment
-   - 골조만 있으면 독립 작성 가능. `Agent` 도구로 병렬 처리한다.
+   - 골조만 있으면 독립 작성 가능. `multi_tool_use.parallel`로 독립 섹션 초안을 병렬 작성한다.
+   - 각 병렬 작업에는 골조 전체 + 기존 스펙의 해당 원문 + 관련 코드/문서만 제공한다.
    - 기존 스펙의 해당 내용 재배치 + 코드 citation 삽입을 수행한다.
 
 Phase 2 완료 후 `<!-- Phase 2에서 상세 작성 -->` 주석을 모두 제거한다.
