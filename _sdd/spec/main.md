@@ -1,0 +1,672 @@
+# SDD Skills
+
+> Markdown 기반 스킬 시스템으로 AI 에이전트의 Spec-Driven Development 워크플로우를 구조화한다.
+
+**Version**: 2.0.0
+**Last Updated**: 2026-03-13
+**Status**: Approved
+
+## Table of Contents
+
+- [Background & Motivation](#background--motivation)
+- [Core Design](#core-design)
+- [Architecture Overview](#architecture-overview)
+- [Component Details](#component-details)
+- [Usage Guide & Expected Results](#usage-guide--expected-results)
+- [Environment & Dependencies](#environment--dependencies)
+- [Identified Issues & Improvements](#identified-issues--improvements)
+- [Appendix: Code Reference Index](#appendix-code-reference-index)
+
+---
+
+## Background & Motivation
+
+### Problem Statement
+
+AI 코딩 에이전트(Claude Code, Codex)는 강력한 코드 생성 능력을 가지고 있지만, 프로젝트의 요구사항과 설계가 체계적으로 문서화되지 않으면 맥락을 잃고 일관성 없는 결과를 생산한다. 기존 소프트웨어 개발 방법론(Agile, Waterfall)은 인간 개발자를 전제로 설계되었으며, AI 에이전트가 스펙을 읽고 → 구현하고 → 검증하는 루프에 최적화되어 있지 않다.
+
+### Why This Approach
+
+| 접근 | 장점 | 단점 | 판정 |
+|------|------|------|------|
+| SDD 스킬 기반 | 스펙 = Single Source of Truth, AI가 직접 참조/업데이트 가능, `/스킬명` 한 줄로 실행 | 스킬 설계/유지 비용 | **채택** |
+| 프롬프트 라이브러리 | 간단, 빠른 시작 | 스킬 간 연결/데이터 흐름 없음, 맥락 유실 | 거부: 확장성 부족 |
+| 코드 기반 자동화 (CI/CD) | 검증된 인프라 | AI 에이전트의 유연성과 맞지 않음, 자연어 지시 불가 | 거부: AI 워크플로우에 부적합 |
+
+### Core Value Proposition
+
+마크다운 기반 스킬 시스템으로 소프트웨어 개발 생명주기 전체를 구조화한다. 각 스킬은 독립적이면서도 `_sdd/` 아티팩트를 통해 유기적으로 연결되며, 사용자는 `/스킬명` 한 줄로 복잡한 개발 워크플로우(스펙 작성 → 구현 → 검증 → 리뷰)를 AI 에이전트에게 위임할 수 있다.
+
+### Primary Objective
+
+Claude Code와 Codex에서 **Spec-Driven Development(SDD) 워크플로우**를 실행하기 위한 스킬 모음을 제공한다. 스펙 문서를 Single Source of Truth로 삼아 요구사항 정의 → 구현 → 검증 → 유지보수 전 과정을 AI 에이전트가 체계적으로 수행할 수 있도록 한다.
+
+### Key Features
+
+- **16개 스킬**: 스펙 생성부터 PR 리뷰까지 소프트웨어 개발 생명주기 전체를 커버
+- **듀얼 플랫폼**: Claude Code (`.claude/skills/`) + Codex (`.codex/skills/`) 동시 지원
+- **Plugin 배포**: Claude Code Plugin Marketplace를 통한 원클릭 설치
+- **규모별 워크플로우**: 대규모(6단계) / 중규모(3단계) / 소규모(1단계) 분리
+
+### Target Users / Use Cases
+
+| 사용자 유형 | 사용 사례 | 우선순위 |
+|------------|----------|----------|
+| AI 에이전트 활용 개발자 | Claude Code/Codex로 소프트웨어 개발 | High |
+| 팀 리더 | 스펙 기반 체계적 AI 코딩 워크플로우 구축 | Medium |
+
+### Success Criteria
+
+- 모든 16개 스킬이 Claude Code에서 `/스킬명`으로 정상 호출 및 실행
+- Codex에서 15개 스킬(discussion 제외)이 정상 동작
+- 스킬 간 워크플로우 연결이 끊김 없이 동작 (e.g., spec-create → feature-draft → implementation)
+
+---
+
+## Core Design
+
+### Key Idea
+
+SDD Skills의 중심 설계 원리는 **"SKILL.md = 실행 가능한 프롬프트"**이다. 각 스킬은 독립된 SKILL.md 파일에 정의되며, AI 에이전트 플랫폼이 이를 컨텍스트에 로드하면 곧바로 실행된다. 스킬 간 데이터 흐름은 코드가 아닌 `_sdd/` 디렉토리의 마크다운 아티팩트(스펙, 드래프트, 구현 계획, 리뷰 리포트)를 통해 연결된다. 이는 학술 논문이 참고문헌을 통해 지식을 연결하는 구조와 유사하다.
+
+```
+# 스킬 실행 흐름 (데이터 흐름 관점)
+# [.claude/skills/spec-create/SKILL.md]
+[사용자: /spec-create]
+    → SKILL.md 로드
+    → Step 1~3 순차 실행
+    → 출력: _sdd/spec/<project>.md
+
+# [.claude/skills/feature-draft/SKILL.md]
+[사용자: /feature-draft]
+    → SKILL.md 로드
+    → 입력: _sdd/spec/<project>.md (이전 스킬의 출력)
+    → Step 1~7 실행
+    → 출력: _sdd/drafts/feature_draft_<name>.md
+```
+
+### SKILL.md 공통 구조
+
+모든 스킬은 동일한 마크다운 구조를 따른다 [`.claude/skills/*/SKILL.md`]:
+
+```markdown
+---
+name: <skill-name>
+description: <trigger description>
+version: <semver>
+---
+
+# <Skill Title>
+
+## Workflow Position       # 워크플로우 내 위치
+## Hard Rules              # 절대 위반 불가 규칙
+## Process (Step 1~N)      # 단계별 실행 프로세스
+  - Decision Gates         # 단계 간 전환 조건
+  - Tools                  # 각 단계에서 사용할 도구
+## Output Format           # 출력 형식 정의
+## Progressive Disclosure  # 사용자에게 요약 → 상세 순서로 제공
+## Edge Cases / Errors     # 예외 처리
+## Language Preference     # 언어 설정
+```
+
+### Design Patterns
+
+**Decision Gate 패턴**: 각 Step 사이에 조건을 두어 잘못된 상태에서 다음 단계 진행을 방지한다. 무조건 순차 실행 방식은 에러 전파 위험이 있어 거부되었다.
+
+**Progressive Disclosure 패턴**: 모든 스킬에서 최종 출력 시 공통 적용한다.
+1. 요약 테이블 먼저 제시 (사용자 확인을 기다리지 않음)
+2. 전체 상세 내용 출력
+3. 파일 저장
+
+**Target Files 패턴**: `feature-draft` [`.claude/skills/feature-draft/SKILL.md`], `implementation-plan`, `implementation`에서 사용하는 병렬 실행 지원 메커니즘:
+
+```markdown
+**Target Files**:
+- [C] `src/new_file.py` -- 새 파일 생성
+- [M] `src/existing.py` -- 기존 파일 수정
+- [D] `src/deprecated.py` -- 파일 삭제
+```
+
+- `[C]` Create, `[M]` Modify, `[D]` Delete
+- 동일 파일에 `[M]` 마커가 있는 태스크 쌍 → Sequential (conflict)
+- 겹치지 않는 태스크 → Parallel 실행 가능
+
+**2-Phase Generation 패턴**: `spec-create` [`.claude/skills/spec-create/SKILL.md`], `spec-rewrite`, `spec-upgrade`에서 사용. 대형 스펙 생성 시 골조(skeleton) → 내용 채우기(fill)로 분리하여 LLM 컨텍스트 윈도우 한계와 후반부 품질 저하를 방지한다.
+
+### Common Hard Rules
+
+1. **스펙 직접 수정 금지** (spec-update-todo, spec-update-done 제외): 대부분의 스킬은 스펙을 읽기 전용으로 참조
+2. **_sdd/env.md 참조 필수**: 로컬 명령 실행 전 환경 설정 확인
+3. **기존 파일 백업**: 덮어쓰기 전 `prev/PREV_<filename>_<timestamp>.md`로 아카이브
+4. **한국어 기본**: 사용자와의 커뮤니케이션은 한국어 (스킬 내부 정의는 영어)
+
+### Design Rationale
+
+| 설계 결정 | 근거 | 대안 |
+|-----------|------|------|
+| 마크다운 기반 스킬 정의 | 코드 배포 없이 텍스트 편집만으로 스킬 수정 가능. AI 에이전트가 자연어를 직접 해석 | 코드 기반 플러그인 (거부: 수정 시 빌드/배포 필요) |
+| `_sdd/` 아티팩트를 통한 스킬 간 연결 | 파일 기반이므로 플랫폼 독립적. git으로 버전 관리 가능 | API/메모리 기반 (거부: 플랫폼 종속, 세션 간 유실) |
+| Decision Gate 패턴 | 각 Step 사이에 조건을 두어 잘못된 상태에서 다음 단계 진행 방지 | 무조건 순차 실행 (거부: 에러 전파 위험) |
+| Progressive Disclosure | 요약 먼저 → 상세 나중. 사용자가 대량 출력에 압도되지 않음 | 전체 출력 한번에 (거부: 가독성 저하) |
+
+---
+
+## Architecture Overview
+
+### System Diagram
+
+```
+사용자 ──→ Claude Code / Codex
+              │
+              ├── Skill Loader (SKILL.md 파싱)
+              │     ├── .claude/skills/  (Claude Code용)
+              │     └── .codex/skills/   (Codex용)
+              │
+              └── SDD Workflow Engine
+                    ├── 스펙 관리 스킬 (Create / Review / Rewrite / Summary / Update / Upgrade)
+                    ├── 구현 스킬 (Draft / Plan / Implement / Review)
+                    ├── PR 스킬 (Patch / Review)
+                    └── 보조 스킬 (Discussion / Ralph Loop / Guide)
+```
+
+### Skill Loading Structure
+
+각 스킬은 독립적인 디렉토리로 구성되며, 플랫폼(Claude Code / Codex)이 `SKILL.md`를 컨텍스트에 로드하여 실행한다 [`.claude/skills/*/`]:
+
+```
+<skill-name>/
+├── SKILL.md          # 메인 프롬프트 (스킬 정의, 프로세스, 규칙)
+├── skill.json        # 메타데이터 (이름, 설명, 버전)
+├── references/       # 보조 참조 문서 (체크리스트, 포맷 명세 등)
+│   └── *.md
+└── examples/         # 실행 예시 (세션, 출력물 샘플)
+    └── *.md
+```
+
+### Data Flow
+
+```
+[사용자 요청]
+    │
+    ▼
+[Skill Dispatch] ─── skill.json의 description으로 매칭
+    │
+    ▼
+[SKILL.md 로드] ─── 프로세스 Step 순서대로 실행
+    │                ├── references/*.md 참조 (필요 시)
+    │                └── examples/*.md 참조 (포맷 가이드)
+    │
+    ▼
+[_sdd/ 아티팩트 생성/수정]
+    ├── _sdd/spec/          (스펙 문서)
+    ├── _sdd/drafts/        (피처 드래프트)
+    ├── _sdd/implementation/ (구현 계획/리포트)
+    └── _sdd/pr/            (PR 리뷰/패치)
+```
+
+### Workflow
+
+#### 규모별 워크플로우
+
+```
+┌─────────────────────────────────────────────────────┐
+│ 대규모 (Large) - 6단계                               │
+│ discussion? → spec-create → feature-draft            │
+│   → spec-update-todo → implementation-plan           │
+│   → implementation → implementation-review           │
+│   → spec-update-done                                 │
+└─────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────┐
+│ 중규모 (Medium) - 3단계                              │
+│ spec-create → feature-draft → implementation         │
+│   → spec-update-done                                 │
+└─────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────┐
+│ 소규모 (Small) - 1단계                               │
+│ feature-draft (spec patch + plan 한 번에)            │
+└─────────────────────────────────────────────────────┘
+```
+
+#### PR 프로세스
+
+```
+PR 생성 → pr-spec-patch → pr-review → (merge 후) spec-update-done
+```
+
+#### 스펙 유지보수
+
+```
+코드 변경 감지 → spec-review → (SYNC_REQUIRED 시) spec-update-done
+스펙 복잡도 증가 → spec-rewrite
+현황 파악 → spec-summary
+레거시 스펙 → spec-upgrade
+```
+
+### _sdd/ Artifact Map
+
+| 경로 | 생성 스킬 | 설명 |
+|------|----------|------|
+| `_sdd/spec/<project>.md` | spec-create | 메인 스펙 문서 |
+| `_sdd/spec/SUMMARY.md` | spec-summary | 스펙 요약 |
+| `_sdd/spec/SPEC_REVIEW_REPORT.md` | spec-review | 리뷰 리포트 |
+| `_sdd/spec/REWRITE_REPORT.md` | spec-rewrite | 리라이트 리포트 |
+| `_sdd/spec/DECISION_LOG.md` | spec-create, feature-draft | 의사결정 로그 |
+| `_sdd/drafts/feature_draft_*.md` | feature-draft | 피처 드래프트 |
+| `_sdd/guides/guide_*.md` | guide-create | 기능별 가이드 |
+| `_sdd/implementation/IMPLEMENTATION_PLAN.md` | implementation-plan | 구현 계획 |
+| `_sdd/implementation/IMPLEMENTATION_REPORT*.md` | implementation | 구현 리포트 |
+| `_sdd/implementation/IMPLEMENTATION_REVIEW.md` | implementation-review | 구현 검증 |
+| `_sdd/pr/spec_patch_draft.md` | pr-spec-patch | PR 스펙 패치 |
+| `_sdd/pr/PR_REVIEW.md` | pr-review | PR 리뷰 |
+| `ralph/` | ralph-loop-init | ML 디버그 루프 |
+
+### Technology Stack
+
+| Layer | Technology | Purpose |
+|-------|------------|---------|
+| 스킬 정의 형식 | Markdown (SKILL.md) | AI 에이전트가 직접 해석 가능한 스킬 정의 |
+| 메타데이터 | JSON (skill.json) | 스킬 매칭, 버전 관리 |
+| 배포 | Claude Code Plugin Marketplace, Codex LobeHub | 원클릭 설치 |
+| 실행 환경 | Claude Code CLI, Codex CLI | AI 에이전트 실행 플랫폼 |
+
+---
+
+## Component Details
+
+### Skill Category Overview
+
+| 카테고리 | 스킬 | 역할 |
+|----------|------|------|
+| **스펙 생성/관리** | spec-create | 코드 분석 또는 초안에서 스펙 문서 생성 |
+| | spec-review | 스펙 품질 및 코드-스펙 드리프트 검증 (read-only) |
+| | spec-rewrite | 과도하게 긴/복잡한 스펙 구조 재정리 |
+| | spec-summary | 스펙 요약본 생성 (현황 파악, 온보딩용) |
+| | spec-update-todo | 새 기능/요구사항을 스펙에 사전 반영 |
+| | spec-update-done | 구현 완료 후 코드와 스펙 동기화 |
+| | spec-upgrade | 구 형식 스펙을 whitepaper §1-§8로 변환 |
+| | guide-create | 스펙에서 기능별 구현/리뷰 가이드 생성 |
+| **구현** | feature-draft | 스펙 패치 초안 + 구현 계획을 한 번에 생성 |
+| | implementation-plan | Phase별 구현 계획 수립 (Target Files 포함) |
+| | implementation | TDD 기반 병렬 구현 실행 |
+| | implementation-review | 계획 대비 구현 진행 검증 |
+| **PR 프로세스** | pr-spec-patch | PR과 스펙 비교하여 패치 초안 생성 |
+| | pr-review | PR을 스펙/패치 초안 대비 검증 및 판정 |
+| **보조** | discussion | 구조화된 의사결정 토론 (Claude Code 전용) |
+| | ralph-loop-init | ML 자동 트레이닝 디버그 루프 생성 |
+
+### spec-create
+
+| Aspect | Description |
+|--------|-------------|
+| **Purpose** | 프로젝트 코드 분석 또는 사용자 초안을 기반으로 SDD 스펙 문서 생성 |
+| **Why** | 스펙이 없으면 AI 에이전트가 일관된 코드를 생성할 수 없다. 워크플로우의 시작점으로서 Single Source of Truth를 생성하는 역할을 분리했다. |
+| **Input** | 프로젝트 코드베이스, user_draft.md, 사용자 대화 |
+| **Output** | `_sdd/spec/<project>.md`, CLAUDE.md, AGENTS.md, _sdd/env.md (부트스트랩) |
+| **Source** | `.claude/skills/spec-create/SKILL.md` |
+| **Process** | Step 1 정보 수집 → Step 2 분석 → Step 2.5 Checkpoint → Step 2.7 생성 전략 → Step 3 부트스트랩 + 작성 |
+| **Dependencies** | 없음 (워크플로우 시작점) |
+
+### feature-draft
+
+| Aspect | Description |
+|--------|-------------|
+| **Purpose** | 요구사항 수집 → 스펙 패치 초안(Part 1) + 구현 계획(Part 2)을 단일 파일로 생성 |
+| **Why** | 스펙 수정과 구현 계획을 별도로 진행하면 반복 작업이 발생한다. 두 산출물을 한 번에 생성하여 워크플로우 효율을 높인다. |
+| **Input** | 기존 스펙, 사용자 요구사항, 코드베이스 |
+| **Output** | `_sdd/drafts/feature_draft_<name>.md` |
+| **Source** | `.claude/skills/feature-draft/SKILL.md` |
+| **Process** | 7단계: 입력 분석 → 맥락 수집 → 질문 → 설계 → Part 1 → Part 2 → 저장 |
+| **Dependencies** | spec-create (스펙이 있어야 Part 1 생성 가능) |
+
+### spec-update-todo
+
+| Aspect | Description |
+|--------|-------------|
+| **Purpose** | 새 기능/요구사항을 스펙에 사전 반영 (구현 전 드리프트 방지) |
+| **Why** | 구현 후에만 스펙을 업데이트하면 스펙-코드 간 드리프트가 누적된다. 사전 반영으로 스펙이 항상 의도를 정확히 반영하도록 한다. |
+| **Input** | user_spec.md 또는 feature-draft Part 1 |
+| **Output** | 스펙 파일 직접 수정 + 변경 요약 리포트 |
+| **Source** | `.claude/skills/spec-update-todo/SKILL.md` |
+| **Dependencies** | spec-create (스펙 존재 필수) |
+
+### spec-update-done
+
+| Aspect | Description |
+|--------|-------------|
+| **Purpose** | 구현 완료 후 코드 변경사항을 스펙에 반영 |
+| **Why** | 구현 과정에서 스펙과 다르게 구현된 부분을 감지하고 스펙을 최신 상태로 동기화한다. |
+| **Input** | 구현 리포트, 코드 diff, 기존 스펙 |
+| **Output** | 스펙 파일 업데이트 + 아카이브 |
+| **Source** | `.claude/skills/spec-update-done/SKILL.md` |
+| **Dependencies** | implementation 완료 후 실행 |
+
+### spec-review
+
+| Aspect | Description |
+|--------|-------------|
+| **Purpose** | 스펙 품질 검증 + 코드-스펙 드리프트 감지 (read-only) |
+| **Why** | 스펙 수정 없이 현재 상태를 객관적으로 진단하는 역할을 분리했다. 수정과 진단을 같은 스킬에서 하면 사용자가 의도치 않은 변경을 받을 위험이 있다. |
+| **Input** | 스펙 파일, 코드베이스 |
+| **Output** | `_sdd/spec/SPEC_REVIEW_REPORT.md` |
+| **Source** | `.claude/skills/spec-review/SKILL.md` |
+| **판정** | SPEC_OK / SYNC_REQUIRED / NEEDS_DISCUSSION 3단계 |
+
+### spec-rewrite
+
+| Aspect | Description |
+|--------|-------------|
+| **Purpose** | 과도하게 긴/복잡한 스펙을 구조 재정리 (파일 분할, 부록 이동) |
+| **Why** | 스펙이 커지면 AI 에이전트가 전체를 컨텍스트에 로드하기 어렵고, 사용자도 관리가 힘들다. 구조 재정리를 별도 스킬로 분리하여 안전하게 수행한다. |
+| **Input** | 기존 스펙 파일 |
+| **Output** | 재구성된 스펙 파일 + `REWRITE_REPORT.md` |
+| **Source** | `.claude/skills/spec-rewrite/SKILL.md` |
+
+### spec-summary
+
+| Aspect | Description |
+|--------|-------------|
+| **Purpose** | 스펙의 인간 친화적 요약본 생성 |
+| **Why** | 전체 스펙을 읽지 않고도 현재 프로젝트 상태를 파악하거나, 새 팀원 온보딩에 활용할 수 있도록 요약을 분리했다. |
+| **Input** | 스펙 파일, 구현 진행 현황 |
+| **Output** | `_sdd/spec/SUMMARY.md`, 선택적 README 블록 |
+| **Source** | `.claude/skills/spec-summary/SKILL.md` |
+
+### spec-upgrade
+
+| Aspect | Description |
+|--------|-------------|
+| **Purpose** | 구 형식 스펙을 whitepaper §1-§8 구조로 변환 |
+| **Why** | SDD_SPEC_DEFINITION 제정 이전에 만든 레거시 스펙을 표준 형식으로 마이그레이션하는 전용 스킬. 업그레이드와 일반 리라이트는 관심사가 다르다. |
+| **Input** | 기존 스펙 파일, 코드베이스 |
+| **Output** | whitepaper 형식으로 변환된 스펙 파일 |
+| **Source** | `.claude/skills/spec-upgrade/SKILL.md` |
+
+### guide-create
+
+| Aspect | Description |
+|--------|-------------|
+| **Purpose** | 스펙에서 특정 기능의 구현/리뷰 가이드 문서 생성 |
+| **Why** | 전체 스펙은 방대하므로, 특정 기능에 집중한 가이드를 생성하여 구현자나 리뷰어가 필요한 정보만 빠르게 참조할 수 있도록 한다. |
+| **Input** | 스펙 파일, 기능명 |
+| **Output** | `_sdd/guides/guide_<feature>.md` |
+| **Source** | `.claude/skills/guide-create/SKILL.md` |
+
+### implementation-plan
+
+| Aspect | Description |
+|--------|-------------|
+| **Purpose** | 대규모 구현을 위한 Phase별 구현 계획 수립 |
+| **Why** | 복잡한 구현을 단일 세션에서 수행하면 맥락 유실과 품질 저하가 발생한다. Target Files 기반 병렬 실행 분석으로 효율적 구현을 계획한다. |
+| **Input** | 스펙, feature-draft Part 2, 코드베이스 |
+| **Output** | `_sdd/implementation/IMPLEMENTATION_PLAN.md` |
+| **Source** | `.claude/skills/implementation-plan/SKILL.md` |
+
+### implementation
+
+| Aspect | Description |
+|--------|-------------|
+| **Purpose** | 구현 계획에 따른 TDD 기반 코드 작성 실행 |
+| **Why** | AI 에이전트의 구현 실행을 계획에 따라 체계적으로 수행하고, Target Files 기반 병렬 Agent 실행으로 효율을 높인다. |
+| **Input** | 구현 계획, 코드베이스 |
+| **Output** | 구현된 코드 + `IMPLEMENTATION_REPORT.md` |
+| **Source** | `.claude/skills/implementation/SKILL.md` |
+
+### implementation-review
+
+| Aspect | Description |
+|--------|-------------|
+| **Purpose** | 구현 계획 대비 실제 구현 진행 검증 |
+| **Why** | 구현 중간/후에 계획 대비 진행률과 품질을 객관적으로 검증하여, 누락이나 이탈을 조기에 발견한다. |
+| **Input** | 구현 계획, 구현 리포트, 코드 |
+| **Output** | 검증 리포트 + 다음 단계 제안 |
+| **Source** | `.claude/skills/implementation-review/SKILL.md` |
+
+### pr-spec-patch
+
+| Aspect | Description |
+|--------|-------------|
+| **Purpose** | PR 변경사항과 스펙을 비교하여 패치 초안 생성 |
+| **Why** | PR 리뷰 전에 스펙 관점의 영향 분석을 별도로 수행하여, 리뷰어가 스펙 준수 여부를 판단할 근거를 제공한다. |
+| **Input** | PR 번호 (gh CLI), 스펙 파일 |
+| **Output** | `_sdd/pr/spec_patch_draft.md` |
+| **Source** | `.claude/skills/pr-spec-patch/SKILL.md` |
+
+### pr-review
+
+| Aspect | Description |
+|--------|-------------|
+| **Purpose** | PR 구현을 스펙 및 패치 초안 대비 검증하여 APPROVE/REQUEST CHANGES 판정 |
+| **Why** | 스펙 기반 PR 리뷰를 자동화하여 일관된 품질 기준을 적용한다. |
+| **Input** | PR 번호, 스펙, spec_patch_draft.md |
+| **Output** | `_sdd/pr/PR_REVIEW.md` |
+| **Source** | `.claude/skills/pr-review/SKILL.md` |
+
+### discussion
+
+| Aspect | Description |
+|--------|-------------|
+| **Purpose** | 구조화된 의사결정 토론 (맥락 수집 + 선택지 비교 + 결정/미결/실행항목 정리) |
+| **Why** | 기술 선택, 아키텍처 결정 등 복잡한 의사결정을 구조화된 프로세스로 진행하여 결정의 품질과 추적 가능성을 높인다. |
+| **Input** | 토픽, 코드베이스(선택) |
+| **Output** | 토론 요약 (터미널 출력 또는 파일 저장) |
+| **Source** | `.claude/skills/discussion/SKILL.md` |
+| **제한** | Claude Code 전용 (AskUserQuestion 기반 반복 토론), 최대 10라운드 |
+
+### ralph-loop-init
+
+| Aspect | Description |
+|--------|-------------|
+| **Purpose** | ML 트레이닝 디버그를 위한 자동화 루프 디렉토리/파일 생성 |
+| **Why** | ML 트레이닝의 반복 디버그 루프를 표준화하여 일관된 실험 환경을 빠르게 구성한다. |
+| **Input** | 프로젝트 코드, 트레이닝 스크립트 |
+| **Output** | `ralph/` 디렉토리 (config.sh, PROMPT.md, run.sh, state.md, CHECKS.md) |
+| **Source** | `.claude/skills/ralph-loop-init/SKILL.md` |
+
+---
+
+## Usage Guide & Expected Results
+
+### Scenario 1: 새 프로젝트 스펙 생성 (처음 시작)
+
+**Setup:**
+```bash
+# 프로젝트 디렉토리에서 SDD Skills 플러그인 설치
+/plugin marketplace add malfo-y/sdd-skills
+/plugin install sdd-skills@sdd-skills
+```
+
+**Action:**
+```bash
+/spec-create
+```
+
+**Expected Result:**
+- `_sdd/spec/<project>.md` 생성 — 프로젝트 코드를 분석하여 §1~§8 구조의 스펙 문서 자동 생성
+- `_sdd/env.md` 생성 — 환경 설정/실행 방법 가이드
+- `CLAUDE.md` 생성 또는 업데이트 — 워크스페이스 안내에 `_sdd/` 경로 추가
+- 사용자에게 요약 테이블 제시 후 전체 스펙 출력
+
+### Scenario 2: 대규모 기능 추가 (Full SDD Workflow)
+
+**Action:**
+```bash
+/feature-draft           # Part 1: 스펙 패치 초안 + Part 2: 구현 계획
+/spec-update-todo        # 스펙에 새 기능 반영
+/implementation-plan     # Phase별 구현 계획 수립
+/implementation          # TDD 기반 코드 작성
+/implementation-review   # 계획 대비 검증
+/spec-update-done        # 코드 변경사항을 스펙에 동기화
+```
+
+**Expected Result:**
+- `_sdd/drafts/feature_draft_<name>.md` — 스펙 패치 초안 + 구현 태스크 리스트
+- `_sdd/spec/<project>.md` 업데이트 — 새 기능 반영
+- `_sdd/implementation/IMPLEMENTATION_PLAN.md` — Target Files 기반 병렬 실행 계획
+- 구현 완료 후 스펙과 코드 간 드리프트 0 상태
+
+### Scenario 3: PR 기반 스펙 동기화
+
+**Action:**
+```bash
+/pr-spec-patch           # PR 변경사항과 스펙 비교, 패치 초안 생성
+/pr-review               # 스펙 대비 PR 검증 → APPROVE / REQUEST CHANGES
+```
+
+**Expected Result:**
+- `_sdd/pr/spec_patch_draft.md` — PR이 스펙에 미치는 영향 분석
+- `_sdd/pr/PR_REVIEW.md` — 스펙 준수 여부 판정 + 구체적 피드백
+
+### Scenario 4: 스펙 현황 파악 및 의사결정
+
+**Action:**
+```bash
+/spec-summary            # 현재 프로젝트 상태 요약
+/discussion              # 기술 선택, 아키텍처 결정 등 구조화된 토론
+```
+
+**Expected Result:**
+- `_sdd/spec/SUMMARY.md` — Executive Summary + 기능 대시보드 + 권장 다음 단계
+- 토론 결과 — 결정사항/미결/실행항목 정리 (최대 10라운드)
+
+---
+
+## Environment & Dependencies
+
+### Directory Structure
+
+```
+sdd_skills/
+├── README.md                    # 프로젝트 소개 + 설치 가이드
+├── CLAUDE.md                    # Claude Code 워크스페이스 안내
+│
+├── docs/
+│   ├── SDD_CONCEPT.md           # SDD 핵심 개념 설명
+│   ├── SDD_QUICK_START.md       # 빠른 참조 가이드
+│   └── SDD_WORKFLOW.md          # 종합 워크플로우 가이드
+│
+├── .claude/
+│   └── skills/                  # Claude Code 스킬 (16개)
+│       ├── discussion/
+│       ├── feature-draft/
+│       ├── guide-create/
+│       ├── implementation/
+│       ├── implementation-plan/
+│       ├── implementation-review/
+│       ├── pr-review/
+│       ├── pr-spec-patch/
+│       ├── ralph-loop-init/
+│       ├── spec-create/
+│       ├── spec-review/
+│       ├── spec-rewrite/
+│       ├── spec-summary/
+│       ├── spec-update-done/
+│       ├── spec-update-todo/
+│       └── spec-upgrade/
+│
+├── .codex/
+│   └── skills/                  # Codex 스킬 (15개, discussion 제외)
+│       └── (위와 동일 구조)
+│
+├── .claude-plugin/              # Claude Code Plugin 설정
+│
+├── scripts/
+│   ├── generate_sdd_seminar_ppt.py
+│   ├── generate_sdd_skills_keynote_60.py
+│   └── sdd_seminar_ko.pptx
+│
+└── _sdd/
+    ├── spec/
+    │   └── main.md              # 이 스펙 문서
+    ├── discussion/              # 토론 기록
+    └── implementation/
+        └── IMPLEMENTATION_PLAN.md
+```
+
+### Platform Differences
+
+| 항목 | Claude Code | Codex |
+|------|------------|-------|
+| 스킬 경로 | `.claude/skills/` | `.codex/skills/` |
+| 설치 방법 | Plugin Marketplace | LobeHub / 수동 복사 |
+| 스킬 수 | 16개 | 15개 (discussion 제외) |
+| AskUserQuestion | 지원 | 미지원 (request_user_input으로 변환) |
+| Agent tool | 지원 (Explore, general-purpose) | 제한적 지원 (multi_tool_use.parallel) |
+| SKILL.md 차이 | 원본 | AskUserQuestion → request_user_input 변환 |
+
+**Codex 제한 사항:**
+- `AskUserQuestion` 도구 미지원 → SKILL.md에서 `request_user_input`으로 변환
+- `Agent` 도구 제한 → 병렬 Agent 실행 시 `multi_tool_use.parallel` 사용
+- `discussion` 스킬은 AskUserQuestion 반복 루프에 의존하므로 Codex 미지원
+
+### Installation
+
+**Claude Code (Plugin):**
+```
+/plugin marketplace add malfo-y/sdd-skills
+/plugin install sdd-skills@sdd-skills
+```
+
+**Codex:**
+- **Option A**: LobeHub Skills Marketplace 경유 (README.md 참조)
+- **Option B**: `.codex/skills/` 내용을 `$CODEX_HOME/skills/`에 수동 복사
+
+---
+
+## Identified Issues & Improvements
+
+### 해결 완료 ✅
+
+1. ~~**implementation 스킬 예시 Step 번호 불일치**~~ (v1.0.1 해결)
+   - 예시를 SKILL.md 7단계 (Step 1~7) 구조에 맞게 재구성, Step 2 신규 추가
+
+2. ~~**spec-update-done 참조 파일 불완전**~~ (v1.0.1 해결)
+   - drift-patterns.md에 env.md 드리프트 (Section 7) + DECISION_LOG.md 드리프트 (Section 8) 추가
+
+3. ~~**pr-review Mode 2 (Degraded) 예시 부재**~~ (v1.0.1 해결)
+   - sample-review.md에 Mode 2 (Degraded) 시나리오 예시 추가
+
+4. ~~**일부 참조 파일 언어 불일치**~~ (v1.0.1 해결)
+   - implementation, pr-review, spec-review의 review-checklist.md에 bilingual 헤더 적용
+
+### 중간 우선순위 🟡
+
+5. **Codex 스킬 동기화 수동 프로세스**
+   - 현황: `.claude/skills/`를 수정하면 `.codex/skills/`도 수동으로 동기화 필요
+   - 제안: 동기화 스크립트 작성 또는 빌드 프로세스 도입
+
+6. **스킬 버전 관리 미흡**
+   - 현황: 대부분 skill.json version이 "1.0.0"으로 고정
+   - 제안: SKILL.md 변경 시 semver 업데이트 규칙 정립
+
+### 낮은 우선순위 🟢
+
+7. **docs/sdd.md가 독립 개념서**
+   - 현황: SDD 개념 설명 문서이나 스킬과 직접 연결되지 않음
+   - 제안: docs/SDD_WORKFLOW.md에서 참조 링크 추가
+
+---
+
+## Appendix: Code Reference Index
+
+이 프로젝트의 "코드"는 SKILL.md 파일이다. 각 스킬의 소스 위치:
+
+| File | Skill | Referenced In |
+|------|-------|---------------|
+| `.claude/skills/spec-create/SKILL.md` | spec-create | Core Design, Component Details |
+| `.claude/skills/spec-review/SKILL.md` | spec-review | Component Details |
+| `.claude/skills/spec-rewrite/SKILL.md` | spec-rewrite | Component Details |
+| `.claude/skills/spec-summary/SKILL.md` | spec-summary | Component Details |
+| `.claude/skills/spec-update-todo/SKILL.md` | spec-update-todo | Component Details |
+| `.claude/skills/spec-update-done/SKILL.md` | spec-update-done | Component Details |
+| `.claude/skills/spec-upgrade/SKILL.md` | spec-upgrade | Component Details |
+| `.claude/skills/guide-create/SKILL.md` | guide-create | Component Details |
+| `.claude/skills/feature-draft/SKILL.md` | feature-draft | Core Design, Component Details |
+| `.claude/skills/implementation-plan/SKILL.md` | implementation-plan | Component Details |
+| `.claude/skills/implementation/SKILL.md` | implementation | Component Details |
+| `.claude/skills/implementation-review/SKILL.md` | implementation-review | Component Details |
+| `.claude/skills/pr-spec-patch/SKILL.md` | pr-spec-patch | Component Details |
+| `.claude/skills/pr-review/SKILL.md` | pr-review | Component Details |
+| `.claude/skills/discussion/SKILL.md` | discussion | Component Details |
+| `.claude/skills/ralph-loop-init/SKILL.md` | ralph-loop-init | Component Details |
