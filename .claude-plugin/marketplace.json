@@ -17,18 +17,23 @@
       "skills": [
         "./.claude/skills/discussion",
         "./.claude/skills/feature-draft",
+        "./.claude/skills/git",
+        "./.claude/skills/guide-create",
         "./.claude/skills/implementation",
         "./.claude/skills/implementation-plan",
         "./.claude/skills/implementation-review",
         "./.claude/skills/pr-review",
         "./.claude/skills/pr-spec-patch",
         "./.claude/skills/ralph-loop-init",
+        "./.claude/skills/sdd-upgrade",
         "./.claude/skills/spec-create",
         "./.claude/skills/spec-review",
         "./.claude/skills/spec-rewrite",
+        "./.claude/skills/spec-snapshot",
         "./.claude/skills/spec-summary",
         "./.claude/skills/spec-update-done",
-        "./.claude/skills/spec-update-todo"
+        "./.claude/skills/spec-update-todo",
+        "./.claude/skills/spec-upgrade"
       ]
     }
   ]
