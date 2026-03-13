@@ -27,6 +27,7 @@
 | `/spec-review` | 선택적 보조 검증 (리포트 전용, 스펙 본문 미수정) |
 | `/spec-summary` | 스펙 요약본 생성(현황 파악/온보딩) |
 | `/spec-rewrite` | 너무 긴/복잡한 스펙을 구조 재정리(파일 분할/부록 이동) |
+| `/spec-upgrade` | 구 형식 스펙을 whitepaper §1-§8 형식으로 변환 (migration) |
 | `/pr-spec-patch` | PR과 스펙 비교하여 패치 초안 생성 |
 | `/pr-review` | PR 구현을 스펙/패치 초안 대비 검증 및 판정 |
 | `/implementation-plan` | phase별 구현 계획 생성 (대규모 구현 시) |

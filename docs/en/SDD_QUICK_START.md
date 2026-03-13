@@ -27,6 +27,7 @@ See [SDD_WORKFLOW.md > Appendix: Skill Descriptions](SDD_WORKFLOW.md#appendix-sk
 | `/spec-review` | Optional auxiliary verification (report only, no spec modification) |
 | `/spec-summary` | Generate spec summary (for status overview/onboarding) |
 | `/spec-rewrite` | Restructure overly long/complex specs (file splitting/appendix migration) |
+| `/spec-upgrade` | Convert old-format specs to whitepaper §1-§8 structure (migration) |
 | `/pr-spec-patch` | Generate patch draft by comparing PR with spec |
 | `/pr-review` | Verify PR implementation against spec/patch draft and render verdict |
 | `/implementation-plan` | Generate phase-by-phase implementation plan (for large-scale) |

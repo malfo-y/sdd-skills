@@ -47,7 +47,7 @@ flowchart LR
     classDef step fill:#E3F2FD,stroke:#1565C0,stroke-width:1.5px,color:#0D47A1;
 ```
 
-### Currently Available SDD Skills (14)
+### Currently Available SDD Skills (16)
 
 | Skill | Trigger | Purpose |
 |-------|---------|---------|
@@ -58,6 +58,7 @@ flowchart LR
 | **spec-review** | "spec review", "drift check" | Auxiliary strict review for verification (report only) |
 | **spec-summary** | "spec summary", "project overview" | Generate spec summary (for status overview) |
 | **spec-rewrite** | "spec rewrite", "clean up spec" | Restructure long/complex specs (file splitting/appendix migration) + issue report |
+| **spec-upgrade** | "spec upgrade", "convert to whitepaper" | Convert old-format specs to whitepaper §1-§8 structure (migration) |
 | **pr-spec-patch** | "PR spec patch", "prep PR review" | Generate patch draft by comparing PR with spec |
 | **pr-review** | "PR review", "verify PR" | Verify PR implementation against spec and render verdict |
 | **implementation-plan** | "create implementation plan" | Generate phase-by-phase implementation plan (for large-scale) |

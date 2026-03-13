@@ -47,7 +47,7 @@ flowchart LR
     classDef step fill:#E3F2FD,stroke:#1565C0,stroke-width:1.5px,color:#0D47A1;
 ```
 
-### 현재 제공 SDD 스킬(15개)
+### 현재 제공 SDD 스킬(16개)
 
 | 스킬 | 트리거 | 목적 |
 |------|--------|------|
@@ -58,6 +58,7 @@ flowchart LR
 | **spec-review** | "스펙 리뷰", "드리프트 점검" | 보조 검증용 strict 리뷰 (리포트 전용) |
 | **spec-summary** | "스펙 요약", "프로젝트 개요" | 스펙의 요약본 생성 (현황 파악용) |
 | **spec-rewrite** | "스펙 리라이트", "스펙 정리" | 긴/복잡한 스펙을 구조 재정리(파일 분할/부록 이동) + 이슈 리포트 |
+| **spec-upgrade** | "스펙 업그레이드", "스펙 변환" | 구 형식 스펙을 whitepaper §1-§8 형식으로 변환 (migration) |
 | **pr-spec-patch** | "PR 스펙 패치", "PR 리뷰 준비" | PR과 스펙 비교하여 패치 초안 생성 |
 | **pr-review** | "PR 리뷰", "PR 검증" | PR 구현을 스펙 대비 검증 및 판정 |
 | **implementation-plan** | "구현 계획 생성" | phase별 구현 계획 생성 (대규모 구현 시) |
