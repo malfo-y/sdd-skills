@@ -34,6 +34,8 @@ SDD는 **글로벌 스펙**과 **임시 스펙**, 두 단계로 문서를 관리
 
 > 두 단계 구조의 상세 설명과 생명주기: [SDD_CONCEPT.md](SDD_CONCEPT.md)
 
+> SDD에서 스펙이 어떤 문서여야 하는지에 대한 정의: [SDD_SPEC_DEFINITION.md](SDD_SPEC_DEFINITION.md)
+
 ### SDD 철학
 
 ```mermaid

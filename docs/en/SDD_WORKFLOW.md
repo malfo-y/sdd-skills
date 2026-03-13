@@ -34,6 +34,8 @@ SDD manages documents in two levels: the **global spec** and **temporary specs**
 
 > Detailed explanation of the two-level structure and lifecycle: [SDD_CONCEPT.md](SDD_CONCEPT.md)
 
+> Definition of what kind of document an SDD spec should be: [SDD_SPEC_DEFINITION.md](SDD_SPEC_DEFINITION.md)
+
 ### SDD Philosophy
 
 ```mermaid

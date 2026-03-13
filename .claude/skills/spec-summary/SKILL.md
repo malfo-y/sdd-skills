@@ -1,7 +1,7 @@
 ---
 name: spec-summary
 description: This skill should be used when the user asks to "summarize spec", "spec summary", "show spec overview", "스펙 요약", "스펙 개요", "show spec status", "스펙 현황", "project overview", "프로젝트 개요", "what's the current state", "현재 상태는", or wants a human-readable summary of the current specification for quick understanding.
-version: 1.3.0
+version: 1.4.0
 ---
 
 # spec-summary: Specification Summary Generator
@@ -80,31 +80,43 @@ The skill reads information from multiple sources:
 
 ### Spec Document Structure Expected
 
-The skill expects spec documents to follow SDD format:
+The skill supports both **whitepaper-style** (§1~§8) and **legacy** spec formats. Whitepaper sections are optional; legacy sections remain backward compatible.
 
 ```markdown
 # [Project Name]
 
-## 목표 (Goal)
+## Background & Motivation (§1, 배경 및 동기)        ← NEW (whitepaper)
+[Problem statement, why this approach, core value proposition]
+
+## Core Design (§2, 핵심 설계)                       ← NEW (whitepaper)
+[Key idea narrative, algorithm/logic flow, design rationale]
+
+## 목표 (Goal) / Architecture Overview (§3)
 - ✅ Feature 1
 - 🚧 Feature 2 (진행중)
 - 📋 Feature 3 (계획됨)
 
-## 아키텍처 개요 (Architecture Overview)
+## 아키텍처 개요 (Architecture Overview, §3)
 [Component descriptions]
 
-## 컴포넌트 상세 (Component Details)
+## 컴포넌트 상세 (Component Details, §4)
 [Detailed component information]
 
-## 환경 및 의존성 (Environment & Dependencies)
+## Usage Guide & Expected Results (§5, 사용 가이드)  ← NEW (whitepaper)
+[Scenario-based usage with expected outcomes]
+
+## 환경 및 의존성 (Environment & Dependencies, §8)
 [Tech stack and dependencies]
 
 ## 발견된 이슈 및 개선 필요사항 (Issues & Improvements)
 [Known issues and improvement ideas]
-
-## 사용 예시 (Usage Examples)
-[Code examples]
 ```
+
+**Whitepaper section mapping for summary output:**
+- §1 → Executive Summary "Why" (problem + value proposition)
+- §2 → 💡 Core Design Highlights (key idea + design rationale)
+- §5 → 📖 Usage Scenarios (key scenarios + expected results)
+- §1/§2/§5 absent → corresponding summary sections are simply omitted
 
 ## Summary Generation Process
 
@@ -156,6 +168,20 @@ ELSE → 오류 메시지 출력 후 중지: "스펙 파일에 접근할 수 없
    - Parse 목표 (Goal) section
    - Extract purpose statement
    - Identify problem being solved
+   - IF §1 Background & Motivation exists: use Problem Statement + Core Value Proposition for richer "Why"
+
+2b. **Core Design (§2)** → Core Design Highlights (conditional)
+   - IF §2 Core Design section exists:
+     - Extract Key Idea narrative (1-3 sentences)
+     - Extract Design Rationale summary (1-2 sentences)
+     - Note key inline citations `[filepath:functionName]` if present
+   - IF §2 absent: skip (section will be omitted from output)
+
+2c. **Usage Guide (§5)** → Usage Scenarios (conditional)
+   - IF §5 Usage Guide & Expected Results exists:
+     - Extract 2-3 key scenarios (action + expected result)
+     - Keep concise — no setup/install duplication
+   - IF §5 absent: skip (section will be omitted from output)
 
 3. **Key Feature Explanations (Feature-by-Feature)** → Narrative Paragraphs
    - Select representative features from Goal and feature sections
@@ -262,7 +288,9 @@ Pseudo-logic:
 | 프로젝트명 | ... |
 | 전체 진행률 | N% |
 | 완료/진행중/계획 | X / Y / Z |
+| 핵심 설계 (§2) | 있음 / 없음 (없으면 섹션 생략) |
 | 핵심 기능 수 | N개 |
+| 사용 시나리오 (§5) | 있음 / 없음 (없으면 섹션 생략) |
 | 이슈 수 | High N / Medium N / Low N |
 | 권장 다음 단계 | N개 |
 ```
@@ -282,6 +310,9 @@ ELSE → Step 5 재실행
 **Tools**: `Write`, `Bash (mkdir -p)`
 
 1. Apply summary template (see `references/summary-template.md`)
+   - 💡 Core Design Highlights: §2 존재 시 template의 해당 섹션 적용, 없으면 섹션 전체 생략
+   - 📖 Usage Scenarios: §5 존재 시 template의 해당 섹션 적용, 없으면 섹션 전체 생략
+   - Executive Summary "Why": §1 존재 시 template의 강화된 추출 규칙 적용
 2. Fill in extracted information
 3. If `_sdd/spec/SUMMARY.md` already exists, create a versioned backup before overwriting:
    - `_sdd/spec/prev/PREV_SUMMARY_<timestamp>.md` (create `_sdd/spec/prev/` if missing)
@@ -324,12 +355,28 @@ The generated summary follows this layered structure:
 
 ### Why (왜)
 [1-2 sentences: The problem it solves or value it provides]
+[IF §1 Background & Motivation exists: enrich with Problem Statement + Core Value Proposition]
 
 ### Status (현재 상태)
 - **전체 진행률** (Overall Progress): X%
 - **완료된 기능** (Completed): N개
 - **진행중인 기능** (In Progress): M개
 - **계획된 기능** (Planned): K개
+
+---
+
+## 💡 Core Design Highlights (핵심 설계 요약)
+
+[ONLY if §2 Core Design exists in spec; otherwise OMIT entirely]
+
+### Key Idea (핵심 아이디어)
+[1-3 sentences from §2 Core Design > Key Idea]
+
+### Design Rationale (설계 근거)
+[1-2 sentences from §2 Core Design > Design Rationale]
+
+### Key Code Reference (핵심 코드 참조)
+[IF inline citations exist: show key `[filepath:functionName]` references]
 
 ---
 
@@ -397,6 +444,20 @@ Component A ──> Component B
 
 ### On Hold ⏸️
 - **[Feature 7]** - [brief description] (Reason: [why on hold])
+
+---
+
+## 📖 Usage Scenarios (주요 사용 시나리오)
+
+[ONLY if §5 Usage Guide & Expected Results exists in spec; otherwise OMIT entirely]
+
+### Scenario 1: [Name]
+- **Action**: [What the user does]
+- **Expected Result**: [Observable outcome]
+
+### Scenario 2: [Name]
+- **Action**: [What the user does]
+- **Expected Result**: [Observable outcome]
 
 ---
 
@@ -723,6 +784,11 @@ A good summary should:
 
 ## Version History
 
+- **1.4.0** (2026-03): Added whitepaper-style (§1~§8) support
+  - New conditional section: 💡 Core Design Highlights (from §2 Core Design)
+  - New conditional section: 📖 Usage Scenarios (from §5 Usage Guide & Expected Results)
+  - Executive Summary "Why" enriched with §1 Background & Motivation when present
+  - Backward compatible: legacy spec format still fully supported
 - **1.3.0** (2026-02): Added optional README create/update flow
   - Added explicit README trigger phrases and optional output target
   - Added marker-based README sync strategy (`<!-- spec-summary:start/end -->`)

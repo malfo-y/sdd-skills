@@ -54,6 +54,8 @@ Primary goals:
 
 **Tools**: `Read`, `Glob`
 
+> **먼저 `references/spec-format.md`를 Read로 읽는다.** 화이트페이퍼 스타일 스펙의 기대 섹션 구조(§1~§8)와 보존 규칙이 정의되어 있다. 이 기준으로 현재 스펙의 누락/보존 대상을 판단한다.
+
 First identify structural quality issues in the current spec.
 
 - Section length imbalance (single section dominates document size)
@@ -135,6 +137,9 @@ Rules:
 - Keep one canonical version of repeated content and replace duplicates with links
 - Do not drop important "why" context silently; preserve it in `_sdd/spec/DECISION_LOG.md` when needed
 - **Preserve component-level "why"**: Each component's Why field (existence reason, design motivation) must remain in the component section — do not prune it into DECISION_LOG. The Why field is execution-critical context, not supplementary rationale
+- **Preserve whitepaper sections**: §1 Background & Motivation, §2 Core Design, and §5 Usage Guide & Expected Results are paper-like narrative sections. Do not prune, split, or move them to appendix. These provide the "why" and "how" context that makes the spec self-explanatory
+- **Preserve inline citations**: Code references in `[filepath:functionName]` format and code blocks with `# [filepath:functionName]` headers must be kept intact during restructuring. Update file paths if sections are moved
+- **Preserve Code Reference Index**: If an Appendix: Code Reference Index exists, keep it updated when sections containing citations are moved
 
 ### Step 4.5: Preserve Decision Context
 
@@ -205,6 +210,8 @@ If needed, add `## Open Questions` to the index and keep detailed items in the r
 
 **Tools**: `Glob`, `Read`
 
+> **`references/rewrite-checklist.md`를 Read로 읽는다.** 진단/분할/보고서/화이트페이퍼 포맷 체크 항목이 정의되어 있다.
+
 Quality Checklist를 검증 스텝으로 실행한다:
 
 - [ ] 인덱스에서 목표/범위/완료 기준을 빠르게 파악할 수 있는가?
@@ -242,6 +249,13 @@ Create or update `_sdd/spec/REWRITE_REPORT.md` with:
 ## Ambiguities and Issues
 - [Priority] [Type] description
 - Suggested resolution
+
+## Whitepaper Section Status
+- §1 Background & Motivation: [Present / Missing]
+- §2 Core Design: [Present / Missing]
+- §5 Usage Guide & Expected Results: [Present / Missing]
+- Inline citations: [N found / None]
+- Code Reference Index: [Present / Missing]
 
 ## Decision Log Additions
 - [Entry title] (if any)
@@ -319,6 +333,7 @@ Create or update `_sdd/spec/REWRITE_REPORT.md` with:
 
 ### Reference Files
 - `references/rewrite-checklist.md` - diagnosis/splitting/report checklist
+- `references/spec-format.md` - whitepaper-style spec format definition and preservation rules
 
 ### Example Files
 - `examples/rewrite-report.md` - sample rewrite result report

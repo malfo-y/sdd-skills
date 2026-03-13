@@ -25,6 +25,8 @@ CLAUDE.md                          _sdd/spec/main.md (Global Spec)
 - All SDD skills use this document as their reference
 - A living document that evolves alongside the code (synced after implementation)
 
+For a definition of what kind of document a spec itself should be, see [SDD_SPEC_DEFINITION.md](SDD_SPEC_DEFINITION.md).
+
 ---
 
 ## 2. Two-Level Spec Structure — Think of It Like Git Branches

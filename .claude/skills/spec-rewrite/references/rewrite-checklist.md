@@ -57,6 +57,16 @@ Include at least the following in `_sdd/spec/REWRITE_REPORT.md`:
 - Priority-based recommended resolutions
 - Decision-log additions (when rationale was moved out of main body)
 
+## 5.5) Whitepaper Format Checks
+
+- [ ] §1 Background & Motivation section exists (problem statement, approach rationale, core value)
+- [ ] §2 Core Design section exists (key idea narrative, algorithm/logic flow, design rationale)
+- [ ] §5 Usage Guide & Expected Results section exists (scenario-based usage with expected outcomes)
+- [ ] Inline citations `[filepath:functionName]` are preserved and valid
+- [ ] Code blocks with `# [filepath:functionName]` headers are intact
+- [ ] Appendix: Code Reference Index is present and up-to-date (if code excerpts exist)
+- [ ] If any whitepaper sections are missing, they are flagged in REWRITE_REPORT
+
 ## 6) Exit Criteria
 
 - [ ] Core decisions are understandable from the main index alone
@@ -65,3 +75,5 @@ Include at least the following in `_sdd/spec/REWRITE_REPORT.md`:
 - [ ] Unresolved ambiguities remain explicitly documented
 - [ ] Essential rationale is preserved in `_sdd/spec/DECISION_LOG.md` when removed from main spec
 - [ ] Component-level Why fields are preserved inline (not moved to DECISION_LOG or appendix)
+- [ ] Whitepaper narrative sections (§1, §2, §5) are preserved inline (not pruned to appendix)
+- [ ] Inline citations and code excerpt headers are intact after restructuring

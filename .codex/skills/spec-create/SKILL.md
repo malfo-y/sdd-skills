@@ -196,6 +196,8 @@ ELSE → 미파악 항목에 대해 추가 탐색 또는 AskUserQuestion
 
 **Tools**: `Read`, `Edit`, `Write`, `Bash (mkdir -p)`
 
+> **먼저 `references/template-full.md`를 Read로 읽는다.** 이 템플릿에 전체 섹션 구조(Background & Motivation, Core Design, Usage Guide & Expected Results 등)와 코드 발취/인라인 citation 형식이 정의되어 있다. 템플릿을 참조하여 스펙을 작성한다.
+
 Before writing the spec, bootstrap guidance files if missing:
 
 #### Step 3-A: Create missing workspace guidance files
@@ -251,13 +253,24 @@ Then write the spec document using the template structure below, adapting sectio
 ```markdown
 # <Project Name>
 
-## Goal
+## Background & Motivation
 
-Describe project goals in detail:
+Describe the problem this project solves, why this approach was chosen, and the core value proposition:
+- Problem statement
+- Why this approach (alternatives comparison)
+- Core value proposition
 - Primary objective
 - Key features
 - Target users/use cases
 - Success criteria
+
+## Core Design
+
+Describe the central design idea and key algorithms:
+- Key idea narrative
+- Algorithm/logic flow with actual code excerpts (≤30 lines: full; >30 lines: signature + core logic)
+- Inline code citations as [filepath:functionName]
+- Design rationale and alternatives considered
 
 ## Architecture Overview
 
@@ -329,19 +342,11 @@ project/
 ### Robustness & Reliability
 - [ ] Error handling improvements needed
 
-## Usage Examples
+## Usage Guide & Expected Results
 
-### Running the Project
-```bash
-# Command to run
-```
-
-### Common Operations
-- Example 1: Description
-- Example 2: Description
-
-### Output Interpretation
-- How to interpret results
+Scenario-based usage with expected results:
+- Scenario: [Action] → [Expected Result]
+- Installation, running, common operations
 ```
 
 ## Spec Management Operations
@@ -359,7 +364,7 @@ project/
 9. If decisions or trade-offs were made during drafting, create/update `_sdd/spec/DECISION_LOG.md`
 10. **출력 검증** (Glob 기반):
    a. `Glob("_sdd/spec/<project>.md")` → 생성 파일 존재 확인
-   b. 필수 섹션 포함 확인: Goal, Architecture, Component Details, Environment
+   b. 필수 섹션 포함 확인: Background & Motivation, Core Design, Architecture, Component Details, Environment
    c. 500줄 초과 시 → 모듈 분할 제안
    d. `DECISION_LOG.md` 생성 여부 확인 (결정 사항이 있었을 경우)
    e. 링크/경로 유효성 확인
@@ -416,6 +421,8 @@ See detailed specs:
 - **Be Specific**: Avoid vague descriptions
 - **Use Examples**: Include code snippets and usage examples
 - **Stay Current**: Update spec when code changes significantly
+- **Code Excerpts**: When a codebase exists, include actual code excerpts in the Core Design section. Rule: functions ≤30 lines → full body excerpt; >30 lines → signature + core logic only. Mark each excerpt with `# [filepath:functionName]` comment header.
+- **Inline Citations**: Reference code in prose using `[filepath:functionName]` format (e.g., `[src/auth/handler.py:validateToken]`). This maps to the academic `[Author, Year]` pattern for AI-parseable code tracing.
 - **Link to Code**: Reference file paths and line numbers when helpful. When a codebase exists, use the **Source** field in component tables to map each component to its implementation files. Source field format:
   ```
   | **Source** | `<relative/path/to/file>`: ClassName, function_name() |

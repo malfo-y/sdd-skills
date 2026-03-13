@@ -14,7 +14,8 @@ This is the full template with all possible sections. Adapt as needed for each p
 
 ## Table of Contents
 
-- [Goal](#goal)
+- [Background & Motivation](#background--motivation)
+- [Core Design](#core-design)
 - [Architecture Overview](#architecture-overview)
 - [Component Details](#component-details)
 - [Data Models](#data-models)
@@ -24,14 +25,32 @@ This is the full template with all possible sections. Adapt as needed for each p
 - [Security Considerations](#security-considerations)
 - [Performance Considerations](#performance-considerations)
 - [Identified Issues & Improvements](#identified-issues--improvements)
-- [Usage Examples](#usage-examples)
+- [Usage Guide & Expected Results](#usage-guide--expected-results)
 - [Testing](#testing)
 - [Deployment](#deployment)
+- [Appendix: Code Reference Index](#appendix-code-reference-index)
 - [Changelog](#changelog)
 
 ---
 
-## Goal
+## Background & Motivation
+
+### Problem Statement
+
+[What problem does this project solve? What pain point or gap exists without it?]
+
+### Why This Approach
+
+[Why was this approach chosen over alternatives? Briefly compare with key alternatives considered.]
+
+| Approach | Pros | Cons | Decision |
+|----------|------|------|----------|
+| This project's approach | ... | ... | **Chosen** |
+| Alternative A | ... | ... | Rejected: ... |
+
+### Core Value Proposition
+
+[What is the key value this project delivers? One paragraph summarizing the essential insight.]
 
 ### Primary Objective
 
@@ -60,6 +79,41 @@ This is the full template with all possible sections. Adapt as needed for each p
 
 - Item 1
 - Item 2
+
+---
+
+## Core Design
+
+### Key Idea
+
+[Narrative explanation of the core design idea. What is the central insight or approach that drives this project's architecture? Write as a story — what problem was encountered, what solution was devised, and why it works.]
+
+### Algorithm / Logic Flow
+
+[Describe the main algorithm or processing flow. Include actual code excerpts for key functions.]
+
+> **Code Excerpt Rule**: Functions ≤30 lines → include full body. Functions >30 lines → include signature + core logic only.
+
+```python
+# [src/core/processor.py:process_data]
+def process_data(input: InputModel) -> OutputModel:
+    """Core processing logic."""
+    validated = validate(input)
+    result = transform(validated)
+    return OutputModel(result=result)
+```
+
+> **Inline Citation Format**: Reference code in prose as `[filepath:functionName]`.
+> Example: "The validation step `[src/core/validator.py:validate]` ensures data integrity before the transform `[src/core/processor.py:transform]`."
+
+### Design Rationale
+
+[Why was this structure chosen? What constraints or goals drove the design decisions?]
+
+| Design Choice | Rationale | Alternatives Considered |
+|---------------|-----------|------------------------|
+| Choice 1 | Why this was chosen | What else was considered |
+| Choice 2 | Why this was chosen | What else was considered |
 
 ---
 
@@ -422,7 +476,32 @@ database:
 
 ---
 
-## Usage Examples
+## Usage Guide & Expected Results
+
+### Scenario 1: [Basic Usage]
+
+**Setup:**
+```bash
+# Prerequisites and setup steps
+```
+
+**Action:**
+```bash
+# What the user does
+```
+
+**Expected Result:**
+```
+# What should happen — expected output, state changes, or observable effects
+```
+
+### Scenario 2: [Advanced Usage]
+
+**Setup:** [Prerequisites]
+
+**Action:** [Steps]
+
+**Expected Result:** [Observable outcome with specific values/behaviors]
 
 ### Installation
 
@@ -436,7 +515,6 @@ pip install -e ".[dev]"
 
 # Set up environment
 cp .env.example .env
-# Edit .env with your configuration
 ```
 
 ### Running Locally
@@ -514,6 +592,18 @@ docker build -t project:latest .
 # Deploy
 kubectl apply -f k8s/
 ```
+
+---
+
+## Appendix: Code Reference Index
+
+All code references cited in this spec, organized by file.
+
+| File | Functions / Classes | Referenced In |
+|------|---------------------|---------------|
+| `src/core/processor.py` | process_data(), transform() | Core Design, Component Details |
+| `src/core/validator.py` | validate(), ValidationRule | Core Design |
+| `src/api/handler.py` | APIHandler, handle_request() | Component Details |
 
 ---
 

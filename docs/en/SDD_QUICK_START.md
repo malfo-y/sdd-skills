@@ -6,6 +6,8 @@ Spec-Driven Development (SDD) Quick Reference
 
 > **Two-Level Spec Structure**: SDD manages documents with a **global spec** (main.md = Single Source of Truth) and **temporary specs** (feature_draft, spec_patch_draft = change proposals). Create temporary specs first, then merge into the global spec after validation. Details: [SDD_CONCEPT.md](SDD_CONCEPT.md)
 
+> **What a Spec Is**: In SDD, a spec is not just a manual. It is a whitepaper-like reference document that captures background, motivation, core design, expected results, and code-grounded evidence together. Details: [SDD_SPEC_DEFINITION.md](SDD_SPEC_DEFINITION.md)
+
 > **Key to Using Skills**: Skills are structured workflow templates, not magic. **Input quality determines output quality.** When invoking a skill, specify **What** (what to build), **Why** (why it's needed), and **Constraints** (constraints/boundary conditions).
 >
 > Good/bad input comparison examples and detailed guide per skill: [SDD_WORKFLOW.md > 2. Effective Skill Usage](SDD_WORKFLOW.md#2-effective-skill-usage)

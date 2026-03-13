@@ -373,6 +373,37 @@ git log --oneline --grep="decision\|chose\|trade-off\|alternative" | head -20
 
 ---
 
+## 9. Code Snippet Drift
+
+### Pattern: Embedded Code Excerpts Outdated
+
+**Detection:**
+- Extract function names from `# [filepath:functionName]` comment headers in spec code blocks
+- Search codebase for those functions using Grep/rg
+- Compare embedded code snippets against actual current code (content hash comparison)
+
+```bash
+# Find all inline citations in spec
+grep -oP '\[[\w/._-]+:\w+\]' _sdd/spec/*.md | sort -u
+# For each cited function, compare spec excerpt with actual code
+```
+
+**Symptoms:**
+- Code blocks in spec differ from actual implementation
+- Function signatures have changed (parameters added/removed/retyped)
+- Logic flow updated but spec excerpt not refreshed
+- Inline citations `[filepath:functionName]` point to renamed/moved functions
+
+**Resolution:**
+- Re-extract code from codebase following the 30-line rule:
+  - Functions ≤30 lines → replace with full body excerpt
+  - Functions >30 lines → replace with signature + core logic only
+- Update inline citations `[filepath:functionName]` to reflect current paths
+- Update Appendix: Code Reference Index table
+- Note excerpt refresh in changelog
+
+---
+
 ## Detection Checklist
 
 ### Quick Review (5 minutes)
@@ -388,6 +419,8 @@ git log --oneline --grep="decision\|chose\|trade-off\|alternative" | head -20
 - [ ] API endpoints match
 - [ ] Config options documented
 - [ ] Examples work
+- [ ] Embedded code excerpts match actual code
+- [ ] Inline citations `[filepath:functionName]` resolve to existing functions
 
 ### Deep Review (2+ hours)
 - [ ] Full architecture comparison
@@ -408,4 +441,5 @@ git log --oneline --grep="decision\|chose\|trade-off\|alternative" | head -20
 | Wrong examples | Medium | P2 - This week |
 | Config changes | Medium | P2 - This week |
 | Resolved issues | Low | P3 - When convenient |
+| Code snippet outdated | Medium | P2 - This week |
 | Style/formatting | Low | P4 - Batch updates |

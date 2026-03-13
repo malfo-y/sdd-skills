@@ -32,6 +32,8 @@ Some sections should only appear if data is available:
 | High Priority Issues | Any high-priority items | Show "No high-priority issues" |
 | Architecture Diagram | 2+ components | Generate ASCII diagram |
 | Key Feature Explanations | Feature/goal details exist in spec | Explain representative features in subsection form; if details are weak, mark status as "Unknown" and state assumptions |
+| Core Design Highlights | §2 Core Design section exists in spec | Summarize key idea + design rationale; if absent, OMIT section entirely |
+| Usage Scenarios | §5 Usage Guide & Expected Results section exists in spec | Summarize 2-3 key scenarios; if absent, OMIT section entirely |
 | README Sync (Optional) | User explicitly asks for README create/update | Update only marker block; if absent, insert safely after first H1 or append |
 
 ## Full Template
@@ -54,6 +56,7 @@ Some sections should only appear if data is available:
 ### Why (왜)
 [1-2 sentences: Problem statement or value proposition]
 [Focus on business value or user benefit]
+[IF §1 Background & Motivation exists: Extract from Problem Statement + Core Value Proposition]
 
 ### Status (현재 상태)
 - **전체 진행률** (Overall Progress): [X]%
@@ -64,6 +67,25 @@ Some sections should only appear if data is available:
   - Count of 🚧 markers
 - **계획된 기능** (Planned): [K]개
   - Count of 📋 markers
+
+---
+
+## 💡 Core Design Highlights (핵심 설계 요약)
+
+[ONLY include this section IF §2 Core Design section exists in spec]
+[IF §2 does not exist: OMIT this section entirely]
+
+### Key Idea (핵심 아이디어)
+[1-3 sentences: The central design concept or approach from §2 Core Design > Key Idea]
+[Write as natural prose — what problem was encountered, what solution was devised]
+
+### Design Rationale (설계 근거)
+[1-2 sentences: Why this approach was chosen over alternatives, from §2 Core Design > Design Rationale]
+
+[IF code excerpts/citations exist in spec:]
+### Key Code Reference (핵심 코드 참조)
+[Most important inline citation or code excerpt from spec, if any]
+[Use `[filepath:functionName]` format if available]
 
 ---
 
@@ -160,6 +182,29 @@ Database       Cache (Redis)
 [IF no on-hold features: OMIT this section entirely]
 - **[Feature Name]** - [Brief description] (Reason: [Extract reason if available])
 - ...
+
+---
+
+## 📖 Usage Scenarios (주요 사용 시나리오)
+
+[ONLY include this section IF §5 Usage Guide & Expected Results section exists in spec]
+[IF §5 does not exist: OMIT this section entirely]
+
+[Summarize 2-3 key usage scenarios from §5. Keep concise — action + expected result.]
+
+### Scenario 1: [Name]
+- **Action**: [What the user does]
+- **Expected Result**: [What happens — observable outcome]
+
+### Scenario 2: [Name]
+- **Action**: [What the user does]
+- **Expected Result**: [What happens — observable outcome]
+
+[RULES for scenario extraction:]
+- Choose scenarios that best represent the project's primary use cases
+- Keep each scenario to 2-3 lines max
+- Focus on user-facing actions and observable outcomes
+- If spec has installation/setup steps, do NOT duplicate here (those belong in Quick Reference)
 
 ---
 
@@ -351,16 +396,27 @@ fi
 
 ### Step 4: Extract Sections
 ```yaml
+# Whitepaper sections (§1~§8 format)
+BackgroundMotivation: [Text after "## Background & Motivation" or "## 배경 및 동기" (§1)]
+CoreDesign: [Text after "## Core Design" or "## 핵심 설계" (§2)]
+UsageGuide: [Text after "## Usage Guide & Expected Results" or "## 사용 가이드 & 기대 결과" (§5)]
+
+# Legacy/common sections (backward compatible)
 Goal: [Text after "## 목표" or "## Goal"]
 KeyFeatures: [Representative feature names from Goal + feature sections]
 FeatureNarratives: [Plain-text what/how/why/status notes per selected feature]
-Architecture: [Text after "## 아키텍처 개요" or "## Architecture Overview"]
-Components: [Parse component names from architecture section]
+Architecture: [Text after "## 아키텍처 개요" or "## Architecture Overview" (§3)]
+Components: [Parse component names from architecture section (§4)]
 Issues: [Text after "## 발견된 이슈" or "## Issues"]
-Dependencies: [Text after "## 환경 및 의존성" or "## Dependencies"]
+Dependencies: [Text after "## 환경 및 의존성" or "## Dependencies" (§8)]
 ReadmePath: [`README.md` if exists]
 ReadmeMarkers: [Whether `spec-summary` markers already exist]
 ```
+
+**Whitepaper section mapping for summary output:**
+- §1 → Executive Summary "Why" (problem + value proposition)
+- §2 → Core Design Highlights (key idea + design rationale)
+- §5 → Usage Scenarios (key scenarios + expected results)
 
 ### Step 5: Prioritize Issues
 ```python
@@ -454,6 +510,9 @@ if user_requested_readme_sync:
 ## Quality Checklist
 
 - [ ] Executive summary readable by non-developers
+- [ ] Executive summary "Why" leverages §1 Background & Motivation (if present)
+- [ ] Core Design Highlights included (if §2 exists); omitted cleanly (if §2 absent)
+- [ ] Usage Scenarios included (if §5 exists); omitted cleanly (if §5 absent)
 - [ ] Explain features with clear plain-text paragraph (what/how/why/status)
 - [ ] Architecture focuses on key components (not all details)
 - [ ] Status percentages match marker counts

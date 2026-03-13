@@ -6,6 +6,8 @@
 
 > **두 단계 스펙 구조**: SDD는 **글로벌 스펙**(main.md = Single Source of Truth)과 **임시 스펙**(feature_draft, spec_patch_draft = 변경 제안서)으로 문서를 관리합니다. 임시 스펙을 먼저 만들고, 검증 후 글로벌 스펙에 병합합니다. 상세: [SDD_CONCEPT.md](SDD_CONCEPT.md)
 
+> **스펙의 정의**: SDD에서 스펙은 단순한 매뉴얼이 아니라, 배경/동기, 핵심 설계, 기대 결과, 코드 근거를 함께 담는 화이트페이퍼형 기준 문서입니다. 상세: [SDD_SPEC_DEFINITION.md](SDD_SPEC_DEFINITION.md)
+
 > **스킬 사용의 핵심**: 스킬은 구조화된 워크플로우 템플릿이지, 마법이 아닙니다. **입력의 질이 출력의 질을 결정합니다.** 스킬을 호출할 때 **What**(무엇을 만들 것인지), **Why**(왜 필요한지), **Constraints**(제약조건/경계조건)를 명시하세요.
 >
 > 스킬별 좋은/나쁜 입력 비교 예시와 상세 가이드: [SDD_WORKFLOW.md > 2. 효과적인 스킬 사용법](SDD_WORKFLOW.md#2-효과적인-스킬-사용법)

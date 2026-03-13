@@ -136,6 +136,8 @@ ELSE IF NOT sources_available → AskUserQuestion: 비교 대상 소스 확인
 
 **Tools**: `Grep`, `Glob`, `Read`, `Bash (git diff)`
 
+> **`references/drift-patterns.md`를 Read로 읽는다.** 9가지 드리프트 패턴(Architecture, Feature, API, Config, Issue, Documentation, Environment, Decision Log, Code Snippet)의 상세 감지 방법과 해결 전략이 정의되어 있다.
+
 Compare spec against reality to find discrepancies:
 
 **Architecture Drift:**
@@ -166,6 +168,11 @@ Compare spec against reality to find discrepancies:
 - Components with implementation but no Source field
 - Source field references outdated files/classes/functions
 - Renamed or moved files not reflected in Source field
+
+**Code Snippet Drift:**
+- Embedded code excerpts in spec differ from actual implementation
+- Inline citations `[filepath:functionName]` point to renamed/moved/deleted functions
+- Code Reference Index table entries are stale
 
 ### Step 3: Generate Change Report
 

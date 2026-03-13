@@ -55,6 +55,16 @@ _sdd/spec/
 - **Impact**: High implementation variance
 - **Recommended Action**: Replace wording with numeric SLA/SLO targets
 
+## Whitepaper Section Status
+
+- §1 Background & Motivation: **Missing** — spec lacks problem statement and approach rationale
+- §2 Core Design: **Missing** — no narrative design explanation or code excerpts
+- §5 Usage Guide & Expected Results: **Missing** — usage examples exist but lack expected results
+- Inline citations: None found
+- Code Reference Index: Not present
+
+> **Recommendation**: Consider running `spec-create` to add missing whitepaper sections (§1, §2, §5).
+
 ## Validation Result
 
 - Link check: pass (0 broken links)

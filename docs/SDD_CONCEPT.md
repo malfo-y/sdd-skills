@@ -25,6 +25,8 @@ CLAUDE.md                          _sdd/spec/main.md (글로벌 스펙)
 - 모든 SDD 스킬이 이 문서를 기준으로 판단
 - 코드와 함께 진화하는 살아있는 문서 (구현 후 동기화)
 
+스펙 자체를 어떤 문서로 정의하는지에 대한 설명은 [SDD_SPEC_DEFINITION.md](SDD_SPEC_DEFINITION.md)를 참고하세요.
+
 ---
 
 ## 2. 두 단계 스펙 구조 — Git 브랜치처럼 생각하기
