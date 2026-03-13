@@ -36,6 +36,14 @@ Both files use the same "Spec Update Input" format.
 **Author**: [Name or "User"]
 **Target Spec**: [spec filename, e.g., apify_ig.md]
 
+## Background & Motivation Updates
+
+[Background/motivation changes — maps to §1...]
+
+## Design Changes
+
+[Core design/algorithm changes — maps to §2...]
+
 ## New Features
 
 [Feature entries...]
@@ -55,6 +63,10 @@ Both files use the same "Spec Update Input" format.
 ## Configuration Changes
 
 [Config entries...]
+
+## Usage Scenarios
+
+[New usage scenarios and expected results — maps to §5...]
 
 ## Notes
 
@@ -262,14 +274,18 @@ List format (simpler):
 
 | Category | Description | Maps to Spec Section |
 |----------|-------------|---------------------|
+| Background/Motivation | 배경/동기 변경 | 배경 및 동기 (§1) |
+| Design Change | 핵심 설계/알고리즘 변경 | 핵심 설계 (§2) |
 | Core Feature | 핵심 기능 | 목표 > 주요 기능 |
 | Enhancement | 기존 기능 개선 | 개선 필요사항 |
 | Bug Fix | 버그 수정 | 발견된 이슈 |
 | Performance | 성능 개선 | 개선 필요사항 |
 | Security | 보안 관련 | 보안 고려사항 |
+| Usage Scenario | 사용 시나리오/기대 결과 | 사용 가이드 & 기대 결과 (§5) |
 | Documentation | 문서 개선 | 해당 섹션 |
 | Testing | 테스트 추가 | 테스트 섹션 |
-| Infrastructure | 인프라/환경 | 환경 및 의존성 |
+| Infrastructure | 인프라/환경 | 환경 및 의존성 (§8) |
+| Code Reference | 코드 레퍼런스 | 부록: 코드 레퍼런스 목록 |
 
 ---
 

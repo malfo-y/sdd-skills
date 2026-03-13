@@ -57,7 +57,7 @@ User input file for spec update. Two file types are supported:
 - **`user_spec.md`**: User-written specification input
 - **`user_draft.md`**: 사용자 작성 초안 (draft)
 
-If there are both `_sdd/spec/user_spec.md` or `_sdd/spec/user_draft.md` existing, ask user what to choose.
+If both `_sdd/spec/user_spec.md` and `_sdd/spec/user_draft.md` exist, prefer `user_draft.md` first and merge complementary details from `user_spec.md`. Record the assumption in the update plan when both materially contribute.
 
 Recommended format is a structured file format for batched updates, but any free-form text are accepted.
 
@@ -111,7 +111,7 @@ If present, use it as a constraint/rationale source:
    - `_sdd/spec/user_draft.md` (사용자 초안)
    - `_sdd/spec/user_spec.md` (user-written)
 3. If multiple sources exist, process all (conversation first, then files)
-4. If no sources found, ask user for input
+4. If no sources found, stop with a short report explaining that there is no update input to apply
 ```
 
 **Decision Gate 1→2**:
@@ -119,28 +119,31 @@ If present, use it as a constraint/rationale source:
 input_found = (사용자 대화 OR user_draft.md OR user_spec.md) 중 하나 이상 존재
 
 IF input_found → Step 2 진행
-ELSE → AskUserQuestion: 업데이트할 요구사항 요청
+ELSE → 짧은 보고 후 종료: 업데이트할 요구사항 입력이 없음
 ```
 
 ### Step 2: Load Current Spec
 
-**Tools**: `Read`, `Glob`, `AskUserQuestion`
+**Tools**: `Read`, `Glob`
 
 ```
 1. Locate the main spec document in `_sdd/spec/` with this priority:
    - (1) `_sdd/spec/<project>.md` (프로젝트명 기반)
    - (2) `_sdd/spec/main.md` (이전 프로젝트)
    - (3) 단일 .md 파일만 존재하면 자동 선택
-   - (4) 2개 이상 후보 시에만 사용자에게 선택 요청
-2. If multiple plausible main spec files exist, ask the user which file to update (and treat as the index/main spec)
+   - (4) 2개 이상 후보 시에는 인덱스 역할이 가장 명확한 파일을 선택하고, 선택 근거를 Update Plan에 기록
+2. If multiple plausible main spec files exist, choose the most likely index/main spec deterministically and record the assumption in the Update Plan
 3. If the spec is already split across multiple files, follow the index/links and update the appropriate file(s)
 4. Read current spec content (index + any referenced sub-specs that will be affected)
 5. If `_sdd/spec/DECISION_LOG.md` exists, read relevant entries before deciding how to insert/update requirements
    - DECISION_LOG 충돌 처리: (1) Update Plan에 충돌 사항 명시 (2) DECISION_LOG에 새 항목으로 추가 (3) Summary에 포함
 6. Identify sections that will be updated:
+   - "배경 및 동기" / "Background & Motivation" (§1) → for motivation/problem statement changes
+   - "핵심 설계" / "Core Design" (§2) → for design/algorithm changes
    - "목표" / "Goal" → for new features
    - "발견된 이슈 및 개선 필요사항" / "Issues & Improvements" → for bugs/improvements
-   - "컴포넌트 상세" / "Component Details" → for component changes
+   - "컴포넌트 상세" / "Component Details" (§4) → for component changes
+   - "사용 가이드 & 기대 결과" / "Usage Guide & Expected Results" (§5) → for usage scenarios
    - Create new sections if needed
 ```
 
@@ -167,20 +170,24 @@ Extract structured information from input:
 
 | Category | Target Section | Update Type |
 |----------|---------------|-------------|
+| Background/Motivation | 배경 및 동기 (§1) | Update narrative |
+| Design Change | 핵심 설계 (§2) | Update design/algorithm |
 | New Feature | 목표 > 주요 기능 | Add to list |
 | Enhancement | 개선 필요사항 > 개선 제안 | Add with priority |
 | Bug Fix | 발견된 이슈 > 버그 | Add to issues |
-| Component Change | 컴포넌트 상세 | Update/add section |
-| Configuration | 설정 | Add options |
-| API Change | API 레퍼런스 | Add endpoints |
+| Component Change | 컴포넌트 상세 (§4) | Update/add section |
+| Usage Scenario | 사용 가이드 & 기대 결과 (§5) | Add scenario |
+| Configuration | 설정 (§8) | Add options |
+| API Change | API 레퍼런스 (§7) | Add endpoints |
+| Code Reference | 부록: 코드 레퍼런스 목록 | Add reference |
 
 > 상세 섹션 매핑 규칙은 `references/section-mapping.md`를 참조한다.
 
 ### Step 5: Generate Update Plan
 
-**Tools**: `AskUserQuestion`
+**Tools**: — (보고 단계, 도구 불필요)
 
-Before modifying, present update plan:
+Before modifying, present an update plan as a report:
 
 ```markdown
 ## Spec Update Plan
@@ -201,15 +208,15 @@ Before modifying, present update plan:
 #### New Section: [Section Name] (if needed)
 - CREATE: [New section content]
 
-### Questions (if any)
+### Open Questions (if any)
 - [Clarification needed]
 ```
 
 **Decision Gate 5→6**:
 ```
-plan_presented = Update Plan을 사용자에게 제시 완료
+plan_presented = Update Plan을 작업 로그로 제시 완료
 
-IF plan_presented → Step 6 진행 (사용자 확인을 기다리지 않는다)
+IF plan_presented → Step 6 진행 (보고 후 자동 진행)
 ELSE → Step 5 재실행
 ```
 
@@ -401,11 +408,11 @@ After updating, provide summary:
 |-----------|--------|
 | Spec file not found | Suggest running `spec-create` first |
 | Ambiguous input | 최선의 해석으로 진행, 판단 불가 시 스펙에 Open Questions로 기록 |
-| Conflicting requirements | Flag and ask user to resolve |
+| Conflicting requirements | 충돌 내용을 Update Plan과 `Open Questions`에 기록하고, 비파괴적 방향으로만 적용 |
 | Invalid input file format | Report parsing errors, suggest corrections |
 | 백업 디렉토리 미존재 | `mkdir -p _sdd/spec/prev/` 자동 생성 |
-| 다수 입력 파일 존재 | 사용자에게 선택 확인 |
-| 입력 파일과 스펙 섹션 매핑 불가 | 사용자에게 대상 섹션 확인 |
+| 다수 입력 파일 존재 | `user_draft.md` 우선 + 보조 입력 병합 규칙 적용, 가정은 Update Plan에 기록 |
+| 입력 파일과 스펙 섹션 매핑 불가 | 보수적인 섹션에만 반영하고 불확실한 항목은 `Open Questions`에 기록 |
 
 ### Post-Update Glob 검증
 

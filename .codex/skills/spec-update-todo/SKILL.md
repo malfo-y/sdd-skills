@@ -6,8 +6,11 @@ version: 1.0.0
 
 # Spec Update from User Input
 
-> **Workflow Role Note**: In the large-scale SDD path, run this skill after `feature-draft` to pre-reflect planned requirements into spec documents before implementation.
-> `feature-draft` generates draft artifacts only; actual spec document updates are applied by this skill.
+| Workflow | Position | When |
+|----------|----------|------|
+| Large | Step 2 of 6 | feature-draft 후 스펙에 사전 반영 (드리프트 방지) |
+| Medium | — | feature-draft가 통합 처리 |
+| Small | — | 직접 구현 |
 
 Update existing spec documents with new features, requirements, and planned improvements based on user input. This skill focuses on adding "to-add" or "to-implement" items to the spec.
 
@@ -34,7 +37,7 @@ After processing input files, rename them to mark as processed:
 
 1. **Always backup**: 스펙 파일 수정 전 반드시 `_sdd/spec/prev/PREV_<filename>_<timestamp>.md`로 백업한다.
 2. **Rename processed input files**: 처리된 입력 파일은 반드시 `_processed_` 접두사로 이름 변경한다.
-3. **한국어 작성**: 추가 내용은 스펙 문서 언어를 따르되, 기본은 한국어로 작성한다.
+3. **언어 규칙**: 기존 스펙/문서의 언어를 따른다. 새 프로젝트(기존 스펙 없음)는 한국어 기본. 사용자 명시 지정 시 해당 언어 사용.
 4. **DECISION_LOG.md 최소화**: 결정 로그는 `DECISION_LOG.md`에만 기록하며, 추가 문서는 사용자 요청 시에만 생성한다.
 5. **스펙 구조 보존**: 기존 스펙의 구조와 스타일을 유지하며, 필요한 항목만 추가한다.
 
@@ -54,7 +57,7 @@ User input file for spec update. Two file types are supported:
 - **`user_spec.md`**: User-written specification input
 - **`user_draft.md`**: 사용자 작성 초안 (draft)
 
-If there are both `_sdd/spec/user_spec.md` or `_sdd/spec/user_draft.md` existing, apply deterministic defaults what to choose.
+If both `_sdd/spec/user_spec.md` and `_sdd/spec/user_draft.md` exist, prefer `user_draft.md` first and merge complementary details from `user_spec.md`. Record the assumption in the update plan when both materially contribute.
 
 Recommended format is a structured file format for batched updates, but any free-form text are accepted.
 
@@ -108,7 +111,7 @@ If present, use it as a constraint/rationale source:
    - `_sdd/spec/user_draft.md` (사용자 초안)
    - `_sdd/spec/user_spec.md` (user-written)
 3. If multiple sources exist, process all (conversation first, then files)
-4. If no sources found, apply deterministic defaults for input
+4. If no sources found, stop with a short report explaining that there is no update input to apply
 ```
 
 **Decision Gate 1→2**:
@@ -116,32 +119,31 @@ If present, use it as a constraint/rationale source:
 input_found = (사용자 대화 OR user_draft.md OR user_spec.md) 중 하나 이상 존재
 
 IF input_found → Step 2 진행
-ELSE → deterministic defaults (non-interactive): 업데이트할 요구사항 요청
+ELSE → 짧은 보고 후 종료: 업데이트할 요구사항 입력이 없음
 ```
 
 ### Step 2: Load Current Spec
 
-**Tools**: `Read`, `Glob`, `deterministic defaults (non-interactive)`
+**Tools**: `Read`, `Glob`
 
 ```
-1. Locate the main spec document in `_sdd/spec/` (prefer `_sdd/spec/<project>.md` as the index/main spec; `_sdd/spec/main.md` may exist in older projects)
-2. If multiple plausible main spec files exist, apply deterministic defaults which file to update (and treat as the index/main spec)
+1. Locate the main spec document in `_sdd/spec/` with this priority:
+   - (1) `_sdd/spec/<project>.md` (프로젝트명 기반)
+   - (2) `_sdd/spec/main.md` (이전 프로젝트)
+   - (3) 단일 .md 파일만 존재하면 자동 선택
+   - (4) 2개 이상 후보 시에는 인덱스 역할이 가장 명확한 파일을 선택하고, 선택 근거를 Update Plan에 기록
+2. If multiple plausible main spec files exist, choose the most likely index/main spec deterministically and record the assumption in the Update Plan
 3. If the spec is already split across multiple files, follow the index/links and update the appropriate file(s)
-4. Check spec size/complexity. If the spec is getting too large to maintain comfortably in one file (e.g. >500 lines, or the component/API sections dominate navigation), split automatically using deterministic defaults.
-   - keep `_sdd/spec/<project>.md` as an index/overview, extract long sections into separate files under `_sdd/spec/`, and link them from the index using a consistent naming scheme such as:
-     - `_sdd/spec/<project>_API.md`
-     - `_sdd/spec/<project>_DATA_MODEL.md`
-     - `_sdd/spec/<project>_COMPONENTS.md`
-     - Other suffixes are allowed if they better fit the project domain (e.g. `_ARCH.md`, `_FLOWS.md`, `_DB_SCHEMA.md`)—keep the naming consistent and log the split/file map in `Open Questions`.
-     - Naming style: prefer `UPPER_SNAKE_CASE` suffixes (e.g. `_DATA_MODEL`, `_DB_SCHEMA`) for consistency.
-     - Split rationale template:
-       - "대형 스펙 자동 분할 적용: 인덱스+하위 문서 구조로 전환하고 파일맵을 기록."
-5. Read current spec content (index + any referenced sub-specs that will be affected)
-6. If `_sdd/spec/DECISION_LOG.md` exists, read relevant entries before deciding how to insert/update requirements
-7. Identify sections that will be updated:
+4. Read current spec content (index + any referenced sub-specs that will be affected)
+5. If `_sdd/spec/DECISION_LOG.md` exists, read relevant entries before deciding how to insert/update requirements
+   - DECISION_LOG 충돌 처리: (1) Update Plan에 충돌 사항 명시 (2) DECISION_LOG에 새 항목으로 추가 (3) Summary에 포함
+6. Identify sections that will be updated:
+   - "배경 및 동기" / "Background & Motivation" (§1) → for motivation/problem statement changes
+   - "핵심 설계" / "Core Design" (§2) → for design/algorithm changes
    - "목표" / "Goal" → for new features
    - "발견된 이슈 및 개선 필요사항" / "Issues & Improvements" → for bugs/improvements
-   - "컴포넌트 상세" / "Component Details" → for component changes
+   - "컴포넌트 상세" / "Component Details" (§4) → for component changes
+   - "사용 가이드 & 기대 결과" / "Usage Guide & Expected Results" (§5) → for usage scenarios
    - Create new sections if needed
 ```
 
@@ -168,18 +170,24 @@ Extract structured information from input:
 
 | Category | Target Section | Update Type |
 |----------|---------------|-------------|
+| Background/Motivation | 배경 및 동기 (§1) | Update narrative |
+| Design Change | 핵심 설계 (§2) | Update design/algorithm |
 | New Feature | 목표 > 주요 기능 | Add to list |
 | Enhancement | 개선 필요사항 > 개선 제안 | Add with priority |
 | Bug Fix | 발견된 이슈 > 버그 | Add to issues |
-| Component Change | 컴포넌트 상세 | Update/add section |
-| Configuration | 설정 | Add options |
-| API Change | API 레퍼런스 | Add endpoints |
+| Component Change | 컴포넌트 상세 (§4) | Update/add section |
+| Usage Scenario | 사용 가이드 & 기대 결과 (§5) | Add scenario |
+| Configuration | 설정 (§8) | Add options |
+| API Change | API 레퍼런스 (§7) | Add endpoints |
+| Code Reference | 부록: 코드 레퍼런스 목록 | Add reference |
+
+> 상세 섹션 매핑 규칙은 `references/section-mapping.md`를 참조한다.
 
 ### Step 5: Generate Update Plan
 
-**Tools**: `deterministic defaults (non-interactive)`
+**Tools**: — (보고 단계, 도구 불필요)
 
-Before modifying, present update plan:
+Before modifying, present an update plan as a report:
 
 ```markdown
 ## Spec Update Plan
@@ -200,18 +208,16 @@ Before modifying, present update plan:
 #### New Section: [Section Name] (if needed)
 - CREATE: [New section content]
 
-### Questions (if any)
+### Open Questions (if any)
 - [Clarification needed]
 ```
 
 **Decision Gate 5→6**:
 ```
 plan_presented = Update Plan을 작업 로그로 제시 완료
-plan_validated = 자동 일관성 검증 통과
 
-IF plan_presented AND plan_validated → Step 6 진행
-ELSE IF NOT plan_presented → Step 5 재실행
-ELSE → 자동 보정 후 계획 수정 (최대 2라운드)
+IF plan_presented → Step 6 진행 (보고 후 자동 진행)
+ELSE → Step 5 재실행
 ```
 
 ### Step 6: Apply Updates
@@ -386,27 +392,27 @@ After updating, provide summary:
 | 코드베이스 크기 | 전략 | 구체적 방법 |
 |----------------|------|-------------|
 | < 50 파일 | 자유 탐색 | `Glob` + `Read` 자유롭게 사용 |
-| 50-200 파일 | 타겟 탐색 | `rg`/`Glob`/`Read`/`Bash`으로 후보 식별 → 타겟 `Read` |
-| > 200 파일 | 타겟 탐색 | `rg`/`Glob`/`Read`/`Bash` 위주 → 최소한의 `Read` |
+| 50-200 파일 | 타겟 탐색 | `rg`/`Glob`으로 후보 식별 → 타겟 `Read` |
+| > 200 파일 | 타겟 탐색 | `rg`/`Glob` 위주 → 최소한의 `Read` |
 
 ## Language Handling
 
-- **Follow Spec Language**: If spec is in Korean, add Korean content
-- **Preserve Consistency**: Don't mix languages within sections
-- **Translate if Needed**: Convert input to spec's language
+- **Follow Spec Language**: 기존 스펙/문서의 언어를 따른다
+- **Preserve Consistency**: 섹션 내 언어를 혼합하지 않는다
+- **Translate if Needed**: 입력을 스펙 언어로 변환한다
+- **New Project Default**: 새 프로젝트(기존 스펙 없음)는 한국어 기본
 
 ## Error Handling
 
 | Situation | Action |
 |-----------|--------|
 | Spec file not found | Suggest running `spec-create` first |
-| Ambiguous input | Use deterministic defaults (non-interactive) for clarification |
-| Conflicting requirements | Flag and apply deterministic defaults to resolve |
+| Ambiguous input | 최선의 해석으로 진행, 판단 불가 시 스펙에 Open Questions로 기록 |
+| Conflicting requirements | 충돌 내용을 Update Plan과 `Open Questions`에 기록하고, 비파괴적 방향으로만 적용 |
 | Invalid input file format | Report parsing errors, suggest corrections |
 | 백업 디렉토리 미존재 | `mkdir -p _sdd/spec/prev/` 자동 생성 |
-| 대형 스펙 (500줄+) | 인덱스+하위 문서 구조로 자동 분할 |
-| 다수 입력 파일 존재 | 입력 우선순위 규칙으로 자동 병합 |
-| 입력 파일과 스펙 섹션 매핑 불가 | 휴리스틱 매핑 후 `Open Questions` 기록 |
+| 다수 입력 파일 존재 | `user_draft.md` 우선 + 보조 입력 병합 규칙 적용, 가정은 Update Plan에 기록 |
+| 입력 파일과 스펙 섹션 매핑 불가 | 보수적인 섹션에만 반영하고 불확실한 항목은 `Open Questions`에 기록 |
 
 ### Post-Update Glob 검증
 
@@ -421,11 +427,9 @@ After updating, provide summary:
 ## Integration with Other Skills
 
 ```
-spec-create → spec-update-todo → implementation-plan → implementation → spec-update-done
-                                                                        │
-                                                                        │
-                                                                        │
-                   └────────────────────────────────────────────────────┘
+Large:    feature-draft → spec-update-todo → implementation-plan → implementation → implementation-review → spec-update-done
+Medium:   feature-draft → implementation → spec-update-done
+Small:    직접 구현 (→ implementation-review) (→ spec-update-done)
 ```
 
 - **spec-create**: Create initial spec (run first if no spec exists)

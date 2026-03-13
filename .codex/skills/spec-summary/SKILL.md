@@ -122,19 +122,19 @@ The skill supports both **whitepaper-style** (§1~§8) and **legacy** spec forma
 
 ### Step 1: Locate Spec Documents
 
-**Tools**: `Glob`, `Read`
+**Tools**: `Glob`, `Read`, `request_user_input`
 
 1. Search for main spec in `_sdd/spec/`:
    - `<project>.md` (named after project)
    - `main.md` (generic name)
-   - If still ambiguous: list candidates and ask the user which should be treated as the index/main spec
+   - If still ambiguous: list candidates and use `request_user_input` to confirm which should be treated as the index/main spec
    - Do **not** auto-select generated/backup files:
      - `SUMMARY.md`
      - `prev/PREV_*.md`
 2. If spec is split:
    - Identify sub-spec files via index/links
    - Read all linked/related specs for a complete picture
-   - If the index does not link clearly, prefer `_sdd/spec/<project>_*.md` (excluding `SUMMARY.md` and `prev/PREV_*.md`) and confirm the intended set with the user
+   - If the index does not link clearly, prefer `_sdd/spec/<project>_*.md` (excluding `SUMMARY.md` and `prev/PREV_*.md`) and confirm the intended set with `request_user_input`
 3. Check for implementation files:
    - `_sdd/implementation/IMPLEMENTATION_PROGRESS.md`
    - `_sdd/implementation/IMPLEMENTATION_PROGRESS_PHASE_<n>.md` (if multiple exist, summarize all phases)
@@ -155,7 +155,7 @@ ELSE → 오류 메시지 출력 후 중지: "스펙 파일에 접근할 수 없
 
 ### Step 2: Extract Key Information
 
-**Tools**: `Read`, `Glob`, `Grep`
+**Tools**: `Read`, `Glob`, `rg`
 
 #### From Spec Document(s)
 

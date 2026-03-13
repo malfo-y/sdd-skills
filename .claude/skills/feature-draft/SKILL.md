@@ -35,7 +35,7 @@ In a single conversation, it collects requirements and simultaneously generates 
 
 1. **No spec file modifications**: Files under `_sdd/spec/` are **read-only**. Never modify them.
 2. **Output location**: Save to `_sdd/drafts/` directory.
-3. **Write in Korean**: Output file content must be written in Korean.
+3. **언어 규칙**: 기존 스펙/문서의 언어를 따른다. 스펙이 없으면 한국어 기본. 사용자 명시 지정 시 해당 언어 사용.
 4. **Multiple features supported**: Multiple features can be included in one file, but always confirm with the user first.
 5. **spec-update-todo compatible**: Part 1 must follow the "Spec Update Input" format so it can be directly used as input for `spec-update-todo`.
 6. **Target Files required**: Every task in Part 2 MUST include a `**Target Files**` field.
@@ -182,16 +182,20 @@ ELSE → 미충족 항목에 대해 AskUserQuestion (최대 2라운드)
 2. Map each item to target spec section:
    | Type | Target Section |
    |------|----------------|
+   | Background/Motivation Update | Background & Motivation (§1) |
+   | Design Change / Algorithm | Core Design (§2) |
    | New Feature (Core) | Goal > Key Features |
-   | New Feature (Component) | Component Details |
+   | New Feature (Component) | Component Details (§4) |
    | Improvement | Issues > Improvements |
    | Bug Fix | Issues > Bugs |
    | Performance | Issues > Performance |
    | Security | Security Considerations |
-   | Configuration | Configuration |
-   | Dependency | Environment & Dependencies |
-   | API Change | API Reference |
+   | Usage Scenario / Expected Result | Usage Guide & Expected Results (§5) |
+   | Configuration | Configuration (§8) |
+   | Dependency | Environment & Dependencies (§8) |
+   | API Change | API Reference (§7) |
    | Test Addition | Testing |
+   | Code Reference | Appendix: Code Reference List |
 
 3. Identify implementation components:
    - Group related features into modules
@@ -244,6 +248,35 @@ Part 1의 시작과 끝에 호환성 마커를 포함한다:
 **Date**: YYYY-MM-DD
 **Author**: [author]
 **Target Spec**: [target spec file]
+
+## Background & Motivation Updates
+
+### Background Update: [title]
+**Target Section**: `_sdd/spec/xxx.md` > `배경 및 동기 (§1)`
+**Change Type**: Problem Statement / Motivation / Alternative Comparison
+
+**Current**: [current description in spec, if any]
+**Proposed**: [proposed update]
+**Reason**: [why this update is needed]
+
+---
+
+## Design Changes
+
+### Design Change: [title]
+**Priority**: High/Medium/Low
+**Target Section**: `_sdd/spec/xxx.md` > `핵심 설계 (§2)`
+**Change Type**: Algorithm / Logic Flow / Design Rationale
+
+**Description**:
+[what design aspect is changing and why]
+
+**Code Reference**: `[filepath:functionName]`
+
+**Impact**:
+[what other parts of the system are affected]
+
+---
 
 ## New Features
 
@@ -311,6 +344,22 @@ Part 1의 시작과 끝에 호환성 마커를 포함한다:
 **Required**: Yes/No
 **Default**: [default value]
 **Description**: [description]
+
+---
+
+## Usage Scenarios
+
+### Scenario: [scenario name]
+**Target Section**: `_sdd/spec/xxx.md` > `사용 가이드 & 기대 결과 (§5)`
+
+**Setup**:
+[preconditions or setup steps]
+
+**Action**:
+[what the user does]
+
+**Expected Result**:
+[what should happen — observable behavior, output, side effects]
 
 ---
 

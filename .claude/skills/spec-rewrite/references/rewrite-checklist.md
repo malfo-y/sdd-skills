@@ -32,7 +32,7 @@ Keep these items in the main index:
 
 - [ ] Index file: `_sdd/spec/<project>.md`
 - [ ] Sub-directory: `_sdd/spec/<project>/`
-- [ ] Consistent filename pattern (`01-overview.md`, `02-architecture.md`, ...)
+- [ ] Consistent filename pattern using component/topic names directly (for example `api.md`, `database.md`, or `<component>/overview.md`)
 - [ ] Each sub-file follows single-topic responsibility
 - [ ] Every sub-file is reachable from the index
 - [ ] Zero broken links

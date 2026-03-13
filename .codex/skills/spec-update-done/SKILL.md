@@ -30,7 +30,7 @@ spec → feature-draft → implementation → spec-update-done (this)
 1. **Report before changing**: 변경 사항을 적용하기 전에 반드시 Change Report를 작업 로그에 먼저 제시한다.
 2. **Always backup to prev/**: 스펙 파일 수정 전 `_sdd/spec/prev/PREV_<filename>_<timestamp>.md`로 백업한다.
 3. **Copy-only archive**: 구현 산출물은 복사만 하며 원본을 이동/삭제하지 않는다.
-4. **한국어 작성**: 추가/수정 내용은 한국어로 작성한다 (기존 영어 부분 유지).
+4. **언어 규칙**: 기존 스펙/문서의 언어를 따른다. 새 프로젝트(기존 스펙 없음)는 한국어 기본. 사용자 명시 지정 시 해당 언어 사용.
 5. **DECISION_LOG.md 최소화**: 결정 로그는 `DECISION_LOG.md`에만 기록하며, 추가 거버넌스 문서는 사용자 요청 시에만 생성한다.
 
 ## Routing Guard (Review-Only Requests)
@@ -107,7 +107,7 @@ If local code/test execution is needed to verify claims, read `_sdd/env.md` firs
 
 ### Step 1: Gather Context
 
-**Tools**: `Read`, `Glob`, `Bash (git diff, git log, git status)`
+**Tools**: `Read`, `Glob`, `Bash (git diff, git log, git status)`, `request_user_input`
 
 Collect information from all available sources:
 
@@ -142,13 +142,13 @@ spec_loaded = 스펙 문서 읽기 완료
 sources_available = (구현 로그 OR git diff OR 사용자 피드백) 중 하나 이상 존재
 
 IF spec_loaded AND sources_available → Step 2 진행
-ELSE IF NOT spec_loaded → deterministic defaults (non-interactive): 스펙 파일 위치 확인
-ELSE IF NOT sources_available → deterministic defaults (non-interactive): 비교 대상 소스 확인
+ELSE IF NOT spec_loaded → `request_user_input`: 스펙 파일 위치 확인
+ELSE IF NOT sources_available → `request_user_input`: 비교 대상 소스 확인
 ```
 
 ### Step 2: Identify Spec Drift
 
-**Tools**: `rg`, `Glob`, `Read`, `Bash`, `Read`, `Bash (git diff)`
+**Tools**: `rg`, `Glob`, `Read`, `Bash (git diff)`
 
 > **`references/drift-patterns.md`를 Read로 읽는다.** 9가지 드리프트 패턴(Architecture, Feature, API, Config, Issue, Documentation, Environment, Decision Log, Code Snippet)의 상세 감지 방법과 해결 전략이 정의되어 있다.
 
@@ -257,7 +257,7 @@ Update spec document with identified changes:
 2. For each component in spec, match implementation files to Source field:
    - New components: Add Source field with key files/classes/functions
    - Existing components: Update Source field (reflect file renames, new functions, removed functions)
-3. Supplement with code exploration (Grep/Glob):
+3. Supplement with code exploration (`rg`/`Glob`):
    - Verify extracted paths still exist
    - Discover additional relevant files not in implementation artifacts
 4. Skip Source field for components without implementation code
@@ -279,7 +279,7 @@ Source field format reference:
 
 ### Step 5: Validate Updates
 
-**Tools**: `rg`, `Glob`, `Read`, `Bash`, `Bash (git diff)`
+**Tools**: `rg`, `Glob`, `Read`, `Bash (git diff, validation commands)`
 
 Verify updated spec accuracy:
 
@@ -288,7 +288,7 @@ Verify updated spec accuracy:
 - Verify dependency versions
 - Confirm API endpoints match
 - If local tests/commands are used for verification, apply `_sdd/env.md` setup first
-- If `_sdd/env.md` is missing/incomplete, apply deterministic defaults for environment details instead of guessing
+- If `_sdd/env.md` is missing/incomplete, skip local execution-based validation and record the limitation in the report instead of guessing
 - Record significant changes in the report and continue; unresolved impacts go to `Open Questions`
 
 **Decision Gate 5→6**:
@@ -450,7 +450,7 @@ Incremental updates during development:
 
 - **Report before changing**: Show findings before applying updates
 - **Highlight breaking changes**: Flag architecture/API changes
-- **When uncertain**: Use deterministic defaults (non-interactive) for ambiguities
+- **When uncertainty is high-risk**: Use `request_user_input` when ambiguity changes which spec should be edited or materially changes the meaning of the update; otherwise continue and record the limitation in `Open Questions`
 - **Document decisions**: Note why changes were made in `_sdd/spec/DECISION_LOG.md`
 - **Avoid Artifact Sprawl**: Do not create extra context/governance docs unless the user explicitly asks
 
@@ -480,13 +480,13 @@ spec-create → feature-draft → implementation → spec-update-done
 | 상황 | 대응 |
 |------|------|
 | `_sdd/spec/` 디렉토리 미존재 | `spec-create` 먼저 실행 권장 |
-| 스펙 파일 미발견 | 자동 탐색 규칙으로 메인 스펙 선택, 실패 시 문서 기반 보고만 생성 |
+| 스펙 파일 미발견 | 자동 탐색 후에도 불명확하면 `request_user_input`으로 확인하고, 확정 전에는 스펙 수정 금지 |
 | 구현 로그 미존재 | git diff 기반 Quick Sync 모드로 전환 |
 | git 이력 없음 | 코드 직접 분석으로 대체 |
 | `_sdd/env.md` 미존재/불완전 | 로컬 실행 건너뛰고 문서 기반 검증으로 진행 |
 | feature_id 모호 | 컨텍스트에서 자동 생성 (커밋 메시지, 변경 파일명 등 활용) |
 | 백업 디렉토리 미존재 | `mkdir -p _sdd/spec/prev/` 자동 생성 |
-| 충돌하는 변경 사항 | 우선순위 규칙으로 자동 정렬 후 `Open Questions` 기록 |
+| 충돌하는 변경 사항 | 충돌 지점을 `Open Questions`에 기록하고, 문서 의미가 달라지면 `request_user_input`으로 확인 |
 
 ## Additional Resources
 

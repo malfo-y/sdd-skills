@@ -66,6 +66,7 @@ For multiple features:
 ### Full Structure
 
 ```markdown
+<!-- spec-update-todo-input-start -->
 # Part 1: Spec Patch Draft
 
 > This patch can be copy-pasted into the corresponding spec section,
@@ -76,6 +77,12 @@ For multiple features:
 **Date**: YYYY-MM-DD
 **Author**: [author]
 **Target Spec**: [target spec filename]
+
+## Background & Motivation Updates
+[background/motivation changes — maps to §1...]
+
+## Design Changes
+[core design/algorithm changes — maps to §2...]
 
 ## New Features
 [feature items...]
@@ -92,11 +99,66 @@ For multiple features:
 ## Configuration Changes
 [configuration items...]
 
+## Usage Scenarios
+[new usage scenarios and expected results — maps to §5...]
+
 ## Notes
 [additional context...]
+<!-- spec-update-todo-input-end -->
 ```
 
 ### Per-Section Detailed Format
+
+#### Background & Motivation Updates
+
+```markdown
+## Background & Motivation Updates
+
+### Background Update: [title]
+**Target Section**: `_sdd/spec/xxx.md` > `배경 및 동기 (§1)`
+**Change Type**: Problem Statement / Motivation / Alternative Comparison
+
+**Current**: [current description in spec, if any]
+**Proposed**: [proposed update]
+**Reason**: [why this update is needed]
+```
+
+Minimal format:
+```markdown
+### Background Update: [title]
+**Target Section**: `_sdd/spec/xxx.md` > `배경 및 동기 (§1)`
+
+**Proposed**: [proposed update]
+```
+
+#### Design Changes
+
+```markdown
+## Design Changes
+
+### Design Change: [title]
+**Priority**: High/Medium/Low
+**Target Section**: `_sdd/spec/xxx.md` > `핵심 설계 (§2)`
+**Change Type**: Algorithm / Logic Flow / Design Rationale
+
+**Description**:
+[what design aspect is changing and why]
+
+**Code Reference**: `[filepath:functionName]`
+
+**Impact**:
+[what other parts of the system are affected]
+```
+
+Minimal format:
+```markdown
+### Design Change: [title]
+**Priority**: High/Medium/Low
+**Target Section**: `_sdd/spec/xxx.md` > `핵심 설계 (§2)`
+
+**Description**:
+[what design aspect is changing and why]
+```
 
 #### New Features
 
@@ -230,20 +292,51 @@ Simple format:
 [reference links]
 ```
 
+#### Usage Scenarios
+
+```markdown
+## Usage Scenarios
+
+### Scenario: [scenario name]
+**Target Section**: `_sdd/spec/xxx.md` > `사용 가이드 & 기대 결과 (§5)`
+
+**Setup**:
+[preconditions or setup steps]
+
+**Action**:
+[what the user does]
+
+**Expected Result**:
+[what should happen — observable behavior, output, side effects]
+```
+
+Minimal format:
+```markdown
+### Scenario: [scenario name]
+**Target Section**: `_sdd/spec/xxx.md` > `사용 가이드 & 기대 결과 (§5)`
+
+**Action**: [what the user does]
+**Expected Result**: [what should happen]
+```
+
 ### Target Section Annotation Rules
 
 | Input Type | Target Section Value |
 |------------|---------------------|
+| Background/Motivation Update | `_sdd/spec/xxx.md` > `배경 및 동기 (§1)` |
+| Design Change / Algorithm | `_sdd/spec/xxx.md` > `핵심 설계 (§2)` |
 | New Feature (Core) | `_sdd/spec/xxx.md` > `Goal > Key Features` |
-| New Feature (Component) | `_sdd/spec/xxx.md` > `Component Details` |
+| New Feature (Component) | `_sdd/spec/xxx.md` > `Component Details (§4)` |
 | Improvement | `_sdd/spec/xxx.md` > `Issues > Improvements` |
 | Bug Report | `_sdd/spec/xxx.md` > `Issues > Bugs` |
 | Performance | `_sdd/spec/xxx.md` > `Issues > Performance` |
 | Security | `_sdd/spec/xxx.md` > `Security Considerations` |
-| Configuration | `_sdd/spec/xxx.md` > `Configuration` |
-| Dependency | `_sdd/spec/xxx.md` > `Environment & Dependencies` |
-| API Change | `_sdd/spec/xxx.md` > `API Reference` |
+| Usage Scenario / Expected Result | `_sdd/spec/xxx.md` > `사용 가이드 & 기대 결과 (§5)` |
+| Configuration | `_sdd/spec/xxx.md` > `Configuration (§8)` |
+| Dependency | `_sdd/spec/xxx.md` > `Environment & Dependencies (§8)` |
+| API Change | `_sdd/spec/xxx.md` > `API Reference (§7)` |
 | Test Addition | `_sdd/spec/xxx.md` > `Testing` |
+| Code Reference | `_sdd/spec/xxx.md` > `부록: 코드 레퍼런스 목록` |
 
 For split specs, use actual filenames:
 - `_sdd/spec/project_API.md` > `API Reference`
@@ -314,8 +407,8 @@ For split specs, use actual filenames:
 ---
 
 ## Parallel Execution Summary
-| Phase | Total Tasks | Max Parallel | File Conflicts |
-|-------|-------------|--------------|----------------|
+| Phase | Total Tasks | Max Parallel | Sequential (conflicts) |
+|-------|-------------|--------------|----------------------|
 | 1     | N           | N            | None           |
 | 2     | N           | N            | file.py (Task X, Y) |
 

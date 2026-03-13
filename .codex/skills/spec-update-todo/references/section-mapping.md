@@ -8,20 +8,102 @@ How to map user input categories to spec document sections.
 
 | Input Type | Spec Section (Korean) | Spec Section (English) |
 |------------|----------------------|------------------------|
+| Background/Motivation | 배경 및 동기 (§1) | Background & Motivation |
+| Design Change | 핵심 설계 (§2) | Core Design |
 | New Feature (Core) | 목표 > 주요 기능 | Goal > Key Features |
-| New Feature (Component) | 컴포넌트 상세 | Component Details |
+| New Feature (Component) | 컴포넌트 상세 (§4) | Component Details |
 | Enhancement | 개선 필요사항 > 개선 제안 | Issues > Improvements |
 | Bug Report | 발견된 이슈 > 버그 | Issues > Bugs |
 | Performance | 개선 필요사항 > 성능 | Issues > Performance |
 | Security | 보안 고려사항 | Security Considerations |
-| Config Change | 설정 | Configuration |
-| Dependency | 환경 및 의존성 | Environment & Dependencies |
-| API Change | API 레퍼런스 | API Reference |
+| Usage Scenario | 사용 가이드 & 기대 결과 (§5) | Usage Guide & Expected Results |
+| Config Change | 설정 (§8) | Configuration |
+| Dependency | 환경 및 의존성 (§8) | Environment & Dependencies |
+| API Change | API 레퍼런스 (§7) | API Reference |
 | Test Addition | 테스트 | Testing |
+| Code Reference | 부록: 코드 레퍼런스 목록 | Appendix: Code Reference List |
 
 ---
 
 ## Detailed Mapping Rules
+
+### 0a. Background & Motivation Updates
+
+**When input changes the project's problem statement, motivation, or alternative comparisons:**
+
+```
+Input: Background/Motivation update
+↓
+Target: 배경 및 동기 (§1)
+```
+
+**Example:**
+```markdown
+# Input
+### Background Update: 멀티테넌시 요구사항 추가
+**Change Type**: Motivation
+**Proposed**: 단일 테넌트에서 멀티테넌트로 확장 필요
+
+# Maps to Spec
+## 배경 및 동기
+### 왜 이 접근법인가
+...기존 내용...
+- 멀티테넌시 지원으로 확장 가능한 구조 필요 📋
+```
+
+### 0b. Design Changes
+
+**When input changes core design, algorithms, or design rationale:**
+
+```
+Input: Design change
+↓
+Target: 핵심 설계 (§2)
+```
+
+**Example:**
+```markdown
+# Input
+### Design Change: 이벤트 소싱 패턴 도입
+**Change Type**: Algorithm
+**Description**: 상태 변경을 이벤트 로그로 관리
+**Code Reference**: `[src/core/event_store.py:EventStore]`
+
+# Maps to Spec
+## 핵심 설계
+### 알고리즘/로직 흐름
+...기존 내용...
+
+**이벤트 소싱 패턴** 📋 계획됨
+상태 변경을 이벤트 로그로 관리하여 감사 추적과 상태 복원을 지원한다.
+`[src/core/event_store.py:EventStore]`
+```
+
+### 0c. Usage Scenarios
+
+**When input describes new usage scenarios or expected results:**
+
+```
+Input: Usage scenario
+↓
+Target: 사용 가이드 & 기대 결과 (§5)
+```
+
+**Example:**
+```markdown
+# Input
+### Scenario: 배치 처리 실행
+**Action**: 사용자 목록 파일로 배치 실행
+**Expected Result**: 각 사용자별 결과 파일 생성 + 요약 리포트
+
+# Maps to Spec
+## 사용 가이드 & 기대 결과
+### 시나리오: 배치 처리 실행 📋
+
+**설정**: 사용자 목록 CSV 파일 준비
+**실행**: `python batch_run.py --input users.csv`
+**기대 결과**: 각 사용자별 결과 파일 생성 + 요약 리포트 출력
+```
 
 ### 1. New Features
 

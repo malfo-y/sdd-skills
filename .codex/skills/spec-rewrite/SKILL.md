@@ -72,12 +72,12 @@ scope_clear = 리라이트 범위 명확
 
 IF quality_issues_identified AND scope_clear → Step 2 진행
 ELSE IF NOT quality_issues_identified → 추가 진단 수행
-ELSE → AskUserQuestion: 리라이트 범위 확인
+ELSE → `request_user_input`: 리라이트 범위 확인
 ```
 
 ### Step 2: Propose Rewrite Plan First
 
-**Tools**: `AskUserQuestion`
+**Tools**: `request_user_input`
 
 Present a rewrite plan before making changes.
 
@@ -314,8 +314,8 @@ Create or update `_sdd/spec/REWRITE_REPORT.md` with:
 | 코드베이스 크기 | 전략 | 구체적 방법 |
 |----------------|------|-------------|
 | < 50 파일 | 자유 탐색 | `Glob` + `Read` 자유롭게 사용 |
-| 50-200 파일 | 타겟 탐색 | `Grep`/`Glob`으로 후보 식별 → 타겟 `Read` |
-| > 200 파일 | 타겟 탐색 | `Grep`/`Glob` 위주 → 최소한의 `Read` |
+| 50-200 파일 | 타겟 탐색 | `rg`/`Glob`으로 후보 식별 → 타겟 `Read` |
+| > 200 파일 | 타겟 탐색 | `rg`/`Glob` 위주 → 최소한의 `Read` |
 
 ## Error Handling
 
