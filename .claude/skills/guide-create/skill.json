@@ -2,5 +2,5 @@
   "name": "guide-create",
   "description": "This skill should be used when the user asks to \"guide create\", \"create guide\", \"feature guide\", \"write guide\", \"가이드 작성\", \"기능 가이드\", \"가이드 문서 만들어줘\", or wants to generate a feature-focused technical report with detailed scenario guides and API reference from spec and code context.",
   "instruction_file": "SKILL.md",
-  "version": "2.0.0"
+  "version": "2.1.0"
 }

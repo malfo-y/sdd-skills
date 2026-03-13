@@ -1,7 +1,7 @@
 ---
 name: guide-create
 description: This skill should be used when the user asks to "guide create", "create guide", "feature guide", "write guide", "가이드 작성", "기능 가이드", "가이드 문서 만들어줘", or wants to generate an implementation/review guide document for a specific feature from spec and code context.
-version: 2.0.0
+version: 2.1.0
 ---
 
 # Guide Create - Feature Technical Report Generator
@@ -130,6 +130,21 @@ Examples of requests that should trigger this skill:
    - partially implemented behavior
    - spec-only intended behavior
 
+### Step 3.5: Generation Strategy Decision
+
+**Tools**: — (판단 단계)
+
+Step 3에서 수집한 관련 소스 파일 수에 따라 생성 전략을 결정한다.
+
+```
+related_files = Step 3에서 식별한 기능 관련 소스 파일 수 (테스트/설정 파일 제외)
+
+IF related_files < 10 → 1-페이즈 (Step 5에서 단일 패스로 전체 작성)
+IF related_files >= 10 → 2-페이즈 (Step 5에서 골조 생성 → 내용 채우기)
+```
+
+> **참고**: 기능 가이드는 단일 기능 deep-dive이므로 프로젝트 전체 스펙(spec-create)보다 낮은 임계값(10개)을 사용한다.
+
 ### Step 4: Resolve Gaps with Deterministic Defaults
 
 **Tools**: deterministic defaults (non-interactive)
@@ -146,7 +161,54 @@ Never invent confirmed behavior that is unsupported by spec or code.
 
 ### Step 5: Generate the Technical Report
 
-**Tools**: write output only
+**Tools**: `Write`, `Edit`, `Agent` (2-페이즈 병렬 실행 시)
+
+> **1-페이즈** (related_files < 10): 아래 required sections 구조로 단일 패스 작성.
+> **2-페이즈** (related_files >= 10): 아래 절차를 먼저 수행한 후, 최종 결과를 동일한 구조로 저장.
+
+#### 2-페이즈 실행 절차 (related_files >= 10일 때만)
+
+> 1-페이즈인 경우 이 절차를 건너뛰고 아래 required sections로 직접 작성한다.
+
+**Phase 1 — 골조(Skeleton) 생성**
+
+§1~§5 각 섹션에 대해 미니 요약(3-5줄)을 작성한다. 골조는 Phase 2의 "계약서" 역할을 한다.
+
+각 섹션의 골조 형식:
+```markdown
+## N. [Section Title]
+
+**요약**: [핵심 내용 1-2줄]
+[추가 맥락 1-2줄]
+
+**코드 참조**: `[주요 파일/디렉토리]`
+**다룰 내용**: [이 섹션에서 상세히 다룰 토픽 나열]
+
+<!-- Phase 2에서 상세 작성 -->
+```
+
+- 골조 전체는 ~40-60줄로 가볍게 유지한다.
+- 골조 작성 시 Step 2-3에서 수집한 스펙 컨텍스트와 코드 증거를 참조한다.
+- 골조를 컨텍스트에만 보관하지 말고, 실제 target guide 파일(`_sdd/guides/guide_<slug>.md`)에 먼저 저장한다.
+- Phase 1 결과는 `<!-- Phase 2에서 상세 작성 -->` 주석이 남아 있는 초안 상태로 파일에 존재해야 한다.
+- 골조 완료 후 Phase 2로 자동 진행한다 (사용자 리뷰 게이트 없음).
+
+**Phase 2 — 내용 채우기(Fill)**
+
+Phase 1에서 저장한 skeleton 파일을 다시 읽고, 그 내용을 기준으로 각 섹션의 상세 내용을 작성한다.
+
+실행 순서:
+1. **순차 실행**: §1 배경 및 동기 → §2 핵심 설계
+   - 이 섹션들은 상호 의존성이 있어 순서대로 작성한다.
+   - 각 섹션 작성 시 저장된 skeleton + 이전 완성된 섹션 + 스펙/코드를 참조한다.
+2. **병렬 실행**: §3 사용 시나리오 가이드, §4 API 레퍼런스, §5 구현 가이드
+   - 이 섹션들은 저장된 skeleton + 완성된 §1-2만 있으면 독립 작성이 가능하다.
+   - `Agent` 도구로 sub-agent를 생성하여 병렬 처리한다.
+   - 각 sub-agent에게 저장된 skeleton 전체 + 완성된 §1-2 + 스펙/코드 접근 권한을 제공한다.
+
+Phase 2 완료 후 저장된 guide 파일에서 `<!-- Phase 2에서 상세 작성 -->` 주석을 모두 제거하고 최종 가이드를 조립한다.
+
+#### Required sections
 
 Write one guide per feature using the required structure from `references/output-format.md`.
 
