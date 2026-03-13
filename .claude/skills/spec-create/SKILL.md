@@ -1,7 +1,7 @@
 ---
 name: spec-create
 description: This skill should be used when the user asks to "create a spec", "write a spec document", "generate SDD", "create software design document", "document the project", "create spec for project", or mentions "_sdd" directory, specification documents, or project documentation needs.
-version: 1.0.0
+version: 1.1.0
 ---
 
 # Spec Document Creation and Management
@@ -192,6 +192,22 @@ IF has_goal AND has_architecture AND has_components → Step 3 진행
 ELSE → 미파악 항목에 대해 추가 탐색 또는 AskUserQuestion
 ```
 
+### Step 2.7: Generation Strategy Decision
+
+**Tools**: `Glob`
+
+Step 2에서 파악한 코드베이스 규모에 따라 생성 전략을 결정한다.
+
+```
+source_files = Glob("**/*.{py,ts,js,java,go,rs,tsx,jsx}") 에서 테스트/설정 파일 제외
+# test/, tests/, spec/, __test__, config/, node_modules/, .git, dist/, build/ 등 제외
+
+IF source_files < 30 → 1-페이즈 (Step 3에서 단일 패스로 전체 작성)
+IF source_files >= 30 → 2-페이즈 (Step 3에서 골조 생성 → 내용 채우기)
+```
+
+> **참고**: 생성 전략(1/2-페이즈)과 저장 전략(파일 분할)은 독립적 관심사이다. 2-페이즈로 생성해도 최종 저장은 기존 규모별 구조(소/중/대규모)를 따른다.
+
 ### Step 3: Bootstrap + Write the Spec Document
 
 **Tools**: `Read`, `Edit`, `Write`, `Bash (mkdir -p)`
@@ -248,7 +264,55 @@ Before writing the spec, bootstrap guidance files if missing:
    - If user approves, append only the missing lines (minimal edit, preserve existing structure).
    - If user declines, keep file unchanged and continue spec creation.
 
-Then write the spec document using the template structure below, adapting sections as needed:
+#### Step 3-B: Write Spec
+
+> **1-페이즈** (source_files < 30): 아래 템플릿으로 단일 패스 작성.
+> **2-페이즈** (source_files >= 30): 아래 절차를 먼저 수행한 후, 최종 결과를 동일한 템플릿 구조로 저장.
+
+##### 2-페이즈 실행 절차 (source_files >= 30일 때만)
+
+> 1-페이즈인 경우 이 절차를 건너뛰고 아래 템플릿으로 직접 작성한다.
+
+**Phase 1 — 골조(Skeleton) 생성**
+
+§1~§8 각 섹션에 대해 미니 요약(3-5줄)을 작성한다. 골조는 Phase 2의 "계약서" 역할을 한다.
+
+각 섹션의 골조 형식:
+```markdown
+## §N [Section Title]
+
+**요약**: [핵심 내용 1-2줄]
+[추가 맥락 1-2줄]
+
+**코드 참조**: `[주요 파일/디렉토리]`
+**다룰 내용**: [이 섹션에서 상세히 다룰 토픽 나열]
+
+<!-- Phase 2에서 상세 작성 -->
+```
+
+- 골조 전체는 ~50-80줄로 가볍게 유지한다.
+- 골조 작성 시 코드베이스 구조와 Step 2 분석 결과를 참조한다.
+- 골조 완료 후 Phase 2로 자동 진행한다 (사용자 리뷰 게이트 없음).
+
+**Phase 2 — 내용 채우기(Fill)**
+
+골조 전체를 컨텍스트로 유지하면서 각 섹션의 상세 내용을 작성한다.
+
+실행 순서:
+1. **순차 실행**: §1 Background & Motivation → §2 Core Design → §3 Architecture Overview
+   - 이 섹션들은 상호 의존성이 있어 순서대로 작성한다.
+   - 각 섹션 작성 시 골조 전체 + 이전 완성된 섹션 + 코드베이스를 참조한다.
+2. **병렬 실행**: §4 Component Details, §5 Usage Guide, §6 Data Models, §7 API Reference, §8 Environment
+   - 이 섹션들은 골조만 있으면 독립 작성이 가능하다.
+   - `Agent` 도구로 sub-agent를 생성하여 병렬 처리한다.
+   - 각 sub-agent에게 골조 전체 + 코드베이스 접근 권한을 제공한다.
+
+Phase 2 완료 후 `<!-- Phase 2에서 상세 작성 -->` 주석을 모두 제거하고 최종 스펙을 조립한다.
+최종 스펙의 구조와 형식은 아래 템플릿과 동일하다.
+
+##### 스펙 템플릿
+
+Write the spec document using the template structure below, adapting sections as needed:
 
 ```markdown
 # <Project Name>

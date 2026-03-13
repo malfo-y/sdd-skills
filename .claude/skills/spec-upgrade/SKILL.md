@@ -1,7 +1,7 @@
 ---
 name: spec-upgrade
 description: This skill should be used when the user asks to "upgrade spec", "convert spec to whitepaper", "migrate spec format", "spec upgrade", "스펙 업그레이드", "스펙 변환", "스펙 마이그레이션", "whitepaper 형식으로 변환", or wants to convert old-format spec documents to the whitepaper-style §1-§8 structure defined in SDD_SPEC_DEFINITION.md.
-version: 1.0.0
+version: 1.2.0
 ---
 
 # Spec Upgrade - 구 형식 스펙을 Whitepaper 형식으로 변환
@@ -26,7 +26,7 @@ version: 1.0.0
 2. **언어 규칙**: 기존 스펙의 언어를 따른다. 한국어 스펙이면 한국어로, 영어 스펙이면 영어로 업그레이드한다.
 3. **기존 내용 보존**: 구 형식 스펙의 기존 내용은 최대한 보존한다. 삭제하지 않고 §1-§8에 재배치한다.
 4. **백업 필수**: 변환 전 반드시 `_sdd/spec/prev/PREV_<filename>_<timestamp>.md`로 백업한다.
-5. **Checkpoint 필수**: Step 3에서 Gap 분석 결과와 보충 방향을 사용자에게 반드시 확인받는다.
+5. **Checkpoint 필수**: Step 3에서 Gap 분석 결과와 업그레이드 계획을 먼저 보고한다. 대상 파일이나 구조가 모호할 때만 사용자 확인을 요청한다.
 6. **DECISION_LOG.md 보존**: 기존 DECISION_LOG.md가 있으면 보존한다. 업그레이드 과정의 주요 결정도 추가 기록한다.
 7. **In-place 덮어쓰기**: 업그레이드 결과는 기존 파일 경로에 덮어쓴다 (백업 후).
 
@@ -69,23 +69,18 @@ version: 1.0.0
 §1-§8 필수 섹션이 모두 존재하고 서사 섹션(§1, §2, §5)이 충분한 내용을 가지면:
 
 ```
-텍스트 출력: "이 스펙은 이미 whitepaper 형식에 가깝습니다."
-
-AskUserQuestion:
-  "이미 whitepaper 형식에 가까운 스펙입니다. 계속 업그레이드를 진행할까요?"
-  옵션:
-  1. "계속 진행" - 부족한 부분 보강
-  2. "중단" - 업그레이드 불필요
-  3. "spec-review로 전환" - 품질 검증만 수행
+- "이 스펙은 이미 whitepaper 형식에 가깝다"는 진단을 보고한다.
+- 부족한 항목만 보강 대상으로 표시한다.
+- 구조 변경 없이 Step 2로 진행한다.
 ```
 
 **Decision Gate 1→2**:
 ```
 spec_found = 스펙 파일이 1개 이상 존재
 gap_identified = §1-§8 대비 빠진 섹션 또는 부족한 섹션 식별 완료
-user_confirmed = 이미 whitepaper 형식인 경우 사용자가 "계속 진행" 선택
+targets_resolved = 업그레이드 대상 파일 경로 확정
 
-IF spec_found AND gap_identified AND (NOT already_whitepaper OR user_confirmed) → Step 2
+IF spec_found AND gap_identified AND targets_resolved → Step 2
 IF NOT spec_found → "스펙 파일이 없습니다. spec-create를 먼저 실행하세요." 출력 후 종료
 ```
 
@@ -107,28 +102,20 @@ Glob("**/*.{py,ts,js,java,go,rs,tsx,jsx}")로 구현 파일 확인
 
 빠진 섹션에 따라 필요한 정보를 수집:
 
-| 빠진 섹션 | 수집 대상 | Sub-agent |
+| 빠진 섹션 | 수집 대상 | 탐색 방식 |
 |-----------|----------|-----------|
-| §1 배경/동기 | README, CLAUDE.md, 커밋 히스토리, 프로젝트 구조 | Explore |
-| §2 핵심 설계 | 핵심 알고리즘, 메인 로직 흐름, 진입점 | Explore |
-| §5 사용 가이드 | CLI 인터페이스, API 엔드포인트, 테스트 시나리오 | Explore |
-| Code citation | 모든 주요 파일/클래스/함수 매핑 | Explore |
+| §1 배경/동기 | README, docs, 커밋 히스토리, 프로젝트 구조 | Read, Grep, git log |
+| §2 핵심 설계 | 핵심 알고리즘, 메인 로직 흐름, 진입점 | Read, Grep |
+| §5 사용 가이드 | CLI 인터페이스, API 엔드포인트, 테스트 시나리오 | Read, Grep |
+| Code citation | 모든 주요 파일/클래스/함수 매핑 | Read, Grep |
 
-```
-Agent(
-  subagent_type="Explore",
-  prompt="다음 프로젝트의 코드베이스를 분석하세요: [프로젝트 경로]
+대형 코드베이스에서는 탐색을 병렬화하거나 하위 탐색으로 위임할 수 있지만, 결과는 다음 항목으로 요약한다:
 
-  수집 대상:
-  1. 프로젝트의 핵심 목적과 해결하는 문제 (README, docs 기반)
-  2. 핵심 알고리즘/로직 흐름 (진입점부터 주요 처리 경로)
-  3. 주요 파일/클래스/함수 목록 (코드 citation용)
-  4. 사용 방법과 주요 시나리오 (CLI, API, 테스트 기반)
-  5. 기술 스택과 의존성
-
-  각 항목을 구조화된 형태로 보고하세요."
-)
-```
+1. 프로젝트의 핵심 목적과 해결하는 문제
+2. 핵심 알고리즘/로직 흐름
+3. 주요 파일/클래스/함수 목록
+4. 사용 방법과 주요 시나리오
+5. 기술 스택과 의존성
 
 #### 2.3 멀티파일 통합 준비
 
@@ -143,17 +130,16 @@ Agent(
 **Decision Gate 2→3**:
 ```
 code_analyzed = 코드베이스 분석 완료 (또는 코드 없음 확인)
-gap_fillable = 빠진 섹션을 채울 자료가 최소 1개 수집됨
+gap_plan_ready = 빠진 섹션별 보강 방향 정리 완료
 
-IF code_analyzed AND gap_fillable → Step 3
-IF code_analyzed AND NOT gap_fillable → 사용자에게 부족한 정보 요청 후 Step 3
+IF code_analyzed AND gap_plan_ready → Step 3
 ```
 
-### Step 3: Checkpoint (사용자 확인)
+### Step 3: Checkpoint (분석 결과 보고)
 
-**Tools**: `AskUserQuestion`
+**Tools**: — (보고 단계), `AskUserQuestion` (only if risky ambiguity remains)
 
-Gap 분석 결과와 보충 방향을 사용자에게 제시하고 승인을 받는다.
+Gap 분석 결과와 보충 방향을 사용자에게 먼저 보고한다.
 
 #### 3.1 Gap 분석 결과 테이블 출력
 
@@ -188,27 +174,73 @@ Gap 분석 결과와 보충 방향을 사용자에게 제시하고 승인을 받
 - Citation: [매핑 대상 파일 N개]
 ```
 
-#### 3.2 사용자 승인
+#### 3.2 진행 규칙
 
-```
-AskUserQuestion:
-  "분석 결과를 확인해 주세요. 업그레이드를 진행할까요?"
-  옵션:
-  1. "확인, 진행" - 제시된 방향으로 업그레이드
-  2. "수정 필요" - 피드백 후 방향 조정
-  3. "중단" - 업그레이드 취소
-```
-
-수정 피드백 시 최대 2라운드 조정 후 진행.
+- 기본 동작은 보고 후 자동 진행이다.
+- 아래 경우에만 짧게 확인한다:
+  - canonical spec 파일 후보가 2개 이상이고 결정 근거가 약한 경우
+  - split spec의 인덱스/서브 파일 구조가 문서만으로 판별되지 않는 경우
+  - 업그레이드보다 구조 재편이 더 적절해 보이는 경우 (`spec-rewrite` 전환 여부 확인)
 
 **Decision Gate 3→4**:
 ```
-user_approved = 사용자가 "확인, 진행" 선택
-feedback_resolved = 수정 피드백이 있었다면 반영 완료
+report_presented = Gap 분석 결과와 업그레이드 계획 보고 완료
+ambiguity_resolved = 위험한 모호성이 있다면 해소 완료
 
-IF user_approved OR feedback_resolved → Step 4
-IF 사용자가 "중단" 선택 → 종료
+IF report_presented AND ambiguity_resolved → Step 4
 ```
+
+### Step 3.5: Generation Strategy Decision
+
+기존 스펙의 줄 수에 따라 업그레이드 출력 생성 전략을 결정한다.
+
+```
+spec_lines = 기존 스펙의 총 줄 수 (모든 스펙 파일 합산)
+
+IF spec_lines < 300 → 1-페이즈 (Step 4에서 단일 패스로 업그레이드)
+IF spec_lines >= 300 → 2-페이즈 (골조 먼저 생성 → 내용 채우기)
+```
+
+#### 2-페이즈 업그레이드 절차 (spec_lines >= 300일 때만)
+
+> 1-페이즈인 경우 이 절차를 건너뛰고 기존 Step 4.3 방식으로 진행한다.
+
+**Phase 1 — 골조(Skeleton) 생성**
+
+업그레이드할 최종 §1~§8 구조의 각 섹션에 대해 미니 요약(3-5줄)을 작성한다. 골조는 Phase 2의 "계약서" 역할을 한다.
+
+각 섹션의 골조 형식:
+```markdown
+## §N [Section Title]
+
+**요약**: [기존 내용에서 매핑할 핵심 + 새로 보충할 서사 방향 1-2줄]
+[추가 맥락 1-2줄]
+
+**코드 참조**: `[관련 소스 파일]`
+**다룰 내용**: [이 섹션에 포함될 내용 나열]
+
+<!-- Phase 2에서 상세 작성 -->
+```
+
+- 골조 전체는 ~50-80줄로 가볍게 유지한다.
+- 골조 작성 시 Step 1 Gap 분석 결과와 Step 2 코드 분석 결과를 참조한다.
+- 골조 완료 후 Phase 2로 자동 진행한다 (사용자 리뷰 게이트 없음).
+
+**Phase 2 — 내용 채우기(Fill)**
+
+골조 전체를 컨텍스트로 유지하면서 각 섹션의 상세 내용을 작성한다.
+
+실행 순서:
+1. **순차 실행**: §1 Background & Motivation → §2 Core Design → §3 Architecture Overview
+   - 상호 의존성이 있어 순서대로 작성한다.
+   - 기존 스펙 내용의 재배치 + 새 서사 생성을 함께 수행한다.
+2. **병렬 실행**: §4 Component Details ~ §8 Environment
+   - 골조만 있으면 독립 작성 가능. `Agent` 도구로 병렬 처리한다.
+   - 기존 스펙의 해당 내용 재배치 + 코드 citation 삽입을 수행한다.
+
+Phase 2 완료 후 `<!-- Phase 2에서 상세 작성 -->` 주석을 모두 제거한다.
+
+> **참고**: 생성 전략(2-페이즈)과 저장 전략(파일 분할)은 독립적 관심사이다. 2-페이즈로 생성해도 최종 저장은 기존 파일 구조를 따른다.
 
 ### Step 4: Backup & Upgrade (백업 및 업그레이드 실행)
 
@@ -221,15 +253,16 @@ IF 사용자가 "중단" 선택 → 종료
 2. 각 스펙 파일을 prev/PREV_<filename>_<YYYYMMDD_HHMMSS>.md로 복사
 ```
 
-#### 4.2 멀티파일 통합 (해당 시)
+#### 4.2 멀티파일 업그레이드 (해당 시)
 
 멀티파일 스펙인 경우:
 ```
-1. 모든 서브 파일 내용을 §1-§8 순서로 통합
-2. 중복 내용 제거
-3. 상호 참조 링크를 인라인으로 변환
-4. 통합 결과를 main.md로 저장
-5. 기존 서브 파일은 백업에만 보존 (삭제)
+1. 기존 파일 구조를 유지한다.
+2. `main.md`가 인덱스 역할이면 인덱스로 유지한다.
+3. 공통 서사 섹션(§1, §2, §3, §5, §8)은 canonical top-level spec 또는 index 파일에 보강한다.
+4. 컴포넌트별 상세 내용(§4, 필요 시 §6/§7)은 해당 서브 파일/디렉토리에 유지한다.
+5. 기존 서브 파일은 삭제하지 않는다.
+6. 구조 재편이 필요하면 이 스킬에서 강제하지 말고 `spec-rewrite` 후보로 보고한다.
 ```
 
 #### 4.3 Whitepaper 구조 변환
@@ -281,15 +314,18 @@ IF 사용자가 "중단" 선택 → 종료
 #### 5.1 구조 검증
 
 ```
-1. Glob("_sdd/spec/main.md") → 파일 존재 확인
-2. 필수 섹션 포함 확인:
-   - §1 Background & Motivation ✅
-   - §2 Core Design ✅
-   - §3 Architecture Overview ✅
-   - §4 Component Details ✅
-   - §5 Usage Guide & Expected Results ✅
-   - §8 Environment & Dependencies ✅
-3. 선택 섹션 확인 (해당 시):
+1. Step 1에서 식별한 upgraded target file(s) 존재 확인
+2. 단일 파일 spec이면 해당 파일에서 필수 섹션 확인:
+   - §1 Background & Motivation
+   - §2 Core Design
+   - §3 Architecture Overview
+   - §4 Component Details
+   - §5 Usage Guide & Expected Results
+   - §8 Environment & Dependencies
+3. split spec이면:
+   - top-level spec 또는 `main.md`에 §1, §2, §3, §5, §8 및 링크 구조 확인
+   - component files/subdirs에 §4 상세 내용 존재 확인
+4. 선택 섹션 확인 (해당 시):
    - §6 Data Models
    - §7 API Reference
    - Appendix: Code Reference Index
@@ -317,7 +353,7 @@ Glob("_sdd/spec/prev/PREV_*.md") → 백업 파일 존재 확인
 1. 완료 요약 테이블:
    | 항목 | 내용 |
    |------|------|
-   | 업그레이드 파일 | `_sdd/spec/main.md` |
+   | 업그레이드 파일 | `<actual target path(s)>` |
    | 백업 파일 | `_sdd/spec/prev/PREV_<name>_<ts>.md` |
    | 변환 전 줄 수 | N줄 |
    | 변환 후 줄 수 | N줄 |
@@ -358,12 +394,12 @@ Glob("_sdd/spec/prev/PREV_*.md") → 백업 파일 존재 확인
 | 상황 | 대응 |
 |------|------|
 | 스펙 파일 미존재 | "스펙 파일이 없습니다. spec-create를 먼저 실행하세요." 출력 후 종료 |
-| 이미 whitepaper 형식 | 경고 + AskUserQuestion으로 계속/중단/spec-review 전환 선택 |
-| 코드베이스 미존재 | 코드 분석 스킵, 사용자 입력 기반으로 서사 섹션 작성 |
+| 이미 whitepaper 형식 | 경고를 보고하고 부족한 항목만 보강 |
+| 코드베이스 미존재 | 코드 분석 스킵, 기존 스펙 기반으로 서사 섹션 작성 |
 | 멀티파일 통합 실패 | 개별 파일 상태 보고, 수동 통합 안내 |
-| 사용자 Checkpoint 중단 | 분석 결과까지만 보존, 스펙 파일 미변경 |
+| canonical spec 모호 | 최소 확인 후 진행 |
 | 코드 citation 경로 무효 | 무효 경로 목록 보고, 스펙에 TODO 마커 삽입 |
-| 대형 스펙 (1000줄+) | 타겟 섹션만 읽기, Explore agent 활용 |
+| 대형 스펙 (1000줄+) | 타겟 섹션만 읽기, 병렬/위임 탐색 활용 |
 | DECISION_LOG.md 충돌 | 기존 항목 보존, 새 항목만 추가 |
 | 백업 디렉토리 생성 실패 | 오류 보고, 업그레이드 중단 |
 
