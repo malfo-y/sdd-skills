@@ -1,7 +1,7 @@
 ---
 name: spec-create
 description: This skill should be used when the user asks to "create a spec", "write a spec document", "generate SDD", "create software design document", "document the project", "create spec for project", or mentions "_sdd" directory, specification documents, or project documentation needs.
-version: 1.2.0
+version: 1.3.0
 ---
 
 # Spec Document Creation and Management
@@ -294,22 +294,25 @@ Before writing the spec, bootstrap guidance files if missing:
 
 - 골조 전체는 ~50-80줄로 가볍게 유지한다.
 - 골조 작성 시 코드베이스 구조와 Step 2 분석 결과를 참조한다.
+- 골조를 컨텍스트에만 보관하지 말고, 실제 target spec 파일에 먼저 저장한다.
+- 단일 파일이면 canonical spec 파일에 skeleton을 저장하고, split spec이면 `main.md`/index와 필요한 sub-spec 파일에 placeholder skeleton을 먼저 생성한다.
+- Phase 1 결과는 `<!-- Phase 2에서 상세 작성 -->` 주석이 남아 있는 초안 상태로 파일에 존재해야 한다.
 - 골조 완료 후 Phase 2로 자동 진행한다 (사용자 리뷰 게이트 없음).
 
 **Phase 2 — 내용 채우기(Fill)**
 
-골조 전체를 컨텍스트로 유지하면서 각 섹션의 상세 내용을 작성한다.
+Phase 1에서 저장한 skeleton 파일들을 다시 읽고, 그 내용을 기준으로 각 섹션의 상세 내용을 작성한다.
 
 실행 순서:
 1. **순차 실행**: §1 Background & Motivation → §2 Core Design → §3 Architecture Overview
    - 이 섹션들은 상호 의존성이 있어 순서대로 작성한다.
-   - 각 섹션 작성 시 골조 전체 + 이전 완성된 섹션 + 코드베이스를 참조한다.
+   - 각 섹션 작성 시 저장된 skeleton + 이전 완성된 섹션 + 코드베이스를 참조한다.
 2. **병렬 실행**: §4 Component Details, §5 Usage Guide, §6 Data Models, §7 API Reference, §8 Environment
-   - 이 섹션들은 골조만 있으면 독립 작성이 가능하다.
+   - 이 섹션들은 저장된 skeleton만 있으면 독립 작성이 가능하다.
    - `Agent` 도구로 sub-agent를 생성하여 병렬 처리한다.
-   - 각 sub-agent에게 골조 전체 + 코드베이스 접근 권한을 제공한다.
+   - 각 sub-agent에게 저장된 skeleton 전체 + 코드베이스 접근 권한을 제공한다.
 
-Phase 2 완료 후 `<!-- Phase 2에서 상세 작성 -->` 주석을 모두 제거하고 최종 스펙을 조립한다.
+Phase 2 완료 후 저장된 spec 파일들에서 `<!-- Phase 2에서 상세 작성 -->` 주석을 모두 제거하고 최종 스펙을 조립한다.
 최종 스펙의 구조와 형식은 아래 템플릿과 동일하다.
 
 ##### 스펙 템플릿

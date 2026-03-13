@@ -1,7 +1,7 @@
 ---
 name: spec-upgrade
 description: This skill should be used when the user asks to "upgrade spec", "convert spec to whitepaper", "migrate spec format", "spec upgrade", "스펙 업그레이드", "스펙 변환", "스펙 마이그레이션", "whitepaper 형식으로 변환", or wants to convert old-format spec documents to the whitepaper-style §1-§8 structure defined in SDD_SPEC_DEFINITION.md.
-version: 1.3.0
+version: 1.4.0
 ---
 
 # Spec Upgrade - 구 형식 스펙을 Whitepaper 형식으로 변환
@@ -228,22 +228,25 @@ IF spec_lines >= 300 → 2-페이즈 (골조 먼저 생성 → 내용 채우기)
 
 - 골조 전체는 ~50-80줄로 가볍게 유지한다.
 - 골조 작성 시 Step 1 Gap 분석 결과와 Step 2 코드 분석 결과를 참조한다.
+- Step 4에서 백업을 만든 직후, 기존 spec 파일의 적절한 위치에 skeleton 내용을 먼저 삽입하거나 보강한다.
+- 단일 파일이면 해당 파일에, split spec이면 index와 관련 sub-spec 파일에 whitepaper skeleton을 먼저 반영한다.
+- Phase 1 결과는 `<!-- Phase 2에서 상세 작성 -->` 주석이 포함된 업그레이드 중간본으로 파일에 저장되어 있어야 한다.
 - 골조 완료 후 Phase 2로 자동 진행한다 (사용자 리뷰 게이트 없음).
 
 **Phase 2 — 내용 채우기(Fill)**
 
-골조 전체를 컨텍스트로 유지하면서 각 섹션의 상세 내용을 작성한다.
+Phase 1에서 파일에 반영한 whitepaper skeleton을 다시 읽고, 그 구조를 기준으로 각 섹션의 상세 내용을 작성한다.
 
 실행 순서:
 1. **순차 실행**: §1 Background & Motivation → §2 Core Design → §3 Architecture Overview
    - 상호 의존성이 있어 순서대로 작성한다.
-   - 기존 스펙 내용의 재배치 + 새 서사 생성을 함께 수행한다.
+   - 저장된 skeleton을 기준으로 기존 스펙 내용의 재배치 + 새 서사 생성을 함께 수행한다.
 2. **병렬 실행**: §4 Component Details ~ §8 Environment
-   - 골조만 있으면 독립 작성 가능. `multi_tool_use.parallel`로 독립 섹션 초안을 병렬 작성한다.
-   - 각 병렬 작업에는 골조 전체 + 기존 스펙의 해당 원문 + 관련 코드/문서만 제공한다.
+   - 저장된 skeleton만 있으면 독립 작성 가능. `multi_tool_use.parallel`로 독립 섹션 초안을 병렬 작성한다.
+   - 각 병렬 작업에는 저장된 skeleton 전체 + 기존 스펙의 해당 원문 + 관련 코드/문서만 제공한다.
    - 기존 스펙의 해당 내용 재배치 + 코드 citation 삽입을 수행한다.
 
-Phase 2 완료 후 `<!-- Phase 2에서 상세 작성 -->` 주석을 모두 제거한다.
+Phase 2 완료 후 파일에 남아 있는 `<!-- Phase 2에서 상세 작성 -->` 주석을 모두 제거한다.
 
 > **참고**: 생성 전략(2-페이즈)과 저장 전략(파일 분할)은 독립적 관심사이다. 2-페이즈로 생성해도 최종 저장은 기존 파일 구조를 따른다.
 
