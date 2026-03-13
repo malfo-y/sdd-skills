@@ -84,10 +84,11 @@ AFTER Step 3:
 
 ```text
 AFTER Step 5:
-  has_explanation  = 설명 섹션 작성됨
-  has_rules        = 규칙 섹션 작성됨
-  has_checklist    = 체크리스트 섹션 작성됨
-  has_examples     = 예시 섹션 작성됨 (최소 1개 긍정 예시)
+  has_background       = 배경 및 동기 섹션 작성됨
+  has_core_design      = 핵심 설계 섹션 작성됨
+  has_scenarios         = 사용 시나리오 가이드 작성됨 (정상 1개 + 예외 1개 이상)
+  has_api_reference     = API 레퍼런스 작성됨
+  has_impl_guide        = 구현 가이드 작성됨
 
   IF all true:
     -> Step 6
