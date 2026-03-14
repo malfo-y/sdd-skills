@@ -1,0 +1,6 @@
+{
+  "name": "write-phased",
+  "description": "Use this skill when the user asks to write, create, or generate a long document or code file. Triggers on: \"write-phased\", \"긴 문서 작성\", \"코드 파일 생성\", \"큰 파일 작성\", or when a writing task is structurally complex (3+ sections, 5+ functions). Applies a 2-phase strategy: skeleton first, then fill.",
+  "instruction_file": "SKILL.md",
+  "version": "1.0.0"
+}
