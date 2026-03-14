@@ -494,15 +494,15 @@ See detailed specs:
 - **Stay Current**: Update spec when code changes significantly
 - **Code Excerpts**: When a codebase exists, include actual code excerpts in the Core Design section. Rule: functions ≤30 lines → full body excerpt; >30 lines → signature + core logic only. Mark each excerpt with `# [filepath:functionName]` comment header.
 - **Inline Citations**: Reference code in prose using `[filepath:functionName]` format (e.g., `[src/auth/handler.py:validateToken]`). This maps to the academic `[Author, Year]` pattern for AI-parseable code tracing.
-- **Link to Code**: Reference file paths and line numbers when helpful. When a codebase exists, use the **Source** field in component tables to map each component to its implementation files. Source field format:
+- **Link to Code**: Reference file paths and line numbers when helpful. When a codebase exists, use the **Source** field in component details to map each component to its implementation files. Under a `Source` heading or label, format it as a list:
   ```
-  | **Source** | `<relative/path/to/file>`: ClassName, function_name() |
-  |            | `<relative/path/to/other>`: AnotherClass              |
+  - `<relative/path/to/file>`: ClassName, function_name()
+  - `<relative/path/to/other>`: AnotherClass
   ```
   - Wrap file paths in backticks.
   - Use project-root-relative paths.
   - Group classes/functions by file; separate items within the same file with commas.
-  - Use a new table row (`|            |`) per file for readability.
+  - Use one bullet per file for readability.
   - Omit the Source field entirely for spec-only / greenfield projects with no codebase (see Step 2 Codebase Existence Check).
 
 ### Organization

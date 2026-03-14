@@ -164,7 +164,7 @@ YAML 파일을 파싱하여 TaskGraph 객체를 생성한다.
 
 #### Source
 
-| **Source** | `src/parser.py`: Parser.parse(), validate_schema() |
+- `src/parser.py`: Parser.parse(), validate_schema()
 
 #### Dependencies
 
@@ -191,7 +191,7 @@ TaskGraph를 위상 정렬하여 병렬 실행 가능한 그룹 순서를 결정
 
 #### Source
 
-| **Source** | `src/scheduler.py`: Scheduler.topological_sort(), detect_cycles() |
+- `src/scheduler.py`: Scheduler.topological_sort(), detect_cycles()
 
 #### Dependencies
 
@@ -218,7 +218,7 @@ Scheduler가 결정한 순서대로 태스크를 asyncio 기반으로 병렬 실
 
 #### Source
 
-| **Source** | `src/executor.py`: Executor.execute(), run_task(), handle_timeout() |
+- `src/executor.py`: Executor.execute(), run_task(), handle_timeout()
 
 #### Dependencies
 
@@ -246,7 +246,7 @@ Scheduler가 결정한 순서대로 태스크를 asyncio 기반으로 병렬 실
 
 #### Source
 
-| **Source** | `src/logger.py`: Logger.log(), format_result(), rotate_logs() |
+- `src/logger.py`: Logger.log(), format_result(), rotate_logs()
 
 ---
 

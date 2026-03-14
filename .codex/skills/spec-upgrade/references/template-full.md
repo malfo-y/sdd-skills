@@ -175,8 +175,8 @@ Why this component exists — what problem it solves, why it's a separate compon
 <!-- Include Source field only when documenting an existing codebase -->
 #### Source
 
-| **Source** | `src/components/name/main.py`: ClassName.method(), entry_point() |
-|            | `src/components/name/utils.py`: helper_function(), parse_input() |
+- `src/components/name/main.py`: ClassName.method(), entry_point()
+- `src/components/name/utils.py`: helper_function(), parse_input()
 
 #### Dependencies
 

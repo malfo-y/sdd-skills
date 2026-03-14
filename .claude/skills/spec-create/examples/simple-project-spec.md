@@ -53,8 +53,8 @@ Create a simple URL shortening service that converts long URLs into short, share
 
 **Source:**
 
-| **Source** | `src/services/url_service.py`: generate_short_code(), resolve_url(), track_click() |
-|            | `src/models/url.py`: URLModel, URLCreate |
+- `src/services/url_service.py`: generate_short_code(), resolve_url(), track_click()
+- `src/models/url.py`: URLModel, URLCreate
 
 **Key Files:**
 - `src/services/url_service.py` - Core logic

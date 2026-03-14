@@ -146,8 +146,8 @@ def process_data(input: InputModel) -> OutputModel:
 
 ### Source 필드 (§4 Component Details)
 ```
-| **Source** | `src/core/processor.py`: ProcessorClass, process_data() |
-|            | `src/core/validator.py`: validate(), ValidationRule     |
+- `src/core/processor.py`: ProcessorClass, process_data()
+- `src/core/validator.py`: validate(), ValidationRule
 ```
 
 ### Appendix: Code Reference Index

@@ -169,11 +169,11 @@ Separated as an independent service because product catalog operations (search, 
 
 #### Source
 
-| **Source** | `services/product/src/main.py`: create_app(), configure_routes() |
-|            | `services/product/src/api/products.py`: list_products(), create_product(), get_product(), update_product(), delete_product() |
-|            | `services/product/src/api/search.py`: search_products(), build_query() |
-|            | `services/product/src/models/product.py`: Product, ProductVariant, ProductImage |
-|            | `services/product/src/events/publishers.py`: publish_product_event() |
+- `services/product/src/main.py`: create_app(), configure_routes()
+- `services/product/src/api/products.py`: list_products(), create_product(), get_product(), update_product(), delete_product()
+- `services/product/src/api/search.py`: search_products(), build_query()
+- `services/product/src/models/product.py`: Product, ProductVariant, ProductImage
+- `services/product/src/events/publishers.py`: publish_product_event()
 
 #### Dependencies
 
@@ -211,10 +211,10 @@ Order processing requires strong consistency guarantees (saga pattern, compensat
 
 #### Source
 
-| **Source** | `services/order/src/api/orders.py`: create_order(), cancel_order(), get_order_status() |
-|            | `services/order/src/services/saga.py`: OrderCreationSaga, compensate() |
-|            | `services/order/src/services/fulfillment.py`: FulfillmentCoordinator, process_refund() |
-|            | `services/order/src/models/order.py`: Order, OrderItem, OrderStatus |
+- `services/order/src/api/orders.py`: create_order(), cancel_order(), get_order_status()
+- `services/order/src/services/saga.py`: OrderCreationSaga, compensate()
+- `services/order/src/services/fulfillment.py`: FulfillmentCoordinator, process_refund()
+- `services/order/src/models/order.py`: Order, OrderItem, OrderStatus
 
 #### Order State Machine
 
