@@ -1,6 +1,6 @@
 ---
 name: write-phased
-description: This skill should be used when the user asks to "write-phased", "긴 문서 작성", "큰 파일 작성", "코드 파일 생성", "골조부터 작성", "skeleton first", or wants to create a structurally complex document or code file in two phases: skeleton first, then fill.
+description: This skill should be used when the user asks to "write-phased", "문서 작성", "작성해줘", "만들어줘", "코드 작성", "파일 생성", "구현해줘", "write a document", "create a file", "generate code", "implement", or any request to produce a markdown document, code file, config file, or technical writing. Applies a 2-phase strategy: skeleton first, then fill.
 version: 1.0.0
 ---
 
