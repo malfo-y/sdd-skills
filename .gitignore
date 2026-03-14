@@ -1,0 +1,12 @@
+.nfs*
+**/.DS_Store
+__pycache__/
+*.py[cod]
+scripts/
+
+_sdd/spec/prev/
+_sdd/implementation/*
+_sdd/pr/*
+
+.agents
+.sdd-workbench
