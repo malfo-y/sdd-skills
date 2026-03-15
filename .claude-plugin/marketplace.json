@@ -33,8 +33,10 @@
         "./.claude/skills/spec-summary",
         "./.claude/skills/spec-update-done",
         "./.claude/skills/spec-update-todo",
-        "./.claude/skills/spec-upgrade",
-        "./.claude/skills/write-phased"
+        "./.claude/skills/spec-upgrade"
+      ],
+      "agents": [
+        "./.claude/agents/write-phased.md"
       ]
     }
   ]

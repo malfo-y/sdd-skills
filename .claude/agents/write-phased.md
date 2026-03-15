@@ -1,7 +1,8 @@
 ---
 name: write-phased
-description: Use this skill when the user asks to write, create, or generate a document or code file. Triggers on "write-phased", "문서 작성", "작성해줘", "만들어줘", "코드 작성", "파일 생성", "구현해줘", "write a document", "create a file", "generate code", "implement", or any request to produce a markdown document, code file, config file, or technical writing. Applies a 2-phase strategy: skeleton first, then fill.
-version: 1.0.0
+description: "Use this agent when writing, creating, or generating a document or code file. Delegate to this agent for: \"문서 작성\", \"작성해줘\", \"만들어줘\", \"코드 작성\", \"파일 생성\", \"구현해줘\", \"write a document\", \"create a file\", \"generate code\", \"implement\", or any request to produce a markdown document, code file, config file, or technical writing. This agent applies a 2-phase strategy: skeleton first, then fill."
+tools: ["Read", "Write", "Edit", "Glob", "Grep", "Agent"]
+model: inherit
 ---
 
 # write-phased — 2-Phase Writing Strategy
