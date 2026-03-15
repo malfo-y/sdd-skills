@@ -123,6 +123,10 @@ ELSE → 사용자 피드백 반영 후 계획 수정 (최대 2라운드)
 
 > Steps 3-5는 실제 파일 수정 단계이다. `Edit`, `Write`, `Bash` 도구를 사용한다.
 
+#### 파일 작성 위임
+
+규모가 큰 재작성 시 출력 문서 작성을 `write-phased` 서브에이전트에 위임한다. 서브에이전트 호출 시 아래 Output Format 전체와 작성에 필요한 맥락(수집된 정보, 분석 결과 등)을 프롬프트에 포함한다.
+
 **Tools**: `Bash (mkdir -p, cp)`, `Write`
 
 For every existing file you modify, create a backup under `_sdd/spec/prev/` using `prev/PREV_<filename>_<timestamp>.md` (create `_sdd/spec/prev/` first if missing).

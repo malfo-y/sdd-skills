@@ -170,43 +170,20 @@ Never invent confirmed behavior that is unsupported by spec or code.
 
 > 1-페이즈인 경우 이 절차를 건너뛰고 아래 required sections로 직접 작성한다.
 
-**Phase 1 — 골조(Skeleton) 생성**
+### 파일 작성 위임
 
-§1~§5 각 섹션에 대해 미니 요약(3-5줄)을 작성한다. 골조는 Phase 2의 "계약서" 역할을 한다.
+출력 문서 작성 시 `write-phased` 서브에이전트에 작업을 위임한다. 서브에이전트 호출 시 아래 Required sections 전체와 작성에 필요한 맥락(스펙 컨텍스트, 코드 증거, Step 2-3 분석 결과 등)을 프롬프트에 포함한다.
 
-각 섹션의 골조 형식:
-```markdown
-## N. [Section Title]
-
-**요약**: [핵심 내용 1-2줄]
-[추가 맥락 1-2줄]
-
-**코드 참조**: `[주요 파일/디렉토리]`
-**다룰 내용**: [이 섹션에서 상세히 다룰 토픽 나열]
-
-<!-- Phase 2에서 상세 작성 -->
 ```
+Agent(
+  subagent_type="write-phased",
+  prompt="다음 문서를 작성해주세요.
 
-- 골조 전체는 ~40-60줄로 가볍게 유지한다.
-- 골조 작성 시 Step 2-3에서 수집한 스펙 컨텍스트와 코드 증거를 참조한다.
-- 골조를 컨텍스트에만 보관하지 말고, 실제 target guide 파일(`_sdd/guides/guide_<slug>.md`)에 먼저 저장한다.
-- Phase 1 결과는 `<!-- Phase 2에서 상세 작성 -->` 주석이 남아 있는 초안 상태로 파일에 존재해야 한다.
-- 골조 완료 후 Phase 2로 자동 진행한다 (사용자 리뷰 게이트 없음).
+  파일 경로: [target guide path - _sdd/guides/guide_<slug>.md]
 
-**Phase 2 — 내용 채우기(Fill)**
-
-Phase 1에서 저장한 skeleton 파일을 다시 읽고, 그 내용을 기준으로 각 섹션의 상세 내용을 작성한다.
-
-실행 순서:
-1. **순차 실행**: §1 배경 및 동기 → §2 핵심 설계
-   - 이 섹션들은 상호 의존성이 있어 순서대로 작성한다.
-   - 각 섹션 작성 시 저장된 skeleton + 이전 완성된 섹션 + 스펙/코드를 참조한다.
-2. **병렬 실행**: §3 사용 시나리오 가이드, §4 API 레퍼런스, §5 구현 가이드
-   - 이 섹션들은 저장된 skeleton + 완성된 §1-2만 있으면 독립 작성이 가능하다.
-   - `Agent` 도구로 sub-agent를 생성하여 병렬 처리한다.
-   - 각 sub-agent에게 저장된 skeleton 전체 + 완성된 §1-2 + 스펙/코드 접근 권한을 제공한다.
-
-Phase 2 완료 후 저장된 guide 파일에서 `<!-- Phase 2에서 상세 작성 -->` 주석을 모두 제거하고 최종 가이드를 조립한다.
+  [아래 Required sections(§1-§5)과 Step 2-3에서 수집한 맥락을 여기에 포함]"
+)
+```
 
 #### Required sections
 

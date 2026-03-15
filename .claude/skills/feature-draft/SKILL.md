@@ -530,6 +530,10 @@ ELSE → 미완료 파트 생성 후 재확인
       - `_sdd/drafts/prev/prev_feature_draft_<name>_<timestamp>.md`
    c. Save: `_sdd/drafts/feature_draft_<feature_name>.md`
 
+### 파일 작성 위임
+
+출력 문서 작성 시 `write-phased` 서브에이전트에 작업을 위임한다. 서브에이전트 호출 시 아래 Output Format 전체와 작성에 필요한 맥락(수집된 정보, 분석 결과 등)을 프롬프트에 포함한다.
+
 6. Process input files (드래프트 저장 성공 후에만 실행):
    - `user_draft.md` → `_processed_user_draft.md`
    - `user_spec.md` → `_processed_user_spec.md`

@@ -309,6 +309,10 @@ ELSE → Step 5 재실행
 
 **Tools**: `Write`, `Bash (mkdir -p)`
 
+#### 파일 작성 위임
+
+출력 문서 작성 시 `write-phased` 서브에이전트에 작업을 위임한다. 서브에이전트 호출 시 아래 Output Format 전체와 작성에 필요한 맥락(수집된 정보, 분석 결과 등)을 프롬프트에 포함한다.
+
 1. Apply summary template (see `references/summary-template.md`)
    - 💡 Core Design Highlights: §2 존재 시 template의 해당 섹션 적용, 없으면 섹션 전체 생략
    - 📖 Usage Scenarios: §5 존재 시 template의 해당 섹션 적용, 없으면 섹션 전체 생략
