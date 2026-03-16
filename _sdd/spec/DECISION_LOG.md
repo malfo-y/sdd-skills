@@ -115,3 +115,31 @@ SDD_SPEC_DEFINITION.md 기준 whitepaper 형식 준수. spec-upgrade 스킬의 2
 - 토론: `_sdd/discussion/discussion_autopilot_meta_skill.md`
 - 후속 토론: `_sdd/discussion/discussion_autopilot_open_questions.md`
 - Feature Draft: `_sdd/drafts/feature_draft_autopilot_meta_skill.md`
+
+## 2026-03-17 - Agent Non-Interactive Conversion (AskUserQuestion 제거) (v3.0.0 → v3.1.0)
+
+### Context
+
+v3.0에서 8개 스킬을 에이전트로 전환했으나, 에이전트 정의 내에 AskUserQuestion 호출이 남아 있었다. sdd-autopilot의 Phase 2에서 서브에이전트로 호출할 때 사용자 인터랙션이 발생하면 파이프라인이 중단되어 자율 실행이 불가능했다.
+
+### Decision
+
+8개 파이프라인 에이전트(feature-draft, implementation-plan, implementation, implementation-review, ralph-loop-init, spec-review, spec-update-done, spec-update-todo)에서 AskUserQuestion을 완전 제거하고, **Autonomous Decision-Making 패턴**으로 대체한다.
+
+### Rationale
+
+- 서브에이전트는 부모 에이전트(sdd-autopilot)의 컨텍스트 내에서 실행되며, 사용자와 직접 인터랙션할 수 없다
+- 모호한 상황에서는 가용 정보로 최선 추론 → 판단 근거를 출력에 기록 → 추론 불가 항목은 Open Questions에 남기는 3단계 전략 적용
+- discussion, sdd-autopilot은 풀 스킬이므로 AskUserQuestion 유지 (사용자 인터랙션이 핵심 기능)
+- 래퍼 스킬 경유 호출 시에도 에이전트가 non-interactive로 동작하지만, 부모 세션에서 사용자가 결과를 확인할 수 있으므로 문제 없음
+
+### Changes
+
+- `.claude/agents/feature-draft.md` -- AskUserQuestion → 자율 판단 로직
+- `.claude/agents/implementation-plan.md` -- AskUserQuestion → 자율 판단 로직
+- `.claude/agents/implementation-review.md` -- Tools에서 AskUserQuestion 제거
+- `.claude/agents/ralph-loop-init.md` -- AskUserQuestion → 자동 선택/오류 보고
+- `.claude/agents/spec-review.md` -- Tools에서 AskUserQuestion 제거
+- `.claude/agents/spec-update-done.md` -- AskUserQuestion → 자동 선택/Quick Sync 전환
+- `.claude-plugin/marketplace.json` -- sdd-autopilot 스킬 + 8개 에이전트 등록
+- `_sdd/spec/main.md` -- v3.0.0 → v3.1.0

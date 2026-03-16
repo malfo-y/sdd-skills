@@ -167,7 +167,7 @@ Assign one overall decision:
 
 ### Step 5: Report and Handoff
 
-**Tools**: `Write`, `Bash (mkdir -p)`, `AskUserQuestion`
+**Tools**: `Write`, `Bash (mkdir -p)`
 
 1. Create/update strict review report.
 2. Do not edit actual spec content.

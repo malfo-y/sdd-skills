@@ -427,7 +427,7 @@ Suggestions that aren't blocking:
 
 ## Step 5: Summary and Next Steps
 
-**Tools**: `Write`, `Bash (mkdir -p)`, `AskUserQuestion`
+**Tools**: `Write`, `Bash (mkdir -p)`
 
 ### 파일 작성 위임
 

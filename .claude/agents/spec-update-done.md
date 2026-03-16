@@ -129,8 +129,8 @@ spec_loaded = 스펙 문서 읽기 완료
 sources_available = (구현 로그 OR git diff OR 사용자 피드백) 중 하나 이상 존재
 
 IF spec_loaded AND sources_available → Step 2 진행
-ELSE IF NOT spec_loaded → AskUserQuestion: 스펙 파일 위치 확인
-ELSE IF NOT sources_available → AskUserQuestion: 비교 대상 소스 확인
+ELSE IF NOT spec_loaded → _sdd/spec/ 내 최근 수정된 .md 파일을 자동 선택, 판단 근거를 리포트에 기록. 파일 미존재 시 오류 보고 후 `spec-create` 먼저 실행 권장
+ELSE IF NOT sources_available → git diff 기반 Quick Sync 모드로 자동 전환, 전환 사유를 리포트에 기록
 ```
 
 ### Step 2: Identify Spec Drift
@@ -436,7 +436,7 @@ Incremental updates during development:
 
 - **Report before changing**: Show findings before applying updates
 - **Highlight breaking changes**: Flag architecture/API changes
-- **Ask when uncertain**: Use AskUserQuestion for ambiguities
+- **Record when uncertain**: 모호한 항목은 최선 판단 후 진행, 판단 근거를 리포트에 기록하고 Open Questions로 남김
 - **Document decisions**: Note why changes were made in `_sdd/spec/DECISION_LOG.md`
 - **Avoid Artifact Sprawl**: Do not create extra context/governance docs unless the user explicitly asks
 
@@ -466,7 +466,7 @@ spec-create → feature-draft → implementation → spec-update-done
 | 상황 | 대응 |
 |------|------|
 | `_sdd/spec/` 디렉토리 미존재 | `spec-create` 먼저 실행 권장 |
-| 스펙 파일 미발견 | 사용자에게 스펙 파일 경로 확인 |
+| 스펙 파일 미발견 | `spec-create` 먼저 실행 권장 후 스킬 종료 |
 | 구현 로그 미존재 | git diff 기반 Quick Sync 모드로 전환 |
 | git 이력 없음 | 코드 직접 분석으로 대체 |
 | `_sdd/env.md` 미존재/불완전 | 로컬 실행 건너뛰고 사용자에게 환경 확인 |

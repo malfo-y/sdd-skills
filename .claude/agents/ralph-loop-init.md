@@ -37,7 +37,7 @@ Check if an `_sdd/` directory exists in the project root.
 
 If it exists:
 1. Glob for `_sdd/spec/**/*.md`
-2. If multiple spec files are found, use AskUserQuestion to ask the user which file(s) describe the training pipeline (training script, dataset format, loss functions, CLI args, validation)
+2. If multiple spec files are found, auto-select files most likely to describe the training pipeline by scanning for keywords (training, dataset, loss, hyperparameter, epoch, batch) and record selection rationale in output
 3. Read the relevant spec files — these are the **primary source of truth** for understanding the training architecture
 4. Extract key information: training script path, dataset format, CLI arguments, loss functions, validation pipeline, hyperparameters, framework details
 5. Also check if `_sdd/env.md` exists. If it does, read it — it contains Python environment setup (conda env name, venv path, `uv` config), required environment variables (API keys, paths, tokens), and other runtime configuration needed to run the code.
@@ -101,7 +101,7 @@ training_script_found = 학습 스크립트 1개 이상 식별
 framework_detected = PyTorch/Lightning/HF Trainer 등 프레임워크 식별
 
 IF training_script_found AND framework_detected -> Step 2
-ELSE IF NOT training_script_found -> AskUserQuestion: 학습 스크립트 경로 요청
+ELSE IF NOT training_script_found -> 오류 보고: "학습 스크립트를 찾을 수 없습니다. 프로젝트 루트에 train*.py 파일이 있는지 확인하세요." → 스킬 종료
 ELSE -> 부분 탐색 결과로 Step 2 진행, 미확인 항목 표시
 ```
 
@@ -122,11 +122,11 @@ ELSE -> 부분 탐색 결과로 Step 2 진행, 미확인 항목 표시
 
 ---
 
-## Step 2: Confirm Findings with User
+## Step 2: Present Findings and Auto-Proceed
 
-**Tools**: `AskUserQuestion`
+**Tools**: — (요약 제시, 도구 불필요)
 
-Present all discovered information to the user via AskUserQuestion. Ask them to confirm or correct.
+Present all discovered information to the user as a summary table and auto-proceed with discovered values.
 
 분석 결과 요약 테이블을 제시:
 | 항목 | 파악 내용 | 상태 |
@@ -586,11 +586,11 @@ increase it (or set to empty for unlimited) once the first full run succeeds.
 
 | 상황 | 대응 |
 |------|------|
-| 학습 스크립트 미발견 | AskUserQuestion: 경로 요청 (최대 2라운드) |
+| 학습 스크립트 미발견 | 오류 보고 후 스킬 종료 (train*.py 파일 확인 안내) |
 | `_sdd/spec` 디렉토리 미존재 | 코드 기반 탐색으로 진행, 사용자에게 경고 |
 | `ralph-loop-concept.md` 참조 파일 미발견 | 오류: 스킬 설치 불완전, 메시지와 함께 중단 |
 | `run.sh.example` 참조 파일 미발견 | 오류: 스킬 설치 불완전, 메시지와 함께 중단 |
 | 사용자 미확인 (2+ 라운드) | 부분 탐색 결과 저장, 수동 설정 안내 |
 | CHECKS.md 검증 실패 (Step 7) | 실패 파일 수정, 재검증 (최대 2라운드) |
-| 복수 학습 스크립트 발견 | AskUserQuestion: 목록 제시, 선택 요청 |
-| 프레임워크 감지 모호 | AskUserQuestion: 후보 + 근거 제시, 선택 요청 |
+| 복수 학습 스크립트 발견 | 가장 유력한 스크립트 자동 선택 (파일명/import 분석 기반), 판단 근거를 출력에 기록 |
+| 프레임워크 감지 모호 | import 빈도/패턴 분석으로 자동 선택, 판단 근거를 출력에 기록 |

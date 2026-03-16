@@ -45,7 +45,7 @@ After processing `user_input.md`, rename it to `_processed_user_input.md` to mar
 
 ## Step 1: Specification Analysis
 
-**Tools**: `Read`, `Glob`, `AskUserQuestion`
+**Tools**: `Read`, `Glob`
 
 Read and analyze the provided specification thoroughly:
 
@@ -55,7 +55,7 @@ Read and analyze the provided specification thoroughly:
 - **Success Criteria**: How will completion be measured?
 - **Unknowns/Risks**: What needs clarification or research?
 
-If the specification is unclear or incomplete, use the AskUserQuestion tool to clarify before proceeding.
+If the specification is unclear or incomplete, make best-effort inferences from available context and record assumptions in the plan's Open Questions section.
 
 #### Context Management
 
@@ -79,7 +79,7 @@ requirements_clear = 핵심 요구사항 파악 완료
 scope_defined = 스코프 경계 정의 완료
 
 IF spec_loaded AND requirements_clear AND scope_defined → Step 2 진행
-ELSE IF NOT requirements_clear → AskUserQuestion: 모호한 요구사항 질문
+ELSE IF NOT requirements_clear → 가용 정보에서 최선 추론, 모호한 항목은 Open Questions에 기록
 ELSE → 미파악 항목 추가 분석 후 재평가
 ```
 
@@ -163,7 +163,7 @@ ELSE → 누락 항목 보완 후 재확인
 
 ## Step 4: Phase Decomposition
 
-**Tools**: `AskUserQuestion`
+**Tools**: — (자율 판단, 도구 불필요)
 
 정의된 Task들을 분석하여 Phase로 그룹핑한다.
 
@@ -342,16 +342,16 @@ Present the final plan in this structure:
   e. 전체 Target Files 수집 → 중복 파일 감지 → Parallel Execution Summary에 반영
   f. 중복 파일이 있는 Task는 순차 실행으로 표시
 
-## When to Ask for Clarification
+## Autonomous Decision-Making (Clarification 대체)
 
-Use AskUserQuestion when encountering:
+다음 상황에서는 최선의 판단으로 자율적으로 진행하고, 판단 근거를 Plan에 기록한다:
 
-- Ambiguous requirements with multiple valid interpretations
-- Missing technical constraints (language, framework, etc.)
-- Unclear priority between competing features
-- Unknown integration requirements
-- Incomplete success criteria
-- Uncertain file paths for Target Files
+- 모호한 요구사항 → 가장 합리적인 해석을 선택, 대안을 Open Questions에 기록
+- 누락된 기술 제약 → 코드베이스/스펙에서 추론, 추론 근거 명시
+- 불명확한 우선순위 → 의존성 분석 기반으로 자동 배정
+- 미확인 통합 요구사항 → 코드베이스 탐색으로 파악, 미확인 항목은 Risks에 기록
+- 불완전한 성공 기준 → 기능 설명에서 추론하여 자동 생성
+- 불확실한 Target Files 경로 → `[TBD] <reason>` 마커 사용
 
 ## LLM Model to use
 
@@ -389,11 +389,8 @@ After creating the plan:
    | 예상 File Conflicts | N개 |
    | 모델 추천 | ... |
 
-2. AskUserQuestion: "상세 내용을 확인하시겠습니까?"
-   옵션:
-   1. "전체 Plan 확인" → 전체 출력
-   2. "특정 Phase만" → 해당 Phase 상세 출력
-   3. "파일로 저장" → Output Location의 파일 분할 옵션 질문 후 저장
+2. 요약 테이블 제시 후 바로 파일로 저장한다 (사용자 확인을 기다리지 않는다).
+   파일 분할은 Step 6의 deterministic defaults (총 Task 수 기준)에 따라 자동 결정.
 ```
 
 ## Error Handling
@@ -401,12 +398,12 @@ After creating the plan:
 | 상황 | 대응 |
 |------|------|
 | 스펙 파일 미발견 | `spec-create` 먼저 실행 권장 |
-| 스펙 내용 모호 | AskUserQuestion으로 명확화 (최대 2라운드) |
-| Target Files 경로 확인 불가 | 사용자에게 경로 확인 요청, TBD로 표시 |
+| 스펙 내용 모호 | 가용 정보에서 최선 추론, 모호한 항목은 Open Questions에 기록 |
+| Target Files 경로 확인 불가 | `[TBD] <reason>` 마커 사용, Open Questions에 기록 |
 | 순환 의존성 발견 | Task 분할 또는 사용자에게 우선순위 확인 |
 | 기존 Plan 파일 존재 | `prev/PREV_IMPLEMENTATION_PLAN_<timestamp>.md`로 아카이브 |
 | Plan이 대규모 | Step 6에서 파일 분할 옵션 제시 (Phase별 개별/AI 그룹핑/단일 문서) |
-| 모호한 우선순위 | 사용자에게 P0-P3 확인 요청 |
+| 모호한 우선순위 | 의존성 분석 기반 자동 배정, 판단 근거를 Plan에 기록 |
 | user_input.md 형식 오류 | 파싱 오류 보고, 자유 형식으로 해석 시도 |
 
 ## Additional Resources
