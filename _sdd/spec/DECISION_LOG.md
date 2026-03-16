@@ -81,3 +81,37 @@ SDD_SPEC_DEFINITION.md 기준 whitepaper 형식 준수. spec-upgrade 스킬의 2
 
 - `_sdd/spec/main.md` — v1.1.0 → v2.0.0 (598줄 → 672줄)
 - `_sdd/spec/prev/PREV_sdd_skills_20260313_120859.md` — 백업 생성
+
+## 2026-03-16 - Dual Architecture: Skill + Agent Layer (v2.1.0 → v3.0.0)
+
+### Context
+
+기존 SDD Skills는 스킬 전용(skills-only) 아키텍처로, 20개 스킬이 `.claude/skills/*/SKILL.md`에 전체 로직을 포함하고 있었다. 사용자가 대규모 기능을 구현하려면 6-7개 스킬을 수동으로 순서대로 호출해야 하며, 중간에 맥락이 유실되거나 단계를 빠뜨릴 위험이 있었다. `write-phased` 에이전트가 `tools: ["Agent"]`로 서브에이전트 호출이 가능함을 증명하였다.
+
+### Decision
+
+1. **스킬 + 에이전트 이중 아키텍처 도입**: 8개 파이프라인 필수 스킬을 `.claude/agents/*.md` 에이전트 정의로 분리하고, 기존 SKILL.md는 Agent Wrapper 래퍼로 전환
+2. **autopilot 메타스킬 추가**: 적응형 오케스트레이터를 생성하여 에이전트 파이프라인을 end-to-end 자율 실행
+3. **오케스트레이터 저장 위치**: `_sdd/pipeline/`에 저장 (초기 토론에서 `.claude/skills/`로 결정했으나, 후속 토론에서 변경 — 일회성 실행 계획이므로 스킬 디렉토리 오염 방지)
+4. **Codex는 기존 유지**: Agent 도구 제한으로 래퍼 패턴 불가. Codex 동기화는 별도 후속 작업
+
+### Rationale
+
+- 사용자 인터페이스(`/스킬명`) 하위 호환성 유지가 필수 → 래퍼 스킬 유지
+- autopilot의 서브에이전트 호출을 위해 에이전트 레이어 필요 → Agent Wrapper 패턴
+- 선행 집중형 사용자 인터랙션(Phase 1 interactive, Phase 2 autonomous) → 2-Phase Orchestration 패턴
+- Discussion은 AskUserQuestion이 핵심이므로 에이전트 전환 불필요 → 스킬 유지
+
+### Changes
+
+- `_sdd/spec/main.md` — v2.1.0 → v3.0.0
+- `.claude/agents/` — 8개 에이전트 정의 신규 생성
+- `.claude/skills/*/SKILL.md` — 8개 래퍼 전환
+- `.claude/skills/autopilot/` — 메타스킬 신규 생성
+- `_sdd/spec/prev/PREV_main_20260316_120000.md` — 백업 생성
+
+### References
+
+- 토론: `_sdd/discussion/discussion_autopilot_meta_skill.md`
+- 후속 토론: `_sdd/discussion/discussion_autopilot_open_questions.md`
+- Feature Draft: `_sdd/drafts/feature_draft_autopilot_meta_skill.md`
