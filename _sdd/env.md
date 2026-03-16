@@ -19,11 +19,11 @@
 - 문서 위생 확인: `git diff --check`
 - 구조 확인: `find _sdd/spec -maxdepth 2 -type f | sort`
 
-## Autopilot Resources
+## SDD-Autopilot Resources
 
-> autopilot 메타스킬의 Pre-flight Check에서 참조하는 섹션.
-> 프로젝트에서 autopilot을 사용하려면 아래 항목을 미리 기록해 둔다.
-> autopilot은 이 섹션과 파이프라인 요구사항을 대조하여 갭을 분석한다.
+> sdd-autopilot 메타스킬의 Pre-flight Check에서 참조하는 섹션.
+> 프로젝트에서 sdd-autopilot을 사용하려면 아래 항목을 미리 기록해 둔다.
+> sdd-autopilot은 이 섹션과 파이프라인 요구사항을 대조하여 갭을 분석한다.
 
 ### 외부 서비스
 <!-- 예시:

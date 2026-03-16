@@ -1,33 +1,33 @@
 ---
-name: autopilot
-description: "적응형 오케스트레이터 메타스킬. /autopilot으로 호출하여 요구사항 분석부터 스펙 동기화까지 end-to-end SDD 파이프라인을 자율 실행한다."
+name: sdd-autopilot
+description: "적응형 오케스트레이터 메타스킬. /sdd-autopilot으로 호출하여 요구사항 분석부터 스펙 동기화까지 end-to-end SDD 파이프라인을 자율 실행한다."
 version: 1.0.0
 ---
 
-# Autopilot -- 적응형 오케스트레이터 메타스킬
+# SDD Autopilot -- 적응형 오케스트레이터 메타스킬
 
 ## Workflow Position
 
 | Workflow | Position | When |
 |----------|----------|------|
 | SDD Full Pipeline | Orchestrator (최상위) | end-to-end 자율 구현이 필요할 때 |
-| Standalone | 독립 실행 | 사용자가 `/autopilot`으로 직접 호출할 때 |
+| Standalone | 독립 실행 | 사용자가 `/sdd-autopilot`으로 직접 호출할 때 |
 
 ```
 User Request
     |
     v
-[autopilot] -----> Phase 1 (Interactive)
+[sdd-autopilot] -----> Phase 1 (Interactive)
     |                 ├── Inline Discussion (AskUserQuestion)
     |                 ├── Explore agent (코드베이스 탐색)
     |                 └── Scale Assessment
     |
     v
-[autopilot] -----> Phase 1.5 (Checkpoint)
+[sdd-autopilot] -----> Phase 1.5 (Checkpoint)
     |                 └── 오케스트레이터 생성 + 사용자 확인
     |
     v
-[autopilot] -----> Phase 2 (Autonomous Execution)
+[sdd-autopilot] -----> Phase 2 (Autonomous Execution)
                       ├── feature-draft agent     → _sdd/drafts/
                       ├── implementation-plan agent → _sdd/implementation/
                       ├── implementation agent      → 코드 생성/수정
@@ -54,7 +54,7 @@ User Request
 - 토론만 필요한 경우 → `/discussion` 직접 호출
 - 스펙 문서만 업데이트하는 경우 → `/spec-update-done` 또는 `/spec-update-todo` 직접 호출
 
-**트리거 키워드**: "autopilot", "자동 구현", "end-to-end 구현", "전체 파이프라인", "자동으로 구현해줘", "처음부터 끝까지"
+**트리거 키워드**: "sdd-autopilot", "autopilot", "자동 구현", "end-to-end 구현", "전체 파이프라인", "자동으로 구현해줘", "처음부터 끝까지"
 
 ## Hard Rules
 
@@ -449,7 +449,7 @@ ELSE → 수정 후 재확인
 
 3. **마일스톤 출력**:
    ```
-   [autopilot] 파이프라인 실행을 시작합니다.
+   [sdd-autopilot] 파이프라인 실행을 시작합니다.
    규모: <소/중/대> | 단계: N개 | 시작: <timestamp>
    ```
 
@@ -459,7 +459,7 @@ ELSE → 수정 후 재확인
 
 ```
 FOR EACH step IN pipeline_steps:
-  1. 마일스톤 출력: "[autopilot] Step N/M: <agent-name> 시작..."
+  1. 마일스톤 출력: "[sdd-autopilot] Step N/M: <agent-name> 시작..."
   2. 로그 기록: 시작 시간 기록 (Edit)
   3. 에이전트 호출:
      Agent(
@@ -475,7 +475,7 @@ FOR EACH step IN pipeline_steps:
   4. 결과 처리:
      - 에이전트 결과에서 핵심 정보 추출 (출력 파일 경로, 주요 결정사항)
      - 로그에 완료 기록 + 핵심 결정사항 추가 (Edit)
-  5. 마일스톤 출력: "[autopilot] Step N/M: <agent-name> 완료 -- <출력 파일 경로>"
+  5. 마일스톤 출력: "[sdd-autopilot] Step N/M: <agent-name> 완료 -- <출력 파일 경로>"
   6. 에러 발생 시: Error Handling 절차 실행 (7.5절)
 ```
 
@@ -507,11 +507,11 @@ WHILE review_count < MAX_REVIEW:
 
   3. 종료 조건 확인:
      IF critical_count == 0 AND high_count == 0:
-       → 마일스톤: "[autopilot] 리뷰 통과 (Round N) -- critical/high 이슈 없음"
+       → 마일스톤: "[sdd-autopilot] 리뷰 통과 (Round N) -- critical/high 이슈 없음"
        → BREAK
 
      IF review_count == MAX_REVIEW:
-       → 마일스톤: "[autopilot] 리뷰 루프 종료 (최대 3회 도달) -- 잔여 이슈 로그 기록"
+       → 마일스톤: "[sdd-autopilot] 리뷰 루프 종료 (최대 3회 도달) -- 잔여 이슈 로그 기록"
        → 잔여 이슈를 로그에 기록하고 다음 단계 진행
        → BREAK
 
@@ -529,7 +529,7 @@ WHILE review_count < MAX_REVIEW:
          medium/low 이슈는 무시하세요."
        )
 
-  5. 마일스톤: "[autopilot] Review-Fix Round N/3 완료"
+  5. 마일스톤: "[sdd-autopilot] Review-Fix Round N/3 완료"
 ```
 
 #### 7.4 테스트 실행
@@ -575,7 +575,7 @@ MAX_RETRY = 3
 ON ERROR:
   retry_count += 1
   1. 로그에 에러 상세 기록 (에이전트명, 에러 내용, 타임스탬프)
-  2. 마일스톤: "[autopilot] 에러 발생 -- <agent-name>: <에러 요약> (재시도 N/3)"
+  2. 마일스톤: "[sdd-autopilot] 에러 발생 -- <agent-name>: <에러 요약> (재시도 N/3)"
 
   IF retry_count <= MAX_RETRY:
     3. 에러 원인 분석 (에러 메시지, 관련 파일 확인)
@@ -583,7 +583,7 @@ ON ERROR:
     5. 에이전트 재호출
   ELSE:
     3. 로그에 실패 기록
-    4. 마일스톤: "[autopilot] <agent-name> 실패 -- 최대 재시도(3회) 초과. 다음 단계로 진행합니다."
+    4. 마일스톤: "[sdd-autopilot] <agent-name> 실패 -- 최대 재시도(3회) 초과. 다음 단계로 진행합니다."
     5. 해당 단계를 건너뛰고 다음 단계로 진행
        (단, 핵심 단계 실패 시 파이프라인 중단 가능 -- 아래 참조)
 ```
@@ -599,24 +599,24 @@ ON ERROR:
 
 마일스톤 포맷:
 ```
-[autopilot] Step N/M: <agent-name> <상태>
+[sdd-autopilot] Step N/M: <agent-name> <상태>
   └── <부가 정보 (출력 파일 경로, 소요 시간 등)>
 ```
 
 예시:
 ```
-[autopilot] Step 1/6: feature-draft 시작...
-[autopilot] Step 1/6: feature-draft 완료 -- _sdd/drafts/feature_draft_auth_system.md
-[autopilot] Step 2/6: implementation-plan 시작...
-[autopilot] Step 2/6: implementation-plan 완료 -- _sdd/implementation/IMPLEMENTATION_PLAN.md
-[autopilot] Step 3/6: implementation 시작...
-[autopilot] Step 3/6: implementation 완료 -- 15개 파일 생성/수정
-[autopilot] Review-Fix Round 1/3: critical 2건, high 1건 발견 -- 수정 중...
-[autopilot] Review-Fix Round 2/3: critical 0건, high 0건 -- 리뷰 통과
-[autopilot] Step 5/6: 인라인 테스트 시작...
-[autopilot] Step 5/6: 테스트 통과 (12/12)
-[autopilot] Step 6/6: spec-update-done 시작...
-[autopilot] Step 6/6: spec-update-done 완료 -- _sdd/spec/main.md 업데이트
+[sdd-autopilot] Step 1/6: feature-draft 시작...
+[sdd-autopilot] Step 1/6: feature-draft 완료 -- _sdd/drafts/feature_draft_auth_system.md
+[sdd-autopilot] Step 2/6: implementation-plan 시작...
+[sdd-autopilot] Step 2/6: implementation-plan 완료 -- _sdd/implementation/IMPLEMENTATION_PLAN.md
+[sdd-autopilot] Step 3/6: implementation 시작...
+[sdd-autopilot] Step 3/6: implementation 완료 -- 15개 파일 생성/수정
+[sdd-autopilot] Review-Fix Round 1/3: critical 2건, high 1건 발견 -- 수정 중...
+[sdd-autopilot] Review-Fix Round 2/3: critical 0건, high 0건 -- 리뷰 통과
+[sdd-autopilot] Step 5/6: 인라인 테스트 시작...
+[sdd-autopilot] Step 5/6: 테스트 통과 (12/12)
+[sdd-autopilot] Step 6/6: spec-update-done 시작...
+[sdd-autopilot] Step 6/6: spec-update-done 완료 -- _sdd/spec/main.md 업데이트
 ```
 
 #### 7.7 로그 파일 관리
@@ -667,7 +667,7 @@ Edit: _sdd/pipeline/log_<topic>_<timestamp>.md
 #### 8.2 사용자에게 최종 보고
 
 ```
-## Autopilot 실행 완료
+## SDD Autopilot 실행 완료
 
 | 항목 | 결과 |
 |------|------|
@@ -898,7 +898,7 @@ ON ERROR at step N:
 핵심 단계 실패로 파이프라인이 중단되면:
 
 ```
-## Autopilot 파이프라인 중단
+## SDD Autopilot 파이프라인 중단
 
 | 항목 | 내용 |
 |------|------|
