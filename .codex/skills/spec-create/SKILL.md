@@ -326,106 +326,7 @@ Phase 2 완료 후 저장된 spec 파일들에서 `<!-- Phase 2에서 상세 작
 
 ##### 스펙 템플릿
 
-Write the spec document using the template structure below, adapting sections as needed:
-
-```markdown
-# <Project Name>
-
-## Background & Motivation
-
-Describe the problem this project solves, why this approach was chosen, and the core value proposition:
-- Problem statement
-- Why this approach (alternatives comparison)
-- Core value proposition
-- Primary objective
-- Key features
-- Target users/use cases
-- Success criteria
-
-## Core Design
-
-Describe the central design idea and key algorithms:
-- Key idea narrative
-- Algorithm/logic flow with actual code excerpts (≤30 lines: full; >30 lines: signature + core logic)
-- Inline code citations as [filepath:functionName]
-- Design rationale and alternatives considered
-
-## Architecture Overview
-
-Describe project architecture:
-- High-level system design
-- Component interactions
-- Data flow diagrams (use text or ASCII art)
-- Technology stack
-
-## Component Details
-
-### <Component Name>
-
-For each major component, include:
-
-| Aspect | Description |
-|--------|-------------|
-| **Purpose** | What this component does |
-| **Why** | Why this component exists — what problem it solves, why it's a separate component rather than part of something else. Include design motivation and context (e.g., "Separated from X because Y", "Needed to solve Z problem") |
-| **Input** | Expected inputs and formats |
-| **Output** | Produced outputs and formats |
-| **Dependencies** | Other components or external deps — include _why_ the dependency exists (e.g., "Depends on Tokenizer because raw text must be split before embedding") |
-| **Source** | _(Include only when codebase exists)_ Mapped source files, classes, and functions. See Source field format in Best Practices > Writing Quality. |
-
-**Architecture Details:**
-- Implementation approach and _why this approach was chosen_ (briefly note key alternatives considered if relevant)
-- Key classes/functions
-- Design patterns used
-
-**How to Use:**
-- API/interface examples
-- Configuration options
-
-**Known Issues:**
-- Current limitations
-- Planned improvements
-
-## Environment & Dependencies
-
-### Directory Structure
-```
-project/
-├── src/
-├── tests/
-└── ...
-```
-
-### Dependencies
-- Runtime dependencies
-- Development dependencies
-- Environment requirements
-
-### Configuration
-- Environment variables
-- Config files
-- Required credentials
-
-## Identified Issues & Improvements
-
-### Critical Bugs
-- [ ] Issue description and location
-
-### Code Quality Issues
-- [ ] Technical debt items
-
-### Missing Features
-- [ ] Feature gaps
-
-### Robustness & Reliability
-- [ ] Error handling improvements needed
-
-## Usage Guide & Expected Results
-
-Scenario-based usage with expected results:
-- Scenario: [Action] → [Expected Result]
-- Installation, running, common operations
-```
+> **`references/template-compact.md`를 읽는다.** 이 템플릿에 §1-§8 섹션 구조, Writing Rules(코드 발췌/인라인 citation/What-Why-How 트라이어드), 그리고 Modular Spec Guide가 정의되어 있다. 이 템플릿을 참조하여 스펙을 작성한다.
 
 ## Spec Management Operations
 
@@ -584,7 +485,8 @@ Save spec documents to:
 ## Additional Resources
 
 ### Reference Files
-- **`references/template-full.md`** - Complete template with all sections
+- **`references/template-compact.md`** - Canonical §1-§8 generation template with What/Why/How triad and Modular Spec Guide
+- **`references/template-full.md`** - Complete template with all sections (detailed examples)
 
 ### Example Files
 - **`examples/simple-project-spec.md`** - Minimal spec for small projects

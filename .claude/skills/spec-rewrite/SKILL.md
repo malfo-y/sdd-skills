@@ -54,7 +54,8 @@ Primary goals:
 
 **Tools**: `Read`, `Glob`
 
-> **먼저 `references/spec-format.md`를 Read로 읽는다.** 화이트페이퍼 스타일 스펙의 기대 섹션 구조(§1~§8)와 보존 규칙이 정의되어 있다. 이 기준으로 현재 스펙의 누락/보존 대상을 판단한다.
+> **먼저 `references/template-compact.md`를 Read로 읽는다.** §1-§8 섹션 구조, Writing Rules(코드 발췌/인라인 citation/What-Why-How 트라이어드), 그리고 Modular Spec Guide가 정의되어 있다. 리라이트 시 생성 형식으로 참조한다.
+> **그다음 `references/spec-format.md`를 Read로 읽는다.** 화이트페이퍼 스타일 스펙의 기대 섹션 구조(§1~§8)와 보존 규칙이 정의되어 있다. 이 기준으로 현재 스펙의 누락/보존 대상을 판단한다.
 
 First identify structural quality issues in the current spec.
 
@@ -389,6 +390,7 @@ Create or update `_sdd/spec/REWRITE_REPORT.md` with:
 ## Additional Resources
 
 ### Reference Files
+- `references/template-compact.md` - Canonical §1-§8 generation template with What/Why/How triad and Modular Spec Guide
 - `references/rewrite-checklist.md` - diagnosis/splitting/report checklist
 - `references/spec-format.md` - whitepaper-style spec format definition and preservation rules
 

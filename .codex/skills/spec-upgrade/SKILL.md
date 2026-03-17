@@ -283,7 +283,8 @@ Phase 2 완료 후 파일에 남아 있는 `<!-- Phase 2에서 상세 작성 -->
 
 #### 4.3 Whitepaper 구조 변환
 
-> **먼저 `references/template-full.md`를 읽는다.** 이 템플릿에 전체 섹션 구조와 코드 citation 형식이 정의되어 있다.
+> **먼저 `references/template-compact.md`를 읽는다.** 이 템플릿에 §1-§8 섹션 구조, Writing Rules(코드 발췌/인라인 citation/What-Why-How 트라이어드), 그리고 Modular Spec Guide가 정의되어 있다.
+> **그다음 `references/template-full.md`를 읽는다.** 이 템플릿에 전체 섹션 구조와 코드 citation 형식의 상세 예시가 정의되어 있다.
 > **그다음 `references/upgrade-mapping.md`를 읽는다.** 이 파일에 구 형식 → whitepaper 섹션 매핑 규칙이 정의되어 있다.
 
 변환 순서:
@@ -422,8 +423,9 @@ Phase 2 완료 후 파일에 남아 있는 `<!-- Phase 2에서 상세 작성 -->
 ## Additional Resources
 
 ### Reference Files
+- **`references/template-compact.md`** - Canonical §1-§8 generation template with What/Why/How triad and Modular Spec Guide
 - **`references/spec-format.md`** - Whitepaper §1-§8 구조 및 보존 규칙
-- **`references/template-full.md`** - 전체 스펙 템플릿 (섹션 구조, citation 형식)
+- **`references/template-full.md`** - 전체 스펙 템플릿 (섹션 구조, citation 형식 상세 예시)
 - **`references/upgrade-mapping.md`** - 구 형식 → whitepaper 섹션 매핑 가이드
 
 ### Example Files
