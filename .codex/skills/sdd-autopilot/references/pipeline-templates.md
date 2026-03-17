@@ -45,16 +45,21 @@ implementation
 
 - small 기본: review 미포함
 - 단, review가 들어가면 `implementation_review -> implementation -> implementation_review`
+- review가 포함된 경우 `implementation_review`는 핵심 단계로 간주한다
+- 최대 3회까지 반복하고, unresolved `critical/high`가 남으면 파이프라인을 중단한다
 
 ## Test Strategy
 
 - strategy: inline verification
 - command: <repo-specific command>
+- Exit Criteria: 검증 명령이 성공하고 요청된 결과가 실제로 확인되어야 한다
+- Execute -> Verify를 분리하여 기록한다
 
 ## Error Handling
 
 - retry: 3
 - critical: implementation, implementation_review when included
+- selected test/verification stage
 ```
 
 ## Medium
@@ -131,17 +136,21 @@ feature_draft -> implementation_plan -> implementation
 - max rounds: 3
 - stop when critical = 0 and high = 0
 - fix only critical/high
+- max rounds 도달 후 unresolved `critical/high`가 남으면 파이프라인 중단
 
 ## Test Strategy
 
 - strategy: inline verification
 - command: <repo-specific command>
 - retry loop: up to 5 when local and short-running
+- Exit Criteria: 테스트/검증 결과가 요청된 완료 조건을 만족해야 한다
+- agent 실행만으로 완료로 간주하지 않고 Execute -> Verify 두 페이즈를 기록한다
 
 ## Error Handling
 
 - retry: 3
 - critical: feature_draft, implementation_plan, implementation, implementation_review
+- critical: selected test/verification stage
 - non-critical: spec_update_done
 ```
 
@@ -219,17 +228,22 @@ feature_draft -> spec_update_todo -> implementation_plan -> implementation
 - max rounds: 3
 - stop when critical = 0 and high = 0
 - log medium/low as residual issues
+- max rounds 도달 후 unresolved `critical/high`가 남으면 파이프라인 중단
 
 ## Test Strategy
 
 - strategy: inline or `ralph_loop_init`
 - justify the choice with `_sdd/env.md` and scale assessment
+- inline 전략이면 Execute -> Verify를 분리하고 Exit Criteria를 만족해야 한다
+- `ralph_loop_init` 전략이면 설정 생성(Phase A-1) -> 설정 검증(Phase B-1) -> 실제 실행(Phase A-2) -> 결과 검증(Phase B-2) 모두를 포함해야 한다
+- `ralph_loop_init`는 설정만 만들고 종료할 수 없다
 
 ## Error Handling
 
 - retry: 3
 - critical: feature_draft, implementation_plan, implementation, implementation_review
-- non-critical: spec_update_todo, spec_update_done, spec_review, `ralph_loop_init`
+- critical: selected test/debug stage including `ralph_loop_init`
+- non-critical: spec_update_todo, spec_update_done, spec_review
 ```
 
 ### Notes
@@ -237,6 +251,7 @@ feature_draft -> spec_update_todo -> implementation_plan -> implementation
 - 테스트/디버깅이 길면 `ralph_loop_init`을 조건부로 포함한다
 - long-form output이 많은 단계는 `write_phased`를 우선한다
 - generated orchestrator는 custom agent 이름을 사용하고 wrapper skill 이름을 직접 실행 단위로 쓰지 않는다
+- 테스트를 나중으로 미루는 경우는 승인 전에 파이프라인 범위로 명시되어야 하며, 실행 중 silent defer로 대체하면 안 된다
 
 ## Generated Orchestrator Lifecycle
 

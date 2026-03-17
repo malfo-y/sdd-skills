@@ -1,32 +1,37 @@
-# Sample Orchestrator - Codex Medium Pipeline Example
+# Sample Orchestrator -- 중규모 인증 시스템 + 대규모 ML 파이프라인 예시
 
-이 파일은 `sdd-autopilot`이 생성하는 orchestration skill의 완성도 기준 예시다.
-사용자가 "Codex autopilot parity review와 restoration을 구현해줘"를 요청한 경우의 중규모 예시다.
+이 파일은 `sdd-autopilot`이 생성하는 Codex orchestration skill의 완성도 기준 예시다.
+generated orchestrator는 이 정도 밀도로 pipeline step, review-fix, test strategy, error handling, 로그/리포트 계약을 포함해야 한다.
 
-## Generated Orchestrator Example
+---
+
+## 생성된 오케스트레이터 예시 1 -- 중규모 JWT 인증 시스템
 
 ```markdown
-# Orchestrator: Autopilot Parity Review
+# Orchestrator: JWT 인증 시스템
 
-**generated**: 2026-03-17T23:00:00
+**generated**: 2026-03-17T23:30:00
 **scale**: medium
 **owner**: sdd-autopilot
 **status**: active
 
 ## Goal
 
-Claude `sdd-autopilot`과 Codex `sdd-autopilot`의 의미적 parity를 검토하고, 누락되거나 잘못 축약된 실행 계약을 복원한다.
+JWT 기반 인증 시스템을 구현한다. 로그인, 로그아웃, 토큰 갱신 기능을 포함한다.
 
 ### Clarified Requirements
-- main skill body parity를 확인한다
-- pipeline templates, scale assessment, sample orchestrator의 참조 계약을 맞춘다
-- Codex custom agent spawn 모델을 유지한다
-- 문서 드리프트와 실행 계약 누락을 바로 수정한다
+- JWT Bearer 인증
+- 로그인 엔드포인트 (`email`, `password`)
+- 로그아웃 엔드포인트 (토큰 무효화)
+- 토큰 갱신 엔드포인트 (refresh token)
+- access token 만료: 1시간
+- refresh token 만료: 7일
+- bcrypt 해시 사용
 
 ### Constraints
-- 기존 custom agent roster를 유지한다
-- generated orchestrator는 custom agent 이름만 사용한다
-- `_sdd/spec/`는 직접 수정하지 않는다
+- 기존 Express.js 프레임워크 사용
+- 기존 `User` 모델 확장
+- 기존 middleware 패턴 유지
 
 ## Pipeline Steps
 
@@ -34,199 +39,395 @@ Claude `sdd-autopilot`과 Codex `sdd-autopilot`의 의미적 parity를 검토하
 
 **agent**: `feature_draft`
 **input**: (none)
-**output**: `_sdd/drafts/feature_draft_autopilot_parity_review.md`
+**output**: `_sdd/drafts/feature_draft_jwt_auth.md`
 
 **prompt**:
-Create a feature draft for the Codex/Claude autopilot parity review and restoration work.
+Create a feature draft for a JWT-based authentication system.
 
-Required focus:
-- main skill body parity
-- reference parity
-- sample orchestrator parity
-- Codex execution linkage sanity check
+Requirements:
+- login, logout, token refresh
+- bcrypt password hashing
+- access token 1 hour
+- refresh token 7 days
 
-Keep the original user request and target files visible in the draft.
+Constraints:
+- existing Express.js framework
+- extend existing `User` model
+- preserve middleware conventions
+
+Original user request: "JWT 기반 인증 시스템 구현해줘. 로그인, 로그아웃, 토큰 갱신 포함."
 
 ### Step 2: implementation_plan
 
 **agent**: `implementation_plan`
-**input**: `_sdd/drafts/feature_draft_autopilot_parity_review.md`
+**input**: `_sdd/drafts/feature_draft_jwt_auth.md`
 **output**: `_sdd/implementation/IMPLEMENTATION_PLAN.md`
 
 **prompt**:
 Turn the feature draft into an implementation plan.
 
+Feature draft: `_sdd/drafts/feature_draft_jwt_auth.md`
+Existing spec: `_sdd/spec/main.md`
+
 Requirements:
-- separate research, patching, and validation work
+- identify parallelizable tasks
 - keep Target Files explicit
-- include documentation sync and validation steps
+- stay consistent with existing Express.js patterns
+
+Original user request: "JWT 기반 인증 시스템 구현해줘. 로그인, 로그아웃, 토큰 갱신 포함."
 
 ### Step 3: implementation
 
 **agent**: `implementation`
-**input**: `_sdd/drafts/feature_draft_autopilot_parity_review.md`
+**input**: `_sdd/implementation/IMPLEMENTATION_PLAN.md`
 **output**:
-- `.codex/skills/sdd-autopilot/SKILL.md`
-- `.codex/skills/sdd-autopilot/references/pipeline-templates.md`
-- `.codex/skills/sdd-autopilot/references/scale-assessment.md`
-- `.codex/skills/sdd-autopilot/examples/sample-orchestrator.md`
+- `src/middleware/auth.js`
+- `src/routes/auth.js`
+- `src/services/auth-service.js`
+- `src/services/token-service.js`
+- `src/models/user.js`
+- `test/services/auth-service.test.js`
+- `test/routes/auth.test.js`
 
 **prompt**:
-Implement the parity restoration plan.
+Execute the implementation plan.
 
-TDD / verification expectations:
-1. compare Codex and Claude documents
-2. patch missing execution contracts
-3. keep Codex-specific divergences explicit
-4. run repository hygiene checks after edits
+Implementation plan: `_sdd/implementation/IMPLEMENTATION_PLAN.md`
 
-### Step 4: implementation_review
+Expectations:
+- follow TDD where practical
+- keep changes scoped to auth-related files
+- preserve existing Express.js conventions
 
-**agent**: `implementation_review`
-**input**:
-- `_sdd/drafts/feature_draft_autopilot_parity_review.md`
-- modified Codex autopilot docs
-**output**: review findings in text
+Original user request: "JWT 기반 인증 시스템 구현해줘. 로그인, 로그아웃, 토큰 갱신 포함."
 
-**prompt**:
-Review the updated Codex autopilot docs against the feature draft.
+### Step 4: review-fix loop
 
-Focus:
-- missing contracts
-- incorrect translation
-- doc drift
-- execution linkage mismatch
+(managed by autopilot directly -- see Review-Fix Loop below)
 
 ### Step 5: spec_update_done
 
 **agent**: `spec_update_done`
-**input**: relevant spec docs if spec sync becomes necessary
-**output**: optional
+**input**: `_sdd/spec/main.md`, implementation outputs
+**output**: `_sdd/spec/main.md`
 
 **prompt**:
-Run only if implementation reveals spec drift that should be synchronized now.
+Synchronize the spec with the completed JWT authentication implementation.
+
+Spec: `_sdd/spec/main.md`
+Feature draft: `_sdd/drafts/feature_draft_jwt_auth.md`
+Implementation plan: `_sdd/implementation/IMPLEMENTATION_PLAN.md`
+
+Implemented files:
+- `src/middleware/auth.js`
+- `src/routes/auth.js`
+- `src/services/auth-service.js`
+- `src/services/token-service.js`
+- `src/models/user.js`
 
 ## Artifact Handoff
 
-- feature draft: `_sdd/drafts/feature_draft_autopilot_parity_review.md`
-- implementation report: `_sdd/implementation/features/autopilot-parity-review/SYNC_20260317_230000_IMPLEMENTATION_REPORT.md`
-- pipeline log: `_sdd/pipeline/log_autopilot_parity_review_20260317_230000.md`
-- final report: `_sdd/pipeline/report_autopilot_parity_review_20260317_230000.md`
+- feature draft: `_sdd/drafts/feature_draft_jwt_auth.md`
+- implementation plan: `_sdd/implementation/IMPLEMENTATION_PLAN.md`
+- pipeline log: `_sdd/pipeline/log_jwt_auth_20260317_233000.md`
+- final report: `_sdd/pipeline/report_jwt_auth_20260317_233000.md`
 
 ## Review-Fix Loop
 
 - **max rounds**: 3
 - **stop condition**: critical = 0 and high = 0
 - **fix scope**: critical/high only
+- **max rounds reached**: if unresolved critical/high remain, stop the pipeline
 
 ### Review Prompt
 
-Review the Codex autopilot docs after the implementation step.
+Review the JWT auth implementation.
 
-Check:
-- When to Use / Do Not Use coverage
-- pipeline lifecycle, review-fix, test, error handling coverage
-- sample orchestrator detail density
-- consistency with custom-agent execution model
+Implementation plan: `_sdd/implementation/IMPLEMENTATION_PLAN.md`
+
+Files to review:
+- `src/middleware/auth.js`
+- `src/routes/auth.js`
+- `src/services/auth-service.js`
+- `src/services/token-service.js`
+- `src/models/user.js`
+- `test/services/auth-service.test.js`
+- `test/routes/auth.test.js`
+
+Review output must include severity labels: critical / high / medium / low.
 
 ### Fix Prompt
 
 If critical/high issues remain, send only those issues back to `implementation`.
-Do not broaden the scope beyond the identified parity gaps.
+Do not broaden the scope beyond the identified review findings.
 
 ## Test Strategy
 
 - **strategy**: inline verification
 - **commands**:
+  - `npm test -- auth`
   - `git diff --check`
-  - targeted `rg` sanity checks for agent names, report path, and lifecycle wording
-- **retry loop**: allowed when verification failures are local and quick to fix
+- **Exit Criteria**:
+  - auth tests pass
+  - login / refresh / logout flow is covered
+  - working tree has no whitespace errors
+- **Execute -> Verify**:
+  - execute tests
+  - verify exit code and requested auth behavior
+  - if Exit Criteria are not met after max retries, stop the pipeline
 
 ## Error Handling
 
 - **retry**: 3
-- **critical steps**: `feature_draft`, `implementation_plan`, `implementation`, `implementation_review`
+- **critical steps**: `feature_draft`, `implementation_plan`, `implementation`, `implementation_review`, selected test stage
 - **non-critical steps**: `spec_update_done`
-- **fallback**: if review still fails after 3 rounds, leave active orchestrator in place and write a partial report
+- **fallback**: non-critical failure is logged with manual follow-up guidance
 ```
 
-## Matching Pipeline Log Example
+## 대응하는 로그 파일 예시 1
 
 ```markdown
-# Pipeline Log: Autopilot Parity Review
+# Pipeline Log: JWT 인증 시스템
 
 ## Meta
-- **request**: "Codex autopilot 스킬을 Claude와 비교해서 빠진 걸 복원해줘"
-- **orchestrator**: `.codex/skills/orchestrator_autopilot_parity_review/SKILL.md`
+- **request**: "JWT 기반 인증 시스템 구현해줘. 로그인, 로그아웃, 토큰 갱신 포함."
+- **orchestrator**: `.codex/skills/orchestrator_jwt_auth/SKILL.md`
 - **scale**: medium
-- **started**: 2026-03-17T23:00:00
-- **pipeline**: feature_draft -> implementation_plan -> implementation -> implementation_review
+- **started**: 2026-03-17T23:30:00
+- **pipeline**: feature_draft -> implementation_plan -> implementation -> review-fix -> inline verification -> spec_update_done
 
 ## Status
 | Step | Agent | Status | Output |
 |------|-------|--------|--------|
-| 1 | feature_draft | completed | `_sdd/drafts/feature_draft_autopilot_parity_review.md` |
+| 1 | feature_draft | completed | `_sdd/drafts/feature_draft_jwt_auth.md` |
 | 2 | implementation_plan | completed | `_sdd/implementation/IMPLEMENTATION_PLAN.md` |
-| 3 | implementation | completed | 4 Codex autopilot docs updated |
-| 4 | implementation_review | completed | no blocking findings |
+| 3 | implementation | completed | 7 files updated |
+| 4 | review-fix | completed | round 2 passed |
+| 5 | inline verification | completed | auth tests passed |
+| 6 | spec_update_done | completed | `_sdd/spec/main.md` |
 
 ## Execution Log
 
 ### feature_draft -- completed
-- **time**: 23:00:00 ~ 23:05:00
-- **output**: `_sdd/drafts/feature_draft_autopilot_parity_review.md`
+- **time**: 23:30:00 ~ 23:34:00
+- **output**: `_sdd/drafts/feature_draft_jwt_auth.md`
 - **key decisions**:
-  - parity review 범위를 main skill + references + example + execution linkage로 확정
-  - Codex divergence와 결함을 분리해 분류하기로 함
+  - access / refresh token split adopted
+  - existing `User` model extended instead of adding new auth model
 - **issues**: none
 
 ### implementation_plan -- completed
-- **time**: 23:05:00 ~ 23:09:00
+- **time**: 23:34:00 ~ 23:38:00
 - **output**: `_sdd/implementation/IMPLEMENTATION_PLAN.md`
 - **key decisions**:
-  - research -> patch -> validation 순서
-  - documentation sync를 구현 범위에 포함
+  - route/service split
+  - auth middleware and token service implemented separately
 - **issues**: none
 
 ### implementation -- completed
-- **time**: 23:09:00 ~ 23:24:00
-- **output**:
-  - `.codex/skills/sdd-autopilot/SKILL.md`
-  - `.codex/skills/sdd-autopilot/references/pipeline-templates.md`
-  - `.codex/skills/sdd-autopilot/references/scale-assessment.md`
-  - `.codex/skills/sdd-autopilot/examples/sample-orchestrator.md`
+- **time**: 23:38:00 ~ 23:53:00
+- **output**: 7 files updated
 - **key decisions**:
-  - When to Use / Do Not Use 복원
-  - scale guide 경계 사례와 examples 복원
-  - sample orchestrator에 review-fix, test, error handling, report path 추가
+  - bcrypt hash verification in auth service
+  - refresh token invalidation on logout
 - **issues**: none
 
-### implementation_review -- completed
-- **time**: 23:24:00 ~ 23:28:00
+### review-fix -- round 1/3
+- **result**: critical 0, high 2, medium 1, low 0
+- **critical/high fixes applied**:
+  - refresh token rotation bug fixed
+  - missing auth middleware branch test added
+
+### review-fix -- round 2/3
 - **result**: critical 0, high 0, medium 1, low 0
-- **logged residual**:
-  - actual Codex runtime dry-run remains manual
+- **status**: passed
+
+### inline verification -- completed
+- **execute**:
+  - `npm test -- auth`
+  - `git diff --check`
+- **verify**:
+  - auth tests passed
+  - refresh / logout flow covered
+  - no whitespace errors
+
+### spec_update_done -- completed
+- **time**: 24:00:00 ~ 24:03:00
+- **output**: `_sdd/spec/main.md`
+- **issues**: none
 ```
 
-## Matching Final Report Example
+---
+
+## 생성된 오케스트레이터 예시 2 -- 대규모 ML 학습 파이프라인 (`ralph_loop`)
+
+이 예시는 `ralph_loop_init`를 사용할 때 Execute -> Verify가 어떻게 분리되어야 하는지 보여준다.
+
+> `ralph_loop_init`는 설정 생성과 실제 실행+결과 검증이 모두 완료되어야 한다. 설정만 만들고 넘어갈 수 없다.
 
 ```markdown
-# Final Report: Autopilot Parity Review
+# Orchestrator: 이미지 분류 Fine-tuning 파이프라인
 
-## What Was Done
+**generated**: 2026-03-18T10:00:00
+**scale**: large
+**owner**: sdd-autopilot
+**status**: active
 
-- compared Claude and Codex `sdd-autopilot` skill sets
-- restored missing execution contracts in the Codex main skill
-- expanded pipeline templates, scale guide, and sample orchestrator
+## Goal
 
-## Results
+ViT 기반 이미지 분류 fine-tuning 파이프라인을 구현한다. DDP 학습과 WandB 로깅을 포함한다.
 
-- main skill body now includes use/do-not-use guidance, test strategy, retry/error handling, and richer orchestration requirements
-- reference docs now preserve boundary rules and generated orchestrator contracts
-- sample orchestrator now demonstrates artifact handoff, review-fix loop, test strategy, and final reporting
+### Clarified Requirements
+- ViT 기반 이미지 분류 fine-tuning
+- DDP multi-GPU training
+- WandB logging
+- 1 epoch 이상 실행 가능한 학습 엔트리
+- validation accuracy 기록
 
-## Remaining Work
+### Constraints
+- 기존 PyTorch training stack 재사용
+- GPU 없는 테스트 환경에서도 일부 unit test는 실행 가능해야 함
+- config-driven training entry 유지
 
-- actual Codex runtime dry-run is still required
-- if runtime behavior diverges, validation guide and sample orchestrator may need a follow-up patch
+## Pipeline Steps
+
+### Step 1: feature_draft
+**agent**: `feature_draft`
+**output**: `_sdd/drafts/feature_draft_image_cls_finetune.md`
+
+### Step 2: spec_update_todo
+**agent**: `spec_update_todo`
+**input**: `_sdd/drafts/feature_draft_image_cls_finetune.md`, `_sdd/spec/main.md`
+**output**: `_sdd/spec/main.md`
+
+### Step 3: implementation_plan
+**agent**: `implementation_plan`
+**input**: `_sdd/drafts/feature_draft_image_cls_finetune.md`
+**output**: `_sdd/implementation/IMPLEMENTATION_PLAN.md`
+
+### Step 4: implementation
+**agent**: `implementation`
+**input**: `_sdd/implementation/IMPLEMENTATION_PLAN.md`
+**output**:
+- `src/models/vit_classifier.py`
+- `src/data/cls_dataset.py`
+- `src/training/trainer.py`
+- `src/utils/ddp.py`
+- `src/utils/wandb_logger.py`
+- `configs/finetune_vit.yaml`
+- `scripts/train.py`
+- `tests/test_trainer.py`
+
+### Step 5: review-fix loop
+(managed by autopilot directly)
+
+### Step 6: ralph_loop (Execute -> Verify)
+
+**Phase A-1: setup generation**
+
+**agent**: `ralph_loop_init`
+**input**: implementation outputs, `configs/finetune_vit.yaml`
+**output**: `ralph/`
+
+**prompt**:
+Set up an automated debug/training loop for the image classification fine-tuning pipeline.
+
+Training command:
+`torchrun --nproc_per_node=2 scripts/train.py --config-name=finetune_vit`
+
+Success criteria:
+- at least 1 epoch completes
+- validation accuracy is recorded
+
+**Phase B-1: setup verification (Exit Criteria)**
+- `ralph/` directory exists
+- `ralph/run.sh` is executable
+- `ralph/state.md` exists
+
+**Phase A-2: actual execution**
+- run the ralph loop in background or attached mode according to environment constraints
+
+**Phase B-2: result verification (Exit Criteria)**
+- `ralph/state.md` has `phase == DONE`
+- at least 1 iteration was executed
+- final loss / accuracy is recorded
+- if Exit Criteria fail, stop the pipeline
+
+### Step 7: spec_update_done
+**agent**: `spec_update_done`
+**input**: `_sdd/spec/main.md`, implementation outputs
+**output**: `_sdd/spec/main.md`
+
+## Review-Fix Loop
+
+- **max rounds**: 3
+- **stop condition**: critical = 0 and high = 0
+- **max rounds reached**: if unresolved critical/high remain, stop the pipeline
+
+## Test Strategy
+
+- **strategy**: `ralph_loop_init`
+- **reason**: training/debug loop is long-running and unsuitable for short inline verification
+- **Exit Criteria**:
+  - setup verified
+  - `ralph/state.md phase == DONE`
+  - training result metrics recorded
+
+## Error Handling
+
+- **retry**: 3
+- **critical steps**: `feature_draft`, `implementation_plan`, `implementation`, `implementation_review`, `ralph_loop_init`
+- **non-critical steps**: `spec_update_todo`, `spec_update_done`, `spec_review`
+- **fallback**: if `ralph_loop_init` setup or execution verification fails after max retries, stop the pipeline and leave active orchestrator in place
+```
+
+## 대응하는 로그 파일 예시 2
+
+```markdown
+# Pipeline Log: 이미지 분류 Fine-tuning 파이프라인
+
+## Meta
+- **request**: "이미지 분류 모델 fine-tuning 파이프라인 구현해줘. ViT 기반으로, DDP 학습, WandB 로깅 포함."
+- **orchestrator**: `.codex/skills/orchestrator_image_cls_finetune/SKILL.md`
+- **scale**: large
+- **started**: 2026-03-18T10:05:00
+- **pipeline**: feature_draft -> spec_update_todo -> implementation_plan -> implementation -> review-fix -> ralph_loop -> spec_update_done
+
+## Status
+| Step | Agent | Status | Output |
+|------|-------|--------|--------|
+| 1 | feature_draft | completed | `_sdd/drafts/feature_draft_image_cls_finetune.md` |
+| 2 | spec_update_todo | completed | `_sdd/spec/main.md` |
+| 3 | implementation_plan | completed | `_sdd/implementation/IMPLEMENTATION_PLAN.md` |
+| 4 | implementation | completed | 8 files updated |
+| 5 | review-fix | completed | round 2 passed |
+| 6 | ralph_loop | completed | `ralph/state.md phase=DONE` |
+| 7 | spec_update_done | completed | `_sdd/spec/main.md` |
+
+## Execution Log
+
+### review-fix -- round 1/3
+- **result**: critical 1, high 2, medium 3, low 1
+- **fix scope**: critical/high only
+
+### review-fix -- round 2/3
+- **result**: critical 0, high 0, medium 2, low 1
+- **status**: passed
+
+### ralph_loop_init -- completed (Phase A-1, B-1)
+- **output**: `ralph/`
+- **verify**:
+  - `ralph/` exists
+  - `ralph/run.sh` executable
+  - `ralph/state.md` exists
+
+### ralph_loop execution -- completed (Phase A-2, B-2)
+- **iterations**: 3
+- **verify**:
+  - `ralph/state.md phase == DONE`
+  - final `val_accuracy = 0.847`
+  - final training loss recorded
+
+### spec_update_done -- completed
+- **output**: `_sdd/spec/main.md`
 ```

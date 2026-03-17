@@ -1,7 +1,7 @@
 ---
 name: sdd-autopilot
 description: This skill should be used when the user asks to "sdd-autopilot", "autopilot", "자동 구현", "end-to-end 구현", "전체 파이프라인", "처음부터 끝까지", or wants Codex to orchestrate the full SDD workflow from requirement clarification to spec sync.
-version: 1.2.0
+version: 1.3.0
 ---
 
 # SDD Autopilot - Codex Adaptive Orchestration Meta Skill
@@ -54,12 +54,12 @@ version: 1.2.0
 2. **Discussion은 인라인**: 사용자와의 요구사항 정리는 `request_user_input` 또는 메인 스레드 대화로 진행한다.
 3. **스펙 직접 수정 금지**: `_sdd/spec/` 변경은 `spec_update_todo` 또는 `spec_update_done` 실행 단위로만 수행한다.
 4. **파일 기반 handoff**: 단계 간 상태 전달은 `_sdd/` 산출물 경로로만 수행한다.
-5. **Review-Fix 사이클 필수**: review 단계가 포함되면 `review -> fix -> re-review`를 최대 3회까지 반드시 실행한다.
+5. **Review-Fix 사이클 필수**: review 단계(`implementation_review` 또는 동등한 코드 리뷰)가 포함되면 반드시 `review -> fix -> re-review` 사이클을 최대 3회까지 실행한다. 리뷰만 수행하고 종료하는 것은 허용하지 않는다. partial execution, resume, 중간부터 시작하는 파이프라인에도 동일하게 적용한다. review가 포함된 파이프라인에서 `implementation_review`는 핵심 단계이며 실패 시 건너뛸 수 없다.
 6. **오케스트레이터 라이프사이클 준수**: 미완료 orchestrator는 active `.codex/skills/orchestrator_<topic>/`에 유지하고, 완료 후 `_sdd/pipeline/orchestrators/<topic>_<timestamp>/`로 이동한다.
 7. **언어 규칙**: 사용자의 활성 언어를 따른다. 지정이 없으면 기존 스펙/문서 언어를 따른다.
 8. **요약 대신 원문 전달**: 하위 실행 단위로 넘길 때 사용자의 원래 요청과 산출물 경로를 유지한다.
 9. **Pre-flight 필수**: 승인 전 `_sdd/env.md`와 `.codex/config.toml`을 함께 읽고 resource gap을 확인한다.
-10. **Nested writing depth 보장**: `write_phased` nested spawn이 필요한 파이프라인에서는 `agents.max_depth >= 2`를 만족해야 한다.
+10. **Execute -> Verify 필수**: 모든 파이프라인 단계는 반드시 (1) 실행(Execute)과 (2) 검증(Verify) 두 페이즈를 거쳐야 한다. custom agent를 호출한 것만으로 완료로 간주하지 않는다. 검증 페이즈에서 Exit Criteria를 만족해야 다음 단계로 진행할 수 있다. 이 규칙은 `ralph_loop_init` 같은 생성형 단계에도 동일하게 적용되며, 설정 생성 후 실제 실행과 결과 확인까지 완료되어야 한다.
 11. **Generated orchestrator는 skill이 아니라 agent를 호출**: execution step은 `.codex/agents/*.toml`에 정의된 custom agent 이름만 사용한다.
 
 ## Inputs
@@ -300,10 +300,11 @@ After approval, execute without unnecessary user interruption.
 For each pipeline step:
 
 1. write a start log entry
-2. spawn the mapped custom agent
-3. pass input artifact paths and original request
-4. collect outputs and decisions
-5. update the pipeline log
+2. execute the mapped custom agent with original request and artifact paths
+3. collect output artifacts and 핵심 결정사항
+4. run the step-specific verification
+5. only mark the step `completed` when Exit Criteria are satisfied
+6. otherwise retry, fix, or stop according to the error policy
 
 ### 7.3 Review-Fix Loop
 
@@ -313,6 +314,7 @@ If review is included:
 - if `critical > 0` or `high > 0`, send only those issues back to `implementation`
 - re-run `implementation_review`
 - stop after success or max 3 rounds
+- if max 3 rounds are reached and unresolved `critical/high` remain, stop the pipeline
 
 `medium` and `low` issues are logged but do not block completion.
 
@@ -320,12 +322,21 @@ If review is included:
 
 When the selected strategy is inline:
 
-- run tests or verification commands
-- retry fix-and-rerun up to 5 times when the loop is short and local
+- execute the chosen tests or verification commands
+- verify the expected Exit Criteria after each run
+- retry fix-and-rerun up to 5 times only when the loop is short and local
+- if Exit Criteria are still not satisfied after max retries, stop the pipeline
 
 When the selected strategy requires long-running or external orchestration:
 
-- include `ralph_loop_init` in the pipeline or record why the test step is deferred
+- include `ralph_loop_init` in the pipeline
+- Phase A-1: generate the `ralph/` setup
+- Phase B-1: verify setup artifacts such as `ralph/run.sh` and `ralph/state.md`
+- Phase A-2: actually execute the ralph loop
+- Phase B-2: verify final state such as `phase == DONE` and required result artifacts
+- if setup or execution verification fails, stop the pipeline
+
+If testing is intentionally deferred, that decision must be made before approval and recorded as an explicit pipeline scope choice. It must not silently replace Execute -> Verify during execution.
 
 ### 7.5 Error Handling
 
@@ -337,13 +348,18 @@ Critical steps:
 - `implementation_plan`
 - `implementation`
 - `implementation_review` when review is included
+- selected test/debug stage (`inline verification` or `ralph_loop_init`)
 
 Non-critical candidates:
 
 - `spec_update_todo`
 - `spec_update_done`
 - `spec_review`
-- `ralph_loop_init`
+
+After max retries:
+
+- if the current step is critical, stop the pipeline and record the failure reason
+- if the current step is non-critical, log the failure, record fallback guidance, and continue only when skipping that step does not violate an earlier approval or Exit Criteria contract
 
 Critical step failure stops the pipeline. Non-critical failure is logged and reported with fallback guidance.
 

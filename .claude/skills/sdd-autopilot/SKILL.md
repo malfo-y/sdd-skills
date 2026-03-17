@@ -67,6 +67,7 @@ User Request
 7. **파일 기반 상태 전달**: 각 에이전트에는 파일 경로만 전달한다. 에이전트의 전체 출력을 부모 컨텍스트에 누적하지 않는다. 에이전트 결과에서 핵심 정보(출력 파일 경로, 주요 결정사항)만 추출한다.
 8. **에이전트 호출 시 원문 전달**: 에이전트에 프롬프트를 전달할 때 사용자의 원래 요청과 관련 컨텍스트 파일 경로를 포함한다. 요약하지 않는다.
 9. **Review-Fix 사이클 필수**: 파이프라인에 review 단계(implementation-review 또는 모든 형태의 코드 리뷰)가 포함되면, 반드시 review → fix → re-review 사이클을 실행해야 한다. 리뷰만 하고 끝나는 것은 허용하지 않는다. 이 규칙은 전체 파이프라인, 부분 파이프라인, 중간부터 시작하는 파이프라인, 재개(resume) 모두에 적용된다. review가 포함된 파이프라인에서 `implementation-review`는 핵심 단계로 취급하며, 실패 시 건너뛸 수 없다.
+10. **Execute → Verify 필수**: 모든 파이프라인 단계는 반드시 (1) 실행(Execute)과 (2) 검증(Verify) 두 페이즈를 거쳐야 한다. 에이전트를 호출한 것만으로 완료로 간주하지 않는다. 검증 페이즈에서 Exit Criteria를 만족하는지 확인하고, 만족하지 않으면 다음 단계로 넘어가지 않는다. 이 규칙은 생성 에이전트(ralph-loop-init 등)에도 동일하게 적용된다 — 설정을 생성한 후 실제로 실행하여 결과를 확인해야 한다.
 
 ## Process
 
@@ -288,7 +289,7 @@ IF Explore agent 실패 → 직접 탐색으로 보완 후 Step 4 진행
 Step 2-3에서 수집한 정보를 기반으로 규모를 판단하고, 적절한 파이프라인과 테스트 전략을 결정한다.
 
 > 상세 판단 기준은 [Scale Assessment Criteria (상세)](#scale-assessment-criteria-상세) 섹션 참조.
-> 파이프라인 템플릿은 `references/scale-assessment.md` 참조.
+> 파이프라인 템플릿은 `references/pipeline-templates.md` 참조.
 
 #### 4.1 규모 판단
 
@@ -520,12 +521,16 @@ ELSE → 수정 후 재확인
    규모: <소/중/대> | 단계: N개 | 시작: <timestamp>
    ```
 
-#### 7.2 파이프라인 실행 루프
+#### 7.2 파이프라인 실행 루프 (Execute → Verify)
+
+> **Hard Rule #10 적용**: 모든 단계는 Execute(실행)와 Verify(검증) 두 페이즈를 반드시 거친다. 에이전트 호출만으로 완료로 간주하지 않는다.
 
 오케스트레이터에 정의된 순서대로 각 에이전트를 호출한다.
 
 ```
 FOR EACH step IN pipeline_steps:
+
+  ## Phase A: Execute (실행)
   1. 마일스톤 출력: "[sdd-autopilot] Step N/M: <agent-name> 시작..."
   2. 로그 기록: 시작 시간 기록 (Edit)
   3. 에이전트 호출:
@@ -539,12 +544,41 @@ FOR EACH step IN pipeline_steps:
 
        사용자 원래 요청: <사용자 요청 원문>"
      )
-  4. 결과 처리:
-     - 에이전트 결과에서 핵심 정보 추출 (출력 파일 경로, 주요 결정사항)
-     - 로그에 완료 기록 + 핵심 결정사항 추가 (Edit)
-  5. 마일스톤 출력: "[sdd-autopilot] Step N/M: <agent-name> 완료 -- <출력 파일 경로>"
-  6. 에러 발생 시: Error Handling 절차 실행 (7.5절)
+
+  ## Phase B: Verify (검증)
+  4. Exit Criteria 검증:
+     - 해당 단계의 Exit Criteria(7.2.1 참조)를 하나씩 확인한다
+     - 산출물 파일이 존재하는지 Glob/Read로 확인한다
+     - 산출물 내용이 비어있거나 형식이 틀리지 않은지 확인한다
+     - 실행이 필요한 단계(테스트, ralph loop 등)는 실제 실행 결과를 확인한다
+
+  5. 검증 결과 분기:
+     IF 모든 Exit Criteria 만족:
+       → 로그에 완료 기록 + 핵심 결정사항 추가 (Edit)
+       → 마일스톤: "[sdd-autopilot] Step N/M: <agent-name> 검증 통과 -- <출력 파일 경로>"
+       → 다음 단계로 진행
+     IF Exit Criteria 미충족:
+       → 로그에 미충족 항목 기록
+       → 마일스톤: "[sdd-autopilot] Step N/M: <agent-name> 검증 실패 -- <미충족 항목>"
+       → Error Handling 절차 실행 (7.5절) -- 재시도 또는 보완 후 Phase B 재실행
 ```
+
+#### 7.2.1 단계별 Exit Criteria
+
+각 에이전트의 완료 조건이다. **Verify 페이즈에서 이 조건들을 모두 확인해야 다음 단계로 넘어갈 수 있다.**
+
+| 에이전트 | Exit Criteria |
+|---------|--------------|
+| `feature-draft` | `_sdd/drafts/feature_draft_<topic>.md` 파일 존재 + 요구사항/제약조건 섹션이 비어있지 않음 |
+| `implementation-plan` | `_sdd/implementation/IMPLEMENTATION_PLAN.md` 파일 존재 + 태스크가 1개 이상 정의됨 |
+| `implementation` | 구현 대상 파일이 생성/수정됨 + 구문 에러 없음 (lint/parse 통과) |
+| `implementation-review` | 리뷰 결과에 심각도 분류(critical/high/medium/low)가 포함됨 |
+| `ralph-loop-init` | `ralph/` 디렉토리 존재 + `ralph/run.sh` 실행 가능 + `ralph/state.md` 존재 |
+| ralph loop 실행 | `ralph/state.md`의 phase가 `DONE` + 최종 테스트 결과가 기록됨 |
+| 인라인 테스트 | 테스트 명령 실행 완료 + 전체 테스트 통과 (또는 최대 재시도 후 결과 기록) |
+| `spec-update-done` | `_sdd/spec/` 파일이 업데이트됨 + 구현 내용이 스펙에 반영됨 |
+| `spec-update-todo` | `_sdd/spec/` 파일이 업데이트됨 + 계획된 기능이 스펙에 추가됨 |
+| `spec-review` | 리뷰 결과가 텍스트로 반환됨 + 드리프트/품질 이슈가 분류됨 |
 
 #### 7.3 Review-Fix 루프 (필수 사이클)
 
@@ -581,9 +615,10 @@ WHILE review_count < MAX_REVIEW:
        → 마일스톤: "[sdd-autopilot] 리뷰 통과 (Round N) -- critical/high 이슈 없음"
        → BREAK
 
-     IF review_count == MAX_REVIEW:
-       → 마일스톤: "[sdd-autopilot] 리뷰 루프 종료 (최대 3회 도달) -- 잔여 이슈 로그 기록"
-       → 잔여 이슈를 로그에 기록하고 다음 단계 진행
+     IF review_count == MAX_REVIEW AND (critical_count > 0 OR high_count > 0):
+       → 마일스톤: "[sdd-autopilot] 리뷰 루프 종료 (최대 3회 도달) -- critical/high 미해결, 파이프라인 중단"
+       → 잔여 이슈를 로그에 기록
+       → **파이프라인 중단** (Exit Criteria 미충족 -- Hard Rule #9, #10)
        → BREAK
 
   4. 수정 실행 (필수 -- 이슈 발견 시 건너뛸 수 없음):
@@ -610,16 +645,21 @@ WHILE review_count < MAX_REVIEW:
 1. 먼저 implementation-review를 실행한다
 2. 이슈가 발견되면 → implementation 에이전트로 fix 실행
 3. fix 후 → re-review 실행 (사이클 반복)
-4. critical/high = 0 또는 MAX_REVIEW 도달 시 종료
+4. critical/high = 0이면 종료
+5. MAX_REVIEW 도달 시에도 critical/high > 0이면 → **파이프라인 중단**
 
 리뷰 결과 이슈 0건인 경우에만 단일 리뷰로 종료가 가능하다.
 
-#### 7.4 테스트 실행
+#### 7.4 테스트 실행 (Execute → Verify)
 
 리뷰 완료 후 테스트를 실행한다. 오케스트레이터에 정의된 테스트 전략에 따라 분기한다.
 
+> **Hard Rule #10 적용**: 테스트 단계도 Execute → Verify를 반드시 거친다. 설정만 생성하고 실행하지 않는 것은 허용하지 않는다.
+
 **인라인 디버깅** (대부분의 경우):
+
 ```
+## Phase A: Execute
 implementation 에이전트에 테스트 실행을 포함하여 호출:
 Agent(
   subagent_type="implementation",
@@ -630,11 +670,25 @@ Agent(
 
   테스트 통과까지 수정-재실행 루프를 반복하세요 (최대 5회)."
 )
+
+## Phase B: Verify
+Exit Criteria 확인:
+  - 테스트 명령이 실제로 실행되었는가 (에이전트 결과에서 실행 로그 확인)
+  - 테스트 결과가 보고되었는가 (통과/실패 건수)
+  - 실패 테스트가 있다면 수정이 시도되었는가
+
+IF 테스트 전체 통과 → 다음 단계 진행
+IF 최대 재시도 후에도 실패 → 실패한 테스트 목록을 로그에 기록 → **파이프라인 중단** (Exit Criteria 미충족 -- Hard Rule #10)
+IF 테스트가 실행조차 되지 않음 → Error Handling (7.5절) → 재시도 실패 시 **파이프라인 중단**
 ```
 
 **ralph-loop-init** (장시간 테스트):
+
+> **주의**: ralph-loop-init은 설정 생성(Phase A-1)과 실제 실행+결과 확인(Phase A-2, Phase B)이 모두 완료되어야 한다. 설정만 만들고 넘어가는 것은 **Hard Rule #10 위반**이다.
+
 ```
-1. ralph-loop-init 에이전트로 설정 생성:
+## Phase A-1: Execute (설정 생성)
+ralph-loop-init 에이전트로 설정 생성:
 Agent(
   subagent_type="ralph-loop-init",
   prompt="다음 기능의 자동 디버깅 루프를 설정하세요.
@@ -644,7 +698,17 @@ Agent(
   관련 파일: <구현된 파일 목록>"
 )
 
-2. ralph loop를 background로 실행:
+## Phase B-1: Verify (설정 검증)
+Exit Criteria 확인:
+  - ralph/ 디렉토리가 존재하는가
+  - ralph/run.sh 파일이 존재하고 실행 가능한가
+  - ralph/state.md 파일이 존재하는가
+
+IF 미충족 → Error Handling (7.5절)으로 재시도
+IF 충족 → Phase A-2로 진행
+
+## Phase A-2: Execute (실제 실행)
+ralph loop를 background로 실행:
 Bash(
   command="bash ralph/run.sh 2>&1",
   run_in_background=true
@@ -652,10 +716,19 @@ Bash(
 → 마일스톤: "[sdd-autopilot] ralph loop 실행 중 (background)..."
 → background 작업 완료 알림을 기다린다 (polling/sleep 하지 않음)
 
-3. 완료 알림 수신 후 결과 확인:
-→ ralph/state.md의 phase 확인
-→ phase가 DONE이면 → 다음 단계(spec-update-done) 진행
-→ phase가 DONE이 아니면 → 로그에 실패 기록, 다음 단계 진행
+## Phase B-2: Verify (실행 결과 검증)
+완료 알림 수신 후 Exit Criteria 확인:
+  - ralph/state.md의 phase 값 확인
+  - 최종 테스트 결과가 기록되어 있는가
+  - 디버깅 루프가 실제로 실행되었는가 (iteration 횟수 > 0)
+
+IF phase == DONE AND 테스트 결과 기록됨:
+  → 마일스톤: "[sdd-autopilot] ralph loop 완료 -- 결과: <요약>"
+  → 다음 단계(spec-update-done) 진행
+IF phase != DONE:
+  → 로그에 실패 상세 기록 (phase 값, 마지막 에러, iteration 횟수)
+  → 마일스톤: "[sdd-autopilot] ralph loop 미완료 -- phase: <값>, 파이프라인 중단"
+  → **파이프라인 중단** (Exit Criteria 미충족 -- Hard Rule #10)
 ```
 
 #### 7.5 에러 핸들링
@@ -679,15 +752,22 @@ ON ERROR:
     5. 에이전트 재호출
   ELSE:
     3. 로그에 실패 기록
-    4. 마일스톤: "[sdd-autopilot] <agent-name> 실패 -- 최대 재시도(3회) 초과. 다음 단계로 진행합니다."
-    5. 해당 단계를 건너뛰고 다음 단계로 진행
-       (단, 핵심 단계 실패 시 파이프라인 중단 가능 -- 아래 참조)
+    4. IF 현재 단계가 비핵심 단계:
+         마일스톤: "[sdd-autopilot] <agent-name> 실패 -- 최대 재시도(3회) 초과. 비핵심 단계이므로 로그에 기록 후 다음 단계로 진행합니다."
+    5. IF 현재 단계가 비핵심 단계:
+         해당 단계를 건너뛰고 다음 단계로 진행
+       ELSE:
+         파이프라인 중단
+         (핵심 단계 실패 시 중단 기준은 아래 참조)
 ```
 
 **핵심 단계 실패 시 파이프라인 중단 기준:**
-- `implementation` 에이전트 실패 → 파이프라인 중단 (구현 없이 진행 불가)
 - `feature-draft` 에이전트 실패 → 파이프라인 중단 (계획 없이 구현 불가)
-- 기타 에이전트 실패 → 건너뛰고 진행 (로그에 기록)
+- `implementation-plan` 에이전트 실패 → 파이프라인 중단 (구현 계획 없이 구현 불가)
+- `implementation` 에이전트 실패 → 파이프라인 중단 (구현 없이 진행 불가)
+- `implementation-review` 에이전트 실패 (파이프라인에 review 포함 시) → 파이프라인 중단 (Hard Rule #9 -- review-fix 사이클 필수)
+- 테스트 단계 실패 (인라인/ralph 모두) → 파이프라인 중단 (Hard Rule #10 -- Exit Criteria 미충족)
+- `spec-update-done` / `spec-review` 실패 → 건너뛰고 진행 (로그에 기록, 수동 수행 가능)
 
 #### 7.6 마일스톤 보고
 
@@ -1043,14 +1123,13 @@ ON ERROR at step N:
 - `feature-draft`: 계획 없이 구현 불가
 - `implementation-plan`: 구현 계획 없이 구현 불가
 - `implementation`: 코드 생성 자체가 실패
-
-**조건부 핵심 단계** (파이프라인에 포함된 경우 핵심 단계로 취급):
-- `implementation-review`: 파이프라인에 review가 포함된 경우 핵심 단계. review-fix 사이클을 완료해야 하며, 실패 시 건너뛸 수 없음. 최대 3회 재시도 후에도 실패하면 파이프라인 중단.
+- `implementation-review` (파이프라인에 review 포함 시): review-fix 사이클 필수 (Hard Rule #9). 실패 시 건너뛸 수 없음.
+- 테스트 단계 (인라인/ralph 모두): Exit Criteria 미충족 시 중단 (Hard Rule #10)
 
 **비핵심 단계** (실패 시 건너뛰고 진행):
 - `spec-update-done`: 스펙 동기화는 수동으로 가능
+- `spec-update-todo`: 스펙 추가는 수동으로 가능
 - `spec-review`: 선택적 품질 검사
-- `ralph-loop-init`: 인라인 디버깅으로 대체 가능
 
 ### 파이프라인 중단 시 보고
 
