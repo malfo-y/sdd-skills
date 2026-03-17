@@ -121,18 +121,28 @@ def process_data(input):
 
 ## §4 Component Details
 
-*이 섹션은 주요 컴포넌트마다 반복한다. 각 컴포넌트에 What/Why/How 트라이어드를 테이블 컬럼으로 강제한다.*
+*이 섹션은 주요 컴포넌트마다 반복한다. 각 컴포넌트에 What/Why/How 트라이어드를 강제한다.*
+
+*스펙의 규모가 클 경우 각 컴포넌트는 별개의 파일로 작성되거나 subdirectory로 나뉠 수 있다. `Modular Spec Guide` 참고*
 
 ### [Component Name]
 
-| Aspect | Description |
-|--------|-------------|
-| **Purpose** [What] | 이 컴포넌트가 하는 일 |
-| **Why** | 이 컴포넌트가 존재하는 이유 — 산문체 (Writing Rules 참조) |
-| **Input** | 입력 형식과 데이터 |
-| **Output** | 출력 형식과 데이터 |
-| **Dependencies** [Why] | 의존성과 이유: "X에 의존 — Y 때문" |
-| **Source** | _(코드베이스 존재 시)_ `<path>`: Class, function() |
+**Motivation [Why]**:
+- 이 컴포넌트가 존재하는 이유 (Writing Rules 참조)
+
+**Purpose [What]**:
+- 이 컴포넌트가 하는 일
+
+**Input/Output**:
+- 입출력 형식과 데이터
+
+**Dependencies**:
+- 의존성과 이유: "X에 의존 — Y 때문"
+
+**Source**: (코드베이스 존재 시)
+- `<path>`: Class, function()
+- `<path>`: Class, function()
+- ...
 
 **Architecture Details [How]**:
 - 구현 접근 방식과 선택 이유
