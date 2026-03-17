@@ -28,11 +28,11 @@ This is the full template with all possible sections. Adapt as needed for each p
 
 ## Background & Motivation
 
-### Problem Statement
+### Problem Statement [What]
 
 [What problem does this project solve? What pain point or gap exists without it?]
 
-### Why This Approach
+### Why This Approach [Why]
 
 [Why was this approach chosen over alternatives? Briefly compare with key alternatives considered.]
 
@@ -77,11 +77,11 @@ This is the full template with all possible sections. Adapt as needed for each p
 
 ## Core Design
 
-### Key Idea
+### Key Idea [What]
 
 [Narrative explanation of the core design idea. What is the central insight or approach that drives this project's architecture? Write as a story — what problem was encountered, what solution was devised, and why it works.]
 
-### Algorithm / Logic Flow
+### Algorithm / Logic Flow [How]
 
 [Describe the main algorithm or processing flow. Include actual code excerpts for key functions.]
 
@@ -99,7 +99,7 @@ def process_data(input: InputModel) -> OutputModel:
 > **Inline Citation Format**: Reference code in prose as `[filepath:functionName]`.
 > Example: "The validation step `[src/core/validator.py:validate]` ensures data integrity before the transform `[src/core/processor.py:transform]`."
 
-### Design Rationale
+### Design Rationale [Why]
 
 [Why was this structure chosen? What constraints or goals drove the design decisions?]
 
@@ -137,22 +137,22 @@ Record significant decisions in `_sdd/spec/DECISION_LOG.md` as well, so rational
 
 ## Component Details
 
+> 각 컴포넌트에 What/Why/How 트라이어드를 적용한다. 스펙 규모가 클 경우 각 컴포넌트는 별개의 파일로 분리될 수 있다 — Modular Spec Guide 참고.
+
 ### Component: <Name>
 
-#### Overview
-
-Brief description of what this component does.
-
-#### Why
+#### Motivation [Why]
 
 Why this component exists — what problem it solves, why it's a separate component rather than part of something else. Write as natural prose, NOT as a label pattern like "~의 이유: ..." (e.g., "Separated from X because Y to enable independent scaling").
 
-#### Responsibility
+#### Purpose [What]
+
+Brief description of what this component does.
 
 - Primary: What it does
 - Secondary: Supporting functions
 
-#### Interface
+#### Input/Output
 
 **Input:**
 ```python
@@ -164,13 +164,9 @@ Why this component exists — what problem it solves, why it's a separate compon
 # Output type/schema
 ```
 
-#### Implementation Details
+#### Dependencies
 
-**Key Files:**
-- `src/components/name/main.py` - Entry point
-
-**Key Classes/Functions:**
-- `ClassName.method()` - Description
+- **ComponentB** (Internal) — Data processing. Separated processing logic to allow independent scaling and testing.
 
 <!-- Include Source field only when documenting an existing codebase -->
 #### Source
@@ -178,11 +174,22 @@ Why this component exists — what problem it solves, why it's a separate compon
 - `src/components/name/main.py`: ClassName.method(), entry_point()
 - `src/components/name/utils.py`: helper_function(), parse_input()
 
-#### Dependencies
+#### Architecture Details [How]
 
-| Dependency | Type | Purpose | Why |
-|------------|------|---------|-----|
-| ComponentB | Internal | Data processing | ... |
+**Key Files:**
+- `src/components/name/main.py` - Entry point
+
+**Key Classes/Functions:**
+- `ClassName.method()` - Description
+
+#### How to Use
+
+- API/interface examples
+- Configuration options
+
+#### Known Issues
+
+- Current limitations and planned improvements
 
 ---
 

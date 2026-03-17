@@ -25,7 +25,6 @@
         "./.claude/skills/pr-review",
         "./.claude/skills/pr-spec-patch",
         "./.claude/skills/ralph-loop-init",
-        "./.claude/skills/sdd-upgrade",
         "./.claude/skills/spec-create",
         "./.claude/skills/spec-review",
         "./.claude/skills/spec-rewrite",
