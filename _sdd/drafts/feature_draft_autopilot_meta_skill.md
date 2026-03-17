@@ -3,7 +3,7 @@
 **날짜**: 2026-03-16
 **근거 토론**: `_sdd/discussion/discussion_autopilot_meta_skill.md`
 **후속 토론**: `_sdd/discussion/discussion_autopilot_open_questions.md` (Open Questions 해결)
-**변경된 요구사항**: 오케스트레이터 저장 위치 변경 (`.claude/skills/` → `_sdd/pipeline/`)
+**변경된 요구사항**: 오케스트레이터 저장 위치 — `.claude/skills/` (최종 결정. 변경 이력: `.claude/skills/` → `_sdd/pipeline/` → `.claude/skills/`)
 
 ---
 
@@ -114,7 +114,7 @@
 1. **Discussion (인라인)**: 사용자와 대화하여 요구사항을 구체화한다 (에이전트가 아닌 스킬 내 인라인으로 실행)
 2. **코드베이스 탐색**: 현재 프로젝트 구조, 스펙, 관련 코드를 분석한다
 3. **규모/복잡도 판단**: 분석 결과를 기반으로 소/중/대 규모를 판단한다
-4. **오케스트레이터 생성**: 규모에 맞는 맞춤형 오케스트레이터 SKILL.md를 `_sdd/pipeline/`에 생성한다
+4. **오케스트레이터 생성**: 규모에 맞는 맞춤형 오케스트레이터 SKILL.md를 `.claude/skills/`에 생성한다
 5. **사용자 확인**: 생성된 오케스트레이터를 사용자에게 제시하여 확인/수정을 받는다
 6. **자율 실행**: 승인된 오케스트레이터가 에이전트 파이프라인을 자율적으로 실행한다
 
@@ -144,6 +144,10 @@
 - [ ] 각 마일스톤에서 텍스트 출력 + `_sdd/pipeline/` 로그 기록
 - [ ] review-fix 루프 최대 3회, critical/high = 0이면 종료
 - [ ] 에러 발생 시 상세 로그 기록 → 디버깅 → 최대 3회 재시도
+- [ ] **재개(Resume)**: 기존 미완료 파이프라인 감지 시 사용자에게 재개/새로 시작 선택 제시
+- [ ] **부분 실행**: 사용자 요청에서 시작점/종료점 힌트를 파싱하여 파이프라인 범위 조절
+- [ ] **산출물 스캔**: `_sdd/` 하위 기존 산출물을 감지하고 현재 요청과의 관련성 판단
+- [ ] **로그 메타데이터**: 로그에 Meta(request, orchestrator 참조, scale, started, pipeline) + Status 테이블 포함
 
 ### Feature: 파이프라인 로그 시스템
 
@@ -177,6 +181,10 @@ _sdd/pipeline/
 - [ ] 각 에이전트 단계의 시작/완료가 기록됨
 - [ ] 에러 및 재시도 이력이 기록됨
 - [ ] 로그 파일이 마크다운 포맷으로 사람이 읽을 수 있음
+- [ ] 로그에 Meta 섹션(request, orchestrator 참조, scale, started, pipeline) 포함
+- [ ] 로그에 Status 테이블(Step/Agent/Status/Output) 포함
+- [ ] Status 상태값: pending/in_progress/completed/failed/skipped
+- [ ] 재개 시 Status 테이블에서 첫 번째 미완료 스텝을 찾아 실행 재개 가능
 
 ## Improvements
 
@@ -1181,7 +1189,7 @@ autopilot 메타스킬의 end-to-end 동작을 테스트한다:
 | 1 | Codex 스킬 동기화 | **Codex는 기존 유지** — `.codex/skills/`는 풀 SKILL.md 유지. 에이전트 전환은 Claude Code 전용. Codex는 Agent 도구를 제한적으로 지원하므로 래퍼 패턴이 동일하게 동작하지 않음 |
 | 2 | Agent 정의에 references/examples 포함 방식 | **Read로 참조** — 에이전트 본문에는 SKILL.md 로직만 포함. references/examples는 기존 `.claude/skills/<name>/references/` 경로에서 Read로 읽도록 지시 |
 | 3 | 래퍼 스킬 버전 관리 | **Minor 버전 업** — 래퍼 전환 시 `1.0.0 → 1.1.0`. 기능 동일, 구조 변경 표시. skill.json도 함께 업데이트 |
-| 4 | 오케스트레이터 생성 위치 | **`_sdd/pipeline/`에 저장** — 일회성 실행 계획이므로 `.claude/skills/`를 오염시키지 않음. 로그와 함께 관리. (**이전 토론 결정 #12 변경**) |
+| 4 | 오케스트레이터 생성 위치 | **`.claude/skills/`에 저장** — 스킬로서 재사용 가능, 재개(resume) 시 파이프라인 정의로 활용. 로그(`_sdd/pipeline/`)와 분리하여 역할 명확화. (변경 이력: `.claude/skills/` → `_sdd/pipeline/` → `.claude/skills/`) |
 | 5 | 대규모 파이프라인 컨텍스트 관리 | **파일 기반 전달로 충분** — 부모(autopilot)는 각 에이전트에 파일 경로만 전달. 에이전트는 자체 컨텍스트에서 파일을 Read. 부모 컨텍스트 누적 최소화 |
 | 6 | 파이프라인 실행 로그 (추가 논의) | **공유 로그 파일** — autopilot이 로그 파일을 생성하고, 각 에이전트 결과를 받을 때마다 핵심 결정사항을 추출하여 로그에 추가. 에이전트는 로그를 모름 |
 
