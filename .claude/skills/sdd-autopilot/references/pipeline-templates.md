@@ -60,7 +60,11 @@ implementation agent → 인라인 테스트 → (완료)
 
 ## Review-Fix Loop
 
-- 소규모에서는 생략 (implementation 에이전트가 자체 테스트로 품질 확보)
+> **Hard Rule #9**: 파이프라인에 review가 포함되면 review-fix 사이클은 필수.
+> 소규모에서도 review가 포함된 경우(사용자 요청, 부분 파이프라인 등) 동일하게 적용.
+
+- 소규모 기본: review 미포함 (implementation 에이전트가 자체 테스트로 품질 확보)
+- **단, review가 포함되면**: review → fix → re-review 사이클 필수 실행 (최대 3회)
 
 ## Test Strategy
 
@@ -70,7 +74,7 @@ implementation agent → 인라인 테스트 → (완료)
 ## Error Handling
 
 - **재시도 횟수**: 3회
-- **핵심 단계**: implementation
+- **핵심 단계**: implementation, implementation-review (review 포함 시)
 ```
 
 ---
@@ -161,9 +165,10 @@ Feature draft: `_sdd/drafts/feature_draft_<topic>.md`
 
 사용자 원래 요청: <사용자 요청 원문>
 
-### Step 4: review-fix loop
+### Step 4: review-fix loop (필수 사이클)
 
 (autopilot이 직접 관리 -- review-fix loop 섹션 참조)
+**Hard Rule #9 적용**: review → fix → re-review 사이클 필수. 리뷰만 하고 끝나지 않음.
 
 ### Step 5: spec-update-done
 
@@ -180,11 +185,14 @@ Feature draft: `_sdd/drafts/feature_draft_<topic>.md`
 
 사용자 원래 요청: <사용자 요청 원문>
 
-## Review-Fix Loop
+## Review-Fix Loop (필수 사이클)
+
+> **Hard Rule #9**: review → fix → re-review 사이클 필수. 리뷰만 하고 끝나지 않음.
 
 - **최대 반복**: 3회
 - **종료 조건**: critical = 0 AND high = 0
 - **수정 대상**: critical/high만 (medium/low는 로그 기록)
+- **사이클 필수**: 이슈 발견 시 fix → re-review 반드시 실행. 단일 리뷰로 종료 불가.
 
 ## Test Strategy
 
@@ -195,7 +203,7 @@ Feature draft: `_sdd/drafts/feature_draft_<topic>.md`
 ## Error Handling
 
 - **재시도 횟수**: 3회
-- **핵심 단계**: feature-draft, implementation-plan, implementation
+- **핵심 단계**: feature-draft, implementation-plan, implementation, implementation-review (review-fix 사이클 포함)
 - **비핵심 단계**: spec-update-done
 ```
 
@@ -352,11 +360,14 @@ Feature draft: `_sdd/drafts/feature_draft_<topic>.md`
 - 기존 섹션과의 일관성
 - 구현과의 정합성
 
-## Review-Fix Loop
+## Review-Fix Loop (필수 사이클)
+
+> **Hard Rule #9**: review → fix → re-review 사이클 필수. 리뷰만 하고 끝나지 않음.
 
 - **최대 반복**: 3회
 - **종료 조건**: critical = 0 AND high = 0
 - **수정 대상**: critical/high만 (medium/low는 로그 기록)
+- **사이클 필수**: 이슈 발견 시 fix → re-review 반드시 실행. 단일 리뷰로 종료 불가.
 
 ## Test Strategy
 
@@ -367,6 +378,6 @@ Feature draft: `_sdd/drafts/feature_draft_<topic>.md`
 ## Error Handling
 
 - **재시도 횟수**: 3회
-- **핵심 단계**: feature-draft, implementation-plan, implementation
+- **핵심 단계**: feature-draft, implementation-plan, implementation, implementation-review (review-fix 사이클 포함)
 - **비핵심 단계**: spec-update-todo, spec-update-done, spec-review
 ```
