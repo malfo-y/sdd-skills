@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
-"""Install every skill under a GitHub repo path into ~/.codex/skills."""
+"""Install the Codex skill bundle (skills + agents + config) from a GitHub repo."""
 
 from __future__ import annotations
 
 import argparse
 from dataclasses import dataclass
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -18,6 +19,8 @@ import zipfile
 DEFAULT_REF = "main"
 DEFAULT_REPO = "malfo-y/sdd-skills"
 DEFAULT_SKILLS_ROOT = ".codex/skills"
+DEFAULT_AGENTS_ROOT = ".codex/agents"
+DEFAULT_CONFIG_PATH = ".codex/config.toml"
 
 
 @dataclass
@@ -39,6 +42,16 @@ class Source:
     repo: str
     ref: str
     skills_root: str
+    agents_root: str
+    config_path: str
+
+
+@dataclass
+class Destinations:
+    codex_home: str
+    skills_root: str
+    agents_root: str
+    config_path: str
 
 
 class InstallError(Exception):
@@ -149,7 +162,7 @@ def _download_repo_zip(owner: str, repo: str, ref: str, dest_dir: str) -> str:
     return os.path.join(dest_dir, next(iter(top_levels)))
 
 
-def _git_sparse_checkout(repo_url: str, ref: str, sparse_path: str, dest_dir: str) -> str:
+def _git_sparse_checkout(repo_url: str, ref: str, sparse_paths: list[str], dest_dir: str) -> str:
     repo_dir = os.path.join(dest_dir, "repo")
     clone_cmd = [
         "git",
@@ -180,12 +193,13 @@ def _git_sparse_checkout(repo_url: str, ref: str, sparse_path: str, dest_dir: st
                 repo_dir,
             ]
         )
-    _run_git(["git", "-C", repo_dir, "sparse-checkout", "set", sparse_path])
+    _run_git(["git", "-C", repo_dir, "sparse-checkout", "set", *sparse_paths])
     _run_git(["git", "-C", repo_dir, "checkout", ref])
     return repo_dir
 
 
 def _prepare_repo(source: Source, method: str, tmp_dir: str) -> str:
+    sparse_paths = [source.skills_root, source.agents_root, source.config_path]
     if method in ("download", "auto"):
         try:
             return _download_repo_zip(source.owner, source.repo, source.ref, tmp_dir)
@@ -200,14 +214,14 @@ def _prepare_repo(source: Source, method: str, tmp_dir: str) -> str:
             return _git_sparse_checkout(
                 _build_repo_url(source.owner, source.repo),
                 source.ref,
-                source.skills_root,
+                sparse_paths,
                 tmp_dir,
             )
         except InstallError:
             return _git_sparse_checkout(
                 _build_repo_ssh(source.owner, source.repo),
                 source.ref,
-                source.skills_root,
+                sparse_paths,
                 tmp_dir,
             )
     raise InstallError("Unsupported method.")
@@ -223,6 +237,8 @@ def _resolve_source(args: Args) -> Source:
             repo=repo,
             ref=ref,
             skills_root=_validate_relative_path(skills_root),
+            agents_root=_validate_relative_path(DEFAULT_AGENTS_ROOT),
+            config_path=_validate_relative_path(DEFAULT_CONFIG_PATH),
         )
     repo = args.repo or DEFAULT_REPO
     repo_parts = [part for part in repo.split("/") if part]
@@ -233,6 +249,24 @@ def _resolve_source(args: Args) -> Source:
         repo=repo_parts[1],
         ref=args.ref,
         skills_root=_validate_relative_path(skills_root or DEFAULT_SKILLS_ROOT),
+        agents_root=_validate_relative_path(DEFAULT_AGENTS_ROOT),
+        config_path=_validate_relative_path(DEFAULT_CONFIG_PATH),
+    )
+
+
+def _resolve_destinations(dest: str | None) -> Destinations:
+    skills_root = os.path.expanduser(dest or _default_dest())
+    normalized = os.path.normpath(skills_root)
+    if os.path.basename(normalized) == "skills":
+        codex_home = os.path.dirname(normalized)
+    else:
+        codex_home = normalized
+        skills_root = os.path.join(codex_home, "skills")
+    return Destinations(
+        codex_home=codex_home,
+        skills_root=skills_root,
+        agents_root=os.path.join(codex_home, "agents"),
+        config_path=os.path.join(codex_home, "config.toml"),
     )
 
 
@@ -252,6 +286,23 @@ def _discover_skills(repo_root: str, skills_root: str, include_hidden: bool) -> 
         discovered.append((entry, skill_dir))
     if not discovered:
         raise InstallError(f"No skills found under: {skills_root}")
+    return discovered
+
+
+def _discover_agents(repo_root: str, agents_root: str) -> list[tuple[str, str]]:
+    root_dir = os.path.join(repo_root, agents_root)
+    if not os.path.isdir(root_dir):
+        raise InstallError(f"Agents root not found: {agents_root}")
+    discovered = []
+    for entry in sorted(os.listdir(root_dir)):
+        agent_path = os.path.join(root_dir, entry)
+        if os.path.isdir(agent_path):
+            continue
+        if not entry.endswith(".toml"):
+            continue
+        discovered.append((entry, agent_path))
+    if not discovered:
+        raise InstallError(f"No agents found under: {agents_root}")
     return discovered
 
 
@@ -280,16 +331,118 @@ def _install_skill(
     return "installed"
 
 
-def _print_summary(results: list[tuple[str, str]], dest_root: str, dry_run: bool) -> None:
+def _install_agent(
+    agent_name: str,
+    agent_path: str,
+    dest_root: str,
+    force: bool,
+    dry_run: bool,
+) -> str:
+    dest_path = os.path.join(dest_root, agent_name)
+    existed_before = os.path.exists(dest_path)
+    if existed_before and not force:
+        return "skipped"
+    if dry_run:
+        if existed_before and force:
+            return "would replace"
+        return "would install"
+    os.makedirs(dest_root, exist_ok=True)
+    if existed_before:
+        os.remove(dest_path)
+    shutil.copy2(agent_path, dest_path)
+    if existed_before and force:
+        return "replaced"
+    return "installed"
+
+
+def _extract_agents_section(config_text: str) -> dict[str, int]:
+    match = re.search(r"(?ms)^\[agents\]\s*(.*?)(?=^\[|\Z)", config_text)
+    if not match:
+        return {}
+    body = match.group(1)
+    values: dict[str, int] = {}
+    for key in ("max_threads", "max_depth"):
+        key_match = re.search(rf"(?m)^{key}\s*=\s*(\d+)\s*$", body)
+        if key_match:
+            values[key] = int(key_match.group(1))
+    return values
+
+
+def _merge_config(existing_text: str | None, incoming_text: str) -> tuple[str, str]:
+    incoming_agents = _extract_agents_section(incoming_text)
+    if not incoming_agents:
+        raise InstallError("Incoming config.toml is missing an [agents] section.")
+
+    if not existing_text:
+        return incoming_text, "installed"
+
+    existing_agents = _extract_agents_section(existing_text)
+    merged_agents = dict(existing_agents)
+    changed = False
+    for key, value in incoming_agents.items():
+        if existing_agents.get(key) != value:
+            merged_agents[key] = value
+            changed = True
+
+    if not existing_agents:
+        block_lines = ["[agents]"] + [f"{key} = {merged_agents[key]}" for key in sorted(merged_agents)]
+        suffix = "" if existing_text.endswith("\n") or not existing_text else "\n"
+        merged_text = existing_text + suffix + "\n".join(block_lines) + "\n"
+        return merged_text, "updated" if changed else "unchanged"
+
+    def repl(match: re.Match[str]) -> str:
+        body = "\n".join(f"{key} = {merged_agents[key]}" for key in sorted(merged_agents))
+        return f"[agents]\n{body}\n\n"
+
+    merged_text = re.sub(r"(?ms)^\[agents\]\s*.*?(?=^\[|\Z)", repl, existing_text, count=1)
+    return merged_text, "updated" if changed else "unchanged"
+
+
+def _install_config(
+    config_path: str,
+    dest_path: str,
+    dry_run: bool,
+) -> str:
+    incoming_text = open(config_path, "r", encoding="utf-8").read()
+    existing_text = None
+    if os.path.exists(dest_path):
+        existing_text = open(dest_path, "r", encoding="utf-8").read()
+    merged_text, status = _merge_config(existing_text, incoming_text)
+    if dry_run:
+        if status == "installed":
+            return "would install"
+        if status == "updated":
+            return "would update"
+        return "unchanged"
+    os.makedirs(os.path.dirname(dest_path), exist_ok=True)
+    with open(dest_path, "w", encoding="utf-8") as handle:
+        handle.write(merged_text)
+    return status
+
+
+def _print_summary(
+    skill_results: list[tuple[str, str]],
+    agent_results: list[tuple[str, str]],
+    config_result: tuple[str, str],
+    destinations: Destinations,
+    dry_run: bool,
+) -> None:
     action_word = "Planned" if dry_run else "Completed"
-    print(f"{action_word} bundle install into {dest_root}")
-    for skill_name, status in results:
+    print(f"{action_word} bundle install into {destinations.codex_home}")
+    print(f"Skills root: {destinations.skills_root}")
+    for skill_name, status in skill_results:
         print(f"- {skill_name}: {status}")
+    print(f"Agents root: {destinations.agents_root}")
+    for agent_name, status in agent_results:
+        print(f"- {agent_name}: {status}")
+    label, status = config_result
+    print(f"Config: {destinations.config_path}")
+    print(f"- {label}: {status}")
 
 
 def _parse_args(argv: list[str]) -> Args:
     parser = argparse.ArgumentParser(
-        description="Install every skill under a GitHub repo path into ~/.codex/skills."
+        description="Install the Codex skill bundle (skills + agents + config) into CODEX_HOME."
     )
     parser.add_argument(
         "--repo",
@@ -308,7 +461,7 @@ def _parse_args(argv: list[str]) -> Args:
     parser.add_argument(
         "--dest",
         default=_default_dest(),
-        help="Destination skill root (default: ~/.codex/skills)",
+        help="Destination skill root or CODEX_HOME root (default: ~/.codex/skills)",
     )
     parser.add_argument(
         "--method",
@@ -338,24 +491,46 @@ def main(argv: list[str]) -> int:
     args = _parse_args(argv)
     try:
         source = _resolve_source(args)
-        dest_root = os.path.expanduser(args.dest or _default_dest())
+        destinations = _resolve_destinations(args.dest)
         tmp_dir = tempfile.mkdtemp(prefix="skill-bundle-", dir=_tmp_root())
         try:
             repo_root = _prepare_repo(source, args.method, tmp_dir)
             discovered = _discover_skills(repo_root, source.skills_root, args.include_hidden)
-            results: list[tuple[str, str]] = []
+            discovered_agents = _discover_agents(repo_root, source.agents_root)
+            config_source = os.path.join(repo_root, source.config_path)
+            if not os.path.isfile(config_source):
+                raise InstallError(f"Config file not found: {source.config_path}")
+            skill_results: list[tuple[str, str]] = []
             for skill_name, skill_dir in discovered:
                 status = _install_skill(
                     skill_name=skill_name,
                     skill_dir=skill_dir,
-                    dest_root=dest_root,
+                    dest_root=destinations.skills_root,
                     force=args.force,
                     dry_run=args.dry_run,
                 )
-                results.append((skill_name, status))
+                skill_results.append((skill_name, status))
+            agent_results: list[tuple[str, str]] = []
+            for agent_name, agent_path in discovered_agents:
+                status = _install_agent(
+                    agent_name=agent_name,
+                    agent_path=agent_path,
+                    dest_root=destinations.agents_root,
+                    force=args.force,
+                    dry_run=args.dry_run,
+                )
+                agent_results.append((agent_name, status))
+            config_result = (
+                os.path.basename(destinations.config_path),
+                _install_config(
+                    config_path=config_source,
+                    dest_path=destinations.config_path,
+                    dry_run=args.dry_run,
+                ),
+            )
         finally:
             shutil.rmtree(tmp_dir, ignore_errors=True)
-        _print_summary(results, dest_root, args.dry_run)
+        _print_summary(skill_results, agent_results, config_result, destinations, args.dry_run)
         if not args.dry_run:
             print("Restart Codex to pick up new skills.")
         return 0
