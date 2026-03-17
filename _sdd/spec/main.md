@@ -2,7 +2,7 @@
 
 > Markdown 기반 스킬 시스템으로 AI 에이전트의 Spec-Driven Development 워크플로우를 구조화한다.
 
-**Version**: 3.2.0
+**Version**: 3.3.0
 **Last Updated**: 2026-03-17
 **Status**: Approved
 
@@ -192,7 +192,7 @@ Agent(subagent_type="<agent-name>", prompt="[사용자의 원래 요청 전문]"
 - Phase 1 (Interactive): 사용자와 인라인 discussion → 코드베이스 탐색 → 규모 판단 → 오케스트레이터 생성. 시작점/종료점 감지를 통해 기존 산출물을 활용하거나 파이프라인 범위를 조절
 - Phase 1.5 (Checkpoint): 생성된 오케스트레이터를 사용자에게 제시 → 확인/수정 → 실행 승인
 - Phase 2 (Autonomous): 승인된 오케스트레이터가 에이전트 파이프라인을 자율 실행 → 마일스톤 텍스트 출력 + `_sdd/pipeline/` 로그 기록 (Meta + Status 테이블 포함)
-- 종료 조건: review-fix 루프 최대 3회, critical/high = 0이면 종료. 에러 시 3회 재시도.
+- 종료 조건: review-fix 루프 최대 3회, critical/high = 0이면 종료. 에러 시 3회 재시도. **Hard Rule #9**: review가 포함된 파이프라인에서는 review → fix → re-review 사이클이 필수이며, 리뷰만 하고 끝나는 것은 허용하지 않는다. 부분 파이프라인/재개에서도 동일 적용. `implementation-review`는 review 포함 시 조건부 핵심 단계로 취급된다.
 - 재개: Status 테이블에서 첫 번째 미완료 스텝을 찾아 해당 스텝부터 실행 재개
 
 ### Common Hard Rules
@@ -201,6 +201,10 @@ Agent(subagent_type="<agent-name>", prompt="[사용자의 원래 요청 전문]"
 2. **_sdd/env.md 참조 필수**: 로컬 명령 실행 전 환경 설정 확인
 3. **기존 파일 백업**: 덮어쓰기 전 `prev/PREV_<filename>_<timestamp>.md`로 아카이브
 4. **한국어 기본**: 사용자와의 커뮤니케이션은 한국어 (스킬 내부 정의는 영어)
+
+**sdd-autopilot 전용 Hard Rules** (위 공통 규칙에 추가):
+
+5. **Review-Fix 사이클 필수** (Hard Rule #9): 파이프라인에 review 단계(implementation-review 또는 모든 형태의 코드 리뷰)가 포함되면, 반드시 review → fix → re-review 사이클을 실행해야 한다. 리뷰만 하고 끝나는 것은 허용하지 않는다. 이 규칙은 전체 파이프라인, 부분 파이프라인, 중간부터 시작하는 파이프라인, 재개(resume) 모두에 적용된다. review가 포함된 파이프라인에서 `implementation-review`는 조건부 핵심 단계로 취급하며, 실패 시 건너뛸 수 없다.
 
 ### Design Rationale
 
@@ -459,7 +463,7 @@ PR 생성 → pr-spec-patch → pr-review → (merge 후) spec-update-done
 |            | `.claude/skills/sdd-autopilot/references/pipeline-templates.md`: 규모별 파이프라인 템플릿 |
 |            | `.claude/skills/sdd-autopilot/references/scale-assessment.md`: 규모 판단 가이드라인 |
 |            | `.claude/skills/sdd-autopilot/examples/sample-orchestrator.md`: 오케스트레이터 예시 |
-| **Process** | Step 0 (Pipeline State Detection): 기존 미완료 파이프라인 감지 → 재개/새로 시작 선택 → Phase 1 (Interactive): 요청 분석 (시작점/종료점 감지 + 산출물 스캔) → 인라인 discussion → 코드베이스 탐색 → 규모 판단 → Pre-flight Check → Phase 1.5 (Checkpoint): 오케스트레이터 생성 (.claude/skills/에 저장) + 사용자 확인 → Phase 2 (Autonomous): 에이전트 파이프라인 자율 실행 + 마일스톤 로그 (Meta + Status 테이블) |
+| **Process** | Step 0 (Pipeline State Detection): 기존 미완료 파이프라인 감지 → 재개/새로 시작 선택 → Phase 1 (Interactive): 요청 분석 (시작점/종료점 감지 + 산출물 스캔 + Review-Fix 사이클 필수 검증) → 인라인 discussion → 코드베이스 탐색 → 규모 판단 → Pre-flight Check → Phase 1.5 (Checkpoint): 오케스트레이터 생성 (.claude/skills/에 저장) + 사용자 확인 → Phase 2 (Autonomous): 에이전트 파이프라인 자율 실행 + 마일스톤 로그 (Meta + Status 테이블). **Hard Rule #9**: review 포함 시 review → fix → re-review 사이클 필수. `implementation-review`는 조건부 핵심 단계 |
 | **Dependencies** | 스펙 존재 시 활용, 없어도 실행 가능 |
 | **실행 형태** | 풀 스킬 (사용자 인터랙션이 핵심이므로 에이전트 전환 불필요) |
 
@@ -731,7 +735,7 @@ PR 생성 → pr-spec-patch → pr-review → (merge 후) spec-update-done
 **Expected Result:**
 - Phase 1: sdd-autopilot이 인라인 discussion으로 요구사항을 구체화하고, 코드베이스를 탐색하여 규모를 판단
 - Phase 1.5: 생성된 오케스트레이터를 사용자에게 제시 → 확인 후 실행
-- Phase 2: feature-draft → implementation-plan → implementation → implementation-review (review-fix loop) → 인라인 테스트 → spec-update-done을 자율 실행
+- Phase 2: feature-draft → implementation-plan → implementation → implementation-review (review-fix loop, **필수 사이클** -- Hard Rule #9에 따라 이슈 발견 시 fix → re-review 반드시 실행) → 인라인 테스트 → spec-update-done을 자율 실행
 - `.claude/skills/orchestrator_auth_system/SKILL.md` — 생성된 오케스트레이터 (스킬로 재사용/재개 가능)
 - `_sdd/pipeline/log_auth_system_<ts>.md` — 파이프라인 실행 로그 (Meta + Status 테이블 + 각 에이전트 시작/완료, 결정사항, 에러)
 - 구현 완료 + 스펙 동기화 완료
@@ -942,6 +946,13 @@ sdd_skills/
 | `.claude/agents/write-phased.md` | write-phased | Component Details |
 
 ### Changelog
+
+#### v3.3.0 (2026-03-17)
+
+- **Hard Rule #9 (Review-Fix 사이클 필수) 반영**: sdd-autopilot에 추가된 Hard Rule #9을 스펙에 반영 -- review 포함 파이프라인에서 review → fix → re-review 사이클 필수, 리뷰만 하고 끝나는 것 불허
+- **implementation-review 단계 재분류**: "비핵심 단계"에서 "조건부 핵심 단계"로 승격 (review 포함 파이프라인에서는 핵심 단계로 취급, 실패 시 건너뛸 수 없음)
+- **변경**: Common Hard Rules에 sdd-autopilot 전용 Hard Rule #9 추가, 2-Phase Orchestration 패턴 설명 보강, sdd-autopilot Process 필드 업데이트, Scenario 2b 설명 보강
+- 백업: `_sdd/spec/prev/PREV_main_20260317_180000.md`
 
 #### v3.2.0 (2026-03-17)
 

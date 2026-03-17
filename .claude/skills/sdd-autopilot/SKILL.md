@@ -634,6 +634,7 @@ Agent(
 
 **ralph-loop-init** (장시간 테스트):
 ```
+1. ralph-loop-init 에이전트로 설정 생성:
 Agent(
   subagent_type="ralph-loop-init",
   prompt="다음 기능의 자동 디버깅 루프를 설정하세요.
@@ -642,6 +643,19 @@ Agent(
   테스트 명령: <테스트 실행 명령>
   관련 파일: <구현된 파일 목록>"
 )
+
+2. ralph loop를 background로 실행:
+Bash(
+  command="bash ralph/run.sh 2>&1",
+  run_in_background=true
+)
+→ 마일스톤: "[sdd-autopilot] ralph loop 실행 중 (background)..."
+→ background 작업 완료 알림을 기다린다 (polling/sleep 하지 않음)
+
+3. 완료 알림 수신 후 결과 확인:
+→ ralph/state.md의 phase 확인
+→ phase가 DONE이면 → 다음 단계(spec-update-done) 진행
+→ phase가 DONE이 아니면 → 로그에 실패 기록, 다음 단계 진행
 ```
 
 #### 7.5 에러 핸들링
