@@ -1,7 +1,7 @@
 ---
 name: guide-create
 description: This skill should be used when the user asks to "guide create", "create guide", "feature guide", "write guide", "가이드 작성", "기능 가이드", "가이드 문서 만들어줘", or wants to generate an implementation/review guide document for a specific feature from spec and code context.
-version: 2.1.0
+version: 2.2.0
 ---
 
 # Guide Create - Feature Technical Report Generator
@@ -38,6 +38,14 @@ The `guide-create` skill generates a feature-focused **technical report** aligne
 4. **Non-interactive by default**: Infer missing details with deterministic defaults. Do not ask follow-up questions unless the user explicitly requests discussion.
 5. **Spec-first grounding**: Treat `_sdd/spec/` as the primary source. Use code only to refine implementation detail, naming, file references, and symbol references.
 6. **No fake certainty**: If evidence is incomplete, state assumptions or unknowns explicitly in the guide.
+
+## Long-form Writing Strategy
+
+기능 가이드는 장문 deep-dive 문서가 되기 쉬우므로, 구조적 복잡도가 높으면 `$write-phased` 전략을 우선 적용한다.
+
+- skeleton first, fill second
+- 긴 API/reference 섹션은 patch 기반으로 확장
+- runtime delegation이 불가능하면 동일 전략을 현재 실행 안에서 모사한다
 7. **Per-feature output**: If multiple features are detected, generate one guide file per feature instead of combining them into a single document.
 8. **Backup before overwrite**: If the target guide already exists, create a timestamped backup in `_sdd/guides/prev/` before writing the new file.
 9. **Language rule**: 기존 스펙/문서의 언어를 따른다. 사용자 명시 지정 시 해당 언어 사용. 새 프로젝트(기존 스펙 없음)는 한국어 기본.

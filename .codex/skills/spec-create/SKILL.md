@@ -1,7 +1,7 @@
 ---
 name: spec-create
 description: This skill should be used when the user asks to "create a spec", "write a spec document", "generate SDD", "create software design document", "document the project", "create spec for project", or mentions "_sdd" directory, specification documents, or project documentation needs.
-version: 1.3.0
+version: 1.4.0
 ---
 
 # Spec Document Creation and Management
@@ -33,6 +33,14 @@ Spec documents are stored in the `_sdd/spec/` directory within the project root.
 4. **기존 스펙 보존**: 이미 스펙 파일이 존재하면 덮어쓰기 전 반드시 `prev/PREV_<filename>_<timestamp>.md`로 백업한다.
 5. **부트스트랩 파일 최소 수정 원칙**: `AGENTS.md`, `CLAUDE.md`, `_sdd/env.md`가 이미 존재할 때 필수 안내 문구가 누락된 경우, 반드시 사용자 확인 후 필요한 문구만 최소 추가한다.
 6. **DECISION_LOG.md 최소화**: 결정 로그는 `DECISION_LOG.md`에만 기록하며, 추가 거버넌스 문서는 사용자 요청 시에만 생성한다.
+
+## Long-form Writing Strategy
+
+장문 스펙 본문(여러 섹션, 상세 표, 긴 예시)이 필요한 경우 `$write-phased` 전략을 우선 적용한다.
+
+- Phase 1: skeleton을 실제 파일에 저장
+- Phase 2: section-by-section patch로 채우기
+- runtime delegation이 불가능하면 현재 실행 안에서 동일한 skeleton -> fill 절차를 따른다
 
 ## Directory Structure
 

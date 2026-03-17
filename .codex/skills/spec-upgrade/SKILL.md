@@ -1,7 +1,7 @@
 ---
 name: spec-upgrade
 description: This skill should be used when the user asks to "upgrade spec", "convert spec to whitepaper", "migrate spec format", "spec upgrade", "스펙 업그레이드", "스펙 변환", "스펙 마이그레이션", "whitepaper 형식으로 변환", or wants to convert old-format spec documents to the whitepaper-style §1-§8 structure defined in SDD_SPEC_DEFINITION.md.
-version: 1.4.0
+version: 1.5.0
 ---
 
 # Spec Upgrade - 구 형식 스펙을 Whitepaper 형식으로 변환
@@ -29,6 +29,14 @@ version: 1.4.0
 5. **Checkpoint 필수**: Step 3에서 Gap 분석 결과와 업그레이드 계획을 먼저 보고한다. 대상 파일이나 구조가 모호할 때만 `request_user_input`으로 확인한다.
 6. **DECISION_LOG.md 보존**: 기존 DECISION_LOG.md가 있으면 보존한다. 업그레이드 과정의 주요 결정도 추가 기록한다.
 7. **In-place 덮어쓰기**: 업그레이드 결과는 기존 파일 경로에 덮어쓴다 (백업 후).
+
+## Long-form Writing Strategy
+
+whitepaper 변환 결과가 장문이 되는 경우 `$write-phased` 전략을 우선 적용한다.
+
+- skeleton에 §1-§8 구조를 먼저 저장
+- 이후 기존 내용 재배치와 서사 보강을 patch 기반으로 채운다
+- runtime delegation이 불가능하면 현재 실행 안에서 동일한 2-phase 절차를 따른다
 
 ## Process
 

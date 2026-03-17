@@ -1,7 +1,7 @@
 ---
 name: pr-review
 description: This skill should be used when the user asks to "review PR", "PR review", "review PR against spec", "PR 리뷰", "PR 검증", "스펙 기반 PR 리뷰", "PR 승인 검토", or wants to verify a pull request's implementation against the specification and spec patch draft.
-version: 1.0.0
+version: 1.1.0
 ---
 
 # PR Review - Spec-Based PR Verification and Verdict
@@ -36,6 +36,14 @@ implementation → PR → pr-spec-patch → pr-review → approve/revise → spe
 
 - Apply deterministic defaults in all modes.
 - Continue execution without interruption and log unresolved items in `Open Questions`.
+
+## Long-form Writing Strategy
+
+PR 리뷰 리포트가 장문 구조가 되면 `$write-phased` 전략을 우선 적용한다.
+
+- skeleton에 verdict/증거/findings 섹션을 먼저 만든다
+- 이후 각 finding과 evidence를 patch 기반으로 채운다
+- runtime delegation이 불가능하면 현재 실행 안에서 동일한 2-phase 절차를 따른다
 
 ## LLM Model to use
 

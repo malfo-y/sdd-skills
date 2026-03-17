@@ -38,7 +38,7 @@
 | `/guide-create` | 스펙+코드 기반 기능별 구현/리뷰 가이드 문서 생성 |
 | `/sdd-autopilot` | 규모 자동 판단 후 전체 SDD 파이프라인 자율 오케스트레이션 |
 
-> (caveat) `/discussion` 스킬은 Claude Code에서만 지원합니다.
+> `/discussion`과 `/sdd-autopilot`은 Claude Code와 Codex 모두에서 사용할 수 있습니다. Codex에서는 실행 중 오케스트레이터를 `.codex/skills/orchestrator_<topic>/`에 유지하고, 완료 후 `_sdd/pipeline/orchestrators/<topic>_<timestamp>/`로 아카이브합니다. 실제 하위 실행은 `.codex/agents/` custom agents가 맡고, `_sdd/env.md` + `.codex/config.toml`이 pre-flight 입력으로 사용됩니다.
 
 ### 언제 `/discussion`을 먼저 쓰나
 

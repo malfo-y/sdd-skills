@@ -1,5 +1,111 @@
 # Decision Log
 
+## 2026-03-17 - Codex Autopilot Parity Restoration and Validation Guide Consolidation
+
+### Context
+
+Codex custom agent backbone과 `sdd-autopilot` 구조는 도입되었지만, Codex 쪽 autopilot 문서 세트가 Claude 원본보다 과도하게 축약되어 있었다. 특히 main skill, scale assessment, pipeline templates, sample orchestrator에서 review-fix, test strategy, error handling, final report artifact 같은 실행 계약이 충분히 드러나지 않았다. 또한 Codex dry-run 체크리스트가 `docs/CODEX_AGENT_VALIDATION.md`로 분리되어 있어 운영 가이드와 검증 가이드가 분산되어 있었다.
+
+### Decision
+
+1. **Codex autopilot parity 복원**: `.codex/skills/sdd-autopilot/`의 main skill, references, example을 Claude 원본 대비 의미 보존 수준으로 확장
+2. **Final report artifact 명시**: Codex autopilot 산출물 계약에 `_sdd/pipeline/report_<topic>_<timestamp>.md`를 포함
+3. **Validation guide 통합**: Codex dry-run 체크리스트를 `docs/AUTOPILOT_GUIDE.md`의 "Codex 검증 체크리스트" 섹션으로 흡수하고 별도 `docs/CODEX_AGENT_VALIDATION.md`는 제거
+4. **Spec sync**: `_sdd/spec/main.md`에서도 Codex wrapper -> custom agent 실행 모델, autopilot report artifact, validation guide 위치를 최신 상태로 반영
+
+### Rationale
+
+- Codex 쪽도 실행 계약이 충분히 구체적이어야 generated orchestrator 품질과 운영 가이드를 신뢰할 수 있다
+- final report artifact가 문서/예시/가이드에 모두 명시돼야 autopilot completion contract가 일관된다
+- validation 체크리스트는 사용자-facing 운영 가이드 안에 있을 때 찾기 쉽고 유지보수 포인트가 줄어든다
+
+### Changes
+
+- `.codex/skills/sdd-autopilot/SKILL.md` -- use/do-not-use, richer execution/test/error handling, final report contract 복원
+- `.codex/skills/sdd-autopilot/references/pipeline-templates.md` -- generated orchestrator minimum contract 복원
+- `.codex/skills/sdd-autopilot/references/scale-assessment.md` -- 판단 프로세스, 경계 사례, examples 복원
+- `.codex/skills/sdd-autopilot/examples/sample-orchestrator.md` -- review-fix, test, error handling, final report 예시 복원
+- `docs/AUTOPILOT_GUIDE.md` -- Codex 검증 체크리스트 섹션 추가, validation guide 흡수
+- `_sdd/spec/main.md` -- Codex wrapper/custom-agent 실행 모델, final report artifact, validation guide 위치 동기화
+
+### References
+
+- 드래프트: `_sdd/drafts/feature_draft_autopilot_parity_review.md`
+- 드래프트: `_sdd/drafts/feature_draft_codex_agent_backbone_autopilot_parity.md`
+- 구현 리포트: `_sdd/implementation/features/autopilot-parity-review/SYNC_20260317_230000_IMPLEMENTATION_REPORT.md`
+
+## 2026-03-17 - Codex Custom Agent Backbone and Autopilot Spawn Model
+
+### Context
+
+초기 Codex 정렬 작업으로 `sdd-autopilot`, generated orchestration skill, `write-phased` utility 설명은 추가되었지만, 실제로 generated orchestrator가 spawn할 repo-local custom agent 레이어가 없었다. 이 상태에서는 "오케스트레이터가 실행 단위를 재사용한다"는 설명은 가능했지만, Claude Code의 `wrapper -> agent -> nested write-phased` 구조와 동등한 실행 backbone은 비어 있었다.
+
+### Decision
+
+1. **Codex custom agent layer 도입**: `.codex/agents/` 아래에 기존 SDD 핵심 역할 8개와 `write_phased`를 custom agent로 정의
+2. **wrapper parity 채택**: `.codex/skills/*/SKILL.md`는 사용자 진입점과 handoff contract를 유지하고, 실제 spawned execution unit은 `.codex/agents/*.toml`이 담당
+3. **Autopilot spawn 모델 명시**: generated orchestration skill은 skill이 아니라 custom agent를 직접 spawn
+4. **nested `write_phased` 1차 범위 확정**: `feature_draft`, `implementation_plan`, `implementation_review`, `spec_review`가 장문 산출물 생성 시 `write_phased`를 nested 사용
+5. **Pre-flight 확장**: `_sdd/env.md`와 `.codex/config.toml`을 함께 읽고, 최소 `agents.max_depth >= 2`를 확인
+
+### Rationale
+
+- custom agent 레이어가 있어야 Codex autopilot이 실제로 end-to-end 파이프라인을 실행할 수 있다
+- wrapper skill을 유지해야 기존 사용자 호출 인터페이스를 깨지 않으면서 agent spawn 모델을 도입할 수 있다
+- planning/review 계열은 long-form writing 품질 이득이 커서 nested `write_phased`의 우선 대상이다
+- config 기반 pre-flight가 없으면 nested spawn 구조가 환경에 따라 조용히 실패할 수 있다
+
+### Changes
+
+- `.codex/config.toml` -- agent execution config 신규 추가
+- `.codex/agents/` -- 9개 custom agent 정의 신규 추가
+- `.codex/skills/feature-draft/`, `.codex/skills/implementation-plan/`, `.codex/skills/implementation/`, `.codex/skills/implementation-review/`, `.codex/skills/spec-update-done/`, `.codex/skills/spec-update-todo/`, `.codex/skills/spec-review/`, `.codex/skills/ralph-loop-init/`, `.codex/skills/write-phased/` -- wrapper/custom-agent parity 반영
+- `.codex/skills/sdd-autopilot/` -- custom agent spawn 모델과 pre-flight 반영
+- `_sdd/spec/main.md`, `docs/AUTOPILOT_GUIDE.md`, `docs/SDD_QUICK_START.md`, `docs/SDD_WORKFLOW.md` -- custom agent 구조 반영
+
+### References
+
+- 드래프트: `_sdd/drafts/feature_draft_codex_agent_backbone_autopilot_parity.md`
+- 드래프트: `_sdd/drafts/feature_draft_autopilot_meta_skill.md`
+- 토론: `_sdd/discussion/discussion_autopilot_meta_skill.md`
+- 토론: `_sdd/discussion/discussion_write_phased_skill_design.md`
+
+## 2026-03-17 - Codex Autopilot Orchestration and Write-Phased Utility Alignment
+
+### Context
+
+Claude Code용 autopilot 메타스킬과 래퍼/에이전트 구조는 이미 정리되어 있었지만, Codex 쪽에는 대응되는 `sdd-autopilot` 메타스킬과 orchestration contract가 없었다. 또한 `write-phased`는 Claude에서는 에이전트 중심 전략으로 쓰였지만, Codex에서는 공용 long-form writing utility로 어떤 스킬들이 활용해야 하는지 명확히 정리되지 않았다.
+
+### Decision
+
+1. **Codex `sdd-autopilot` 지원 추가**: `.codex/skills/sdd-autopilot/`를 추가하여 기존 execution skill들을 재사용하는 generated orchestration skill 패턴을 지원
+2. **오케스트레이터 라이프사이클 하이브리드 정책**: 실행 중에는 `.codex/skills/orchestrator_<topic>/SKILL.md`에 활성 상태로 유지하고, 완료 후에는 `_sdd/pipeline/orchestrators/<topic>_<timestamp>/`로 아카이브
+3. **Codex binding 책임 분리**: repo는 wrapper/orchestration contract만 정의하고, 실제 wrapper/agent binding은 Codex 런타임/환경 레이어 책임으로 둔다
+4. **`write-phased` 승격**: Codex `write-phased`를 `spec-create`, `guide-create`, `pr-spec-patch`, `pr-review`, `spec-summary`, `spec-upgrade`, `sdd-autopilot`이 재사용하는 공용 long-form writing utility로 정의
+5. **범위 제한**: `feature-draft -> write-phased` 직접 연동은 후속 최적화로 미루고 이번 결정 범위에서는 제외 **> Superseded by 2026-03-17 custom agent backbone decision: nested write_phased parity를 1차 범위에 포함**
+
+### Rationale
+
+- 기존에 정의한 SDD execution unit들을 유지하면서 Codex에서도 autopilot 메타스킬을 도입하는 편이 가장 낮은 전환 비용으로 구조적 일관성을 확보한다
+- 활성 스킬 디렉토리와 아카이브 디렉토리를 분리하면 resume 가능성과 active skill 공간 관리 사이의 균형을 맞출 수 있다
+- Codex는 Claude와 다른 orchestration/runtime 모델을 가지므로, repo-local binding까지 고정하는 것보다 contract만 명세하는 편이 유지보수성이 높다
+- 긴 문서/대형 코드 출력은 write-phased의 skeleton → fill 전략을 공용 유틸리티로 재사용하는 것이 품질과 안정성에 유리하다
+
+### Changes
+
+- `.codex/skills/sdd-autopilot/` -- 메타스킬 신규 추가
+- `.codex/skills/write-phased/` -- 공용 long-form writing utility로 역할 재정의
+- `.codex/skills/feature-draft/`, `.codex/skills/implementation-plan/`, `.codex/skills/implementation/`, `.codex/skills/implementation-review/`, `.codex/skills/spec-update-done/`, `.codex/skills/spec-update-todo/`, `.codex/skills/spec-review/`, `.codex/skills/ralph-loop-init/` -- orchestration mode guidance 추가
+- `.codex/skills/spec-create/`, `.codex/skills/guide-create/`, `.codex/skills/pr-spec-patch/`, `.codex/skills/pr-review/`, `.codex/skills/spec-summary/`, `.codex/skills/spec-upgrade/` -- long-form writing strategy 반영
+- `docs/AUTOPILOT_GUIDE.md`, `docs/SDD_WORKFLOW.md`, `docs/SDD_QUICK_START.md`, `_sdd/spec/main.md` -- Codex autopilot/orchestrator/write-phased 설명 동기화
+
+### References
+
+- 드래프트: `_sdd/drafts/feature_draft_codex_autopilot_orchestration.md`
+- 토론: `_sdd/discussion/discussion_autopilot_meta_skill.md`
+- 토론: `_sdd/discussion/discussion_autopilot_open_questions.md`
+- 토론: `_sdd/discussion/discussion_autopilot_resume_and_partial_execution.md`
+
 ## 2026-03-09 - Exploration-first spec adopted for the SDD skills repo
 
 ### Context
@@ -93,7 +199,7 @@ SDD_SPEC_DEFINITION.md 기준 whitepaper 형식 준수. spec-upgrade 스킬의 2
 1. **스킬 + 에이전트 이중 아키텍처 도입**: 8개 파이프라인 필수 스킬을 `.claude/agents/*.md` 에이전트 정의로 분리하고, 기존 SKILL.md는 Agent Wrapper 래퍼로 전환
 2. **sdd-autopilot 메타스킬 추가**: 적응형 오케스트레이터를 생성하여 에이전트 파이프라인을 end-to-end 자율 실행
 3. **오케스트레이터 저장 위치**: `_sdd/pipeline/`에 저장 (초기 토론에서 `.claude/skills/`로 결정했으나, 후속 토론에서 변경 — 일회성 실행 계획이므로 스킬 디렉토리 오염 방지) **> Superseded by 2026-03-17 decision: `.claude/skills/orchestrator_<topic>/SKILL.md`로 원복 (재사용성 + 재개 기능)**
-4. **Codex는 기존 유지**: Agent 도구 제한으로 래퍼 패턴 불가. Codex 동기화는 별도 후속 작업
+4. **Codex는 기존 유지**: Agent 도구 제한으로 래퍼 패턴 불가. Codex 동기화는 별도 후속 작업 **> Superseded by 2026-03-17 decision: Codex `sdd-autopilot` + orchestration contract 지원 추가**
 
 ### Rationale
 

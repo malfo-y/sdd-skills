@@ -1,7 +1,7 @@
 ---
 name: spec-summary
 description: This skill should be used when the user asks to "summarize spec", "spec summary", "show spec overview", "스펙 요약", "스펙 개요", "show spec status", "스펙 현황", "project overview", "프로젝트 개요", "what's the current state", "현재 상태는", or wants a human-readable summary of the current specification for quick understanding.
-version: 1.4.0
+version: 1.5.0
 ---
 
 # spec-summary: Specification Summary Generator
@@ -37,6 +37,14 @@ The **spec-summary** skill generates human-readable summaries of SDD (Spec-Drive
 2. **README sync on explicit request only**: README 업데이트는 사용자가 명시적으로 요청할 때만 수행한다.
 3. **언어 규칙**: 기존 스펙/문서의 언어를 따른다. 새 프로젝트(기존 스펙 없음)는 한국어 기본. 사용자 명시 지정 시 해당 언어 사용.
 4. **백업 후 덮어쓰기**: 기존 `SUMMARY.md` 존재 시 `prev/PREV_SUMMARY_<timestamp>.md`로 백업 후 새로 생성한다.
+
+## Long-form Writing Strategy
+
+summary가 executive summary + technical detail + status dashboard까지 길어질 경우 `$write-phased` 전략을 우선 적용한다.
+
+- 요약 skeleton을 먼저 저장
+- 이후 narrative/표/recommendation을 patch 기반으로 채운다
+- runtime delegation이 불가능하면 현재 실행 안에서 동일한 2-phase 절차를 따른다
 
 ## When to Use This Skill
 

@@ -1,7 +1,7 @@
 ---
 name: pr-spec-patch
 description: This skill should be used when the user asks to "create spec patch from PR", "PR spec patch", "compare PR with spec", "PR to spec", "PR 스펙 패치", "PR 리뷰 준비", "스펙 패치 생성", "PR 변경사항 스펙 반영", or wants to generate a spec patch document by comparing a pull request against the current specification.
-version: 1.0.0
+version: 1.1.0
 ---
 
 # PR Spec Patch - PR-Based Spec Patch Draft Generation
@@ -17,6 +17,14 @@ This skill analyzes PR changes, compares them against the current spec documents
 - Spec files under `_sdd/spec/` are **never** created/modified/deleted.
 - The only output of this skill is `_sdd/pr/spec_patch_draft.md`.
 - Spec updates **must** be done via `/spec-update-todo`.
+
+## Long-form Writing Strategy
+
+PR 기반 패치 초안이 길어질 경우 `$write-phased` 전략을 우선 적용한다.
+
+- skeleton에 patch section 구조를 먼저 고정한다
+- 이후 evidence/impact/details를 patch 기반으로 채운다
+- runtime delegation이 불가능하면 현재 실행 안에서 동일한 2-phase 절차를 따른다
 
 ## When to Use This Skill
 
