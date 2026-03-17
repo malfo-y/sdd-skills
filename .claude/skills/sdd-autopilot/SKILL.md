@@ -38,7 +38,7 @@ User Request
 ```
 
 **입력**: 사용자의 기능 요청 (자연어)
-**출력**: 구현 완료된 코드 + 동기화된 스펙 + 파이프라인 로그 (`_sdd/pipeline/`)
+**출력**: 구현 완료된 코드 + 동기화된 스펙 + 파이프라인 로그 + 최종 정리 보고서 (`_sdd/pipeline/`)
 
 ## When to Use
 
@@ -739,7 +739,7 @@ Edit: _sdd/pipeline/log_<topic>_<timestamp>.md
 
 **Tools**: `Edit`, `Write`
 
-파이프라인 완료 후 로그 파일을 마무리하고, 최종 결과를 사용자에게 보고한다.
+파이프라인 완료 후 로그 파일을 마무리하고, 최종 정리 보고서를 작성하여 사용자에게 보고한다.
 
 #### 8.1 로그 파일 마무리
 
@@ -760,7 +760,36 @@ Edit: _sdd/pipeline/log_<topic>_<timestamp>.md
 - **잔여 이슈**: <있으면 목록, 없으면 "없음">
 ```
 
-#### 8.2 사용자에게 최종 보고
+#### 8.2 최종 정리 보고서 작성
+
+파이프라인 완료(또는 중단/실패) 시 독립된 보고서 파일을 작성한다:
+
+```
+Write: _sdd/pipeline/report_<topic>_<timestamp>.md
+```
+
+보고서에 반드시 포함할 세 가지:
+
+1. **뭘 했는가 (What was done)**:
+   - 실행된 파이프라인 단계와 spawn된 에이전트 목록
+   - 생성/수정된 산출물 파일 경로
+   - review-fix 사이클 횟수, 테스트 실행 여부
+
+2. **어떻게 나왔는가 (Results)**:
+   - 각 단계의 성공/실패 여부와 결과 요약
+   - review에서 발견된 이슈와 해결 상태
+   - 테스트 통과율, 스펙 동기화 완료 여부
+
+3. **뭘 더 해야 하는가 (Remaining work)**:
+   - 미완료 단계 및 사유
+   - 알려진 제한사항, 리스크
+   - 후속 작업 제안 (수동 확인, 추가 테스트, 배포 등)
+
+> 파이프라인이 실패/중단된 경우에도 반드시 보고서를 작성한다. 현재까지 진행 상황과 실패 원인을 기록한다.
+
+#### 8.3 사용자에게 최종 보고
+
+보고서 파일 작성 후, 핵심 내용을 텍스트로 출력하여 사용자에게 보고한다:
 
 ```
 ## SDD Autopilot 실행 완료
@@ -775,6 +804,7 @@ Edit: _sdd/pipeline/log_<topic>_<timestamp>.md
 | 테스트 | 통과 N/N |
 | 스펙 동기화 | 완료 |
 | 로그 파일 | _sdd/pipeline/log_<topic>_<timestamp>.md |
+| 정리 보고서 | _sdd/pipeline/report_<topic>_<timestamp>.md |
 | 오케스트레이터 | .claude/skills/orchestrator_<topic>/SKILL.md |
 
 ### 주요 산출물
