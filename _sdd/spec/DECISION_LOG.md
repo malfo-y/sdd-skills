@@ -92,7 +92,7 @@ SDD_SPEC_DEFINITION.md 기준 whitepaper 형식 준수. spec-upgrade 스킬의 2
 
 1. **스킬 + 에이전트 이중 아키텍처 도입**: 8개 파이프라인 필수 스킬을 `.claude/agents/*.md` 에이전트 정의로 분리하고, 기존 SKILL.md는 Agent Wrapper 래퍼로 전환
 2. **sdd-autopilot 메타스킬 추가**: 적응형 오케스트레이터를 생성하여 에이전트 파이프라인을 end-to-end 자율 실행
-3. **오케스트레이터 저장 위치**: `_sdd/pipeline/`에 저장 (초기 토론에서 `.claude/skills/`로 결정했으나, 후속 토론에서 변경 — 일회성 실행 계획이므로 스킬 디렉토리 오염 방지)
+3. **오케스트레이터 저장 위치**: `_sdd/pipeline/`에 저장 (초기 토론에서 `.claude/skills/`로 결정했으나, 후속 토론에서 변경 — 일회성 실행 계획이므로 스킬 디렉토리 오염 방지) **> Superseded by 2026-03-17 decision: `.claude/skills/orchestrator_<topic>/SKILL.md`로 원복 (재사용성 + 재개 기능)**
 4. **Codex는 기존 유지**: Agent 도구 제한으로 래퍼 패턴 불가. Codex 동기화는 별도 후속 작업
 
 ### Rationale
@@ -115,6 +115,37 @@ SDD_SPEC_DEFINITION.md 기준 whitepaper 형식 준수. spec-upgrade 스킬의 2
 - 토론: `_sdd/discussion/discussion_autopilot_meta_skill.md`
 - 후속 토론: `_sdd/discussion/discussion_autopilot_open_questions.md`
 - Feature Draft: `_sdd/drafts/feature_draft_autopilot_meta_skill.md`
+
+## 2026-03-17 - Autopilot Resume, Partial Execution, and Enhanced Pipeline Log (v3.1.0 → v3.2.0)
+
+### Context
+
+sdd-autopilot이 e2e 전제로 설계되어 있어, 기존 미완료 파이프라인 재개, 기존 산출물 활용(중간 진입), 파이프라인 일부만 실행하는 시나리오가 불가능했다. 또한 오케스트레이터가 `_sdd/pipeline/`에 저장되어 스킬로서 재사용이 불가능하고, 파이프라인 로그에 구조화된 상태 추적이 없었다.
+
+### Decision
+
+1. **Step 0 (Pipeline State Detection) 추가**: autopilot 시작 시 `_sdd/pipeline/log_*.md`를 스캔하여 미완료 파이프라인을 감지하고, 사용자에게 재개/새로 시작 선택을 제시
+2. **Step 1.4 (산출물 스캔 + 시작점/종료점 감지) 추가**: 사용자 요청에서 시작/종료 힌트를 파싱하고, `_sdd/` 기존 산출물과의 관련성을 판단하여 파이프라인 범위 조절
+3. **Pipeline Log Format 강화**: Meta 섹션(request, orchestrator 참조, scale, started, pipeline) + Status 테이블(5개 상태값: pending/in_progress/completed/failed/skipped) 추가
+4. **오케스트레이터 저장 위치 변경**: `_sdd/pipeline/` → `.claude/skills/orchestrator_<topic>/SKILL.md` (변경 이력: `.claude/skills/` → `_sdd/pipeline/` → `.claude/skills/`)
+
+### Rationale
+
+- 오케스트레이터를 `.claude/skills/`에 저장하면 스킬로서 재사용 가능하고, 재개 시 파이프라인 정의 역할을 수행할 수 있다
+- 로그의 Status 테이블로 재개 시 첫 번째 미완료 스텝을 빠르게 찾을 수 있다
+- 산출물 스캔으로 기존 작업 결과를 활용하여 불필요한 반복을 방지한다
+- 자동 감지 + 사용자 선택 방식으로 재개를 구현하여, Phase 1이 이미 interactive이므로 질문 추가 비용이 낮다
+
+### Changes
+
+- `.claude/skills/sdd-autopilot/SKILL.md` -- Step 0, Step 1.4, Pipeline Log Format 강화, 오케스트레이터 경로 변경
+- `_sdd/drafts/feature_draft_autopilot_meta_skill.md` -- Acceptance Criteria 추가 (재개, 부분 실행, 산출물 스캔, 로그 메타데이터)
+- `_sdd/spec/main.md` -- v3.1.0 → v3.2.0
+
+### References
+
+- 토론: `_sdd/discussion/discussion_autopilot_resume_and_partial_execution.md`
+- 후속 반영: `_sdd/discussion/discussion_autopilot_open_questions.md` (오케스트레이터 위치 결정 변경)
 
 ## 2026-03-17 - Agent Non-Interactive Conversion (AskUserQuestion 제거) (v3.0.0 → v3.1.0)
 
