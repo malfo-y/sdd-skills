@@ -132,59 +132,6 @@ ELSE → 사용자 피드백 반영 후 계획 수정 (최대 2라운드)
 
 For every existing file you modify, create a backup under `_sdd/spec/prev/` using `prev/PREV_<filename>_<timestamp>.md` (create `_sdd/spec/prev/` first if missing).
 
-### Step 3.5: Generation Strategy Decision
-
-기존 스펙의 줄 수에 따라 리라이트 출력 생성 전략을 결정한다.
-
-```
-spec_lines = 기존 스펙의 총 줄 수 (모든 스펙 파일 합산)
-
-IF spec_lines < 300 → 1-페이즈 (Steps 4-5에서 단일 패스로 리라이트)
-IF spec_lines >= 300 → 2-페이즈 (골조 먼저 생성 → 내용 채우기)
-```
-
-#### 2-페이즈 리라이트 절차 (spec_lines >= 300일 때만)
-
-> 1-페이즈인 경우 이 절차를 건너뛰고 기존 Steps 4-5 방식으로 진행한다.
-
-**Phase 1 — 골조(Skeleton) 생성**
-
-리라이트할 최종 구조의 §1~§8 각 섹션에 대해 미니 요약(3-5줄)을 작성한다. 골조는 Phase 2의 "계약서" 역할을 한다.
-
-각 섹션의 골조 형식:
-```markdown
-## §N [Section Title]
-
-**요약**: [기존 내용에서 보존/이동할 핵심 포인트 1-2줄]
-[리라이트 방향 1-2줄]
-
-**코드 참조**: `[관련 소스 파일]`
-**다룰 내용**: [이 섹션에 포함될 내용 나열]
-
-<!-- Phase 2에서 상세 작성 -->
-```
-
-- 골조 전체는 ~50-80줄로 가볍게 유지한다.
-- Step 3에서 백업을 만든 뒤, 기존 spec 파일의 적절한 위치에 skeleton 섹션을 먼저 삽입하거나 대체한다.
-- 단일 파일이면 해당 파일에, split spec이면 index와 관련 sub-spec 파일에 Phase 1 skeleton을 먼저 반영한다.
-- Phase 1 결과는 기존 스펙 위에 `<!-- Phase 2에서 상세 작성 -->` 주석이 포함된 작업 중간본으로 파일에 저장되어 있어야 한다.
-- 골조 완료 후 Phase 2로 자동 진행한다 (사용자 리뷰 게이트 없음).
-
-**Phase 2 — 내용 채우기(Fill)**
-
-Phase 1에서 파일에 반영한 skeleton을 다시 읽고, 그 구조를 기준으로 각 섹션의 상세 내용을 작성한다.
-
-실행 순서:
-1. **순차 실행**: §1 Background & Motivation → §2 Core Design → §3 Architecture Overview
-   - 상호 의존성이 있어 순서대로 작성한다.
-   - 각 섹션 작성 시 저장된 skeleton + 기존 스펙 원문 + 코드베이스를 참조한다.
-2. **병렬 실행**: §4 Component Details ~ §8 Environment
-   - 저장된 skeleton만 있으면 독립 작성 가능. `Agent` 도구로 병렬 처리한다.
-
-Phase 2 완료 후 파일에 남아 있는 `<!-- Phase 2에서 상세 작성 -->` 주석을 모두 제거한다.
-
-> **참고**: 생성 전략(2-페이즈)과 저장 전략(파일 분할)은 독립적 관심사이다. 2-페이즈로 생성해도 최종 저장은 기존 규모별 구조(소/중/대규모)를 따른다.
-
 ### Step 4: Prune and Appendix Migration
 
 **Tools**: `Edit`, `Write`, `Read`

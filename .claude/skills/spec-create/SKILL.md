@@ -194,27 +194,9 @@ IF has_goal AND has_architecture AND has_components → Step 3 진행
 ELSE → 미파악 항목에 대해 추가 탐색 또는 Open Questions 기록
 ```
 
-### Step 2.7: Generation Strategy Decision
-
-**Tools**: `Glob`
-
-Step 2에서 파악한 코드베이스 규모에 따라 생성 전략을 결정한다.
-
-```
-source_files = Glob("**/*.{py,ts,js,java,go,rs,tsx,jsx}") 에서 테스트/설정 파일 제외
-# test/, tests/, spec/, __test__, config/, node_modules/, .git, dist/, build/ 등 제외
-
-IF source_files < 30 → 1-페이즈 (Step 3에서 단일 패스로 전체 작성)
-IF source_files >= 30 → 2-페이즈 (Step 3에서 골조 생성 → 내용 채우기)
-```
-
-> **참고**: 생성 전략(1/2-페이즈)과 저장 전략(파일 분할)은 독립적 관심사이다. 2-페이즈로 생성해도 최종 저장은 기존 규모별 구조(소/중/대규모)를 따른다.
-
 ### Step 3: Bootstrap + Write the Spec Document
 
 **Tools**: `Read`, `Edit`, `Write`, `Bash (mkdir -p)`
-
-> **먼저 `references/template-full.md`를 Read로 읽는다.** 이 템플릿에 전체 섹션 구조(Background & Motivation, Core Design, Usage Guide & Expected Results 등)와 코드 발취/인라인 citation 형식이 정의되어 있다. 템플릿을 참조하여 스펙을 작성한다.
 
 Before writing the spec, bootstrap guidance files if missing:
 
@@ -268,16 +250,7 @@ Before writing the spec, bootstrap guidance files if missing:
 
 #### Step 3-B: Write Spec
 
-> **1-페이즈** (source_files < 30): 아래 템플릿으로 단일 패스 작성.
-> **2-페이즈** (source_files >= 30): 아래 절차를 먼저 수행한 후, 최종 결과를 동일한 템플릿 구조로 저장.
-
-##### 2-페이즈 실행 절차 (source_files >= 30일 때만)
-
-> 1-페이즈인 경우 이 절차를 건너뛰고 아래 템플릿으로 직접 작성한다.
-
-### 파일 작성 위임
-
-출력 문서 작성 시 `write-phased` 서브에이전트에 작업을 위임한다. 서브에이전트 호출 시 `references/template-compact.md`의 스펙 템플릿 전체와 작성에 필요한 맥락(Step 2 분석 결과, 코드베이스 구조, 수집된 정보 등)을 프롬프트에 포함한다.
+출력 문서 작성 시 `write-phased` 서브에이전트에 위임한다. 서브에이전트 호출 시 `references/template-compact.md`의 스펙 템플릿 전체와 작성에 필요한 맥락(Step 2 분석 결과, 코드베이스 구조, 수집된 정보 등)을 프롬프트에 포함한다. `write-phased`가 내부적으로 skeleton→fill 2-페이즈 전략을 처리한다.
 
 ```
 Agent(
@@ -289,8 +262,6 @@ Agent(
   [references/template-compact.md의 §1-§8 템플릿과 Step 2 분석 결과를 여기에 포함]"
 )
 ```
-
-##### 스펙 템플릿
 
 > **`references/template-compact.md`를 Read로 읽는다.** 이 템플릿에 §1-§8 섹션 구조, Writing Rules(코드 발췌/인라인 citation/What-Why-How 트라이어드), 그리고 Modular Spec Guide가 정의되어 있다. 이 템플릿을 참조하여 스펙을 작성한다.
 

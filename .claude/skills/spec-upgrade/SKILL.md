@@ -190,24 +190,9 @@ ambiguity_resolved = 위험한 모호성이 있다면 해소 완료
 IF report_presented AND ambiguity_resolved → Step 4
 ```
 
-### Step 3.5: Generation Strategy Decision
-
-기존 스펙의 줄 수에 따라 업그레이드 출력 생성 전략을 결정한다.
-
-```
-spec_lines = 기존 스펙의 총 줄 수 (모든 스펙 파일 합산)
-
-IF spec_lines < 300 → 1-페이즈 (Step 4에서 단일 패스로 업그레이드)
-IF spec_lines >= 300 → 2-페이즈 (골조 먼저 생성 → 내용 채우기)
-```
-
-#### 2-페이즈 업그레이드 절차 (spec_lines >= 300일 때만)
-
-> 1-페이즈인 경우 이 절차를 건너뛰고 기존 Step 4.3 방식으로 진행한다.
-
 ### 파일 작성 위임
 
-출력 문서 작성 시 `write-phased` 서브에이전트에 작업을 위임한다. 서브에이전트 호출 시 Step 4.3의 Whitepaper 구조 변환 규칙(§1-§8)과 작성에 필요한 맥락(Step 1 Gap 분석 결과, Step 2 코드 분석 결과, 기존 스펙 내용 등)을 프롬프트에 포함한다.
+출력 문서 작성 시 `write-phased` 서브에이전트에 위임한다. 서브에이전트 호출 시 Step 4.3의 Whitepaper 구조 변환 규칙(§1-§8)과 작성에 필요한 맥락(Step 1 Gap 분석 결과, Step 2 코드 분석 결과, 기존 스펙 내용 등)을 프롬프트에 포함한다. `write-phased`가 내부적으로 skeleton→fill 2-페이즈 전략을 처리한다.
 
 ```
 Agent(
