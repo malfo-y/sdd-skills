@@ -1,11 +1,13 @@
 # 기능 기술 보고서: 결제 승인
 
+**Version**: 1.0.0
+**Status**: Draft
 **생성일**: 2026-03-12
 **입력 소스**: mixed (conversation + spec + code)
 **대상 기능**: 결제 승인
 **신뢰도**: Medium
 
-## 1. 배경 및 동기
+## §1 배경 및 동기
 
 결제 승인은 사용자가 결제 의사를 최종 확정했을 때 거래를 승인 상태로 전환하고, 후속 주문 처리 흐름을 시작하기 위한 핵심 기능이다.
 
@@ -16,7 +18,7 @@
 
 외부 게이트웨이의 상태를 그대로 노출하는 대신, 내부 상태 모델로 변환하는 접근을 택한 이유는 게이트웨이 벤더 교체 시 영향 범위를 최소화하고, 도메인 로직이 외부 의존성에 직접 결합되는 것을 방지하기 위함이다.
 
-## 2. 핵심 설계
+## §2 핵심 설계
 
 결제 승인의 핵심 설계는 **상태 머신 기반 전이**와 **멱등성 보장**이다.
 
@@ -29,7 +31,7 @@
 - `[src/payments/payment_repository.ts:markApproved]` — 상태 전이 및 영속화
 
 ```typescript
-// confirmPayment 핵심 흐름 (간략)
+// [src/payments/payment_service.ts:confirmPayment]
 async confirmPayment(paymentId: string, idempotencyKey: string) {
   const payment = await this.repo.findById(paymentId);
   if (payment.status !== 'pending') throw new InvalidStateError();
@@ -42,7 +44,7 @@ async confirmPayment(paymentId: string, idempotencyKey: string) {
 }
 ```
 
-## 3. 사용 시나리오 가이드
+## §3 사용 시나리오 가이드
 
 ### 시나리오 1: 정상 결제 승인
 
@@ -137,7 +139,7 @@ HTTP 상태: 409 Conflict
 ```
 HTTP 상태: 502 Bad Gateway
 
-## 4. API 레퍼런스
+## §4 API 레퍼런스
 
 ### POST /payments/confirm
 
@@ -181,7 +183,7 @@ curl -X POST /api/v1/payments/confirm \
   }'
 ```
 
-## 5. 구현 가이드
+## §5 구현 가이드
 
 ### 핵심 규칙
 

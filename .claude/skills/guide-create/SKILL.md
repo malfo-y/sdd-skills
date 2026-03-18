@@ -1,7 +1,7 @@
 ---
 name: guide-create
 description: This skill should be used when the user asks to "guide create", "create guide", "feature guide", "write guide", "가이드 작성", "기능 가이드", "가이드 문서 만들어줘", or wants to generate an implementation/review guide document for a specific feature from spec and code context.
-version: 2.1.0
+version: 2.2.0
 ---
 
 # Guide Create - Feature Technical Report Generator
@@ -172,7 +172,7 @@ Never invent confirmed behavior that is unsupported by spec or code.
 
 ### 파일 작성 위임
 
-출력 문서 작성 시 `write-phased` 서브에이전트에 작업을 위임한다. 서브에이전트 호출 시 아래 Required sections 전체와 작성에 필요한 맥락(스펙 컨텍스트, 코드 증거, Step 2-3 분석 결과 등)을 프롬프트에 포함한다.
+출력 문서 작성 시 `write-phased` 서브에이전트에 작업을 위임한다. 서브에이전트 호출 시 아래 Required sections 전체와 작성에 필요한 맥락(스펙 컨텍스트, 코드 증거, Step 2-3 분석 결과 등)을 프롬프트에 포함한다. `references/template-compact.md`의 Writing Rules와 §1-§5 구조를 준수하도록 지시한다.
 
 ```
 Agent(
@@ -180,6 +180,7 @@ Agent(
   prompt="다음 문서를 작성해주세요.
 
   파일 경로: [target guide path - _sdd/guides/guide_<slug>.md]
+  참조 템플릿: references/template-compact.md (Writing Rules, § 구조 준수)
 
   [아래 Required sections(§1-§5)과 Step 2-3에서 수집한 맥락을 여기에 포함]"
 )
@@ -191,26 +192,26 @@ Write one guide per feature using the required structure from `references/output
 
 Required sections:
 
-1. **배경 및 동기 / Background & Motivation**
+- **§1 배경 및 동기 / Background & Motivation**
    - 이 기능이 해결하는 문제
    - 왜 이 접근을 택했는가
    - 대안 대비 선택 이유 (스펙에서 확인 가능한 경우)
-2. **핵심 설계 / Core Design**
+- **§2 핵심 설계 / Core Design**
    - 기능의 핵심 아이디어 또는 알고리즘
    - 설계 결정과 그 이유
    - 코드 citation (파일:심볼 형식)
-3. **사용 시나리오 가이드 / Usage Scenario Guide** ★특화
+- **§3 사용 시나리오 가이드 / Usage Scenario Guide** ★특화
    - 시나리오별 end-to-end 사용 흐름
    - 각 시나리오: 전제 조건 → 입력 → 처리 흐름 → 기대 결과
    - 정상 시나리오 + 예외/에러 시나리오
    - 가능하면 구체적 데이터 예시 포함
-4. **API 레퍼런스 / API Reference** ★특화
+- **§4 API 레퍼런스 / API Reference** ★특화
    - 엔드포인트/함수/인터페이스 상세
    - 파라미터 (이름, 타입, 필수/선택, 설명)
    - 리턴값/응답 구조
    - 에러 코드 및 에러 응답
    - 코드 예시 (요청/응답 또는 호출 예시)
-5. **구현 가이드 / Implementation Guide**
+- **§5 구현 가이드 / Implementation Guide**
    - 핵심 구현 규칙 및 제약
    - 체크리스트 (구현 전/중/후)
    - 안티패턴
@@ -245,24 +246,26 @@ For each feature guide:
 ```markdown
 # 기능 기술 보고서: <feature>
 
+**Version**: X.Y.Z
+**Status**: Draft | In Review | Approved | Deprecated
 **생성일**: YYYY-MM-DD
 **입력 소스**: [conversation/spec/code]
 **대상 기능**: <feature>
 **신뢰도**: High/Medium/Low
 
-## 1. 배경 및 동기
+## §1 배경 및 동기
 ...
 
-## 2. 핵심 설계
+## §2 핵심 설계
 ...
 
-## 3. 사용 시나리오 가이드
+## §3 사용 시나리오 가이드
 ...
 
-## 4. API 레퍼런스
+## §4 API 레퍼런스
 ...
 
-## 5. 구현 가이드
+## §5 구현 가이드
 ...
 
 ## 부록 (선택)
@@ -285,6 +288,7 @@ Full formatting details, slug rules, backup rules, and reference notation rules 
 
 ## Additional Resources
 
+- `references/template-compact.md` — canonical guide generation template with Writing Rules and §1-§5 structure
 - `references/output-format.md` — required guide structure and notation rules
 - `references/tool-and-gates.md` — tool mapping, decision gates, and context management
 - `examples/feature-guide-example.md` — sample output (Medium confidence, spec+code mixed)

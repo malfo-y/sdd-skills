@@ -184,7 +184,7 @@ Never invent confirmed behavior that is unsupported by spec or code.
 
 각 섹션의 골조 형식:
 ```markdown
-## N. [Section Title]
+## §N [Section Title]
 
 **요약**: [핵심 내용 1-2줄]
 [추가 맥락 1-2줄]
@@ -222,26 +222,26 @@ Write one guide per feature using the required structure from `references/output
 
 Required sections:
 
-1. **배경 및 동기 / Background & Motivation**
+- **§1 배경 및 동기 / Background & Motivation**
    - 이 기능이 해결하는 문제
    - 왜 이 접근을 택했는가
    - 대안 대비 선택 이유 (스펙에서 확인 가능한 경우)
-2. **핵심 설계 / Core Design**
+- **§2 핵심 설계 / Core Design**
    - 기능의 핵심 아이디어 또는 알고리즘
    - 설계 결정과 그 이유
    - 코드 citation (파일:심볼 형식)
-3. **사용 시나리오 가이드 / Usage Scenario Guide** ★특화
+- **§3 사용 시나리오 가이드 / Usage Scenario Guide** ★특화
    - 시나리오별 end-to-end 사용 흐름
    - 각 시나리오: 전제 조건 → 입력 → 처리 흐름 → 기대 결과
    - 정상 시나리오 + 예외/에러 시나리오
    - 가능하면 구체적 데이터 예시 포함
-4. **API 레퍼런스 / API Reference** ★특화
+- **§4 API 레퍼런스 / API Reference** ★특화
    - 엔드포인트/함수/인터페이스 상세
    - 파라미터 (이름, 타입, 필수/선택, 설명)
    - 리턴값/응답 구조
    - 에러 코드 및 에러 응답
    - 코드 예시 (요청/응답 또는 호출 예시)
-5. **구현 가이드 / Implementation Guide**
+- **§5 구현 가이드 / Implementation Guide**
    - 핵심 구현 규칙 및 제약
    - 체크리스트 (구현 전/중/후)
    - 안티패턴
@@ -276,24 +276,26 @@ For each feature guide:
 ```markdown
 # 기능 기술 보고서: <feature>
 
+**Version**: X.Y.Z
+**Status**: Draft | In Review | Approved | Deprecated
 **생성일**: YYYY-MM-DD
 **입력 소스**: [conversation/spec/code]
 **대상 기능**: <feature>
 **신뢰도**: High/Medium/Low
 
-## 1. 배경 및 동기
+## §1 배경 및 동기
 ...
 
-## 2. 핵심 설계
+## §2 핵심 설계
 ...
 
-## 3. 사용 시나리오 가이드
+## §3 사용 시나리오 가이드
 ...
 
-## 4. API 레퍼런스
+## §4 API 레퍼런스
 ...
 
-## 5. 구현 가이드
+## §5 구현 가이드
 ...
 
 ## 부록 (선택)
@@ -316,6 +318,7 @@ Full formatting details, slug rules, backup rules, and reference notation rules 
 
 ## Additional Resources
 
+- `references/template-compact.md` — canonical guide generation template with Writing Rules and §1-§5 structure
 - `references/output-format.md` — required guide structure and notation rules
 - `references/tool-and-gates.md` — tool mapping, decision gates, and context management
 - `examples/feature-guide-example.md` — sample output (Medium confidence, spec+code mixed)

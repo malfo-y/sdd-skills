@@ -1,11 +1,13 @@
 # 기능 기술 보고서: 사용자 초대
 
+**Version**: 1.0.0
+**Status**: Draft
 **생성일**: 2026-03-12
 **입력 소스**: mixed (conversation + spec + code)
 **대상 기능**: 사용자 초대
 **신뢰도**: High
 
-## 1. 배경 및 동기
+## §1 배경 및 동기
 
 사용자 초대 기능은 워크스페이스 관리자가 이메일 주소로 새 멤버를 초대하고, 초대받은 사용자가 링크를 통해 가입/합류하는 흐름이다.
 
@@ -16,7 +18,7 @@
 
 관리자가 직접 계정을 생성하는 방식 대신 초대 토큰 기반 접근을 택한 이유는, 사용자가 직접 비밀번호를 설정하고 동의 절차를 거치도록 하기 위함이다.
 
-## 2. 핵심 설계
+## §2 핵심 설계
 
 핵심 설계는 **토큰 기반 초대 + 상태 머신**이다.
 
@@ -31,7 +33,7 @@
 - `[src/auth/token_generator.ts:generateSecureToken]` — 암호학적 난수 기반 토큰 생성
 
 ```typescript
-// createInvitation 핵심 흐름 (간략)
+// [src/workspaces/invitation_service.ts:createInvitation]
 async createInvitation(workspaceId: string, email: string) {
   if (await this.members.isMember(workspaceId, email)) {
     throw new AlreadyMemberError();
@@ -47,7 +49,7 @@ async createInvitation(workspaceId: string, email: string) {
 }
 ```
 
-## 3. 사용 시나리오 가이드
+## §3 사용 시나리오 가이드
 
 ### 시나리오 1: 신규 사용자 초대 (정상 흐름)
 
@@ -184,7 +186,7 @@ HTTP 상태: 410 Gone
 
 **기대 결과**: 초대 레코드는 유지되며, 관리자가 재발송을 트리거할 수 있다.
 
-## 4. API 레퍼런스
+## §4 API 레퍼런스
 
 ### POST /workspaces/:workspace_id/invitations
 
@@ -264,7 +266,7 @@ curl -X POST /api/v1/invitations/tok_secure_abc/accept \
   -H "Authorization: Bearer <user_token>"
 ```
 
-## 5. 구현 가이드
+## §5 구현 가이드
 
 ### 핵심 규칙
 
