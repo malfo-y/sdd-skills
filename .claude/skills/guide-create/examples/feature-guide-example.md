@@ -60,13 +60,13 @@ POST /payments/confirm
 ```
 
 **처리 흐름**:
-1. `payment_id`로 결제 조회
-2. 상태가 `pending`인지 확인
-3. `idempotency_key`로 기존 처리 이력 확인 → 없음
-4. 외부 게이트웨이에 승인 요청
-5. 게이트웨이 응답을 도메인 상태(`approved`)로 변환
-6. DB에 상태 전이 기록
-7. `payment.approved` 이벤트 발행
+1. `payment_id`로 결제 조회 `[src/payments/payment_service.ts:confirmPayment]`
+2. 상태가 `pending`인지 확인 `[src/payments/payment_service.ts:confirmPayment]`
+3. `idempotency_key`로 기존 처리 이력 확인 → 없음 `[src/payments/payment_repository.ts:findByIdempotencyKey]`
+4. 외부 게이트웨이에 승인 요청 `[src/payments/payment_service.ts:confirmPayment]`
+5. 게이트웨이 응답을 도메인 상태(`approved`)로 변환 `[src/payments/gateway_adapter.ts:toDomainStatus]`
+6. DB에 상태 전이 기록 `[src/payments/payment_repository.ts:markApproved]`
+7. `payment.approved` 이벤트 발행 `[src/payments/payment_service.ts:confirmPayment]`
 
 **기대 결과**:
 ```json
@@ -85,9 +85,9 @@ POST /payments/confirm
 **입력**: 시나리오 1과 동일한 요청
 
 **처리 흐름**:
-1. `payment_id`로 결제 조회
-2. `idempotency_key`로 기존 처리 이력 확인 → 존재
-3. 기존 승인 결과를 그대로 반환 (게이트웨이 재호출 없음)
+1. `payment_id`로 결제 조회 `[src/payments/payment_service.ts:confirmPayment]`
+2. `idempotency_key`로 기존 처리 이력 확인 → 존재 `[src/payments/payment_repository.ts:findByIdempotencyKey]`
+3. 기존 승인 결과를 그대로 반환 (게이트웨이 재호출 없음) `[src/payments/payment_service.ts:confirmPayment]`
 
 **기대 결과**: 시나리오 1과 동일한 응답 (새 트랜잭션 생성 없음)
 
@@ -105,8 +105,8 @@ POST /payments/confirm
 ```
 
 **처리 흐름**:
-1. `payment_id`로 결제 조회
-2. 상태가 `expired` → 승인 불가 판정
+1. `payment_id`로 결제 조회 `[src/payments/payment_service.ts:confirmPayment]`
+2. 상태가 `expired` → 승인 불가 판정 `[src/payments/payment_service.ts:confirmPayment]`
 
 **기대 결과**:
 ```json
@@ -124,8 +124,8 @@ HTTP 상태: 409 Conflict
 **전제 조건**: 결제가 `pending` 상태이나 외부 게이트웨이가 응답하지 않음.
 
 **처리 흐름**:
-1. 상태 검증 통과
-2. 게이트웨이 호출 → 타임아웃 발생
+1. 상태 검증 통과 `[src/payments/payment_service.ts:confirmPayment]`
+2. 게이트웨이 호출 → 타임아웃 발생 `[src/payments/payment_service.ts:confirmPayment]`
 3. 결제 상태를 `pending` 유지 (변경하지 않음)
 4. 에러 로그에 추적 식별자 기록
 
@@ -142,6 +142,8 @@ HTTP 상태: 502 Bad Gateway
 ## §4 API 레퍼런스
 
 ### POST /payments/confirm
+
+**구현 소스**: `[src/payments/payment_service.ts:confirmPayment]`
 
 결제를 최종 승인한다.
 
@@ -187,9 +189,9 @@ curl -X POST /api/v1/payments/confirm \
 
 ### 핵심 규칙
 
-1. 승인 요청은 이미 만료되었거나 취소된 결제에 대해 성공으로 처리하면 안 된다.
-2. 동일 결제에 대한 중복 승인 요청은 멱등적으로 다루어야 한다.
-3. 외부 게이트웨이 응답을 내부 상태 모델에 바로 노출하지 말고 도메인 상태로 변환한다.
+1. 승인 요청은 이미 만료되었거나 취소된 결제에 대해 성공으로 처리하면 안 된다. `[src/payments/payment_service.ts:confirmPayment]`
+2. 동일 결제에 대한 중복 승인 요청은 멱등적으로 다루어야 한다. `[src/payments/payment_repository.ts:findByIdempotencyKey]`
+3. 외부 게이트웨이 응답을 내부 상태 모델에 바로 노출하지 말고 도메인 상태로 변환한다. `[src/payments/gateway_adapter.ts:toDomainStatus]`
 4. 승인 성공 후 이벤트 발행 시, 중복 부작용을 막는 식별자를 함께 남긴다.
 5. 에러 메시지는 사용자용과 내부 진단용을 분리한다.
 6. 금액, 통화, 결제 수단 등 핵심 필드는 승인 전에 다시 검증한다.
@@ -215,8 +217,8 @@ curl -X POST /api/v1/payments/confirm \
 
 ### 안티패턴
 
-- 외부 게이트웨이의 상태 문자열을 그대로 DB에 저장하는 방식 — 벤더 교체 시 전체 상태 로직 수정 필요
-- 이미 `approved` 상태인 결제에 대해 매번 새 주문 생성 로직을 다시 실행하는 방식 — 중복 주문 발생
+- 외부 게이트웨이의 상태 문자열을 그대로 DB에 저장하는 방식 — 벤더 교체 시 전체 상태 로직 수정 필요 (올바른 방식: `[src/payments/gateway_adapter.ts:toDomainStatus]`로 변환)
+- 이미 `approved` 상태인 결제에 대해 매번 새 주문 생성 로직을 다시 실행하는 방식 — 중복 주문 발생 (올바른 방식: `[src/payments/payment_repository.ts:findByIdempotencyKey]`로 중복 검사)
 - 사용자 응답에 내부 예외 메시지나 스택트레이스를 그대로 노출하는 방식 — 보안 위험
 
 ## 부록

@@ -64,12 +64,12 @@ POST /workspaces/ws_001/invitations
 ```
 
 **처리 흐름**:
-1. 요청자의 관리자 권한 확인
-2. `alice@example.com`이 워크스페이스 멤버인지 확인 → 아님
-3. 동일 이메일로 미수락 초대가 있는지 확인 → 없음
-4. 72시간 만료 토큰 생성 (암호학적 난수)
-5. 초대 레코드 생성 (상태: `pending`)
-6. 초대 이메일 발송
+1. 요청자의 관리자 권한 확인 `[src/workspaces/invitation_service.ts:createInvitation]`
+2. `alice@example.com`이 워크스페이스 멤버인지 확인 → 아님 `[src/workspaces/invitation_service.ts:createInvitation]`
+3. 동일 이메일로 미수락 초대가 있는지 확인 → 없음 `[src/workspaces/invitation_repository.ts:findPendingByEmail]`
+4. 72시간 만료 토큰 생성 (암호학적 난수) `[src/auth/token_generator.ts:generateSecureToken]`
+5. 초대 레코드 생성 (상태: `pending`) `[src/workspaces/invitation_service.ts:createInvitation]`
+6. 초대 이메일 발송 `[src/workspaces/invitation_service.ts:createInvitation]`
 
 **기대 결과**:
 ```json
@@ -94,11 +94,11 @@ POST /invitations/tok_secure_abc/accept
 ```
 
 **처리 흐름**:
-1. 토큰으로 초대 조회
-2. 만료 여부 확인 → 유효
-3. 사용자 계정 존재 여부 확인 → 기존 계정 있음
-4. 워크스페이스 멤버로 즉시 등록
-5. 초대 상태를 `accepted`로 변경
+1. 토큰으로 초대 조회 `[src/workspaces/invitation_service.ts:acceptInvitation]`
+2. 만료 여부 확인 → 유효 `[src/workspaces/invitation_service.ts:acceptInvitation]`
+3. 사용자 계정 존재 여부 확인 → 기존 계정 있음 `[src/workspaces/invitation_service.ts:acceptInvitation]`
+4. 워크스페이스 멤버로 즉시 등록 `[src/workspaces/invitation_service.ts:acceptInvitation]`
+5. 초대 상태를 `accepted`로 변경 `[src/workspaces/invitation_service.ts:acceptInvitation]`
 
 **기대 결과**:
 ```json
@@ -133,7 +133,7 @@ POST /invitations/tok_secure_abc/accept
 
 ### 시나리오 4: 기존 멤버 중복 초대
 
-**전제 조건**: 초대 대상 이메일이 이미 워크스페이스 멤버.
+**전제 조건**: 초대 대상 이메일이 이미 워크스페이스 멤버. `[src/workspaces/invitation_service.ts:createInvitation]`에서 멤버 여부를 확인하여 차단한다.
 
 **입력**:
 ```json
@@ -157,7 +157,7 @@ HTTP 상태: 409 Conflict
 
 **전제 조건**: 동일 이메일로 `pending` 상태의 초대가 이미 존재.
 
-**처리 흐름**: 새 토큰 생성 없이 기존 초대의 이메일을 재발송한다.
+**처리 흐름**: 새 토큰 생성 없이 기존 초대의 이메일을 재발송한다. `[src/workspaces/invitation_repository.ts:findPendingByEmail]` → `[src/workspaces/invitation_service.ts:createInvitation]`
 
 **기대 결과**: 시나리오 1과 동일한 응답 구조 (기존 `invitation_id` 유지)
 
@@ -189,6 +189,8 @@ HTTP 상태: 410 Gone
 ## §4 API 레퍼런스
 
 ### POST /workspaces/:workspace_id/invitations
+
+**구현 소스**: `[src/workspaces/invitation_service.ts:createInvitation]`
 
 워크스페이스에 새 멤버를 초대한다.
 
@@ -227,6 +229,8 @@ HTTP 상태: 410 Gone
 ---
 
 ### POST /invitations/:token/accept
+
+**구현 소스**: `[src/workspaces/invitation_service.ts:acceptInvitation]`
 
 초대를 수락하고 워크스페이스에 합류한다.
 
@@ -271,9 +275,9 @@ curl -X POST /api/v1/invitations/tok_secure_abc/accept \
 ### 핵심 규칙
 
 1. 이미 워크스페이스에 속한 사용자에게 중복 초대를 보내면 안 된다.
-2. 초대 토큰은 유일하고 예측 불가능해야 하며, 72시간 만료를 가진다.
+2. 초대 토큰은 유일하고 예측 불가능해야 하며, 72시간 만료를 가진다. `[src/auth/token_generator.ts:generateSecureToken]`
 3. 만료된 토큰으로 수락 요청이 오면 실패 처리하고, 관리자에게 재초대를 안내한다.
-4. 동일 이메일에 대한 미수락 초대가 이미 존재하면 기존 초대를 재발송한다.
+4. 동일 이메일에 대한 미수락 초대가 이미 존재하면 기존 초대를 재발송한다. `[src/workspaces/invitation_repository.ts:findPendingByEmail]`
 5. 수락 시 계정 유무에 따라 즉시 등록 또는 가입 전환한다.
 6. 이메일 발송 실패는 초대 생성을 롤백하지 않는다.
 
@@ -300,9 +304,9 @@ curl -X POST /api/v1/invitations/tok_secure_abc/accept \
 
 ### 안티패턴
 
-- 초대 생성과 이메일 발송을 하나의 트랜잭션으로 묶어 발송 실패 시 초대 자체가 롤백되는 방식 — 네트워크 일시 장애로 초대 전체가 실패
-- 토큰을 UUID v4가 아닌 순차 ID로 생성하여 예측 가능한 방식 — 토큰 추측 공격 가능
-- 만료 검증 없이 토큰 존재 여부만으로 수락을 허용하는 방식 — 무기한 유효한 토큰 위험
+- 초대 생성과 이메일 발송을 하나의 트랜잭션으로 묶어 발송 실패 시 초대 자체가 롤백되는 방식 — 네트워크 일시 장애로 초대 전체가 실패 (참고: `[src/workspaces/invitation_service.ts:createInvitation]`에서 이메일 발송은 트랜잭션 외부에서 처리)
+- 토큰을 UUID v4가 아닌 순차 ID로 생성하여 예측 가능한 방식 — 토큰 추측 공격 가능 (참고: `[src/auth/token_generator.ts:generateSecureToken]`에서 암호학적 난수 사용)
+- 만료 검증 없이 토큰 존재 여부만으로 수락을 허용하는 방식 — 무기한 유효한 토큰 위험 (참고: `[src/workspaces/invitation_service.ts:acceptInvitation]`에서 만료 검증 수행)
 
 ## 부록
 

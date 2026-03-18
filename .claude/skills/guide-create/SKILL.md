@@ -125,7 +125,8 @@ Examples of requests that should trigger this skill:
    - file paths
    - function/class/component/type names
    - test cases or existing patterns
-3. Distinguish between:
+3. **Build a citation index**: 발견된 핵심 파일/심볼에 대해 `[filepath:symbol]` 형식의 citation 목록을 작성한다. 이 목록은 Step 5에서 §2-§5 전체에 걸쳐 인라인 citation으로 사용된다.
+4. Distinguish between:
    - confirmed implementation behavior
    - partially implemented behavior
    - spec-only intended behavior
@@ -199,28 +200,42 @@ Required sections:
 - **§2 핵심 설계 / Core Design**
    - 기능의 핵심 아이디어 또는 알고리즘
    - 설계 결정과 그 이유
-   - 코드 citation (파일:심볼 형식)
+   - 인라인 citation: 본문에서 `[filepath:symbol]` 형식으로 코드 참조
+   - 코드 발췌: `# [filepath:functionName]` 헤더 부착 (≤30줄 전문, >30줄 시그니처+핵심)
 - **§3 사용 시나리오 가이드 / Usage Scenario Guide** ★특화
    - 시나리오별 end-to-end 사용 흐름
    - 각 시나리오: 전제 조건 → 입력 → 처리 흐름 → 기대 결과
    - 정상 시나리오 + 예외/에러 시나리오
    - 가능하면 구체적 데이터 예시 포함
+   - **인라인 citation**: 처리 흐름 단계에서 관련 함수/메서드를 `[filepath:symbol]` 형식으로 참조
 - **§4 API 레퍼런스 / API Reference** ★특화
    - 엔드포인트/함수/인터페이스 상세
    - 파라미터 (이름, 타입, 필수/선택, 설명)
    - 리턴값/응답 구조
    - 에러 코드 및 에러 응답
    - 코드 예시 (요청/응답 또는 호출 예시)
+   - **인라인 citation**: 각 API/함수의 구현 소스를 `[filepath:symbol]` 형식으로 참조
 - **§5 구현 가이드 / Implementation Guide**
    - 핵심 구현 규칙 및 제약
    - 체크리스트 (구현 전/중/후)
    - 안티패턴
+   - **인라인 citation**: 핵심 규칙과 안티패턴에서 관련 코드를 `[filepath:symbol]` 형식으로 참조
 
 Optional appendix:
 
 - spec references with section names
 - code references with file + symbol names
 - assumptions / open points
+
+#### Inline Citation Rules (모든 섹션 공통)
+
+> spec-create의 Best Practices > Writing Quality와 동일한 규칙을 guide-create에서도 강제한다.
+
+- **Code Excerpts**: 코드 발췌 시 `# [filepath:functionName]` 헤더를 코드 블록 첫 줄에 부착. ≤30줄 함수는 전문, >30줄 함수는 시그니처+핵심 로직만.
+- **Inline Citations**: 본문에서 코드를 참조할 때 `[filepath:functionName]` 형식 사용. 예: "상태 검증은 `[src/payments/payment_service.ts:confirmPayment]`에서 수행한다."
+- **Citation 밀도**: §2에만 한정하지 않고 §3 처리 흐름, §4 API 소스, §5 핵심 규칙/안티패턴에서도 코드 근거가 있으면 반드시 인라인 citation을 사용한다.
+- **Source Field**: 컴포넌트 설명 시 `<path>`: ClassName, function_name() 형식. 코드베이스가 없으면 생략.
+- **Low 신뢰도 예외**: 코드 근거가 없는 Low 신뢰도 가이드에서는 citation 대신 "코드 미확인" 표기.
 
 ### Step 6: Save with Backup Semantics
 

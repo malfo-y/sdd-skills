@@ -38,14 +38,6 @@ The `guide-create` skill generates a feature-focused **technical report** aligne
 4. **Non-interactive by default**: Infer missing details with deterministic defaults. Do not ask follow-up questions unless the user explicitly requests discussion.
 5. **Spec-first grounding**: Treat `_sdd/spec/` as the primary source. Use code only to refine implementation detail, naming, file references, and symbol references.
 6. **No fake certainty**: If evidence is incomplete, state assumptions or unknowns explicitly in the guide.
-
-## Long-form Writing Strategy
-
-기능 가이드는 장문 deep-dive 문서가 되기 쉬우므로, 구조적 복잡도가 높으면 `$write-phased` 전략을 우선 적용한다.
-
-- skeleton first, fill second
-- 긴 API/reference 섹션은 patch 기반으로 확장
-- runtime delegation이 불가능하면 동일 전략을 현재 실행 안에서 모사한다
 7. **Per-feature output**: If multiple features are detected, generate one guide file per feature instead of combining them into a single document.
 8. **Backup before overwrite**: If the target guide already exists, create a timestamped backup in `_sdd/guides/prev/` before writing the new file.
 9. **Language rule**: 기존 스펙/문서의 언어를 따른다. 사용자 명시 지정 시 해당 언어 사용. 새 프로젝트(기존 스펙 없음)는 한국어 기본.
@@ -133,7 +125,8 @@ Examples of requests that should trigger this skill:
    - file paths
    - function/class/component/type names
    - test cases or existing patterns
-3. Distinguish between:
+3. **Build a citation index**: 발견된 핵심 파일/심볼에 대해 `[filepath:symbol]` 형식의 citation 목록을 작성한다. 이 목록은 Step 5에서 §2-§5 전체에 걸쳐 인라인 citation으로 사용된다.
+4. Distinguish between:
    - confirmed implementation behavior
    - partially implemented behavior
    - spec-only intended behavior
@@ -178,43 +171,21 @@ Never invent confirmed behavior that is unsupported by spec or code.
 
 > 1-페이즈인 경우 이 절차를 건너뛰고 아래 required sections로 직접 작성한다.
 
-**Phase 1 — 골조(Skeleton) 생성**
+### 파일 작성 위임
 
-§1~§5 각 섹션에 대해 미니 요약(3-5줄)을 작성한다. 골조는 Phase 2의 "계약서" 역할을 한다.
+출력 문서 작성 시 `write-phased` 서브에이전트에 작업을 위임한다. 서브에이전트 호출 시 아래 Required sections 전체와 작성에 필요한 맥락(스펙 컨텍스트, 코드 증거, Step 2-3 분석 결과 등)을 프롬프트에 포함한다. `references/template-compact.md`의 Writing Rules와 §1-§5 구조를 준수하도록 지시한다.
 
-각 섹션의 골조 형식:
-```markdown
-## §N [Section Title]
-
-**요약**: [핵심 내용 1-2줄]
-[추가 맥락 1-2줄]
-
-**코드 참조**: `[주요 파일/디렉토리]`
-**다룰 내용**: [이 섹션에서 상세히 다룰 토픽 나열]
-
-<!-- Phase 2에서 상세 작성 -->
 ```
+Agent(
+  subagent_type="write-phased",
+  prompt="다음 문서를 작성해주세요.
 
-- 골조 전체는 ~40-60줄로 가볍게 유지한다.
-- 골조 작성 시 Step 2-3에서 수집한 스펙 컨텍스트와 코드 증거를 참조한다.
-- 골조를 컨텍스트에만 보관하지 말고, 실제 target guide 파일(`_sdd/guides/guide_<slug>.md`)에 먼저 저장한다.
-- Phase 1 결과는 `<!-- Phase 2에서 상세 작성 -->` 주석이 남아 있는 초안 상태로 파일에 존재해야 한다.
-- 골조 완료 후 Phase 2로 자동 진행한다 (사용자 리뷰 게이트 없음).
+  파일 경로: [target guide path - _sdd/guides/guide_<slug>.md]
+  참조 템플릿: references/template-compact.md (Writing Rules, § 구조 준수)
 
-**Phase 2 — 내용 채우기(Fill)**
-
-Phase 1에서 저장한 skeleton 파일을 다시 읽고, 그 내용을 기준으로 각 섹션의 상세 내용을 작성한다.
-
-실행 순서:
-1. **순차 실행**: §1 배경 및 동기 → §2 핵심 설계
-   - 이 섹션들은 상호 의존성이 있어 순서대로 작성한다.
-   - 각 섹션 작성 시 저장된 skeleton + 이전 완성된 섹션 + 스펙/코드를 참조한다.
-2. **병렬 실행**: §3 사용 시나리오 가이드, §4 API 레퍼런스, §5 구현 가이드
-   - 이 섹션들은 저장된 skeleton + 완성된 §1-2만 있으면 독립 작성이 가능하다.
-   - `Agent` 도구로 sub-agent를 생성하여 병렬 처리한다.
-   - 각 sub-agent에게 저장된 skeleton 전체 + 완성된 §1-2 + 스펙/코드 접근 권한을 제공한다.
-
-Phase 2 완료 후 저장된 guide 파일에서 `<!-- Phase 2에서 상세 작성 -->` 주석을 모두 제거하고 최종 가이드를 조립한다.
+  [아래 Required sections(§1-§5)과 Step 2-3에서 수집한 맥락을 여기에 포함]"
+)
+```
 
 #### Required sections
 
@@ -229,28 +200,42 @@ Required sections:
 - **§2 핵심 설계 / Core Design**
    - 기능의 핵심 아이디어 또는 알고리즘
    - 설계 결정과 그 이유
-   - 코드 citation (파일:심볼 형식)
+   - 인라인 citation: 본문에서 `[filepath:symbol]` 형식으로 코드 참조
+   - 코드 발췌: `# [filepath:functionName]` 헤더 부착 (≤30줄 전문, >30줄 시그니처+핵심)
 - **§3 사용 시나리오 가이드 / Usage Scenario Guide** ★특화
    - 시나리오별 end-to-end 사용 흐름
    - 각 시나리오: 전제 조건 → 입력 → 처리 흐름 → 기대 결과
    - 정상 시나리오 + 예외/에러 시나리오
    - 가능하면 구체적 데이터 예시 포함
+   - **인라인 citation**: 처리 흐름 단계에서 관련 함수/메서드를 `[filepath:symbol]` 형식으로 참조
 - **§4 API 레퍼런스 / API Reference** ★특화
    - 엔드포인트/함수/인터페이스 상세
    - 파라미터 (이름, 타입, 필수/선택, 설명)
    - 리턴값/응답 구조
    - 에러 코드 및 에러 응답
    - 코드 예시 (요청/응답 또는 호출 예시)
+   - **인라인 citation**: 각 API/함수의 구현 소스를 `[filepath:symbol]` 형식으로 참조
 - **§5 구현 가이드 / Implementation Guide**
    - 핵심 구현 규칙 및 제약
    - 체크리스트 (구현 전/중/후)
    - 안티패턴
+   - **인라인 citation**: 핵심 규칙과 안티패턴에서 관련 코드를 `[filepath:symbol]` 형식으로 참조
 
 Optional appendix:
 
 - spec references with section names
 - code references with file + symbol names
 - assumptions / open points
+
+#### Inline Citation Rules (모든 섹션 공통)
+
+> spec-create의 Best Practices > Writing Quality와 동일한 규칙을 guide-create에서도 강제한다.
+
+- **Code Excerpts**: 코드 발췌 시 `# [filepath:functionName]` 헤더를 코드 블록 첫 줄에 부착. ≤30줄 함수는 전문, >30줄 함수는 시그니처+핵심 로직만.
+- **Inline Citations**: 본문에서 코드를 참조할 때 `[filepath:functionName]` 형식 사용. 예: "상태 검증은 `[src/payments/payment_service.ts:confirmPayment]`에서 수행한다."
+- **Citation 밀도**: §2에만 한정하지 않고 §3 처리 흐름, §4 API 소스, §5 핵심 규칙/안티패턴에서도 코드 근거가 있으면 반드시 인라인 citation을 사용한다.
+- **Source Field**: 컴포넌트 설명 시 `<path>`: ClassName, function_name() 형식. 코드베이스가 없으면 생략.
+- **Low 신뢰도 예외**: 코드 근거가 없는 Low 신뢰도 가이드에서는 citation 대신 "코드 미확인" 표기.
 
 ### Step 6: Save with Backup Semantics
 

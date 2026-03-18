@@ -111,7 +111,8 @@ def process_data(input):
 
 **입력**: 구체적 데이터 예시 포함
 
-**처리 흐름**: 단계별 동작 설명
+**처리 흐름**: 단계별 동작 설명. 각 단계에서 호출되는 함수/메서드를 인라인 citation으로 참조.
+- 예: "`[src/payments/payment_service.ts:confirmPayment]`에서 상태를 검증한다"
 
 **기대 결과**: 성공/실패 시 예상 출력
 
@@ -125,6 +126,8 @@ def process_data(input):
 *이 섹션은 개별 인터페이스별 reference로 작성한다. 가능한 한 구체적이고 자세하게 작성한다.*
 
 ### [Endpoint / Function / Interface]
+
+**구현 소스**: `[filepath:handler/service]` (인라인 citation)
 
 **시그니처**: 엔드포인트 URL, 함수 시그니처, 또는 인터페이스 정의
 
