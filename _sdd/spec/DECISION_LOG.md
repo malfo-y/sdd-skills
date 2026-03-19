@@ -1,5 +1,46 @@
 # Decision Log
 
+## 2026-03-20 - AC-First + Self-Contained 전면 리팩토링 (v3.5.0 -> v3.6.0)
+
+### Context
+
+v3.0에서 도입된 Agent Wrapper 패턴에서, 5개 agent가 skill 디렉토리의 `references/`를 명시적으로 참조하지만 subagent로 실행 시 해당 파일에 접근 불가. Plugin 환경에서도 동일. 또한 agent/skill 파일이 비대하여(agent 9개 합계 4,365줄, full skill 11개 합계 5,042줄) 핵심 로직이 Best Practices, Context Management 등 bloat에 묻혀 있었다.
+
+### Decision
+
+1. **AC-First 구조 전면 적용**: 모든 9개 Claude agent, 11개 Claude full skill, 9개 Codex agent, 10개 Codex full skill에 Acceptance Criteria + 자체 검증 지시(blockquote) + Final Check 추가
+2. **Self-Contained Agent**: 핵심 reference 내용을 agent 파일에 인라인 (원본 대비 70%+ 압축), 외부 reference 의존성 완전 제거
+3. **공통 bloat 제거**: Best Practices, Context Management, When to Use, Version History, Integration with Other Skills 등 공통 섹션 삭제
+4. **래퍼 스킬 정리**: Claude 9개 + Codex 8개 wrapper skill에서 미사용 references/examples 총 48개 파일 삭제
+5. **Codex 통일**: Final Smoke Check 제거, Final Check으로 통일
+6. **ralph-loop-init 범용화**: "ML 트레이닝 디버그" -> "장기 실행 프로세스(ML, e2e, 빌드 등)"
+7. **SDD workflow 세부**: implementation-plan Target Files 충돌 규칙 수정, spec-update-todo 기본 상태 마커 📋 명시, implementation-plan/implementation-review 리팩토링 메타 AC 삭제
+
+### Rationale
+
+- Agent가 subagent로 실행 시 skill 디렉토리 접근 불가 -- self-contained가 유일한 해결책
+- AC-First로 실행 결과가 명확히 측정 가능하고, Final Check으로 자체 품질 보장
+- Bloat 제거로 LLM 컨텍스트 윈도우 효율 극대화 (Claude agent 55%, full skill 46% 감축)
+- 4개 커밋으로 일관된 구조 적용 완료 (7141c70, a751c11, 0ce7fcc, 675ce75)
+
+### Changes
+
+- `.claude/agents/*.md` -- 9개 agent AC-First + self-contained 재작성 (4,365줄 -> 1,961줄)
+- `.claude/skills/*/SKILL.md` -- 11개 full skill AC-First 정제 (5,042줄 -> 2,718줄)
+- `.codex/agents/*.toml` -- 9개 agent AC-First 정비
+- `.codex/skills/*/SKILL.md` -- 10개 full skill AC-First 정제
+- `.claude/skills/*/references/`, `.claude/skills/*/examples/` -- 래퍼 스킬 48개 파일 삭제
+- `.codex/skills/*/references/`, `.codex/skills/*/examples/` -- Codex 래퍼 스킬 파일 삭제
+- `_sdd/spec/main.md` -- v3.5.0 -> v3.6.0
+
+### References
+
+- 드래프트: `_sdd/drafts/feature_draft_agent_self_containment.md`
+- 드래프트: `_sdd/drafts/feature_draft_agent_self_containment_phase2.md`
+- 드래프트: `_sdd/drafts/feature_draft_full_skills_ac_first.md`
+- 드래프트: `_sdd/drafts/feature_draft_codex_agent_wrapper_diet.md`
+- 드래프트: `_sdd/drafts/feature_draft_codex_full_skills_ac_first.md`
+
 ## 2026-03-19 - sdd-autopilot v2.0.0 Reasoning-Based Rewrite (v3.4.1 -> v3.5.0)
 
 ### Context
