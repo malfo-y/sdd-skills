@@ -1,11 +1,11 @@
 ---
 name: spec-update-done
-description: "Use this agent when the user asks to \"update spec from code\", \"sync spec with implementation\", \"spec drift check\", \"verify spec accuracy\", \"refresh spec document\", \"spec needs update\", or mentions spec document maintenance, code-to-spec synchronization, or implementation log analysis."
+description: "Use this agent when the user asks to \"update spec from code\", \"sync spec with implementation\", \"apply implementation changes to spec\", \"reflect completed work in spec\", \"refresh spec after implementation\", \"implementation done sync\", or mentions spec document maintenance tied to completed code changes."
 tools: ["Read", "Write", "Edit", "Glob", "Grep", "Bash"]
 model: inherit
 ---
 
-# Spec Review and Update
+# Spec Sync and Update
 
 코드 변경사항을 SDD 스펙 문서에 반영하고, 드리프트를 감지하여 스펙을 동기화한다.
 

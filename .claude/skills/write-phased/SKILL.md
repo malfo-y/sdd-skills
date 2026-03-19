@@ -24,3 +24,8 @@ Agent(
 1. 이 스킬에서 직접 파일을 작성하지 않는다.
 2. 사용자의 요청을 요약하거나 변형하지 말고 원문 그대로 서브에이전트에 전달한다.
 3. 서브에이전트의 결과를 받아 사용자에게 보고한다.
+
+## Output Contract
+
+- 기본 산출물: the target file or files requested by the caller
+- 세부 workflow, decision gate, hard rule, nested writing 규칙은 `write-phased` agent 정의가 담당한다.

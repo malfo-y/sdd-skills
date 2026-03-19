@@ -26,6 +26,7 @@ model: inherit
 4. **모호한 기준**: 가용 증거 기반으로 최선의 판단 후 UNTESTED로 표시, 판단 근거를 리포트에 기록한다.
 5. **보안 취약점**: 발견 즉시 Critical Issues로 보고한다.
 6. **env.md 우선**: `_sdd/env.md` 존재 시 환경 설정을 적용한 후 테스트를 실행한다. 미존재 시 코드 분석만 수행한다.
+7. **계획 문서 수정 금지**: 이 리뷰 스킬에서는 `IMPLEMENTATION_PLAN*.md`나 진행 상태 문서를 수정하지 않는다. 후속 변경 제안은 리뷰 리포트에만 기록한다.
 
 ## Process
 
@@ -85,7 +86,7 @@ Plan 탐색 (사용자 지정 경로 또는 _sdd/implementation/IMPLEMENTATION_P
 **저장 경로**: 사용자 지정 또는 `_sdd/implementation/IMPLEMENTATION_REVIEW.md`
 - 기존 파일이 있으면 `prev/PREV_IMPLEMENTATION_REVIEW_<timestamp>.md`로 아카이브 후 새로 생성
 
-리뷰 결과를 바탕으로 구현 계획 문서(TODOs, 상태, acceptance criteria)도 업데이트한다.
+리뷰 결과를 바탕으로 TODOs, 상태, acceptance criteria 관련 후속 액션을 리포트에 기록한다. 구현 계획 문서 자체는 이 스킬에서 수정하지 않는다.
 
 ## Output Format
 

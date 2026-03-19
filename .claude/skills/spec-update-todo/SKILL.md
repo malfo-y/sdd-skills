@@ -14,6 +14,11 @@ version: 1.1.0
 2. **원문 전달**: 사용자의 요청을 원문 그대로 서브에이전트에 전달한다.
 3. **결과 보고**: 서브에이전트의 결과를 받아 사용자에게 보고한다.
 
+## Output Contract
+
+- 기본 산출물: `_sdd/spec/*.md`
+- 세부 workflow, decision gate, hard rule, nested writing 규칙은 `spec-update-todo` agent 정의가 담당한다.
+
 ## Execution
 
 ```
