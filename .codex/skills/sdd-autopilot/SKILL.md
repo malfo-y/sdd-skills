@@ -1,7 +1,7 @@
 ---
 name: sdd-autopilot
 description: "적응형 오케스트레이터 메타스킬. /sdd-autopilot으로 호출하여 요구사항 분석부터 스펙 동기화까지 end-to-end SDD 파이프라인을 자율 실행한다."
-version: 2.0.1
+version: 2.1.0
 ---
 
 # SDD Autopilot -- 적응형 오케스트레이터 메타스킬
@@ -20,7 +20,7 @@ User Request
 [sdd-autopilot] -----> Phase 1 (Interactive)
     |                 ├── Reference Loading
     |                 ├── Task Analysis + Inline Discussion
-    |                 ├── Explore agent (코드베이스 탐색)
+    |                 ├── explorer agent (코드베이스 탐색)
     |                 ├── Reasoning → Orchestrator Generation
     |                 └── Orchestrator Verification
     |
@@ -228,7 +228,7 @@ ELSE → 추가 질문
 
 코드베이스 구조와 관련 파일을 분석하여 규모 판단의 근거를 수집한다.
 
-#### 3.1 Explore 에이전트 호출
+#### 3.1 explorer 에이전트 호출
 
 ```
 spawn_agent(
@@ -249,7 +249,7 @@ spawn_agent(
 
 #### 3.2 직접 탐색 (보조)
 
-Explore 에이전트 결과가 부족한 경우 직접 보완한다:
+explorer 에이전트 결과가 부족한 경우 직접 보완한다:
 
 - shell `rg --files`: 관련 파일 패턴 검색 (e.g., `**/*.py`, `**/*.ts`)
 - shell `rg -n`: 키워드 기반 관련 코드 검색
@@ -275,7 +275,7 @@ codebase_analysis = {
 analysis_complete = 프로젝트 구조와 관련 파일이 식별됨
 
 IF analysis_complete → Step 4 진행
-IF Explore agent 실패 → 직접 탐색으로 보완 후 Step 4 진행
+IF explorer agent 실패 → 직접 탐색으로 보완 후 Step 4 진행
 ```
 
 ### Step 4: Reasoning → Orchestrator Generation (추론 → 오케스트레이터 생성)
@@ -303,11 +303,8 @@ f) **특수 패턴**: 부분 파이프라인, 팬아웃 병렬, 재개 등
 
 #### 4.3 오케스트레이터 SKILL.md 생성
 
-- 기존 [Orchestrator Template](#orchestrator-template) 형식 유지
-- 새 섹션 추가: **"## Reasoning Trace"** (5-10줄)
-  - 왜 이 스킬들이 선택되었는지
-  - 왜 이 순서인지
-  - 어떤 SDD 원칙이 적용되었는지
+- 오케스트레이터 형식은 `references/orchestrator-contract.md`의 계약을 따른다.
+- `Reasoning Trace`는 3-6개 bullet로 간결하게 작성한다.
 
 파일 경로:
 ```
@@ -320,8 +317,9 @@ f) **특수 패턴**: 부분 파이프라인, 팬아웃 병렬, 재개 등
 1. `.codex/skills/orchestrator_<topic>/` 디렉토리 생성 (없으면 `mkdir -p`)
 2. Step 1에서 로딩한 `references/sdd-reasoning-reference.md`의 스킬 카탈로그를 참조하여 파이프라인 구성
 3. `examples/sample-orchestrator.md`를 품질 기준으로 참조
-4. Step 2-3에서 수집한 정보를 반영하여 오케스트레이터 생성
-5. 오케스트레이터 파일을 `apply_patch`로 저장
+4. `references/orchestrator-contract.md`의 섹션/필드 계약을 충족하도록 생성
+5. Step 2-3에서 수집한 정보를 반영하여 오케스트레이터 생성
+6. 오케스트레이터 파일을 `apply_patch`로 저장
 
 #### 4.4 Pre-flight Check (리소스 사전 점검)
 
@@ -495,7 +493,7 @@ ELSE → 수정 후 재확인
    mkdir -p _sdd/pipeline/
    apply_patch로 `_sdd/pipeline/log_<topic>_<timestamp>.md` 생성
    ```
-   로그 파일 초기 내용은 [Pipeline Log Format](#pipeline-log-format) 참조.
+   로그 파일 초기 내용은 `references/orchestrator-contract.md`의 Pipeline Log Contract를 따른다.
 
 2. **오케스트레이터 읽기**: shell `sed`/`cat`으로 오케스트레이터 파일을 읽어 파이프라인 단계를 확인한다.
 
@@ -903,200 +901,8 @@ apply_patch: _sdd/pipeline/report_<topic>_<timestamp>.md
 - <제안 2>
 ```
 
-## Orchestrator Template
+## Reference Files
 
-autopilot이 Step 4에서 생성하는 오케스트레이터 파일의 표준 포맷이다. SKILL.md 표준을 따르되, 파이프라인 실행에 특화된 구조를 갖는다.
-
-```markdown
-# Orchestrator: <기능명>
-
-**생성일**: <timestamp>
-**생성자**: autopilot
-
-## 기능 설명
-
-<사용자 요청 원문>
-
-### 구체화된 요구사항
-- <요구사항 1>
-- <요구사항 2>
-
-### 제약 조건
-- <제약 1>
-
-## Pipeline Steps
-
-### Step 1: <agent-name>
-
-**에이전트**: <agent_type>
-**입력 파일**: <_sdd/ 경로 목록>
-**출력 파일**: <예상 출력 경로>
-
-**프롬프트**:
-```
-<에이전트에 전달할 프롬프트 전문>
-```
-
-### Step 2: <agent-name>
-...
-
-## Review-Fix Loop (필수 사이클 -- Hard Rule #9)
-
-- **최대 반복**: 3회
-- **종료 조건**: critical = 0 AND high = 0
-- **수정 대상**: critical/high만 (medium/low는 로그 기록)
-- **사이클 필수**: 이슈 발견 시 fix → re-review 반드시 실행. 리뷰만 하고 끝나지 않음.
-- **부분 파이프라인 적용**: 파이프라인을 중간부터 시작하거나 일부만 실행해도, review가 포함되면 이 사이클 적용.
-
-## Test Strategy
-
-- **방식**: <인라인 디버깅 / ralph_loop_init>
-- **테스트 명령**: <프로젝트 테스트 실행 명령>
-- **최대 재시도**: 5회
-
-## Error Handling
-
-- **재시도 횟수**: 3회
-- **핵심 단계**: <실패 시 중단할 에이전트 목록>
-- **비핵심 단계**: <건너뛸 수 있는 에이전트 목록>
-
-## Reasoning Trace
-
-- **스킬 선택 근거**: <왜 이 스킬들이 선택되었는지>
-- **순서 결정**: <왜 이 순서인지>
-- **적용된 SDD 원칙**: <어떤 원칙이 적용되었는지>
-```
-
-> 완성된 예시는 `examples/sample-orchestrator.md`를 참조한다.
-
-## Pipeline Log Format
-
-파이프라인 실행 중 `_sdd/pipeline/log_<topic>_<timestamp>.md`에 기록하는 표준 포맷이다.
-
-### 로그 파일 초기 구조
-
-```markdown
-# Pipeline Log: <기능명>
-
-## Meta
-- **request**: "<사용자 원래 요청 원문>"
-- **orchestrator**: .codex/skills/orchestrator_<topic>/SKILL.md
-- **started**: <YYYY-MM-DDTHH:mm:ss>
-- **pipeline**: <agent1> → <agent2> → ...
-
-## Status
-| Step | Agent | Status | Output |
-|------|-------|--------|--------|
-| 1 | <agent-1> | pending | - |
-| 2 | <agent-2> | pending | - |
-| ... | ... | ... | ... |
-
-## Execution Log
-
-(각 에이전트 완료 시 아래에 엔트리 추가)
-```
-
-### Status 상태값
-
-| 상태 | 의미 | 전이 |
-|------|------|------|
-| `pending` | 아직 실행되지 않음 | → `in_progress` |
-| `in_progress` | 현재 실행 중 | → `completed` / `failed` |
-| `completed` | 정상 완료 | (최종) |
-| `failed` | 실패 (최대 재시도 초과) | (최종) |
-| `skipped` | 건너뜀 (비핵심 단계 실패 등) | (최종) |
-
-> **재개 시**: autopilot은 Status 테이블에서 첫 번째 `pending` 또는 `in_progress` 스텝을 찾아 해당 스텝부터 실행을 재개한다.
-
-### Status 업데이트 시점
-
-파이프라인 실행 중 각 에이전트 호출 전후에 Status 테이블을 `apply_patch`로 업데이트한다:
-1. 에이전트 시작 시: `pending` → `in_progress`
-2. 에이전트 완료 시: `in_progress` → `completed` + Output 경로 기록
-3. 에이전트 실패 시: `in_progress` → `failed`
-4. 건너뛰기 시: `pending` → `skipped`
-
-### 에이전트 완료 엔트리
-
-```markdown
-### <agent-name> -- <완료/실패/스킵>
-- **시간**: <시작 HH:mm:ss> ~ <완료 HH:mm:ss> (<소요 시간>)
-- **출력**: `<출력 파일 경로>`
-- **핵심 결정사항**:
-  - <결정 1>
-  - <결정 2>
-- **이슈**: <있으면 기록, 없으면 "없음">
-```
-
-### Review-Fix 루프 엔트리
-
-```markdown
-### review-fix -- Round N/3
-- **리뷰 결과**: critical N건, high N건, medium N건, low N건
-- **수정 대상**: <critical/high 이슈 목록>
-- **수정 결과**: 완료 / 부분 완료
-```
-
-### 에러 엔트리
-
-```markdown
-### ERROR: <agent-name> -- 재시도 N/3
-- **에러 내용**: <에러 메시지>
-- **원인 분석**: <분석 결과>
-- **조치**: <수행한 조치>
-- **결과**: 해결 / 미해결
-```
-
-### 핵심 결정사항 추출 방식
-
-autopilot은 각 에이전트의 결과 텍스트에서 핵심 결정사항을 추출하여 로그에 기록한다. 에이전트는 로그 파일의 존재를 모른다.
-
-추출 기준:
-1. 에이전트가 "결정", "선택", "방향", "전략", "채택" 등의 단어와 함께 기술한 내용
-2. 에이전트가 생성한 파일의 핵심 구조 (e.g., "3개 모듈로 분리", "TDD 방식 채택")
-3. 추출이 어려운 경우 에이전트의 주요 행동을 1-3줄로 요약
-
-## Integration with SDD Agents
-
-> 에이전트 목록, 역할, 입력/출력, 의존 관계 상세는 `references/sdd-reasoning-reference.md`의 §2.2~§2.4를 참조한다.
-
-### 에이전트 호출 포맷
-
-```
-spawn_agent(
-  agent_type="<agent-name>",
-  prompt="<task description>
-
-  컨텍스트 파일:
-  - <파일 경로 1>
-  - <파일 경로 2>
-
-  사용자 원래 요청: <사용자 요청 원문>"
-)
-```
-
-### 보조 에이전트
-
-| 에이전트 | agent_type | 역할 | 사용 시점 |
-|---------|---------------|------|----------|
-| Explore | `"Explore"` | 코드베이스 탐색 | Step 3 (코드베이스 탐색) |
-| general-purpose | `"general-purpose"` | 범용 리서치 | 필요 시 (기술 리서치 등) |
-
-### 상태 전달 경로 요약
-
-```
-_sdd/drafts/feature_draft_<topic>.md     → feature_draft 출력 → implementation_plan 입력
-_sdd/implementation/IMPLEMENTATION_PLAN.md → impl-plan 출력 → implementation 입력
-.codex/skills/orchestrator_<topic>/SKILL.md → autopilot이 생성, Step 7에서 참조
-_sdd/pipeline/log_<topic>_<ts>.md         → autopilot이 생성/갱신
-```
-
-## Additional Resources
-
-### Reference Files
-
-- **`references/sdd-reasoning-reference.md`** -- SDD 철학 + 스킬 카탈로그. Step 1에서 Read하여 reasoning의 기반으로 사용.
-
-### Example Files
-
-- **`examples/sample-orchestrator.md`** -- 완성된 오케스트레이터 예시. 품질 기준으로 사용.
+- `references/sdd-reasoning-reference.md`: SDD 철학, skill catalog, 규모별 reasoning 기준
+- `references/orchestrator-contract.md`: 오케스트레이터/로그 최소 계약
+- `examples/sample-orchestrator.md`: 중규모 기본형 + 대규모 차이점 예시
