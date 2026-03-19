@@ -47,7 +47,7 @@ flowchart LR
     classDef step fill:#E3F2FD,stroke:#1565C0,stroke-width:1.5px,color:#0D47A1;
 ```
 
-### Currently Available SDD Skills (16)
+### Currently Available SDD Skills (18)
 
 | Skill | Trigger | Purpose |
 |-------|---------|---------|
@@ -66,12 +66,22 @@ flowchart LR
 | **implementation-review** | "review implementation", "check progress" | Verify implementation against plan (phase-by-phase for large-scale) |
 | **ralph-loop-init** | "ralph loop", "training debug loop" | Generate automated ML training debug loop |
 | **discussion** | "discuss", "brainstorm", "let's discuss" | Structured decision-making discussion: context gathering + option comparison + decisions/open questions/action items |
+| **guide-create** | "create guide", "feature guide", "guide create" | Generate feature-specific implementation/review guide from spec and code |
+| **sdd-autopilot** | "autopilot", "auto implement", "full pipeline" | Autonomous orchestration of the full SDD pipeline |
 
-> (caveat) The `/discussion` skill is only supported in Claude Code.
+### Automated Orchestration (sdd-autopilot) — Recommended Path
 
-### Scale-Based Workflows
+For most feature implementations, start with `/sdd-autopilot`. If direction is unclear, run `/discussion` first to align, then call `/sdd-autopilot`. It analyzes requirements, automatically determines scale, composes the appropriate skill combination, and runs the full pipeline autonomously.
 
-Three paths are used depending on feature scale:
+```bash
+/sdd-autopilot Implement this feature: [feature description]
+```
+
+> Detailed guide: [AUTOPILOT_GUIDE.md](../AUTOPILOT_GUIDE.md)
+
+### Scale-Based Workflows (Manual)
+
+When manually composing individual skills, three paths are used depending on feature scale:
 
 | Scale | Workflow |
 |-------|----------|
@@ -127,6 +137,10 @@ project/
 │   ├── drafts/                          # feature-draft output
 │   │   ├── feature_draft_*.md           # Spec patch + implementation plan combined file
 │   │   └── prev/                        # Archive
+│   │
+│   ├── guides/                          # guide-create output
+│   │   ├── guide_<slug>.md              # Feature-specific implementation/review guide
+│   │   └── prev/                        # PREV_* backups
 │   │
 │   └── env.md                         # Environment configuration
 │
@@ -369,6 +383,7 @@ flowchart LR
 | Medium features | Medium | feature-draft creates draft + plan in one step |
 | Bug fixes, urgent hotfixes | Small | Fix directly, verify when needed |
 | ML training debug | ralph-loop-init | Automated training debug loop |
+| **Full automation (recommended)** | **sdd-autopilot** | **Full pipeline autonomous execution** |
 
 ---
 
@@ -397,7 +412,19 @@ Follow-up skill connections:
 
 > Discussion summaries can optionally be saved as `_sdd/discussion/discussion_<title>.md`.
 
-#### Scenario 3: Large-Scale Feature Implementation
+#### Scenario 3: Automated Orchestration (Autopilot) — Recommended
+
+The **default path** for most feature implementations. Automatically determines skill combinations and runs the full pipeline.
+
+```bash
+/sdd-autopilot
+Implement this feature: [feature description]
+# Runs the full pipeline from requirements analysis to spec sync
+```
+
+> To manually compose individual skills, see scenarios 4–6 below.
+
+#### Scenario 4: Large-Scale Feature Implementation (Manual)
 
 ```bash
 # 1. Generate spec patch draft + implementation plan
@@ -424,7 +451,7 @@ Follow-up skill connections:
 
 > If no spec exists, run `/spec-create` first.
 
-#### Scenario 4: Medium-Scale Feature Implementation
+#### Scenario 5: Medium-Scale Feature Implementation (Manual)
 
 ```bash
 # 1. Generate spec patch draft + implementation plan
@@ -439,7 +466,7 @@ Follow-up skill connections:
 
 > `feature-draft` generates both the spec patch draft (Part 1) and implementation plan (Part 2) in one step, so a separate `implementation-plan` is unnecessary.
 
-#### Scenario 5: Small-Scale / Bug Fixes
+#### Scenario 6: Small-Scale / Bug Fixes
 
 ```bash
 # 1. Direct fix request
@@ -452,7 +479,7 @@ Follow-up skill connections:
 /spec-update-done
 ```
 
-#### Scenario 6: Long-Running Debugging (Ralph Loop)
+#### Scenario 7: Long-Running Debugging (Ralph Loop)
 
 Applies an LLM-based automated loop to tasks where a single debugging turn takes a long time (ML training, e2e tests, etc.).
 
@@ -470,7 +497,7 @@ ls ralph/results/
 
 > For detailed workflow and examples, see [6. Long-Running Debugging — Ralph Loop](#6-long-running-debugging--ralph-loop).
 
-#### Scenario 7: PR-Based Spec Patch and Review
+#### Scenario 8: PR-Based Spec Patch and Review
 
 ```bash
 # 1. Generate patch draft by comparing PR with spec
@@ -487,7 +514,19 @@ ls ralph/results/
 /spec-update-done
 ```
 
-#### Scenario 8: Spec Status Overview
+#### Scenario 9: Feature Guide Generation
+
+Generate feature-specific implementation/review guide documents based on spec and code. Used when creating derived documents without modifying the spec itself.
+
+```bash
+/guide-create
+# Analyze spec and code to generate feature-specific guide
+# Output: _sdd/guides/guide_<slug>.md
+```
+
+> If a spec exists, guides are generated based on the spec; if only code exists, guides are generated with Low confidence. Does not modify the spec itself, so it is safe to use.
+
+#### Scenario 10: Spec Status Overview
 
 ```bash
 # Generate spec summary
@@ -824,6 +863,8 @@ bash ralph/run.sh
 | `/implementation-review` | Verify implementation against plan (phase-by-phase for large-scale) |
 | `/ralph-loop-init` | Generate automated ML training debug loop |
 | `/discussion` | Pre-implementation decision-making (discussion points/decisions/open questions/action items) |
+| `/guide-create` | Generate feature-specific implementation/review guide from spec and code |
+| `/sdd-autopilot` | Autonomous orchestration of the full SDD pipeline |
 
 ### Path-Based Workflow Summary
 
@@ -862,6 +903,7 @@ Direct implementation (→ /implementation-review) (→ /spec-update-done)
 | Progress tracking (overall/summary) | `_sdd/implementation/IMPLEMENTATION_PROGRESS.md` |
 | Progress tracking (phase split) | `_sdd/implementation/IMPLEMENTATION_PROGRESS_PHASE_<n>.md` |
 | Review results | `_sdd/implementation/IMPLEMENTATION_REVIEW.md` |
+| Feature guide | `_sdd/guides/guide_<slug>.md` |
 | Environment configuration | `_sdd/env.md` |
 
 ### Full Workflow Diagram
@@ -1103,3 +1145,43 @@ Conducts structured iterative discussions. Organizes ideas with research support
 **When NOT to use**:
 - When requirements/design are already fixed and ready for immediate implementation
 - For simple bug fixes where decision-making discussion is unnecessary
+
+### sdd-autopilot
+
+Autonomously orchestrates the full SDD pipeline. Performs requirements analysis, scale determination, skill combination selection, and autonomous execution in one go.
+
+In Codex, the generated orchestration skill directly spawns `.codex/agents/` custom agents, and uses both the active skill directory and `_sdd/pipeline/` logs to support resume/partial execution.
+
+**Trigger**: "autopilot", "auto implement", "end-to-end implement", "full pipeline", "start to finish"
+
+**Usage examples**:
+- "Implement this feature from start to finish automatically."
+- "Implement the auth system with the full pipeline."
+
+**When to use**:
+- When you want to automate feature implementation from start to finish
+- When you want to handle a broad implementation request in one go
+
+**When NOT to use**:
+- Tasks completable with a single skill (e.g., spec review only)
+- When an implementation plan already exists and only execution is needed
+
+### guide-create
+
+Generates feature-specific implementation/review guide documents by analyzing spec and code. Writes derived guide documents to `_sdd/guides/` without modifying the spec itself.
+
+**Trigger**: "create guide", "feature guide", "guide create", "write guide", "implementation guide"
+
+**Usage examples**:
+- "Create an implementation guide for the payment approval feature."
+- "Organize a review guide based on this spec."
+- "Write a guide for the user invitation feature."
+
+**When to use**:
+- When a spec exists but execution documents for implementation/review are needed
+- When sharing feature-specific checklists and rules with team members
+- When creating derived guides without modifying the spec
+
+**When NOT to use**:
+- When the spec itself needs to be modified/created (use spec-create, spec-update-todo)
+- When an implementation plan is needed (use feature-draft, implementation-plan)

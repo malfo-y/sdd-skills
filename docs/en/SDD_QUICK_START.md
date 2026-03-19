@@ -35,8 +35,8 @@ See [SDD_WORKFLOW.md > Appendix: Skill Descriptions](SDD_WORKFLOW.md#appendix-sk
 | `/implementation-review` | Verify implementation against plan (phase-by-phase for large-scale) |
 | `/ralph-loop-init` | Generate automated ML training debug loop |
 | `/discussion` | Structured decision-making discussion: context gathering + option comparison + decisions/open questions/action items |
-
-> (caveat) The `/discussion` skill is only supported in Claude Code.
+| `/guide-create` | Generate feature-specific implementation/review guide from spec and code |
+| `/sdd-autopilot` | Autonomous orchestration of the full SDD pipeline |
 
 ### When to Use `/discussion` First
 
@@ -69,6 +69,18 @@ flowchart LR
 ---
 
 ## Choosing an Implementation Path
+
+For most feature implementations, start with `/sdd-autopilot`. If direction is unclear, run `/discussion` first to align, then call `/sdd-autopilot`.
+
+```bash
+# When direction is clear
+/sdd-autopilot Implement this feature: [feature description]
+
+# When direction is unclear
+/discussion → (after alignment) → /sdd-autopilot
+```
+
+To manually compose individual skills, use the scale-based paths below:
 
 | Scale | Workflow |
 |-------|----------|
@@ -111,7 +123,19 @@ Follow-up skill connections:
 
 > Discussion summaries can optionally be saved as `_sdd/discussion/discussion_<title>.md`.
 
-### 3. Large-Scale Feature Implementation
+### 3. Automated Orchestration (Autopilot) — Recommended
+
+The **default path** for most feature implementations. Automatically determines skill combinations and runs the full pipeline.
+
+```bash
+/sdd-autopilot
+Implement this feature: [feature description]
+# Runs the full pipeline from requirements analysis to spec sync
+```
+
+> To manually compose individual skills, see scenarios 4–6 below.
+
+### 4. Large-Scale Feature Implementation (Manual)
 
 ```bash
 # 1. Generate spec patch draft + implementation plan
@@ -138,7 +162,7 @@ Follow-up skill connections:
 
 > If no spec exists, run `/spec-create` first.
 
-### 4. Medium-Scale Feature Implementation
+### 5. Medium-Scale Feature Implementation (Manual)
 
 ```bash
 # 1. Generate spec patch draft + implementation plan
@@ -153,7 +177,7 @@ Follow-up skill connections:
 
 > `feature-draft` generates both the spec patch draft (Part 1) and implementation plan (Part 2) in one step, so a separate `implementation-plan` is unnecessary.
 
-### 5. Small-Scale / Bug Fixes
+### 6. Small-Scale / Bug Fixes
 
 ```bash
 # 1. Direct fix request
@@ -166,7 +190,7 @@ Follow-up skill connections:
 /spec-update-done
 ```
 
-### 6. ML Training Debug Loop
+### 7. ML Training Debug Loop
 
 ```bash
 /ralph-loop-init
@@ -175,7 +199,7 @@ Follow-up skill connections:
 
 > Generates an LLM-based automated ML training debug loop structure.
 
-### 7. PR-Based Spec Patch and Review
+### 8. PR-Based Spec Patch and Review
 
 ```bash
 /pr-spec-patch → (refine via conversation) → /pr-review → (spec reflection via /spec-update-todo) → (if needed) /spec-update-done
@@ -184,7 +208,17 @@ Follow-up skill connections:
 **Important rule (per skill)**: Spec change reflection from PRs **must** be done via `/spec-update-todo`.
 (Move contents from `_sdd/pr/spec_patch_draft.md` to `_sdd/spec/user_draft.md` or `_sdd/spec/user_spec.md` and execute)
 
-### 8. Spec Status Overview
+### 9. Feature Guide Generation
+
+```bash
+/guide-create
+# Analyze spec and code to generate feature-specific implementation/review guide
+# Output: _sdd/guides/guide_<slug>.md
+```
+
+> If a spec exists, guides are generated based on the spec; if only code exists, guides are generated with Low confidence.
+
+### 10. Spec Status Overview
 
 ```bash
 /spec-summary
@@ -224,6 +258,10 @@ _sdd/
 │   ├── feature_draft_*.md       # Spec patch + implementation plan combined file
 │   └── prev/                    # Archive
 │
+├── guides/                      # guide-create output
+│   ├── guide_<slug>.md          # Feature-specific implementation/review guide
+│   └── prev/                    # PREV_* backups
+│
 └── env.md                       # Environment configuration
 ```
 
@@ -253,6 +291,7 @@ Backup files are saved in each area's `prev/`:
 | Medium-scale features | Medium |
 | Bug fixes, urgent hotfixes | Small |
 | ML training debug | ralph-loop-init |
+| **Full automation (recommended)** | **sdd-autopilot** |
 
 ---
 

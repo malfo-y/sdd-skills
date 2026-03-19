@@ -67,13 +67,21 @@ flowchart LR
 | **ralph-loop-init** | "ralph loop", "training debug loop" | ML 자동 트레이닝 디버그 루프 생성 |
 | **discussion** | "토론", "discuss", "brainstorm" | 구조화 의사결정 토론: 맥락 수집 + 선택지 비교 + 결정/미결/실행항목 정리 |
 | **guide-create** | "가이드 작성", "기능 가이드", "guide create" | 스펙+코드 기반 기능별 구현/리뷰 가이드 문서 생성 |
-| **sdd-autopilot** | "autopilot", "자동 구현", "전체 파이프라인" | 규모 자동 판단 후 전체 SDD 파이프라인을 자율 오케스트레이션 |
+| **sdd-autopilot** | "autopilot", "자동 구현", "전체 파이프라인" | 전체 SDD 파이프라인을 자율 오케스트레이션 |
 
-> (caveat) `/discussion` 스킬은 Claude Code에서만 지원합니다.
+### 자동 오케스트레이션 (sdd-autopilot) — 추천 경로
 
-### 규모별 워크플로우
+대부분의 기능 구현은 `/sdd-autopilot`으로 시작하면 됩니다. 방향이 불확실하면 `/discussion`으로 먼저 정리한 뒤 `/sdd-autopilot`을 호출합니다. autopilot이 요구사항을 분석하고, 규모에 맞는 스킬 조합을 자동으로 구성하여 전체 파이프라인을 자율 실행합니다.
 
-기능의 규모에 따라 3가지 경로를 사용합니다:
+```bash
+/sdd-autopilot 이 기능 구현해줘: [기능 설명]
+```
+
+> 상세 가이드: [AUTOPILOT_GUIDE.md](AUTOPILOT_GUIDE.md)
+
+### 규모별 워크플로우 (수동)
+
+개별 스킬을 수동으로 조합하고 싶을 때 규모에 따라 3가지 경로를 사용합니다:
 
 | 규모 | 워크플로우 |
 |------|-----------|
@@ -375,7 +383,7 @@ flowchart LR
 | 중간 규모 기능 | 중규모 | feature-draft로 초안 + 계획을 한 번에 |
 | 버그 수정, 긴급 핫픽스 | 소규모 | 바로 수정, 필요 시 검증 |
 | ML 트레이닝 디버그 | ralph-loop-init | 자동 트레이닝 디버그 루프 |
-| 전체 자동화 (end-to-end) | sdd-autopilot | 규모 자동 판단 + 전체 파이프라인 자율 실행 |
+| **전체 자동화 (추천)** | **sdd-autopilot** | **전체 파이프라인 자율 실행** |
 
 ---
 
@@ -404,7 +412,19 @@ flowchart LR
 
 > 토론 결과 요약은 사용자 선택에 따라 `_sdd/discussion/discussion_<title>.md`로 저장할 수 있습니다.
 
-#### 시나리오 3: 대규모 기능 구현
+#### 시나리오 3: 자동 오케스트레이션 (Autopilot) — 추천
+
+대부분의 기능 구현에서 **기본 경로**입니다. 스킬 조합을 자동으로 판단하여 전체 파이프라인을 실행합니다.
+
+```bash
+/sdd-autopilot
+이 기능 구현해줘: [기능 설명]
+# 요구사항 분석부터 스펙 동기화까지 전체 파이프라인을 자동 실행
+```
+
+> 개별 스킬을 수동으로 조합하고 싶다면 아래 시나리오 4~6을 참고하세요.
+
+#### 시나리오 4: 대규모 기능 구현 (수동)
 
 ```bash
 # 1. 스펙 패치 초안 + 구현 계획 생성
@@ -431,7 +451,7 @@ flowchart LR
 
 > 스펙이 없으면 먼저 `/spec-create`를 실행합니다.
 
-#### 시나리오 4: 중규모 기능 구현
+#### 시나리오 5: 중규모 기능 구현 (수동)
 
 ```bash
 # 1. 스펙 패치 초안 + 구현 계획 생성
@@ -446,7 +466,7 @@ flowchart LR
 
 > `feature-draft`가 스펙 패치 초안(Part 1)과 구현 계획(Part 2)을 한 번에 생성하므로 별도의 `implementation-plan`이 불필요합니다.
 
-#### 시나리오 5: 소규모 / 버그 수정
+#### 시나리오 6: 소규모 / 버그 수정
 
 ```bash
 # 1. 직접 수정 요청
@@ -459,7 +479,7 @@ flowchart LR
 /spec-update-done
 ```
 
-#### 시나리오 6: 장기 실행 디버깅 (Ralph Loop)
+#### 시나리오 7: 장기 실행 디버깅 (Ralph Loop)
 
 한 턴의 디버깅에 시간이 오래 걸리는 작업(ML 트레이닝, e2e 테스트 등)에 LLM 기반 자동 루프를 적용합니다.
 
@@ -477,7 +497,7 @@ ls ralph/results/
 
 > 상세 워크플로우와 사용 예시는 [6. 장기 실행 디버깅 — Ralph Loop](#6-장기-실행-디버깅--ralph-loop) 참고.
 
-#### 시나리오 7: PR 기반 스펙 패치 및 리뷰
+#### 시나리오 8: PR 기반 스펙 패치 및 리뷰
 
 ```bash
 # 1. PR과 스펙 비교하여 패치 초안 생성
@@ -494,7 +514,7 @@ ls ralph/results/
 /spec-update-done
 ```
 
-#### 시나리오 8: 기능 가이드 생성
+#### 시나리오 9: 기능 가이드 생성
 
 스펙과 코드 기반으로 기능별 구현/리뷰 가이드 문서를 생성합니다. 스펙을 수정하지 않고 파생 문서를 만들 때 사용합니다.
 
@@ -506,41 +526,13 @@ ls ralph/results/
 
 > 스펙이 있으면 스펙 기반으로, 코드만 있으면 Low 신뢰도로 가이드를 생성합니다. 스펙 자체를 수정하지 않으므로 안전하게 사용할 수 있습니다.
 
-#### 시나리오 9: 스펙 현황 파악
+#### 시나리오 10: 스펙 현황 파악
 
 ```bash
 # 스펙 요약 생성
 /spec-summary
 # SUMMARY.md 생성 (진행률, 이슈, 추천사항 포함)
 ```
-
-#### 시나리오 10: 자동 오케스트레이션 (Autopilot)
-
-위 시나리오들의 스킬 조합을 수동으로 실행하는 대신, `/sdd-autopilot`으로 전체 파이프라인을 자동 실행할 수 있습니다. autopilot이 요구사항을 분석하고, 규모를 자동 판단하여 적절한 스킬을 순차 호출합니다.
-
-Codex에서도 같은 흐름을 지원합니다. 실행 중인 오케스트레이터는 `.codex/skills/orchestrator_<topic>/`에 활성 상태로 유지되고, 완료 후에는 `_sdd/pipeline/orchestrators/<topic>_<timestamp>/`로 아카이브됩니다. 파이프라인 상태 추적은 `_sdd/pipeline/log_<topic>_<timestamp>.md`를 기준으로 합니다.
-
-현재 Codex 구현에서는 generated orchestrator가 `.codex/agents/`의 custom agents를 직접 spawn합니다. 기존 `.codex/skills/*`는 사용자 진입점과 workflow contract를 유지하는 wrapper/direct skill layer로 남습니다.
-
-```bash
-/sdd-autopilot
-이 기능 구현해줘: [기능 설명]
-
-# autopilot이 자동으로 수행:
-# 1. 요구사항 확인 (대화형)
-# 2. 코드베이스 탐색 + 규모 판단
-# 3. 파이프라인 구성 + 사용자 승인
-# 4. 자율 실행 (feature-draft → impl-plan → impl → review-fix → spec-sync)
-```
-
-**적합한 경우:**
-- 기능 구현을 처음부터 끝까지 자동화하고 싶을 때
-- "이 기능 구현해줘"처럼 범위가 넓은 구현 요청
-- 여러 스킬을 순차 호출해야 하는 복잡한 작업
-
-**적합하지 않은 경우:**
-- 단일 스킬로 완료 가능한 작업 (e.g., 스펙 리뷰만, 구현 계획만)
-- 이미 구현 계획이 있고 구현만 실행하면 되는 경우 → `/implementation` 직접 호출
 
 ---
 
@@ -872,7 +864,7 @@ bash ralph/run.sh
 | `/ralph-loop-init` | ML 자동 트레이닝 디버그 루프 생성 |
 | `/discussion` | 구현 전 의사결정 정리(논점/결정/미결/실행항목 도출) |
 | `/guide-create` | 스펙+코드 기반 기능별 구현/리뷰 가이드 문서 생성 |
-| `/sdd-autopilot` | 규모 자동 판단 후 전체 SDD 파이프라인 자율 오케스트레이션 |
+| `/sdd-autopilot` | 전체 SDD 파이프라인 자율 오케스트레이션 |
 
 ### 경로별 워크플로우 요약
 

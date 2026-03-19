@@ -36,9 +36,7 @@
 | `/ralph-loop-init` | ML 자동 트레이닝 디버그 루프 생성 |
 | `/discussion` | 구조화 의사결정 토론: 맥락 수집 + 선택지 비교 + 결정/미결/실행항목 정리 |
 | `/guide-create` | 스펙+코드 기반 기능별 구현/리뷰 가이드 문서 생성 |
-| `/sdd-autopilot` | 규모 자동 판단 후 전체 SDD 파이프라인 자율 오케스트레이션 |
-
-> `/discussion`과 `/sdd-autopilot`은 Claude Code와 Codex 모두에서 사용할 수 있습니다. Codex에서는 실행 중 오케스트레이터를 `.codex/skills/orchestrator_<topic>/`에 유지하고, 완료 후 `_sdd/pipeline/orchestrators/<topic>_<timestamp>/`로 아카이브합니다. 실제 하위 실행은 `.codex/agents/` custom agents가 맡고, `_sdd/env.md` + `.codex/config.toml`이 pre-flight 입력으로 사용됩니다.
+| `/sdd-autopilot` | 전체 SDD 파이프라인 자율 오케스트레이션 |
 
 ### 언제 `/discussion`을 먼저 쓰나
 
@@ -71,6 +69,18 @@ flowchart LR
 ---
 
 ## 구현 경로 선택
+
+대부분의 기능 구현은 `/sdd-autopilot`으로 시작하면 됩니다. 방향이 불확실하면 `/discussion`으로 먼저 정리한 뒤 `/sdd-autopilot`을 호출합니다.
+
+```bash
+# 방향이 명확할 때
+/sdd-autopilot 이 기능 구현해줘: [기능 설명]
+
+# 방향이 불확실할 때
+/discussion → (합의 후) → /sdd-autopilot
+```
+
+개별 스킬을 수동으로 조합하고 싶다면 아래 규모별 경로를 사용합니다:
 
 | 규모 | 워크플로우 |
 |------|-----------|
@@ -113,7 +123,19 @@ flowchart LR
 
 > 토론 결과 요약은 사용자 선택에 따라 `_sdd/discussion/discussion_<title>.md`로 저장할 수 있습니다.
 
-### 3. 대규모 기능 구현
+### 3. 자동 오케스트레이션 (Autopilot) — 추천
+
+대부분의 기능 구현에서 **기본 경로**입니다. 스킬 조합을 자동으로 판단하여 전체 파이프라인을 실행합니다.
+
+```bash
+/sdd-autopilot
+이 기능 구현해줘: [기능 설명]
+# 요구사항 분석부터 스펙 동기화까지 전체 파이프라인을 자동 실행
+```
+
+> 개별 스킬을 수동으로 조합하고 싶다면 아래 시나리오 4~6을 참고하세요.
+
+### 4. 대규모 기능 구현 (수동)
 
 ```bash
 # 1. 스펙 패치 초안 + 구현 계획 생성
@@ -140,7 +162,7 @@ flowchart LR
 
 > 스펙이 없으면 먼저 `/spec-create`를 실행합니다.
 
-### 4. 중규모 기능 구현
+### 5. 중규모 기능 구현 (수동)
 
 ```bash
 # 1. 스펙 패치 초안 + 구현 계획 생성
@@ -155,7 +177,7 @@ flowchart LR
 
 > `feature-draft`가 스펙 패치 초안(Part 1)과 구현 계획(Part 2)을 한 번에 생성하므로 별도의 `implementation-plan`이 불필요합니다.
 
-### 5. 소규모 / 버그 수정
+### 6. 소규모 / 버그 수정
 
 ```bash
 # 1. 직접 수정 요청
@@ -168,7 +190,7 @@ flowchart LR
 /spec-update-done
 ```
 
-### 6. ML 트레이닝 디버그 루프
+### 7. 장시간 실행 디버그 루프
 
 ```bash
 /ralph-loop-init
@@ -177,7 +199,7 @@ flowchart LR
 
 > LLM 기반 자동 ML 트레이닝 디버깅을 위한 루프 구조를 생성합니다.
 
-### 7. PR 기반 스펙 패치 및 리뷰
+### 8. PR 기반 스펙 패치 및 리뷰
 
 ```bash
 /pr-spec-patch → (대화로 정제) → /pr-review → (스펙 반영은 /spec-update-todo) → (필요 시) /spec-update-done
@@ -186,7 +208,7 @@ flowchart LR
 **중요 규칙(스킬 기준)**: PR에서 나온 스펙 변경사항 반영은 **반드시** `/spec-update-todo`로 진행합니다.
 (`_sdd/pr/spec_patch_draft.md` 내용을 `_sdd/spec/user_draft.md` 또는 `_sdd/spec/user_spec.md`로 옮겨서 실행)
 
-### 8. 기능 가이드 생성
+### 9. 기능 가이드 생성
 
 ```bash
 /guide-create
@@ -196,22 +218,11 @@ flowchart LR
 
 > 스펙이 있으면 스펙 기반으로, 코드만 있으면 Low 신뢰도로 가이드를 생성합니다.
 
-### 9. 스펙 현황 파악
+### 10. 스펙 현황 파악
 
 ```bash
 /spec-summary
 # SUMMARY.md 생성 (진행률, 이슈, 추천사항 포함)
-```
-
-### 10. 자동 오케스트레이션 (Autopilot)
-
-위 시나리오들의 스킬 조합을 수동으로 실행하는 대신, 전체 파이프라인을 자동 실행합니다.
-
-```bash
-/sdd-autopilot
-이 기능 구현해줘: [기능 설명]
-# 요구사항 분석부터 스펙 동기화까지 전체 파이프라인을 자동 실행
-# 규모를 자동 판단하여 적절한 스킬 조합을 순차 호출
 ```
 
 ---
@@ -280,7 +291,7 @@ _sdd/
 | 중간 규모 기능 | 중규모 |
 | 버그 수정, 긴급 핫픽스 | 소규모 |
 | ML 트레이닝 디버그 | ralph-loop-init |
-| 전체 자동화 (end-to-end) | sdd-autopilot |
+| **전체 자동화 (추천)** | **sdd-autopilot** |
 
 ---
 
