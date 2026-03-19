@@ -325,7 +325,7 @@ Build a task management API with user authentication
 
 ### Choosing an Implementation Path
 
-Choose a path based on feature complexity and situation:
+`/sdd-autopilot` automatically selects the appropriate path. To choose manually, refer to the guide below:
 
 ```mermaid
 flowchart LR

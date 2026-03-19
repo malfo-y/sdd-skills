@@ -325,7 +325,7 @@ flowchart LR
 
 ### 구현 경로 선택
 
-기능의 복잡도와 상황에 따라 경로를 선택합니다:
+`/sdd-autopilot` 사용 시 자동으로 적절한 경로를 선택합니다. 수동으로 선택하려면 아래를 참고합니다:
 
 ```mermaid
 flowchart LR
