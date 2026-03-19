@@ -45,7 +45,8 @@ python3 tools/install-codex-skill-bundle.py
 - 기본 repo: `malfo-y/sdd-skills`
 - 기본 ref: `main`
 - 기본 설치 경로: `~/.codex/skills` (`agents`는 `~/.codex/agents`, config는 `~/.codex/config.toml`)
-- 기존에 같은 이름의 스킬이 있으면 기본적으로 건너뜀
+- 기존에 같은 이름의 스킬/에이전트가 있으면 내용을 비교
+- 내용이 같으면 건너뜀, 다르면 자동으로 덮어씀
 - 기존 `config.toml`이 있으면 `[agents]` 섹션만 안전하게 병합
 
 자주 쓰는 예시:
@@ -54,7 +55,7 @@ python3 tools/install-codex-skill-bundle.py
 # 설치 예정 항목만 확인
 python3 tools/install-codex-skill-bundle.py --dry-run
 
-# 이미 설치된 스킬도 전부 교체
+# 이미 설치된 스킬/에이전트를 내용과 상관없이 전부 교체
 python3 tools/install-codex-skill-bundle.py --force
 
 # 다른 포크/브랜치에서 설치

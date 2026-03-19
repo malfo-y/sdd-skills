@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 from dataclasses import dataclass
+import hashlib
 import os
 import re
 import shutil
@@ -306,6 +307,51 @@ def _discover_agents(repo_root: str, agents_root: str) -> list[tuple[str, str]]:
     return discovered
 
 
+def _sha256_file(path: str) -> str:
+    digest = hashlib.sha256()
+    with open(path, "rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def _dir_signature(root: str) -> list[tuple[str, ...]]:
+    signature: list[tuple[str, ...]] = []
+    for current_root, dirnames, filenames in os.walk(root):
+        dirnames.sort()
+        filenames.sort()
+        rel_root = os.path.relpath(current_root, root)
+        if rel_root == ".":
+            rel_root = ""
+        signature.append(("dir", rel_root))
+        for filename in filenames:
+            abs_path = os.path.join(current_root, filename)
+            rel_path = os.path.join(rel_root, filename) if rel_root else filename
+            signature.append(("file", rel_path, _sha256_file(abs_path)))
+    return signature
+
+
+def _same_skill_dir(src_dir: str, dest_dir: str) -> bool:
+    if not os.path.isdir(dest_dir):
+        return False
+    return _dir_signature(src_dir) == _dir_signature(dest_dir)
+
+
+def _same_file(src_path: str, dest_path: str) -> bool:
+    if not os.path.isfile(dest_path):
+        return False
+    if os.path.getsize(src_path) != os.path.getsize(dest_path):
+        return False
+    return _sha256_file(src_path) == _sha256_file(dest_path)
+
+
+def _remove_existing_path(path: str) -> None:
+    if os.path.isdir(path) and not os.path.islink(path):
+        shutil.rmtree(path)
+        return
+    os.remove(path)
+
+
 def _install_skill(
     skill_name: str,
     skill_dir: str,
@@ -315,18 +361,18 @@ def _install_skill(
 ) -> str:
     dest_dir = os.path.join(dest_root, skill_name)
     existed_before = os.path.exists(dest_dir)
+    identical = existed_before and _same_skill_dir(skill_dir, dest_dir)
     if existed_before:
-        if not force:
-            return "skipped"
-        if not dry_run:
-            shutil.rmtree(dest_dir)
-    if dry_run:
-        if existed_before and force:
+        if identical and not force:
+            return "unchanged"
+        if dry_run:
             return "would replace"
+        _remove_existing_path(dest_dir)
+    if dry_run:
         return "would install"
     os.makedirs(dest_root, exist_ok=True)
     shutil.copytree(skill_dir, dest_dir)
-    if existed_before and force:
+    if existed_before:
         return "replaced"
     return "installed"
 
@@ -340,17 +386,18 @@ def _install_agent(
 ) -> str:
     dest_path = os.path.join(dest_root, agent_name)
     existed_before = os.path.exists(dest_path)
-    if existed_before and not force:
-        return "skipped"
+    identical = existed_before and _same_file(agent_path, dest_path)
+    if existed_before and identical and not force:
+        return "unchanged"
     if dry_run:
-        if existed_before and force:
+        if existed_before:
             return "would replace"
         return "would install"
     os.makedirs(dest_root, exist_ok=True)
     if existed_before:
-        os.remove(dest_path)
+        _remove_existing_path(dest_path)
     shutil.copy2(agent_path, dest_path)
-    if existed_before and force:
+    if existed_before:
         return "replaced"
     return "installed"
 
@@ -472,7 +519,7 @@ def _parse_args(argv: list[str]) -> Args:
     parser.add_argument(
         "--force",
         action="store_true",
-        help="Replace already installed skills instead of skipping them",
+        help="Replace existing skills and agents even when contents are identical",
     )
     parser.add_argument(
         "--include-hidden",

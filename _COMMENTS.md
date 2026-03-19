@@ -1,80 +1,32 @@
 # _COMMENTS
 
-Generated at: 2026-03-09T10:52:31.648Z
-Total comments: 3
+Generated at: 2026-03-19T01:14:38.382Z
+Total comments: 1
 
 ## Comments
 
-### _sdd/drafts/feature_draft_codex_sdd_skills_human_explanation_alignment.md:L508-L508
+### .claude/skills/sdd-autopilot/references/sdd-reasoning-reference.md:L103-L103
 
-이거는 나중에
+8개?
 
-- anchor.hash: 73b0077d
-- anchor.snippet: KILL.md`까지 같은 턴에 수정할지 별도 후속 작업으로 둘지 
-- anchor.before: 폼 drift 발생 | 사용자 혼선 | 이번 계획의 범위를 명시하고, 후속 `.claude/skills` mirror 작업을 Open Questions로 남김 |
-| 요약 스킬이 다시 너무 길어짐 | LLM 소비성 저하 | `spec-summary`는 1-2문장 narrative 슬롯만 추가하고 길이 제한 유지 |
+- anchor.hash: 7f6ebc3b
+- anchor.snippet: 9개
+- anchor.before:                                                    ralph-loop-init (장시간 테스트)
+```
 
-## Open Questions
+discussion은 어디서든 선행 가능 (방향 불확실 시).
+guide-create, spec-review는 파이프라인 끝에 선택적 추가.
+write-phased는 다른 스킬의 하위 도구로 중첩 호출.
 
-- [ ] `implementation/S
-- anchor.after: 결정 필요
-- [ ] `skill.json` 버전 정책을 일괄 minor bump로 할지, 일부만 patch bump로 할지 정해야 함
-- [ ] `.claude/skills` mirror를 시작하기 전에 Codex 쪽 example/checklist를 사실상 canonical test fixture로 볼지 확정 필요
+### 2.2 오케스트레이션 대상 스킬 (
+- anchor.after: )
 
-## Next Steps
+autopilot이 생성한 오케스트레이터 파이프라인에 조합하는 스킬.
 
-### Apply Spec Patch
-- `s
-- createdAt: 2026-03-09T10:51:47.002Z
+> **전제 조건**: 글로벌 스펙(`_sdd/spec/main.md`)이 존재해야 한다. 스펙이 없으면 오케스트레이터 생성을 중단하고, 사용자에게 `/spec-create` 실행을 안내한다.
 
----
+#### feature-draft
 
-### _sdd/drafts/feature_draft_codex_sdd_skills_human_explanation_alignment.md:L509-L509
-
-일괄 minor bump
-
-- anchor.hash: ced248dd
-- anchor.snippet: 책을 일괄 minor bump로 할지, 일부만 patch bu
-- anchor.before:  작업을 Open Questions로 남김 |
-| 요약 스킬이 다시 너무 길어짐 | LLM 소비성 저하 | `spec-summary`는 1-2문장 narrative 슬롯만 추가하고 길이 제한 유지 |
-
-## Open Questions
-
-- [ ] `implementation/SKILL.md`까지 같은 턴에 수정할지 별도 후속 작업으로 둘지 결정 필요
-- [ ] `skill.json` 버전 정
-- anchor.after: mp로 할지 정해야 함
-- [ ] `.claude/skills` mirror를 시작하기 전에 Codex 쪽 example/checklist를 사실상 canonical test fixture로 볼지 확정 필요
-
-## Next Steps
-
-### Apply Spec Patch
-- `spec-update-todo`를 실행해 Part 1의 planned update를 `_sdd/spec/`에 반영
-
-- createdAt: 2026-03-09T10:51:58.959Z
-
----
-
-### _sdd/drafts/feature_draft_codex_sdd_skills_human_explanation_alignment.md:L510-L510
-
-.claude/skills 미러링은 하지 않음.
-
-- anchor.hash: 084f81d3
-- anchor.snippet: ror를 시작하기 전에 Codex 쪽 example/checklist를
-- anchor.before: `는 1-2문장 narrative 슬롯만 추가하고 길이 제한 유지 |
-
-## Open Questions
-
-- [ ] `implementation/SKILL.md`까지 같은 턴에 수정할지 별도 후속 작업으로 둘지 결정 필요
-- [ ] `skill.json` 버전 정책을 일괄 minor bump로 할지, 일부만 patch bump로 할지 정해야 함
-- [ ] `.claude/skills` mir
-- anchor.after:  사실상 canonical test fixture로 볼지 확정 필요
-
-## Next Steps
-
-### Apply Spec Patch
-- `spec-update-todo`를 실행해 Part 1의 planned update를 `_sdd/spec/`에 반영
-
-### Execute Implementation
-- 위 Phase 순서대로 `.codex/skills/` 수정
-- 각 Phase 종료 시 
-- createdAt: 2026-03-09T10:52:17.494Z
+- **Role**: 스펙 패치 초안 + 구현 계획을 한 번에 생성
+- **Agent*
+- createdAt: 2026-03-19T01:13:45.394Z
