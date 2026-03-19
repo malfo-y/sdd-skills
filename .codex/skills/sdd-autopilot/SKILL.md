@@ -18,7 +18,7 @@ version: 2.2.0
 - [ ] AC2: `.codex/skills/orchestrator_<topic>/SKILL.md`에 generated orchestrator를 저장했다.
 - [ ] AC3: `_sdd/pipeline/log_<topic>_<timestamp>.md`에 실행 로그를 남겼다.
 - [ ] AC4: review 단계가 포함된 파이프라인이면 review → fix → re-review 사이클을 실제로 수행했다.
-- [ ] AC5: 모든 단계가 Execute → Verify 두 페이즈를 거쳤고, exit criteria를 확인했다.
+- [ ] AC5: 모든 단계가 Execute → Verify 두 페이즈를 거쳤고, 테스트 결과가 사용자가 볼 수 있는 형태로 저장되었다 (`_sdd/implementation/test_results/` 또는 `ralph/state.md`).
 - [ ] AC6: 최종 결과와 후속 조치를 `_sdd/pipeline/report_<topic>_<timestamp>.md`에 정리했다.
 - [ ] AC7: `_sdd/spec/` 직접 수정은 `spec_update_done` 또는 `spec_update_todo` 에이전트에만 위임했다.
 
@@ -211,7 +211,7 @@ critical/high 이슈가 남아 있으면 종료하지 않는다.
 - 빠른 검증 가능: 인라인 테스트/수동 실행
 - 장기 실행/불안정/브라우저 의존: `ralph_loop_init`
 
-테스트 단계도 설정 생성만으로 끝내지 않고, 실제 실행과 결과 검증까지 포함한다.
+테스트 단계도 설정 생성만으로 끝내지 않고, 실제 실행과 결과 검증까지 포함한다. 인라인 테스트 결과는 `_sdd/implementation/test_results/test_result_<timestamp>.md`에 저장한다.
 
 ### Step 8: Finalize
 

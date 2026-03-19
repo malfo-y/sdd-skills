@@ -12,7 +12,7 @@ version: 2.0.0
 - [ ] AC2: orchestrator SKILL.md가 `.claude/skills/orchestrator_<topic>/`에 생성되고, 검증(12항목)을 통과했다
 - [ ] AC3: orchestrator 기반 Phase 2 자율 실행이 완료되었다 (에이전트 호출 + Exit Criteria 검증)
 - [ ] AC4: review-fix loop가 정상 동작했다 (이슈 발견 시 fix → re-review 사이클 실행, critical/high 0건 또는 MAX_REVIEW 도달 시 중단)
-- [ ] AC5: 테스트(인라인 또는 ralph-loop)가 Execute → Verify 패턴으로 실행되었다
+- [ ] AC5: 테스트(인라인 또는 ralph-loop)가 Execute → Verify 패턴으로 실행되고, 결과가 사용자가 볼 수 있는 형태로 저장되었다 (`_sdd/implementation/test_results/` 또는 `ralph/state.md`)
 - [ ] AC6: 최종 요약 보고서(`_sdd/pipeline/report_<topic>_<timestamp>.md`)가 작성되고 사용자에게 보고되었다
 
 ## Workflow Position
@@ -252,7 +252,7 @@ FOR EACH step IN pipeline_steps:
 | `implementation-review` | 심각도 분류(critical/high/medium/low) 포함 |
 | `ralph-loop-init` | `ralph/` + `run.sh` 실행 가능 + `state.md` 존재 |
 | ralph loop 실행 | `state.md` phase=DONE + 최종 결과 기록 |
-| 인라인 테스트 | 테스트 실행 완료 + 전체 통과 (또는 최대 재시도 후 결과 기록) |
+| 인라인 테스트 | 테스트 실행 완료 + 결과 파일 저장 (`_sdd/implementation/test_results/`) + 전체 통과 (또는 최대 재시도 후 결과 기록) |
 | `spec-update-done/todo` | `_sdd/spec/` 업데이트 + 내용 반영 |
 | `spec-review` | 리뷰 결과 반환 + 드리프트/품질 이슈 분류 |
 
@@ -281,7 +281,7 @@ WHILE review_count < MAX_REVIEW:
 
 | 전략 | Execute | Verify |
 |------|---------|--------|
-| **인라인 디버깅** | implementation 에이전트에 테스트 포함 호출 (수정-재실행 최대 5회) | 테스트 실행 로그 + 통과/실패 건수 + 수정 시도 확인. 전체 통과 → 다음 단계. 최대 재시도 후 실패 → 중단 |
+| **인라인 디버깅** | implementation 에이전트에 테스트 포함 호출 (수정-재실행 최대 5회) | 테스트 실행 로그 + 통과/실패 건수 + 수정 시도 확인. 결과를 `_sdd/implementation/test_results/test_result_<timestamp>.md`에 저장. 전체 통과 → 다음 단계. 최대 재시도 후 실패 → 중단 |
 | **ralph-loop-init** | Phase A-1: 설정 생성 → Phase B-1: 설정 검증 (ralph/, run.sh, state.md) → Phase A-2: `bash ralph/run.sh` background 실행 | Phase B-2: 완료 알림 후 state.md phase 확인. DONE → 다음 단계. 미완료 → 중단 |
 
 #### 7.4 에러 핸들링
