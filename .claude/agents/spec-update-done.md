@@ -151,3 +151,8 @@ model: inherit
 | Large | Step 6 of 6 | 구현 완료 후 스펙 동기화 |
 | Medium | Step 3 of 3 | 구현 완료 후 스펙 동기화 |
 | Small | Optional | 스펙에 영향 있는 변경 시 |
+
+## Final Check
+
+Acceptance Criteria가 모두 만족되었나 검증한다. 미충족 항목이 있으면 해당 단계로 돌아가 수정한다.
+

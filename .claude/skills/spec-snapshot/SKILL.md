@@ -125,3 +125,8 @@ _sdd/snapshots/
 ## Integration
 
 `spec-create`(원본 생성) → **spec-snapshot**(번역 스냅샷) → `spec-summary`(요약 참고)
+
+## Final Check
+
+Acceptance Criteria가 모두 만족되었나 검증한다. 미충족 항목이 있으면 해당 단계로 돌아가 수정한다.
+

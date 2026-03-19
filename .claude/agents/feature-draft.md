@@ -276,3 +276,8 @@ model: inherit
 | 동명 파일 존재 | `prev/`에 아카이브 후 생성 |
 | 불완전 정보 | 최선 추론, Open Questions에 기록 |
 | Target Files 결정 불가 | `[TBD] <reason>` 마커 사용 |
+
+## Final Check
+
+Acceptance Criteria가 모두 만족되었나 검증한다. 미충족 항목이 있으면 해당 단계로 돌아가 수정한다.
+

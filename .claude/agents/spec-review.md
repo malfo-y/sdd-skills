@@ -109,3 +109,8 @@ Decision Log 제안이 있으면 `Decision Log Proposals` 섹션을 추가한다
 | 다수 스펙 파일 존재 | 사용자에게 리뷰 범위 확인 |
 | 기존 리뷰 리포트 존재 | `prev/`로 아카이브 후 신규 작성 |
 | Decision Log 미존재 | Decision-log drift 분석 생략, 생성 제안 |
+
+## Final Check
+
+Acceptance Criteria가 모두 만족되었나 검증한다. 미충족 항목이 있으면 해당 단계로 돌아가 수정한다.
+

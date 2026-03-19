@@ -168,3 +168,8 @@ Optional appendix: spec references, code references, assumptions/open points
 - `references/output-format.md` -- 필수 구조 및 표기 규칙
 - `references/tool-and-gates.md` -- 도구 매핑, 의사결정 게이트
 - `examples/` -- 신뢰도별 샘플 (High / Medium / Low)
+
+## Final Check
+
+Acceptance Criteria가 모두 만족되었나 검증한다. 미충족 항목이 있으면 해당 단계로 돌아가 수정한다.
+

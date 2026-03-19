@@ -434,3 +434,8 @@ See `examples/summary-output.md` for a complete example summary.
 See `references/summary-template.md` for the template with placeholders.
 
 **Integration**: `spec-create` / `spec-update-todo` / `spec-update-done` → `spec-summary` 순서로 연계 사용.
+
+## Final Check
+
+Acceptance Criteria가 모두 만족되었나 검증한다. 미충족 항목이 있으면 해당 단계로 돌아가 수정한다.
+

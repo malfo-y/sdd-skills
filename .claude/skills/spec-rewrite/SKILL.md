@@ -214,3 +214,8 @@ Acceptance Criteria(AC1-AC7)를 자체 검증하고, 미충족 항목은 해당 
 - `examples/rewrite-report.md` — sample rewrite report
 
 **Related skills**: spec-update-done (코드 검증), spec-summary (요약 재생성), implementation-plan (구현 계획)
+
+## Final Check
+
+Acceptance Criteria가 모두 만족되었나 검증한다. 미충족 항목이 있으면 해당 단계로 돌아가 수정한다.
+

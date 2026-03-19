@@ -85,3 +85,8 @@ class AuthService:
 Edit(old_string="    def login(...) -> Token:\n        # TODO: Phase 2\n        pass",
      new_string="    def login(...) -> Token:\n        user = self._find_user(email)\n        ...")
 ```
+
+## Final Check
+
+Acceptance Criteria가 모두 만족되었나 검증한다. 미충족 항목이 있으면 해당 단계로 돌아가 수정한다.
+

@@ -245,3 +245,8 @@ Decision log entry format:
 - **`examples/additional-specs.md`** — CLI, Web API, Data Pipeline 예시
 
 연관 skill: `feature-draft` → `implementation` → `spec-update-done`
+
+## Final Check
+
+Acceptance Criteria가 모두 만족되었나 검증한다. 미충족 항목이 있으면 해당 단계로 돌아가 수정한다.
+

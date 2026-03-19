@@ -1,838 +1,206 @@
 ---
 name: spec-summary
 description: This skill should be used when the user asks to "summarize spec", "spec summary", "show spec overview", "스펙 요약", "스펙 개요", "show spec status", "스펙 현황", "project overview", "프로젝트 개요", "what's the current state", "현재 상태는", or wants a human-readable summary of the current specification for quick understanding.
-version: 1.5.0
+version: 1.6.0
 ---
 
-# spec-summary: Specification Summary Generator
+# spec-summary
 
-| Workflow | Position | When |
-|----------|----------|------|
-| Any | Standalone | 프로젝트 현황 파악, 스테이크홀더 미팅, 온보딩 |
-| Any | After spec-update-todo/done | 스펙 변경 후 요약 갱신 |
+## Goal
 
-## Overview
+현재 스펙과 구현 상태를 읽어 `_sdd/spec/SUMMARY.md`에 사람이 빠르게 훑을 수 있는 layered summary를 만든다. 필요할 때만 `README.md`의 managed block을 갱신해, 짧은 스냅샷과 전체 요약 문서를 연결한다.
 
-The **spec-summary** skill generates human-readable summaries of SDD (Spec-Driven Development) specification documents. It creates a layered, scannable document that helps both technical and non-technical stakeholders quickly understand:
+## Acceptance Criteria
 
-- **Project motivation and goals** (What and Why)
-- **Key features explained clearly** (feature-by-feature plain text paragraphs)
-- **High-level architecture** (key components, bird's-eye view)
-- **Current status and progress** (completion percentage, feature dashboard)
-- **Open issues and improvements** (prioritized by impact)
-- **Recommended next steps** (immediate, short-term, long-term)
-- **Project README snapshot** (optional, marker-based update on request)
+> 완료 전 아래 기준을 자체 검증한다. 미충족 항목이 있으면 해당 단계로 돌아가 수정한다.
 
-### Output
+- [ ] AC1: `_sdd/spec/SUMMARY.md`를 생성하거나 안전하게 갱신했다.
+- [ ] AC2: summary에 프로젝트 목표, 핵심 기능, 구조, 진행 상태, 주요 이슈, 다음 단계가 포함된다.
+- [ ] AC3: split spec과 구현 진행 문서가 있으면 이를 반영해 현재 상태를 왜곡 없이 요약했다.
+- [ ] AC4: README 갱신은 사용자가 명시적으로 요청한 경우에만 수행했다.
+- [ ] AC5: summary와 README는 기존 문서 언어를 따르며, README는 marker block만 갱신했다.
+- [ ] AC6: 본문만 읽어도 실행 계약은 이해 가능하고, `references/summary-template.md`와 `examples/summary-output.md`는 품질 향상을 위한 companion asset으로 유지된다.
 
-- **Primary file**: `_sdd/spec/SUMMARY.md`
-- **Optional file**: `README.md` (only when user explicitly requests README create/update)
-- **Format**: Layered markdown (executive summary → technical details)
-- **Audience**: Mixed (stakeholders + developers)
-- **Language**: Follows spec document language (Korean/English/bilingual)
+## SDD Lens
+
+- summary는 스펙의 대체물이 아니라, `_sdd/spec/`를 빠르게 이해하기 위한 안내 문서다.
+- summary는 spec, implementation progress, implementation review를 연결해 현재 상태를 설명해야 한다.
+- 문서 작성은 간결해야 하지만, 상태/리스크/다음 단계 같은 운영 정보는 빠뜨리면 안 된다.
+
+## Companion Assets
+
+- `references/summary-template.md`: SUMMARY 구조 템플릿
+- `examples/summary-output.md`: 완성 예시
+
+긴 문서일수록 위 자산을 적극 활용하되, 본문 자체가 입력 소스와 출력 계약을 설명해야 한다.
 
 ## Hard Rules
 
-1. **Spec read-only**: `_sdd/spec/*.md` 파일은 읽기 전용이다 (`SUMMARY.md` 제외). 스펙 내용을 수정하지 않는다.
-2. **README sync on explicit request only**: README 업데이트는 사용자가 명시적으로 요청할 때만 수행한다.
-3. **언어 규칙**: 기존 스펙/문서의 언어를 따른다. 새 프로젝트(기존 스펙 없음)는 한국어 기본. 사용자 명시 지정 시 해당 언어 사용.
-4. **백업 후 덮어쓰기**: 기존 `SUMMARY.md` 존재 시 `prev/PREV_SUMMARY_<timestamp>.md`로 백업 후 새로 생성한다.
-
-## Long-form Writing Strategy
-
-summary가 executive summary + technical detail + status dashboard까지 길어질 경우 `$write-phased` 전략을 우선 적용한다.
-
-- 요약 skeleton을 먼저 저장
-- 이후 narrative/표/recommendation을 patch 기반으로 채운다
-- runtime delegation이 불가능하면 현재 실행 안에서 동일한 2-phase 절차를 따른다
-
-## Codex Fan-out Summary Contract
-
-split spec 또는 컴포넌트 수가 많은 프로젝트는 summary 생성을 두 단계로 나눈다.
-
-- 컴포넌트별/섹션별 핵심 포인트 추출을 병렬로 수행한다
-- 부모가 completion/status/issues를 통합 계산한다
-- 최종 `SUMMARY.md`는 부모가 직접 쓰거나 `spawn_agent(agent_type="write_phased")`로 위임한다
-- spawned 결과는 `wait_agent(...)`로 수집하고 중복/톤을 정리한다
-
-## When to Use This Skill
-
-Trigger `/spec-summary` in these scenarios:
-
-1. **Before stakeholder meetings** - Quick status brief
-2. **Onboarding new team members** - Project overview
-3. **After major spec updates** - Show what changed
-4. **After spec review** - Sync results summary
-5. **Periodic status checks** - Weekly/monthly progress reports
-6. **Before implementation planning** - Understand current state
-
-### Trigger Phrases
-
-The skill auto-activates when the user says:
-- "summarize spec" / "스펙 요약"
-- "spec summary" / "spec overview"
-- "show spec status" / "스펙 현황"
-- "project overview" / "프로젝트 개요"
-- "what's the current state" / "현재 상태는"
-- "README도 같이 업데이트" / "update README too"
-- "README 만들어줘" / "create README from summary"
+1. `_sdd/spec/*.md`는 읽기 전용이다. 단, `SUMMARY.md`는 생성/갱신할 수 있다.
+2. README 갱신은 사용자가 명시적으로 요청한 경우에만 수행한다.
+3. 기존 `SUMMARY.md`가 있으면 `prev/PREV_SUMMARY_<timestamp>.md`로 백업 후 갱신한다.
+4. README는 전체를 덮어쓰지 않는다. `spec-summary` marker block만 갱신하거나 없으면 안전하게 추가한다.
+5. 문서 언어는 기존 스펙/문서를 따른다. 기존 스펙이 없으면 한국어를 기본으로 한다.
+6. summary가 길거나 구조적으로 복잡하면 `$write-phased` 전략을 사용한다.
+7. split spec 또는 컴포넌트 수가 많으면 병렬 추출 후 부모가 최종 summary를 통합한다.
 
 ## Input Sources
 
-The skill reads information from multiple sources:
+우선순위:
 
-### Primary Source
-- **Main spec**: `_sdd/spec/<project>.md` or `_sdd/spec/main.md`
-- **Sub-specs**: Prefer sub-spec files referenced/linked from the index/main spec.
-  - Common convention: `_sdd/spec/<project>_*.md` (e.g. `<project>_API.md`, `<project>_DATA_MODEL.md`)
-  - Important: exclude generated/backup files such as `SUMMARY.md` and `prev/PREV_*.md`
+1. `_sdd/spec/main.md` 또는 프로젝트 index spec
+2. index spec이 가리키는 sub-spec 파일
+3. `_sdd/implementation/IMPLEMENTATION_PROGRESS*.md`
+4. `_sdd/implementation/IMPLEMENTATION_REVIEW.md`
+5. `README.md` (README sync 요청 시만)
+6. `_sdd/env.md` (로컬 검증이 필요할 때만)
 
-### Secondary Sources (Optional)
-- **Implementation progress**: `_sdd/implementation/IMPLEMENTATION_PROGRESS.md`
-- **Implementation progress (phases)**: `_sdd/implementation/IMPLEMENTATION_PROGRESS_PHASE_<n>.md` (if present, prefer the latest phase for “current status”)
-- **Implementation review**: `_sdd/implementation/IMPLEMENTATION_REVIEW.md`
-- **Project README**: `README.md` (only when README sync is requested)
-- **Status markers in spec**: 📋 (계획됨), 🚧 (진행중), ✅ (완료), ⏸️ (보류)
-- **Execution/test environment guide**: `_sdd/env.md` (only when local validation commands/tests are needed)
+주의:
 
-### Spec Document Structure Expected
+- `SUMMARY.md`와 `prev/PREV_*.md`는 입력 후보에서 제외한다.
+- split spec인데 링크가 불명확하면 관련 spec 집합을 사용자에게 확인한다.
 
-The skill supports both **whitepaper-style** (§1~§8) and **legacy** spec formats. Whitepaper sections are optional; legacy sections remain backward compatible.
+## Process
 
-```markdown
-# [Project Name]
+### Step 1: Locate the Spec Set
 
-## Background & Motivation (§1, 배경 및 동기)        ← NEW (whitepaper)
-[Problem statement, why this approach, core value proposition]
+먼저 index/main spec을 찾고, 필요하면 sub-spec 집합을 결정한다.
 
-## Core Design (§2, 핵심 설계)                       ← NEW (whitepaper)
-[Key idea narrative, algorithm/logic flow, design rationale]
+- 후보: `_sdd/spec/main.md`, `_sdd/spec/<project>.md`
+- split spec이면 index에서 링크된 파일을 우선 사용
+- 링크가 불명확하면 `_sdd/spec/<project>_*.md`를 후보로 모아 확인
+- implementation progress/review 파일 존재 여부도 함께 확인
 
-## 목표 (Goal) / Architecture Overview (§3)
-- ✅ Feature 1
-- 🚧 Feature 2 (진행중)
-- 📋 Feature 3 (계획됨)
+스펙이 없으면 `/spec-create`를 먼저 권장하고 종료한다.
 
-## 아키텍처 개요 (Architecture Overview, §3)
-[Component descriptions]
+### Step 2: Extract the Facts
 
-## 컴포넌트 상세 (Component Details, §4)
-[Detailed component information]
+아래 항목을 스펙과 보조 문서에서 추출한다.
 
-## Usage Guide & Expected Results (§5, 사용 가이드)  ← NEW (whitepaper)
-[Scenario-based usage with expected outcomes]
+- 프로젝트 이름, 버전, 최근 변경 시점
+- 목표와 해결하려는 문제
+- 핵심 기능과 현재 상태
+- 주요 아키텍처/컴포넌트
+- 진행률과 blocker
+- 구현 리뷰 결과와 주요 이슈
+- 다음 단계 후보
 
-## 환경 및 의존성 (Environment & Dependencies, §8)
-[Tech stack and dependencies]
+whitepaper 섹션이 있으면 다음을 추가로 활용한다.
 
-## 발견된 이슈 및 개선 필요사항 (Issues & Improvements)
-[Known issues and improvement ideas]
-```
+- §1 Background & Motivation → why
+- §2 Core Design → 핵심 설계 요약
+- §5 Usage Guide & Expected Results → 대표 사용 시나리오
 
-**Whitepaper section mapping for summary output:**
-- §1 → Executive Summary "Why" (problem + value proposition)
-- §2 → 💡 Core Design Highlights (key idea + design rationale)
-- §5 → 📖 Usage Scenarios (key scenarios + expected results)
-- §1/§2/§5 absent → corresponding summary sections are simply omitted
+### Step 3: Compute Status
 
-## Summary Generation Process
+상태 마커와 구현 문서를 바탕으로 현재 상태를 계산한다.
 
-### Step 1: Locate Spec Documents
+- `✅` 완료
+- `🚧` 진행중
+- `📋` 계획됨
+- `⏸️` 보류
 
-**Tools**: `Glob`, `Read`, `request_user_input`, `multi_tool_use.parallel`, `spawn_agent`, `wait_agent`
-
-1. Search for main spec in `_sdd/spec/`:
-   - `<project>.md` (named after project)
-   - `main.md` (generic name)
-   - If still ambiguous: list candidates and use `request_user_input` to confirm which should be treated as the index/main spec
-   - Do **not** auto-select generated/backup files:
-     - `SUMMARY.md`
-     - `prev/PREV_*.md`
-2. If spec is split:
-   - Identify sub-spec files via index/links
-   - Read all linked/related specs for a complete picture
-   - If the index does not link clearly, prefer `_sdd/spec/<project>_*.md` (excluding `SUMMARY.md` and `prev/PREV_*.md`) and confirm the intended set with `request_user_input`
-3. Check for implementation files:
-   - `_sdd/implementation/IMPLEMENTATION_PROGRESS.md`
-   - `_sdd/implementation/IMPLEMENTATION_PROGRESS_PHASE_<n>.md` (if multiple exist, summarize all phases)
-   - `_sdd/implementation/IMPLEMENTATION_REVIEW.md`
-4. If local runtime/test validation is needed for summary evidence, read `_sdd/env.md` and apply setup before running commands.
-
-**Error Handling**: If no spec found → suggest `/spec-create` first
-
-**Decision Gate 1→2**:
-```
-spec_found = 스펙 문서 발견
-spec_readable = 스펙 파일 읽기 가능
-
-IF spec_found AND spec_readable → Step 2 진행
-ELSE IF NOT spec_found → `/spec-create` 먼저 실행 권장
-ELSE → 오류 메시지 출력 후 중지: "스펙 파일에 접근할 수 없습니다. 파일 경로와 권한을 확인해 주세요."
-```
-
-### Step 2: Extract Key Information
-
-**Tools**: `Read`, `Glob`, `rg`, `multi_tool_use.parallel`, `spawn_agent`, `wait_agent`
-
-#### From Spec Document(s)
-
-1. **Metadata**
-   - Project name (from heading or filename)
-   - Version (if specified)
-   - Last modified date
-
-2. **Goal Section** → "What" and "Why"
-   - Parse 목표 (Goal) section
-   - Extract purpose statement
-   - Identify problem being solved
-   - IF §1 Background & Motivation exists: use Problem Statement + Core Value Proposition for richer "Why"
-
-2b. **Core Design (§2)** → Core Design Highlights (conditional)
-   - IF §2 Core Design section exists:
-     - Extract Key Idea narrative (1-3 sentences)
-     - Extract Design Rationale summary (1-2 sentences)
-     - Note key inline citations `[filepath:functionName]` if present
-   - IF §2 absent: skip (section will be omitted from output)
-
-2c. **Usage Guide (§5)** → Usage Scenarios (conditional)
-   - IF §5 Usage Guide & Expected Results exists:
-     - Extract 2-3 key scenarios (action + expected result)
-     - Keep concise — no setup/install duplication
-   - IF §5 absent: skip (section will be omitted from output)
-
-3. **Key Feature Explanations (Feature-by-Feature)** → Narrative Paragraphs
-   - Select representative features from Goal and feature sections
-   - For each feature, capture: what it does, how it works, why it matters, and current status
-   - Write plain-text explanations (paper paragraph style)
-   - If details are incomplete, keep wording explicit and mark status as `Unknown`
-
-4. **Feature List with Status** → Progress Calculation
-   ```
-   Parse status markers:
-   - ✅ (완료/completed) → count as done
-   - 🚧 (진행중/in-progress) → count as active
-   - 📋 (계획됨/planned) → count as planned
-   - ⏸️ (보류/on-hold) → exclude from total
-
-   Calculate completion %:
-   (completed / (completed + in-progress + planned)) * 100
-   ```
-
-5. **Architecture Overview** → Core Components
-   - Extract component names and purposes
-   - **Limit to key components** (not all details)
-   - Identify relationships between components
-   - Extract tech stack information
-
-6. **Issues & Improvements** → Prioritized List
-   - Parse 발견된 이슈 및 개선 필요사항 section
-   - Categorize: Bug, Enhancement, Tech Debt
-   - Infer priority from spec order or keywords
-
-#### From Implementation Files (If Exist)
-
-1. **IMPLEMENTATION_PROGRESS.md**
-   - Current task status
-   - Blockers or challenges
-   - Recent milestones
-
-2. **IMPLEMENTATION_REVIEW.md**
-   - Review findings
-   - Quality issues
-   - Recommended actions
-
-병렬 요약 규칙:
+기본 completion 계산:
 
 ```text
-IF sub_specs > 3 OR key_components > 5:
-  1. component summary lanes를 병렬 실행
-  2. implementation/status lanes를 별도로 병렬 실행
-  3. wait_agent 또는 parallel barrier로 결과 수집
-  4. 부모가 최종 SUMMARY.md 구조로 병합
-ELSE:
-  → 순차 요약
+completed / (completed + in-progress + planned)
 ```
 
-### Step 3: Analyze Status
-
-**Tools**: — (계산/분석, 도구 불필요)
-
-Calculate project health metrics:
-
-```
-Feature Metrics:
-- Total features = completed + in-progress + planned
-- Completion rate = (completed / total) * 100
-- Active work items = in-progress count
-- Backlog size = planned count
-
-Issue Metrics:
-- High priority issues = bugs + critical improvements
-- Technical debt items = refactoring/cleanup needs
-- Enhancement requests = new feature ideas
-```
-
-### Step 4: Generate Recommendations
-
-**Tools**: — (분석 기반 권장 사항 생성, 도구 불필요)
-
-Based on current state, suggest actionable next steps:
-
-#### Immediate Actions (This Week)
-- **High-priority issues** → "Fix [issue] affecting [component]"
-- **In-progress features near completion** → "Complete [feature] (80% done)"
-- **Blockers from implementation review** → "Unblock [task] by resolving [dependency]"
-
-#### Short-term Goals (This Month)
-- **Planned features with dependencies resolved** → "Start implementing [feature]"
-- **Medium-priority improvements** → "Refactor [component] for better [quality attribute]"
-- **Testing/documentation gaps** → "Add tests for [component]"
-
-#### Long-term Roadmap (Quarter/Year)
-- **Major planned features** → "Milestone: [feature set] by Q[N]"
-- **Architectural improvements** → "Migrate to [new architecture] for [benefit]"
-- **Tech debt cleanup** → "Quarterly cleanup sprint for [area]"
-
-**Recommendation Logic**:
-```text
-Pseudo-logic:
-
-- If high priority issues > 0:
-  - Immediate: Address critical issues first
-- If in-progress items > 0:
-  - Immediate: Complete active features before starting new ones
-- If completion rate > 80% and planned items > 0:
-  - Short-term: Start next planned feature set
-- If tech debt items > 5:
-  - Long-term: Schedule tech debt cleanup sprint
-```
-
-### Step 4.5: 요약 초안 제시
+필요하면 구현 progress/review 문서의 최근 상태로 보정한다.
 
-요약 초안 테이블을 사용자에게 제시한 후 바로 Step 5로 진행한다 (사용자 확인을 기다리지 않는다):
+### Step 4: Build the Summary Shape
 
-```
-| 항목 | 내용 |
-|------|------|
-| 프로젝트명 | ... |
-| 전체 진행률 | N% |
-| 완료/진행중/계획 | X / Y / Z |
-| 핵심 설계 (§2) | 있음 / 없음 (없으면 섹션 생략) |
-| 핵심 기능 수 | N개 |
-| 사용 시나리오 (§5) | 있음 / 없음 (없으면 섹션 생략) |
-| 이슈 수 | High N / Medium N / Low N |
-| 권장 다음 단계 | N개 |
-```
+`SUMMARY.md`는 아래 순서를 기본으로 한다.
 
-**Decision Gate 5→6**:
-```
-summary_created = SUMMARY.md 생성 완료
-readme_requested = 사용자가 README 업데이트 요청
+1. Executive summary
+2. Project motivation / goals
+3. Core design highlights (있는 경우)
+4. Key feature explanations
+5. Architecture snapshot
+6. Status dashboard
+7. Issues and improvements
+8. Recommended next steps
 
-IF summary_created AND readme_requested → Step 6 진행
-ELSE IF summary_created AND NOT readme_requested → 완료
-ELSE → Step 5 재실행
-```
+원칙:
 
-### Step 5: Create Summary Document
+- summary는 읽기 쉬운 narrative + 표를 섞는다
+- 구현 세부사항은 압축하고, 상태와 의미를 더 강조한다
+- 모르는 정보는 추측하지 않고 명시적으로 `Unknown` 또는 open question으로 남긴다
 
-**Tools**: `Write`, `Bash (mkdir -p)`
+### Step 5: Write `SUMMARY.md`
 
-1. Apply summary template (see `references/summary-template.md`)
-   - 💡 Core Design Highlights: §2 존재 시 template의 해당 섹션 적용, 없으면 섹션 전체 생략
-   - 📖 Usage Scenarios: §5 존재 시 template의 해당 섹션 적용, 없으면 섹션 전체 생략
-   - Executive Summary "Why": §1 존재 시 template의 강화된 추출 규칙 적용
-2. Fill in extracted information
-3. If `_sdd/spec/SUMMARY.md` already exists, create a versioned backup before overwriting:
-   - `_sdd/spec/prev/PREV_SUMMARY_<timestamp>.md` (create `_sdd/spec/prev/` if missing)
-4. Generate or update `_sdd/spec/SUMMARY.md`
-5. Add generation timestamp and metadata
-6. Preserve human-readable formatting (tables, emojis, visual markers)
+`references/summary-template.md`를 기반으로 내용을 채우고 `_sdd/spec/SUMMARY.md`를 작성한다.
 
-### Step 6: Optional README Sync (On Request Only)
+문서가 길거나 컴포넌트가 많으면:
 
-**Tools**: `Read`, `Edit`, `Write`
+- 섹션별 핵심 포인트 추출을 병렬 수행
+- 부모가 completion, risk, next steps를 통합
+- 최종 파일은 직접 작성하거나 `write_phased`로 위임
 
-1. Trigger only when user explicitly asks to create/update README
-2. Use marker block strategy for safe partial updates:
-   - Start marker: `<!-- spec-summary:start -->`
-   - End marker: `<!-- spec-summary:end -->`
-3. If markers exist in `README.md`, replace only content between markers
-4. If markers do not exist:
-   - Insert a new marker block after the first H1 (`# ...`) when present
-   - Otherwise append the block to the end of `README.md`
-5. Never overwrite the entire README; preserve all non-marker content
-6. Keep README concise and link back to `_sdd/spec/SUMMARY.md` for full details
+### Step 6: Optional README Sync
 
-## Output Format
+사용자가 명시적으로 요청한 경우에만 수행한다.
 
-The generated summary follows this layered structure:
+- `README.md`에 `spec-summary` marker가 있으면 해당 블록만 갱신
+- marker가 없으면 새 managed block을 안전하게 추가
+- 전체 README는 보존
+- README에는 짧은 snapshot만 두고, 자세한 내용은 `_sdd/spec/SUMMARY.md`로 연결
 
-```markdown
-# [Project Name] - Specification Summary
+권장 README 블록 요소:
 
-**생성일** (Generated): YYYY-MM-DD HH:MM
-**스펙 버전** (Spec Version): X.Y.Z
-**최종 업데이트** (Last Updated): YYYY-MM-DD
+- 프로젝트 한 줄 요약
+- 현재 상태
+- 핵심 기능 3-5개
+- 전체 summary 링크
 
----
+### Step 7: Final Check
 
-## 🎯 Executive Summary (비기술 담당자용)
+마지막으로 아래를 점검한다.
 
-### What (무엇을)
-[1-2 sentences: What this project does in plain language]
+- summary가 스펙의 핵심을 왜곡 없이 요약하는가
+- 진행 상태와 이슈가 최신 문서와 충돌하지 않는가
+- README를 요청하지 않았는데 수정하지 않았는가
+- backup/marker 규칙을 지켰는가
 
-### Why (왜)
-[1-2 sentences: The problem it solves or value it provides]
-[IF §1 Background & Motivation exists: enrich with Problem Statement + Core Value Proposition]
+## Output Contract
 
-### Status (현재 상태)
-- **전체 진행률** (Overall Progress): X%
-- **완료된 기능** (Completed): N개
-- **진행중인 기능** (In Progress): M개
-- **계획된 기능** (Planned): K개
+기본 산출물:
 
----
+- `_sdd/spec/SUMMARY.md`
 
-## 💡 Core Design Highlights (핵심 설계 요약)
+조건부 산출물:
 
-[ONLY if §2 Core Design exists in spec; otherwise OMIT entirely]
+- `README.md`의 `spec-summary` managed block
 
-### Key Idea (핵심 아이디어)
-[1-3 sentences from §2 Core Design > Key Idea]
+`SUMMARY.md`에 포함할 핵심 섹션:
 
-### Design Rationale (설계 근거)
-[1-2 sentences from §2 Core Design > Design Rationale]
+- Executive Summary
+- Goals / Motivation
+- Core Design Highlights (있으면)
+- Key Feature Explanations
+- Architecture Snapshot
+- Status Dashboard
+- Issues & Improvements
+- Recommended Next Steps
 
-### Key Code Reference (핵심 코드 참조)
-[IF inline citations exist: show key `[filepath:functionName]` references]
+README block 원칙:
 
----
-
-## ✨ Key Feature Explanations (기능별 상세 설명)
-
-[Explain representative features as paper-like subsections. Use plain language and avoid heavy jargon.]
-
-### 1. [Feature Name]
-**Status**: ✅ / 🚧 / 📋 / ✅+🚧 / Unknown  
-[plain-text explanation]
-- what this feature does.
-- how it works end-to-end in simple terms.
-- why this matters (user/business impact).
-- (optional): current limitation, blocker, or next step.
-
-### 2. [Feature Name]
-**Status**: ✅ / 🚧 / 📋 / ✅+🚧 / Unknown  
-[plain-text explanation following the same pattern]
-
-[Selection rules]
-- Choose representative features (prefer user-facing + actively developed)
-- Do not collapse major features into one generic capability name
-- Keep terminology simple; define unavoidable technical terms once
-- If evidence is weak, mark status as `Unknown` and state assumptions explicitly
-
----
-
-## 🏗️ Architecture at a Glance (아키텍처 개요)
-
-### Core Components (key components only)
-
-```
-[ASCII diagram showing component relationships]
-Component A ──> Component B
-     │              │
-     └──> Component C
-```
-
-| Component | Purpose | Status |
-|-----------|---------|--------|
-| Component A | [What it does] | ✅ / 🚧 / 📋 |
-| Component B | [What it does] | ✅ / 🚧 / 📋 |
-| Component C | [What it does] | ✅ / 🚧 / 📋 |
-
-### Tech Stack
-- **Language** (언어): [주 언어]
-- **Framework** (프레임워크): [주요 프레임워크]
-- **Key Libraries** (핵심 라이브러리): [핵심 라이브러리 3개 이하]
-
----
-
-## 📊 Feature Status Dashboard
-
-### Completed Features ✅
-- **[Feature 1]** - [brief description]
-- **[Feature 2]** - [brief description]
-
-### In Progress 🚧
-- **[Feature 3]** - [brief description] ([X]% complete)
-- **[Feature 4]** - [brief description]
-
-### Planned 📋
-- **[Feature 5]** - [brief description]
-- **[Feature 6]** - [brief description]
-
-### On Hold ⏸️
-- **[Feature 7]** - [brief description] (Reason: [why on hold])
-
----
-
-## 📖 Usage Scenarios (주요 사용 시나리오)
-
-[ONLY if §5 Usage Guide & Expected Results exists in spec; otherwise OMIT entirely]
-
-### Scenario 1: [Name]
-- **Action**: [What the user does]
-- **Expected Result**: [Observable outcome]
-
-### Scenario 2: [Name]
-- **Action**: [What the user does]
-- **Expected Result**: [Observable outcome]
-
----
-
-## ⚠️ Open Issues & Improvements (우선순위순)
-
-### High Priority 🔴
-1. **[Issue/Improvement Title]** (Category: Bug/Enhancement/Tech Debt)
-   - **Impact** (영향): [Why it matters]
-   - **Location** (위치): [File/Component if known]
-   - **Suggested Fix** (해결 방안): [Brief suggestion if available]
-
-### Medium Priority 🟡
-[Same format as high priority]
-
-### Low Priority 🟢
-[Same format as high priority]
-
----
-
-## 🚀 Recommended Next Steps
-
-Based on current spec state and progress:
-
-### 1. Immediate Actions (이번 주)
-- [ ] **[Action item 1]** - [Why/Impact]
-- [ ] **[Action item 2]** - [Why/Impact]
-- [ ] **[Action item 3]** - [Why/Impact]
-
-### 2. Short-term Goals (이번 달)
-- [ ] **[Goal 1]** - [Expected outcome]
-- [ ] **[Goal 2]** - [Expected outcome]
-
-### 3. Long-term Roadmap (분기/연간)
-- [ ] **[Milestone 1]** - [Target: Q[N] YYYY]
-- [ ] **[Milestone 2]** - [Target: Q[N] YYYY]
-
----
-
-## 📚 Quick Reference
-
-### Key Files
-- **Spec Document** (스펙 문서): `_sdd/spec/<project>.md`
-- **Implementation Plan** (구현 계획): `_sdd/implementation/IMPLEMENTATION_PLAN.md` (if exists)
-- **Implementation Progress** (구현 진행): `_sdd/implementation/IMPLEMENTATION_PROGRESS.md` (if exists)
-- **Latest Review** (최근 리뷰): `_sdd/implementation/IMPLEMENTATION_REVIEW.md` (if exists)
-
-### Related Commands
-- `/spec-update-todo` - Add new features to spec
-- `/implementation-plan` - Create implementation plan from spec
-- `/spec-update-done` - Sync spec with code changes
-- `/spec-summary` - Regenerate this summary
-
----
-
-**Summary 생성 방법**: `/spec-summary`를 실행하면 이 파일이 자동 생성/갱신됩니다.
-**How to Generate**: Run `/spec-summary` to automatically create/update this file.
-```
-
-### Optional README Block Output
-
-When README sync is requested, generate/update this marker block in `README.md`:
-
-```markdown
-<!-- spec-summary:start -->
-## Project Snapshot
-
-### What
-[1-2 sentence summary]
-
-### Current Status
-- Overall Progress: X%
-- Completed / In Progress / Planned: N / M / K
-
-### Key Feature Explanations
-### 1. [Feature Name]
-[Plain-text what/how/why/status paragraph]
-
-### 2. [Feature Name]
-[Plain-text what/how/why/status paragraph]
-
-More details: [`_sdd/spec/SUMMARY.md`](_sdd/spec/SUMMARY.md)
-<!-- spec-summary:end -->
-```
-
-### Key Formatting Principles
-
-1. **Layered Information**
-   - Executive summary first (non-technical)
-   - Technical details follow
-   - Each section standalone and scannable
-
-2. **Visual Hierarchy**
-   - Emojis for quick scanning (🎯, ✨, 🏗️, 📊, ⚠️, 🚀, 📚)
-   - Tables for structured data
-   - Checkboxes for actionable items
-   - Priority colors (🔴 🟡 🟢)
-
-3. **Bilingual Headers**
-   - Korean/English for mixed teams
-   - Terminology follows spec document
-
-4. **Conciseness**
-   - Executive summary: 1-2 sentences per item
-   - Key features: feature-level paragraphs 
-   - Architecture: key components first
-   - README block: short snapshot + link to full summary
-   - Next steps: Specific and time-bound
-
-## Best Practices
-
-### For Executors
-
-1. **Keep Executive Summary Non-Technical**
-   - ❌ Bad: "Implements REST API with JWT authentication and PostgreSQL"
-   - ✅ Good: "Securely manages user data and access permissions"
-
-2. **Limit Architecture to Core Components**
-   - Don't list every class/module
-   - Show only key components that matter to understanding
-   - Focus on relationships and data flow
-
-3. **Explain Key Features Feature-by-Feature**
-   - Each paragraph should read like a mini abstract (what/how/why/status)
-   - Keep explanations concrete and tied to feature names
-   - Keep exhaustive counts and raw lists in the status dashboard
-
-4. **Prioritize Issues by Impact**
-   - Not just spec order
-   - Consider: user impact, security, performance, tech debt cost
-   - High priority = blocks progress or affects users
-
-5. **Make Next Steps Concrete and Time-Bound**
-   - ❌ Bad: "Improve performance"
-   - ✅ Good: "Profile database queries and optimize top 3 slow endpoints (this week)"
-
-6. **Use Visual Markers for Scannability**
-   - Tables > long paragraphs
-   - Emojis > text labels (when appropriate)
-   - Checkboxes > bulleted lists (for action items)
-
-7. **When validating with local execution, use the documented environment**
-   - If local commands/tests are required, follow `_sdd/env.md` first
-   - If `_sdd/env.md` is missing/incomplete, ask the user and proceed with document-only summary until clarified
-
-8. **Use Marker-Based README Updates**
-   - Update only the `spec-summary` marker block in `README.md`
-   - Do not rewrite unrelated README sections
-   - Always include a link to `_sdd/spec/SUMMARY.md`
-
-### For Spec Authors
-
-1. **Use Status Markers Consistently**
-   - ✅ for completed features
-   - 🚧 for work in progress
-   - 📋 for planned features
-   - ⏸️ for on-hold items
-
-2. **Maintain Issues Section**
-   - Update as you discover problems
-   - Remove resolved issues
-   - Add priority indicators if helpful
-
-3. **Keep Architecture Section Current**
-   - Update when major components change
-   - Remove obsolete components
-   - Document component relationships
-
-## Integration with Other Skills
-
-```
-Workflow Integration:
-
-spec-create ──> spec-summary
-    │               ↑
-    ↓               │
-spec-update-todo ────────┘
-    │
-    ↓
-implementation-plan ──> implementation ──> implementation-review ──> spec-update-done
-                                                                          │
-                                                                          ↓
-                                                                    spec-summary
-```
-
-### Trigger Points
-
-1. **After spec-update-todo**
-   - Show what features were added
-   - Update progress metrics
-   - Adjust recommendations
-
-2. **After spec-update-done**
-   - Show sync results
-   - Highlight drift areas
-   - Update implementation progress
-
-3. **Before implementation-plan**
-   - Understand current state
-   - Identify what's left to do
-   - Inform planning decisions
-
-4. **On-demand**
-   - Status check meetings
-   - New team member onboarding
-   - Periodic reports
-
-### Integration Examples
-
-```bash
-# Workflow 1: Update spec → summarize
-/spec-update-todo
-# (User adds new features)
-/spec-summary
-# → Summary shows new planned features
-
-# Workflow 2: Review → summarize
-/spec-update-done
-# (Claude syncs spec with code)
-/spec-summary
-# → Summary shows updated completion status
-
-# Workflow 3: Before planning
-/spec-summary
-# (Review current state)
-/implementation-plan
-# (Plan next iteration based on summary insights)
-```
-
-## Language Handling
-
-The skill adapts to the spec document's language:
-
-| Spec Language | Summary Language | Headers |
-|---------------|------------------|---------|
-| Korean | Korean | Bilingual (Korean + English) |
-| English | English | English only |
-| Mixed | Follow majority | Bilingual |
-
-**Preservation Rules**:
-- Keep technical terms from spec (don't translate)
-- Maintain consistent terminology
-- Preserve spec's tone and formality
+- concise snapshot만 제공
+- 전체 요약 문서 링크 포함
+- unrelated README 내용은 보존
 
 ## Error Handling
 
-| Situation | Action | Message to User |
-|-----------|--------|-----------------|
-| No spec found | Suggest `/spec-create` | "No spec document found in `_sdd/spec/`. Run `/spec-create` first to generate a specification." |
-| Empty spec | Generate minimal summary with warning | "Spec document is empty or minimal. Summary will be basic. Consider running `/spec-update-todo` to add features." |
-| No status markers | Mark as "status unknown" | "No status markers found (✅, 🚧, 📋). Progress calculation unavailable. Add markers to feature list for tracking." |
-| Multiple main specs | Ask user which to summarize | "Found multiple spec files: [list]. Which should I summarize? Or say 'all' to merge." |
-| No architecture section | Skip architecture section | "No architecture section found. Summary will omit architecture overview." |
-| No issues section | Show "No open issues documented" | Creates empty issues section with note. |
-| README sync requested but `README.md` not found | Create minimal README with marker block | "README.md not found. I'll create one and insert a spec-summary block." |
-| README has no marker block | Insert new marker block safely | "README exists without spec-summary markers. I'll insert a new managed block and preserve other content." |
-| `_sdd/env.md` missing/incomplete (while local validation requested) | Skip local execution and ask user | "Local validation requested, but `_sdd/env.md` is missing/incomplete. I'll proceed with document-based summary unless you provide runtime setup details." |
+| 상황 | 대응 |
+|------|------|
+| spec 없음 | `/spec-create` 먼저 권장 |
+| split spec 범위 불명확 | 후보를 제시하고 사용자 확인 |
+| 구현 문서 없음 | spec만 기준으로 요약하고 상태 신뢰도 낮음을 명시 |
+| README 요청이 없는데 README 관련 문서만 있음 | README는 수정하지 않음 |
+| README marker 없음 | 새 managed block 추가 |
+| 문서가 너무 큼 | `write-phased` 또는 fan-out으로 분리 작성 |
 
-## Advanced Usage
+## Final Check
 
-### Summarizing Split Specs
+Acceptance Criteria가 모두 만족되었나 검증한다. 미충족 항목이 있으면 해당 단계로 돌아가 수정한다.
 
-For projects with multiple spec files:
-
-```
-_sdd/spec/
-  ├── <project>.md (index/overview)
-  ├── <project>_API.md
-  ├── <project>_DATA_MODEL.md
-  └── <project>_COMPONENTS.md
-```
-
-**Behavior**:
-1. Read the index spec (`<project>.md` or `main.md`) for overview
-2. Follow links and aggregate key points/features from referenced sub-specs
-3. Merge issues from all specs
-4. Calculate combined progress
-5. Generate unified summary
-
-**User Control**:
-```bash
-/spec-summary
-# If you want a full merged view across all linked sub-specs, say:
-# - "모든 서브 스펙까지 포함해서 요약해줘" / "include all sub-specs"
-# If you want to focus on a specific area, say:
-# - "API 쪽만 요약해줘" / "Summarize only the API spec"
-```
-
-### Custom Summary Scope
-
-Users can request focused summaries:
-
-```bash
-/spec-summary
-# "이슈만 요약해줘" / "Only issues and recommendations"
-# "진행률만 보여줘" / "Only progress dashboard"
-# "아키텍처만 요약해줘" / "Only architecture overview"
-# "핵심 기능 상세만 요약해줘" / "Only key feature explanations"
-# "README도 같이 업데이트해줘" / "Also update README snapshot"
-```
-
-This generates a shorter summary with only requested sections.
-
-## Examples
-
-See `examples/summary-output.md` for a complete example summary.
-
-See `references/summary-template.md` for the template with placeholders.
-
-## Success Criteria (Glob 기반 검증 포함)
-
-A good summary should:
-
-- [ ] `Glob("_sdd/spec/SUMMARY.md")` → 파일 존재 확인
-- [ ] Be scannable in < 2 minutes
-- [ ] Answer "What/Why/Status" in executive summary
-- [ ] Explain features with clear plain-text paragraph (what/how/why/status)
-- [ ] Show core components (not all details)
-- [ ] Calculate accurate completion percentage
-- [ ] Prioritize issues by impact
-- [ ] Provide concrete, time-bound next steps
-- [ ] Serve both technical and non-technical readers
-- [ ] Update smoothly when spec changes
-- [ ] (If requested) README marker block is updated without damaging other README content
-
-## Version History
-
-- **1.4.0** (2026-03): Added whitepaper-style (§1~§8) support
-  - New conditional section: 💡 Core Design Highlights (from §2 Core Design)
-  - New conditional section: 📖 Usage Scenarios (from §5 Usage Guide & Expected Results)
-  - Executive Summary "Why" enriched with §1 Background & Motivation when present
-  - Backward compatible: legacy spec format still fully supported
-- **1.3.0** (2026-02): Added optional README create/update flow
-  - Added explicit README trigger phrases and optional output target
-  - Added marker-based README sync strategy (`<!-- spec-summary:start/end -->`)
-  - Added README snapshot output block template and error handling
-- **1.2.0** (2026-02): Switched key features to feature-by-feature narrative subsections
-  - Replaced high-level key-feature table with paper-like per-feature explanations
-  - Updated extraction rules for plain-text what/how/why/status descriptions
-  - Added focused scope phrase for key-feature explanation-only summaries
-- **1.1.0** (2026-02): Added high-level key features section
-  - New "Key Features (High-Level)" output section
-  - Capability extraction guidance in summary generation process
-  - Scope option for key-feature-only summaries
-- **1.0.0** (2026-02): Initial release
-  - Layered summary format
-  - Status dashboard
-  - Prioritized issues
-  - Actionable recommendations
-  - Bilingual support

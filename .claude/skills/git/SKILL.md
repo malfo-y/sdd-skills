@@ -193,3 +193,8 @@ Proceed? (y/n/edit)
 | `/git cleanup`, "git 정리" | Graph cleanup (rebase, linearize) |
 | `/git branch <name>` | Create branch, move uncommitted changes |
 | `/git all` | Stage all → group → commit → push (confirms first) |
+
+## Final Check
+
+Acceptance Criteria가 모두 만족되었나 검증한다. 미충족 항목이 있으면 해당 단계로 돌아가 수정한다.
+

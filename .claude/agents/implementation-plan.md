@@ -246,3 +246,8 @@ Agent("IMPLEMENTATION_PLAN_PHASE_N.md [Phase N]")  ─┘
 | 기존 Plan 파일 존재 | `prev/`로 아카이브 |
 | 모호한 우선순위 | 의존성 분석 기반 자동 배정 |
 | user_input.md 형식 오류 | 자유 형식으로 해석 시도 |
+
+## Final Check
+
+Acceptance Criteria가 모두 만족되었나 검증한다. 미충족 항목이 있으면 해당 단계로 돌아가 수정한다.
+

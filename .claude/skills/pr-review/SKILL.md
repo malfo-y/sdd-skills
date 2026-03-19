@@ -302,3 +302,8 @@ Steps 4, 6, 7 proceed identically.
 - **`references/review-checklist.md`** - PR review checklist
 - **`pr-spec-patch/references/gh-commands.md`** - `gh` CLI command reference
 - **`examples/sample-review.md`** - PR review session example
+
+## Final Check
+
+Acceptance Criteria가 모두 만족되었나 검증한다. 미충족 항목이 있으면 해당 단계로 돌아가 수정한다.
+

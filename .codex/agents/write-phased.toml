@@ -185,4 +185,8 @@ class AuthService:
 - Phase 2에서 섹션/함수 단위 patch로 내용이 채워진다.
 - 최종 결과물에 Phase 마커나 placeholder만 남은 블록이 없다.
 - 큰 산출물일수록 구조가 먼저 안정되고, 후속 수정 diff가 읽기 쉬워진다.
+
+## Final Check
+
+Acceptance Criteria가 모두 만족되었나 검증한다. 미충족 항목이 있으면 해당 단계로 돌아가 수정한다.
 '''

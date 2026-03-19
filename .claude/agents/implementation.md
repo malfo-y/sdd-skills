@@ -269,3 +269,8 @@ Phase 리포트 저장: `_sdd/implementation/IMPLEMENTATION_REPORT_PHASE_<N>.md`
 1. **Plan 확보** (Step 1 참조)
 2. **환경 로드**: `_sdd/env.md` 존재 시 setup 적용 (conda, export 등)
 3. **코드베이스 이해**: Grep/Glob으로 기존 패턴, 테스트 프레임워크, 테스트 파일 위치 파악
+
+## Final Check
+
+Acceptance Criteria가 모두 만족되었나 검증한다. 미충족 항목이 있으면 해당 단계로 돌아가 수정한다.
+

@@ -136,3 +136,8 @@ Tier 3의 경우 추가로 **Assumptions** 섹션을 포함한다 (Plan/Spec 미
 ## Quick Review
 
 사용자가 빠른 상태 확인을 요청하면 진행률/핵심 Blockers/Next Action만 간결하게 출력한다.
+
+## Final Check
+
+Acceptance Criteria가 모두 만족되었나 검증한다. 미충족 항목이 있으면 해당 단계로 돌아가 수정한다.
+

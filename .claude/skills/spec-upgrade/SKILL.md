@@ -202,3 +202,8 @@ Gap 분석 결과를 아래 형식으로 보고 후 자동 진행:
 - **`examples/before-upgrade.md`** / **`examples/after-upgrade.md`** — 업그레이드 전후 예시
 
 후속 스킬: spec-create(스펙 신규), spec-rewrite(정리/분할), spec-review(품질 검증), spec-update-done(코드-스펙 동기화)
+
+## Final Check
+
+Acceptance Criteria가 모두 만족되었나 검증한다. 미충족 항목이 있으면 해당 단계로 돌아가 수정한다.
+

@@ -199,3 +199,8 @@ Round 1: [주제] → [결론/방향]
 
 - **`references/discussion-question-guide.md`** - 토론 질문 템플릿 및 전략 가이드
 - **`examples/sample-discussion-session.md`** - 구조화된 토론 세션 예시
+
+## Final Check
+
+Acceptance Criteria가 모두 만족되었나 검증한다. 미충족 항목이 있으면 해당 단계로 돌아가 수정한다.
+

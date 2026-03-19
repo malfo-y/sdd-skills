@@ -353,3 +353,8 @@ ON ERROR:
 - `references/sdd-reasoning-reference.md`: SDD 철학, skill catalog, 규모별 reasoning 기준
 - `references/orchestrator-contract.md`: 오케스트레이터/로그 최소 계약
 - `examples/sample-orchestrator.md`: 중규모 기본형 + 대규모 차이점 예시
+
+## Final Check
+
+Acceptance Criteria가 모두 만족되었나 검증한다. 미충족 항목이 있으면 해당 단계로 돌아가 수정한다.
+
