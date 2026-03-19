@@ -33,7 +33,7 @@ See [SDD_WORKFLOW.md > Appendix: Skill Descriptions](SDD_WORKFLOW.md#appendix-sk
 | `/implementation-plan` | Generate phase-by-phase implementation plan (for large-scale) |
 | `/implementation` | Execute TDD-based implementation |
 | `/implementation-review` | Verify implementation against plan (phase-by-phase for large-scale) |
-| `/ralph-loop-init` | Generate automated ML training debug loop |
+| `/ralph-loop-init` | Generate automated debug loop for long-running processes |
 | `/discussion` | Structured decision-making discussion: context gathering + option comparison + decisions/open questions/action items |
 | `/guide-create` | Generate feature-specific implementation/review guide from spec and code |
 | `/sdd-autopilot` | Autonomous orchestration of the full SDD pipeline |
@@ -197,7 +197,7 @@ Implement this feature: [feature description]
 # Generate automated training debug loop structure in ralph/ directory
 ```
 
-> Generates an LLM-based automated ML training debug loop structure.
+> Generates an LLM-based automated debug loop for long-running processes.
 
 ### 8. PR-Based Spec Patch and Review
 
@@ -290,7 +290,7 @@ Backup files are saved in each area's `prev/`:
 | Large-scale features, architecture changes | Large |
 | Medium-scale features | Medium |
 | Bug fixes, urgent hotfixes | Small |
-| ML training debug | ralph-loop-init |
+| Long-running process debug (ML, e2e, build, etc.) | ralph-loop-init |
 | **Full automation (recommended)** | **sdd-autopilot** |
 
 ---

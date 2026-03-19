@@ -1,51 +1,28 @@
 # _COMMENTS
 
-Generated at: 2026-03-19T09:53:53.106Z
+Generated at: 2026-03-19T09:56:18.052Z
 Total comments: 1
 
 ## Comments
 
-### docs/SDD_WORKFLOW.md:L328-L328
+### docs/SDD_WORKFLOW.md:L725-L725
 
-sdd-autopilot 사용 시 자동으로 적절한 경로를 선택합니다.
+ralph loop 스킬이 ML 디버깅용에서 (시간이 오래 걸리는) 일반적인 e2e 디버깅으로 바뀌었어. 이 내용도 맞춰서 업데이트 되어야 해.
 
-- anchor.hash: ce6ff8d2
-- anchor.snippet: 황에 따라 경로를 선택합니다:
-- anchor.before: 트 초안
-
-## 목표
-사용자 인증이 있는 작업 관리 API 구축
-
-## 필요한 기능
-- JWT 기반 로그인/회원가입
-- 작업 CRUD
-- 마감일 알림
-
-## 기술 스택
-- Python + FastAPI
-- PostgreSQL
+- anchor.hash: e84d91ad
+- anchor.snippet: 장기 실행 디버깅 — Ralph Loop
+- anchor.before:  rec fill:#E8F5E9,stroke:#2E7D32,stroke-width:2px,color:#1B5E20;
+    classDef doc fill:#F5F5F5,stroke:#616161,stroke-width:1.5px,color:#212121;
 ```
 
-**적합한 경우:**
-- PM/기획자가 요구사항 제공
-- 새 프로젝트 시작
-- 명확한 요구사항이 있을 때
+필요 시(이상 징후 또는 대규모 변경 직후) `/spec-review`를 추가로 실행해 최종 검증합니다.
 
 ---
 
-### 구현 경로 선택
-
-기능의 복잡도와 상
+## 6. 
 - anchor.after: 
 
-```mermaid
-flowchart LR
-    Start(["규모별 경로 선택"]):::start
+### Ralph Loop란?
 
-    %% 대규모
-    subgraph L["대규모"]
-        direction TB
-        L1["feature-draft<br/>패치 초안 + 구현 계획"]:::large
-        L2["spec-update-todo<br/>스펙 사전 반영"]:::large
-
-- createdAt: 2026-03-19T09:53:21.915Z
+Ralph Loop는 **human-in-the-loop 디버깅에서 human을 LLM으로 교체**한 자동화 루프입니다 ([원본 컨셉](https://dev.to/ibrahimpima/the-ralf-wiggum-breakdown-3mko)). 사람이 매번 개입하지 않아도 LLM이 상태를 분석하고, 액션을 작성·실행하고, 결과를 보고 다음 단계를 판단합니다
+- createdAt: 2026-03-19T09:55:58.607Z

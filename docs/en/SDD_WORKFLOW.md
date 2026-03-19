@@ -64,7 +64,7 @@ flowchart LR
 | **implementation-plan** | "create implementation plan" | Generate phase-by-phase implementation plan (for large-scale) |
 | **implementation** | "implement plan", "start implementation" | Execute TDD-based implementation |
 | **implementation-review** | "review implementation", "check progress" | Verify implementation against plan (phase-by-phase for large-scale) |
-| **ralph-loop-init** | "ralph loop", "training debug loop" | Generate automated ML training debug loop |
+| **ralph-loop-init** | "ralph loop", "training debug loop" | Generate automated debug loop for long-running processes |
 | **discussion** | "discuss", "brainstorm", "let's discuss" | Structured decision-making discussion: context gathering + option comparison + decisions/open questions/action items |
 | **guide-create** | "create guide", "feature guide", "guide create" | Generate feature-specific implementation/review guide from spec and code |
 | **sdd-autopilot** | "autopilot", "auto implement", "full pipeline" | Autonomous orchestration of the full SDD pipeline |
@@ -382,7 +382,7 @@ flowchart LR
 | Large features, architecture changes | Large | Phase-by-phase planning + spec pre-registration prevents drift |
 | Medium features | Medium | feature-draft creates draft + plan in one step |
 | Bug fixes, urgent hotfixes | Small | Fix directly, verify when needed |
-| ML training debug | ralph-loop-init | Automated training debug loop |
+| Long-running process debug (ML, e2e, build, etc.) | ralph-loop-init | Automated debug loop |
 | **Full automation (recommended)** | **sdd-autopilot** | **Full pipeline autonomous execution** |
 
 ---
@@ -795,8 +795,8 @@ cat ralph/results/last_exit_code  # Last action exit code
 |-------|---------|
 | `SETUP` | Initial state, environment check |
 | `SMOKE_TEST` | Quick validation run |
-| `TRAINING` | Full training/execution |
-| `VALIDATING` | Result validation |
+| `EXECUTING` | Main process execution (training, testing, building, etc.) |
+| `CHECKING` | Result verification |
 | `ANALYZING` | Result analysis |
 | `ADJUSTING` | Parameter/configuration adjustment |
 | `DONE` | Complete |
@@ -861,7 +861,7 @@ bash ralph/run.sh
 | `/implementation-plan` | Generate phase-by-phase implementation plan (for large-scale) |
 | `/implementation` | Execute TDD-based implementation |
 | `/implementation-review` | Verify implementation against plan (phase-by-phase for large-scale) |
-| `/ralph-loop-init` | Generate automated ML training debug loop |
+| `/ralph-loop-init` | Generate automated debug loop for long-running processes |
 | `/discussion` | Pre-implementation decision-making (discussion points/decisions/open questions/action items) |
 | `/guide-create` | Generate feature-specific implementation/review guide from spec and code |
 | `/sdd-autopilot` | Autonomous orchestration of the full SDD pipeline |
@@ -1122,7 +1122,7 @@ Verifies implementation results against plan/spec. Used for phase-by-phase verif
 
 ### ralph-loop-init
 
-Initializes an LLM-based automated ML training debug loop (ralph loop). Generates the `ralph/` directory structure, configuration files, and prompt templates.
+Initializes an LLM-based automated debug loop for long-running processes (ralph loop). Generates the `ralph/` directory structure, configuration files, and prompt templates.
 
 **Trigger**: "ralph loop", "init ralph", "training debug loop", "set up ralph loop", "automated training loop"
 

@@ -64,7 +64,7 @@ flowchart LR
 | **implementation-plan** | "구현 계획 생성" | phase별 구현 계획 생성 (대규모 구현 시) |
 | **implementation** | "계획 구현", "구현 시작" | TDD 기반 구현 실행 |
 | **implementation-review** | "구현 리뷰", "진행 상황 확인" | 계획 대비 구현 검증 (대규모 phase별 검증) |
-| **ralph-loop-init** | "ralph loop", "training debug loop" | ML 자동 트레이닝 디버그 루프 생성 |
+| **ralph-loop-init** | "ralph loop", "training debug loop" | 장시간 실행 프로세스 자동 디버그 루프 생성 |
 | **discussion** | "토론", "discuss", "brainstorm" | 구조화 의사결정 토론: 맥락 수집 + 선택지 비교 + 결정/미결/실행항목 정리 |
 | **guide-create** | "가이드 작성", "기능 가이드", "guide create" | 스펙+코드 기반 기능별 구현/리뷰 가이드 문서 생성 |
 | **sdd-autopilot** | "autopilot", "자동 구현", "전체 파이프라인" | 전체 SDD 파이프라인을 자율 오케스트레이션 |
@@ -382,7 +382,7 @@ flowchart LR
 | 대규모 기능, 아키텍처 변경 | 대규모 | phase별 계획 + 스펙 사전 반영으로 드리프트 방지 |
 | 중간 규모 기능 | 중규모 | feature-draft로 초안 + 계획을 한 번에 |
 | 버그 수정, 긴급 핫픽스 | 소규모 | 바로 수정, 필요 시 검증 |
-| ML 트레이닝 디버그 | ralph-loop-init | 자동 트레이닝 디버그 루프 |
+| 장시간 실행 디버그 | ralph-loop-init | 자동 디버그 루프 (ML, e2e, 빌드 등) |
 | **전체 자동화 (추천)** | **sdd-autopilot** | **전체 파이프라인 자율 실행** |
 
 ---
@@ -795,8 +795,8 @@ cat ralph/results/last_exit_code  # 마지막 액션 종료 코드
 |--------|------|
 | `SETUP` | 초기 상태, 환경 확인 |
 | `SMOKE_TEST` | 빠른 검증 실행 |
-| `TRAINING` | 본격 학습/실행 |
-| `VALIDATING` | 결과 검증 |
+| `EXECUTING` | 메인 프로세스 실행 (학습, 테스트, 빌드 등) |
+| `CHECKING` | 결과 검증 |
 | `ANALYZING` | 결과 분석 |
 | `ADJUSTING` | 파라미터/설정 조정 |
 | `DONE` | 완료 |
@@ -861,7 +861,7 @@ bash ralph/run.sh
 | `/implementation-plan` | phase별 구현 계획 생성 (대규모 구현 시) |
 | `/implementation` | TDD 기반 구현 실행 |
 | `/implementation-review` | 계획 대비 구현 검증 (대규모 phase별 검증) |
-| `/ralph-loop-init` | ML 자동 트레이닝 디버그 루프 생성 |
+| `/ralph-loop-init` | 장시간 실행 프로세스 자동 디버그 루프 생성 |
 | `/discussion` | 구현 전 의사결정 정리(논점/결정/미결/실행항목 도출) |
 | `/guide-create` | 스펙+코드 기반 기능별 구현/리뷰 가이드 문서 생성 |
 | `/sdd-autopilot` | 전체 SDD 파이프라인 자율 오케스트레이션 |
@@ -1122,7 +1122,7 @@ PR의 구현 내용을 스펙과 스펙 패치 기준으로 검증합니다. 코
 
 ### ralph-loop-init
 
-LLM 기반 자동화 ML 학습 디버깅 루프(ralph loop)를 초기화합니다. `ralph/` 디렉토리 구조, 설정 파일, 프롬프트 템플릿을 생성합니다.
+LLM 기반 장시간 실행 프로세스 자동 디버깅 루프(ralph loop)를 초기화합니다. `ralph/` 디렉토리 구조, 설정 파일, 프롬프트 템플릿을 생성합니다.
 
 **트리거**: "ralph loop", "init ralph", "training debug loop", "set up ralph loop", "automated training loop"
 

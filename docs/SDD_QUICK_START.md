@@ -33,7 +33,7 @@
 | `/implementation-plan` | phase별 구현 계획 생성 (대규모 구현 시) |
 | `/implementation` | TDD 기반 구현 실행 |
 | `/implementation-review` | 계획 대비 구현 검증 (대규모 phase별 검증) |
-| `/ralph-loop-init` | ML 자동 트레이닝 디버그 루프 생성 |
+| `/ralph-loop-init` | 장시간 실행 프로세스 자동 디버그 루프 생성 |
 | `/discussion` | 구조화 의사결정 토론: 맥락 수집 + 선택지 비교 + 결정/미결/실행항목 정리 |
 | `/guide-create` | 스펙+코드 기반 기능별 구현/리뷰 가이드 문서 생성 |
 | `/sdd-autopilot` | 전체 SDD 파이프라인 자율 오케스트레이션 |
@@ -194,7 +194,7 @@ flowchart LR
 
 ```bash
 /ralph-loop-init
-# ralph/ 디렉토리에 자동 트레이닝 디버그 루프 구조 생성
+# ralph/ 디렉토리에 자동 디버그 루프 구조 생성
 ```
 
 > LLM 기반 자동 ML 트레이닝 디버깅을 위한 루프 구조를 생성합니다.
@@ -290,7 +290,7 @@ _sdd/
 | 대규모 기능, 아키텍처 변경 | 대규모 |
 | 중간 규모 기능 | 중규모 |
 | 버그 수정, 긴급 핫픽스 | 소규모 |
-| ML 트레이닝 디버그 | ralph-loop-init |
+| 장시간 실행 디버그 (ML, e2e, 빌드 등) | ralph-loop-init |
 | **전체 자동화 (추천)** | **sdd-autopilot** |
 
 ---
