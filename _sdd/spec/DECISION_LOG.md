@@ -1,5 +1,43 @@
 # Decision Log
 
+## 2026-03-19 - sdd-autopilot v2.0.0 Reasoning-Based Rewrite (v3.4.1 -> v3.5.0)
+
+### Context
+
+sdd-autopilot v1.0.0은 규모별 템플릿 매칭(소/중/대 3가지 경로)으로 파이프라인을 구성했다. 이 방식은 3가지 고정 경로만 가능하여 유연성이 제한적이었다. harness 철학에서 영감을 받아, SDD 철학을 이해하고 상황에 맞게 스킬을 동적으로 조합하는 reasoning 기반 오케스트레이션으로 전환하기로 결정했다.
+
+### Decision
+
+1. **SKILL.md 전면 리라이트**: 규모별 템플릿 매칭 -> SDD reference 기반 reasoning + 동적 파이프라인 구성
+2. **Reference 문서 통합**: `references/pipeline-templates.md` + `references/scale-assessment.md` 삭제, `references/sdd-reasoning-reference.md` 신규 생성 (docs/ 4개 문서를 ~310줄로 압축, SDD 철학 + 스킬 카탈로그)
+3. **Step 구조 변경**: Step 1(Reference Loading), Step 4(Reasoning -> Orchestrator), Step 5(Verification) 신규 추가
+4. **Orchestrator Verification**: Producer-Reviewer 패턴으로 구조 6항목 + 철학 6항목 = 12항목 자동 검증
+5. **Hard Rule #10 추가**: Execute -> Verify 필수
+6. **비오케스트레이션 스킬 재분류**: spec-create, discussion, guide-create는 autopilot 파이프라인에 넣지 않는 스킬로 명시
+7. **Dependencies 변경**: 글로벌 스펙 존재 필수 (없으면 /spec-create 안내)
+
+### Rationale
+
+- 규모별 3가지 고정 경로에서 상황 맞춤 무한 조합으로 유연성 확대
+- Reference 문서를 Step 1에서 Read하여 reasoning의 기반으로 사용 -- "사람이 docs를 읽고 reasoning하듯이 autopilot도 동일 과정"
+- Producer-Reviewer 패턴으로 동적 생성의 리스크를 관리 (구조 의존성 + SDD 철학 정합성 검증)
+- Hard Rules(#9 review-fix, #10 execute-verify)와 파일 기반 상태 전달 등 검증된 규칙은 보존
+
+### Changes
+
+- `.claude/skills/sdd-autopilot/SKILL.md` -- v1.0.0 -> v2.0.0 전면 리라이트
+- `.claude/skills/sdd-autopilot/references/sdd-reasoning-reference.md` -- 신규 생성
+- `.claude/skills/sdd-autopilot/references/pipeline-templates.md` -- 삭제 (reference에 흡수)
+- `.claude/skills/sdd-autopilot/references/scale-assessment.md` -- 삭제 (reference에 흡수)
+- `.claude/skills/sdd-autopilot/skill.json` -- v2.0.0으로 업데이트
+- `.codex/skills/sdd-autopilot/SKILL.md` -- v2.0.1 동일 아키텍처 동기화 (Codex 차이점 보존)
+- `.codex/skills/sdd-autopilot/references/sdd-reasoning-reference.md` -- 신규 생성
+- `_sdd/spec/main.md` -- v3.4.1 -> v3.5.0
+
+### References
+
+- 토론: `_sdd/discussion/discussion_autopilot_reasoning_harness.md`
+
 ## 2026-03-17 - Codex Autopilot Parity Restoration and Validation Guide Consolidation
 
 ### Context
