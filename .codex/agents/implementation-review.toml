@@ -118,6 +118,25 @@ If `_sdd/env.md` exists, apply its setup instructions first (for example: `conda
 
 ## Review Process Overview
 
+## Codex Parallel Review Contract
+
+리뷰 대상이 큰 경우 검증과 finding 초안을 병렬 lane으로 분리한다.
+
+- lane은 `spawn_agent(agent_type="explorer")`로 실행한다
+- lane 예시: task/module verification, test/quality verification, drift/risk verification
+- 각 lane은 읽기 전용이며, 서로 겹치지 않는 파일/질문 범위를 가진다
+- 부모 agent는 `wait_agent(...)`로 lane 결과를 수집한 뒤 최종 severity와 next actions를 통합한다
+- 장문 리뷰 리포트는 필요 시 `write_phased` custom agent로 위임한다
+
+권장 조건:
+
+```text
+IF touched_files > 10 OR components > 3:
+  → 병렬 review lanes 활성화
+ELSE:
+  → 순차 리뷰
+```
+
 ### Tier 1 (Plan 기반 — 기존 동작)
 
 ```
@@ -434,7 +453,7 @@ Suggestions that aren't blocking:
 
 ## Step 5: Summary and Next Steps
 
-**Tools**: `Write`, `Bash (mkdir -p)`, `AskUserQuestion`
+**Tools**: `Write`, `Bash (mkdir -p)`, `deterministic defaults (non-interactive)`, `spawn_agent`, `wait_agent`
 
 ### Progress Summary
 ```markdown

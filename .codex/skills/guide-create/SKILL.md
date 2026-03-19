@@ -112,7 +112,7 @@ Examples of requests that should trigger this skill:
 2. If the spec is split, follow linked or convention-based sub-specs relevant to the feature.
 3. Extract the most relevant feature description, related sections, constraints, and acceptance-style language.
 4. If no usable spec exists:
-   - `AskUserQuestion`으로 사용자에게 선택지 제공 (spec-create 실행 / 스펙 없이 Low 신뢰도로 계속)
+   - `request_user_input`으로 사용자에게 선택지 제공 (spec-create 실행 / 스펙 없이 Low 신뢰도로 계속)
 
 > **Decision Gate 2→3**: See `references/tool-and-gates.md` § Gate 2→3: Spec Grounding
 
@@ -162,7 +162,7 @@ Never invent confirmed behavior that is unsupported by spec or code.
 
 ### Step 5: Generate the Technical Report
 
-**Tools**: `Write`, `Edit`, `Agent` (2-페이즈 병렬 실행 시)
+**Tools**: `Write`, `Edit`, `spawn_agent`, `wait_agent` (2-페이즈 병렬 실행 시)
 
 > **1-페이즈** (related_files < 10): 아래 required sections 구조로 단일 패스 작성.
 > **2-페이즈** (related_files >= 10): 아래 절차를 먼저 수행한 후, 최종 결과를 동일한 구조로 저장.
@@ -176,16 +176,25 @@ Never invent confirmed behavior that is unsupported by spec or code.
 출력 문서 작성 시 `write-phased` 서브에이전트에 작업을 위임한다. 서브에이전트 호출 시 아래 Required sections 전체와 작성에 필요한 맥락(스펙 컨텍스트, 코드 증거, Step 2-3 분석 결과 등)을 프롬프트에 포함한다. `references/template-compact.md`의 Writing Rules와 §1-§5 구조를 준수하도록 지시한다.
 
 ```
-Agent(
-  subagent_type="write-phased",
-  prompt="다음 문서를 작성해주세요.
+guide_agent_id = spawn_agent(
+  agent_type="write_phased",
+  message="다음 문서를 작성해주세요.
 
   파일 경로: [target guide path - _sdd/guides/guide_<slug>.md]
   참조 템플릿: references/template-compact.md (Writing Rules, § 구조 준수)
 
   [아래 Required sections(§1-§5)과 Step 2-3에서 수집한 맥락을 여기에 포함]"
 )
+
+wait_agent(ids=[guide_agent_id], timeout_ms=1800000)
 ```
+
+복수 기능을 한 번에 가이드화하거나 `related_files >= 10`인 경우:
+
+1. 공통 배경/용어/아키텍처 근거를 먼저 정리한다.
+2. 기능별 또는 섹션 묶음별로 **겹치지 않는 출력 파일 경로**를 나눈다.
+3. 각 출력 파일마다 `spawn_agent(agent_type="write_phased")`를 병렬 호출한다.
+4. `wait_agent`로 모두 수집한 뒤 링크/인라인 citation/용어 일관성을 최종 점검한다.
 
 #### Required sections
 
@@ -293,8 +302,8 @@ Full formatting details, slug rules, backup rules, and reference notation rules 
 
 | Situation | Response |
 |----------|----------|
-| `_sdd/spec/` missing | `AskUserQuestion`으로 사용자에게 선택지 제공 (spec-create 실행 / 스펙 없이 Low 신뢰도로 계속) |
-| Main spec not found | `AskUserQuestion`으로 사용자에게 선택지 제공 (spec-create 실행 / 스펙 없이 Low 신뢰도로 계속) |
+| `_sdd/spec/` missing | `request_user_input`으로 사용자에게 선택지 제공 (spec-create 실행 / 스펙 없이 Low 신뢰도로 계속) |
+| Main spec not found | `request_user_input`으로 사용자에게 선택지 제공 (spec-create 실행 / 스펙 없이 Low 신뢰도로 계속) |
 | Feature is too ambiguous | Use the strongest available spec phrasing and record assumptions |
 | Code evidence is missing | Generate a spec-grounded report and mark code references as unavailable |
 | Multiple features requested | Generate separate guide files per feature |

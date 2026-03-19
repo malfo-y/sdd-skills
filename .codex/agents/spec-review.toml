@@ -61,6 +61,16 @@ This skill evaluates two dimensions:
 - Test artifacts (when available)
 - `_sdd/env.md` (when local runtime/test verification is needed)
 
+## Codex Parallel Drift Contract
+
+대형 스펙/코드베이스에서는 drift 감지를 축별 lane으로 나눠 병렬 수행한다.
+
+- lane 예시: architecture, feature/API, config/environment, source-field
+- 각 lane은 `spawn_agent(agent_type="explorer")`로 read-only 조사
+- lane 결과는 `wait_agent(...)`로 수집한 뒤 부모 agent가 severity를 통합한다
+- lane별 질문/파일 범위는 겹치지 않게 지정한다
+- 스펙 파일 편집은 여전히 금지되며, 병렬화는 조사 단계에만 적용한다
+
 ## Review Process
 
 ### Step 1: Scope and Source Selection
@@ -108,7 +118,7 @@ Assess the spec as a standalone design artifact:
 
 ### Step 3: Code-Linked Drift Audit
 
-**Tools**: `Grep`, `Glob`, `Read`, `Bash (git diff, git log)`
+**Tools**: `Grep`, `Glob`, `Read`, `Bash (git diff, git log)`, `spawn_agent`, `wait_agent`
 
 Compare spec claims to implementation evidence:
 
@@ -131,6 +141,18 @@ Require concrete evidence wherever possible:
 When local runtime/test execution is used to collect evidence, follow `_sdd/env.md`.
 If `_sdd/env.md` is missing/incomplete, ask the user for environment details instead of guessing.
 
+권장 병렬 lane:
+
+```text
+IF spec_files > 3 OR codebase_files > 50:
+  architecture_lane = spawn_agent(agent_type="explorer", message="Architecture drift만 조사...")
+  feature_lane = spawn_agent(agent_type="explorer", message="Feature/API drift만 조사...")
+  config_lane = spawn_agent(agent_type="explorer", message="Config/Environment/Source-field drift만 조사...")
+  wait_agent(ids=[architecture_lane, feature_lane, config_lane], timeout_ms=1800000)
+ELSE:
+  → 순차 조사
+```
+
 ### Step 3.5: Drift 발견 요약
 
 Drift 발견 요약 테이블을 사용자에게 제시한 후 바로 Step 4로 진행한다 (사용자 확인을 기다리지 않는다):
@@ -144,6 +166,7 @@ Drift 발견 요약 테이블을 사용자에게 제시한 후 바로 Step 4로 
 | Config drift | N | N | N |
 | Issue drift | N | N | N |
 | Decision-log drift | N | N | N |
+| Source-field drift | N | N | N |
 ```
 
 ### Step 4: Severity and Decision
@@ -174,13 +197,14 @@ Assign one overall decision:
 
 ### Step 5: Report and Handoff
 
-**Tools**: `Write`, `Bash (mkdir -p)`, `AskUserQuestion`
+**Tools**: `Write`, `Bash (mkdir -p)`, `spawn_agent`, `wait_agent`
 
 1. Create/update strict review report.
 2. Do not edit actual spec content.
 3. If decision is `SYNC_REQUIRED`, include a ready-to-apply update checklist and recommend running `/spec-update-done`.
 4. If needed, include proposed `DECISION_LOG.md` entries in the report (proposal only).
-5. **Progressive Disclosure**:
+5. If the report is long or multi-file evidence is extensive, delegate report writing to `spawn_agent(agent_type="write_phased")` and collect with `wait_agent`.
+6. **Progressive Disclosure**:
    ```
    1. Severity별 요약 테이블 제시:
       | Severity | 건수 | 주요 항목 |

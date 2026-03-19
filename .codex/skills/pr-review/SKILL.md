@@ -45,6 +45,14 @@ PR 리뷰 리포트가 장문 구조가 되면 `$write-phased` 전략을 우선 
 - 이후 각 finding과 evidence를 patch 기반으로 채운다
 - runtime delegation이 불가능하면 현재 실행 안에서 동일한 2-phase 절차를 따른다
 
+## Codex Evidence + Report Contract
+
+대형 PR 또는 split spec인 경우 review를 두 단계로 분리한다.
+
+- **증거 수집 fan-out**: spec baseline, patch draft, PR diff/changed files를 병렬 로딩
+- **finding 정리**: acceptance / spec violation / test gap 관점으로 분리
+- **최종 보고서 작성**: 부모가 통합하거나 `spawn_agent(agent_type="write_phased")`로 위임 후 `wait_agent(...)`로 수집
+
 ## LLM Model to use
 
 Use the following fixed mapping when users mention Opus/Sonnet/Haiku labels:
@@ -117,13 +125,23 @@ ELSE → 누락 항목 보완 또는 자동 검증
 
 #### Step 2: Load context
 
-**Tools**: `Read`, `Glob`, `Bash (gh pr view, gh pr diff)`, `deterministic defaults (non-interactive)`
+**Tools**: `Read`, `Glob`, `Bash (gh pr view, gh pr diff)`, `deterministic defaults (non-interactive)`, `multi_tool_use.parallel`, `spawn_agent`, `wait_agent`
 
 ```
 1. Read current spec files (if multiple, use deterministic defaults (non-interactive) to select)
 2. Read patch draft → extract Acceptance Criteria
 3. Collect PR metadata (gh pr view)
 4. Collect PR diff (gh pr diff)
+```
+
+권장 fan-out:
+
+```text
+IF changed_files > 30 OR spec_files > 3:
+  → spec baseline 로딩, patch draft parsing, PR diff inspection을 병렬로 수행
+  → wait_agent 또는 parallel read barrier 후 Step 3 진행
+ELSE:
+  → 순차 로딩
 ```
 
 See `../pr-spec-patch/references/gh-commands.md` for PR data collection commands:
@@ -243,10 +261,11 @@ ELSE → 판정 근거 보강 후 재판정
 
 #### Step 7: Report generation
 
-**Tools**: `Write`, `Bash (mkdir -p, cp)`, `deterministic defaults (non-interactive)`
+**Tools**: `Write`, `Bash (mkdir -p, cp)`, `deterministic defaults (non-interactive)`, `spawn_agent`, `wait_agent`
 
 1. If existing `PR_REVIEW.md` exists, archive to `_sdd/pr/prev/PREV_PR_REVIEW_<timestamp>.md` (create `_sdd/pr/prev/` if needed)
 2. Generate `_sdd/pr/PR_REVIEW.md` using the [Output Format](#output-format) below
+   - 보고서가 길거나 finding이 많은 경우 `spawn_agent(agent_type="write_phased")`로 위임하고 `wait_agent`로 수집
 3. **Progressive Disclosure**:
    ```
    1. 리뷰 요약 테이블 제시:

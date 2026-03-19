@@ -38,6 +38,16 @@ Primary goals:
 5. **최소 산출물**: `DECISION_LOG.md` 외 추가 거버넌스 문서는 사용자 요청 시에만 생성한다.
 6. **Preserve Source fields**: 기존 컴포넌트 테이블의 `Source` 필드가 있으면 반드시 보존한다. 섹션 이동/재구성 시에도 Source 매핑 정보를 유지한다.
 
+## Codex Fan-out Rewrite Contract
+
+리라이트는 승인 이후 다음 순서로 수행한다.
+
+- 인덱스/메인 문서를 먼저 고정한다
+- 이동 대상 섹션과 신규 파일 경로를 split map으로 확정한다
+- 그 다음 파일별 rewrite를 `spawn_agent(agent_type="write_phased")`로 병렬화한다
+- 각 writer는 자신의 출력 파일만 수정한다
+- 부모는 `wait_agent(...)` 후 링크, appendix 이동, Source field 보존 여부를 검증한다
+
 ## Input Sources
 
 ### Primary
@@ -153,7 +163,7 @@ If rewriting removes narrative sections that contain meaningful rationale:
 
 ### Step 5: Hierarchical Split
 
-**Tools**: `Write`, `Bash (mkdir -p)`, `Glob`
+**Tools**: `Write`, `Bash (mkdir -p)`, `Glob`, `spawn_agent`, `wait_agent`
 
 프로젝트 복잡도에 따라 적절한 구조를 선택한다:
 
@@ -192,6 +202,16 @@ Rules:
 - 각 컴포넌트 파일/디렉토리는 단일 주제 책임
 - 상대 링크 표준화 및 깨진 링크 수정
 - 파일명은 컴포넌트 이름 그대로 사용 (번호 접두사 불필요)
+
+Codex-native rewrite fan-out:
+
+```text
+1. main.md 인덱스를 먼저 재작성한다.
+2. appendix / component / subdirectory 단위 출력 파일을 확정한다.
+3. 파일별로 write_phased agent를 병렬 spawn한다.
+4. wait_agent로 결과를 모은다.
+5. 부모가 링크/중복/보존 규칙을 최종 검증한다.
+```
 
 ### Step 6: Ambiguity and Problem Reporting
 

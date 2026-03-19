@@ -56,11 +56,11 @@ AFTER Step 2:
   IF spec_found AND feature_grounded:
     -> Step 3
   ELSE IF spec_found AND NOT feature_grounded:
-    -> AskUserQuestion으로 사용자에게 선택지 제공:
+    -> request_user_input으로 사용자에게 선택지 제공:
        1) spec-update-todo를 실행하여 스펙에 기능을 추가한 뒤 다시 시도
        2) 스펙 근거 없이 Low 신뢰도로 가이드 생성 계속
   ELSE:
-    -> AskUserQuestion으로 사용자에게 선택지 제공:
+    -> request_user_input으로 사용자에게 선택지 제공:
        1) spec-create를 실행하여 스펙을 먼저 작성
        2) 스펙 없이 Low 신뢰도로 가이드 생성 계속
 ```
@@ -74,7 +74,7 @@ AFTER Step 3:
   IF has_code_evidence:
     -> 신뢰도 High/Medium 후보로 Step 4
   ELSE:
-    -> AskUserQuestion으로 사용자에게 확인:
+    -> request_user_input으로 사용자에게 확인:
        "코드 근거가 없습니다. 스펙 기반 Low 신뢰도 가이드를 생성할까요?"
     -> 사용자 동의 시 신뢰도 Low 후보로 Step 4
        (코드 레퍼런스 "확인 불가" 표기 예정)

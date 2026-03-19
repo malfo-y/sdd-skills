@@ -264,15 +264,28 @@ For each phase:
 For each task in a parallel group, call sub-agents **simultaneously**:
 
 ```
-Task(
-  subagent_type="general-purpose",
-  model="gpt-5.3-codex",
-  reasoning_effort="high",
-  prompt="[Sub-Agent Prompt - see below]"
-)
+task_agent_ids = []
+
+for task in parallel_group:
+  agent_id = spawn_agent(
+    agent_type="worker",
+    model="gpt-5.3-codex",
+    reasoning_effort="high",
+    message="[Sub-Agent Prompt - see below]"
+  )
+  task_agent_ids.append(agent_id)
+
+wait_agent(ids=task_agent_ids, timeout_ms=1800000)
 ```
 
-**Call all tasks in the same group as parallel sub-agent calls in a single message.**
+**Call all tasks in the same group as parallel `spawn_agent` calls, then collect them with one `wait_agent` barrier before verification.**
+
+Sub-agent dispatch rules:
+
+- assign one task per spawned `worker`
+- include explicit file ownership from `Target Files`
+- tell each worker it is not alone in the codebase and must not revert sibling workers' changes
+- if `wait_agent` times out or a worker fails, keep completed workers' results and retry only the failed task sequentially
 
 ### 4.2 Sub-Agent Prompt Template
 
@@ -307,6 +320,7 @@ Each sub-agent receives:
 ## 파일 경계 규칙
 - 위의 Target Files만 생성/수정/삭제 가능
 - 다른 파일은 읽기(Read)만 가능
+- 당신은 혼자 작업하는 것이 아니다. 다른 worker의 변경을 되돌리지 말고, 이미 반영된 변경과 공존하도록 구현한다.
 - Target Files 외 파일 수정이 필요하면:
   수정하지 말고 보고: "UNPLANNED_DEPENDENCY: {파일경로} - {필요한 변경 설명}"
 

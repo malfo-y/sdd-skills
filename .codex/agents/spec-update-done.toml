@@ -155,7 +155,7 @@ ELSE IF NOT sources_available → `request_user_input`: 비교 대상 소스 확
 
 ### Step 2: Identify Spec Drift
 
-**Tools**: `rg`, `Glob`, `Read`, `Bash (git diff)`
+**Tools**: `rg`, `Glob`, `Read`, `Bash (git diff)`, `spawn_agent`, `wait_agent`
 
 > **`../skills/spec-update-done/references/drift-patterns.md`를 Read로 읽는다.** 9가지 드리프트 패턴(Architecture, Feature, API, Config, Issue, Documentation, Environment, Decision Log, Code Snippet)의 상세 감지 방법과 해결 전략이 정의되어 있다.
 
@@ -194,6 +194,26 @@ Compare spec against reality to find discrepancies:
 - Embedded code excerpts in spec differ from actual implementation
 - Inline citations `[filepath:functionName]` point to renamed/moved/deleted functions
 - Code Reference Index table entries are stale
+
+#### 2.5 Parallel Drift Collection (large updates)
+
+변경 범위가 큰 경우 드리프트 탐지를 병렬 수집 후 부모가 통합한다.
+
+```text
+IF changed_files > 20 OR spec_files > 3:
+  architecture_lane = spawn_agent(agent_type="explorer", message="Architecture/Feature drift만 조사...")
+  environment_lane = spawn_agent(agent_type="explorer", message="Environment/Config drift만 조사...")
+  source_lane = spawn_agent(agent_type="explorer", message="Source/Code Snippet drift만 조사...")
+  wait_agent(ids=[architecture_lane, environment_lane, source_lane], timeout_ms=1800000)
+ELSE:
+  → 순차 분석
+```
+
+lane 결과 통합 규칙:
+
+- 같은 spec 섹션에 대한 제안이 충돌하면 evidence가 더 강한 쪽을 우선한다
+- 불확실한 항목은 `Open Questions` 또는 Change Report에 남긴다
+- 실제 spec 편집은 부모 agent가 순차적으로 적용한다
 
 ### Step 3: Generate Change Report
 

@@ -26,6 +26,15 @@ PR 기반 패치 초안이 길어질 경우 `$write-phased` 전략을 우선 적
 - 이후 evidence/impact/details를 patch 기반으로 채운다
 - runtime delegation이 불가능하면 현재 실행 안에서 동일한 2-phase 절차를 따른다
 
+## Codex Baseline + Patch Fan-out Contract
+
+대형 PR 또는 split spec인 경우 다음 순서를 사용한다.
+
+- baseline spec 로딩과 PR data 수집을 병렬로 수행한다
+- change categorization과 spec mapping을 lane별로 분리할 수 있다
+- 최종 patch draft는 부모가 통합하거나 `spawn_agent(agent_type="write_phased")`에 위임한다
+- spawned writer 결과는 `wait_agent(...)`로 수집한다
+
 ## When to Use This Skill
 
 - When generating a spec patch draft from a PR
@@ -80,7 +89,7 @@ ELSE → 누락 항목 보완
 
 #### Step 2: Read current spec
 
-**Tools**: `Read`, `Glob`, `deterministic defaults (non-interactive)`
+**Tools**: `Read`, `Glob`, `deterministic defaults (non-interactive)`, `multi_tool_use.parallel`
 
 ```
 1. Load main spec file from `_sdd/spec/`
@@ -98,7 +107,7 @@ ELSE → 대상 스펙 재선정
 
 #### Step 3: Collect PR data
 
-**Tools**: `Bash (gh pr view, gh pr diff)`, `Read`
+**Tools**: `Bash (gh pr view, gh pr diff)`, `Read`, `multi_tool_use.parallel`, `spawn_agent`, `wait_agent`
 
 If no PR number is specified, auto-detect from the current branch:
 
@@ -120,6 +129,14 @@ gh pr diff [PR_NUMBER] --name-only
 - Switch to directory/component-level summary
 - Focus on components documented in the spec
 - Inform user about the large PR and proceed with key changes only
+
+권장 fan-out:
+
+```text
+IF changedFiles > 30:
+  → PR metadata / changed files / diff summary / baseline spec mapping을 병렬 수집
+  → wait barrier 후 Step 4 분석으로 진행
+```
 
 **Decision Gate 3→4**:
 ```
@@ -156,11 +173,21 @@ ELSE → 미분류 항목 추가 분석
 
 #### Step 5: Generate patch draft
 
-**Tools**: `Write`, `Bash (mkdir -p)`
+**Tools**: `Write`, `Bash (mkdir -p)`, `spawn_agent`, `wait_agent`
 
 Save the collected/analyzed information in structured form to `_sdd/pr/spec_patch_draft.md`.
 
 See the [Output Format](#output-format) section below for the output format.
+
+초안이 길거나 카테고리가 많은 경우:
+
+```text
+patch_writer = spawn_agent(
+  agent_type="write_phased",
+  message="PR spec patch draft를 작성하세요. 출력 파일: _sdd/pr/spec_patch_draft.md ..."
+)
+wait_agent(ids=[patch_writer], timeout_ms=1800000)
+```
 
 #### Step 5.5: 패치 항목 PR Evidence 검증
 

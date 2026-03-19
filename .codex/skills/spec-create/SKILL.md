@@ -42,6 +42,15 @@ Spec documents are stored in the `_sdd/spec/` directory within the project root.
 - Phase 2: section-by-section patch로 채우기
 - runtime delegation이 불가능하면 현재 실행 안에서 동일한 skeleton -> fill 절차를 따른다
 
+## Codex Fan-out Writing Contract
+
+중규모/대규모 스펙은 단일 writer로 끝내지 않는다.
+
+- canonical index 파일(`main.md` 또는 대표 spec)은 먼저 단일 writer로 확정한다
+- 그 뒤 컴포넌트별 하위 spec은 `spawn_agent(agent_type="write_phased")`로 병렬 생성한다
+- 각 spawned writer는 **서로 겹치지 않는 출력 파일 경로**만 담당한다
+- 부모는 `wait_agent(...)`로 모두 수집한 뒤 링크/섹션/용어 일관성을 최종 검증한다
+
 ## Directory Structure
 
 ```
@@ -204,7 +213,7 @@ ELSE → 미파악 항목에 대해 추가 탐색 또는 Open Questions 기록
 
 ### Step 3: Bootstrap + Write the Spec Document
 
-**Tools**: `Read`, `Edit`, `Write`, `Bash (mkdir -p)`, `multi_tool_use.parallel`
+**Tools**: `Read`, `Edit`, `Write`, `Bash (mkdir -p)`, `multi_tool_use.parallel`, `spawn_agent`, `wait_agent`
 
 Before writing the spec, bootstrap guidance files if missing:
 
@@ -261,6 +270,19 @@ Before writing the spec, bootstrap guidance files if missing:
 출력 문서 작성 시 `$write-phased` 전략을 적용한다. `references/template-compact.md`의 스펙 템플릿과 Step 2 분석 결과를 기반으로 작성하며, skeleton→fill 2-페이즈 전략은 `$write-phased` 내부에서 처리된다.
 
 > **`references/template-compact.md`를 읽는다.** 이 템플릿에 §1-§8 섹션 구조, Writing Rules(코드 발췌/인라인 citation/What-Why-How 트라이어드), 그리고 Modular Spec Guide가 정의되어 있다. 이 템플릿을 참조하여 스펙을 작성한다.
+
+Codex-native 작성 규칙:
+
+```text
+IF single-file spec:
+  → canonical spec 파일 1개를 작성한다
+ELSE:
+  1. main/index 파일을 먼저 작성한다
+  2. 컴포넌트별 출력 파일 경로를 확정한다
+  3. 컴포넌트별로 write_phased agent를 병렬 spawn한다
+  4. wait_agent로 수집한다
+  5. main.md 링크와 하위 파일 참조를 검증한다
+```
 
 ## Spec Management Operations
 
@@ -327,6 +349,12 @@ See detailed specs:
 - [API](./api.md) 또는 [API](./api/overview.md)
 - [Database](./database.md) 또는 [Database](./database/overview.md)
 ```
+
+권장 fan-out:
+
+- `main.md` / canonical index: 순차 작성
+- `api.md`, `database.md`, `frontend.md` 등 컴포넌트 spec: 병렬 writer
+- 검증: 부모가 링크/중복/용어를 한 번에 점검
 
 ## Best Practices
 
