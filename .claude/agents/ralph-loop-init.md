@@ -1,6 +1,6 @@
 ---
 name: ralph-loop-init
-description: "Use this agent when the user asks to \"init ralph\", \"ralph loop\", \"set up ralph loop\", \"training loop\", \"training debug loop\", \"create ralph\", \"set up training debug loop\", \"automated training loop\", or wants to generate a ralph/ directory for LLM-driven automated ML training debugging."
+description: "Use this agent when the user asks to \"init ralph\", \"ralph loop\", \"set up ralph loop\", \"training loop\", \"training debug loop\", \"debug loop\", \"long-running test loop\", \"e2e loop\", \"create ralph\", \"set up training debug loop\", \"automated training loop\", or wants to generate a ralph/ directory for LLM-driven automated long-running process debugging (ML training, e2e tests, build pipelines, integration tests, etc.)."
 tools: ["Read", "Write", "Edit", "Glob", "Grep", "Bash"]
 model: inherit
 ---
@@ -9,13 +9,15 @@ model: inherit
 
 > **Security Notice**: The generated `run.sh` uses `--dangerously-skip-permissions` to enable unattended automation. This grants the LLM full filesystem and command execution access without user confirmation. **Only run ralph loops in trusted repositories within isolated environments** (containers, VMs, or sandboxed machines). Do not use on machines with sensitive credentials, production access, or untrusted code. Log files written to `ralph/results/` could be vectors for prompt injection — review them if the loop behaves unexpectedly.
 
-Generate a complete `ralph/` directory for LLM-driven automated ML training debugging. The ralph loop is a `while true` automation: LLM reads state + results, writes `action.sh`, the script executes it, and the loop repeats until training is complete or the LLM escalates to a human.
+Generate a complete `ralph/` directory for LLM-driven automated long-running process debugging. The ralph loop is a `while true` automation: LLM reads state + results, writes `action.sh`, the script executes it, and the loop repeats until the process completes successfully or the LLM escalates to a human. Applicable to ML training, e2e test suites, build pipelines, integration tests, and any long-running process requiring iterative debugging.
 
-This skill discovers the project's training pipeline, confirms findings with the user, and generates five project-specific files: `CHECKS.md`, `config.sh`, `PROMPT.md`, `run.sh`, and `state.md`.
+This skill discovers the project's target process, confirms findings with the user, and generates five project-specific files: `CHECKS.md`, `config.sh`, `PROMPT.md`, `run.sh`, and `state.md`.
+
+> **Note**: `ralph-loop-concept.md` (in references/) is written with ML training examples, but the pattern is universal. Adapt phase names, config variables, and commands to fit your project's process type.
 
 | Workflow | Position | When |
 |----------|----------|------|
-| Independent | Standalone | ML 학습/e2e 테스트 등 장기 실행 디버깅 자동화 |
+| Independent | Standalone | ML 학습/e2e 테스트/빌드 파이프라인 등 장기 실행 디버깅 자동화 |
 
 > `ralph-loop-init`은 SDD 워크플로우와 독립적이다. `_sdd/spec/`이 존재하면 참조하지만, 규모별 워크플로우에 속하지 않는다.
 
@@ -23,7 +25,7 @@ This skill discovers the project's training pipeline, confirms findings with the
 
 1. **보안**: ralph 루프는 격리된 환경(컨테이너, VM, 샌드박스)에서만 실행한다.
 2. **Spec 읽기 전용**: `_sdd/` 아래 파일을 읽을 수 있으나, 수정하지 않는다.
-3. **Debug-First**: 초기 `MAX_STEPS="10"` — 첫 실행은 sanity check 목적이다.
+3. **Debug-First**: 초기 실행은 최소 범위(sanity check 목적)로 설정한다. 프로세스에 맞는 방법으로 제한한다 (예: ML은 `MAX_STEPS="10"`, 테스트는 단일 테스트 스위트, 빌드는 단일 타겟).
 4. **No Placeholders**: 생성된 파일에 `<placeholder>` 문자열이 없어야 한다.
 5. **Template Fidelity**: `run.sh`는 `run.sh.example`을 거의 그대로 복사하며, 최소한의 수정만 허용한다.
 
@@ -37,10 +39,10 @@ Check if an `_sdd/` directory exists in the project root.
 
 If it exists:
 1. Glob for `_sdd/spec/**/*.md`
-2. If multiple spec files are found, auto-select files most likely to describe the training pipeline by scanning for keywords (training, dataset, loss, hyperparameter, epoch, batch) and record selection rationale in output
-3. Read the relevant spec files — these are the **primary source of truth** for understanding the training architecture
-4. Extract key information: training script path, dataset format, CLI arguments, loss functions, validation pipeline, hyperparameters, framework details
-5. Also check if `_sdd/env.md` exists. If it does, read it — it contains Python environment setup (conda env name, venv path, `uv` config), required environment variables (API keys, paths, tokens), and other runtime configuration needed to run the code.
+2. If multiple spec files are found, auto-select files most likely to describe the target process by scanning for keywords relevant to the user's request context, and record selection rationale in output
+3. Read the relevant spec files — these are the **primary source of truth** for understanding the target process architecture
+4. Extract key information: entry point scripts, input/data format, CLI arguments, verification criteria, key configuration, runtime details
+5. Also check if `_sdd/env.md` exists. If it does, read it — it contains runtime environment setup (Python env, Node version, Docker config, etc.), required environment variables (API keys, paths, tokens), and other runtime configuration needed to run the code.
 
 If `_sdd/` does not exist, skip to Step 1 (code-only discovery).
 
@@ -56,52 +58,71 @@ ELSE → Step 1 (코드 기반 탐색)
 
 ---
 
-## Step 1: Discover the Training Pipeline
+## Step 1: Discover the Target Process
 
 **Tools**: `Glob`, `Grep`, `Read`
 
-Use Glob and Grep to find:
+Analyze the project to identify the target process that needs automated debugging. The LLM should determine the appropriate discovery strategy based on the user's request and project structure.
 
-### 1.1 Training Script
-- Glob for `**/train*.py`, `**/training*.py`, `**/run_training*.py`
-- Read the main training script
-- Parse argparse/click arguments to understand CLI interface
-- Detect the framework: accelerate, raw PyTorch, PyTorch Lightning, HuggingFace Trainer
+### 1.1 Entry Point
 
-### 1.2 Validation Script
-- Glob for `**/valid*.py`, `**/eval*.py`, `**/infer*.py`, `**/generate*.py`
-- If no validation script exists, note this — PROMPT.md will skip VALIDATING phase or generate a minimal validation step
+Identify the main entry point for the target process:
+- **ML training**: `train*.py`, `training*.py`, `run_training*.py`
+- **E2E/integration tests**: test config files, `Makefile`, `package.json` scripts, `pytest.ini`
+- **Build pipelines**: `Dockerfile`, `Makefile`, build scripts, CI config
+- **Other**: Analyze project structure and user context to find the appropriate entry point
 
-### 1.3 Dataset
-- Look for dataset paths in training script arguments or config files
-- Identify dataset format (local files + JSONL, WebDataset, HuggingFace datasets, etc.)
+Read the main entry point script/config and understand the execution interface (CLI args, config files, environment variables).
 
-### 1.4 Structured Logging
-- Grep for the literal string `[TRAIN]` in the training script source code (use fixed-string mode or escape brackets: `\[TRAIN\]`)
-- If found: PROMPT.md will include `[TRAIN]` event parsing instructions
-- If not found: PROMPT.md will instruct parsing raw log output instead
+### 1.2 Verification Step
 
-### 1.5 Python Environment
+Identify how to verify the process succeeded:
+- **ML training**: validation/evaluation scripts (`valid*.py`, `eval*.py`, `infer*.py`)
+- **E2E tests**: assertion results, test reports
+- **Build pipelines**: artifact existence, build logs
+- **Other**: Process-specific success criteria
+
+If no verification step exists, note this — PROMPT.md will skip CHECKING phase or generate a minimal verification step.
+
+### 1.3 Input/Data Dependencies
+
+Identify inputs and data dependencies:
+- **ML training**: dataset paths, data format (JSONL, WebDataset, HuggingFace datasets, etc.)
+- **E2E tests**: test fixtures, seed data, external service dependencies
+- **Build pipelines**: source files, dependency manifests, base images
+- **Other**: Any required input files, data, or resources
+
+### 1.4 Output Parsing
+
+Determine how to parse process output for status monitoring:
+- Check for structured logging (e.g., `[TRAIN] event=step` for ML, JSON test reports for tests)
+- If structured logging found: PROMPT.md will include specific parsing instructions
+- If not found: PROMPT.md will instruct parsing raw log output
+
+### 1.5 Runtime Environment
 
 **Tools**: `Glob`, `Read`
 
-- If `_sdd/env.md` was read in Step 0, use its Python environment specification as the authoritative source
-- Otherwise: check if `pyproject.toml` exists and contains `[tool.uv]` or `[project]` with uv → use `uv run python`
-- Check if `requirements.txt` exists → use `python3` or `python`
-- Default: `python3`
+- If `_sdd/env.md` was read in Step 0, use its environment specification as the authoritative source
+- **Python**: check `pyproject.toml` for `[tool.uv]` → `uv run python`; `requirements.txt` → `python3`
+- **Node.js**: check `package.json` for scripts; use `npm`, `yarn`, or `pnpm` accordingly
+- **Go**: check `go.mod`; use `go run` or `go build`
+- **Rust**: check `Cargo.toml`; use `cargo run` or `cargo build`
+- **Docker/Make**: check for `Dockerfile`, `Makefile`, `docker-compose.yml`
+- Default: infer from project structure
 
 ### 1.6 Cross-Reference with Specs
 - Compare code discovery findings with spec information from Step 0
-- Specs provide richer context (why certain hyperparameters, what metrics matter, what validation measures)
+- Specs provide richer context (why certain configurations, what metrics matter, what verification criteria apply)
 - Use spec information to fill gaps that code discovery alone cannot provide
 
 **Decision Gate 1->2**:
 ```
-training_script_found = 학습 스크립트 1개 이상 식별
-framework_detected = PyTorch/Lightning/HF Trainer 등 프레임워크 식별
+entry_point_found = 대상 프로세스 진입점 1개 이상 식별
+process_understood = 프로세스의 실행 방법과 검증 방법을 이해함
 
-IF training_script_found AND framework_detected -> Step 2
-ELSE IF NOT training_script_found -> 오류 보고: "학습 스크립트를 찾을 수 없습니다. 프로젝트 루트에 train*.py 파일이 있는지 확인하세요." → 스킬 종료
+IF entry_point_found AND process_understood -> Step 2
+ELSE IF NOT entry_point_found -> 오류 보고: "대상 프로세스의 진입점을 찾을 수 없습니다. 실행 가능한 스크립트/명령을 확인하세요." → 스킬 종료
 ELSE -> 부분 탐색 결과로 Step 2 진행, 미확인 항목 표시
 ```
 
@@ -131,21 +152,23 @@ Present all discovered information to the user as a summary table and auto-proce
 분석 결과 요약 테이블을 제시:
 | 항목 | 파악 내용 | 상태 |
 |------|----------|------|
-| 학습 스크립트 | train.py | confirmed |
-| 검증 스크립트 | 미발견 | input needed |
-| 데이터셋 경로 | ./data/train.jsonl | confirmed |
-| 프레임워크 | PyTorch Lightning | confirmed |
-| 가상환경 | .venv (Python 3.10) | confirmed |
+| 진입점 (Entry Point) | &lt;discovered script/command&gt; | confirmed |
+| 검증 단계 (Verification) | &lt;discovered or "미발견"&gt; | confirmed / input needed |
+| 입력/데이터 | &lt;discovered inputs&gt; | confirmed |
+| 핵심 설정 | &lt;key configuration&gt; | confirmed |
+| 런타임 환경 | &lt;detected runtime&gt; | confirmed |
+| 초기 파라미터 | &lt;suggested initial params&gt; | confirmed |
+| 실행 명령 | &lt;execution command&gt; | confirmed |
 
 Ask the user to confirm or correct:
 
-1. **Training script path** — the main entry point
-2. **Validation script** — path or "none"
-3. **Dataset path** — where the training data lives
-4. **Model path/ID** — pretrained model location
-5. **GPU configuration** — number of GPUs, mixed precision preference
-6. **Initial hyperparameters** — learning rate, epochs, batch size (suggest reasonable defaults based on framework)
-7. **Python command** — `uv run python`, `python3`, or other
+1. **Entry point** — the main execution script/command
+2. **Verification step** — how to verify success, or "none"
+3. **Input/data path** — where input data or dependencies live
+4. **Key configuration** — essential config values for the process
+5. **Runtime environment** — runtime, package manager, etc.
+6. **Initial parameters** — conservative initial values for debug-first run (suggest reasonable defaults)
+7. **Execution command** — the full command to run the process
 
 Structure the question so the user can quickly confirm defaults or override specific values.
 
@@ -176,25 +199,25 @@ Project: <project name>
 
 ## config.sh
 - [ ] No `<placeholder>` strings remain (no `<...>` literals)
-- [ ] `MAX_STEPS="10"` is set for debug-first approach
 - [ ] `LLM_TIMEOUT_SECONDS` is defined
-- [ ] Every variable referenced in PROMPT.md's training command is defined here
-- [ ] Variable names match the training script's actual CLI argument names
+- [ ] `MAX_LLM_FAILURES` is defined
+- [ ] Every variable referenced in PROMPT.md's execution command is defined here
+- [ ] Variable names match the project's actual configuration names
 
 ## PROMPT.md
 - [ ] Anti-recursion warning present near the top
-- [ ] `SMOKE_TEST` phase defined between `SETUP` and `TRAINING`
-  - [ ] `SMOKE_TEST` runs training with `MAX_STEPS=1` (hardcoded, overrides config)
-  - [ ] Pass criteria stated: exit code 0 AND log contains ≥1 step indicator
-  - [ ] On PASS → transitions to `TRAINING`
+- [ ] `SMOKE_TEST` phase defined between `SETUP` and the main execution phase
+  - [ ] `SMOKE_TEST` runs a minimal/quick version of the target process
+  - [ ] Pass criteria stated: exit code 0 AND output contains expected indicator
+  - [ ] On PASS → transitions to main execution phase
   - [ ] On FAIL → transitions to `ADJUSTING` with "SMOKE_TEST failed: <error>"
   - [ ] If failure originated in SMOKE_TEST, ADJUSTING sends phase back to `SMOKE_TEST` (repeat gate)
-- [ ] All phases present: SETUP, SMOKE_TEST, TRAINING, VALIDATING, ANALYZING, ADJUSTING, DONE
-- [ ] TRAINING section contains exact command using `config.sh` variables
-- [ ] VALIDATING section contains exact command or explicit skip notice
+- [ ] Core phases present (reference names or project-appropriate custom names)
+- [ ] Main execution section contains exact command using `config.sh` variables
+- [ ] Verification/checking section contains exact command or explicit skip notice
 - [ ] `## Known Errors` section present (E1 macOS timeout included if applicable)
 - [ ] `## action.sh Rules` section present
-- [ ] `SMOKE_TEST` explicitly states `MAX_STEPS=1` is the only allowed hardcoded exception
+- [ ] `SMOKE_TEST` explicitly states minimal execution as the only allowed hardcoded exception
 - [ ] PROMPT.md self-correction protocol present in ADJUSTING section (Step 2.5 or dedicated subsection)
 
 ## decisions.md
@@ -221,47 +244,55 @@ Project: <project name>
 
 **Tools**: `Read`, `Write`
 
-Create `ralph/config.sh` with shell variables grouped by category. Follow this structure:
+Create `ralph/config.sh` with shell variables grouped by category. The LLM generates project-appropriate variables based on the target process type.
 
+**Fixed variables** (always present):
 ```bash
 #!/usr/bin/env bash
 # Ralph Loop Configuration
 # Edit these values BEFORE running: bash ralph/run.sh
 # ──────────────────────────────────────────────────────────
 
-# ── Model ──
-MODEL_ID="<discovered or user-specified>"
-MODEL_BASE_PATH="<path to pretrained models>"
-
-# ── Dataset ──
-DATASET_PATH="<discovered dataset path>"
-# ... other dataset-specific variables ...
-
-# ── Training ──
-LEARNING_RATE=<suggested default>
-NUM_EPOCHS=<suggested default>
-MAX_STEPS="10"               # ALWAYS start with 10 for debug-first approach
-GRADIENT_ACCUMULATION_STEPS=1
-
-# ── GPU / Distributed ──
-NUM_GPUS=<detected>
-MIXED_PRECISION="<suggested>"
-
-# ── Output ──
-OUTPUT_PATH="./models/train/<project-specific>"
-LOG_EVERY=10
-
-# ── Loop Safety ──
+# ── Loop Safety (fixed) ──
 LLM_TIMEOUT_SECONDS=600  # max seconds for one LLM turn (0 disables timeout)
+MAX_LLM_FAILURES=3       # consecutive LLM failures before abort
+```
+
+**Project-specific variables** (LLM generates based on discovered process):
+
+The LLM should add variables appropriate for the project type. Examples:
+
+```bash
+# ── ML Training Example ──
+# MODEL_ID="<model name>"
+# DATASET_PATH="<dataset path>"
+# LEARNING_RATE=5e-5
+# NUM_EPOCHS=3
+# MAX_STEPS="10"                # debug-first: start small
+# GRADIENT_ACCUMULATION_STEPS=1
+# NUM_GPUS=1
+# MIXED_PRECISION="fp16"
+# OUTPUT_PATH="./models/train/<project>"
+
+# ── E2E Test Example ──
+# TEST_SUITE="<test suite path>"
+# TEST_CONFIG="<config path>"
+# PARALLEL_WORKERS=1            # debug-first: single worker
+# TIMEOUT_PER_TEST=60
+
+# ── Build Pipeline Example ──
+# BUILD_TARGET="<target>"
+# BUILD_CONFIG="debug"          # debug-first: debug build
+# ARTIFACT_PATH="./build/output"
 ```
 
 **Key rules:**
-- `MAX_STEPS="10"` always — first run is a quick sanity check
-- Set `LLM_TIMEOUT_SECONDS` to bound a single LLM turn and avoid indefinite hangs
+- `LLM_TIMEOUT_SECONDS` and `MAX_LLM_FAILURES` are always present
+- Set initial parameters conservatively for debug-first approach
 - Group variables by category with comment headers
-- Use descriptive variable names matching the training script's CLI args
+- Use descriptive variable names matching the project's actual configuration
 - Include comments explaining non-obvious variables
-- Only include variables that the training script actually uses
+- Only include variables that the target process actually uses
 
 ---
 
@@ -276,22 +307,24 @@ Find and read `ralph-loop-concept.md` by globbing for `**/.claude/skills/ralph-l
 
 This contains the generic skeleton: state machine, action.sh rules, iteration protocol, error patterns, anti-recursion warning.
 
+> **Note**: `ralph-loop-concept.md` uses ML training examples, but the pattern applies to any long-running process. Adapt phase names, commands, and error patterns to fit the project's process type.
+
 ### 4.2 Generate the PROMPT.md
 
 Structure the PROMPT.md as follows:
 
 ```markdown
-# Ralph Loop: <Project Name> Training
+# Ralph Loop: <Project Name>
 
-IMPORTANT: Do NOT invoke any skills, modes, or slash commands. Do NOT use the Skill tool. You are inside a standalone training automation loop — not an interactive session.
+IMPORTANT: Do NOT invoke any skills, modes, or slash commands. Do NOT use the Skill tool. You are inside a standalone automation loop — not an interactive session.
 
-You are running inside an automated training loop. The loop structure is:
+You are running inside an automated process debugging loop. The loop structure is:
 
 [... core concept from reference ...]
 
 **Your job**: Read state, diagnose, then output `ralph/action.sh` and update `ralph/state.md`. Exit immediately after.
 
-**DO NOT** run training or long commands yourself. Write them into `ralph/action.sh` instead.
+**DO NOT** run long commands yourself. Write them into `ralph/action.sh` instead.
 
 ## Step-by-step for EVERY iteration
 
@@ -300,48 +333,51 @@ You are running inside an automated training loop. The loop structure is:
 ## Project Context
 
 - **Config**: `ralph/config.sh` (user edits before starting the loop)
-- **Python**: Always use `<detected python command>` in action.sh
-- **Validation script**: `<path or "none — skip VALIDATING phase">`
+- **Runtime**: Always use `<detected runtime command>` in action.sh
+- **Verification**: `<path or "none — skip CHECKING phase">`
 - **Results dir**: `ralph/results/` (action.sh should write outputs here)
-- **Environment**: `_sdd/env.md` (if it exists — read it for Python env setup, required env variables, and runtime configuration before writing action.sh)
+- **Environment**: `_sdd/env.md` (if it exists — read it for runtime env setup, required env variables, and runtime configuration before writing action.sh)
 
 ## State Machine
+
+> Reference phases: SETUP / SMOKE_TEST / EXECUTING / CHECKING / ANALYZING / ADJUSTING / DONE
+> EXECUTING = main process (training, testing, building, etc.)
+> CHECKING = result verification (validation, assertion, artifact checking)
+> Customize phase names to fit your project (e.g., TRAINING instead of EXECUTING, VALIDATING instead of CHECKING).
 
 ### SETUP
 [... generic setup checks, customized for this project's requirements ...]
 
 ### SMOKE_TEST
 
-**Purpose**: Verify the training pipeline runs end-to-end before committing to full training.
+**Purpose**: Verify the target process runs end-to-end before committing to full execution.
 
 Write `action.sh` to:
-1. Run the training command with `MAX_STEPS=1` (hardcode the value — do not use `${MAX_STEPS}`)
+1. Run a minimal/quick version of the target process (e.g., ML: 1 training step; tests: single test; build: minimal target)
 2. Save output to `ralph/results/smoke_test.log` (use `2>&1 | tee`)
-3. After the run, grep the log for a step/loss indicator:
-   - If structured logging: look for `[TRAIN] event=step`
-   - If raw logging: look for `loss=` or `step 1` or equivalent
+3. After the run, check the log for a success indicator appropriate to the process type
 
 **Acceptance criteria** (BOTH must pass):
 - Exit code = 0
-- `ralph/results/smoke_test.log` contains at least one step completion indicator
+- `ralph/results/smoke_test.log` contains at least one expected output indicator
 
-On PASS → set `phase: TRAINING` in state.md, note "Smoke test passed (1 step)."
+On PASS → set phase to the main execution phase in state.md
 On FAIL → set `phase: ADJUSTING` in state.md, note "SMOKE_TEST failed: <first error from log>"
 
 **Repeat gate rule**:
-- If ADJUSTING fixes a failure that originated in SMOKE_TEST, set phase back to `SMOKE_TEST` and rerun the 1-step smoke test.
-- Do not transition to `TRAINING` until SMOKE_TEST passes.
+- If ADJUSTING fixes a failure that originated in SMOKE_TEST, set phase back to `SMOKE_TEST` and rerun the smoke test.
+- Do not transition to the main execution phase until SMOKE_TEST passes.
 
-[Note: `MAX_STEPS=1` in SMOKE_TEST is hardcoded in action.sh — it does not use `${MAX_STEPS}` from config.sh, which is set to 10 for the full debug run. This is the only intentional hardcoded-value exception to the general config-variable rule. Customize the step indicator grep pattern based on whether the project uses structured `[TRAIN]` logging or raw log output. SMOKE_TEST is a repeat gate: after ADJUSTING fixes a smoke failure, return to SMOKE_TEST until it passes.]
+[Note: The minimal execution in SMOKE_TEST is hardcoded in action.sh — it does not use the full-scale parameters from config.sh. This is the only intentional hardcoded-value exception to the general config-variable rule. SMOKE_TEST is a repeat gate: after ADJUSTING fixes a smoke failure, return to SMOKE_TEST until it passes.]
 
-### TRAINING
-[... exact training command using config variables, specific to this project ...]
-[... structured log parsing if [TRAIN] events exist, or raw log parsing ...]
+### <Main Execution Phase> (e.g., TRAINING, EXECUTING, TESTING, BUILDING)
+[... exact execution command using config variables, specific to this project ...]
+[... structured log parsing if available, or raw log parsing ...]
 
-### VALIDATING
-[... exact validation command, or note that validation is skipped ...]
-- Before generating a new validation action, check if existing validation output already determines pass/fail.
-- If validation action exit code is `0` but required validation output file is still missing, transition to `ADJUSTING` (root cause: output-not-produced) instead of repeating the same validation action indefinitely.
+### <Verification Phase> (e.g., VALIDATING, CHECKING)
+[... exact verification command, or note that verification is skipped ...]
+- Before generating a new verification action, check if existing output already determines pass/fail.
+- If verification action exit code is `0` but required output is still missing, transition to `ADJUSTING` (root cause: output-not-produced) instead of repeating the same action indefinitely.
 
 ### ANALYZING
 [... what to analyze: project-specific metrics, output files ...]
@@ -368,7 +404,7 @@ Not allowed: change state machine structure, remove phases, rewrite core protoco
 
 ## action.sh Rules
 
-[... 10 rules from reference, with project-specific Python command ...]
+[... 10 rules from reference, with project-specific runtime command ...]
 
 ## Decision Log
 
@@ -398,13 +434,12 @@ Each iteration, append exactly one entry:
 ```
 
 **Key customizations per project:**
-- The SMOKE_TEST section's grep pattern must match the project's actual log format (structured `[TRAIN] event=step` or raw `loss=`/`step 1`)
 - The SMOKE_TEST section must enforce repeat-gate behavior (`ADJUSTING -> SMOKE_TEST` for smoke-origin failures)
-- The SMOKE_TEST section must call out `MAX_STEPS=1` as an explicit exception to the no-hardcoding rule
-- The TRAINING section must contain the **exact command** to run training, using config variables
-- The VALIDATING section must contain the **exact command** to run validation (or be marked as skipped), plus artifact-driven transition rules to prevent infinite loops
-- Log parsing instructions must match the project's actual log format
-- Error patterns should include project-specific issues (e.g., specific dataset format errors, model loading issues)
+- The SMOKE_TEST section must call out the minimal execution as an explicit exception to the no-hardcoding rule
+- The main execution section must contain the **exact command** to run the process, using config variables
+- The verification section must contain the **exact command** to verify results (or be marked as skipped), plus artifact-driven transition rules to prevent infinite loops
+- Log/output parsing instructions must match the project's actual output format
+- Error patterns should include project-specific issues
 
 ### 4.3 Generate `## Known Errors` Section in PROMPT.md
 
@@ -423,8 +458,8 @@ After the ADJUSTING section, add a `## Known Errors (Confirmed + Fixed)` section
 ```
 
 **Add project-specific errors** discovered during Step 1 (code discovery):
-- If the project imports packages from sibling directories (not in the venv), add a PYTHONPATH error entry
-- If the project requires specific directories to exist at runtime (e.g., `./data/`, `./outputs/`), add a missing-directory entry
+- If the project imports packages from sibling directories (not in the runtime environment), add a path/import error entry
+- If the project requires specific directories to exist at runtime, add a missing-directory entry
 - If there are known schema or API compatibility issues from spec/README, add them
 
 The LLM inside the ralph loop checks this section first in ADJUSTING (Step 0 of the ADJUSTING protocol), so pre-populating it with anticipated errors reduces investigation turns significantly.
@@ -493,20 +528,20 @@ For each criterion in `ralph/CHECKS.md`, perform a targeted check:
 
 **config.sh**:
 - Check for remaining placeholders: `<[a-zA-Z_][a-zA-Z0-9_]*>` 패턴 매칭 — expect 0 occurrences
-- Check `MAX_STEPS="10"` is present
 - Check `LLM_TIMEOUT_SECONDS` is defined
-- Check every variable referenced in PROMPT.md's TRAINING command is defined in config.sh
-- Check variable names align with training script CLI argument names
+- Check `MAX_LLM_FAILURES` is defined
+- Check every variable referenced in PROMPT.md's execution command is defined in config.sh
+- Check variable names align with project configuration names
 
 **PROMPT.md**:
 - Check anti-recursion warning: grep for `Do NOT invoke`
 - Check SMOKE_TEST phase: grep for `SMOKE_TEST`
-- Check SMOKE_TEST hardcoded rule: grep for `MAX_STEPS=1` and confirm it does not use `${MAX_STEPS}`
-- Check SMOKE_TEST pass criteria: grep for both `Exit code = 0` and `step completion indicator`
+- Check SMOKE_TEST minimal execution rule: confirm smoke test uses a minimal/quick execution
+- Check SMOKE_TEST pass criteria: grep for both `Exit code = 0` and expected output indicator
 - Check SMOKE_TEST repeat gate: confirm `ADJUSTING -> SMOKE_TEST` behavior is written
-- Check all phases present: grep for SETUP, SMOKE_TEST, TRAINING, VALIDATING, ANALYZING, ADJUSTING, DONE
-- Check TRAINING section includes exact command using config variables
-- Check VALIDATING section includes exact command or explicit skip
+- Check core phases present: confirm SETUP, SMOKE_TEST, a main execution phase, ANALYZING, ADJUSTING, DONE exist (using reference names or project-appropriate custom names)
+- Check main execution section includes exact command using config variables
+- Check verification section includes exact command or explicit skip
 - Check Known Errors section: grep for `## Known Errors`
 - Check action.sh Rules section: grep for `## action.sh Rules`
 - Check PROMPT.md self-correction: grep for `PROMPT_FIX` or `Self-Correction` or `self-correction`
@@ -541,24 +576,21 @@ Ralph loop initialized (TDD verified)!
 
 Files created:
   ralph/CHECKS.md    — Acceptance criteria (all criteria verified ✅)
-  ralph/config.sh    — Training configuration (edit before running)
-  ralph/PROMPT.md    — LLM instructions for the training loop
+  ralph/config.sh    — Process configuration (edit before running)
+  ralph/PROMPT.md    — LLM instructions for the automation loop
   ralph/run.sh       — Loop controller script
   ralph/state.md     — Initial state (SETUP, iteration 0)
   ralph/results/     — Output directory
 
-Loop phases: SETUP -> SMOKE_TEST -> TRAINING -> VALIDATING -> ANALYZING -> DONE
+Loop phases: SETUP -> SMOKE_TEST -> [execution] -> [checking] -> ANALYZING -> DONE
 
 Next steps:
-  1. Review and edit ralph/config.sh (especially dataset paths and model paths)
+  1. Review and edit ralph/config.sh (especially paths and key parameters)
   2. Resume run: bash ralph/run.sh
   3. Fresh restart (clear old outputs): bash ralph/run.sh --reset
-  4. The loop will SMOKE_TEST (1 step) before TRAINING (MAX_STEPS=10)
+  4. The loop will SMOKE_TEST (minimal run) before full execution
   5. Ctrl+C to stop at any time
 ```
-
-Remind user that `MAX_STEPS="10"` is for the debug training run after smoke test passes —
-increase it (or set to empty for unlimited) once the first full run succeeds.
 
 ---
 
@@ -572,8 +604,8 @@ increase it (or set to empty for unlimited) once the first full run succeeds.
    |------|------|
    | 생성 파일 | 5개 + results/ |
    | CHECKS.md 상태 | N/N 통과 |
-   | 감지 프레임워크 | PyTorch Lightning |
-   | Phase 구성 | SETUP -> SMOKE_TEST -> TRAINING -> ... -> DONE |
+   | 프로세스 타입 | <detected type> |
+   | Phase 구성 | SETUP -> SMOKE_TEST -> [execution] -> ... -> DONE |
 
 2. PROMPT.md 핵심 섹션 요약 출력
 
@@ -586,11 +618,11 @@ increase it (or set to empty for unlimited) once the first full run succeeds.
 
 | 상황 | 대응 |
 |------|------|
-| 학습 스크립트 미발견 | 오류 보고 후 스킬 종료 (train*.py 파일 확인 안내) |
+| 대상 프로세스 진입점 미발견 | 오류 보고 후 스킬 종료 (실행 가능한 스크립트/명령 확인 안내) |
 | `_sdd/spec` 디렉토리 미존재 | 코드 기반 탐색으로 진행, 사용자에게 경고 |
 | `ralph-loop-concept.md` 참조 파일 미발견 | 오류: 스킬 설치 불완전, 메시지와 함께 중단 |
 | `run.sh.example` 참조 파일 미발견 | 오류: 스킬 설치 불완전, 메시지와 함께 중단 |
 | 사용자 미확인 (2+ 라운드) | 부분 탐색 결과 저장, 수동 설정 안내 |
 | CHECKS.md 검증 실패 (Step 7) | 실패 파일 수정, 재검증 (최대 2라운드) |
-| 복수 학습 스크립트 발견 | 가장 유력한 스크립트 자동 선택 (파일명/import 분석 기반), 판단 근거를 출력에 기록 |
-| 프레임워크 감지 모호 | import 빈도/패턴 분석으로 자동 선택, 판단 근거를 출력에 기록 |
+| 복수 진입점 발견 | 가장 유력한 진입점 자동 선택 (파일명/구조 분석 기반), 판단 근거를 출력에 기록 |
+| 프로세스 타입 감지 모호 | 사용자 요청 컨텍스트와 프로젝트 구조 분석으로 자동 선택, 판단 근거를 출력에 기록 |

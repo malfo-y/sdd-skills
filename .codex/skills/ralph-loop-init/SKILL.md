@@ -1,7 +1,7 @@
 ---
 name: ralph-loop-init
-description: Use this skill when the user asks to "init ralph", "ralph loop", "set up ralph loop", "training loop", "training debug loop", "create ralph", "set up training debug loop", "automated training loop", or wants to generate a ralph/ directory for LLM-driven automated ML training debugging.
-version: 1.2.0
+description: Use this skill when the user asks to "init ralph", "ralph loop", "set up ralph loop", "training loop", "training debug loop", "debug loop", "long-running test loop", "e2e loop", "create ralph", "set up training debug loop", "automated training loop", or wants to generate a ralph/ directory for LLM-driven automated long-running process debugging.
+version: 1.3.0
 ---
 
 # Ralph Loop Initialization (Wrapper)
@@ -16,7 +16,7 @@ version: 1.2.0
 
 ## Output Contract
 
-- 기본 산출물: the generated `ralph/` workspace
+- 기본 산출물: the generated `ralph/` workspace for long-running process debugging
 - 세부 workflow, decision gate, hard rule, nested writing 규칙은 `ralph_loop_init` agent 정의가 담당한다.
 
 ## Execution

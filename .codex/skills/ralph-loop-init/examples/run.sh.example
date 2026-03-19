@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# Ralph loop for ML training: LLM thinks -> script executes -> repeat
+# Ralph loop for long-running process debugging: LLM thinks -> script executes -> repeat
 #
 # Flow per iteration:
 #   1. LLM reads state.md + results, diagnoses, writes action.sh
-#   2. action.sh executes (training, validation, etc.) -- may take hours
+#   2. action.sh executes (tests, training, build, verification, etc.) -- may take hours
 #   3. action.sh saves results to ralph/results/
 #   4. Loop restarts -> LLM reads new results
 #
@@ -170,7 +170,7 @@ sys.exit(completed.returncode)
 PY
 }
 
-VALID_PHASES="SETUP SMOKE_TEST TRAINING VALIDATING ANALYZING ADJUSTING DONE"
+VALID_PHASES="SETUP SMOKE_TEST EXECUTING CHECKING TRAINING VALIDATING ANALYZING ADJUSTING DONE"
 
 validate_state_file() {
   local state_file="ralph/state.md"

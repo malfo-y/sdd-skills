@@ -1,32 +1,24 @@
 # _COMMENTS
 
-Generated at: 2026-03-19T01:14:38.382Z
+Generated at: 2026-03-19T06:26:20.153Z
 Total comments: 1
 
 ## Comments
 
-### .claude/skills/sdd-autopilot/references/sdd-reasoning-reference.md:L103-L103
+### _sdd/discussion/discussion_ralph_generalization.md:L27-L27
 
-8개?
+LLM이 프로젝트를 분석해서 자유롭게 phase들을 만들되, 일반적으로 이런 phase들이 있다고 hint 정도로 가이드.
 
-- anchor.hash: 7f6ebc3b
-- anchor.snippet: 9개
-- anchor.before:                                                    ralph-loop-init (장시간 테스트)
-```
+- anchor.hash: 3fbc497f
+- anchor.snippet: 정. 추가/제거 불필요. LL
+- anchor.before: 빈번한 유스케이스이므로 기존 동작이 깨지면 안 됨 | 1 |
 
-discussion은 어디서든 선행 가능 (방향 불확실 시).
-guide-create, spec-review는 파이프라인 끝에 선택적 추가.
-write-phased는 다른 스킬의 하위 도구로 중첩 호출.
+## 미결 질문 → 해소 (Resolved Open Questions)
 
-### 2.2 오케스트레이션 대상 스킬 (
-- anchor.after: )
-
-autopilot이 생성한 오케스트레이터 파이프라인에 조합하는 스킬.
-
-> **전제 조건**: 글로벌 스펙(`_sdd/spec/main.md`)이 존재해야 한다. 스펙이 없으면 오케스트레이터 생성을 중단하고, 사용자에게 `/spec-create` 실행을 안내한다.
-
-#### feature-draft
-
-- **Role**: 스펙 패치 초안 + 구현 계획을 한 번에 생성
-- **Agent*
-- createdAt: 2026-03-19T01:13:45.394Z
+| # | 질문 | 결정 |
+|---|------|------|
+| 1 | 레퍼런스 phase set 구성 | **SETUP / SMOKE_TEST / EXECUTING / CHECKING / ANALYZING / ADJUSTING / DONE** 7개로 확
+- anchor.after: M이 프로젝트에 따라 이 레퍼런스를 참고하여 커스터마이징. |
+| 2 | Step 1 프로젝트 타입 자동 감지 기준 | **LLM 판단에 위임**. 고정 파일 패턴 매칭(train*.py 등) 대신 LLM이 프로젝트를 분석해서 적절한 탐색 전략을 직접 결정. |
+| 3 | `ralph-loop-concept.md` 범용화 여부 | **그대로 유지**. ML 예시 기반으로 남기되, agent
+- createdAt: 2026-03-19T06:25:59.786Z

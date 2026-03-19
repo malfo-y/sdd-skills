@@ -95,7 +95,7 @@ SDD 스펙은 단순 문서가 아니라, 문제/동기/핵심 설계/기대 동
 
 feature_draft -> spec_update_todo -> implementation_plan -> implementation -> implementation_review -> spec_update_done
                                                                                        |  (review-fix loop)
-                                                                             ralph_loop_init (장시간 테스트)
+                                                                             ralph_loop_init (장시간 검증/디버깅)
 ```
 
 discussion은 어디서든 선행 가능 (방향 불확실 시).
@@ -180,13 +180,13 @@ autopilot이 생성한 오케스트레이터 파이프라인에 조합하는 스
 
 #### ralph_loop_init
 
-- **Role**: 장시간 자동 디버깅 루프 설정 + 실행
+- **Role**: 장시간 프로세스 자동 디버깅 루프 설정 + 실행
 - **Agent**: `ralph_loop_init`
-- **Input**: 코드 파일 + 테스트/학습 명령
+- **Input**: 코드 파일 + 실행/검증 명령
 - **Output**: `ralph/` 디렉토리 (run.sh, state.md, PROMPT.md)
-- **Pre-condition**: 구현 완료 + 장시간 테스트가 필요한 상황
+- **Pre-condition**: 구현 완료 + 장시간 실행/반복 디버깅/환경 격리가 필요한 상황
 - **Post-condition**: ralph/ 존재 + run.sh 실행 가능 + state.md 존재
-- **Reasoning note**: 테스트 1회 실행 > 수십분 시 사용 (ML 학습, 대규모 E2E 등).
+- **Reasoning note**: 단일 실행이 길거나 반복 디버깅이 필요한 경우 사용 (ML 학습, 대규모 E2E, 빌드 파이프라인 등).
 
 ### 2.3 비오케스트레이션 스킬 (참고용 목록)
 
@@ -259,7 +259,7 @@ feature_draft -> spec_update_todo -> implementation_plan -> implementation -> re
 
 - **스펙 없음**: autopilot은 중단하고 `/spec-create` 실행을 안내
 - **방향 불확실**: discussion을 선행 (autopilot에서는 인라인)
-- **ML/장시간 테스트**: `ralph_loop_init`을 테스트 단계에 배치
+- **장시간 실행/반복 디버깅/환경 격리 필요**: `ralph_loop_init`을 테스트 단계에 배치
 - **부분 파이프라인**: 사용자가 시작점/종료점 지정 시 해당 범위만 구성
 - **파이프라인 재개**: 기존 로그/산출물 스캔 후 중단점부터 재개
 
@@ -272,12 +272,15 @@ feature_draft -> spec_update_todo -> implementation_plan -> implementation -> re
 
 ### 2.6 테스트 전략 판단
 
-| 조건 | 전략 |
-|------|------|
-| 테스트 1회 수분 이내 + 로컬 완결 + 외부 의존 없음 | **인라인 디버깅** |
-| 테스트 수십분+ / GPU/대용량 / 외부 CI 필요 | **ralph_loop_init** |
+고정 분기표가 아니라 힌트 기반 가이드라인으로 판단한다.
 
-| 프로젝트 유형 | 기본 전략 |
-|-------------|----------|
-| 웹 백엔드, 프론트엔드, CLI | 인라인 디버깅 |
-| ML/DL, 모바일(빌드), 인프라/DevOps | ralph_loop_init |
+| 프로세스 특성 | 전략 |
+|--------------|------|
+| 1회 실행이 수분 이내이고 로컬에서 빠르게 재시도 가능함 | **인라인 디버깅** |
+| 단일 실행이 길거나, 반복 수정-재실행이 필요하거나, 환경 격리가 중요함 | **ralph_loop_init** |
+
+판단 힌트:
+- 장시간 실행 (예: 대규모 E2E, 긴 빌드, ML 학습)
+- 실행 결과를 보고 여러 번 조정해야 하는 루프
+- 별도 환경/컨테이너/장시간 세션에서 돌리는 편이 안전한 경우
+- 단일 턴에서 끝내기 어려운 flaky 또는 느린 검증
