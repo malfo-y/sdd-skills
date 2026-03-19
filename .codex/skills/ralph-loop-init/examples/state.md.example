@@ -1,7 +1,0 @@
-phase: SETUP
-iteration: 0
-initialized_at: __INITIALIZED_AT_UTC__
-errors: []
-last_checkpoint: null
-validation_results: null
-notes: Initial state. Ralph loop initialized.
