@@ -126,7 +126,7 @@ ELSE → 사용자 피드백 반영 후 계획 수정 (최대 2라운드)
 
 #### 파일 작성 위임
 
-규모가 큰 재작성 시 출력 문서 작성을 `write-phased` 서브에이전트에 위임한다. 서브에이전트 호출 시 아래 Output Format 전체와 작성에 필요한 맥락(수집된 정보, 분석 결과 등)을 프롬프트에 포함한다.
+규모가 큰 재작성 시 출력 문서 작성을 `write-phased` 서브에이전트에 위임한다. 서브에이전트 호출 시 아래 Output Format 전체와 작성에 필요한 맥락(수집된 정보, 분석 결과 등)을 프롬프트에 포함한다. 멀티파일 분할 시의 write-phased 호출 패턴은 Step 5 '멀티파일 write-phased 위임' 참조.
 
 **Tools**: `Bash (mkdir -p, cp)`, `Write`
 
@@ -196,6 +196,31 @@ Rules:
 - 각 컴포넌트 파일/디렉토리는 단일 주제 책임
 - 상대 링크 표준화 및 깨진 링크 수정
 - 파일명은 컴포넌트 이름 그대로 사용 (번호 접두사 불필요)
+
+#### 멀티파일 write-phased 위임
+
+중규모/대규모 분할 시 인덱스-먼저 패턴:
+
+**Step 5-1**: main.md (인덱스) 순차 작성
+
+```
+Agent(subagent_type="write-phased", prompt="main.md 인덱스 재작성.
+  리라이트 계획 + 컴포넌트 링크
+  [Output Format + 수집된 정보]")
+```
+
+**Step 5-2**: 컴포넌트 파일 병렬 작성 (main.md 완성 후)
+
+각 Agent에 포함: 파일 경로, Keep/Move/Split 매핑, 기존 내용, 템플릿, main.md 구조
+
+```
+Agent("_sdd/spec/<comp_1>.md [기존 내용 + 정리 방향]")  ─┐
+Agent("_sdd/spec/<comp_2>.md [기존 내용 + 정리 방향]")  ─┤ 동시
+```
+
+> 독립 컴포넌트 2개 이상이면 병렬 디스패치.
+
+소규모 (500줄 이하): 분할 불필요 → Step 3의 단일 write-phased 호출로 처리.
 
 ### Step 6: Ambiguity and Problem Reporting
 

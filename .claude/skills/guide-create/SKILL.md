@@ -175,6 +175,8 @@ Never invent confirmed behavior that is unsupported by spec or code.
 
 출력 문서 작성 시 `write-phased` 서브에이전트에 작업을 위임한다. 서브에이전트 호출 시 아래 Required sections 전체와 작성에 필요한 맥락(스펙 컨텍스트, 코드 증거, Step 2-3 분석 결과 등)을 프롬프트에 포함한다. `references/template-compact.md`의 Writing Rules와 §1-§5 구조를 준수하도록 지시한다.
 
+#### 단일 기능
+
 ```
 Agent(
   subagent_type="write-phased",
@@ -186,6 +188,20 @@ Agent(
   [아래 Required sections(§1-§5)과 Step 2-3에서 수집한 맥락을 여기에 포함]"
 )
 ```
+
+#### 복수 기능 (Hard Rule #7: per-feature output)
+
+가이드 파일 간 의존 관계 없음 → 인덱스-먼저 패턴 불필요, 전체 병렬:
+
+각 Agent에 포함: 파일 경로, 스펙 컨텍스트, 코드 증거+citation, 템플릿, 언어/스타일
+
+```
+Agent("guide_<slug_a>.md [기능 A: 스펙 컨텍스트 + 코드 증거 + §1-§5 + 스타일]")  ─┐
+Agent("guide_<slug_b>.md [기능 B: 스펙 컨텍스트 + 코드 증거 + §1-§5 + 스타일]")  ─┤ 동시
+Agent("guide_<slug_c>.md [기능 C: 스펙 컨텍스트 + 코드 증거 + §1-§5 + 스타일]")  ─┘
+```
+
+> 독립 기능 가이드 2개 이상이면 병렬 디스패치.
 
 #### Required sections
 

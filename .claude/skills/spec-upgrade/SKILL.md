@@ -194,6 +194,8 @@ IF report_presented AND ambiguity_resolved → Step 4
 
 출력 문서 작성 시 `write-phased` 서브에이전트에 위임한다. 서브에이전트 호출 시 Step 4.3의 Whitepaper 구조 변환 규칙(§1-§8)과 작성에 필요한 맥락(Step 1 Gap 분석 결과, Step 2 코드 분석 결과, 기존 스펙 내용 등)을 프롬프트에 포함한다. `write-phased`가 내부적으로 skeleton→fill 2-페이즈 전략을 처리한다.
 
+#### 단일 파일 스펙
+
 ```
 Agent(
   subagent_type="write-phased",
@@ -204,6 +206,28 @@ Agent(
   [Step 4.3 Whitepaper 구조 변환 규칙과 Gap 분석/코드 분석 결과를 여기에 포함]"
 )
 ```
+
+#### 멀티파일 스펙 (main.md + 서브 파일)
+
+인덱스-먼저 패턴:
+
+**Step 4.3-1**: main.md (§1,§2,§3,§5,§8 보강) 순차 업그레이드
+
+```
+Agent(subagent_type="write-phased", prompt="main.md whitepaper 변환.
+  [Gap 분석 + 코드 분석 결과 + §1,§2,§3,§5,§8 변환 규칙]")
+```
+
+**Step 4.3-2**: 서브 파일 병렬 업그레이드 (main.md 완성 후)
+
+각 Agent에 포함: 파일 경로+기존 내용, Gap/코드 분석, 템플릿, main.md 구조
+
+```
+Agent("_sdd/spec/<sub_1>.md §4 보강 [기존 내용 + Gap 분석 + 템플릿]")  ─┐
+Agent("_sdd/spec/<sub_2>.md §4 보강 [기존 내용 + Gap 분석 + 템플릿]")  ─┤ 동시
+```
+
+> 독립 서브 파일 2개 이상이면 병렬 디스패치.
 
 ### Step 4: Backup & Upgrade (백업 및 업그레이드 실행)
 

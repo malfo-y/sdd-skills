@@ -269,6 +269,37 @@ ELSE → 미완료 항목 보완
 
 출력 문서 작성 시 `write-phased` 서브에이전트에 작업을 위임한다. 서브에이전트 호출 시 아래 Output Format 전체와 작성에 필요한 맥락(수집된 정보, 분석 결과 등)을 프롬프트에 포함한다.
 
+#### 단일 문서 (total_tasks <= 25)
+
+```
+Agent(subagent_type="write-phased", prompt="IMPLEMENTATION_PLAN.md 작성.
+  [Output Format + 수집된 정보]")
+```
+
+#### Phase별 분할 문서 (total_tasks > 25)
+
+인덱스-먼저 패턴:
+
+**Step 6-1**: 인덱스 파일 순차 작성
+
+```
+Agent(subagent_type="write-phased", prompt="IMPLEMENTATION_PLAN.md 인덱스 작성.
+  Overview/Scope/Components/Phase 요약 + Phase 파일 링크
+  [수집된 정보]")
+```
+
+**Step 6-2**: Phase 파일 병렬 작성 (인덱스 완성 후)
+
+각 Agent에 포함: 파일 경로, Phase 테마, 태스크+Target Files+의존성, 컴포넌트 정의
+
+```
+Agent("IMPLEMENTATION_PLAN_PHASE_1.md [Phase 1 태스크 + Target Files]")  ─┐
+Agent("IMPLEMENTATION_PLAN_PHASE_2.md [Phase 2 태스크 + Target Files]")  ─┤ 동시
+Agent("IMPLEMENTATION_PLAN_PHASE_N.md [Phase N 태스크 + Target Files]")  ─┘
+```
+
+> 독립 Phase 파일 2개 이상이면 병렬 디스패치.
+
 Present the final plan in this structure:
 
 ```markdown

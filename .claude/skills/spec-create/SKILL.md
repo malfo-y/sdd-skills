@@ -252,6 +252,10 @@ Before writing the spec, bootstrap guidance files if missing:
 
 출력 문서 작성 시 `write-phased` 서브에이전트에 위임한다. 서브에이전트 호출 시 `references/template-compact.md`의 스펙 템플릿 전체와 작성에 필요한 맥락(Step 2 분석 결과, 코드베이스 구조, 수집된 정보 등)을 프롬프트에 포함한다. `write-phased`가 내부적으로 skeleton→fill 2-페이즈 전략을 처리한다.
 
+> **`references/template-compact.md`를 Read로 읽는다.** 이 템플릿에 §1-§8 섹션 구조, Writing Rules(코드 발췌/인라인 citation/What-Why-How 트라이어드), 그리고 Modular Spec Guide가 정의되어 있다. 이 템플릿을 참조하여 스펙을 작성한다.
+
+##### 단일 파일 (소규모, 스펙 500줄 이하)
+
 ```
 Agent(
   subagent_type="write-phased",
@@ -263,7 +267,29 @@ Agent(
 )
 ```
 
-> **`references/template-compact.md`를 Read로 읽는다.** 이 템플릿에 §1-§8 섹션 구조, Writing Rules(코드 발췌/인라인 citation/What-Why-How 트라이어드), 그리고 Modular Spec Guide가 정의되어 있다. 이 템플릿을 참조하여 스펙을 작성한다.
+##### 멀티파일 (중규모 500-1500줄 / 대규모 1500줄+)
+
+Step 2 분석에서 결정된 컴포넌트 목록 기반, 인덱스-먼저 패턴:
+
+**Step 3-B-1**: main.md (인덱스) 순차 작성
+
+```
+Agent(subagent_type="write-phased", prompt="main.md 인덱스 작성.
+  목표/아키텍처 요약/컴포넌트 링크만.
+  [references/template-compact.md 템플릿 + Step 2 분석 결과]")
+```
+
+**Step 3-B-2**: 컴포넌트 파일 병렬 작성 (main.md 완성 후)
+
+각 Agent에 포함: 파일 경로, 컴포넌트 분석 결과, §4 템플릿, 언어/스타일, main.md 링크 구조
+
+```
+Agent("_sdd/spec/<comp_1>.md [컴포넌트 분석 + §4 템플릿 + 스타일]")  ─┐
+Agent("_sdd/spec/<comp_2>.md [컴포넌트 분석 + §4 템플릿 + 스타일]")  ─┤ 동시
+Agent("_sdd/spec/<comp_N>.md [컴포넌트 분석 + §4 템플릿 + 스타일]")  ─┘
+```
+
+> 독립 컴포넌트 2개 이상이면 병렬 디스패치.
 
 ## Spec Management Operations
 

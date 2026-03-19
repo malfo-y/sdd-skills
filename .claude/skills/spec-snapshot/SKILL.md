@@ -62,25 +62,42 @@ _sdd/snapshots/
 3. 타임스탬프 생성: `date +%Y-%m-%dT%H-%M` (로컬 시간)
 4. 스냅샷 디렉토리 생성: `mkdir -p _sdd/snapshots/<timestamp>_<lang>/`
 5. `_sdd/spec/` 아래 모든 `.md` 파일 목록 수집 (`prev/` 디렉토리 제외)
+6. 각 스펙 파일의 내용을 Read로 미리 읽어 둔다 (Step 2 병렬 디스패치 준비)
 
 ### Step 2: 스펙 파일 번역 및 저장
 
-**Tools**: `Read`, `Write`
+**Tools**: `Read`, `Agent` (write-phased)
 
-각 스펙 파일에 대해:
+각 스펙 파일의 번역을 `write-phased` 서브에이전트에 위임한다.
 
-1. 원본 파일 읽기
-2. 대상 언어로 번역 (원본 언어와 동일하면 번역 없이 복사)
-   - 마크다운 구조(헤딩, 테이블, 코드블록, 링크)는 그대로 유지
-   - 코드블록 내용은 번역하지 않음
-   - 파일 경로, 심볼명, 명령어는 번역하지 않음
-   - 섹션 헤딩은 번역하되, 앵커 링크가 깨지지 않도록 주의
-3. 원본과 동일한 상대 경로에 저장
+번역 규칙 (각 Agent 호출에 포함):
+- 마크다운 구조(헤딩, 테이블, 코드블록, 링크)는 그대로 유지
+- 코드블록 내용은 번역하지 않음
+- 파일 경로, 심볼명, 명령어는 번역하지 않음
+- 섹션 헤딩은 번역하되, 앵커 링크가 깨지지 않도록 주의
 
-파일 처리 순서:
-1. `main.md` (또는 프로젝트명 메인 스펙) 먼저
-2. 나머지 컴포넌트 스펙 파일
-3. `DECISION_LOG.md`
+#### 단일 파일 스펙
+
+```
+Agent(subagent_type="write-phased", prompt="번역:
+  원본: _sdd/spec/main.md → 대상: _sdd/snapshots/<ts>_<lang>/main.md
+  [원본 내용 + 대상 언어 + 번역 규칙]")
+```
+
+#### 멀티파일 스펙 (2개 이상)
+
+Step 1에서 모든 원본 파일을 먼저 Read한 후 병렬 디스패치.
+파일 간 번역에 의존 관계 없음 → 전체 병렬:
+
+```
+Agent("번역: main.md → <ts>_<lang>/main.md [내용]")           ─┐
+Agent("번역: <comp_1>.md → <ts>_<lang>/<comp_1>.md [내용]")   ─┤ 동시
+Agent("번역: DECISION_LOG.md → <ts>_<lang>/DECISION_LOG.md")  ─┘
+```
+
+> 독립 파일 2개 이상이면 병렬 디스패치.
+
+SUMMARY.md는 Step 3에서 모든 번역 완료 후 순차 생성.
 
 ### Step 3: SUMMARY.md 생성
 
