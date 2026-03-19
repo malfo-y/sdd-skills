@@ -62,82 +62,37 @@ ELSE -> Step 1 (코드 기반 탐색)
 
 ## Step 1: Discover the Target Process
 
-Analyze the project to identify the target process that needs automated debugging. Use repository evidence first, not project-type assumptions.
+프로젝트를 분석하여 자동 디버깅 대상 프로세스를 식별한다. 프로젝트 타입 가정이 아닌 레포지토리 증거를 우선 사용한다.
 
-### 1.1 Entry Point
+아래 5가지 항목을 파악한다:
 
-Identify the main entry point for the target process:
-- **ML training**: `train*.py`, `training*.py`, `run_training*.py`
-- **E2E/integration tests**: test config files, `Makefile`, `package.json` scripts, `pytest.ini`
-- **Build pipelines**: `Dockerfile`, `Makefile`, build scripts, CI config
-- **Other**: analyze project structure and user context to find the appropriate entry point
+| # | 항목 | 목표 | 미발견 시 |
+|---|------|------|----------|
+| 1 | **Entry Point** | 메인 진입점 (스크립트, 명령, 설정 파일) | → 스킬 종료 |
+| 2 | **Verification Step** | 성공 검증 방법 | → CHECKING phase 생략 |
+| 3 | **Input/Data Dependencies** | 필요한 입력, 데이터, 외부 의존성 | → 기록 후 진행 |
+| 4 | **Output Parsing** | 출력에서 상태 추출 방법 (구조화 로깅 여부) | → raw log 파싱 |
+| 5 | **Runtime Environment** | 실행 환경과 명령 (`_sdd/env.md` 우선) | → 프로젝트 파일에서 추론 |
 
-Read the main entry point script/config and understand the execution interface (CLI args, config files, environment variables).
-
-### 1.2 Verification Step
-
-Identify how to verify the process succeeded:
-- **ML training**: validation/evaluation scripts, metrics reports
-- **E2E tests**: assertion results, test reports
-- **Build pipelines**: artifact existence, build logs
-- **Other**: process-specific success criteria
-
-If no verification step exists, note this — `PROMPT.md` will skip `CHECKING` phase or generate a minimal verification step.
-
-### 1.3 Input/Data Dependencies
-
-Identify inputs and data dependencies:
-- **ML training**: dataset paths, data format
-- **E2E tests**: test fixtures, seed data, external service dependencies
-- **Build pipelines**: source files, dependency manifests, base images
-- **Other**: any required input files, data, or resources
-
-### 1.4 Output Parsing
-
-Determine how to parse process output for status monitoring:
-- If structured logging/report output exists, include exact parsing guidance in `PROMPT.md`
-- Otherwise instruct parsing raw log output
-
-### 1.5 Runtime Environment
-
-- If `_sdd/env.md` was read in Step 0, use its environment specification as the authoritative source
-- **Python**: check `pyproject.toml` for `uv`; fallback to `python3`
-- **Node.js**: check `package.json` for scripts; use `npm`, `yarn`, or `pnpm` accordingly
-- **Go**: check `go.mod`; use `go run` or `go build`
-- **Rust**: check `Cargo.toml`; use `cargo run` or `cargo build`
-- **Docker/Make**: check for `Dockerfile`, `Makefile`, `docker-compose.yml`
-- Default: infer from project structure
-
-### 1.6 Cross-Reference with Specs
-
-- Compare code discovery findings with spec information from Step 0
-- Specs provide richer context (why certain configurations, what metrics matter, what verification criteria apply)
-- Use spec information to fill gaps that code discovery alone cannot provide
+진입점을 읽고 실행 인터페이스(CLI args, config files, env vars)를 파악한다. Step 0에서 읽은 spec이 있으면 코드 탐색 결과와 교차 검증한다.
 
 **Decision Gate 1→2**:
 ```
 entry_point_found = 대상 프로세스 진입점 1개 이상 식별
-process_understood = 프로세스의 실행 방법과 검증 방법을 이해함
+process_understood = 실행 방법과 검증 방법을 이해함
 
 IF entry_point_found AND process_understood -> Step 2
-ELSE IF NOT entry_point_found -> 오류 보고: "대상 프로세스의 진입점을 찾을 수 없습니다. 실행 가능한 스크립트/명령을 확인하세요." -> 종료
+ELSE IF NOT entry_point_found -> 오류 보고 → 종료
 ELSE -> 부분 탐색 결과로 Step 2 진행, 미확인 항목 표시
 ```
 
 #### Context Management
 
-| Spec 크기 | 전략 | 구체적 방법 |
-|-----------|------|-------------|
-| < 200줄 | 전체 읽기 | 전체 파일 읽기 |
-| 200-500줄 | 전체 읽기 가능 | 전체 읽기, 필요 시 섹션별 |
-| 500-1000줄 | TOC 먼저, 관련 섹션만 | 상위 TOC 읽기 -> 관련 섹션만 선택 |
-| > 1000줄 | 인덱스만, 타겟 최대 3개 | 인덱스/TOC만 읽기 -> 타겟 섹션 최대 3개 |
-
-| 코드베이스 크기 | 전략 | 구체적 방법 |
-|----------------|------|-------------|
-| < 50 파일 | 자유 탐색 | 관련 파일 자유 탐색 |
-| 50-200 파일 | 타겟 탐색 | 후보 식별 후 타겟 파일 위주 확인 |
-| > 200 파일 | 최소 탐색 | 검색 위주 -> 최소한의 타겟 파일만 확인 |
+| 크기 | 전략 |
+|------|------|
+| Spec < 500줄 / 코드 < 50파일 | 전체 읽기 |
+| Spec 500+ / 코드 50-200 | TOC 먼저, 타겟만 읽기 |
+| Spec 1000+ / 코드 200+ | 인덱스만, 최대 3개 섹션 |
 
 ---
 
@@ -169,57 +124,34 @@ IF findings_presented -> Step 2.5 진행
 
 ## Step 2.5: Write `ralph/CHECKS.md`
 
-Before generating any files, create `ralph/` directory and write `ralph/CHECKS.md`.
-This document defines acceptance criteria for each generated file — 자동 검증용 체크리스트로, Step 7에서 프로그래밍적으로 검증한다.
+`ralph/` 디렉토리를 생성하고 `ralph/CHECKS.md`를 작성한다. Step 7에서 프로그래밍적으로 검증할 체크리스트다.
 
-Content to write:
-
----
 ```
 # Ralph Loop: Acceptance Criteria
 Generated: <current UTC timestamp>
 Project: <project name>
 
 ## config.sh
-- [ ] No `<placeholder>` strings remain (no `<...>` literals)
-- [ ] `LLM_TIMEOUT_SECONDS` is defined
-- [ ] `MAX_LLM_FAILURES` is defined
-- [ ] Every variable referenced in PROMPT.md's execution command is defined here
-- [ ] Variable names match the project's actual configuration names
+- [ ] No `<placeholder>` strings remain
+- [ ] `LLM_TIMEOUT_SECONDS` and `MAX_LLM_FAILURES` defined
+- [ ] PROMPT.md에서 참조하는 모든 변수가 정의됨
 
 ## PROMPT.md
-- [ ] Anti-recursion warning present near the top
-- [ ] `SMOKE_TEST` phase defined between `SETUP` and the main execution phase
-  - [ ] `SMOKE_TEST` runs a minimal/quick version of the target process
-  - [ ] Pass criteria stated: exit code 0 AND output contains expected indicator
-  - [ ] On PASS → transitions to main execution phase
-  - [ ] On FAIL → transitions to `ADJUSTING` with "SMOKE_TEST failed: <error>"
-  - [ ] If failure originated in SMOKE_TEST, ADJUSTING sends phase back to `SMOKE_TEST` (repeat gate)
-- [ ] Core phases present (reference names or project-appropriate custom names)
-- [ ] Main execution section contains exact command using `config.sh` variables
-- [ ] Verification/checking section contains exact command or explicit skip notice
-- [ ] `## Known Errors` section present (E1 macOS timeout included if applicable)
-- [ ] `## action.sh Rules` section present
-- [ ] `SMOKE_TEST` explicitly states minimal execution as the only allowed hardcoded exception
-- [ ] PROMPT.md self-correction protocol present in ADJUSTING section
-
-## decisions.md
-- [ ] PROMPT.md instructs LLM to read the most recent 15 entries from `ralph/results/decisions.md` each iteration (after state.md)
-- [ ] PROMPT.md instructs LLM to append to `ralph/results/decisions.md` each iteration (after updating state.md)
-- [ ] Decision entry format is specified in PROMPT.md (Iteration N, Observed, Decision, Reason, Evidence, Action)
-- [ ] Decision Evidence rule requires concrete artifacts (`exit code` and `log/artifact path`)
+- [ ] Anti-recursion warning present
+- [ ] SMOKE_TEST phase with repeat gate (ADJUSTING → SMOKE_TEST)
+- [ ] Core phases present (reference names or custom names)
+- [ ] Main execution command using config.sh variables
+- [ ] Known Errors section present
+- [ ] action.sh Rules section present
+- [ ] Decision log read/write instructions present
+- [ ] Self-correction protocol present
 
 ## run.sh
-- [ ] `--reset` flag behavior present (clears `ralph/results/`, rewrites `state.md`)
-- [ ] `LLM_TIMEOUT_SECONDS` sourced from `config.sh`
-- [ ] DONE phase detection present (loop exits when `phase: DONE`)
+- [ ] `--reset` flag, `LLM_TIMEOUT_SECONDS`, DONE detection present
 
 ## state.md
-- [ ] `phase: SETUP`
-- [ ] `iteration: 0`
-- [ ] `initialized_at` set to current UTC timestamp (no `__INITIALIZED_AT_UTC__` placeholder)
+- [ ] `phase: SETUP`, `iteration: 0`, valid `initialized_at` timestamp
 ```
----
 
 ---
 
@@ -271,155 +203,38 @@ MAX_LLM_FAILURES=3       # consecutive LLM failures before abort
 
 ## Step 4: Generate `ralph/PROMPT.md`
 
-This is the most critical file. It tells the LLM inside the ralph loop exactly what to do.
-
 ### 4.1 Read the Reference
 
 Prefer the matching skill path first (`../skills/ralph-loop-init/references/ralph-loop-concept.md` relative to this agent file), then fallback to:
 - `**/.codex/skills/ralph-loop-init/references/ralph-loop-concept.md`
 - `**/.claude/skills/ralph-loop-init/references/ralph-loop-concept.md`
 
-This contains the generic skeleton: state machine, action.sh rules, iteration protocol, error patterns, anti-recursion warning.
+State machine, action.sh rules, iteration protocol, error patterns, anti-recursion warning의 원본이다.
+
+> `ralph-loop-concept.md`는 ML 예시 기반이지만 패턴은 범용적이다. 프로젝트에 맞게 phase 이름, 명령, 에러 패턴을 변환하여 활용한다.
 
 ### 4.2 Generate the PROMPT.md
 
-Structure the `PROMPT.md` as follows:
+레퍼런스의 구조를 기반으로 프로젝트에 맞는 PROMPT.md를 생성한다. LLM이 프로젝트 분석 결과에 따라 내용을 자유롭게 구성하되, 아래 필수 요소를 포함해야 한다:
 
-```markdown
-# Ralph Loop: <Project Name>
+**필수 요소:**
+1. Anti-recursion warning (스킬/슬래시 커맨드 호출 금지)
+2. Project Context (config 경로, runtime 명령, verification 경로, results dir)
+3. Phase hint block:
+   ```
+   > Reference phases: SETUP / SMOKE_TEST / EXECUTING / CHECKING / ANALYZING / ADJUSTING / DONE
+   > 프로젝트에 맞게 phase 이름 변경/추가/제거 가능
+   ```
+4. 각 phase별 프로젝트 고유 명령 (config.sh 변수 사용)
+5. SMOKE_TEST repeat gate (실패 시 ADJUSTING → SMOKE_TEST 반복)
+6. Known Errors section (E1 macOS timeout + Step 1에서 발견한 프로젝트 에러)
+7. action.sh Rules (레퍼런스 참조)
+8. Decision Log read/write protocol (레퍼런스 참조)
+9. Self-correction protocol (PROMPT.md 자체 수정 규칙)
 
-IMPORTANT: Do NOT invoke any skills, modes, or slash commands. Do NOT use the Skill tool. You are inside a standalone automation loop — not an interactive session.
+### 4.3 Known Errors
 
-You are running inside an automated process debugging loop. The loop structure is:
-
-[... core concept from reference ...]
-
-**Your job**: Read state, diagnose, then output `ralph/action.sh` and update `ralph/state.md`. Exit immediately after.
-
-**DO NOT** run long commands yourself. Write them into `ralph/action.sh` instead.
-
-## Step-by-step for EVERY iteration
-
-[... iteration protocol from reference, including reading the most recent 15 entries from decisions.md after state.md and appending to decisions.md after updating state.md ...]
-
-## Project Context
-
-- **Config**: `ralph/config.sh` (user edits before starting the loop)
-- **Runtime**: Always use <detected runtime command> in action.sh
-- **Verification**: <path or "none — skip CHECKING phase">
-- **Results dir**: `ralph/results/` (action.sh should write outputs here)
-- **Environment**: `_sdd/env.md` (if it exists — read it for runtime env setup, required env variables, and runtime configuration before writing action.sh)
-
-## State Machine
-
-> Reference phases: SETUP / SMOKE_TEST / EXECUTING / CHECKING / ANALYZING / ADJUSTING / DONE
-> EXECUTING = main process (training, testing, building, etc.)
-> CHECKING = result verification (validation, assertions, artifact checks)
-> Project-specific aliases such as TRAINING or VALIDATING are allowed when they better match the process.
-
-### SETUP
-[... generic setup checks, customized for this project's requirements ...]
-
-### SMOKE_TEST
-
-**Purpose**: Verify the target process runs end-to-end before committing to full execution.
-
-Write `action.sh` to:
-1. Run a minimal/quick version of the target process
-2. Save output to `ralph/results/smoke_test.log` (use `2>&1 | tee`)
-3. After the run, check the log for a success indicator appropriate to the process type
-
-**Acceptance criteria** (BOTH must pass):
-- Exit code = 0
-- `ralph/results/smoke_test.log` contains at least one expected output indicator
-
-On PASS → set phase to the main execution phase in state.md
-On FAIL → set `phase: ADJUSTING` in state.md, note "SMOKE_TEST failed: <first error from log>"
-
-**Repeat gate rule**:
-- If ADJUSTING fixes a failure that originated in SMOKE_TEST, set phase back to `SMOKE_TEST` and rerun the smoke test.
-- Do not transition to the main execution phase until SMOKE_TEST passes.
-
-[Note: The minimal execution in SMOKE_TEST is hardcoded in action.sh — it does not use the full-scale parameters from config.sh. This is the only intentional hardcoded-value exception to the general config-variable rule.]
-
-### <Main Execution Phase>
-[... exact execution command using config variables, specific to this project ...]
-[... structured log parsing if available, or raw log parsing ...]
-
-### <Verification Phase>
-[... exact verification command, or note that verification is skipped ...]
-- Before generating a new verification action, check if existing output already determines pass/fail.
-- If verification action exit code is `0` but required output is still missing, transition to `ADJUSTING` instead of repeating the same action indefinitely.
-
-### ANALYZING
-[... what to analyze: project-specific metrics, output files ...]
-[... write `ralph/results/experiment_report.md` per the reference ...]
-
-### ADJUSTING
-[... generic debugging protocol from reference, including PROMPT.md self-correction ...]
-[... project-specific error patterns added to the common patterns table ...]
-
-### PROMPT.md Self-Correction
-
-When a recurring error (2+ occurrences) traces back to an incorrect template in this `PROMPT.md`:
-1. Fix the template directly using the Edit tool
-2. Add the error to `## Known Errors`
-3. Record `"iterN PROMPT_FIX: <phase> — <description>"` in `state.md` errors
-4. No `action.sh` needed — set phase back to the failed phase for retry
-
-### DONE
-[... final summary format ...]
-[... confirm `experiment_report.md` was written ...]
-
-## action.sh Rules
-
-[... rules from reference, with project-specific runtime command ...]
-
-## Decision Log
-
-After updating `ralph/state.md`, append a decision entry to `ralph/results/decisions.md`.
-
-### Format
-
-    ## Iteration {N} — {PHASE}
-    - **Observed**: {key facts from logs, exit codes, state}
-    - **Decision**: {what action/transition you chose}
-    - **Reason**: {why this decision, not alternatives}
-    - **Evidence**: {must cite concrete artifacts, including exit code and log/artifact path}
-    - **Action**: {action.sh summary or "LLM-only iteration (no action.sh)"}
-
-### Rules
-- Read the most recent 15 entries from `ralph/results/decisions.md` at the start of every iteration (after `state.md`)
-- Append exactly one entry per iteration
-- Keep each field to 1–2 sentences
-
-## state.md Format
-
-[... canonical format from reference ...]
-```
-
-**Key customizations per project:**
-- The `SMOKE_TEST` section must enforce repeat-gate behavior (`ADJUSTING -> SMOKE_TEST` for smoke-origin failures)
-- The main execution section must contain the exact command to run the process using config variables
-- The verification section must contain the exact command to verify results or be marked as skipped
-- Log/output parsing instructions must match the project's actual output format
-- Error patterns should include project-specific issues
-
-### 4.3 Generate `## Known Errors` Section in PROMPT.md
-
-After the ADJUSTING section, add a `## Known Errors (Confirmed + Fixed)` section following the reference format.
-
-Always include the macOS timeout note if the environment is or may be macOS:
-
-```markdown
-### E1: `timeout: command not found`
-- **Where**: Any action.sh using `timeout N cmd`
-- **Cause**: macOS does not ship GNU `timeout`
-- **Fix**: Use background process + kill pattern
-- **Status**: ✅ Use the fallback timeout pattern whenever timeout is needed
-```
-
-Add project-specific errors discovered during Step 1, such as missing runtime directories, import/path issues, or schema incompatibilities.
+macOS 환경이면 E1(timeout command not found) 포함. Step 1에서 발견한 프로젝트 고유 에러(missing directories, import/path issues, schema incompatibilities 등)도 추가한다.
 
 ---
 
@@ -475,69 +290,36 @@ notes: Initial state. Ralph loop initialized.
 
 ## Step 7: Verify Against CHECKS.md and Summarize
 
-### 7.1 Verify Each File Against Its Criteria
+### 7.1 Verify
 
-For each criterion in `ralph/CHECKS.md`, perform a targeted check and fix failures before proceeding.
+`ralph/CHECKS.md`의 각 항목을 검증한다. 각 체크를 ✅ (pass) 또는 ❌ (fail)로 표시하고, 실패 항목은 해당 파일을 수정한 후 재검증한다 (최대 2회).
 
-**config.sh**:
-- Check for remaining placeholders
-- Check `LLM_TIMEOUT_SECONDS` is defined
-- Check `MAX_LLM_FAILURES` is defined
-- Check every variable referenced in `PROMPT.md` execution command is defined in `config.sh`
+### 7.2 Update CHECKS.md
 
-**PROMPT.md**:
-- Check anti-recursion warning
-- Check `SMOKE_TEST` phase exists
-- Check core phases or allowed aliases are present
-- Check main execution section includes exact command using config variables
-- Check verification section includes exact command or explicit skip
-- Check `## Known Errors`
-- Check `## action.sh Rules`
-- Check self-correction protocol
-- Check decision-log read/write rules
+검증 완료 후 `ralph/CHECKS.md`의 `[ ]`를 `[x]` (통과) 또는 `[!]` (수정 후 통과)로 업데이트한다.
 
-**run.sh**:
-- Check `--reset`
-- Check `LLM_TIMEOUT_SECONDS`
-- Check DONE phase detection
+### 7.3 Summarize
 
-**state.md**:
-- Check `phase: SETUP`
-- Check `iteration: 0`
-- Check `__INITIALIZED_AT_UTC__` placeholder is gone
-
-Mark each check ✅ or ❌ in the output. If any criterion fails, fix the generated file before continuing.
-
-### 7.2 Update CHECKS.md with Results
-
-Replace `[ ]` with `[x]` for passing criteria and `[!]` for failing ones, including a short note if a failure was fixed.
-
-### 7.3 Create `results/` Directory and Summarize
-
-Create `ralph/results/`, then print a summary:
+`ralph/results/` 디렉토리를 생성하고, 사용자에게 요약을 출력한다:
 
 ```
 Ralph loop initialized (verified)!
 
 Files created:
-  ralph/CHECKS.md
-  ralph/config.sh
-  ralph/PROMPT.md
-  ralph/run.sh
-  ralph/state.md
-  ralph/results/
+  ralph/CHECKS.md    — Acceptance criteria (verified ✅)
+  ralph/config.sh    — Process configuration (edit before running)
+  ralph/PROMPT.md    — LLM instructions for the automation loop
+  ralph/run.sh       — Loop controller script
+  ralph/state.md     — Initial state (SETUP, iteration 0)
+  ralph/results/     — Output directory
 
-Reference phases:
-  SETUP -> SMOKE_TEST -> EXECUTING -> CHECKING -> ANALYZING -> ADJUSTING -> DONE
+Loop phases: SETUP -> SMOKE_TEST -> [execution] -> [checking] -> ANALYZING -> DONE
 
 Next steps:
   1. Review and edit ralph/config.sh
-  2. Resume run: bash ralph/run.sh
+  2. Run: bash ralph/run.sh
   3. Fresh restart: bash ralph/run.sh --reset
-  4. The loop will run a minimal SMOKE_TEST before the main execution phase
 ```
-
-If the generated config uses a process-specific debug parameter (for example `MAX_STEPS="10"` for ML), remind the user that it is only for the initial debug run.
 
 ---
 
