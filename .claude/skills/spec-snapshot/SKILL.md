@@ -12,24 +12,25 @@ user_invocable: true
 현재 `_sdd/spec/` 전체를 특정 언어로 번역하여 타임스탬프 디렉토리에 저장한다.
 번역 없이 원본 언어 그대로 스냅샷을 찍는 용도로도 사용할 수 있다.
 
-## 사용 예시
+## Acceptance Criteria
 
-```
-/sdd-skills:spec-snapshot en          # 영어로 번역 스냅샷
-/sdd-skills:spec-snapshot ja          # 일본어로 번역 스냅샷
-/sdd-skills:spec-snapshot ko          # 한국어 원본 그대로 스냅샷
-/sdd-skills:spec-snapshot             # 원본 언어 그대로 스냅샷 (기본값)
-```
+> 프로세스 완료 후 아래 기준을 자체 검증한다. 미충족 항목은 해당 단계로 돌아가 수정한다.
+
+- [ ] AC1: `_sdd/snapshots/<timestamp>_<lang>/` 디렉토리가 생성되었다
+- [ ] AC2: 원본 `_sdd/spec/`의 모든 `.md` 파일이 번역되어 스냅샷에 포함되었다 (`prev/` 제외)
+- [ ] AC3: 스냅샷 디렉토리 루트에 `SUMMARY.md`가 생성되었다
+- [ ] AC4: 원본 `_sdd/spec/` 파일이 수정되지 않았다
+
+**사용 예시**: `/sdd-skills:spec-snapshot en` (영어) · `ja` (일본어) · `ko` (한국어 원본) · 미지정 시 원본 언어 그대로
 
 ## Hard Rules
 
 1. **구현 코드 수정 금지**: `src/`, `tests/` 등 구현 코드 파일은 수정하지 않는다.
 2. **원본 스펙 수정 금지**: `_sdd/spec/` 원본 파일은 절대 수정하지 않는다. 읽기만 한다.
-3. **구조 보존**: 원본 `_sdd/spec/`의 디렉토리 구조(subdirectory 포함)를 스냅샷에 그대로 유지한다.
-4. **전체 복사**: `_sdd/spec/` 아래 모든 `.md` 파일을 스냅샷에 포함한다 (`DECISION_LOG.md` 포함, `prev/` 백업 디렉토리 제외).
-5. **SUMMARY.md 생성**: 스냅샷 디렉토리 루트에 `SUMMARY.md`를 생성한다.
-6. **번역 일관성**: 한 스냅샷 내 모든 파일은 동일한 대상 언어로 번역한다.
-7. **도메인 용어 보존**: 코드 경로, 심볼명, 명령어, 설정 키 등 코드 관련 용어는 번역하지 않고 원문 그대로 유지한다.
+3. **전체 복사 + 구조 보존**: `_sdd/spec/` 아래 모든 `.md` 파일을 스냅샷에 포함하되 (`prev/` 제외), 원본 디렉토리 구조를 그대로 유지한다.
+4. **SUMMARY.md 생성**: 스냅샷 디렉토리 루트에 `SUMMARY.md`를 생성한다.
+5. **번역 일관성**: 한 스냅샷 내 모든 파일은 동일한 대상 언어로 번역한다.
+6. **도메인 용어 보존**: 코드 경로, 심볼명, 명령어, 설정 키 등 코드 관련 용어는 번역하지 않고 원문 그대로 유지한다.
 
 ## Output Structure
 
@@ -76,28 +77,7 @@ _sdd/snapshots/
 - 파일 경로, 심볼명, 명령어는 번역하지 않음
 - 섹션 헤딩은 번역하되, 앵커 링크가 깨지지 않도록 주의
 
-#### 단일 파일 스펙
-
-```
-Agent(subagent_type="write-phased", prompt="번역:
-  원본: _sdd/spec/main.md → 대상: _sdd/snapshots/<ts>_<lang>/main.md
-  [원본 내용 + 대상 언어 + 번역 규칙]")
-```
-
-#### 멀티파일 스펙 (2개 이상)
-
-Step 1에서 모든 원본 파일을 먼저 Read한 후 병렬 디스패치.
-파일 간 번역에 의존 관계 없음 → 전체 병렬:
-
-```
-Agent("번역: main.md → <ts>_<lang>/main.md [내용]")           ─┐
-Agent("번역: <comp_1>.md → <ts>_<lang>/<comp_1>.md [내용]")   ─┤ 동시
-Agent("번역: DECISION_LOG.md → <ts>_<lang>/DECISION_LOG.md")  ─┘
-```
-
-> 독립 파일 2개 이상이면 병렬 디스패치.
-
-SUMMARY.md는 Step 3에서 모든 번역 완료 후 순차 생성.
+독립 파일 2개 이상이면 병렬 디스패치. SUMMARY.md는 Step 3에서 순차 생성.
 
 ### Step 3: SUMMARY.md 생성
 
@@ -107,31 +87,23 @@ SUMMARY.md는 Step 3에서 모든 번역 완료 후 순차 생성.
 
 ```markdown
 # Spec Snapshot Summary
-
 - **Source**: `_sdd/spec/`
 - **Snapshot**: `_sdd/snapshots/<timestamp>_<lang>/`
-- **Language**: <대상 언어 (예: English)>
-- **Created**: <날짜 시간>
-- **Source Commit**: <git rev-parse --short HEAD 결과>
+- **Language**: <대상 언어>  |  **Created**: <날짜 시간>  |  **Source Commit**: <short hash>
 
 ## Project Overview
-
 <메인 스펙의 Goal 섹션 요약 — 2-3문장>
 
 ## Components
-
 | Component | File | Description |
 |-----------|------|-------------|
 | ... | ... | ... |
 
 ## Open Questions
-
 <Open Questions 섹션 요약>
 ```
 
 ### Step 4: 완료 보고
-
-스냅샷 생성 완료 후 아래 정보를 출력한다:
 
 | 항목 | 내용 |
 |------|------|
@@ -144,14 +116,12 @@ SUMMARY.md는 Step 3에서 모든 번역 완료 후 순차 생성.
 
 | 상황 | 대응 |
 |------|------|
-| `_sdd/spec/` 미존재 | 에러 보고: "스펙이 없습니다. `spec-create`를 먼저 실행하세요." |
+| `_sdd/spec/` 미존재 | 에러: "`spec-create`를 먼저 실행하세요." |
 | `_sdd/snapshots/` 미존재 | `mkdir -p`로 자동 생성 |
-| 동일 타임스탬프 디렉토리 존재 | 1분 단위이므로 거의 발생 안 함. 발생 시 덮어쓰기 |
+| 동일 타임스탬프 디렉토리 존재 | 덮어쓰기 |
 | 빈 스펙 파일 | 빈 파일 그대로 복사 |
 | 번역 중 불확실한 용어 | 원문을 괄호로 병기: "invariant (불변 조건)" |
 
-## Integration with Other Skills
+## Integration
 
-- **spec-summary**: SUMMARY.md 생성 시 요약 로직 참고
-- **spec-create**: 스냅샷 대상 스펙의 원본 생성 스킬
-- **spec-rewrite**: 리라이트 전후 스냅샷 비교에 활용 가능
+`spec-create`(원본 생성) → **spec-snapshot**(번역 스냅샷) → `spec-summary`(요약 참고)

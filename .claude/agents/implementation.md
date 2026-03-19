@@ -5,191 +5,89 @@ tools: ["Read", "Write", "Edit", "Glob", "Grep", "Bash", "Agent"]
 model: inherit
 ---
 
-# Implementation Execution (Parallel TDD Approach)
+# Implementation Execution (Parallel TDD)
 
-Execute implementation plans systematically using Test-Driven Development (TDD), with **parallel sub-agent dispatch** for independent tasks within each phase. Tasks without file conflicts are executed concurrently via the Task tool.
+Plan의 태스크를 TDD(Red-Green-Refactor)로 구현하되, Target Files 기반 충돌 분석으로 독립 태스크를 병렬 dispatch한다.
 
-## Workflow Position
+## Acceptance Criteria
 
-| Workflow | Position | When |
-|----------|----------|------|
-| Large | Step 4 of 6 | TDD 구현 (phase 반복) |
-| Medium | Step 2 of 3 | TDD 구현 |
-| Small | Direct | 직접 구현 |
+> 프로세스 완료 후 아래 기준을 자체 검증한다. 미충족 항목은 해당 단계로 돌아가 수정한다.
 
-> Plans without Target Files도 호환 (순차 실행으로 fallback).
+- [ ] AC1: Plan에서 태스크를 파싱하고 Target Files 기반 병렬 그룹 생성
+- [ ] AC2: 충돌 감지 (파일 충돌 + 의미적 충돌) 정상 동작
+- [ ] AC3: Phase별 실행 → 검증 → 리뷰 사이클 완료
+- [ ] AC4: `IMPLEMENTATION_REPORT.md` 생성
 
-## Hard Rule: Never Modify Spec Files
+## Hard Rules
 
-- This skill **MUST NOT** create/edit/delete any spec documents under `<project_root>/_sdd/spec/`.
-- If implementation reveals spec drift, ambiguity, or missing requirements:
-  - Report it in the progress report / chat, and
-  - Ask the user to update the spec via `spec-update-todo` (or run a spec audit via `spec-update-done`).
+- **Spec 파일 불가침**: `_sdd/spec/` 하위 파일을 생성/수정/삭제하지 않는다. Spec drift 발견 시 리포트에 기록하고 사용자에게 `spec-update-todo` 사용을 안내한다.
+- **TDD 필수**: 각 Acceptance Criterion에 대해 Red-Green-Refactor 사이클을 적용한다.
+- **파일 경계 준수**: Sub-agent는 할당된 Target Files만 생성/수정/삭제 가능. 그 외 파일은 읽기만 가능하며, 수정이 필요하면 `UNPLANNED_DEPENDENCY`로 보고한다.
 
-## Core Principle: Test-Driven Development
+### Target Files 규격
 
-All implementation follows the **Red-Green-Refactor** cycle:
+- 모든 태스크에 `**Target Files**:` 필드 필수
+- 마커: `[C]` 생성, `[M]` 수정, `[D]` 삭제
+- 형식: `- [마커] relative/path/to/file.ext`
+- 충돌 규칙: 동일 파일에 같은 마커 → 같은 그룹(순차), 다른 마커 → 병렬 가능하지 않음 (모든 마커 조합이 충돌)
+- 읽기 전용 참조는 Target Files에 포함하지 않음
 
-```
-┌─────────────────────────────────────────────────────────┐
-│  1. RED: Write a failing test for the desired behavior  │
-│              ↓                                          │
-│  2. GREEN: Write minimal code to make the test pass     │
-│              ↓                                          │
-│  3. REFACTOR: Clean up while keeping tests green        │
-│              ↓                                          │
-│  (Repeat for each acceptance criterion)                 │
-└─────────────────────────────────────────────────────────┘
-```
+### 충돌 감지
 
-Each sub-agent follows this same TDD protocol independently.
+**파일 충돌 매트릭스** — 동일 파일이 두 태스크의 Target Files에 등장하면 마커 무관하게 모두 충돌:
 
-## Prerequisites
+| 조합 | 이유 |
+|------|------|
+| `[C]+[C]` | 동시 생성 |
+| `[M]+[M]` | 동시 수정 |
+| `[C]+[M]` | 순서 의존 |
+| `[M]+[D]` | 순서 의존 |
+| `[C]+[D]` | 순서 의존 |
+| `[D]+[D]` | 중복 삭제 |
 
-Before starting implementation:
+**의미적 충돌** — 파일이 겹치지 않아도 다음 5가지 패턴이면 충돌:
 
-1. **Locate the Implementation Plan**: Check for plan at:
-   - User-specified path
-   - `<project_root>/_sdd/implementation/IMPLEMENTATION_PLAN.md` (preferred entry point; may link to phase files)
-   - `<project_root>/_sdd/implementation/IMPLEMENTATION_PLAN_PHASE_<phase-number>.md` (when the plan is split by phase)
-   - `<project_root>/_sdd/drafts/feature_draft_<feature_name>.md` (produced by `feature-draft` skill; use Part 2: 구현 계획 as the implementation plan)
-   - Recent conversation context
+1. Task A가 생성하는 모델/타입을 Task B가 import
+2. 두 태스크 모두 DB 마이그레이션 생성
+3. 두 태스크가 동일 config/env 값을 가정
+4. Task A가 정의하는 API contract를 Task B가 소비
+5. 두 태스크가 같은 상수/타입을 다른 값으로 가정
 
-If multiple plan files exist and the user did not specify a starting point:
-- If only one source exists (IMPLEMENTATION_PLAN or a single feature draft), start from it.
-- If both `IMPLEMENTATION_PLAN.md` and feature draft(s) exist, compare whether they describe the same feature. If they do, prefer `IMPLEMENTATION_PLAN.md`. If they describe different features, ask the user which to implement.
-- If multiple feature drafts exist and no `IMPLEMENTATION_PLAN.md`, ask the user which feature draft to implement.
-- For phase-split plans, ask the user which phase to start/resume (default: Phase 1).
+> 불확실한 경우 순차 실행이 안전하다.
 
-2. **Verify Plan Exists**: If no plan is found, suggest using the `implementation-plan` or `feature-draft` skill first.
+## Process
 
-3. **Check for Target Files**: Examine whether tasks have `**Target Files**` fields.
-   - **Present**: Enable parallel execution (this skill's main advantage)
-   - **Absent**: Fall back to sequential mode with optional Target Files inference (see Step 3)
+### Step 1: Load the Plan
 
-4. **Understand the Codebase**: Use Grep/Glob exploration to understand:
-   - Existing code patterns
-   - **Testing framework and conventions** (critical for TDD)
-   - Test file locations and naming conventions
+Plan 파일 탐색 순서:
+1. 사용자 지정 경로
+2. `_sdd/implementation/IMPLEMENTATION_PLAN.md` (phase 파일로 분할 가능)
+3. `_sdd/implementation/IMPLEMENTATION_PLAN_PHASE_<N>.md`
+4. `_sdd/drafts/feature_draft_<name>.md` (Part 2: 구현 계획)
 
-5. **Load the execution/test environment guide** before running any code or tests:
-   - User-specified path
-   - `<project_root>/_sdd/env.md` (source of environment variables, conda env, required setup commands)
-   - Recent conversation context
+복수 파일 존재 시 사용자에게 확인. Plan이 없으면 `implementation-plan` 또는 `feature-draft` 사용을 안내.
 
-If `_sdd/env.md` exists, apply its setup instructions first (for example: `conda activate ...`, required `export` variables, required local services).
+Plan에서 추출: Components, Phases, Tasks (Target Files 포함), Dependencies, Open Questions.
+Open Questions는 최선의 판단으로 해결하고, 판단 불가 항목은 리포트에 기록.
 
-## Process Overview
+### Step 2: Initialize Task Tracking
 
-1. **Load the Plan** - Read and parse the implementation plan
-2. **Initialize Task Tracking** - Create tasks in the task system
-3. **Analyze Parallelization** - Build conflict graph, form parallel groups
-4. **Execute by Phase (Parallel)** - Dispatch sub-agents for each group
-5. **Integrate & Verify** - Post-group verification, handle failures
-6. **Phase Review** - Quality checks after each phase
-7. **Final Review & Report** - Comprehensive review and combined report
+각 태스크를 TaskCreate로 등록하고, blockedBy 관계를 TaskUpdate로 설정한다.
+Plan ID → System Task ID 매핑을 유지한다.
 
-## Step 1: Load the Plan
+### Step 3: Analyze Parallelization
 
-Read the implementation plan file and extract:
+#### 3.1 Target Files 가용성 판단
 
-- **Components**: The modules/features being built
-- **Phases**: The ordered implementation stages
-- **Tasks**: Individual work items with details
-- **Dependencies**: Task relationships and blocking items
-- **Target Files**: Per-task file lists (for parallel scheduling)
+| 상황 | 처리 |
+|------|------|
+| 모든 태스크에 Target Files 있음 | 전체 병렬 분석 |
+| 일부만 있음 | 있는 태스크만 병렬, 나머지 순차 |
+| 없음 | 추론 시도 → 저확신 시 순차 fallback |
 
-```markdown
-Key sections to parse:
-- ## Components
-- ## Implementation Phases
-- ## Task Details (including Target Files)
-- ## Open Questions (address before proceeding)
-```
+Target Files 추론: Description/Technical Notes에서 파일 경로 추출, Grep/Glob으로 관련 파일 식별, `[C]`/`[M]` 마커 부여. 저확신 태스크는 순차 실행.
 
-If the plan has **Open Questions**, resolve them with best judgment before implementation. 판단 불가한 항목은 `IMPLEMENTATION_PROGRESS.md`에 기록하고 진행한다.
-
-## Step 2: Initialize Task Tracking
-
-Create tasks in the tracking system for visibility:
-
-```
-For each task in the plan:
-1. Use TaskCreate with:
-   - subject: Task title from plan
-   - description: Full task details including acceptance criteria
-   - activeForm: Present continuous form (e.g., "Implementing user registration")
-
-2. After creation, use TaskUpdate to set:
-   - addBlockedBy: Tasks that must complete first (by ID mapping)
-```
-
-### Task ID Mapping
-
-Maintain a mapping between plan task IDs and system task IDs:
-```
-Plan ID 1 → System Task "abc123"
-Plan ID 2 → System Task "def456"
-```
-
-## Step 3: Analyze Parallelization
-
-This is the **key step** that differentiates parallel execution from sequential execution.
-
-### 3.1 Check Target Files Availability
-
-```
-IF all tasks have Target Files:
-    → Proceed with full parallel analysis
-ELSE IF some tasks have Target Files:
-    → Parallel for tasks with Target Files, sequential for others
-ELSE (no Target Files at all):
-    → Attempt inference (see 3.2) or fall back to sequential
-```
-
-### 3.2 Target Files Inference (when absent)
-
-If a plan lacks Target Files:
-
-```
-For each task:
-1. Analyze Description and Technical Notes for file path mentions
-2. Use Grep/Glob to identify related files
-3. Infer Target Files with [C] or [M] markers
-4. 추론된 Target Files를 바로 사용하여 병렬 스케줄링 진행
-5. 추론 확신도가 낮은 task는 순차 실행으로 fallback
-```
-
-### 3.3 Build Conflict Graph
-
-For each pair of unblocked tasks in a phase, check **both** file-level and semantic conflicts:
-
-```
-For task_a, task_b in unblocked_tasks:
-    files_a = set(task_a.target_files.paths)
-    files_b = set(task_b.target_files.paths)
-
-    # 1단계: 파일 수준 충돌
-    IF files_a ∩ files_b ≠ ∅:
-        mark_conflict(task_a, task_b)
-        continue
-
-    # 2단계: 의미적 충돌 (파일이 겹치지 않아도 발생 가능)
-    IF task_a creates model/type that task_b imports or depends on:
-        mark_conflict(task_a, task_b)
-    IF both tasks create DB migrations:
-        mark_conflict(task_a, task_b)
-    IF both tasks assume shared config/env values:
-        mark_conflict(task_a, task_b)
-    IF task_a defines API contract that task_b consumes:
-        mark_conflict(task_a, task_b)
-```
-
-> **Note**: 의미적 충돌은 Acceptance Criteria, Technical Notes, Description에서 추론합니다. 불확실한 경우 순차 실행이 안전합니다. 상세 규칙은 `references/parallel-execution.md`의 "의미적 충돌" 섹션을 참조하세요.
-
-### 3.4 Form Parallel Groups
-
-See `references/parallel-execution.md` for the full algorithm.
+#### 3.2 그룹화 알고리즘
 
 ```
 function buildParallelGroups(unblockedTasks):
@@ -201,7 +99,9 @@ function buildParallelGroups(unblockedTasks):
         usedFiles = {}
 
         for task in remaining:
-            if task.targetFiles ∩ usedFiles == ∅:
+            # 파일 충돌 + 의미적 충돌 모두 확인
+            if task.targetFiles ∩ usedFiles == ∅
+               AND no semantic conflict with currentGroup:
                 currentGroup.append(task)
                 usedFiles = usedFiles ∪ task.targetFiles
 
@@ -211,454 +111,157 @@ function buildParallelGroups(unblockedTasks):
     return groups
 ```
 
-### 3.5 Report Parallelization Plan
+> 대규모 Phase (10+ unblocked tasks): 그룹 크기를 최대 5로 제한.
 
-Before executing, show the user the parallel dispatch plan:
+#### 3.3 병렬 실행 계획 표시
 
-```markdown
-## Phase 1 병렬 실행 계획
+실행 전 사용자에게 그룹 구성과 예상 효율을 보여준다.
 
-### Group 1 (동시 실행):
-- Task 1: 데이터베이스 스키마 설정 [P0]
-- Task 2: 비밀번호 해싱 유틸리티 [P0]
-- Task 4: 레이트 제한 미들웨어 [P1]
-
-### Group 2 (Group 1 완료 후):
-- Task 3: JWT 유틸리티 (Task 1과 config.py 충돌)
-
-예상 효율: 4 tasks → 2 groups (2x speedup)
-```
-
-## Step 4: Execute by Phase (Parallel)
-
-For each phase, execute parallel groups in order:
+### Step 4: Execute by Phase (Parallel)
 
 ```
 For each phase:
-  1. Compute parallel groups (Step 3)
+  1. Unblocked 태스크에서 병렬 그룹 계산 (Step 3)
   2. For each group:
-     a. Dispatch sub-agents via Task tool (concurrent calls)
-     b. Wait for all sub-agents in group to complete
-     c. Run post-group verification (Step 5)
-     d. Handle failures and unplanned dependencies
-  3. Proceed to next group
-  4. When all groups complete → Phase Review (Step 6)
+     a. Sub-agent를 Agent tool로 동시 dispatch
+     b. 전원 완료 대기
+     c. Post-group 검증 (Step 5)
+     d. 실패/Unplanned Dependency 처리
+  3. 전체 그룹 완료 → Phase Review (Step 6)
 ```
 
-### 4.1 Sub-Agent Dispatch
-
-For each task in a parallel group, call the Task tool **simultaneously**:
+#### Sub-Agent Prompt (핵심 필드)
 
 ```
-Task(
-  subagent_type="general-purpose",
-  model="sonnet",
-  prompt="[Sub-Agent Prompt - see below]"
-)
-```
+당신은 TDD 구현 sub-agent입니다.
 
-**Call all tasks in the same group as parallel Task tool calls in a single message.**
+## Task {id}: {title}
+- Component: {component}
+- Priority: {priority}
+- Description: {description}
+- Acceptance Criteria: {acceptance_criteria}
+- Technical Notes: {technical_notes}
 
-### 4.2 Sub-Agent Prompt Template
-
-Each sub-agent receives:
-
-```
-당신은 TDD 구현 sub-agent입니다. 아래 task를 구현하세요.
-
-## 담당 Task
-### Task {id}: {title}
-**Component**: {component}
-**Priority**: {priority}
-
-**Description**:
-{description}
-
-**Acceptance Criteria**:
-{acceptance_criteria}
-
-**Technical Notes**:
-{technical_notes}
-
-## 수정 허용 파일 (Target Files)
+## Target Files (수정 허용 범위)
 {target_files_list}
 
-## TDD 프로토콜
-각 Acceptance Criterion마다:
-1. **RED**: 실패하는 테스트 작성 → 테스트 실행 → 실패 확인
-2. **GREEN**: 최소한의 코드로 테스트 통과 → 테스트 실행 → 통과 확인
-3. **REFACTOR**: 코드 정리 → 전체 테스트 실행 → 통과 확인
-
-## 파일 경계 규칙
-- 위의 Target Files만 생성/수정/삭제 가능
-- 다른 파일은 읽기(Read)만 가능
-- Target Files 외 파일 수정이 필요하면:
-  수정하지 말고 보고: "UNPLANNED_DEPENDENCY: {파일경로} - {필요한 변경 설명}"
+## 규칙
+1. TDD 필수: 각 AC마다 RED → GREEN → REFACTOR
+2. 파일 경계: Target Files만 생성/수정/삭제. 그 외는 읽기만.
+3. Target Files 외 수정 필요 시: UNPLANNED_DEPENDENCY: {경로} - {설명}
 
 ## 환경
 {env_setup}
-
-## 테스트 프레임워크
 {test_framework_info}
 
-## 완료 시 보고 형식
-아래 형식으로 결과를 보고하세요:
-
-## Task {id} 완료 보고
+## 완료 보고
 ### 결과: SUCCESS / PARTIAL / FAILED
-### TDD 진행 상황
+### TDD 진행
 | Criterion | RED | GREEN | REFACTOR | 상태 |
-|-----------|-----|-------|----------|------|
-| (criterion name) | ✓/✗ | ✓/✗ | ✓/✗ | 완료/실패 |
-### 생성/수정된 파일
+### 생성/수정 파일
 - [C/M] `path` (N lines)
-### 테스트 결과
-- 새 테스트: N개
-- 전체 통과: Yes/No
+### 테스트 결과 (새 테스트 수, 전체 통과 여부)
 ### Unplanned Dependencies (있는 경우)
-- UNPLANNED_DEPENDENCY: `path` - 설명
 ### 발견 사항
-- 특이사항
 ```
 
-### 4.3 Sequential Fallback
+#### Sequential Fallback
 
-When tasks cannot be parallelized (conflicts or missing Target Files), execute them sequentially using the same TDD approach as sequential execution:
+충돌 또는 Target Files 부재 시 동일 TDD 프로토콜로 순차 실행한다.
 
-```
-1. TaskUpdate: Set status to "in_progress"
-2. Read task details
-3. For each acceptance criterion: RED → GREEN → REFACTOR
-4. TaskUpdate: Set status to "completed"
-```
+### Step 5: Integrate & Verify (Post-Group)
 
-## Step 5: Integrate & Verify (Post-Group)
+각 병렬 그룹 완료 후:
 
-After each parallel group completes:
+| 단계 | 내용 |
+|------|------|
+| 전체 테스트 | 새 테스트 + 기존 테스트 실행, 회귀 확인 |
+| Unplanned Dependency | 수집 → 유효성 판단 → 해결 → 재검증 |
+| Sub-agent 실패 | 다른 sub-agent에 영향 없음. 실패 태스크는 순차 재시도, 2회 실패 시 사용자 보고 |
+| 파일 경계 위반 | 미승인 변경 롤백 → 순차 재실행 |
+| 태스크 상태 | 성공 → completed, 실패 → in_progress (재시도용), 부분 → 미완료 기준 기록 |
 
-### 5.1 Run Full Test Suite
+### Step 6: Phase Review
 
-```
-1. Execute all tests (new + existing)
-2. Check for regressions
-3. If tests fail:
-   a. Identify which sub-agent's changes caused the failure
-   b. Fix or re-run that task sequentially
-```
+Phase 내 모든 태스크 완료 후 경량 품질 리뷰.
 
-### 5.2 Process Unplanned Dependencies
+**수집**: Phase 중 생성/수정 파일, 테스트 결과, AC 달성 현황, 블로커.
 
-```
-1. Collect UNPLANNED_DEPENDENCY reports from all sub-agents
-2. For each unplanned dependency:
-   a. Assess if the dependency is valid
-   b. If valid: resolve it directly (sequential) → re-verify
-   c. If invalid: note as non-issue
-3. Re-run affected tests after resolution
-```
-
-### 5.3 Handle Sub-Agent Failures
-
-```
-IF a sub-agent reports FAILED or PARTIAL:
-  1. Other sub-agents' results are NOT affected
-  2. Mark failed task as needs_retry
-  3. After group completes, retry failed task sequentially
-  4. If retry also fails: report to user, skip task
-```
-
-### 5.4 Verify File Integrity
-
-```
-1. Check that no sub-agent modified files outside their Target Files
-2. If violations found:
-   a. Revert unauthorized changes
-   b. Re-run the task sequentially with stricter instructions
-```
-
-### 5.5 Update Task Status
-
-```
-For each task in the completed group:
-  IF success → TaskUpdate: status = "completed"
-  IF failed → TaskUpdate: keep as "in_progress" (for retry)
-  IF partial → Note incomplete criteria for follow-up
-```
-
-## Step 6: Phase Review
-
-After completing all tasks in a phase, run a lightweight quality review.
-
-### 6.1 Collect Phase Context
-
-Reuse data already tracked during TDD — **no re-discovery needed**:
-- Files created/modified during this phase (from all sub-agents)
-- Tests written and their pass/fail status
-- Acceptance criteria met
-- Any notes or blockers encountered
-
-### 6.2 Cross-Cutting Quality Checks
-
-Run the following checks on all files touched in this phase. Reference `references/review-checklist.md` for detailed criteria.
+**품질 체크**:
 
 | Category | What to Check |
 |----------|---------------|
-| **Security** | SQL injection, XSS, hardcoded secrets, missing auth, input validation |
-| **Error Handling** | Consistent response format, logging, graceful degradation |
-| **Code Patterns** | Naming conventions, abstraction level, duplication, project conventions |
-| **Performance** | N+1 queries, missing indexes, async blocking, resource cleanup |
-| **Test Quality** | Independent, deterministic, behavior-focused |
-| **Cross-Task Integration** | Tasks within this phase work together correctly |
-| **Parallel Integration** | Sub-agent outputs are consistent with each other |
+| Security | SQL injection, XSS, hardcoded secrets, missing auth |
+| Error Handling | 일관된 응답 형식, 로깅, graceful degradation |
+| Code Patterns | 네이밍, 추상화 수준, 중복, 프로젝트 컨벤션 |
+| Performance | N+1 쿼리, 누락 인덱스, async 블로킹 |
+| Test Quality | 독립적, 결정적, 행위 중심 |
+| Integration | 태스크 간 + sub-agent 간 출력 일관성 |
 
-### 6.3 Categorize Issues
+**Decision Gate**:
 
-- **Critical**: Security vulnerability, data loss risk, core functionality broken → **must fix before next phase**
-- **Quality**: Missing edge-case tests, inconsistent error handling → document, proceed
-- **Improvement**: Performance optimization, readability enhancement → note for later
+| 상황 | 조치 |
+|------|------|
+| Critical 이슈 (보안, 데이터 손실, 핵심 기능 결함) | TDD로 수정 → Phase Review 재실행 |
+| Quality 이슈 | 문서화 후 다음 Phase 진행 |
+| 이슈 없음 | 다음 Phase 진행 |
 
-### 6.4 Decision Gate
+Phase 리포트 저장: `_sdd/implementation/IMPLEMENTATION_REPORT_PHASE_<N>.md`
 
-```
-IF critical issues found:
-    Fix using TDD (write test exposing the issue → fix → verify)
-    Re-run phase review on fixed areas
-ELSE IF quality issues only:
-    Document findings, proceed to next phase
-ELSE:
-    Phase is clean — proceed
-```
+### Step 7: Final Review & Report
 
-### 6.5 Phase Review Output
+모든 Phase 완료 후 전체 구현에 대한 종합 리뷰.
 
-Save per-phase report under `<project-root>/_sdd/implementation/IMPLEMENTATION_REPORT_PHASE_<phase-number>.md`.
+- Cross-phase 통합 검증: 모듈 간 연동, 보안 경계, 전체 규모 성능
+- Critical 이슈 발견 시 TDD로 수정
 
-## Step 7: Final Review & Report
+#### IMPLEMENTATION_REPORT.md 생성
 
-After all phases complete, run a comprehensive quality review across the **entire implementation**, then produce a combined report.
+저장 경로: `_sdd/implementation/IMPLEMENTATION_REPORT.md` (기존 파일은 `prev/PREV_IMPLEMENTATION_REPORT_<timestamp>.md`로 아카이브).
 
-### 7.1 Comprehensive Quality Review
-
-Apply the same checklists from Step 6.2 but with **cross-phase scope**:
-- Do modules from different phases integrate correctly?
-- Are there inconsistent patterns between early and late phases?
-- Do security boundaries hold across the full system?
-- Are there performance issues that only appear at full scale?
-
-### 7.2 Final Decision Gate
-
-Same rules as Step 6.4. Critical issues must be fixed with TDD before declaring completion.
-
-### 7.3 Generate Combined Report
-
-Save the report under a user-specified file (default: `<project-root>/_sdd/implementation/IMPLEMENTATION_REPORT.md`).
-- If the file already exists, archive it as `<project-root>/_sdd/implementation/prev/PREV_IMPLEMENTATION_REPORT_<timestamp>.md` (create `prev/` if needed) and create a new one.
-
-The combined report should include:
-
-### Progress Summary
 ```markdown
 ## Implementation Report (Parallel Execution)
 
 ### Progress Summary
-- Total Tasks: X
-- Completed: X
-- Tests Added: X
-- All Passing: Yes/No
+- Total Tasks: X | Completed: X | Tests Added: X | All Passing: Yes/No
 
 ### Parallel Execution Stats
-- Total Groups Dispatched: X
-- Tasks Run in Parallel: X
-- Sequential Fallbacks: X
+- Groups Dispatched: X | Parallel Tasks: X | Sequential Fallbacks: X
 - Sub-agent Failures: X (retried: Y, resolved: Z)
 
-### Completed
-- [x] Task 1: Set up database schema (3 tests) [parallel: group 1]
-- [x] Task 2: Implement password hashing (5 tests) [parallel: group 1]
-
-### Test Summary
-- New tests added: N
-- All tests passing: Yes
-- Coverage: X%
-```
+### Completed Tasks
+- [x] Task 1: ... (N tests) [parallel: group 1]
 
 ### Quality Assessment
-```markdown
-### Quality Assessment
+| Phase | Critical | Quality | Improvements | Groups | Status |
+|-------|----------|---------|--------------|--------|--------|
 
-#### Phase Reviews
-| Phase | Critical | Quality | Improvements | Parallel Groups | Status |
-|-------|----------|---------|--------------|-----------------|--------|
-| 1: Foundation | 0 | 1 | 2 | 2 | Clean |
-| 2: Core Auth | 1 (fixed) | 0 | 1 | 3 | Fixed |
+### Cross-Phase Review
+- Integration / Security / Performance / Parallel Consistency
 
-#### Cross-Phase Review
-- Integration: All modules communicate correctly
-- Security: Auth boundaries verified across all endpoints
-- Performance: No N+1 queries detected
-- Parallel Consistency: No conflicting changes between sub-agents
-
-#### Issues Found
+### Issues Found
 | # | Severity | Description | Phase | Status |
-|---|----------|-------------|-------|--------|
-| 1 | Critical | Rate limiter not applied to OAuth routes | Cross-phase | Fixed |
 
-#### Recommendations
-1. [recommendation]
+### Recommendations
+1. ...
 
 ### Conclusion
-[Overall assessment: READY / NEEDS WORK / BLOCKED]
+[READY / NEEDS WORK / BLOCKED]
 ```
-
-## TDD Guidelines
-
-### Testing environment
-
-Before running any test or executable command, read `_sdd/env.md` and apply the listed setup.
-If `_sdd/env.md` is missing, ask the user for the required runtime/test environment instead of guessing.
-
-### What to Test
-
-| Task Type | Test Focus |
-|-----------|------------|
-| API Endpoint | Request/response, status codes, validation |
-| Service/Logic | Business rules, edge cases, error handling |
-| Data Layer | CRUD operations, constraints, queries |
-| Utility | Input/output transformations, edge cases |
-
-### Test Naming Convention
-
-Follow the project's existing convention, or use:
-```
-test_<unit>_<scenario>_<expected_result>
-```
-
-### Test Structure (Arrange-Act-Assert)
-
-```python
-def test_something():
-    # Arrange - Set up test data and conditions
-    user = create_test_user()
-
-    # Act - Perform the action being tested
-    result = perform_action(user)
-
-    # Assert - Verify the expected outcome
-    assert result.status == "success"
-```
-
-### When TDD is Difficult
-
-Some tasks don't fit pure TDD. Adapt the approach:
-
-| Situation | Approach |
-|-----------|----------|
-| Database migrations | Write migration, then test the schema |
-| Configuration/setup | Verify setup works, add smoke tests |
-| UI components | Use component testing or integration tests |
-| External integrations | Mock the external service in tests |
-
-## Handling Common Situations
-
-### Parallel-Specific
-
-#### Sub-agent modifies wrong file
-```
-1. Revert the unauthorized change
-2. Re-run the task sequentially with explicit file boundary warnings
-3. If still fails, ask user for guidance
-```
-
-#### Multiple sub-agents report conflicting patterns
-```
-1. Identify the inconsistency during Phase Review
-2. Choose one pattern as canonical
-3. Fix the other tasks to match (using TDD)
-```
-
-#### Sub-agent blocked by unplanned dependency
-```
-1. Sub-agent completes what it can, reports UNPLANNED_DEPENDENCY
-2. Main agent resolves the dependency after group completes
-3. Re-run the incomplete parts of the task
-```
-
-### General
-
-#### Test is Hard to Write
-```
-1. Simplify the acceptance criterion
-2. Break into smaller, testable pieces
-3. Consider if the design needs adjustment (TDD feedback)
-4. Ask user if criterion can be clarified
-```
-
-#### Test Passes Immediately
-```
-1. Feature may already exist - verify
-2. Test may be wrong - review the assertion
-3. Test may be testing the wrong thing - rewrite
-```
-
-#### Task is Blocked by External Dependency
-```
-1. Write tests with mocks for the external dependency
-2. Implement code against the mocks
-3. Note that integration test needed when dependency available
-4. Move to next task
-```
-
-## Implementation Best Practices
-
-### Code Quality
-- **Test first, always**: No production code without a failing test
-- **Minimal code**: Write only enough to pass the test
-- **Follow existing patterns**: Match the codebase's style and conventions
-- **Refactor fearlessly**: Tests give confidence to improve code
-
-### Parallel Execution
-- **Trust sub-agents**: Don't re-do their work; verify through tests
-- **Fix forward**: If a sub-agent's output has minor issues, fix in place rather than re-running
-- **Maximize concurrency**: Dispatch all non-conflicting tasks simultaneously
-- **Fail gracefully**: One sub-agent's failure doesn't stop others
-
-### Communication
-- **Report parallel progress**: Show which groups are executing/completed
-- **Surface blockers**: Alert user to issues requiring decisions
-- **Confirm scope changes**: Ask before deviating from the plan
 
 ## Autonomous Decision-Making
 
-다음 상황에서는 사용자에게 묻지 않고 최선의 판단으로 자율적으로 진행한다:
+다음 상황에서는 사용자에게 묻지 않고 최선의 판단으로 자율 진행:
 
-- **Target Files 불명확**: 가용 정보로 최선의 추론 후 진행, 저확신 시 순차 실행 fallback
-- **테스트 불명확**: 기존 테스트 패턴을 참고하여 최선의 판단으로 작성
-- **모호한 요구사항**: 가장 합리적인 해석으로 진행, 가정 사항을 리포트에 명시
-- **범위 결정**: 구현 계획에 명시된 범위 내에서만 작업, 범위 밖 발견사항은 리포트에 기록
-- **기술 선택**: 기존 코드베이스 패턴을 따르며, 판단 근거를 리포트에 기록
-- **블로커**: 외부 의존성은 mock으로 처리, 해결 불가 항목은 리포트에 기록
+- **Target Files 불명확**: 최선의 추론 후 진행, 저확신 시 순차 fallback
+- **테스트 불명확**: 기존 패턴 참고하여 작성
+- **모호한 요구사항**: 합리적 해석으로 진행, 가정을 리포트에 명시
+- **범위 결정**: 계획 범위 내에서만 작업, 범위 밖 발견사항은 리포트에 기록
+- **기술 선택**: 기존 코드베이스 패턴 준수, 판단 근거를 리포트에 기록
+- **블로커**: 외부 의존성은 mock 처리, 해결 불가 항목은 리포트에 기록
 
-## Integration with Other Skills
+## Prerequisites
 
-- **implementation-plan**: Creates plans with Target Files that this skill consumes
-- **feature-draft**: Also produces plans with Target Files (Part 2: 구현 계획)
-- Plans without Target Files → sequential fallback
-- **implementation-review**: Available for standalone audits
-
-## Quick Start
-
-When user says "implement the plan in parallel":
-
-1. Acquire implementation plan (from `feature-draft`, `implementation-plan`, or existing plan files)
-2. Parse the plan and check for Target Files
-3. If Target Files absent: infer → confirm → or fall back to sequential
-4. Create task tracking
-5. **Identify testing framework** used in the project
-6. For each phase:
-   a. Build parallel groups from unblocked tasks + Target Files
-   b. Show dispatch plan to user
-   c. **Dispatch sub-agents for each group** (Task tool, concurrent calls)
-   d. After each group: **run full test suite**, handle failures
-   e. After all groups in phase: **run phase review**
-   f. Fix any **critical issues** (using TDD)
-7. After all phases: Run **final review**, generate `IMPLEMENTATION_REPORT.md`
+1. **Plan 확보** (Step 1 참조)
+2. **환경 로드**: `_sdd/env.md` 존재 시 setup 적용 (conda, export 등)
+3. **코드베이스 이해**: Grep/Glob으로 기존 패턴, 테스트 프레임워크, 테스트 파일 위치 파악

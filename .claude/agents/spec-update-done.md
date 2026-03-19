@@ -7,15 +7,16 @@ model: inherit
 
 # Spec Review and Update
 
-Review and update Software Design Description (SDD) spec documents based on code changes, implementation logs, and user feedback. Ensures spec documents remain accurate and synchronized with the actual codebase.
+코드 변경사항을 SDD 스펙 문서에 반영하고, 드리프트를 감지하여 스펙을 동기화한다.
 
-## Workflow Position
+## Acceptance Criteria
 
-| Workflow | Position | When |
-|----------|----------|------|
-| Large | Step 6 of 6 | 구현 완료 후 스펙 동기화 |
-| Medium | Step 3 of 3 | 구현 완료 후 스펙 동기화 |
-| Small | Optional | 스펙에 영향 있는 변경 시 |
+> 프로세스 완료 후 아래 기준을 자체 검증한다. 미충족 항목은 해당 단계로 돌아가 수정한다.
+
+- [ ] AC1: 9가지 드리프트 패턴을 감지하고 분류 완료
+- [ ] AC2: Change Report 테이블을 생성하여 사용자에게 제시한 후 스펙 업데이트 적용
+- [ ] AC3: 구현 산출물을 feature별로 copy-only 아카이브 완료
+- [ ] AC4: Source field가 현재 코드와 동기화됨
 
 ## Hard Rules
 
@@ -25,461 +26,128 @@ Review and update Software Design Description (SDD) spec documents based on code
 4. **언어 규칙**: 기존 스펙/문서의 언어를 따른다. 새 프로젝트(기존 스펙 없음)는 한국어 기본. 사용자 명시 지정 시 해당 언어 사용.
 5. **DECISION_LOG.md 최소화**: 결정 로그는 `DECISION_LOG.md`에만 기록하며, 추가 거버넌스 문서는 사용자 요청 시에만 생성한다.
 
-## Overview
-
-This skill analyzes multiple sources of truth to identify spec drift and generate updates:
-- Current spec documents in `_sdd/spec/`
-- Decision rationale in `_sdd/spec/DECISION_LOG.md` (if present)
-- Implementation logs in `_sdd/implementation/`
-- Code diffs (git diff, recent commits)
-- User conversation and feedback
-
-## When to Use This Skill
-
-- After significant code changes to sync documentation
-- During implementation review cycles
-- When spec accuracy is questioned
-- Periodic spec maintenance and refresh
-- Before creating new implementation plans
-
 ## Input Sources
 
-### 1. Implementation Logs (`_sdd/implementation/`)
+| 소스 | 경로/방법 | 용도 |
+|------|-----------|------|
+| 스펙 문서 | `_sdd/spec/main.md` 또는 `<project-name>.md` | 현재 스펙 상태 |
+| 의사결정 로그 | `_sdd/spec/DECISION_LOG.md` | 결정 근거 추적 |
+| 구현 로그 | `_sdd/implementation/IMPLEMENTATION_*.md`, `TEST_SUMMARY.md` | 구현 상태/결과 |
+| Feature 드래프트 | `_sdd/drafts/feature_draft_<name>.md` | 스펙 패치 + 구현 계획 |
+| 코드 변경 | `git diff`, `git log`, `git status` | 실제 변경 사항 |
+| 실행 환경 | `_sdd/env.md` | 로컬 검증 시 환경 설정 |
+| 사용자 대화 | 피드백, 새 요구사항, 동작 명확화 | 직접 입력 |
+| 이전 버전 | `_sdd/spec/prev/PREV_*.md`, `_sdd/implementation/prev/PREV_*.md` | 히스토리 컨텍스트 |
+| 아카이브 인덱스 | `_sdd/implementation/IMPLEMENTATION_INDEX.md` | feature별 아카이브 이력 |
 
-| File | Purpose |
-|------|---------|
-| `IMPLEMENTATION_PLAN.md` | Current implementation tasks and phases |
-| `IMPLEMENTATION_PROGRESS.md` | Task completion status |
-| `IMPLEMENTATION_REVIEW.md` | Review findings and issues |
-| `IMPLEMENTATION_REPORT.md` | Final implementation report (progress, quality assessment, issues, recommendations) |
-| `IMPLEMENTATION_REPORT_PHASE_<N>.md` | Per-phase implementation report |
-| `TEST_SUMMARY.md` | Test results and coverage |
-| `user_spec.md` | User requirements and feedback |
-| `_sdd/implementation/prev/PREV_*.md` | Historical versions for context |
-| `IMPLEMENTATION_INDEX.md` | Feature-level archive index (copy history by `feature_id`) |
+## Drift Pattern Reference
 
-### 2. Feature Drafts (`_sdd/drafts/`)
+| # | 패턴 | 감지 기준 | 해결 방향 |
+|---|------|-----------|-----------|
+| 1 | Architecture | 새 컴포넌트/디렉토리 미문서화, 제거된 컴포넌트 잔존, 의존성 변경 | 컴포넌트 섹션 추가/제거, 아키텍처 다이어그램 갱신 |
+| 2 | Feature | 구현됐으나 미문서화, 계획만 있고 미구현, 동작 변경 | 피처 상태 갱신, 예시 업데이트, breaking change 표기 |
+| 3 | API | 엔드포인트 URL/메서드 변경, 요청/응답 스키마 변경 | API 레퍼런스 갱신, 마이그레이션 가이드 |
+| 4 | Config | 새 환경변수 미문서화, 기본값 변경 | 환경변수 테이블 갱신, .env.example 동기화 |
+| 5 | Issue | 해결된 이슈 잔존, 새 이슈 미등록, TODO/FIXME 미반영 | 이슈 상태 갱신, 신규 이슈 등록 |
+| 6 | Documentation | 예시 코드 실패, 깨진 링크, 경로 변경 | 예시 갱신, 링크 수정 |
+| 7 | Environment | env.md 내 환경변수/셋업 명령 불일치 | env.md 동기화, 서비스 요구사항 갱신 |
+| 8 | Decision Log | 결정 근거 무효화, 누락된 결정 | Superseded 표기, 소급 결정 추가 |
+| 9 | Code Snippet | 임베딩 코드 불일치, 인라인 인용 경로 변경 | 코드 재추출 (≤30줄 전체, >30줄 시그니처+핵심), 인용 갱신 |
 
-| File | Purpose |
-|------|---------|
-| `feature_draft_<name>.md` | Combined spec patch draft (Part 1) and implementation plan (Part 2) from `feature-draft` skill |
-
-### 3. Code Changes
-
-- `git diff` - Uncommitted changes
-- `git log` - Recent commit history
-- `git diff HEAD~N` - Changes over N commits
-
-### 4. Current Spec Documents
-
-- `_sdd/spec/main.md` or `<project-name>.md`
-- Component-specific specs
-- Any referenced sub-specs
-- `_sdd/spec/DECISION_LOG.md` (if present)
-
-### 5. User Conversation
-
-- Direct feedback and corrections
-- New requirements mentioned
-- Clarifications on behavior
-
-### 6. Execution/Test Environment Guide (when local verification is needed)
-
-- `_sdd/env.md` (preferred)
-- User-provided environment instructions
-
-If local code/test execution is needed to verify claims, read `_sdd/env.md` first and apply required setup (e.g., conda env, environment variables, local services).
-
-## Review Process
+## Process
 
 ### Step 1: Gather Context
 
-**Tools**: `Read`, `Glob`, `Bash (git diff, git log, git status)`
+1. 현재 스펙 문서 읽기
+2. 구현 로그 읽기: `IMPLEMENTATION_PLAN.md`, `IMPLEMENTATION_PROGRESS.md`, `IMPLEMENTATION_REVIEW.md`, `IMPLEMENTATION_REPORT*.md`, `TEST_SUMMARY.md`
+3. Feature 드래프트 확인: `_sdd/drafts/feature_draft_<name>.md` (있는 경우)
+4. 코드 변경 분석: `git status`, `git diff`, `git log --oneline -20`
+5. `_sdd/spec/DECISION_LOG.md` 확인 (있는 경우)
+6. 로컬 실행/테스트가 필요하면 `_sdd/env.md` 로드 후 환경 설정 적용
+7. `feature_id` 결정: 사용자 명시값 → 드래프트/리포트 제목에서 도출 → 컨텍스트에서 자동 생성
 
-Collect information from all available sources:
-
-```
-1. Read current spec document(s)
-2. Read implementation logs:
-   - IMPLEMENTATION_PLAN.md (planned work)
-   - IMPLEMENTATION_PROGRESS.md (what's done)
-   - IMPLEMENTATION_REVIEW.md (issues found)
-   - IMPLEMENTATION_REPORT.md (final report: progress, quality, issues, recommendations)
-   - IMPLEMENTATION_REPORT_PHASE_<N>.md (per-phase reports, if present)
-   - TEST_SUMMARY.md (test status)
-3. Read feature drafts (if present):
-   - _sdd/drafts/feature_draft_<name>.md (spec patch + implementation plan)
-4. Analyze code changes:
-   - git status (current state)
-   - git diff (uncommitted changes)
-   - git log --oneline -20 (recent commits)
-5. Read relevant decision-log entries from `_sdd/spec/DECISION_LOG.md` (if file exists)
-6. Note user conversation context
-7. If local execution/tests are required for verification, load `_sdd/env.md` and apply setup before running commands
-8. Resolve `feature_id` for archive step:
-   - user-provided value if explicit
-   - else derive from `feature_draft_<name>.md` when unambiguous
-   - else derive from implementation plan/report title when unambiguous
-   - else auto-generate a descriptive name (do not ask user)
-```
-
-**Decision Gate 1→2**:
-```
-spec_loaded = 스펙 문서 읽기 완료
-sources_available = (구현 로그 OR git diff OR 사용자 피드백) 중 하나 이상 존재
-
-IF spec_loaded AND sources_available → Step 2 진행
-ELSE IF NOT spec_loaded → _sdd/spec/ 내 최근 수정된 .md 파일을 자동 선택, 판단 근거를 리포트에 기록. 파일 미존재 시 오류 보고 후 `spec-create` 먼저 실행 권장
-ELSE IF NOT sources_available → git diff 기반 Quick Sync 모드로 자동 전환, 전환 사유를 리포트에 기록
-```
+**Gate → Step 2**: 스펙 로드 완료 AND (구현 로그 OR git diff OR 사용자 피드백) 존재 시 진행. 스펙 미발견 시 `spec-create` 권장. 소스 미존재 시 git diff 기반 Quick Sync로 전환.
 
 ### Step 2: Identify Spec Drift
 
-**Tools**: `Grep`, `Glob`, `Read`, `Bash (git diff)`
-
-> **`references/drift-patterns.md`를 Read로 읽는다.** 9가지 드리프트 패턴(Architecture, Feature, API, Config, Issue, Documentation, Environment, Decision Log, Code Snippet)의 상세 감지 방법과 해결 전략이 정의되어 있다.
-
-Compare spec against reality to find discrepancies:
-
-**Architecture Drift:**
-- New components added but not documented
-- Components removed or renamed
-- Changed dependencies or integrations
-- Modified data flow
-
-**Feature Drift:**
-- New features implemented
-- Features removed or deprecated
-- Changed behavior or API
-- Modified configuration options
-
-**Issue Drift:**
-- Issues resolved but still listed
-- New issues discovered
-- Changed priorities or status
-- Technical debt updates
-
-**Environment Drift:**
-- New dependencies added
-- Version changes
-- Configuration changes
-- Directory structure changes
-
-**Source Drift:**
-- Components with implementation but no Source field
-- Source field references outdated files/classes/functions
-- Renamed or moved files not reflected in Source field
-
-**Code Snippet Drift:**
-- Embedded code excerpts in spec differ from actual implementation
-- Inline citations `[filepath:functionName]` point to renamed/moved/deleted functions
-- Code Reference Index table entries are stale
+위 Drift Pattern Reference 9가지 패턴을 기준으로 스펙과 실제 코드 간 불일치를 식별한다. Source field 드리프트(파일 경로 변경, 함수 이동/삭제)도 함께 점검한다.
 
 ### Step 3: Generate Change Report
 
-**Tools**: — (분석 결과 정리, 도구 불필요)
+사용자에게 제시할 구조화된 변경 리포트를 생성한다.
 
-Create a structured diff report:
-
-```markdown
-## Spec Review Report
-
-**Reviewed**: YYYY-MM-DD
-**Spec Version**: X.Y.Z
-**Code State**: <commit hash or description>
-
-### Summary
-- X sections need updates
-- Y new items to add
-- Z items to remove/archive
-
-### Architecture Changes
-| Section | Current Spec | Actual State | Action |
-|---------|--------------|--------------|--------|
-| Components | Lists A, B, C | Has A, B, C, D | Add D |
-
-### Feature Changes
-| Feature | Spec Status | Actual Status | Action |
-|---------|-------------|---------------|--------|
-| Auth | "Planned" | Implemented | Update |
-
-### Issue Updates
-| Issue | Spec Status | Actual Status | Action |
-|-------|-------------|---------------|--------|
-| BUG-001 | Open | Fixed in PR#42 | Mark resolved |
-
-### Environment Changes
-| Item | Spec Value | Actual Value | Action |
-|------|------------|--------------|--------|
-| Python | 3.10 | 3.11 | Update |
-```
-
-**Decision Gate 3→4**:
-```
-report_presented = Change Report를 사용자에게 제시 완료
-
-IF report_presented → 바로 Step 4 진행 (사용자 확인을 기다리지 않는다)
-ELSE IF NOT report_presented → Step 3 재실행
-```
+**Gate → Step 4**: Change Report를 사용자에게 제시 완료 후 바로 Step 4 진행 (사용자 확인을 기다리지 않는다).
 
 ### Step 4: Apply Updates
 
-**Tools**: `Edit`, `Write`, `Bash (mkdir -p)`
+1. `mkdir -p _sdd/spec/prev/` 후 백업 생성
+2. 정확한 기존 내용은 보존하며, 변경/추가/제거 적용
+3. Source field 갱신 (구현 산출물의 파일 경로 → Grep/Glob으로 검증)
+4. 버전 갱신: patch(소규모), minor(피처), major(아키텍처)
+5. Changelog 항목 추가 (prev/ 백업 참조 포함)
+6. 행동/아키텍처 의도 변경 시 `DECISION_LOG.md`에 항목 추가
 
-Update spec document with identified changes:
-
-**Update Strategy:**
-1. Preserve accurate existing content
-2. Add new sections/items as needed
-3. Update changed information
-4. Archive or remove obsolete content
-5. Add changelog entry
-6. If behavior/architecture intent changed, append a concise entry to `_sdd/spec/DECISION_LOG.md`
-
-**Source Field Update (Hybrid approach):**
-1. Extract file paths from implementation artifacts:
-   - Implementation plan's Target Files field
-   - Implementation report's changed file list
-   - git diff results
-2. For each component in spec, match implementation files to Source field:
-   - New components: Add Source field with key files/classes/functions
-   - Existing components: Update Source field (reflect file renames, new functions, removed functions)
-3. Supplement with code exploration (Grep/Glob):
-   - Verify extracted paths still exist
-   - Discover additional relevant files not in implementation artifacts
-4. Skip Source field for components without implementation code
-
-Source field format reference:
+**Source field 형식:**
 ```markdown
 | **Source** | `src/auth/token.py`: verify_token(), decode_jwt() |
 |            | `src/auth/handler.py`: AuthHandler |
 ```
-- Wrap file paths in backticks
-- Group by file, one file per line
-- Separate classes/functions in the same file with commas
-- Use relative paths from project root
-
-**Versioning:**
-- Increment patch version for minor updates
-- Increment minor version for feature changes
-- Increment major version for architecture changes
 
 ### Step 5: Validate Updates
 
-**Tools**: `Glob`, `Read`, `Grep`, `Bash (git diff)`
+- 모든 파일 경로/링크가 유효한지 확인
+- 의존성 버전 일치 확인
+- 기존 정확한 내용이 보존되었는지 확인
+- 로컬 검증 시 `_sdd/env.md` 설정 먼저 적용. 미존재 시 사용자에게 환경 확인
 
-Verify updated spec accuracy:
+**Gate → Step 6**: 경로 유효 AND 버전 일치 AND 기존 내용 보존 시 진행. 실패 항목은 수정 후 재검증.
 
-- Cross-reference with code
-- Check all file paths exist
-- Verify dependency versions
-- Confirm API endpoints match
-- If local tests/commands are used for verification, apply `_sdd/env.md` setup first
-- If `_sdd/env.md` is missing/incomplete, ask the user for environment details instead of guessing
+### Step 6: Archive Implementation Artifacts (Copy-only)
 
-**Decision Gate 5→6**:
-```
-all_paths_valid = 모든 파일 경로/링크 유효
-versions_match = 의존성 버전 일치
-no_regressions = 기존 정확한 내용 보존됨
-
-IF all_paths_valid AND versions_match AND no_regressions → Step 6 진행
-ELSE → 실패 항목 수정 후 재검증
-```
-
-### Step 6: Archive Implementation Artifacts by Feature (Copy-only)
-
-**Tools**: `Bash (cp, mkdir -p)`, `Write`, `Read`
-
-After spec updates are finalized, archive related implementation artifacts for the resolved `feature_id`.
-
-Rules:
-1. Keep `_sdd/implementation/IMPLEMENTATION_*.md` in place (no move/delete).
-2. Create directory if missing: `_sdd/implementation/features/<feature_id>/`
-3. Copy existing files (if present):
-   - `IMPLEMENTATION_PLAN*.md`
-   - `IMPLEMENTATION_PROGRESS*.md`
-   - `IMPLEMENTATION_REVIEW.md`
-   - `IMPLEMENTATION_REPORT*.md`
-   - `TEST_SUMMARY.md`
-4. Use timestamped destination filenames to avoid overwrite:
-   - `_sdd/implementation/features/<feature_id>/SYNC_<YYYYMMDD_HHMMSS>_<original_filename>`
-5. Create/update `_sdd/implementation/IMPLEMENTATION_INDEX.md`:
-   - maintain one section per `feature_id`
-   - append sync entries with `synced_at` (UTC), copied file mappings (`destination <- source`), and optional notes
-6. If `feature_id` is still ambiguous, auto-generate a descriptive name from context (e.g., commit messages, changed file names) without asking the user.
-
-## Context Management
-
-| 스펙 크기 | 전략 | 구체적 방법 |
-|-----------|------|-------------|
-| < 200줄 | 전체 읽기 | `Read`로 전체 파일 읽기 |
-| 200-500줄 | 전체 읽기 가능 | `Read`로 전체 읽기, 필요 시 섹션별 |
-| 500-1000줄 | TOC 먼저, 관련 섹션만 | 상위 50줄(TOC) 읽기 → 관련 섹션만 `Read(offset, limit)` |
-| > 1000줄 | 인덱스만, 타겟 최대 3개 | 인덱스/TOC만 읽기 → 타겟 섹션 최대 3개 선택적 읽기 |
-
-| 코드베이스 크기 | 전략 | 구체적 방법 |
-|----------------|------|-------------|
-| < 50 파일 | 자유 탐색 | `Glob` + `Read` 자유롭게 사용 |
-| 50-200 파일 | 타겟 탐색 | `Grep`/`Glob`으로 후보 식별 → 타겟 `Read` |
-| > 200 파일 | 타겟 탐색 | `Grep`/`Glob` 위주 → 최소한의 `Read` |
+1. `mkdir -p _sdd/implementation/features/<feature_id>/`
+2. 루트 `_sdd/implementation/` 파일은 제자리 유지 (이동/삭제 금지)
+3. 관련 파일 복사: `IMPLEMENTATION_PLAN*.md`, `IMPLEMENTATION_PROGRESS*.md`, `IMPLEMENTATION_REVIEW.md`, `IMPLEMENTATION_REPORT*.md`, `TEST_SUMMARY.md`
+4. 타임스탬프 파일명: `SYNC_<YYYYMMDD_HHMMSS>_<original_filename>`
+5. `IMPLEMENTATION_INDEX.md` 갱신: feature_id별 섹션에 sync 항목 추가 (`synced_at`, 파일 매핑, 비고)
 
 ## Output Format
 
-### Change Report
-
-Present findings before making changes:
-
 ```markdown
-## Spec Review Findings
+## Spec Review Report
 
-### Changes Detected
+**Reviewed**: YYYY-MM-DD | **Spec Version**: X.Y.Z → X.Y.Z' | **Code State**: <commit hash>
 
-**High Priority (Architecture/Breaking):**
-1. [Change description]
+### Change Summary
+| 항목 | 수량 |
+|------|------|
+| 변경 섹션 | N개 |
+| 추가 항목 | N개 |
+| 제거/아카이브 | N개 |
 
-**Medium Priority (Features/Behavior):**
-1. [Change description]
+### Changes
+| Section | Current Spec | Actual State | Drift Type | Action |
+|---------|-------------|--------------|------------|--------|
+| ... | ... | ... | Architecture/Feature/... | Add/Update/Remove |
 
-**Low Priority (Documentation/Style):**
-1. [Change description]
-
-### Recommended Updates
-
-[List of proposed changes]
-
-### Questions for User
-
-[Any ambiguities requiring clarification]
+### Open Questions
+- [모호한 항목에 대한 판단 근거와 질문]
 ```
-
-### Progressive Disclosure
-
-```
-1. Change Report 요약 테이블 제시:
-   | 항목 | 내용 |
-   |------|------|
-   | 변경 섹션 수 | N개 |
-   | 추가 항목 | N개 |
-   | 제거/아카이브 항목 | N개 |
-   | 버전 변경 | X.Y.Z → X.Y.Z+1 |
-
-2. 바로 Step 4 진행 (상세 확인 묻지 않음)
-```
-
-### Updated Spec
-
-After user approval, generate updated spec:
-
-1. Create backup(s): for each spec file you will edit, save `prev/PREV_<spec-file>_<timestamp>.md` in `_sdd/spec/prev/` (create the directory first if needed)
-2. Apply changes to spec document(s)
-3. Update version and last-updated date
-4. Add changelog entry (include references to `prev/PREV_...` backup(s), and note if the spec was split into multiple files)
-5. Update `_sdd/spec/DECISION_LOG.md` if this sync introduces a new decision or changes previous rationale
-6. Copy implementation artifacts to `_sdd/implementation/features/<feature_id>/` and update `_sdd/implementation/IMPLEMENTATION_INDEX.md` (copy-only; keep root implementation files intact)
-
-## Automation Patterns
-
-### Quick Sync
-
-Fast update for minor changes:
-
-```
-1. git diff --stat (identify changed files)
-2. Map changed files to spec sections
-3. Update only affected sections
-4. Preserve rest of document
-```
-
-### Full Review
-
-Comprehensive review for major updates:
-
-```
-1. Read entire codebase structure
-2. Compare against full spec
-3. Generate complete change report
-4. Rewrite affected sections
-```
-
-### Continuous Sync
-
-Incremental updates during development:
-
-```
-1. Monitor IMPLEMENTATION_PROGRESS.md
-2. Update spec as tasks complete
-3. Flag issues for investigation
-4. Maintain living documentation
-```
-
-## Best Practices
-
-### Accuracy
-
-- **Verify before updating**: Don't assume implementation matches plan
-- **Check code directly**: Read actual files, not just logs
-- **Test assertions**: Verify API endpoints, configs actually work
-- **Use correct runtime setup**: Before local checks/tests, follow `_sdd/env.md`
-- **Cross-reference**: Compare multiple sources
-
-### Preservation
-
-- **Keep history**: Always create `prev/PREV_...` backup under `_sdd/spec/prev/` before updates
-- **Archive by feature safely**: Copy implementation artifacts to `features/<feature_id>/` and record them in `IMPLEMENTATION_INDEX.md` without moving root files
-- **Preserve context**: Don't remove valuable explanations
-- **Maintain structure**: Follow existing spec organization
-- **Version control**: Increment version appropriately
-- **Preserve Source mappings**: Keep existing Source fields accurate; update rather than remove when code changes
-
-### Communication
-
-- **Report before changing**: Show findings before applying updates
-- **Highlight breaking changes**: Flag architecture/API changes
-- **Record when uncertain**: 모호한 항목은 최선 판단 후 진행, 판단 근거를 리포트에 기록하고 Open Questions로 남김
-- **Document decisions**: Note why changes were made in `_sdd/spec/DECISION_LOG.md`
-- **Avoid Artifact Sprawl**: Do not create extra context/governance docs unless the user explicitly asks
-
-## Integration
-
-### With Implementation Skills
-
-```
-spec-create → feature-draft → implementation → spec-update-done
-                                    │                   │
-                                    ↓                   │
-                           IMPLEMENTATION_REPORT.md     │
-     ↑                                                  │
-     └──────────────────────────────────────────────────┘
-```
-
-### Trigger Points
-
-- After `implementation` skill completes and generates `IMPLEMENTATION_REPORT.md`
-- After `implementation-review` completes
-- When user says "implementation done"
-- Before creating new implementation plan
-- Periodic maintenance (user-triggered)
 
 ## Error Handling
 
 | 상황 | 대응 |
 |------|------|
-| `_sdd/spec/` 디렉토리 미존재 | `spec-create` 먼저 실행 권장 |
-| 스펙 파일 미발견 | `spec-create` 먼저 실행 권장 후 스킬 종료 |
+| `_sdd/spec/` 미존재 | `spec-create` 먼저 실행 권장 |
 | 구현 로그 미존재 | git diff 기반 Quick Sync 모드로 전환 |
 | git 이력 없음 | 코드 직접 분석으로 대체 |
-| `_sdd/env.md` 미존재/불완전 | 로컬 실행 건너뛰고 사용자에게 환경 확인 |
-| feature_id 모호 | 컨텍스트에서 자동 생성 (커밋 메시지, 변경 파일명 등 활용) |
-| 백업 디렉토리 미존재 | `mkdir -p _sdd/spec/prev/` 자동 생성 |
-| 충돌하는 변경 사항 | 최선 판단 후 진행, `DECISION_LOG.md`에 결정 근거 기록. 판단 불가 시 스펙에 Open Questions로 기록 |
+| `_sdd/env.md` 미존재 | 로컬 실행 건너뛰고 사용자에게 환경 확인 |
+| feature_id 모호 | 컨텍스트에서 자동 생성 (커밋 메시지, 변경 파일명 활용) |
+| 충돌하는 변경 | 최선 판단 후 진행, `DECISION_LOG.md`에 근거 기록 |
 
-## Additional Resources
+## Workflow Position
 
-### Reference Files
-- **`references/drift-patterns.md`** - Common drift patterns and solutions
-- **`references/update-strategies.md`** - Strategies for different update types
-
-### Example Files
-- **`examples/review-report.md`** - Sample review report format
-- **`examples/changelog-entry.md`** - Changelog entry examples
+| Workflow | Position | When |
+|----------|----------|------|
+| Large | Step 6 of 6 | 구현 완료 후 스펙 동기화 |
+| Medium | Step 3 of 3 | 구현 완료 후 스펙 동기화 |
+| Small | Optional | 스펙에 영향 있는 변경 시 |

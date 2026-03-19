@@ -8,9 +8,14 @@ version: 1.0.0
 
 One command to handle your entire git workflow: status check, semantic commit grouping, smart branching, push, and graph cleanup.
 
-## Quick Reference
+## Acceptance Criteria
+> 프로세스 완료 후 아래 기준을 자체 검증한다. 미충족 항목은 해당 단계로 돌아가 수정한다.
+- [ ] AC1: ASSESS 단계에서 branch, sync, working tree, graph 상태를 모두 파악했다
+- [ ] AC2: 변경사항을 의미 단위로 semantic grouping 하고, 각 그룹에 Conventional Commits 형식 메시지를 작성했다
+- [ ] AC3: CONFIRM 단계에서 커밋 그룹, diff 요약, 브랜치/push 계획을 사용자에게 보여주고 승인을 받았다
+- [ ] AC4: 사용자 확인 없이 push/commit/rebase를 실행하지 않았다
 
-When the user invokes `/git` (or any git-related request), follow this sequence:
+## 5-Phase Workflow
 
 ```
 1. ASSESS  → git status, branch info, remote sync state
@@ -20,257 +25,136 @@ When the user invokes `/git` (or any git-related request), follow this sequence:
 5. REPORT  → show result summary
 ```
 
-Always show the plan and get confirmation before executing. Never auto-push without the user seeing what will happen.
+> **Hard Rule**: Always show the plan and get confirmation before executing. Never auto-push without the user seeing what will happen.
 
 ---
 
-## Phase 1: ASSESS — Understand the Current State
+## Phase 1: ASSESS
 
-Run these commands and collect the results:
+수집 명령:
 
 ```bash
-# Current branch and tracking info
 git branch --show-current
 git remote -v
-
-# Sync state with remote
 git fetch --quiet 2>/dev/null
-
-# Divergence check: how far ahead/behind from remote
 git rev-list --left-right --count HEAD...@{upstream} 2>/dev/null
-
-# Status of working tree
 git status --porcelain=v2 --branch
-
-# Recent log for graph context (compact)
 git log --oneline --graph --all -15
-
-# Check for ongoing rebase/merge
+# 진행 중인 rebase/merge 확인
 test -d .git/rebase-merge || test -d .git/rebase-apply && echo "REBASE_IN_PROGRESS"
 test -f .git/MERGE_HEAD && echo "MERGE_IN_PROGRESS"
 ```
 
-Build a mental model from this:
-- **branch**: current branch name and its upstream
-- **sync**: commits ahead/behind remote
-- **working_tree**: list of modified/added/deleted/untracked files with their paths
-- **graph_health**: is the graph clean, or is there divergence/merge commits that need cleanup?
-- **in_progress**: any ongoing rebase or merge?
+파악할 정보: branch(현재/upstream), sync(ahead/behind), working_tree(M/A/D/?), graph_health, in_progress 여부.
 
-### Status Dashboard
-
-Present the assessment as a concise dashboard:
+결과를 Status Dashboard로 요약 표시:
 
 ```
 📊 Git Status Dashboard
 ━━━━━━━━━━━━━━━━━━━━━━
 🌿 Branch: feature/user-auth → origin/feature/user-auth
 📡 Sync:   2 ahead, 0 behind  ✅
-⚠️ Graph:  clean
-
 📁 Changes:
-  Staged (3):
-    M  src/auth/login.ts
-    M  src/auth/token.ts
-    A  src/auth/types.ts
-  Unstaged (2):
-    M  README.md
-    M  package.json
-  Untracked (1):
-    ?  src/utils/helper.ts
+  Staged (3):   M src/auth/login.ts, M src/auth/token.ts, A src/auth/types.ts
+  Unstaged (2): M README.md, M package.json
+  Untracked (1): ? src/utils/helper.ts
 ━━━━━━━━━━━━━━━━━━━━━━
 ```
 
-Indicators: 📡 Sync → ✅ in sync, ⚠️ behind, 🔄 diverged. Graph → ✅ clean, ⚠️ messy.
-
 ---
 
-## Phase 2: PLAN — Analyze and Decide Strategy
+## Phase 2: PLAN
 
 ### 2a. Semantic Change Grouping
 
-Examine ALL changed files (staged + unstaged) and their diffs:
+`git diff --stat`, `git diff --cached --stat`으로 전체 변경 파악 후 논리 단위로 그룹핑.
 
-```bash
-git diff --stat
-git diff --cached --stat
-git diff HEAD --   # individual file content when needed
-```
+| 기준 | 설명 |
+|------|------|
+| Directory proximity | 같은 모듈/폴더의 파일 |
+| Functional relationship | component + test + types = 하나 |
+| Nature of change | refactor / feature / fix / config 분리 |
 
-Group changes into **logical commit units** by:
-- **Directory proximity**: files in the same module/feature folder belong together
-- **Functional relationship**: component + test + types = one commit
-- **Nature of change**: separate refactors from features from fixes from config
-- **File type patterns**: migrations together, config files may be separate
+각 그룹에 Conventional Commits 메시지 부여: `<type>(<scope>): <description>`
 
-Each group gets a Conventional Commits message.
-
-**Format**: `<type>(<scope>): <description>`
-
-**Types**:
-- `feat` — new feature or capability
-- `fix` — bug fix
-- `refactor` — code restructuring without behavior change
-- `style` — formatting, whitespace, linting
-- `docs` — documentation only
-- `test` — adding or updating tests
-- `chore` — build, deps, config, CI changes
-- `perf` — performance improvement
-
-**Scope**: derive from the primary directory or module (e.g., `auth`, `api`, `ui`, `db`)
-
-**Description**: imperative mood, lowercase, no period, under 50 chars. Be specific.
-
-**Examples:**
-```
-feat(auth): add JWT token refresh endpoint
-fix(ui): resolve dropdown z-index overlap on mobile
-refactor(api): extract validation logic into middleware
-chore(deps): bump express from 4.18 to 4.21
-test(auth): add integration tests for login flow
-```
-
-For breaking changes, add a body:
-```
-feat(api)!: migrate to v2 authentication scheme
-
-BREAKING CHANGE: /auth/login now requires `client_id` parameter.
-```
+> 상세 type 목록 및 grouping 전략: `references/conventional-commits.md`, `references/semantic-grouping.md` 참조
 
 ### 2b. Smart Branching Decision
 
-**Create a new branch when ANY of these are true:**
-- Current branch is `main`/`master`/`develop`/`release/*` AND changes are feature-level
-- Total diff exceeds ~300 lines across 10+ files
-- Changes span 3+ unrelated modules
-- Work is clearly a new feature area unrelated to recent branch commits
+| 조건 | 행동 |
+|------|------|
+| main/master/develop에서 feature 수준 변경 | 새 브랜치 생성 |
+| diff 300줄+ / 10+ 파일 / 3+ 무관 모듈 | 새 브랜치 생성 |
+| 이미 맞는 feature/fix 브랜치 | 현재 브랜치 유지 |
+| 소규모 수정·docs/config만 | 현재 브랜치 유지 |
 
-**Branch naming**: `<type>/<short-description>`
-- `feature/add-user-auth`
-- `fix/dropdown-overlap`
-- `refactor/extract-api-middleware`
-
-**Stay on current branch when:**
-- Already on a matching feature/fix branch
-- Changes are small fixes or continuations
-- Protected branch but changes are docs/config only
+브랜치명: `<type>/<short-description>` (예: `feature/add-user-auth`, `fix/dropdown-overlap`)
 
 ### 2c. Graph Cleanup Decision
 
-**Rebase when:**
-- Behind remote (new upstream commits after fetch)
-- Unnecessary merge commits that could be linearized
-- Tangled graph visible in `git log --graph`
+| 상황 | 전략 |
+|------|------|
+| Behind, no local commits | `git pull --ff-only` |
+| Behind, with local commits | `git pull --rebase` |
+| Messy graph, feature branch | `git rebase <base-branch>` |
+| main/master/develop | **절대 force-rebase 금지** |
 
-**Strategy:**
-- Behind, no local commits → `git pull --ff-only`
-- Behind, with local commits → `git pull --rebase`
-- Messy graph, on feature branch → `git rebase <base-branch>`
-- Never force-rebase `main`/`master`/`develop`
+> 안전 규칙 상세: `references/safety-rules.md` 참조
 
 ---
 
-## Phase 3: CONFIRM — Show the Plan
+## Phase 3: CONFIRM
 
-Present the full plan before executing. Never skip this.
+실행 전 반드시 전체 계획을 보여주고 승인받는다. **절대 생략 불가.**
 
 ```
 🔄 Proposed Git Actions
 ━━━━━━━━━━━━━━━━━━━━━━
-
-1️⃣ Graph cleanup:
-   → git pull --rebase (2 commits behind origin/main)
-
-2️⃣ Create branch:
-   → git checkout -b feature/add-user-auth
-   (reason: significant feature changes on main branch)
-
+1️⃣ Graph cleanup: git pull --rebase (2 commits behind)
+2️⃣ Create branch: feature/add-user-auth
 3️⃣ Commits (3):
    ┌─ feat(auth): add JWT login and refresh endpoints
    │  src/auth/login.ts, src/auth/token.ts, src/auth/types.ts
    ├─ docs(readme): add authentication setup guide
    │  README.md
    └─ chore(deps): add jsonwebtoken dependency
-      package.json, package-lock.json
-
-4️⃣ Push:
-   → git push -u origin feature/add-user-auth
+      package.json
+4️⃣ Push: git push -u origin feature/add-user-auth
 
 Proceed? (y/n/edit)
 ━━━━━━━━━━━━━━━━━━━━━━
 ```
 
-### Diff Preview
-
-Show a condensed diff preview per commit group:
-
-```
-📝 Diff Preview: feat(auth): add JWT login and refresh endpoints
-━━━━━━━━━━━━━━━━━━━━━━
-src/auth/login.ts  (+45, -3)  — new loginUser() and validateCredentials()
-src/auth/token.ts  (+28, -0)  — new refreshToken() and generatePair()
-src/auth/types.ts  (+15, -0)  — AuthPayload, TokenPair interfaces
-━━━━━━━━━━━━━━━━━━━━━━
-```
+각 커밋 그룹에 대해 condensed diff preview (`+lines, -lines`, 주요 함수명) 포함.
 
 ---
 
-## Phase 4: EXECUTE — Run the Plan
+## Phase 4: EXECUTE
 
-After user confirmation, execute step by step with error handling.
-
-### Execution Order
+사용자 승인 후 순서대로 실행:
 
 ```
-1. Stash unrelated changes if needed
-2. Graph cleanup (pull/rebase) if planned
-3. Create new branch if planned
-4. For each commit group:
-   a. Stage the files: git add <files>
-   b. Commit: git commit -m "<message>"
-5. Push: git push [-u origin <branch>]
-6. Pop stash if we stashed
+1. 관련 없는 변경 stash (필요시)
+2. Graph cleanup (pull/rebase)
+3. 새 브랜치 생성 (필요시)
+4. 각 커밋 그룹별:
+   a. git add <files>
+   b. git commit -m "<message>"
+5. git push [-u origin <branch>]
+6. Stash pop (필요시)
 ```
 
-### Staging Strategy for Multiple Commits
-
-```bash
-# Reset everything to unstaged first
-git reset HEAD -- .
-
-# Stage and commit each group separately
-git add src/auth/login.ts src/auth/token.ts src/auth/types.ts
-git commit -m "feat(auth): add JWT login and refresh endpoints"
-
-git add README.md
-git commit -m "docs(readme): add authentication setup guide"
-
-git add package.json package-lock.json
-git commit -m "chore(deps): add jsonwebtoken dependency"
-```
-
-For partial file staging, use `git add -p <file>`. If hunk boundaries are ambiguous, commit the whole file in the most relevant group.
+부분 파일 스테이징: `git add -p <file>`. Hunk 경계 모호하면 전체 파일을 가장 관련 높은 그룹에 커밋.
 
 ### Conflict Resolution
 
-If rebase/pull produces conflicts:
-
-1. List conflicts: `git diff --name-only --diff-filter=U`
-2. Examine each file's conflict markers
-3. **Auto-resolve** if straightforward:
-   - Only one side has meaningful changes → take that side
-   - Both sides changed different sections → merge both
-   - Same lines changed → present to user
-4. After resolving: `git add <file>` then `git rebase --continue`
-5. If ambiguous, show the conflict and ask:
-```
-⚠️ Conflict in src/auth/login.ts
-Which version? (ours / theirs / both / manual)
-```
+1. `git diff --name-only --diff-filter=U`로 충돌 목록
+2. 한쪽만 의미 있는 변경 → 해당 쪽 채택 / 다른 섹션 변경 → 양쪽 병합
+3. 같은 줄 변경 → 사용자에게 제시: `⚠️ Conflict in <file> — Which version? (ours / theirs / both / manual)`
 
 ---
 
-## Phase 5: REPORT — Show Results
+## Phase 5: REPORT
 
 ```
 ✅ Git Actions Complete
@@ -281,39 +165,21 @@ Which version? (ours / theirs / both / manual)
    • docs(readme): add authentication setup guide      [e4f5g6h]
    • chore(deps): add jsonwebtoken dependency           [i7j8k9l]
 📡 Pushed to: origin/feature/add-user-auth
-�� Rebased: 2 commits from origin/main applied cleanly
 ━━━━━━━━━━━━━━━━━━━━━━
 ```
 
 ---
 
-## Edge Cases and Safety
+## Edge Cases
 
-### Protected Branches
-Never force-push to `main`, `master`, `develop`, or `release/*`. Warn and suggest alternatives.
-
-### Empty Working Tree
-```
-✅ Working tree clean — nothing to commit.
-📡 Branch: main (in sync with origin/main)
-```
-
-### Untracked Files
-Include in analysis. If they look like build artifacts (`dist/`, `*.pyc`, `node_modules/`), suggest `.gitignore` instead.
-
-### Large Binary Files
-Warn if binary file > 1MB. Suggest git-lfs if appropriate.
-
-### Detached HEAD
-Warn and suggest creating a branch before committing.
-
-### Stash Handling
-If uncommitted changes don't fit any commit group:
-```
-📦 Stash these unrelated files?
-   M  scratch/notes.txt
-   ?  tmp/debug.log
-```
+| 상황 | 처리 |
+|------|------|
+| Protected branch (main/master/develop/release/*) | force-push 금지, 대안 제시 |
+| Empty working tree | `✅ Working tree clean` 표시, 종료 |
+| Untracked files | 분석 포함. build artifact면 `.gitignore` 제안 |
+| Large binary (>1MB) | 경고, git-lfs 제안 |
+| Detached HEAD | 경고, 브랜치 생성 권유 |
+| Stash 대상 | 커밋 그룹에 안 맞는 변경은 stash 제안 |
 
 ---
 
@@ -321,9 +187,9 @@ If uncommitted changes don't fit any commit group:
 
 | Command | Behavior |
 |---------|----------|
-| `/git` or `/git status` | Phase 1 only — show dashboard |
-| `/git commit` or "커밋해줘" | Full workflow (Phases 1–5) |
-| `/git push` or "푸시해줘" | Check sync + push (skip commit if clean) |
-| `/git cleanup` or "git 정리" | Graph cleanup focus (rebase, linearize) |
+| `/git`, `/git status` | Phase 1 only (dashboard) |
+| `/git commit`, "커밋해줘" | Full workflow (Phase 1-5) |
+| `/git push`, "푸시해줘" | Check sync + push |
+| `/git cleanup`, "git 정리" | Graph cleanup (rebase, linearize) |
 | `/git branch <name>` | Create branch, move uncommitted changes |
-| `/git all` | Stage all → group → commit → push (still confirms) |
+| `/git all` | Stage all → group → commit → push (confirms first) |

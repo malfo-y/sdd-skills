@@ -7,138 +7,97 @@ model: inherit
 
 # Ralph Loop Initialization
 
-> **Security Notice**: The generated `run.sh` uses `--dangerously-skip-permissions` to enable unattended automation. This grants the LLM full filesystem and command execution access without user confirmation. **Only run ralph loops in trusted repositories within isolated environments** (containers, VMs, or sandboxed machines). Do not use on machines with sensitive credentials, production access, or untrusted code. Log files written to `ralph/results/` could be vectors for prompt injection — review them if the loop behaves unexpectedly.
+대상 프로젝트의 장기 실행 프로세스를 위한 `ralph/` 디렉토리를 생성한다. ralph loop은 `while true` 자동화: LLM이 state + results를 읽고, `action.sh`를 작성하고, 스크립트가 실행하고, 프로세스가 완료되거나 LLM이 사람에게 에스컬레이션할 때까지 반복한다.
 
-Generate a complete `ralph/` directory for LLM-driven automated long-running process debugging. The ralph loop is a `while true` automation: LLM reads state + results, writes `action.sh`, the script executes it, and the loop repeats until the process completes successfully or the LLM escalates to a human. Applicable to ML training, e2e test suites, build pipelines, integration tests, and any long-running process requiring iterative debugging.
+> **Security Notice**: 생성된 `run.sh`는 `--dangerously-skip-permissions`를 사용한다. **격리된 환경(컨테이너, VM, 샌드박스)에서만 실행할 것.**
 
-This skill discovers the project's target process, confirms findings with the user, and generates five project-specific files: `CHECKS.md`, `config.sh`, `PROMPT.md`, `run.sh`, and `state.md`.
+## Acceptance Criteria
 
-> **Note**: `ralph-loop-concept.md` (in references/) is written with ML training examples, but the pattern is universal. Adapt phase names, config variables, and commands to fit your project's process type.
+> 프로세스 완료 후 아래 기준을 자체 검증한다. 미충족 항목은 해당 단계로 돌아가 수정한다.
 
-| Workflow | Position | When |
-|----------|----------|------|
-| Independent | Standalone | ML 학습/e2e 테스트/빌드 파이프라인 등 장기 실행 디버깅 자동화 |
-
-> `ralph-loop-init`은 SDD 워크플로우와 독립적이다. `_sdd/spec/`이 존재하면 참조하지만, 규모별 워크플로우에 속하지 않는다.
+- [ ] AC1: `ralph/` 디렉토리에 5개 파일 생성 (`config.sh`, `PROMPT.md`, `run.sh`, `state.md`, `CHECKS.md`)
+- [ ] AC2: 상태 머신이 SETUP → SMOKE_TEST → 실행 → 분석 → DONE 으로 정상 전환
+- [ ] AC3: `run.sh`가 while-loop + LLM 진단 패턴을 정확히 구현 (아래 템플릿 그대로)
+- [ ] AC4: 생성된 파일에 `<placeholder>` 문자열 없음
+- [ ] AC5: `CHECKS.md`의 모든 항목 통과
 
 ## Hard Rules
 
-1. **보안**: ralph 루프는 격리된 환경(컨테이너, VM, 샌드박스)에서만 실행한다.
+1. **격리 환경 전용**: ralph 루프는 컨테이너, VM, 샌드박스에서만 실행한다.
 2. **Spec 읽기 전용**: `_sdd/` 아래 파일을 읽을 수 있으나, 수정하지 않는다.
-3. **Debug-First**: 초기 실행은 최소 범위(sanity check 목적)로 설정한다. 프로세스에 맞는 방법으로 제한한다 (예: ML은 `MAX_STEPS="10"`, 테스트는 단일 테스트 스위트, 빌드는 단일 타겟).
+3. **Debug-First**: 초기 실행은 최소 범위 (예: ML은 `MAX_STEPS="10"`, 테스트는 단일 스위트).
 4. **No Placeholders**: 생성된 파일에 `<placeholder>` 문자열이 없어야 한다.
-5. **Template Fidelity**: `run.sh`는 `run.sh.example`을 거의 그대로 복사하며, 최소한의 수정만 허용한다.
+5. **Template Fidelity**: `run.sh`는 아래 템플릿을 거의 그대로 복사하며, 최소한의 수정만 허용한다.
 
 ---
 
-## Step 0: Read Project Specs
+## State Machine Reference
 
-**Tools**: `Glob`, `Read`
+ralph loop의 핵심 아키텍처. PROMPT.md 생성 시 이 상태 머신을 프로젝트에 맞게 변환한다.
 
-Check if an `_sdd/` directory exists in the project root.
-
-If it exists:
-1. Glob for `_sdd/spec/**/*.md`
-2. If multiple spec files are found, auto-select files most likely to describe the target process by scanning for keywords relevant to the user's request context, and record selection rationale in output
-3. Read the relevant spec files — these are the **primary source of truth** for understanding the target process architecture
-4. Extract key information: entry point scripts, input/data format, CLI arguments, verification criteria, key configuration, runtime details
-5. Also check if `_sdd/env.md` exists. If it does, read it — it contains runtime environment setup (Python env, Node version, Docker config, etc.), required environment variables (API keys, paths, tokens), and other runtime configuration needed to run the code.
-
-If `_sdd/` does not exist, skip to Step 1 (code-only discovery).
-
-**Decision Gate 0→1**:
 ```
-sdd_exists = Glob("_sdd/") 존재 여부
-spec_files = Glob("_sdd/spec/**/*.md") 결과
+Core loop:
+  while true:
+    LLM reads state + results -> writes action.sh
+    run.sh executes action.sh (may take hours)
+    repeat until phase = DONE
 
-IF sdd_exists AND spec_files → spec 읽기 후 Step 1 진행
-ELSE IF sdd_exists AND NOT spec_files → 경고 출력, Step 1 (코드 기반 탐색)
-ELSE → Step 1 (코드 기반 탐색)
+State transitions:
+  SETUP -> SMOKE_TEST -> EXECUTING -> CHECKING -> ANALYZING -> DONE
+                  \-> ADJUSTING -> SMOKE_TEST (smoke-test failure)
+                            \----> EXECUTING / CHECKING (other fixes)
 ```
+
+| Phase | Role | Next Phase |
+|-------|------|------------|
+| **SETUP** | 환경 검증 (데이터, 스크립트, 런타임) | SMOKE_TEST |
+| **SMOKE_TEST** | 최소 실행으로 파이프라인 검증 | EXECUTING (pass) / ADJUSTING (fail) |
+| **EXECUTING** | 본 실행 (학습, 테스트, 빌드 등) | CHECKING (success) / ADJUSTING (failure) |
+| **CHECKING** | 결과 검증 (validation, assertion 등) | ANALYZING (success) / ADJUSTING (failure) |
+| **ANALYZING** | 결과 분석 + 리포트 작성 | DONE |
+| **ADJUSTING** | 에러 진단 + 수정 | SMOKE_TEST / EXECUTING / CHECKING (retry) |
+| **DONE** | 최종 요약 | — |
+
+> Phase 이름은 프로젝트에 맞게 변경 가능 (예: ML은 TRAINING/VALIDATING, 테스트는 TESTING/VERIFYING).
+
+**Escalation**: 같은 원인 3회 실패 → DONE + "STUCK" 메시지. 진단 불가 → DONE + "UNKNOWN ERROR". 외부 조치 필요 → DONE + 설명.
 
 ---
 
-## Step 1: Discover the Target Process
+## Process
 
-**Tools**: `Glob`, `Grep`, `Read`
+### Step 1: Discover the Target Process
 
-프로젝트를 분석하여 자동 디버깅 대상 프로세스를 식별한다. 사용자 요청과 프로젝트 구조에 따라 탐색 전략을 자율적으로 결정한다.
+**도구**: `Glob`, `Grep`, `Read`
 
-아래 5가지 항목을 파악한다:
+아래 체크리스트를 순서대로 확인한다:
 
-| # | 항목 | 목표 | 미발견 시 |
-|---|------|------|----------|
-| 1 | **Entry Point** | 메인 진입점 (스크립트, 명령, 설정 파일) | → 스킬 종료 |
-| 2 | **Verification Step** | 성공 검증 방법 | → CHECKING phase 생략 |
-| 3 | **Input/Data Dependencies** | 필요한 입력, 데이터, 외부 의존성 | → 기록 후 진행 |
-| 4 | **Output Parsing** | 출력에서 상태 추출 방법 (구조화 로깅 여부) | → raw log 파싱 |
-| 5 | **Runtime Environment** | 실행 환경과 명령 (`_sdd/env.md` 우선) | → 프로젝트 파일에서 추론 |
+- [ ] `_sdd/spec/**/*.md` 존재 시 읽기 (primary source of truth)
+- [ ] `_sdd/env.md` 존재 시 읽기 (런타임 환경 설정)
+- [ ] Entry Point 식별 (메인 진입점 스크립트/명령) — 미발견 시 스킬 종료
+- [ ] Verification Step 파악 (성공 검증 방법)
+- [ ] Input/Data Dependencies 파악
+- [ ] Output Parsing 방법 파악 (구조화 로깅 여부)
+- [ ] Runtime Environment 파악 (`_sdd/env.md` 우선, 없으면 프로젝트 파일에서 추론)
 
-진입점을 읽고 실행 인터페이스(CLI args, config files, env vars)를 파악한다. Step 0에서 읽은 spec이 있으면 코드 탐색 결과와 교차 검증한다.
+### Step 2: Present Findings and Confirm
 
-**Decision Gate 1->2**:
-```
-entry_point_found = 대상 프로세스 진입점 1개 이상 식별
-process_understood = 실행 방법과 검증 방법을 이해함
+분석 결과 요약 테이블을 제시하고 사용자 확인을 요청한다:
 
-IF entry_point_found AND process_understood -> Step 2
-ELSE IF NOT entry_point_found -> 오류 보고 → 스킬 종료
-ELSE -> 부분 탐색 결과로 Step 2 진행, 미확인 항목 표시
-```
-
-#### Context Management
-
-| 크기 | 전략 |
-|------|------|
-| Spec < 500줄 / 코드 < 50파일 | 전체 읽기 |
-| Spec 500+ / 코드 50-200 | TOC/Glob 먼저, 타겟만 Read |
-| Spec 1000+ / 코드 200+ | 인덱스만, 최대 3개 섹션 |
-
----
-
-## Step 2: Present Findings and Auto-Proceed
-
-**Tools**: — (요약 제시, 도구 불필요)
-
-Present all discovered information to the user as a summary table and auto-proceed with discovered values.
-
-분석 결과 요약 테이블을 제시:
 | 항목 | 파악 내용 | 상태 |
 |------|----------|------|
-| 진입점 (Entry Point) | &lt;discovered script/command&gt; | confirmed |
-| 검증 단계 (Verification) | &lt;discovered or "미발견"&gt; | confirmed / input needed |
-| 입력/데이터 | &lt;discovered inputs&gt; | confirmed |
-| 핵심 설정 | &lt;key configuration&gt; | confirmed |
-| 런타임 환경 | &lt;detected runtime&gt; | confirmed |
-| 초기 파라미터 | &lt;suggested initial params&gt; | confirmed |
-| 실행 명령 | &lt;execution command&gt; | confirmed |
+| 진입점 | `<discovered>` | confirmed / input needed |
+| 검증 방법 | `<discovered>` | confirmed / input needed |
+| 입력/데이터 | `<discovered>` | confirmed |
+| 런타임 환경 | `<detected>` | confirmed |
+| 초기 파라미터 | `<suggested>` | confirmed |
+| 실행 명령 | `<command>` | confirmed |
 
-Ask the user to confirm or correct:
+사용자가 확인하면 (또는 auto-proceed 가능하면) 다음 단계로 진행한다.
 
-1. **Entry point** — the main execution script/command
-2. **Verification step** — how to verify success, or "none"
-3. **Input/data path** — where input data or dependencies live
-4. **Key configuration** — essential config values for the process
-5. **Runtime environment** — runtime, package manager, etc.
-6. **Initial parameters** — conservative initial values for debug-first run (suggest reasonable defaults)
-7. **Execution command** — the full command to run the process
+### Step 3: Generate `ralph/CHECKS.md`
 
-Structure the question so the user can quickly confirm defaults or override specific values.
-
-**Decision Gate 2->2.5**:
-```
-findings_presented = 분석 결과 요약 테이블 제시 완료
-
-IF findings_presented -> Step 2.5 진행 (사용자 확인을 기다리지 않는다)
-```
-
----
-
-## Step 2.5: Write `ralph/CHECKS.md`
-
-**Tools**: `Bash (mkdir -p)`, `Write`
-
-`ralph/` 디렉토리를 생성하고 `ralph/CHECKS.md`를 작성한다. Step 7에서 프로그래밍적으로 검증할 체크리스트다.
+`ralph/` 디렉토리를 생성하고 (`mkdir -p ralph`) 아래 내용으로 `ralph/CHECKS.md`를 작성한다:
 
 ```
 # Ralph Loop: Acceptance Criteria
@@ -153,7 +112,7 @@ Project: <project name>
 ## PROMPT.md
 - [ ] Anti-recursion warning present
 - [ ] SMOKE_TEST phase with repeat gate (ADJUSTING → SMOKE_TEST)
-- [ ] Core phases present (reference names or custom names)
+- [ ] Core phases present
 - [ ] Main execution command using config.sh variables
 - [ ] Known Errors section present
 - [ ] action.sh Rules section present
@@ -167,15 +126,9 @@ Project: <project name>
 - [ ] `phase: SETUP`, `iteration: 0`, valid `initialized_at` timestamp
 ```
 
----
+### Step 4: Generate `ralph/config.sh`
 
-## Step 3: Generate `ralph/config.sh`
-
-**Tools**: `Read`, `Write`
-
-Create `ralph/config.sh` with shell variables grouped by category. The LLM generates project-appropriate variables based on the target process type.
-
-**Fixed variables** (always present):
+**고정 변수** (항상 포함):
 ```bash
 #!/usr/bin/env bash
 # Ralph Loop Configuration
@@ -187,152 +140,384 @@ LLM_TIMEOUT_SECONDS=600  # max seconds for one LLM turn (0 disables timeout)
 MAX_LLM_FAILURES=3       # consecutive LLM failures before abort
 ```
 
-**Project-specific variables** (LLM generates based on discovered process):
+**프로젝트별 변수**: LLM이 Step 1 분석 결과에 따라 적절한 변수를 추가한다.
+- `LLM_TIMEOUT_SECONDS`와 `MAX_LLM_FAILURES`는 항상 포함
+- Debug-first 접근: 초기 값은 보수적으로 설정
+- 카테고리별 주석 헤더로 그룹화
+- 프로젝트가 실제 사용하는 변수만 포함
 
-The LLM should add variables appropriate for the project type. Examples:
+### Step 5: Generate `ralph/PROMPT.md`
 
-```bash
-# ── ML Training Example ──
-# MODEL_ID="<model name>"
-# DATASET_PATH="<dataset path>"
-# LEARNING_RATE=5e-5
-# NUM_EPOCHS=3
-# MAX_STEPS="10"                # debug-first: start small
-# GRADIENT_ACCUMULATION_STEPS=1
-# NUM_GPUS=1
-# MIXED_PRECISION="fp16"
-# OUTPUT_PATH="./models/train/<project>"
+State Machine Reference 섹션의 구조를 기반으로 프로젝트에 맞는 PROMPT.md를 생성한다.
 
-# ── E2E Test Example ──
-# TEST_SUITE="<test suite path>"
-# TEST_CONFIG="<config path>"
-# PARALLEL_WORKERS=1            # debug-first: single worker
-# TIMEOUT_PER_TEST=60
-
-# ── Build Pipeline Example ──
-# BUILD_TARGET="<target>"
-# BUILD_CONFIG="debug"          # debug-first: debug build
-# ARTIFACT_PATH="./build/output"
-```
-
-**Key rules:**
-- `LLM_TIMEOUT_SECONDS` and `MAX_LLM_FAILURES` are always present
-- Set initial parameters conservatively for debug-first approach
-- Group variables by category with comment headers
-- Use descriptive variable names matching the project's actual configuration
-- Include comments explaining non-obvious variables
-- Only include variables that the target process actually uses
-
----
-
-## Step 4: Generate `ralph/PROMPT.md`
-
-**Tools**: `Glob`, `Read`, `Write`
-
-### 4.1 Read the Reference
-
-`ralph-loop-concept.md`를 Glob(`**/.claude/skills/ralph-loop-init/references/ralph-loop-concept.md`)으로 찾아 읽는다. State machine, action.sh rules, iteration protocol, error patterns, anti-recursion warning의 원본이다.
-
-> `ralph-loop-concept.md`는 ML 예시 기반이지만 패턴은 범용적이다. 프로젝트에 맞게 phase 이름, 명령, 에러 패턴을 변환하여 활용한다.
-
-### 4.2 Generate the PROMPT.md
-
-레퍼런스의 구조를 기반으로 프로젝트에 맞는 PROMPT.md를 생성한다. LLM이 프로젝트 분석 결과에 따라 내용을 자유롭게 구성하되, 아래 필수 요소를 포함해야 한다:
-
-**필수 요소:**
-1. Anti-recursion warning (스킬/슬래시 커맨드 호출 금지)
+**필수 요소**:
+1. Anti-recursion warning: `IMPORTANT: Do NOT invoke any skills, modes, or slash commands. Do NOT use the Skill tool. You are inside a standalone automation loop — not an interactive session.`
 2. Project Context (config 경로, runtime 명령, verification 경로, results dir)
-3. Phase hint block:
-   ```
-   > Reference phases: SETUP / SMOKE_TEST / EXECUTING / CHECKING / ANALYZING / ADJUSTING / DONE
-   > 프로젝트에 맞게 phase 이름 변경/추가/제거 가능
-   ```
+3. Phase 정의 (프로젝트에 맞게 SETUP / SMOKE_TEST / EXECUTING / CHECKING / ANALYZING / ADJUSTING / DONE 변환)
 4. 각 phase별 프로젝트 고유 명령 (config.sh 변수 사용)
 5. SMOKE_TEST repeat gate (실패 시 ADJUSTING → SMOKE_TEST 반복)
-6. Known Errors section (E1 macOS timeout + Step 1에서 발견한 프로젝트 에러)
-7. action.sh Rules (레퍼런스 참조)
-8. Decision Log read/write protocol (레퍼런스 참조)
-9. Self-correction protocol (PROMPT.md 자체 수정 규칙)
+6. Iteration Protocol (11 Steps): config 읽기 → state 읽기 → decisions.md 읽기 → last_exit_code 읽기 → 결과 읽기 → env.md 읽기 → 판단 → action.sh 작성 → state.md 업데이트 → decisions.md 추가 → 종료
+7. action.sh Rules: `set -euo pipefail`, `source ralph/config.sh`, `mkdir -p ralph/results`, `export PYTHONUNBUFFERED=1`, 결과를 `ralph/results/`에 저장, `2>&1 | tee` 로깅
+8. Known Errors section — `uname -s`로 플랫폼 감지, Darwin이면 E1(macOS timeout 패턴) 포함 + Step 1에서 발견한 프로젝트 고유 에러 추가
+9. Decision Log read/write protocol (append-only, 최근 15개 읽기)
+10. Self-correction protocol (PROMPT.md 자체 수정 규칙: 같은 원인 2회+ 실패 시 targeted edit 허용)
 
-### 4.3 Known Errors
+### Step 6: Generate `ralph/run.sh`
 
-`uname -s`로 플랫폼 감지. Darwin이면 E1(macOS timeout) 포함. Step 1에서 발견한 프로젝트 고유 에러도 추가한다.
+아래 템플릿을 **거의 그대로** `ralph/run.sh`에 복사한다. `python3` 명령이 프로젝트에 맞지 않으면 조정한다. `chmod +x ralph/run.sh` 실행.
 
----
+```bash
+#!/usr/bin/env bash
+# Ralph loop: LLM thinks -> script executes -> repeat
+#
+# Flow per iteration:
+#   1. LLM reads state.md + results, diagnoses, writes action.sh
+#   2. action.sh executes (training, validation, etc.) -- may take hours
+#   3. action.sh saves results to ralph/results/
+#   4. Loop restarts -> LLM reads new results
+#
+# Usage: bash ralph/run.sh [--reset]
+# Stop:  Ctrl+C or set phase to DONE in state.md
 
-## Step 5: Generate `ralph/run.sh`
+set -euo pipefail
+cd "$(dirname "$0")/.."
 
-**Tools**: `Read`, `Write`, `Bash (chmod +x)`
+show_usage() {
+  cat <<'USAGE'
+Usage: bash ralph/run.sh [--reset]
 
-Find and read `run.sh.example` by globbing for `**/.claude/skills/ralph-loop-init/examples/run.sh.example`.
+Options:
+  --reset   Remove previous loop artifacts and restart from initial state.
+USAGE
+}
 
-Copy it nearly verbatim into `ralph/run.sh`. The only modification needed:
-- If the project doesn't use `python3`, adjust the inline Python parser's invocation (the `python3 -u -c` part). This is rare — most systems have `python3`.
+RESET=0
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --reset)
+      RESET=1
+      ;;
+    -h|--help)
+      show_usage
+      exit 0
+      ;;
+    *)
+      echo "[ralph] Unknown option: $1" >&2
+      show_usage >&2
+      exit 1
+      ;;
+  esac
+  shift
+done
 
-Keep the template's CLI behavior:
-- `bash ralph/run.sh` resumes from current `state.md`/`results`.
-- `bash ralph/run.sh --reset` clears prior loop artifacts (`ralph/results/`, stale `ralph/action.sh`) and rewrites `ralph/state.md` to the initial SETUP state with a fresh `initialized_at` UTC timestamp before starting.
-- Source `ralph/config.sh` and apply `LLM_TIMEOUT_SECONDS` to each LLM planning turn (default 600 seconds, `0` disables timeout).
+if [ ${RESET} -eq 1 ]; then
+  INIT_TS="$(date -u '+%Y-%m-%dT%H:%M:%SZ')"
+  echo "[ralph] --reset enabled: clearing previous artifacts."
+  rm -rf ralph/results
+  rm -f ralph/action.sh
+  cat > ralph/state.md <<EOF
+phase: SETUP
+iteration: 0
+initialized_at: ${INIT_TS}
+errors: []
+last_checkpoint: null
+validation_results: null
+notes: Initial state. Ralph loop initialized.
+EOF
+fi
 
-Make the file executable description in the output.
+if [ -f ralph/config.sh ]; then
+  # shellcheck source=/dev/null
+  source ralph/config.sh
+fi
 
----
+LLM_TIMEOUT_SECONDS="${LLM_TIMEOUT_SECONDS:-600}"
+if ! [[ "${LLM_TIMEOUT_SECONDS}" =~ ^[0-9]+$ ]]; then
+  echo "[ralph] Invalid LLM_TIMEOUT_SECONDS='${LLM_TIMEOUT_SECONDS}'. Use a non-negative integer." >&2
+  exit 1
+fi
 
-### Step 5.5: 핵심 파일 확인 (Checkpoint)
+if [ "${LLM_TIMEOUT_SECONDS}" -eq 0 ]; then
+  echo "[ralph] LLM timeout disabled (LLM_TIMEOUT_SECONDS=0)."
+else
+  echo "[ralph] LLM timeout: ${LLM_TIMEOUT_SECONDS}s per LLM step."
+fi
 
-**Tools**: — (요약 제시, 도구 불필요)
+LOCK_DIR="ralph/.ralph.lock.d"
+LOCK_PID_FILE="${LOCK_DIR}/pid"
 
-config.sh, PROMPT.md, run.sh 생성 후 요약 테이블을 제시하고 바로 Step 6으로 진행한다 (사용자 확인을 기다리지 않는다):
+is_probably_ralph_process() {
+  local pid="$1"
+  local cmd
+  cmd="$(ps -p "${pid}" -o command= 2>/dev/null || true)"
+  [ -n "${cmd}" ] && [[ "${cmd}" == *"run.sh"* ]]
+}
 
-| 항목 | 내용 |
-|------|------|
-| config.sh 변수 | N개 설정 |
-| PROMPT.md 섹션 | Known Errors, Phases, ... |
-| run.sh 구조 | 루프 + LLM 호출 + 검증 |
+cleanup_lock() {
+  local owner_pid
+  owner_pid="$(cat "${LOCK_PID_FILE}" 2>/dev/null || true)"
+  if [ -n "${owner_pid}" ] && [ "${owner_pid}" = "$$" ]; then
+    rm -rf "${LOCK_DIR}"
+  fi
+}
 
----
+acquire_lock() {
+  if mkdir "${LOCK_DIR}" 2>/dev/null; then
+    echo "$$" > "${LOCK_PID_FILE}"
+    return 0
+  fi
 
-## Step 6: Generate `ralph/state.md`
+  local existing_pid=""
+  existing_pid="$(cat "${LOCK_PID_FILE}" 2>/dev/null || true)"
 
-**Tools**: `Write`, `Bash (date -u)`
+  if [ -n "${existing_pid}" ] && kill -0 "${existing_pid}" 2>/dev/null && is_probably_ralph_process "${existing_pid}"; then
+    echo "[ralph] ERROR: Another ralph instance is running (PID ${existing_pid})." >&2
+    echo "[ralph] If stale, remove manually: rm -rf ${LOCK_DIR}" >&2
+    return 1
+  fi
 
-Find and read `state.md.example` by globbing for `**/.claude/skills/ralph-loop-init/examples/state.md.example`.
+  echo "[ralph] Stale lock found (PID ${existing_pid}). Reclaiming lock."
+  rm -rf "${LOCK_DIR}"
+  if mkdir "${LOCK_DIR}" 2>/dev/null; then
+    echo "$$" > "${LOCK_PID_FILE}"
+    return 0
+  fi
 
-Copy it into `ralph/state.md`, then replace `__INITIALIZED_AT_UTC__` with the current UTC timestamp (`date -u '+%Y-%m-%dT%H:%M:%SZ'`). The initial structure is:
+  echo "[ralph] ERROR: Failed to acquire lock at ${LOCK_DIR}." >&2
+  return 1
+}
+
+acquire_lock || exit 1
+trap cleanup_lock EXIT INT TERM
+
+run_llm_with_timeout() {
+  local timeout_seconds="$1"
+  local prompt_path="$2"
+  shift 2
+
+  if [ "${timeout_seconds}" -eq 0 ]; then
+    "$@" < "${prompt_path}"
+    return $?
+  fi
+
+  if command -v timeout >/dev/null 2>&1; then
+    timeout "${timeout_seconds}" "$@" < "${prompt_path}"
+    return $?
+  fi
+
+  if command -v gtimeout >/dev/null 2>&1; then
+    gtimeout "${timeout_seconds}" "$@" < "${prompt_path}"
+    return $?
+  fi
+
+  python3 - "${timeout_seconds}" "${prompt_path}" "$@" <<'PY'
+import subprocess
+import sys
+
+timeout_seconds = int(sys.argv[1])
+prompt_path = sys.argv[2]
+cmd = sys.argv[3:]
+
+with open(prompt_path, "rb") as prompt_file:
+    try:
+        completed = subprocess.run(
+            cmd,
+            stdin=prompt_file,
+            stdout=sys.stdout,
+            stderr=sys.stderr,
+            check=False,
+            timeout=timeout_seconds,
+        )
+    except subprocess.TimeoutExpired:
+        print(
+            f"[ralph] LLM step timed out after {timeout_seconds} seconds.",
+            file=sys.stderr,
+        )
+        sys.exit(124)
+
+sys.exit(completed.returncode)
+PY
+}
+
+VALID_PHASES="SETUP SMOKE_TEST TRAINING VALIDATING EXECUTING CHECKING ANALYZING ADJUSTING DONE"
+
+validate_state_file() {
+  local state_file="ralph/state.md"
+  [ -f "${state_file}" ] || { echo "[ralph] VALIDATION ERROR: ${state_file} missing." >&2; return 1; }
+  [ -s "${state_file}" ] || { echo "[ralph] VALIDATION ERROR: ${state_file} empty." >&2; return 1; }
+
+  local phase
+  phase="$(grep -m1 '^phase:' "${state_file}" | sed 's/^phase:[[:space:]]*//' | tr -d '[:space:]')" || true
+  local phase_valid=0
+  for vp in ${VALID_PHASES}; do [ "${phase}" = "${vp}" ] && phase_valid=1 && break; done
+  [ "${phase_valid}" -eq 1 ] || { echo "[ralph] VALIDATION ERROR: Invalid phase '${phase}'." >&2; return 1; }
+
+  local iter_val
+  iter_val="$(grep -m1 '^iteration:' "${state_file}" | sed 's/^iteration:[[:space:]]*//' | tr -d '[:space:]')" || true
+  [[ "${iter_val}" =~ ^[0-9]+$ ]] || { echo "[ralph] VALIDATION ERROR: Invalid iteration '${iter_val}'." >&2; return 1; }
+}
+
+ITERATION=0
+LLM_FAIL_COUNT=0
+MAX_LLM_FAILURES=3
+
+mkdir -p ralph/results
+
+while :; do
+  ITERATION=$((ITERATION + 1))
+  echo ""
+  echo "=========================================="
+  echo "  Ralph iteration #${ITERATION}"
+  echo "  $(date '+%Y-%m-%d %H:%M:%S')"
+  echo "=========================================="
+
+  # --- Phase 1: LLM thinks ---
+  echo "[ralph] Phase 1: LLM analyzing state and writing action..."
+  # Disable errexit temporarily so LLM failures are handled by retry logic.
+  set +e
+  run_llm_with_timeout "${LLM_TIMEOUT_SECONDS}" "ralph/PROMPT.md" \
+    claude -p --verbose --dangerously-skip-permissions --output-format stream-json \
+    | tee "ralph/results/llm_iter${ITERATION}.json" \
+    | python3 -u -c "
+import sys, json
+for line in sys.stdin:
+    line = line.strip()
+    if not line: continue
+    try:
+        ev = json.loads(line)
+    except json.JSONDecodeError:
+        continue
+    t = ev.get('type','')
+    if t == 'assistant' and 'content' in ev:
+        for block in ev['content']:
+            if block.get('type') == 'text':
+                print(block['text'], end='', flush=True)
+            elif block.get('type') == 'tool_use':
+                name = block.get('name','')
+                inp = block.get('input',{})
+                if name in ('Read','Glob','Grep'):
+                    target = inp.get('file_path') or inp.get('pattern','')
+                    print(f'  [{name}] {target}', flush=True)
+                elif name == 'Write':
+                    print(f'  [Write] {inp.get(\"file_path\",\"\")}', flush=True)
+                elif name == 'Edit':
+                    print(f'  [Edit] {inp.get(\"file_path\",\"\")}', flush=True)
+                elif name == 'Bash':
+                    cmd = inp.get('command','')[:80]
+                    print(f'  [Bash] {cmd}', flush=True)
+                else:
+                    print(f'  [{name}]', flush=True)
+    elif t == 'result':
+        pass  # tool results -- skip (too verbose)
+" 2>/dev/null
+  LLM_EXIT=$?
+  set -e
+  echo ""
+
+  if [ ${LLM_EXIT} -ne 0 ]; then
+    LLM_FAIL_COUNT=$((LLM_FAIL_COUNT + 1))
+    if [ ${LLM_EXIT} -eq 124 ]; then
+      echo "[ralph] LLM step exceeded timeout (${LLM_TIMEOUT_SECONDS}s)."
+    fi
+    echo "[ralph] LLM step failed (exit code ${LLM_EXIT}, failure ${LLM_FAIL_COUNT}/${MAX_LLM_FAILURES})"
+    if [ ${LLM_FAIL_COUNT} -ge ${MAX_LLM_FAILURES} ]; then
+      echo "[ralph] ERROR: LLM step failed ${MAX_LLM_FAILURES} consecutive times. Exiting."
+      echo "[ralph] Check: claude CLI installed? API key valid? Network OK?"
+      exit 1
+    fi
+    echo "[ralph] Retrying after sleep..."
+    sleep 10
+    continue
+  fi
+  LLM_FAIL_COUNT=0
+
+  if ! validate_state_file; then
+    echo "[ralph] ERROR: state.md corrupted after LLM step. Aborting." >&2
+    exit 1
+  fi
+
+  # Check if state is DONE (LLM decided we're finished)
+  if grep -q "^phase: DONE" ralph/state.md 2>/dev/null; then
+    COMPLETION_PROMISE="${COMPLETION_PROMISE:-}"
+    if [ -n "${COMPLETION_PROMISE}" ]; then
+      LLM_OUTPUT_FILE="ralph/results/llm_iter${ITERATION}.json"
+      if grep -Fq "<completion_promise>${COMPLETION_PROMISE}</completion_promise>" "${LLM_OUTPUT_FILE}" 2>/dev/null; then
+        echo "[ralph] State is DONE. Completion promise verified. Exiting loop."
+      else
+        echo "[ralph] WARNING: State is DONE but completion promise not found in LLM output."
+        echo "[ralph]   Expected: <completion_promise>${COMPLETION_PROMISE}</completion_promise>"
+        echo "[ralph]   Proceeding with exit (phase: DONE is authoritative)."
+      fi
+    else
+      echo "[ralph] State is DONE. Exiting loop."
+    fi
+    break
+  fi
+
+  # --- Phase 2: Execute action ---
+  if [ -f ralph/action.sh ]; then
+    echo "[ralph] Phase 2: Executing action.sh..."
+    echo ""
+
+    cp ralph/state.md ralph/results/state_backup.md
+
+    # Run action.sh, capture exit code (don't fail the loop on error)
+    set +e
+    bash ralph/action.sh
+    ACTION_EXIT=$?
+    set -e
+
+    if ! validate_state_file 2>/dev/null; then
+      echo "[ralph] WARNING: state.md corrupted after action.sh. Restoring from backup."
+      cp ralph/results/state_backup.md ralph/state.md
+    fi
+
+    # Record exit code for LLM to read next iteration
+    echo "${ACTION_EXIT}" > ralph/results/last_exit_code
+
+    if [ ${ACTION_EXIT} -ne 0 ]; then
+      echo "[ralph] action.sh exited with code ${ACTION_EXIT}"
+    else
+      echo "[ralph] action.sh completed successfully"
+    fi
+
+    # Archive action.sh so LLM writes a fresh one next iteration
+    mv ralph/action.sh "ralph/results/action_iter${ITERATION}.sh"
+  else
+    echo "[ralph] No action.sh found -- LLM-only iteration"
+  fi
+
+  echo ""
+  echo "--- Iteration #${ITERATION} complete ---"
+  sleep 3
+done
+```
+
+### Step 7: Generate `ralph/state.md`
+
+`date -u '+%Y-%m-%dT%H:%M:%SZ'`로 현재 UTC 타임스탬프를 얻어 아래 내용으로 생성한다:
 
 ```
 phase: SETUP
 iteration: 0
-initialized_at: __INITIALIZED_AT_UTC__
+initialized_at: <current UTC timestamp>
 errors: []
 last_checkpoint: null
 validation_results: null
 notes: Initial state. Ralph loop initialized.
 ```
 
----
+### Step 8: Verify Against CHECKS.md and Summarize
 
-## Step 7: Verify Against CHECKS.md and Summarize
-
-**Tools**: `Grep`, `Read`, `Edit`
-
-### 7.1 Verify
-
-`ralph/CHECKS.md`의 각 항목을 `Grep`/`Read`로 검증한다. 각 체크를 ✅ (pass) 또는 ❌ (fail)로 표시하고, 실패 항목은 해당 파일을 수정한 후 재검증한다 (최대 2회).
-
-### 7.2 Update CHECKS.md
-
-검증 완료 후 `ralph/CHECKS.md`의 `[ ]`를 `[x]` (통과) 또는 `[!]` (수정 후 통과)로 업데이트한다.
-
-### 7.3 Summarize
-
-`ralph/results/` 디렉토리를 생성하고(mkdir -p), 사용자에게 요약을 출력한다:
+1. `ralph/CHECKS.md`의 각 항목을 `Grep`/`Read`로 검증한다. 실패 항목은 해당 파일을 수정한 후 재검증 (최대 2회).
+2. 검증 완료 후 `CHECKS.md`의 `[ ]`를 `[x]` (통과) 또는 `[!]` (수정 후 통과)로 업데이트한다.
+3. `mkdir -p ralph/results` 후 요약을 출력한다:
 
 ```
 Ralph loop initialized (TDD verified)!
 
 Files created:
-  ralph/CHECKS.md    — Acceptance criteria (verified ✅)
+  ralph/CHECKS.md    — Acceptance criteria (verified)
   ralph/config.sh    — Process configuration (edit before running)
   ralph/PROMPT.md    — LLM instructions for the automation loop
   ralph/run.sh       — Loop controller script
@@ -347,37 +532,11 @@ Next steps:
   3. Fresh restart: bash ralph/run.sh --reset
 ```
 
----
-
-## Progressive Disclosure (완료 시)
-
-```
-완료 요약 테이블과 함께 전체 정보를 바로 출력한다 (사용자 확인을 기다리지 않는다):
-
-1. 완료 요약 테이블 제시:
-   | 항목 | 내용 |
-   |------|------|
-   | 생성 파일 | 5개 + results/ |
-   | CHECKS.md 상태 | N/N 통과 |
-   | 프로세스 타입 | <detected type> |
-   | Phase 구성 | SETUP -> SMOKE_TEST -> [execution] -> ... -> DONE |
-
-2. PROMPT.md 핵심 섹션 요약 출력
-
-3. config.sh 변수 목록 출력
-```
-
----
-
 ## Error Handling
 
 | 상황 | 대응 |
 |------|------|
-| 대상 프로세스 진입점 미발견 | 오류 보고 후 스킬 종료 (실행 가능한 스크립트/명령 확인 안내) |
-| `_sdd/spec` 디렉토리 미존재 | 코드 기반 탐색으로 진행, 사용자에게 경고 |
-| `ralph-loop-concept.md` 참조 파일 미발견 | 오류: 스킬 설치 불완전, 메시지와 함께 중단 |
-| `run.sh.example` 참조 파일 미발견 | 오류: 스킬 설치 불완전, 메시지와 함께 중단 |
-| 사용자 미확인 (2+ 라운드) | 부분 탐색 결과 저장, 수동 설정 안내 |
-| CHECKS.md 검증 실패 (Step 7) | 실패 파일 수정, 재검증 (최대 2라운드) |
-| 복수 진입점 발견 | 가장 유력한 진입점 자동 선택 (파일명/구조 분석 기반), 판단 근거를 출력에 기록 |
-| 프로세스 타입 감지 모호 | 사용자 요청 컨텍스트와 프로젝트 구조 분석으로 자동 선택, 판단 근거를 출력에 기록 |
+| 진입점 미발견 | 오류 보고 후 스킬 종료 |
+| `_sdd/spec` 미존재 | 코드 기반 탐색으로 진행, 경고 출력 |
+| CHECKS.md 검증 실패 | 실패 파일 수정, 재검증 (최대 2회) |
+| 복수 진입점 발견 | 가장 유력한 진입점 자동 선택, 판단 근거 기록 |

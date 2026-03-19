@@ -5,239 +5,87 @@ tools: ["Read", "Write", "Edit", "Glob", "Grep", "Agent"]
 model: inherit
 ---
 
-# Feature Draft (Parallel) - Unified Spec Patch + Implementation Plan with Target Files
+# Feature Draft
 
-Collects requirements through conversation with the user, then outputs a spec patch draft and implementation plan as a **single file** — with **Target Files** fields on every task to enable parallel execution via `implementation`.
+사용자 요구사항으로부터 spec patch draft (Part 1) + implementation plan (Part 2)을 단일 파일로 생성한다.
 
-## Workflow Position
+## Acceptance Criteria
 
-| Workflow | Position | When |
-|----------|----------|------|
-| Large | Step 1 of 6 | 스펙 패치 초안 + 구현 계획 생성 |
-| Medium | Step 1 of 3 | 스펙 패치 초안 + 구현 계획 생성 |
-| Small | — | 직접 구현 |
+> 프로세스 완료 후 아래 기준을 자체 검증한다. 미충족 항목은 해당 단계로 돌아가 수정한다.
 
-## Overview
-
-This skill integrates spec patch drafting + spec update + implementation planning into a single step.
-In a single conversation, it collects requirements and simultaneously generates a spec patch draft (Part 1) and an implementation plan with Target Files (Part 2).
-
-**This skill**: `feature-draft` (1 invocation, shared context)
-
-## When to Use This Skill
-
-- When you want to plan a new feature and create a **parallel-ready** implementation plan all at once
-- When you want to write a spec patch and implementation plan simultaneously
-- When you want to save tokens while getting both a spec patch and implementation plan
-- When you want to handle spec patch + implementation plan in one step
-- When you expect the implementation to benefit from parallel sub-agent execution
+- [ ] Part 1: `spec-update-todo` 호환 형식의 spec patch가 생성되었다
+- [ ] Part 2: 모든 태스크에 Target Files가 포함된 implementation plan이 생성되었다
+- [ ] `_sdd/drafts/feature_draft_<name>.md`에 저장되었다
+- [ ] 기존 동명 파일이 있으면 `_sdd/drafts/prev/`에 아카이브되었다
 
 ## Hard Rules
 
-1. **No spec file modifications**: Files under `_sdd/spec/` are **read-only**. Never modify them.
-2. **Output location**: Save to `_sdd/drafts/` directory.
-3. **언어 규칙**: 기존 스펙/문서의 언어를 따른다. 스펙이 없으면 한국어 기본. 사용자 명시 지정 시 해당 언어 사용.
-4. **Multiple features supported**: Multiple features can be included in one file, but always confirm with the user first.
-5. **spec-update-todo compatible**: Part 1 must follow the "Spec Update Input" format so it can be directly used as input for `spec-update-todo`.
-6. **Target Files required**: Every task in Part 2 MUST include a `**Target Files**` field.
-7. **[TBD] 허용**: Target Files에서 경로 미결정 시 `[TBD] <reason>` 마커를 사용할 수 있다.
+1. `_sdd/spec/` 파일은 **읽기 전용**. 절대 수정하지 않는다.
+2. 출력 위치: `_sdd/drafts/` 디렉토리.
+3. 언어: 기존 스펙 언어를 따른다. 스펙이 없으면 한국어. 사용자 명시 시 해당 언어.
+4. Part 1은 `spec-update-todo` 입력 형식을 완전 준수한다.
+5. Part 2의 모든 태스크에 `**Target Files**` 필드를 포함한다.
+6. Target Files에서 경로 미결정 시 `[TBD] <reason>` 마커를 허용한다.
 
-## Input Sources
-
-1. **User conversation (current session)**: Real-time requirements collection (primary)
-2. **Existing draft files**: `_sdd/spec/user_draft.md` or `_sdd/spec/user_spec.md`
-3. **Existing implementation input**: `_sdd/implementation/user_input.md`
-4. **User-modified code**: Analyze changes via git diff etc.
-5. **Other user-specified files**: Reference documents or notes
-6. **Existing decision log**: `_sdd/spec/DECISION_LOG.md` (if present)
-
-## Output
-
-**File location**: `_sdd/drafts/feature_draft_<feature_name>.md`
-
-**File structure** (single file, 2 parts):
-- **Part 1**: Spec patch draft ("Spec Update Input" format + Target Section annotations)
-- **Part 2**: Implementation plan with **Target Files** (per-phase tasks, details, risks)
-
-**Optional output**: `_sdd/spec/DECISION_LOG.md` (only when new decisions/trade-offs arise)
+### Target Files 규격
+- 모든 태스크에 `**Target Files**:` 필드 필수
+- 마커: `[C]` 생성, `[M]` 수정, `[D]` 삭제
+- 형식: `- [마커] relative/path/to/file.ext -- 설명`
+- 충돌 규칙: 동일 파일에 같은 마커 → 같은 그룹(순차), 다른 마커 → 병렬 가능하지 않음
+- 읽기 전용 참조는 Target Files에 포함하지 않음
 
 ## Process
 
-### Step 1: Input Analysis
+### Step 1: Input Analysis & Context Gathering
 
-**Tools**: `Read`, `Glob`, `Bash (git diff)`
+**Tools**: `Read`, `Glob`, `Grep`, `Bash (git diff)`
 
-```
-1. Review user conversation content
-2. Check for existing files:
-   - Glob("_sdd/spec/user_draft.md") (사용자 작성 초안)
-   - Glob("_sdd/spec/user_spec.md") (user-authored)
-   - Glob("_sdd/implementation/user_input.md") (implementation input)
-3. Check code changes: Bash("git diff --name-only")
-4. Read discovered input files
-5. Consolidate requirements from all sources
-6. Determine input completeness level (see references/adaptive-questions.md):
-   - HIGH: Feature name + description + acceptance criteria + priority all present
-   - MEDIUM: Feature name + description present but acceptance criteria or priority missing
-   - LOW: Vague idea level
-```
+1. 사용자 대화 내용 분석
+2. 기존 입력 파일 확인:
+   - `_sdd/spec/user_draft.md`, `_sdd/spec/user_spec.md`, `_sdd/implementation/user_input.md`
+   - `git diff --name-only`로 코드 변경 확인
+3. 스펙 파일 읽기 (`Glob("_sdd/spec/*.md")` → `Read`):
+   - 섹션 구조, 컴포넌트, 기존 기능 파악
+   - 스펙 언어/스타일 확인
+4. 코드베이스 탐색 (`Grep`, `Glob`):
+   - 프로젝트 구조, 기존 패턴, 파일 위치 파악
+   - Target Files 후보 경로 확인
+5. `DECISION_LOG.md` 확인 (있으면)
 
-**Decision Gate 1→2**:
-```
-spec_exists = Glob("_sdd/spec/*.md") 중 프로젝트 스펙 파일 존재 여부
-  (user_draft.md, user_spec.md, DECISION_LOG.md 제외)
+**Gate**: `_sdd/spec/`에 프로젝트 스펙 파일이 없으면 → Part 2만 생성 (Part 1 생략, 사유 기록)
 
-IF spec_exists → Step 2 진행
-ELSE → Part 2만 생성 모드로 자동 진행 (Part 1은 스펙이 필요하므로 생략)
-  판단 근거: "_sdd/spec/ 내 프로젝트 스펙 파일 미존재 → Part 1 생성 불가"를 출력에 기록
-```
+### Step 2: Adaptive Clarification
 
-### Step 2: Context Gathering
+입력 완전성에 따라 자율 판단:
 
-**Tools**: `Glob`, `Read`, `Grep`
+- **HIGH** (기능명+설명+AC+우선순위 모두 있음): 바로 진행
+- **MEDIUM** (일부 누락): 합리적 기본값 적용 (Priority→Medium, AC→설명에서 추론)
+- **LOW** (모호): 가용 정보에서 최대 추론, 불가 항목은 Open Questions에 기록
 
-```
-1. Read existing spec (read-only):
-   - Glob("_sdd/spec/*.md")로 스펙 파일 목록 확인
-   - Read로 스펙 읽기 (크기별 전략은 아래 Context Management 참조)
-   - If spec is split, follow links from the index
-2. Understand spec structure:
-   - Section list (to determine where patches go)
-   - Component list (to understand relationships with existing components)
-   - Existing feature list (to prevent duplication)
-   - Verify spec language/style (so patches match existing style)
-3. Check Glob("_sdd/spec/DECISION_LOG.md") (if present):
-   - Review existing decisions/rationale
-   - Ensure new feature doesn't conflict with existing decisions
-4. **Explore codebase** for Target Files:
-   - Grep/Glob: 프로젝트 구조, 기존 패턴 파악
-   - Glob: 소스/테스트/설정 파일 위치 확인
-   - Note naming conventions for new files
-   - Map which existing files will need modification
-```
+복수 기능 감지 시 단일 파일 통합을 기본값으로 채택한다.
 
-#### Context Management (Step 2 후 적용)
+### Step 3: Feature Design
 
-스펙과 코드베이스 크기에 따라 읽기 전략을 조절한다. 상세 전략은 `references/tool-and-gates.md` 참조.
+1. 요구사항을 유형별로 분류 (New Feature, Improvement, Bug, Component, Config 등)
+2. 각 항목을 Target Section에 매핑:
+   - Background/Motivation → `배경 및 동기 (§1)`
+   - Design Change → `핵심 설계 (§2)`
+   - New Feature (Core) → `Goal > Key Features`
+   - New Feature (Component) → `Component Details (§4)`
+   - Improvement → `Issues > Improvements`
+   - Bug → `Issues > Bugs`
+   - Usage Scenario → `사용 가이드 & 기대 결과 (§5)`
+   - Configuration → `Configuration (§8)`
+   - API Change → `API Reference (§7)`
+3. 구현 컴포넌트 식별 및 그룹핑
+4. 태스크별 Target Files 매핑 (`Grep`/`Glob`으로 검증, `[C]`/`[M]`/`[D]` 마커 적용)
 
-| 스펙 크기 | 전략 |
-|-----------|------|
-| < 200줄 | 전체 읽기 |
-| 200-500줄 | 전체 읽기 가능 |
-| 500-1000줄 | TOC 먼저, 관련 섹션만 읽기 |
-| > 1000줄 | 인덱스만, 타겟 섹션 최대 3개 |
+### Step 4: Part 1 — Spec Patch Draft 생성
 
-| 코드베이스 크기 | 전략 |
-|----------------|------|
-| < 50 파일 | `Glob` + `Read` 자유 탐색 |
-| 50-200 파일 | `Grep`/`Glob` + 타겟 `Read` |
-| > 200 파일 | `Grep`/`Glob` 위주 |
-
-### Step 3: Adaptive Clarification (자율 판단)
-
-**Tools**: — (자율 판단, 도구 불필요)
-
-Apply different strategies based on input completeness level:
-
-**HIGH (detailed input)**: Proceed directly. Collected information summary를 출력에 기록.
-
-**MEDIUM (partial input)**: 누락 항목에 합리적 기본값 적용:
-- Priority → Medium (기본값)
-- Acceptance Criteria → 기능 설명에서 추론하여 자동 생성
-- Technical constraints → 코드베이스 분석 결과 기반으로 추론
-- 기본값 적용 사실과 근거를 출력에 기록
-
-**LOW (vague input)**: 가용 정보에서 최대한 추론:
-1. 요구사항 유형 자동 분류 (입력 키워드/맥락 기반)
-2. 유형별 필수 항목을 가용 정보로 채움 (see references/adaptive-questions.md)
-3. 추론 불가 항목은 Open Questions에 기록
-
-**Multiple features check**:
-- 복수 기능 감지 시: 단일 파일에 통합하는 것을 기본값으로 채택
-  - 판단 근거: "복수 기능 감지 → 단일 파일 통합 (기본값)"을 출력에 기록
-
-**Decision Gate 3→4**:
-```
-has_feature_name = 기능명이 명확한가?
-has_description = 기능 설명이 충분한가?
-has_type = 유형 분류가 가능한가? (New Feature / Improvement / Bug / etc.)
-
-IF 모두 충족 → Step 4 진행
-ELSE → 가용 정보로 최선 추론하여 진행, 누락 항목은 Open Questions에 기록
-  판단 근거와 기본값 적용 내역을 출력에 명시
-```
-
-### Step 4: Feature Design
-
-**Tools**: `Grep`, `Glob`
-
-```
-1. Classify requirements by type:
-   - New Features
-   - Improvements
-   - Bug Reports
-   - Component Changes
-   - Configuration Changes
-
-2. Map each item to target spec section:
-   | Type | Target Section |
-   |------|----------------|
-   | Background/Motivation Update | Background & Motivation (§1) |
-   | Design Change / Algorithm | Core Design (§2) |
-   | New Feature (Core) | Goal > Key Features |
-   | New Feature (Component) | Component Details (§4) |
-   | Improvement | Issues > Improvements |
-   | Bug Fix | Issues > Bugs |
-   | Performance | Issues > Performance |
-   | Security | Security Considerations |
-   | Usage Scenario / Expected Result | Usage Guide & Expected Results (§5) |
-   | Configuration | Configuration (§8) |
-   | Dependency | Environment & Dependencies (§8) |
-   | API Change | API Reference (§7) |
-   | Test Addition | Testing |
-   | Code Reference | Appendix: Code Reference List |
-
-3. Identify implementation components:
-   - Group related features into modules
-   - Identify shared utilities/common patterns
-   - Check external dependencies and integration points
-   - Consider data model/storage requirements
-
-4. **Map Target Files per task**:
-   - For each task, identify which files will be created/modified/deleted
-   - Grep: "이 기능과 관련된 기존 코드는?" 형태의 패턴 검색
-   - Glob: 후보 파일 경로 존재 여부 검증
-   - Verify no unnecessary file overlaps between tasks
-   - Apply Target Files markers: [C] Create, [M] Modify, [D] Delete
-   - 충돌 최소화: 5+ tasks/phase이고 파일 겹침 시 Step 6의 Conflict minimization patterns 참조
-```
-
-**Decision Gate 4→5**:
-```
-IF 요구사항 유형별 분류 완료
-   AND 각 항목에 Target Section 매핑 완료
-   AND Target Files 초안 작성 완료
-→ Step 5 진행
-ELSE → 미완료 항목 보완 후 재확인
-```
-
-### Step 5: Spec Patch Generation = Part 1
-
-**Tools**: — (출력 생성 단계, 도구 불필요)
-
-Part 1 follows the "Spec Update Input" format with `**Target Section**` annotations added to each item.
-Part 1의 시작과 끝에 호환성 마커를 포함한다:
-- 시작: `<!-- spec-update-todo-input-start -->`
-- 끝: `<!-- spec-update-todo-input-end -->`
-
-**Format rules**:
-- Full compliance with "Spec Update Input" format (spec-update-todo compatible)
-- Add `**Target Section**` to each item (manual copy-paste location guide)
-- Use status marker: 📋 Planned
-- Match existing spec style/language
-- See `references/output-format.md` for detailed format
+아래 형식으로 Part 1을 생성한다. 상태 마커는 📋 Planned을 사용한다.
 
 ```markdown
+<!-- spec-update-todo-input-start -->
 # Part 1: Spec Patch Draft
 
 > This patch can be copy-pasted into the corresponding spec section,
@@ -249,429 +97,182 @@ Part 1의 시작과 끝에 호환성 마커를 포함한다:
 **Author**: [author]
 **Target Spec**: [target spec file]
 
-## Background & Motivation Updates
+## New Features
+### Feature: [name]
+**Priority**: High/Medium/Low
+**Target Section**: `_sdd/spec/xxx.md` > `Goal > Key Features`
+**Description**: [description]
+**Acceptance Criteria**:
+- [ ] criterion 1
 
+## Improvements
+### Improvement: [name]
+**Priority**: High/Medium/Low
+**Target Section**: `_sdd/spec/xxx.md` > `Issues > Improvements`
+**Current State**: [current]
+**Proposed**: [proposed]
+**Reason**: [reason]
+
+## Bug Reports
+### Bug: [name]
+**Severity**: High/Medium/Low
+**Target Section**: `_sdd/spec/xxx.md` > `Issues > Bugs`
+**Description**: [description]
+
+## Background & Motivation Updates
 ### Background Update: [title]
 **Target Section**: `_sdd/spec/xxx.md` > `배경 및 동기 (§1)`
-**Change Type**: Problem Statement / Motivation / Alternative Comparison
-
-**Current**: [current description in spec, if any]
 **Proposed**: [proposed update]
-**Reason**: [why this update is needed]
-
----
 
 ## Design Changes
-
 ### Design Change: [title]
 **Priority**: High/Medium/Low
 **Target Section**: `_sdd/spec/xxx.md` > `핵심 설계 (§2)`
-**Change Type**: Algorithm / Logic Flow / Design Rationale
-
-**Description**:
-[what design aspect is changing and why]
-
-**Code Reference**: `[filepath:functionName]`
-
-**Impact**:
-[what other parts of the system are affected]
-
----
-
-## New Features
-
-### Feature: [feature name]
-**Priority**: High/Medium/Low
-**Category**: [category]
-**Target Component**: [target component]
-**Target Section**: `_sdd/spec/xxx.md` > `Goal > Key Features`
-
-**Description**:
-[feature description]
-
-**Acceptance Criteria**:
-- [ ] criterion 1
-- [ ] criterion 2
-
-**Technical Notes**:
-[technical notes]
-
-**Dependencies**:
-[dependencies]
-
----
-
-## Improvements
-
-### Improvement: [improvement name]
-**Priority**: High/Medium/Low
-**Target Section**: `_sdd/spec/xxx.md` > `Issues > Improvements`
-**Current State**: [current state]
-**Proposed**: [proposed change]
-**Reason**: [reason]
-
----
-
-## Bug Reports
-
-### Bug: [bug name]
-**Severity**: High/Medium/Low
-**Target Section**: `_sdd/spec/xxx.md` > `Issues > Bugs`
-**Location**: [file:line]
-**Description**: [bug description]
-**Reproduction**: [steps]
-**Expected Behavior**: [expected]
-
----
-
-## Component Changes
-
-### New Component: [component name]
-**Target Section**: `_sdd/spec/xxx.md` > `Component Details`
-**Purpose**: [purpose]
-**Input**: [input]
-**Output**: [output]
-**Planned Methods**:
-- `method_name()` - description
-
----
-
-## Configuration Changes
-
-### New Config: [config name]
-**Target Section**: `_sdd/spec/xxx.md` > `Configuration`
-**Type**: Environment Variable / Config File
-**Required**: Yes/No
-**Default**: [default value]
 **Description**: [description]
 
----
+## Component Changes
+### New Component: [name]
+**Target Section**: `_sdd/spec/xxx.md` > `Component Details`
+**Purpose**: [purpose]
+**Planned Methods**: method list
+
+## Configuration Changes
+### New Config: [name]
+**Target Section**: `_sdd/spec/xxx.md` > `Configuration`
+**Type**: Environment Variable / Config File
+**Default**: [default]
 
 ## Usage Scenarios
-
-### Scenario: [scenario name]
+### Scenario: [name]
 **Target Section**: `_sdd/spec/xxx.md` > `사용 가이드 & 기대 결과 (§5)`
-
-**Setup**:
-[preconditions or setup steps]
-
-**Action**:
-[what the user does]
-
-**Expected Result**:
-[what should happen — observable behavior, output, side effects]
-
----
+**Action**: [action]
+**Expected Result**: [result]
 
 ## Notes
-
-### Context
-[additional context]
-
-### Constraints
-[constraints]
+[context, constraints]
+<!-- spec-update-todo-input-end -->
 ```
 
-> **상세 포맷**: 각 섹션의 전체 필드 목록과 선택/필수 구분은 `references/output-format.md`를 참고하세요.
+> 해당하는 섹션만 포함한다. 빈 섹션은 생략한다.
 
-### Step 5.5: Part 1 요약
+### Step 5: Part 2 — Implementation Plan 생성
 
-Part 1 요약 테이블을 사용자에게 제시한 후 바로 Step 6으로 진행한다 (사용자 확인을 기다리지 않는다):
-
-```
-| 섹션 | 항목 수 | 주요 내용 |
-|------|---------|----------|
-| New Features | N | ... |
-| Improvements | N | ... |
-| ... | ... | ... |
-```
-
-### Step 6: Implementation Plan Generation = Part 2
-
-**Tools**: — (출력 생성 단계, 도구 불필요)
-
-Reuse the components and analysis results from Step 4 to create the implementation plan.
-**Key requirement**: Every task includes a `**Target Files**` field.
-
-**Implementation plan structure**:
+모든 태스크에 `**Target Files**` 필드를 포함한다.
 
 ```markdown
 # Part 2: Implementation Plan
 
 ## Overview
-[summary of what to implement]
+[1-3문장 요약]
 
 ## Scope
 ### In Scope
-- [included items]
-
+- [포함 항목]
 ### Out of Scope
-- [excluded items]
+- [제외 항목]
 
 ## Components
-1. **[component name]**: description
-2. **[component name]**: description
+1. **[component]**: description
 
 ## Implementation Phases
 
-### Phase 1: [phase name]
+### Phase 1: [name]
 | ID | Task | Priority | Dependencies | Component |
 |----|------|----------|--------------|-----------|
-| 1  | ...  | P0       | -            | ...       |
-
-### Phase 2: [phase name]
-| ID | Task | Priority | Dependencies | Component |
-|----|------|----------|--------------|-----------|
-| 2  | ...  | P1       | 1            | ...       |
 
 ## Task Details
 
-### Task 1: [clear, action-oriented title]
-**Component**: [parent component]
-**Priority**: [P0-Critical | P1-High | P2-Medium | P3-Low]
-**Type**: [Feature | Bug | Refactor | Research | Infrastructure | Test]
+### Task [ID]: [action-oriented title]
+**Component**: [component]
+**Priority**: P0-Critical | P1-High | P2-Medium | P3-Low
+**Type**: Feature | Bug | Refactor | Infrastructure | Test
 
-**Description**:
-[detailed description of work to be done]
+**Description**: [description]
 
 **Acceptance Criteria**:
-- [ ] [specific, measurable criterion]
-- [ ] [additional criterion]
+- [ ] criterion
 
 **Target Files**:
-- [C] `src/services/new_service.py` -- 새 서비스 클래스
-- [M] `src/config/settings.py` -- 설정 항목 추가
-- [C] `tests/test_new_service.py` -- 단위 테스트
+- [C] `path/to/new_file.py` -- 설명
+- [M] `path/to/existing.py` -- 변경 설명
 
-**Technical Notes**:
-- [implementation hints, patterns to use]
-
-**Dependencies**: [blocking task ID list]
+**Technical Notes**: [hints]
+**Dependencies**: [blocking task IDs or "-"]
 
 ## Parallel Execution Summary
 | Phase | Total Tasks | Max Parallel | Sequential (conflicts) |
 |-------|-------------|--------------|----------------------|
-| 1     | N           | N            | 0                    |
-| 2     | N           | N            | N                    |
 
 ## Risks and Mitigations
 | Risk | Impact | Mitigation |
 |------|--------|------------|
-| ...  | ...    | ...        |
 
 ## Open Questions
-- [ ] [question needing clarification]
+- [ ] [question]
 
 ## Model Recommendation
-[model recommendation based on implementation complexity]
+[model recommendation]
 ```
 
-**Conflict minimization patterns** (5+ tasks/phase이고 파일 겹침이 많을 때 적용 권장):
+### Step 6: Review & Save
 
-| 패턴 | 상황 | 해결 |
-|------|------|------|
-| **Split-by-method** | 같은 파일에 독립 메서드 추가 | 별도 파일로 분리하여 각 태스크에 배정 |
-| **Shared-config 격리** | 여러 태스크가 settings.py 수정 | 설정 전용 태스크로 통합 |
-| **Test fixture 격리** | conftest.py 충돌 위험 | 디렉토리별 conftest 또는 setup 태스크 통합 |
-| **Interface-first** | 공유 계약(인터페이스) 필요 | 인터페이스 정의 태스크를 먼저 실행 |
+1. Target Files 검증 (`Glob` 기반):
+   - `[M]` 파일 존재 확인 → 미존재 시 `[C]`로 변경
+   - `[C]` 파일 미존재 확인 → 이미 존재하면 `[M]`으로 변경
+   - 중복 파일 감지 → Parallel Execution Summary에 반영
+2. `_sdd/drafts/` 생성 (없으면)
+3. 기존 동명 파일 → `_sdd/drafts/prev/prev_feature_draft_<name>_<timestamp>.md`로 아카이브
+4. `_sdd/drafts/feature_draft_<feature_name>.md`에 저장 (write-phased 서브에이전트 위임)
+5. 입력 파일 처리: `user_draft.md` → `_processed_user_draft.md` (메타데이터 추가)
+6. Decision Log 업데이트 (중요한 결정이 있었을 때만)
+7. 완료 메시지 + Next Steps 안내
 
-**Task definition rules**:
-- Each task should be completable in a single work session
-- Split into subtasks if too large
-- Include infrastructure/setup tasks (CI/CD, environment configuration, etc.)
-- Include test tasks (unit, integration, E2E)
-- Include documentation tasks
-- **Every task MUST have Target Files** (see `references/target-files-spec.md`)
+### 파일명 규칙
+- 형식: `feature_draft_<feature_name>.md`
+- `<feature_name>`: 소문자 영어, 언더스코어 구분 (예: `real_time_notification`)
+- 복수 기능: 대표 이름 또는 그룹명 사용
+- 25개 태스크 초과 시 Phase별 분할 옵션 제안
 
-**Target Files guidelines**:
-- List ALL files the task will create, modify, or delete
-- Use exact file paths (project root relative)
-- Minimize overlap between tasks to maximize parallelization
-- When overlap is unavoidable, note it in Technical Notes
+## Output Format
 
-**Dependency mapping**:
-- **Blocks**: Tasks that cannot start until this task is complete
-- **Related**: Shares context but no blocking relationship
-- **Parallel**: Can be worked on concurrently (when Target Files don't overlap)
-
-**Phase strategy** (choose based on complexity):
-- **MVP-First**: Foundation → MVP → Core → Nice-to-Have
-- **Risk-First**: High-risk items → Core → Low-risk items
-- **Dependency-Driven**: Foundation → Services → Integration → Polish
-
-**Model recommendation**:
-Estimate implementation scale and complexity to recommend an appropriate model.
-See "Model aliases" at https://code.claude.com/docs/en/model-config.
-
-**Decision Gate 6→7**:
-```
-IF Part 1 (또는 Part 2 only 모드) + Part 2 + 병렬 실행 요약 모두 생성 완료
-→ Step 7 진행
-ELSE → 미완료 파트 생성 후 재확인
-```
-
-### Step 7: Review & Confirm
-
-**Tools**: `Write`, `Bash (mkdir/mv)`, `Glob`
-
-```
-1. 요약 테이블 제시 (Part 1 항목 수 + Part 2 Phase/Tasks/병렬도)
-2. **Verify Target Files** (Glob 기반 검증):
-   a. Every task has Target Files
-   b. [M] 파일: Glob으로 존재 확인 → 미존재 시 [C]로 변경 또는 경로 수정
-   c. [C] 파일: Glob으로 미존재 확인 → 이미 존재하면 [M]으로 변경
-   d. [C] 파일의 상위 디렉토리 존재 확인
-   e. 전체 Target Files 수집 → 중복 파일 감지 → 병렬 실행 요약에 반영
-   f. Review overlaps and note which tasks must be sequential
-
-5. Save file:
-   a. Create `_sdd/drafts/` directory (if it doesn't exist)
-   b. Archive existing file (if a file with the same name exists):
-      - `_sdd/drafts/prev/prev_feature_draft_<name>_<timestamp>.md`
-   c. Save: `_sdd/drafts/feature_draft_<feature_name>.md`
-
-### 파일 작성 위임
-
-출력 문서 작성 시 `write-phased` 서브에이전트에 작업을 위임한다. 서브에이전트 호출 시 아래 Output Format 전체와 작성에 필요한 맥락(수집된 정보, 분석 결과 등)을 프롬프트에 포함한다.
-
-6. Process input files (드래프트 저장 성공 후에만 실행):
-   - `user_draft.md` → `_processed_user_draft.md`
-   - `user_spec.md` → `_processed_user_spec.md`
-   - `user_input.md` → `_processed_user_input.md`
-   Add processing metadata:
-   <!-- Processed: YYYY-MM-DD -->
-   <!-- Applied to: feature_draft_<name>.md -->
-
-7. Update Decision Log (optional):
-   - Only when significant decisions/trade-offs were made
-   - Add brief entry to `_sdd/spec/DECISION_LOG.md`
-
-8. Provide next steps guidance:
-```
-
-**Completion message template**:
+최종 파일 구조:
 
 ```markdown
-## Feature Draft Complete (Parallel-Ready)
+# Feature Draft: [Feature Name]
 
-**File**: `_sdd/drafts/feature_draft_<name>.md`
 **Date**: YYYY-MM-DD
+**Author**: [author]
+**Target Spec**: [spec file]
+**Status**: Draft
 
-### Contents
-| Part | Content | Item Count |
-|------|---------|------------|
-| Part 1 | Spec patch draft | N items |
-| Part 2 | Implementation plan (with Target Files) | N tasks (M phases) |
+---
 
-### Parallel Execution Summary
-| Phase | Total Tasks | Max Parallel | Sequential (conflicts) |
-|-------|-------------|--------------|----------------------|
-| 1     | N           | N            | 0                    |
-| 2     | N           | N            | N                    |
+[Part 1: Spec Patch Draft — Step 4 형식]
 
-> `Max Parallel = Total Tasks - Sequential(conflict)`. Conflict = 동일 파일에 [M] 마커를 포함하는 Task 쌍.
+---
 
-### Input Files Processed
-- [x] `user_draft.md` → `_processed_user_draft.md` (if used)
-- [x] `user_spec.md` → `_processed_user_spec.md` (if used)
+[Part 2: Implementation Plan — Step 5 형식]
 
-### Next Steps
-Apply spec patch (choose one):
-- **Method A (automatic)**: Run `spec-update-todo` → use Part 1 as input
-- **Method B (manual)**: Copy-paste each patch from Part 1 to the target section
+---
 
-Execute implementation:
-- **Parallel**: Run `implementation` skill → use Part 2 as implementation plan
-- **Sequential**: Execute tasks sequentially (Target Files ignored)
+## Next Steps
 
-### Model Recommendation
-[model recommendation for implementation]
+### Apply Spec Patch
+- **Method A (automatic)**: Run `spec-update-todo` → Part 1을 입력으로 사용
+- **Method B (manual)**: Part 1의 각 항목을 Target Section에 복사
+
+### Execute Implementation
+- **Parallel**: Run `implementation` skill → Part 2를 계획으로 사용
+- **Sequential**: 태스크를 순차 실행 (Target Files 무시)
 ```
-
-## File Management Rules
-
-### Output Filename
-- Format: `feature_draft_<feature_name>.md`
-- `<feature_name>`: lowercase English, underscore-separated (e.g., `real_time_notification`)
-- For multiple features: use representative feature name or group name (e.g., `feature_draft_v2_features.md`)
-
-### Archive
-- Location: `_sdd/drafts/prev/`
-- Format: `prev_feature_draft_<name>_<timestamp>.md`
-- Archive only when a file with the same name already exists
-
-### File Size Management
-- When exceeding 25 tasks, suggest per-phase split option to user:
-  - Main file: `feature_draft_<name>.md` (index + Part 1)
-  - Phase files: `feature_draft_<name>_phase_1.md`, `feature_draft_<name>_phase_2.md`, ...
-
-## Best Practices
-
-### Effective Requirements Gathering
-- **Be specific**: Provide clear criteria rather than vague expressions
-- **Include examples**: Collect concrete usage examples when possible
-- **Specify priority**: Assign priority to all items
-- **Explain context**: Record why something is needed
-
-### Spec Patch Quality
-- **Style consistency**: Match the existing spec's language/format
-- **Section accuracy**: Target Section annotations must match the actual spec structure
-- **Status markers**: Use 📋 Planned marker
-- **Compatibility**: Full compliance with spec-update-todo input format
-
-### Implementation Plan Quality
-- **Specific tasks**: Vague tasks cause scope creep
-- **Include infrastructure**: CI/CD, environment configuration, tool setup
-- **Include tests**: Unit, integration, E2E test tasks
-- **Consider operations**: Monitoring, logging, deployment procedures
-- **Document decisions**: Record reasons for choosing specific approaches
-- **Identify MVP**: Mark tasks essential for initial release
-
-### Target Files Quality (Parallel-Specific)
-- **Be precise**: Use exact file paths, not directory names
-- **Minimize overlaps**: Design tasks to touch different files when possible
-- **Include tests**: Always list the test file alongside the source file
-- **Think about configs**: Don't forget shared config/settings files that multiple tasks may need
-- **Verify with codebase**: Check actual project structure before naming files
 
 ## Error Handling
 
-| Situation | Response |
-|-----------|----------|
-| `_sdd/spec/` directory missing | Recommend running `spec-create` first |
-| Spec file missing | Can generate Part 2 only without spec (Part 1 requires spec) |
-| `_sdd/drafts/` directory missing | Create automatically |
-| Existing feature_draft file | Archive to `prev/` then create new |
-| Incomplete information | 가용 정보로 최선 추론, 누락 항목은 Open Questions에 기록 |
-| User interrupts | Save content gathered so far |
-| Multiple features detected in input | 단일 파일 통합을 기본값으로 채택, 출력에 판단 근거 기록 |
-| Cannot determine Target Files | `[TBD] <reason>` 마커 사용, Open Questions에 기록 |
-
-## Workflow Integration
-
-```
-Parallel workflow:
-  feature-draft
-       ↓
-  _sdd/drafts/feature_draft_<name>.md
-       ↓                        ↓
-       ↓    spec-update-todo    ↓
-       ↓                        ↓
-  implementation ←─────┘
-       ↓
-  spec-update-done
-
-Non-parallel fallback:
-  Output is compatible with sequential execution mode (Target Files ignored)
-```
-
-## Additional Resources
-
-### Reference Files
-- **`references/adaptive-questions.md`** - Adaptive mode question guide (completeness level assessment + type-specific questions)
-- **`references/output-format.md`** - Output file detailed format specification (with Target Files extension)
-- **`references/target-files-spec.md`** - Target Files field detailed specification
-- **`references/tool-and-gates.md`** - Step별 도구 매핑, Decision Gates, Context Management 전략
-
-### Example Files
-- **`examples/feature_draft_parallel.md`** - Completed output example file with Target Files
+| 상황 | 대응 |
+|------|------|
+| `_sdd/spec/` 없음 | `spec-create` 먼저 실행 권장 |
+| 스펙 파일 없음 | Part 2만 생성 |
+| `_sdd/drafts/` 없음 | 자동 생성 |
+| 동명 파일 존재 | `prev/`에 아카이브 후 생성 |
+| 불완전 정보 | 최선 추론, Open Questions에 기록 |
+| Target Files 결정 불가 | `[TBD] <reason>` 마커 사용 |

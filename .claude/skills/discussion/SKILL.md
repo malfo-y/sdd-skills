@@ -13,22 +13,21 @@ version: 1.0.0
 
 구조화된 반복 토론을 진행한다. 프로빙 질문으로 주제를 심층 탐구하고, sub-agent를 활용해 코드베이스 탐색 및 웹 리서치를 수행하며, 토론 종료 시 구조화된 요약을 텍스트로 출력한다. **마지막 Step 4에서 토론 요약 파일만 생성할 수 있으며, 그 외 단계에서는 파일 생성/수정을 하지 않는다.**
 
-## When to Use This Skill
-
-- 기술적 주제에 대해 깊이 있는 토론이 필요할 때
-- 아키텍처/설계 결정을 논의할 때
-- 기술 선택지를 비교·분석할 때
-- 아이디어를 브레인스토밍할 때
-- 문제 해결 방향을 함께 탐색할 때
+## Acceptance Criteria
+> 프로세스 완료 후 아래 기준을 자체 검증한다. 미충족 항목은 해당 단계로 돌아가 수정한다.
+- [ ] AC1: 구조화된 토론이 최소 1라운드 이상 진행되었다
+- [ ] AC2: key decisions / action items가 내부 상태에 추적·정리되었다
+- [ ] AC3: 토론 요약 파일이 `_sdd/discussion/discussion_<title>.md`에 저장되었다
+- [ ] AC4: 요약에 핵심 논점, 결정 사항, 미결 질문, 실행 항목 섹션이 모두 포함되었다
 
 ## Hard Rules
 
 1. **코드 수정 금지**: `Edit`, `Bash`(mutation 명령) 사용을 금지한다. 읽기 전용 도구만 사용한다.
 2. **파일 생성은 Step 4에서만 허용**: Step 1-3에서는 파일을 생성하지 않는다. Step 4 (토론 정리)에서만 `Write`로 요약 파일을 저장할 수 있다. `mkdir -p _sdd/discussion/` 디렉토리 생성은 허용한다.
 3. **읽기 전용 도구만 허용 (Step 1-3)**: `Read`, `Glob`, `Grep`, `AskUserQuestion`, `Agent`(sub-agent)만 사용 가능하다. Step 4에서는 `Write` 추가 허용.
-4. **언어 규칙**: 사용자가 토론을 시작한 언어를 따른다. 영어로 호출하면 영어로, 한국어로 호출하면 한국어로 진행한다. 토론 중 사용자가 언어를 전환하면 따라간다.
+4. **언어 규칙**: 사용자가 토론을 시작한 언어를 따른다. 토론 중 사용자가 언어를 전환하면 따라간다.
 5. **토론 종료 옵션 항상 포함**: Step 3의 매 질문에 "토론 종료 / 정리해줘" 옵션을 반드시 포함한다.
-6. **AskUserQuestion 도구 필수**: Step 3 토론 루프에서 사용자에게 질문할 때 반드시 `AskUserQuestion` 도구를 사용한다. 일반 텍스트로 질문하지 않는다.
+6. **AskUserQuestion 도구 필수**: Step 3 토론 루프에서 사용자에게 질문할 때 반드시 `AskUserQuestion` 도구를 사용한다.
 
 ## Process
 
@@ -51,20 +50,9 @@ version: 1.0.0
    4. "Other (직접 입력)"
    ```
 
-3. 선택된 토픽에 대해 구체적인 범위를 확인:
-   ```
-   AskUserQuestion: "[선택 카테고리]에서 구체적으로 어떤 부분을 논의하고 싶으신가요?"
-   - 자유 형식 응답 수용
-   ```
+3. 선택된 토픽에 대해 구체적인 범위를 확인 (자유 형식 응답 수용)
 
-**Decision Gate 1→2**:
-```
-topic_defined = 토론 주제가 명확하게 정의됨
-scope_clear = 토론 범위가 적절히 한정됨
-
-IF topic_defined AND scope_clear → Step 2 진행
-ELSE → AskUserQuestion으로 보완 (최대 2라운드)
-```
+**Decision Gate 1→2**: `topic_defined AND scope_clear` → Step 2 진행. ELSE → AskUserQuestion으로 보완 (최대 2라운드).
 
 ### Step 2: Context Gathering (맥락 수집)
 
@@ -81,42 +69,7 @@ ELSE → AskUserQuestion으로 보완 (최대 2라운드)
 | 기술 선택 | 후보 기술 비교 자료 수집 | general-purpose |
 | Other | 사용자 입력 기반 판단 | 필요시 Explore 또는 general-purpose |
 
-#### 2.2 Sub-agent Dispatch
-
-코드베이스 관련 토픽:
-```
-Agent(
-  subagent_type="Explore",
-  prompt="다음 토픽에 관련된 코드베이스 정보를 수집하세요: [토픽]
-
-  수집 대상:
-  - 관련 파일/디렉토리 구조
-  - 주요 패턴 및 컨벤션
-  - 관련 코드 스니펫 (핵심부만)
-  - 의존성 관계
-
-  결과를 구조화된 형태로 보고하세요."
-)
-```
-
-기술 선택 / 아키텍처 토픽:
-```
-Agent(
-  subagent_type="general-purpose",
-  prompt="다음 토픽에 대한 리서치를 수행하세요: [토픽]
-
-  수집 대상:
-  - 관련 기술/패턴의 장단점
-  - 업계 best practices
-  - 대안 비교 (있는 경우)
-
-  결과를 구조화된 형태로 보고하세요."
-)
-```
-
-병렬 디스패치: 아키텍처 토픽의 경우 두 sub-agent를 동시에 호출하여 코드베이스 현황과 외부 리서치를 병렬로 수집한다.
-
-#### 2.3 맥락 요약
+#### 2.2 맥락 요약
 
 수집된 정보를 사용자에게 간략히 보고:
 ```
@@ -128,15 +81,7 @@ Agent(
 | 외부 참고 | ... (있는 경우) |
 ```
 
-**Decision Gate 2→3**:
-```
-context_available = 맥락 정보가 최소 1개 이상 수집됨
-topic_still_valid = 맥락 수집 후에도 토픽이 유효함
-
-IF context_available AND topic_still_valid → Step 3 진행
-IF NOT context_available → 맥락 없이 토론 진행 가능 여부 AskUserQuestion
-IF NOT topic_still_valid → Step 1로 돌아가 토픽 재조정
-```
+**Decision Gate 2→3**: `context_available AND topic_still_valid` → Step 3 진행. 맥락 없으면 사용자에게 확인. 토픽 무효화 시 Step 1 복귀.
 
 ### Step 3: Iterative Discussion (반복 토론)
 
@@ -144,95 +89,42 @@ IF NOT topic_still_valid → Step 1로 돌아가 토픽 재조정
 
 핵심 토론 루프. 사용자와 반복적으로 심층 질문-답변을 수행한다.
 
-> **라운드 정의**: 1라운드 = AskUserQuestion 1회 호출 + 사용자 응답 수신 + 응답 분석/반영
-
 #### 3.1 토론 루프 구조
 
 ```
 내부 상태 추적:
-  key_points = []      # 핵심 논점
-  decisions = []       # 결정 사항
-  open_questions = []  # 미결 질문
-  action_items = []    # 실행 항목
-  conversation_log = [] # 대화 로그 (질문, 옵션, 응답, 후속 분석)
-  round = 0
-  MAX_ROUNDS = 10      # 안전 제한
+  key_points, decisions, open_questions, action_items, conversation_log
+  round = 0, MAX_ROUNDS = 10
 
 WHILE round < MAX_ROUNDS:
   round += 1
-
   1. 현재 맥락 기반으로 probing question 생성
   2. AskUserQuestion으로 질문 제시 (옵션 3개 + "토론 종료")
-  3. 사용자 응답 분석
-  4. key_points/decisions/open_questions/action_items 업데이트
-  5. conversation_log에 {question, options, answer, follow_up} 기록
-  6. 필요 시 mid-discussion sub-agent 리서치 수행
+  3. 사용자 응답 분석 → 내부 상태 업데이트
+  4. 필요 시 mid-discussion sub-agent 리서치 수행
 
-  IF 사용자가 "토론 종료" 선택 OR "정리해줘" 입력:
-    → Step 4 진행
+  IF 사용자가 "토론 종료" 선택 OR "정리해줘" 입력 → Step 4
 ```
 
 #### 3.2 질문 생성 전략
 
-| 토론 단계 | 질문 유형 | 예시 |
-|-----------|----------|------|
-| 초반 (round 1-3) | 범위 확인, 목표 정의 | "이 결정의 주요 목표는 무엇인가요?" |
-| 중반 (round 4-6) | 트레이드오프, 대안 탐색 | "A 방식과 B 방식의 트레이드오프를 어떻게 보시나요?" |
-| 후반 (round 7+) | 합의 도출, 결정 확인 | "지금까지 논의를 바탕으로 X로 결정해도 될까요?" |
+초반(1-3) 범위·목표 확인 → 중반(4-6) 트레이드오프·대안 탐색 → 후반(7+) 합의·결정 확인. 옵션은 상호 배타적이고 포괄적으로 구성하며, 이미 답한 내용은 재질문하지 않는다.
 
-#### 3.3 AskUserQuestion 형식
-
-매 라운드 질문 형식:
-```
-AskUserQuestion: "[probing question]"
-옵션:
-1. "[관련 선택지 A]"
-2. "[관련 선택지 B]"
-3. "[관련 선택지 C]"
-4. "토론 종료 / 정리해줘"
-```
-
-자유 형식 답변이 필요한 경우:
-```
-AskUserQuestion: "[open-ended question]"
-옵션:
-1. "[힌트/방향 A]"
-2. "[힌트/방향 B]"
-3. "잘 모르겠어요 (추가 리서치 필요)"
-4. "토론 종료 / 정리해줘"
-```
-
-#### 3.4 Mid-Discussion Research
+#### 3.3 Mid-Discussion Research
 
 토론 중 근거가 필요하면 sub-agent를 즉시 디스패치:
 
-트리거 조건:
-- 사용자가 "잘 모르겠어요 (추가 리서치 필요)" 선택
-- 사용자가 사실 확인이 필요한 주장을 함
-- 코드베이스 특정 부분에 대한 확인이 필요
-
-```
-코드 확인 필요 시:
-Agent(subagent_type="Explore", prompt="토론 중 다음 사항을 확인: [확인 사항]")
-
-외부 정보 필요 시:
-Agent(subagent_type="general-purpose", prompt="다음 사항에 대한 리서치: [리서치 주제]")
-```
+| 트리거 | Sub-agent |
+|--------|-----------|
+| "추가 리서치 필요" 선택 | general-purpose |
+| 코드베이스 확인 필요 | Explore |
+| 사실 확인 필요한 주장 | general-purpose |
 
 독립적인 리서치 2건 이상이면 병렬 디스패치.
 
-#### 3.5 라운드별 중간 상태 추적
+#### 3.4 중간 상태 추적
 
-매 3라운드마다 (또는 사용자 요청 시) 중간 요약 제시:
-```
-## 토론 중간 요약 (Round N)
-| 항목 | 내용 |
-|------|------|
-| 핵심 논점 | N개 |
-| 결정 사항 | N개 |
-| 미결 질문 | N개 |
-| 실행 항목 | N개 |
-```
+매 3라운드마다 (또는 사용자 요청 시) 핵심 논점·결정 사항·미결 질문·실행 항목 카운트를 중간 요약 테이블로 제시.
 
 ### Step 4: Discussion Summary (토론 정리)
 
@@ -240,12 +132,8 @@ Agent(subagent_type="general-purpose", prompt="다음 사항에 대한 리서치
 
 토론 종료 시 구조화된 요약을 생성하고, `_sdd/discussion/discussion_<title>.md`로 자동 저장한다.
 
-#### 파일명 생성 규칙
-- 소문자, 특수문자는 `_`로 대체, 최대 50자
-- 파일명은 항상 영문 (예: "인증 시스템 설계" → `discussion_auth_system_design.md`)
-
-#### 요약 언어 규칙
-- 토론에서 사용된 언어로 요약을 작성한다 (사용자 입력 언어 기준)
+- **파일명**: 소문자, 특수문자는 `_`로 대체, 최대 50자, 항상 영문 (예: "인증 시스템 설계" → `discussion_auth_system_design.md`)
+- **언어**: 토론에서 사용된 언어로 작성
 
 #### 요약 출력 형식
 
@@ -267,7 +155,6 @@ Agent(subagent_type="general-purpose", prompt="다음 사항에 대한 리서치
 
 ## 미결 질문 (Open Questions)
 - [ ] [질문 1]: [맥락]
-- [ ] [질문 2]: [맥락]
 
 ## 실행 항목 (Action Items)
 | # | 항목 | 우선순위 | 담당 |
@@ -279,7 +166,6 @@ Agent(subagent_type="general-purpose", prompt="다음 사항에 대한 리서치
 
 ## 토론 흐름 (Discussion Flow)
 Round 1: [주제] → [결론/방향]
-Round 2: [주제] → [결론/방향]
 ...
 
 ## 부록: 대화 로그 (Conversation Log)
@@ -289,49 +175,10 @@ Round 2: [주제] → [결론/방향]
 **Options**: 1) ... 2) ... 3) ... 4) 토론 종료
 **A**: [사용자 응답 요약]
 **Follow-up**: [AI 분석/코멘트 요약]
-
-### Round 2
-**Q**: ...
-**Options**: ...
-**A**: ...
-**Follow-up**: ...
-
 ...
 ```
 
-## Progressive Disclosure (완료 시)
-
-```
-완료 요약 테이블을 제시한 후 전체 요약을 바로 출력하고 파일로 저장한다 (사용자 확인을 기다리지 않는다):
-
-1. 완료 요약 테이블 제시:
-   | 항목 | 내용 |
-   |------|------|
-   | 토론 주제 | [토픽] |
-   | 총 라운드 | N |
-   | 결정 사항 | N개 |
-   | 미결 질문 | N개 |
-   | 실행 항목 | N개 |
-   | 리서치 수행 | N건 |
-
-2. 전체 요약을 출력하고 `_sdd/discussion/discussion_<title>.md`로 저장한다 (디렉토리 없으면 생성).
-```
-
-## Context Management
-
-### 토론 상태 크기 관리
-
-| 라운드 수 | 전략 | 구체적 방법 |
-|-----------|------|-------------|
-| < 5 | 전체 추적 | 모든 논점, 결정, 질문을 내부 상태로 유지 |
-| 5-8 | 요약 추적 | 핵심 논점만 유지, 세부 사항은 요약 |
-| > 8 | 압축 추적 | 중간 요약 생성 후 이전 라운드 상세 내용 압축 |
-
-### Sub-agent 결과 관리
-
-- Sub-agent 결과는 핵심 발견만 추출하여 토론 맥락에 통합
-- 전체 리서치 결과는 요약 시 "리서치 결과 요약" 섹션에 포함
-- 동일 주제 재리서치 방지: 이전 리서치 주제 목록 유지
+완료 시 요약 테이블을 제시한 후 전체 요약을 출력하고 파일로 저장한다 (사용자 확인을 기다리지 않는다).
 
 ## Error Handling
 
@@ -343,40 +190,12 @@ Round 2: [주제] → [결론/방향]
 | 토론이 범위를 벗어남 | 원래 토픽 리마인드, 범위 재조정 질문 |
 | MAX_ROUNDS 도달 | 자동으로 Step 4 진행, 안내 메시지 출력 |
 | 코드베이스 접근 불가 | Explore agent 스킵, 외부 리서치만으로 진행 |
-| 다국어 혼재 | 사용자 주 사용 언어 감지, 해당 언어로 전환 |
-
-## Best Practices
-
-### 효과적인 토론 진행
-- 한 번에 하나의 논점에 집중한다
-- 사용자 답변을 paraphrase하여 이해 확인
-- 트레이드오프를 명시적으로 제시한다
-- 결정 사항은 즉시 추적 상태에 기록한다
-
-### 질문 품질
-- 열린 질문과 닫힌 질문을 적절히 혼합한다
-- 옵션은 상호 배타적이고 포괄적이어야 한다
-- 사용자가 이미 답한 내용을 재질문하지 않는다
-
-### Sub-agent 활용
-- 리서치가 토론 흐름을 방해하지 않도록 한다
-- 동일 주제를 반복 리서치하지 않는다
-- 독립 리서치는 병렬 디스패치한다
 
 ## Integration with Other Skills
 
-이 스킬은 다른 SDD 스킬과 독립적으로 동작하지만, 토론 결과를 후속 작업에 활용할 수 있다:
-
-- **spec-create**: 토론에서 도출된 요구사항을 바탕으로 스펙 문서 생성
-- **feature-draft**: 토론에서 결정된 기능 방향을 기반으로 기능 초안 작성
-- **implementation-plan**: 토론에서 합의된 아키텍처로 구현 계획 수립
-
-> 참고: 토론 스킬은 마지막 Step 4에서 토론 요약 파일만 생성한다. 토론 결과를 후속 스킬에 활용하려면 사용자가 해당 요약 내용을 참조하여 후속 스킬을 별도로 실행해야 한다.
+토론 결과를 후속 스킬(spec-create, feature-draft, implementation-plan)에 활용하려면 사용자가 요약 파일을 참조하여 별도 실행한다.
 
 ## Additional Resources
 
-### Reference Files
 - **`references/discussion-question-guide.md`** - 토론 질문 템플릿 및 전략 가이드
-
-### Example Files
 - **`examples/sample-discussion-session.md`** - 구조화된 토론 세션 예시
