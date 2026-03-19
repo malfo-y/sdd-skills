@@ -84,7 +84,20 @@ Glob: _sdd/pipeline/log_*.md
 
 발견된 로그 파일들의 Status 테이블을 읽어 미완료 스텝(`pending`, `in_progress`, `failed`)이 있는 로그를 필터링한다.
 
-#### 0.2 기존 산출물 스캔
+#### 0.2 스펙 존재 확인 (조기 게이트)
+
+```
+Glob: _sdd/spec/main.md OR _sdd/spec/*.md
+```
+
+스펙이 존재하지 않으면 즉시 사용자에게 안내하고 중단한다:
+```
+IF 스펙 파일 없음:
+  → "글로벌 스펙이 없습니다. 먼저 `/spec-create`로 스펙을 생성해주세요."
+  → 종료
+```
+
+#### 0.3 기존 산출물 스캔
 
 ```
 Glob: _sdd/drafts/feature_draft_*.md
@@ -93,7 +106,7 @@ Glob: _sdd/implementation/IMPLEMENTATION_PLAN.md
 
 로그 없이도 기존 산출물이 존재하면, 사용자 요청과의 관련성을 판단하여 활용 여부를 결정한다.
 
-#### 0.3 상태별 분기
+#### 0.4 상태별 분기
 
 ```
 IF 미완료 로그 == 0 AND 관련 산출물 없음:
@@ -134,6 +147,7 @@ ELSE → Step 1 진행 (새 파이프라인)
 
 ```
 Read: references/sdd-reasoning-reference.md  (철학 + 스킬 카탈로그)
+Read: references/orchestrator-contract.md    (오케스트레이터/로그 최소 계약)
 Read: examples/sample-orchestrator.md        (오케스트레이터 품질 기준)
 ```
 
@@ -290,7 +304,7 @@ IF Explore agent 실패 → 직접 탐색으로 보완 후 Step 4 진행
 
 Step 1에서 내재화한 SDD 철학 + 스킬 카탈로그를 바탕으로 다음을 추론한다:
 
-a) **스펙 상태 판단**: 스펙 존재? → 없으면 오케스트레이터 생성 중단, 사용자에게 `/spec-create` 실행 안내
+a) **스펙 상태 판단**: Step 0.2에서 이미 확인됨. 여기서는 스펙의 관련 섹션/범위를 분석
 b) **변경 범위 판단**: 스펙 패치? 신규 섹션? → spec-update-todo 필요 여부
 c) **계획 깊이**: 직접 구현? feature-draft? impl-plan까지?
 d) **검증 수준**: 인라인 테스트? ralph-loop? review 포함?
@@ -747,7 +761,7 @@ ON ERROR:
 - `implementation` 에이전트 실패 → 파이프라인 중단 (구현 없이 진행 불가)
 - `implementation-review` 에이전트 실패 (파이프라인에 review 포함 시) → 파이프라인 중단 (Hard Rule #9 -- review-fix 사이클 필수)
 - 테스트 단계 실패 (인라인/ralph 모두) → 파이프라인 중단 (Hard Rule #10 -- Exit Criteria 미충족)
-- `spec-update-done` / `spec-review` 실패 → 건너뛰고 진행 (로그에 기록, 수동 수행 가능)
+- `spec-update-todo` / `spec-update-done` / `spec-review` 실패 → 건너뛰고 진행 (로그에 기록, 수동 수행 가능)
 
 **파이프라인 중단 시 보고:**
 
