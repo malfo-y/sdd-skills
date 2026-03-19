@@ -87,15 +87,22 @@ rg --files _sdd/pipeline | rg '^_sdd/pipeline/log_.*\.md$'
 #### 0.2 기존 산출물 스캔
 
 ```
+test -f _sdd/spec/main.md
 rg --files _sdd/drafts | rg '^_sdd/drafts/feature_draft_.*\.md$'
 test -f _sdd/implementation/IMPLEMENTATION_PLAN.md
 ```
 
-로그 없이도 기존 산출물이 존재하면, 사용자 요청과의 관련성을 판단하여 활용 여부를 결정한다.
+글로벌 스펙 존재 여부와 기존 산출물을 함께 확인한다. 로그 없이도 기존 산출물이 존재하면, 사용자 요청과의 관련성을 판단하여 활용 여부를 결정한다.
 
 #### 0.3 상태별 분기
 
 ```
+IF _sdd/spec/main.md 없음:
+  → 사용자에게 안내:
+    "글로벌 스펙(`_sdd/spec/main.md`)이 없어 autopilot을 시작할 수 없습니다.
+     먼저 `/spec-create`를 실행해 스펙을 만든 뒤 다시 시도해 주세요."
+  → 종료
+
 IF 미완료 로그 == 0 AND 관련 산출물 없음:
   → Step 1로 진행 (새 파이프라인)
 
@@ -118,9 +125,11 @@ IF 미완료 로그 == 0 AND 관련 산출물 있음:
 
 **Decision Gate 0 -> 1 (or 7)**:
 ```
+spec_exists = _sdd/spec/main.md 존재
 resume_selected = 사용자가 기존 파이프라인 재개를 선택함
 
-IF resume_selected → Step 7 진행 (재개 모드)
+IF NOT spec_exists → 종료 (`/spec-create` 안내)
+ELSE IF resume_selected → Step 7 진행 (재개 모드)
 ELSE → Step 1 진행 (새 파이프라인)
 ```
 
@@ -134,6 +143,7 @@ ELSE → Step 1 진행 (새 파이프라인)
 
 ```
 sed -n '1,260p' references/sdd-reasoning-reference.md
+sed -n '1,220p' references/orchestrator-contract.md
 sed -n '1,260p' examples/sample-orchestrator.md
 ```
 
@@ -143,12 +153,13 @@ sed -n '1,260p' examples/sample-orchestrator.md
 
 - **SDD 원칙 3개**: spec-as-SoT, 결정 고정, 검증 기준
 - **스킬 의존성 그래프**: 어떤 스킬이 어떤 출력을 만드는지 (input/output/pre-condition)
+- **오케스트레이터 최소 계약**: 필수 섹션, step 필드, review-fix/test/log 계약
 - **파이프라인 구성 가이드라인**: 소/중/대 + 특수 상황 (부분 파이프라인, 팬아웃 병렬, 재개 등)
 - **테스트 전략 판단 기준**: 인라인 디버깅 vs ralph_loop_init 결정 근거
 
 **Decision Gate 1 → 2**:
 ```
-reference_loaded = sdd-reasoning-reference.md 읽기 성공
+reference_loaded = reasoning-reference / orchestrator-contract / sample-orchestrator 읽기 성공
 
 IF reference_loaded → Step 2
 ELSE → 에러 (reference 파일 누락)
@@ -300,6 +311,8 @@ f) **특수 패턴**: 부분 파이프라인, 팬아웃 병렬, 재개 등
 
 - 의존성 그래프 기반 동적 조합 (가이드라인 참조, 템플릿 아님)
 - 비표준 조합 가능 (reference의 가이드라인 범위 내에서)
+- 시작/종료 힌트가 있으면 해당 범위 바깥 step은 제거하되, 선행 산출물 전제와 review-fix 완전성은 유지한다.
+- 관련 `feature_draft` 또는 `implementation_plan` 산출물이 이미 있으면, 해당 산출물을 생산하는 step은 생략하고 다음 유효 step부터 시작한다.
 
 #### 4.3 오케스트레이터 SKILL.md 생성
 
@@ -345,7 +358,7 @@ sed -n '1,240p' _sdd/env.md
 | implementation (테스트) | 테스트 DB, mock 서비스, 테스트 데이터 |
 | ralph_loop_init | GPU (ML), 학습 데이터, 장시간 실행 환경 |
 | spec_update_done | git (diff 확인용) |
-| feature_draft, impl-plan, impl-review | 추가 리소스 불필요 (읽기 위주) |
+| feature_draft, implementation_plan, implementation_review | 추가 리소스 불필요 (읽기 위주) |
 
 추정 방법:
 - Step 2 (Discussion)에서 수집한 기술 키워드 분석 (e.g., "Redis 캐시" → Redis 서버 필요)
@@ -747,7 +760,7 @@ ON ERROR:
 - `implementation` 에이전트 실패 → 파이프라인 중단 (구현 없이 진행 불가)
 - `implementation_review` 에이전트 실패 (파이프라인에 review 포함 시) → 파이프라인 중단 (Hard Rule #9 -- review-fix 사이클 필수)
 - 테스트 단계 실패 (인라인/ralph 모두) → 파이프라인 중단 (Hard Rule #10 -- Exit Criteria 미충족)
-- `spec_update_done` / `spec_review` 실패 → 건너뛰고 진행 (로그에 기록, 수동 수행 가능)
+- `spec_update_todo` / `spec_update_done` / `spec_review` 실패 → 건너뛰고 진행 (로그에 기록, 수동 수행 가능)
 
 **파이프라인 중단 시 보고:**
 
