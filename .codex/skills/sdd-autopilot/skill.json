@@ -1,6 +1,6 @@
 {
   "name": "sdd-autopilot",
-  "description": "This skill should be used when the user asks to \"sdd-autopilot\", \"autopilot\", \"자동 구현\", \"end-to-end 구현\", \"전체 파이프라인\", \"처음부터 끝까지\", or wants Codex to orchestrate the full SDD workflow from requirement clarification to spec sync.",
+  "description": "Adaptive orchestrator meta-skill for SDD pipeline. Use when the user says \"sdd-autopilot\", \"autopilot\", \"자동 구현\", \"end-to-end 구현\", \"전체 파이프라인\", \"자동으로 구현해줘\", or wants automated end-to-end implementation from an existing spec to spec synchronization.",
   "instruction_file": "SKILL.md",
-  "version": "1.3.0"
+  "version": "2.0.1"
 }
