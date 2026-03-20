@@ -23,6 +23,7 @@ model: inherit
 - [ ] AC2: 스펙 백업(`prev/PREV_*`) → 섹션 매핑 → 업데이트 적용 → 버전(patch) 증가 완료
 - [ ] AC3: 처리된 입력 파일에 `_processed_` 접두사 추가 및 처리 메타데이터 기록
 - [ ] AC4: 업데이트 요약 보고(변경 섹션·항목 테이블, 입력 파일 상태, 후속 안내) 출력
+- [ ] AC5: 분할 스펙에서 각 항목이 의미적으로 적합한 파일에 배치되고, 신규 파일 생성 시 main.md 인덱스에 링크 추가됨
 
 ## Hard Rules
 
@@ -32,6 +33,8 @@ model: inherit
 4. **스펙 구조 보존**: 기존 구조·스타일 유지, 필요한 항목만 추가한다.
 5. **DECISION_LOG 최소화**: 결정 기록은 `DECISION_LOG.md`에만. 추가 문서는 사용자 요청 시에만 생성한다.
 6. **양 파일 공존 시**: `user_draft.md` 우선, `user_spec.md` 보조 병합. 가정은 Update Plan에 기록한다.
+7. **main.md 인덱스 동기화**: 새 sub-spec 파일 생성 시 반드시 main.md 인덱스에 링크를 추가한다. 고아 파일 금지.
+8. **기존 스펙 구조 보존**: 기존 파일 분할 구조를 변경하지 않는다. 파일 추가만 허용, 기존 구조 재편성 금지.
 
 ## Input Sources
 
@@ -57,7 +60,9 @@ model: inherit
 **Tools**: `Read`, `Glob`
 
 1. 메인 스펙 탐색 우선순위: `<project>.md` → `main.md` → 단일 `.md` → 2개 이상이면 인덱스 역할 파일 선택 (근거 기록)
-2. 스펙 내용 읽기 (분할 스펙이면 관련 파일도 포함)
+2. 스펙 내용 읽기
+   - 단일 파일: 해당 파일 읽기
+   - 분할 스펙: main.md 인덱스에서 링크된 sub-spec 파일 목록 구성, 각 파일의 주제·섹션 구조 파악
 3. `DECISION_LOG.md` 존재 시 참조
 4. 입력에서 기능명, 설명, 우선순위, 수용 기준 등 구조화 정보 추출
 
@@ -79,6 +84,20 @@ model: inherit
 | Configuration | 설정 (§8) | Add options |
 | API Change | API 레퍼런스 (§7) | Add endpoints |
 
+#### File Placement Decision (분할 스펙 전용)
+
+단일 파일 스펙이면 건너뛴다.
+
+1. **기존 파일 매칭**: 항목의 컴포넌트/기능이 기존 sub-spec 파일과 일치 → 해당 파일에 배치
+2. **Cross-cutting 항목**: 환경변수, 글로벌 설정 등은 해당 §이 위치한 파일에 배치
+3. **신규 파일 생성**: 매칭 없으면 새 파일 생성 (파일명 = 컴포넌트명, 예: `proxy.md`). main.md 인덱스에 링크 필수
+4. **소규모 병합**: 생성될 내용이 50줄 미만이면 가장 관련도 높은 기존 파일에 병합 (소규모 = 잘못된 분할)
+
+Update Plan에 파일 배치 결정을 포함한다:
+
+| Item | Target File | Action | Reason |
+|------|------------|--------|--------|
+
 Update Plan을 작업 로그로 출력한 뒤 Step 4로 자동 진행한다.
 
 ### Step 4: 업데이트 적용
@@ -87,6 +106,7 @@ Update Plan을 작업 로그로 출력한 뒤 Step 4로 자동 진행한다.
 
 1. `mkdir -p _sdd/spec/prev/` → 백업 생성
 2. 적절한 섹션에 항목 삽입 (기존 스타일·언어 유지)
+   2-1. 신규 sub-spec 파일 생성 시: 파일 생성 → main.md 인덱스에 링크 추가
 3. 버전 patch 증가 (X.Y.Z → X.Y.Z+1), 날짜 갱신, Changelog 항목 추가
 4. 필요 시 `DECISION_LOG.md`에 항목 추가
 5. 처리된 입력 파일을 `_processed_` 접두사로 이름 변경, 처리 메타데이터 추가
@@ -99,6 +119,7 @@ Update Plan을 작업 로그로 출력한 뒤 Step 4로 자동 진행한다.
 - 수정된 스펙 파일 존재
 - Changelog 항목·버전 증가·백업 파일 존재
 - 입력 파일 `_processed_` 리네임 완료
+- (분할 스펙) 신규 파일이 main.md 인덱스에 링크됨
 
 ## Update Template
 
@@ -122,9 +143,9 @@ N. **[NEW] 항목명**: 설명  <!-- 추가됨: YYYY-MM-DD -->
 
 ### Applied Changes
 
-| Section | Change | Item |
-|---------|--------|------|
-| ... | ADD | ... |
+| File | Section | Change | Item |
+|------|---------|--------|------|
+| ... | ... | ADD | ... |
 
 ### Input File Status
 - [x] `user_draft.md` → `_processed_user_draft.md` (if used)
@@ -144,6 +165,7 @@ N. **[NEW] 항목명**: 설명  <!-- 추가됨: YYYY-MM-DD -->
 | Invalid input file format | 파싱 오류 보고, 수정 제안 |
 | 백업 디렉토리 미존재 | `mkdir -p` 자동 생성 |
 | 섹션 매핑 불가 | 보수적 섹션에 반영, 불확실 항목은 Open Questions에 기록 |
+| 파일 배치 판단 모호 | 가장 관련도 높은 기존 파일에 보수적 배치, Update Plan에 근거 기록 |
 
 ## Integration
 

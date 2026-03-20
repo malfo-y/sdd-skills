@@ -1,7 +1,7 @@
 ---
 name: spec-update-done
 description: "This skill should be used when the user asks to \"update spec from code\", \"sync spec with implementation\", \"apply implementation changes to spec\", \"reflect completed work in spec\", \"refresh spec after implementation\", \"implementation done sync\", or mentions spec document maintenance tied to completed code changes."
-version: 2.0.0
+version: 2.1.0
 ---
 
 # Spec Sync and Update
@@ -16,6 +16,7 @@ version: 2.0.0
 - [ ] AC2: Change Report 테이블을 생성하여 사용자에게 제시한 후 스펙 업데이트 적용
 - [ ] AC3: 구현 산출물을 feature별로 copy-only 아카이브 완료
 - [ ] AC4: Source field가 현재 코드와 동기화됨
+- [ ] AC5: 분할 스펙에서 드리프트 항목이 의미적으로 적합한 파일에 반영되고, 신규 파일 생성 시 main.md 인덱스에 링크 추가됨
 
 ## Hard Rules
 
@@ -24,6 +25,8 @@ version: 2.0.0
 3. **Copy-only archive**: 구현 산출물은 복사만 하며 원본을 이동/삭제하지 않는다.
 4. **언어 규칙**: 기존 스펙/문서의 언어를 따른다. 새 프로젝트(기존 스펙 없음)는 한국어 기본. 사용자 명시 지정 시 해당 언어 사용.
 5. **DECISION_LOG.md 최소화**: 결정 로그는 `DECISION_LOG.md`에만 기록하며, 추가 거버넌스 문서는 사용자 요청 시에만 생성한다.
+6. **main.md 인덱스 동기화**: 새 sub-spec 파일 생성 시 반드시 main.md 인덱스에 링크를 추가한다. 고아 파일 금지.
+7. **기존 스펙 구조 보존**: 기존 파일 분할 구조를 변경하지 않는다. 파일 추가만 허용, 기존 구조 재편성 금지.
 
 ## Input Sources
 
@@ -58,6 +61,8 @@ version: 2.0.0
 ### Step 1: Gather Context
 
 1. 현재 스펙 문서 읽기
+   - 단일 파일: 해당 파일 읽기
+   - 분할 스펙: main.md 인덱스에서 링크된 sub-spec 파일 목록 구성, 각 파일의 주제·섹션 구조 파악
 2. 구현 로그 읽기: `IMPLEMENTATION_PLAN.md`, `IMPLEMENTATION_PROGRESS.md`, `IMPLEMENTATION_REVIEW.md`, `IMPLEMENTATION_REPORT*.md`, `TEST_SUMMARY.md`
 3. Feature 드래프트 확인: `_sdd/drafts/feature_draft_<name>.md` (있는 경우)
 4. 코드 변경 분석: `git status`, `git diff`, `git log --oneline -20`
@@ -71,6 +76,15 @@ version: 2.0.0
 
 위 Drift Pattern Reference 9가지 패턴을 기준으로 스펙과 실제 코드 간 불일치를 식별한다. Source field 드리프트(파일 경로 변경, 함수 이동/삭제)도 함께 점검한다.
 
+#### File Placement Decision (분할 스펙 전용)
+
+단일 파일 스펙이면 건너뛴다.
+
+1. **기존 파일 매칭**: 드리프트 항목의 컴포넌트/기능이 기존 sub-spec 파일과 일치 → 해당 파일에 반영
+2. **Cross-cutting 항목**: 환경변수, 글로벌 설정 등은 해당 §이 위치한 파일에 반영
+3. **신규 파일 생성**: 새 컴포넌트가 코드에 추가되었으나 매칭 없으면 새 파일 생성 (파일명 = 컴포넌트명). main.md 인덱스에 링크 필수
+4. **소규모 병합**: 생성될 내용이 50줄 미만이면 가장 관련도 높은 기존 파일에 병합
+
 ### Step 3: Generate Change Report
 
 사용자에게 제시할 구조화된 변경 리포트를 생성한다.
@@ -81,6 +95,7 @@ version: 2.0.0
 
 1. `mkdir -p _sdd/spec/prev/` 후 백업 생성
 2. 정확한 기존 내용은 보존하며, 변경/추가/제거 적용
+   2-1. 신규 sub-spec 파일 생성 시: 파일 생성 → main.md 인덱스에 링크 추가
 3. Source field 갱신 (구현 산출물의 파일 경로 → Grep/Glob으로 검증)
 4. 버전 갱신: patch(소규모), minor(피처), major(아키텍처)
 5. Changelog 항목 추가 (prev/ 백업 참조 포함)
@@ -97,6 +112,7 @@ version: 2.0.0
 - 모든 파일 경로/링크가 유효한지 확인
 - 의존성 버전 일치 확인
 - 기존 정확한 내용이 보존되었는지 확인
+- (분할 스펙) 신규 파일이 main.md 인덱스에 링크됨
 - 로컬 검증 시 `_sdd/env.md` 설정 먼저 적용. 미존재 시 사용자에게 환경 확인
 
 **Gate → Step 6**: 경로 유효 AND 버전 일치 AND 기존 내용 보존 시 진행. 실패 항목은 수정 후 재검증.
@@ -124,9 +140,9 @@ version: 2.0.0
 | 제거/아카이브 | N개 |
 
 ### Changes
-| Section | Current Spec | Actual State | Drift Type | Action |
-|---------|-------------|--------------|------------|--------|
-| ... | ... | ... | Architecture/Feature/... | Add/Update/Remove |
+| Target File | Section | Current Spec | Actual State | Drift Type | Action |
+|------------|---------|-------------|--------------|------------|--------|
+| ... | ... | ... | ... | Architecture/Feature/... | Add/Update/Remove |
 
 ### Open Questions
 - [모호한 항목에 대한 판단 근거와 질문]
@@ -142,6 +158,7 @@ version: 2.0.0
 | `_sdd/env.md` 미존재 | 로컬 실행 건너뛰고 사용자에게 환경 확인 |
 | feature_id 모호 | 컨텍스트에서 자동 생성 (커밋 메시지, 변경 파일명 활용) |
 | 충돌하는 변경 | 최선 판단 후 진행, `DECISION_LOG.md`에 근거 기록 |
+| 파일 배치 판단 모호 | 가장 관련도 높은 기존 파일에 보수적 배치, Change Report에 근거 기록 |
 
 ## Workflow Position
 
@@ -154,9 +171,3 @@ version: 2.0.0
 ## Final Check
 
 Acceptance Criteria가 모두 만족되었나 검증한다. 미충족 항목이 있으면 해당 단계로 돌아가 수정한다.
-
----
-
-> **Mirror Notice**: 이 스킬의 본문은 `.claude/agents/spec-update-done.md`의 복사본이다.
-> 사용자가 직접 호출할 때 중간 과정의 가시성을 확보하기 위해 복붙되었다.
-> 내용을 수정할 때는 agent 파일과 이 스킬 파일을 **반드시 함께** 수정해야 한다.
