@@ -81,7 +81,10 @@ Plan 탐색 (사용자 지정 경로 또는 _sdd/implementation/IMPLEMENTATION_P
 
 ### Step 5: Summary — 리포트 작성 및 저장
 
-`write-phased` 서브에이전트에 위임하여 리포트를 작성한다.
+`write-skeleton` 서브에이전트에 위임한다. 반환값이 SKELETON_ONLY이면 Sections Remaining 목록을 보고 Edit으로 채운다.
+- 독립 섹션 2개+ → 병렬 Agent dispatch 가능
+- 의존 섹션 → 순서대로 Edit
+- 완료 후 TODO/Phase 마커 제거
 
 **저장 경로**: 사용자 지정 또는 `_sdd/implementation/IMPLEMENTATION_REVIEW.md`
 - 기존 파일이 있으면 `prev/PREV_IMPLEMENTATION_REVIEW_<timestamp>.md`로 아카이브 후 새로 생성

@@ -222,7 +222,11 @@ model: inherit
    - 중복 파일 감지 → Parallel Execution Summary에 반영
 2. `_sdd/drafts/` 생성 (없으면)
 3. 기존 동명 파일 → `_sdd/drafts/prev/prev_feature_draft_<name>_<timestamp>.md`로 아카이브
-4. `_sdd/drafts/feature_draft_<feature_name>.md`에 저장 (write-phased 서브에이전트 위임)
+4. `_sdd/drafts/feature_draft_<feature_name>.md`에 저장
+   - `write-skeleton` 서브에이전트에 위임한다. 반환값이 SKELETON_ONLY이면 Sections Remaining 목록을 보고 Edit으로 채운다.
+     - 독립 섹션 2개+ → 병렬 Agent dispatch 가능
+     - 의존 섹션 → 순서대로 Edit
+     - 완료 후 TODO/Phase 마커 제거
 5. 입력 파일 처리: `user_draft.md` → `_processed_user_draft.md` (메타데이터 추가)
 6. Decision Log 업데이트 (중요한 결정이 있었을 때만)
 7. 완료 메시지 + Next Steps 안내

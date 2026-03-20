@@ -152,7 +152,12 @@ ELSE → 미파악 항목 추가 탐색 또는 Open Questions 기록
 
 #### Step 3-B: Write Spec
 
-`write-phased` 서브에이전트에 위임한다. 호출 시 `references/template-compact.md`의 스펙 템플릿 전체와 Step 2 분석 결과를 프롬프트에 포함한다.
+`write-skeleton` 서브에이전트에 위임한다. 반환값이 SKELETON_ONLY이면 Sections Remaining 목록을 보고 Edit으로 채운다.
+- 독립 섹션 2개+ → 병렬 Agent dispatch 가능
+- 의존 섹션 → 순서대로 Edit
+- 완료 후 TODO/Phase 마커 제거
+
+호출 시 `references/template-compact.md`의 스펙 템플릿 전체와 Step 2 분석 결과를 프롬프트에 포함한다.
 
 > **`references/template-compact.md`를 Read로 읽는다.** §1-§8 섹션 구조, Writing Rules(코드 발췌/인라인 citation/What-Why-How 트라이어드), Modular Spec Guide가 정의되어 있다.
 
@@ -160,7 +165,7 @@ ELSE → 미파악 항목 추가 탐색 또는 Open Questions 기록
 
 ```
 Agent(
-  subagent_type="write-phased",
+  subagent_type="write-skeleton",
   prompt="파일 경로: [_sdd/spec/<project>.md 또는 _sdd/spec/main.md]
   [references/template-compact.md §1-§8 + Step 2 분석 결과]"
 )
@@ -170,7 +175,7 @@ Agent(
 
 **Step 3-B-1**: main.md (인덱스) 순차 작성
 ```
-Agent(subagent_type="write-phased", prompt="main.md 인덱스 작성.
+Agent(subagent_type="write-skeleton", prompt="main.md 인덱스 작성.
   목표/아키텍처 요약/컴포넌트 링크만.
   [references/template-compact.md + Step 2 분석 결과]")
 ```

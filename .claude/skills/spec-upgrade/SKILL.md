@@ -105,9 +105,14 @@ Gap 분석 결과를 아래 형식으로 보고 후 자동 진행:
 
 ### 파일 작성 위임
 
-출력 문서 작성 시 `write-phased` 서브에이전트에 위임한다. Step 4.3 변환 규칙 + Gap/코드 분석 결과 + 기존 스펙 내용을 프롬프트에 포함.
+`write-skeleton` 서브에이전트에 위임한다. 반환값이 SKELETON_ONLY이면 Sections Remaining 목록을 보고 Edit으로 채운다.
+- 독립 섹션 2개+ → 병렬 Agent dispatch 가능
+- 의존 섹션 → 순서대로 Edit
+- 완료 후 TODO/Phase 마커 제거
 
-- **단일 파일**: `Agent(subagent_type="write-phased", prompt="[target path] + 변환 규칙 + 분석 결과")`
+Step 4.3 변환 규칙 + Gap/코드 분석 결과 + 기존 스펙 내용을 프롬프트에 포함.
+
+- **단일 파일**: `Agent(subagent_type="write-skeleton", prompt="[target path] + 변환 규칙 + 분석 결과")`
 - **멀티파일**: main.md 먼저(§1,§2,§3,§5,§8) → 서브 파일 병렬(§4 보강). 독립 서브 파일 2개 이상이면 병렬 디스패치.
 
 ### Step 4: Backup & Upgrade (백업 및 업그레이드 실행)

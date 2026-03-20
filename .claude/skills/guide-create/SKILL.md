@@ -96,7 +96,12 @@ version: 2.2.0
 
 #### 파일 작성 위임
 
-`write-phased` 서브에이전트에 위임. 호출 시 Required sections 전체와 맥락(스펙, 코드 증거, Step 2-3 분석)을 포함. `references/template-compact.md`의 Writing Rules와 §1-§5 구조 준수.
+`write-skeleton` 서브에이전트에 위임한다. 반환값이 SKELETON_ONLY이면 Sections Remaining 목록을 보고 Edit으로 채운다.
+- 독립 섹션 2개+ → 병렬 Agent dispatch 가능
+- 의존 섹션 → 순서대로 Edit
+- 완료 후 TODO/Phase 마커 제거
+
+호출 시 Required sections 전체와 맥락(스펙, 코드 증거, Step 2-3 분석)을 포함. `references/template-compact.md`의 Writing Rules와 §1-§5 구조 준수.
 
 - **단일 기능**: Agent 1회 호출로 `guide_<slug>.md` 작성.
 - **복수 기능** (Hard Rule #5): 기능별 Agent 병렬 디스패치.

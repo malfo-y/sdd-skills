@@ -1,31 +1,55 @@
 ---
 name: write-phased
 description: Use this skill when the user asks to write, create, or generate a document or code file. Triggers on "write-phased", "문서 작성", "작성해줘", "만들어줘", "코드 작성", "파일 생성", "구현해줘", "write a document", "create a file", "generate code", "implement", or any request to produce a markdown document, code file, config file, or technical writing.
-version: 1.1.0
+version: 2.0.0
 ---
 
-# write-phased (Wrapper)
+# write-phased — Skeleton + Fill Orchestration
 
-이 스킬은 `write-phased` 서브에이전트에 작업을 위임한다.
+`write-skeleton` agent로 파일을 생성하고, 필요하면 직접 Edit으로 내용을 채운다. 모든 중간 과정이 메인 대화에서 실행되어 사용자에게 보인다.
 
-## 실행 방법
+## Acceptance Criteria
 
-사용자의 요청을 그대로 `write-phased` 서브에이전트에 전달한다:
+> 프로세스 완료 후 아래 기준을 자체 검증한다. 미충족 항목은 해당 단계로 돌아가 수정한다.
+
+- [ ] AC1: 요청된 파일이 완성된 상태로 저장되어 있다
+- [ ] AC2: TODO/Phase 마커가 남아있지 않다
+- [ ] AC3: 사용자 요청 언어를 따랐다
+
+## Process
+
+### Step 1: Skeleton 생성
+
+`write-skeleton` agent를 호출하여 파일을 생성한다:
 
 ```
-Agent(
-  subagent_type="write-phased",
-  prompt="[사용자의 원래 요청 전체를 그대로 전달]"
-)
+result = Agent(subagent_type="write-skeleton", prompt="[사용자 요청 전문]")
 ```
 
-## 규칙
+### Step 2: 반환값 분기
 
-1. 이 스킬에서 직접 파일을 작성하지 않는다.
-2. 사용자의 요청을 요약하거나 변형하지 말고 원문 그대로 서브에이전트에 전달한다.
-3. 서브에이전트의 결과를 받아 사용자에게 보고한다.
+**COMPLETE인 경우**: 파일이 이미 완성됨. Step 4로 건너뛴다.
 
-## Output Contract
+**SKELETON_ONLY인 경우**: 반환된 `Sections Remaining` 목록을 확인하고 Step 3으로 진행한다.
 
-- 기본 산출물: the target file or files requested by the caller
-- 세부 workflow, decision gate, hard rule, nested writing 규칙은 `write-phased` agent 정의가 담당한다.
+### Step 3: Fill (SKELETON_ONLY일 때만)
+
+반환된 미완성 섹션 목록을 보고 Edit으로 채운다:
+
+- **의존 섹션** (앞 섹션 내용에 의존): 순서대로 Edit
+- **독립 섹션** 2개 이상: 병렬 Agent dispatch 가능
+- **다중 파일**: 파일별 독립 fill 가능
+
+각 섹션의 TODO 마커를 찾아 Edit으로 교체한다:
+```
+Edit(old_string="<!-- TODO: ... -->", new_string="[실제 내용]")
+```
+
+### Step 4: 마커 정리 및 완료
+
+- 파일에 남은 `<!-- TODO -->`, `# TODO:`, `<!-- Phase 2 -->` 등 모든 마커를 제거한다.
+- 완료 결과를 사용자에게 보고한다.
+
+## Final Check
+
+Acceptance Criteria가 모두 만족되었나 검증한다. 미충족 항목이 있으면 해당 단계로 돌아가 수정한다.

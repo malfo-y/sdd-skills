@@ -91,7 +91,12 @@ Rewrite long or complex specs into a clearer structure by pruning unnecessary co
 
 #### 파일 작성 위임
 
-규모가 큰 재작성 시 `write-phased` 서브에이전트에 위임한다. 서브에이전트 호출 시 Output Format 전체와 작성에 필요한 맥락을 프롬프트에 포함한다.
+`write-skeleton` 서브에이전트에 위임한다. 반환값이 SKELETON_ONLY이면 Sections Remaining 목록을 보고 Edit으로 채운다.
+- 독립 섹션 2개+ → 병렬 Agent dispatch 가능
+- 의존 섹션 → 순서대로 Edit
+- 완료 후 TODO/Phase 마커 제거
+
+서브에이전트 호출 시 Output Format 전체와 작성에 필요한 맥락을 프롬프트에 포함한다.
 
 ### Step 4: Prune and Appendix Migration
 
@@ -132,7 +137,7 @@ _sdd/spec/
 - 각 파일/디렉토리는 단일 주제 책임
 - 상대 링크 표준화 및 깨진 링크 수정
 
-#### 멀티파일 write-phased 위임
+#### 멀티파일 write-skeleton 위임
 
 인덱스-먼저 패턴: (1) main.md 순차 작성 → (2) 컴포넌트 파일 병렬 작성. 독립 컴포넌트 2개 이상이면 병렬 디스패치. 소규모(500줄 이하)는 분할 불필요.
 
