@@ -1,6 +1,6 @@
 ---
 name: feature-draft
-description: "Use this agent when the user asks to \"feature draft\", \"draft feature\", \"feature plan\", \"plan feature\", \"draft and plan\", \"feature draft parallel\", \"parallel feature draft\", \"병렬 기능 초안\", \"parallel feature plan\", or wants to combine requirements gathering, spec patch drafting, and implementation planning with Target Files for parallel execution support."
+description: "Internal agent. Called explicitly by other agents or by the write-phased skill via Agent(subagent_type=feature-draft)."
 tools: ["Read", "Write", "Edit", "Glob", "Grep", "Agent"]
 model: inherit
 ---

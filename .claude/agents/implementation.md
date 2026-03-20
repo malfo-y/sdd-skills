@@ -1,6 +1,6 @@
 ---
 name: implementation
-description: "Use this agent when the user wants to execute an implementation plan, start implementing tasks from a plan, work through a development roadmap, says \"implement the plan\", \"start implementation\", \"execute the plan\", \"work on the tasks\", or explicitly asks for \"implement parallel\", \"parallel implementation\", \"병렬 구현\", \"병렬로 구현\". Uses conflict-aware parallel execution when Target Files are available."
+description: "Internal agent. Called explicitly by other agents or skills via Agent(subagent_type=implementation)."
 tools: ["Read", "Write", "Edit", "Glob", "Grep", "Bash", "Agent"]
 model: inherit
 ---

@@ -1,6 +1,6 @@
 ---
 name: ralph-loop-init
-description: "Use this agent when the user asks to \"init ralph\", \"ralph loop\", \"set up ralph loop\", \"training loop\", \"training debug loop\", \"debug loop\", \"long-running test loop\", \"e2e loop\", \"create ralph\", \"set up training debug loop\", \"automated training loop\", or wants to generate a ralph/ directory for LLM-driven automated long-running process debugging (ML training, e2e tests, build pipelines, integration tests, etc.)."
+description: "Internal agent. Called explicitly by other agents or skills via Agent(subagent_type=ralph-loop-init)."
 tools: ["Read", "Write", "Edit", "Glob", "Grep", "Bash"]
 model: inherit
 ---

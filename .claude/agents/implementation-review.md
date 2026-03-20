@@ -1,6 +1,6 @@
 ---
 name: implementation-review
-description: "Use this agent when reviewing implementation progress against the plan, verifying acceptance criteria, identifying issues, and determining next steps. Triggered by \"review implementation\", \"check progress\", \"verify implementation\", \"what's done\", \"implementation status\", or \"audit the code\"."
+description: "Internal agent. Called explicitly by other agents or skills via Agent(subagent_type=implementation-review)."
 tools: ["Read", "Glob", "Grep", "Agent"]
 model: inherit
 ---

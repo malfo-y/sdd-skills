@@ -1,6 +1,6 @@
 ---
 name: spec-update-todo
-description: "Use this agent when the user asks to \"update spec with features\", \"add features to spec\", \"update spec from input\", \"add requirements to spec\", \"spec update\", \"expand spec\", \"add to-do to spec\", or mentions adding new features, requirements, or planned improvements to an existing specification document."
+description: "Internal agent. Called explicitly by other agents or skills via Agent(subagent_type=spec-update-todo)."
 tools: ["Read", "Write", "Edit", "Glob", "Grep"]
 model: inherit
 ---

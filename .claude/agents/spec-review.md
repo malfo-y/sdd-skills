@@ -1,6 +1,6 @@
 ---
 name: spec-review
-description: "Use this agent when the user asks to \"review spec\", \"spec drift check\", \"verify spec accuracy\", \"audit spec quality\", \"review spec against code\", or wants a review-only analysis of spec quality and code-to-spec alignment without directly editing spec files."
+description: "Internal agent. Called explicitly by other agents or skills via Agent(subagent_type=spec-review)."
 tools: ["Read", "Glob", "Grep", "Agent"]
 model: inherit
 ---

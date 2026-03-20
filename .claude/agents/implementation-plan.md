@@ -1,6 +1,6 @@
 ---
 name: implementation-plan
-description: "Use this agent when the user asks to \"create an implementation plan\", \"plan the implementation\", \"break down this spec\", \"create a development roadmap\", \"analyze requirements and create tasks\", \"create a parallel implementation plan\", \"plan parallel implementation\", \"병렬 구현 계획\", \"create parallel development roadmap\", or wants a structured implementation plan with Target Files for parallel execution support."
+description: "Internal agent. Called explicitly by other agents or skills via Agent(subagent_type=implementation-plan)."
 tools: ["Read", "Write", "Edit", "Glob", "Grep", "Agent"]
 model: inherit
 ---

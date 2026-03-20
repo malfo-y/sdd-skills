@@ -1,6 +1,6 @@
 ---
 name: spec-update-done
-description: "Use this agent when the user asks to \"update spec from code\", \"sync spec with implementation\", \"apply implementation changes to spec\", \"reflect completed work in spec\", \"refresh spec after implementation\", \"implementation done sync\", or mentions spec document maintenance tied to completed code changes."
+description: "Internal agent. Called explicitly by other agents or skills via Agent(subagent_type=spec-update-done)."
 tools: ["Read", "Write", "Edit", "Glob", "Grep", "Bash"]
 model: inherit
 ---
