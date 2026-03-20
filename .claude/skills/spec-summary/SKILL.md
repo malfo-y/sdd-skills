@@ -155,7 +155,7 @@ Whitepaper-style (§1~§8)과 legacy 포맷 모두 지원. Whitepaper 섹션은 
 
 **Tools**: `Write`, `Bash (mkdir -p)`
 
-`write-skeleton` 서브에이전트에 위임한다. 반환값이 SKELETON_ONLY이면 Sections Remaining 목록을 보고 Edit으로 채운다.
+`sdd-skills:write-skeleton` 서브에이전트에 위임한다. 반환값이 SKELETON_ONLY이면 Sections Remaining 목록을 보고 Edit으로 채운다.
 - 독립 섹션 2개+ → 병렬 Agent dispatch 가능
 - 의존 섹션 → 순서대로 Edit
 - 완료 후 TODO/Phase 마커 제거

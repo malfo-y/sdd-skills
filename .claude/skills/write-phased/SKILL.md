@@ -6,7 +6,7 @@ version: 2.0.0
 
 # write-phased — Skeleton + Fill Orchestration
 
-`write-skeleton` agent로 파일을 생성하고, 필요하면 직접 Edit으로 내용을 채운다. 모든 중간 과정이 메인 대화에서 실행되어 사용자에게 보인다.
+`sdd-skills:write-skeleton` agent로 파일을 생성하고, 필요하면 직접 Edit으로 내용을 채운다. 모든 중간 과정이 메인 대화에서 실행되어 사용자에게 보인다.
 
 ## Acceptance Criteria
 
@@ -20,10 +20,10 @@ version: 2.0.0
 
 ### Step 1: Skeleton 생성
 
-`write-skeleton` agent를 호출하여 파일을 생성한다:
+`sdd-skills:write-skeleton` agent를 호출하여 파일을 생성한다:
 
 ```
-result = Agent(subagent_type="write-skeleton", prompt="[사용자 요청 전문]")
+result = Agent(subagent_type="sdd-skills:write-skeleton", prompt="[사용자 요청 전문]")
 ```
 
 ### Step 2: 반환값 분기
