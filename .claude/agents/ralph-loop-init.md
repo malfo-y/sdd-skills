@@ -375,6 +375,8 @@ while :; do
   echo "[ralph] Phase 1: LLM analyzing state and writing action..."
   # Disable errexit temporarily so LLM failures are handled by retry logic.
   set +e
+  # Allow nested Claude Code execution (e.g., when spawned from autopilot/agent).
+  unset CLAUDECODE
   run_llm_with_timeout "${LLM_TIMEOUT_SECONDS}" "ralph/PROMPT.md" \
     claude -p --verbose --dangerously-skip-permissions --output-format stream-json \
     | tee "ralph/results/llm_iter${ITERATION}.json" \
