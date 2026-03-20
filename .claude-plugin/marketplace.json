@@ -37,7 +37,7 @@
         "./.claude/skills/sdd-autopilot"
       ],
       "agents": [
-        "./.claude/agents/write-phased.md",
+        "./.claude/agents/write-skeleton.md",
         "./.claude/agents/feature-draft.md",
         "./.claude/agents/implementation-plan.md",
         "./.claude/agents/implementation-review.md",
