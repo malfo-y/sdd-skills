@@ -18,9 +18,10 @@ version: 2.2.0
 - [ ] AC2: `.codex/skills/orchestrator_<topic>/SKILL.md`에 generated orchestrator를 저장했다.
 - [ ] AC3: `_sdd/pipeline/log_<topic>_<timestamp>.md`에 실행 로그를 남겼다.
 - [ ] AC4: review 단계가 포함된 파이프라인이면 review → fix → re-review 사이클을 실제로 수행했다.
-- [ ] AC5: 모든 단계가 Execute → Verify 두 페이즈를 거쳤고, 테스트 결과가 사용자가 볼 수 있는 형태로 저장되었다 (`_sdd/implementation/test_results/` 또는 `ralph/state.md`).
-- [ ] AC6: 최종 결과와 후속 조치를 `_sdd/pipeline/report_<topic>_<timestamp>.md`에 정리했다.
-- [ ] AC7: `_sdd/spec/` 직접 수정은 `spec_update_done` 또는 `spec_update_todo` 에이전트에만 위임했다.
+- [ ] AC5: E2E 테스트/검증이 실제로 실행되었다 (인라인 또는 ralph-loop). Execute → Verify 패턴 준수. 결과가 사용자가 볼 수 있는 형태로 저장되었다 (`_sdd/implementation/test_results/` 또는 `ralph/state.md`). 테스트 건너뛰기 금지 — 실행 불가 시 사유와 수동 검증 방법을 보고서에 명시해야 한다.
+- [ ] AC6: 테스트/검증 결과가 사용자에게 명시적으로 보고되었다 (통과/실패 건수, 실패 시 원인 요약, 수동 확인 필요 항목).
+- [ ] AC7: 최종 결과와 후속 조치를 `_sdd/pipeline/report_<topic>_<timestamp>.md`에 정리했다.
+- [ ] AC8: `_sdd/spec/` 직접 수정은 `spec_update_done` 또는 `spec_update_todo` 에이전트에만 위임했다.
 
 ## SDD Lens
 
