@@ -247,15 +247,15 @@ FOR EACH step IN pipeline_steps:
 
 | 에이전트 | Exit Criteria |
 |---------|--------------|
-| `feature-draft` | `_sdd/drafts/feature_draft_<topic>.md` 존재 + 요구사항/제약조건 비어있지 않음 |
-| `implementation-plan` | `IMPLEMENTATION_PLAN.md` 존재 + 태스크 1개+ |
-| `implementation` | 대상 파일 생성/수정 + 구문 에러 없음 |
-| `implementation-review` | 심각도 분류(critical/high/medium/low) 포함 |
-| `ralph-loop-init` | `ralph/` + `run.sh` 실행 가능 + `state.md` 존재 |
+| `sdd-skills:feature-draft` | `_sdd/drafts/feature_draft_<topic>.md` 존재 + 요구사항/제약조건 비어있지 않음 |
+| `sdd-skills:implementation-plan` | `IMPLEMENTATION_PLAN.md` 존재 + 태스크 1개+ |
+| `sdd-skills:implementation` | 대상 파일 생성/수정 + 구문 에러 없음 |
+| `sdd-skills:implementation-review` | 심각도 분류(critical/high/medium/low) 포함 |
+| `sdd-skills:ralph-loop-init` | `ralph/` + `run.sh` 실행 가능 + `state.md` 존재 |
 | ralph loop 실행 | `state.md` phase=DONE + 최종 결과 기록 |
 | 인라인 테스트 | 테스트 실행 완료 + 결과 파일 저장 (`_sdd/implementation/test_results/`) + 전체 통과 (또는 최대 재시도 후 결과 기록) |
-| `spec-update-done/todo` | `_sdd/spec/` 업데이트 + 내용 반영 |
-| `spec-review` | 리뷰 결과 반환 + 드리프트/품질 이슈 분류 |
+| `sdd-skills:spec-update-done/todo` | `_sdd/spec/` 업데이트 + 내용 반영 |
+| `sdd-skills:spec-review` | 리뷰 결과 반환 + 드리프트/품질 이슈 분류 |
 
 #### 7.3 Review-Fix Loop + 테스트 실행 (통합)
 

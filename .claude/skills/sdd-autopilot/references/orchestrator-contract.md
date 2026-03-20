@@ -26,14 +26,14 @@
 
 허용 subagent_type:
 
-- `feature-draft`
-- `spec-update-todo`
-- `implementation-plan`
-- `implementation`
-- `implementation-review`
-- `spec-update-done`
-- `spec-review`
-- `ralph-loop-init`
+- `sdd-skills:feature-draft`
+- `sdd-skills:spec-update-todo`
+- `sdd-skills:implementation-plan`
+- `sdd-skills:implementation`
+- `sdd-skills:implementation-review`
+- `sdd-skills:spec-update-done`
+- `sdd-skills:spec-review`
+- `sdd-skills:ralph-loop-init`
 
 ## 3. Control Phases
 
