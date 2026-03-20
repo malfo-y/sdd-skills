@@ -1,7 +1,7 @@
 ---
 name: spec-summary
 description: This skill should be used when the user asks to "summarize spec", "spec summary", "show spec overview", "스펙 요약", "스펙 개요", "show spec status", "스펙 현황", "project overview", "프로젝트 개요", "what's the current state", "현재 상태는", or wants a human-readable summary of the current specification for quick understanding.
-version: 1.6.0
+version: 1.7.0
 ---
 
 # spec-summary
@@ -41,7 +41,7 @@ version: 1.6.0
 3. 기존 `SUMMARY.md`가 있으면 `prev/PREV_SUMMARY_<timestamp>.md`로 백업 후 갱신한다.
 4. README는 전체를 덮어쓰지 않는다. `spec-summary` marker block만 갱신하거나 없으면 안전하게 추가한다.
 5. 문서 언어는 기존 스펙/문서를 따른다. 기존 스펙이 없으면 한국어를 기본으로 한다.
-6. summary가 길거나 구조적으로 복잡하면 `$write-phased` 전략을 사용한다.
+6. summary가 길거나 구조적으로 복잡하면 먼저 `write_skeleton` agent로 skeleton을 만든다. 반환값이 `SKELETON_ONLY`이면 이 skill이 `default` 또는 `worker` agent로 남은 섹션을 채운다.
 7. split spec 또는 컴포넌트 수가 많으면 병렬 추출 후 부모가 최종 summary를 통합한다.
 
 ## Input Sources
@@ -135,7 +135,8 @@ completed / (completed + in-progress + planned)
 
 - 섹션별 핵심 포인트 추출을 병렬 수행
 - 부모가 completion, risk, next steps를 통합
-- 최종 파일은 직접 작성하거나 `write_phased`로 위임
+- 먼저 `write_skeleton` agent로 `SUMMARY.md` skeleton을 저장
+- 결과가 `SKELETON_ONLY`이면 `default` 또는 `worker` agent로 `Sections Remaining`을 채운다
 
 ### Step 6: Optional README Sync
 
@@ -198,9 +199,8 @@ README block 원칙:
 | 구현 문서 없음 | spec만 기준으로 요약하고 상태 신뢰도 낮음을 명시 |
 | README 요청이 없는데 README 관련 문서만 있음 | README는 수정하지 않음 |
 | README marker 없음 | 새 managed block 추가 |
-| 문서가 너무 큼 | `write-phased` 또는 fan-out으로 분리 작성 |
+| 문서가 너무 큼 | `write_skeleton` + caller fill 또는 fan-out으로 분리 작성 |
 
 ## Final Check
 
 Acceptance Criteria가 모두 만족되었나 검증한다. 미충족 항목이 있으면 해당 단계로 돌아가 수정한다.
-

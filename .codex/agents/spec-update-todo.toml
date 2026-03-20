@@ -1,5 +1,5 @@
 name = "spec_update_todo"
-description = "Apply planned feature or requirement changes to the spec before implementation."
+description = "Internal agent. Called explicitly by orchestrators or skills via spawn_agent(agent_type=\"spec_update_todo\")."
 developer_instructions = '''
 # Spec Update from User Input
 

@@ -1,5 +1,5 @@
 name = "ralph_loop_init"
-description = "Generate a ralph/ workspace for long-running process debugging and automation."
+description = "Internal agent. Called explicitly by orchestrators or skills via spawn_agent(agent_type=\"ralph_loop_init\")."
 developer_instructions = '''
 # Ralph Loop Initialization
 

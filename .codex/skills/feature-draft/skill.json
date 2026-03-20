@@ -2,5 +2,5 @@
   "name": "feature-draft",
   "description": "This skill should be used when the user asks to \"feature draft\", \"draft feature\", \"feature plan\", \"plan feature\", \"draft and plan\", \"feature draft parallel\", \"parallel feature draft\", \"병렬 기능 초안\", \"parallel feature plan\", or wants to combine requirements gathering, spec patch drafting, and implementation planning with Target Files for parallel execution support.",
   "instruction_file": "SKILL.md",
-  "version": "1.2.0"
+  "version": "2.1.0"
 }

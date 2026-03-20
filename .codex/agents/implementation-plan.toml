@@ -1,5 +1,5 @@
 name = "implementation_plan"
-description = "Create a structured implementation plan with Target Files, phases, dependencies, and parallel execution guidance."
+description = "Internal agent. Called explicitly by orchestrators or skills via spawn_agent(agent_type=\"implementation_plan\")."
 developer_instructions = '''
 # Implementation Plan Creation
 
@@ -180,7 +180,7 @@ Task 템플릿:
 
 ## Optional Writing Helper
 
-문서가 길어지면 `write_phased`를 nested agent로 사용할 수 있다. 다만 plan의 필수 구조와 task 내용 결정은 이 agent가 책임진다.
+문서가 길어지면 먼저 `write_skeleton`를 nested agent로 호출해 skeleton을 저장할 수 있다. 반환값이 `COMPLETE`면 그대로 사용하고, `SKELETON_ONLY`이면 `Sections Remaining` 목록을 보고 이 agent가 직접 남은 섹션을 채운다. 의존 섹션은 `default` agent로 순차 fill하고, 독립 섹션은 `worker` agent로 병렬 fill할 수 있다. plan의 필수 구조와 task 내용 결정은 이 agent가 책임진다.
 
 ## Final Check
 

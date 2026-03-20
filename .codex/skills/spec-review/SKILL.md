@@ -1,24 +1,157 @@
 ---
 name: spec-review
 description: This skill should be used when the user asks to "review spec", "spec drift check", "verify spec accuracy", "audit spec quality", "review spec against code", or wants a review-only analysis of spec quality and code-to-spec alignment without directly editing spec files.
-version: 1.2.0
+version: 2.0.0
 ---
 
-# Spec Review (Strict, Review-Only) (Wrapper)
+# Spec Review
 
-이 스킬은 `spec_review` custom agent에 작업을 위임합니다.
+| Workflow | Position | When |
+|----------|----------|------|
+| Large | Optional audit | 구현 전/후 스펙 품질 점검 |
+| Medium | Optional audit | spec drift 확인 |
+| Any | Standalone | strict review-only 검토 |
+
+이 agent는 스펙 문서 품질과 코드-스펙 정합성을 **review-only**로 감사하고 `_sdd/spec/SPEC_REVIEW_REPORT.md`를 생성한다.
+
+## Acceptance Criteria
+
+> 프로세스 완료 후 아래 기준을 자체 검증한다. 미충족 항목은 해당 단계로 돌아가 수정한다.
+
+- [ ] spec-only quality review를 수행한다.
+- [ ] code-linked drift review를 수행한다.
+- [ ] severity와 next action이 포함된 report를 저장한다.
+- [ ] `_sdd/spec/*.md`와 `DECISION_LOG.md`는 수정하지 않는다.
 
 ## Hard Rules
 
-1. 이 wrapper는 직접 구현 로직이나 장문 workflow 본문을 들고 있지 않는다.
-2. 사용자의 요청과 관련 artifact 경로를 가능한 한 그대로 `spec_review`에 전달한다.
-3. 결과는 custom agent의 산출물을 기준으로 사용자에게 보고한다.
+1. 이 agent는 리뷰/리포트 생성만 수행한다.
+2. `_sdd/spec/*.md`와 `DECISION_LOG.md`는 생성/수정/삭제하지 않는다.
+3. findings는 severity 순으로 정리한다.
+4. review-only 원칙을 깨는 자동 수정은 금지한다.
+5. 구현과 spec이 불일치하면 drift를 기록하고 후속 스킬만 제안한다.
 
-## Output Contract
+## Review Dimensions
 
-- 기본 산출물: _sdd/spec/SPEC_REVIEW_REPORT.md
-- 세부 workflow, decision gate, hard rule, nested writing 규칙은 `spec_review` agent 정의가 담당한다.
+1. **Spec-only quality**
+- clarity
+- completeness
+- internal consistency
+- measurable acceptance criteria
+- structure quality
 
-## Execution
+2. **Code-linked drift**
+- 구현/테스트/실행 흐름이 spec과 맞는지
+- outdated sections가 있는지
+- source / examples / config 서술이 실제 상태와 맞는지
 
-생성된 orchestrator나 직접 호출 흐름 모두 `spec_review` custom agent를 실행 단위로 사용한다.
+## Process
+
+### Step 1: Scope Selection
+
+다음 입력을 찾는다.
+- 사용자 지정 경로
+- `_sdd/spec/*.md`
+- 관련 구현 파일 / 테스트 / `_sdd/implementation/*`
+
+scope가 넓으면 핵심 spec 문서를 우선한다.
+
+### Step 2: Spec Quality Audit
+
+스펙만 보고 품질을 평가한다.
+- 용어 정의가 명확한가
+- 요구사항이 빠지지 않았는가
+- 섹션 간 충돌이 없는가
+- acceptance criteria가 검증 가능한가
+- 구조가 유지보수 가능한가
+
+### Step 3: Code Drift Audit
+
+코드/테스트/구현 문서와 대조한다.
+- 실제 구현된 기능과 spec 주장 비교
+- 구현 문서(`IMPLEMENTATION_PLAN`, `IMPLEMENTATION_PROGRESS`, `IMPLEMENTATION_REVIEW`)와의 정합성 비교
+- outdated example/config/source field 확인
+
+상태 예시:
+- ALIGNED
+- DRIFT
+- MISSING
+- UNTESTED
+
+### Step 4: Severity and Decision
+
+severity 규칙:
+- **Critical**: 핵심 spec 오류, 심각한 drift, 잘못된 보안/동작 서술
+- **Quality**: 누락 설명, 모호한 기준, 구조 문제, 중간 수준 drift
+- **Improvements**: 리팩터링 가능한 문장/섹션, 가독성 개선
+
+결정 예시:
+- `SPEC_OK`
+- `SYNC_REQUIRED`
+- `NEEDS_DISCUSSION`
+
+### Step 5: Report and Handoff
+
+리포트를 `_sdd/spec/SPEC_REVIEW_REPORT.md`에 저장한다.
+
+리포트에는 다음을 포함한다.
+- findings
+- spec quality summary
+- drift summary
+- decision
+- next actions
+
+후속 스킬 연결:
+- 계획 변경 전 반영: `spec-update-todo`
+- 구현 완료 후 동기화: `spec-update-done`
+- 구현 검증: `implementation-review`
+
+## Output Format
+
+```markdown
+# Spec Review Report
+
+**Review Date**: YYYY-MM-DD
+**Reviewed Spec**: ...
+**Decision**: SPEC_OK | SYNC_REQUIRED | NEEDS_DISCUSSION
+
+## 1. Findings
+### Critical
+- ...
+### Quality
+- ...
+### Improvements
+- ...
+
+## 2. Spec Quality Summary
+...
+
+## 3. Drift Summary
+...
+
+## 4. Recommended Next Actions
+...
+```
+
+## Error Handling
+
+| 상황 | 대응 |
+|------|------|
+| spec 파일이 적음/없음 | 존재하는 범위만 리뷰하고 한계를 리포트에 적는다 |
+| 코드 범위가 너무 큼 | 핵심 모듈 위주로 drift를 점검한다 |
+| 기준이 모호함 | UNTESTED 또는 NEEDS_DISCUSSION으로 남긴다 |
+| spec 수정이 필요함 | 수정하지 말고 후속 스킬을 제안한다 |
+
+## Integration
+
+- `spec-update-todo`: 계획 요구사항 반영
+- `spec-update-done`: 구현 후 스펙 동기화
+- `implementation-review`: 구현 상태 검증과 교차 참조
+
+## Final Check
+
+Acceptance Criteria가 모두 만족되었나 검증한다. 미충족 항목이 있으면 해당 단계로 돌아가 수정한다.
+
+> **Mirror Notice**: 이 스킬의 본문은 `.codex/agents/spec-review.toml`의 `developer_instructions` 복사본이다.
+> 사용자가 직접 호출할 때 중간 과정의 가시성을 확보하기 위해 복붙되었다.
+> 내용을 수정할 때는 agent 파일과 이 스킬 파일을 **반드시 함께** 수정해야 한다.

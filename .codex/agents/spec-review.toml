@@ -1,5 +1,5 @@
 name = "spec_review"
-description = "Perform a strict review-only audit of spec quality and spec-to-code alignment."
+description = "Internal agent. Called explicitly by orchestrators or skills via spawn_agent(agent_type=\"spec_review\")."
 developer_instructions = '''
 # Spec Review
 

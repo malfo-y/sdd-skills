@@ -1,10 +1,6 @@
----
-name: write-skeleton
-description: "Internal agent. Called by orchestrator skills (e.g. write-phased) via Agent(subagent_type=\"write-skeleton\"). Do not invoke directly for user requests."
-tools: ["Read", "Write", "Glob", "Grep"]
-model: inherit
----
-
+name = "write_skeleton"
+description = "Internal agent. Called explicitly by orchestrators or skills via spawn_agent(agent_type=\"write_skeleton\")."
+developer_instructions = '''
 # write-skeleton — Skeleton-First Writing
 
 문서나 코드 파일을 작성한다. 짧으면 전체를 쓰고, 길면 skeleton만 쓰고 미완성 섹션 목록을 반환한다. Fill 책임은 호출자에게 있다.
@@ -13,15 +9,15 @@ model: inherit
 
 > 프로세스 완료 후 아래 기준을 자체 검증한다. 미충족 항목은 해당 단계로 돌아가 수정한다.
 
-- [ ] AC1: 대상 파일이 Write로 저장되었다
+- [ ] AC1: 대상 파일이 실제로 저장되었다
 - [ ] AC2: 짧은 문서/코드는 COMPLETE, 긴 문서/코드는 SKELETON_ONLY로 정확히 반환
 - [ ] AC3: SKELETON_ONLY 시 각 미완성 섹션에 문서/언어에 맞는 TODO 마커가 존재
 - [ ] AC4: 반환 메시지에 Write Result 형식(Status, File, Sections Written, Sections Remaining)이 포함
 
 ## Hard Rules
 
-1. **반드시 Write로 저장**: skeleton이든 완성본이든 컨텍스트에만 두지 말고 파일에 Write한다.
-2. **Fill 금지**: 이 agent는 skeleton 작성까지만 책임진다. Edit으로 섹션을 채우지 않는다.
+1. **반드시 파일에 저장**: skeleton이든 완성본이든 컨텍스트에만 두지 말고 파일에 저장한다.
+2. **Fill 금지**: 이 agent는 skeleton 작성까지만 책임진다. 섹션을 채우지 않는다.
 3. **TODO 마커 필수**: SKELETON_ONLY일 때 각 미완성 섹션에 문서/언어에 맞는 명확한 마커를 남긴다.
 4. **언어 규칙**: 사용자 요청 언어를 따른다.
 
@@ -41,10 +37,10 @@ model: inherit
 ### Step 2: 파일 작성
 
 **COMPLETE 경로**:
-- 전체 내용을 Write로 파일에 저장한다. TODO 마커 없음.
+- 전체 내용을 파일에 저장한다. TODO 마커 없음.
 
 **SKELETON_ONLY 경로**:
-- 전체 구조를 잡아 Write로 파일에 저장한다.
+- 전체 구조를 잡아 파일에 저장한다.
 - **문서**: 섹션 제목 + 요약 1-2줄 + `<!-- TODO: [채울 내용 설명] -->`
 - **코드**: 시그니처·타입·구조를 먼저 배치하고, 본문은 언어별 TODO 주석과 최소한의 유효 placeholder를 사용한다.
   - Python: `# TODO: ...` + `pass`
@@ -107,3 +103,4 @@ class AuthService:
 ## Final Check
 
 Acceptance Criteria가 모두 만족되었나 검증한다. 미충족 항목이 있으면 해당 단계로 돌아가 수정한다.
+'''

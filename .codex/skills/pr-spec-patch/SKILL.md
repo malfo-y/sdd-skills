@@ -1,7 +1,7 @@
 ---
 name: pr-spec-patch
 description: This skill should be used when the user asks to "create spec patch from PR", "PR spec patch", "compare PR with spec", "PR to spec", "PR 스펙 패치", "PR 리뷰 준비", "스펙 패치 생성", "PR 변경사항 스펙 반영", or wants to generate a spec patch document by comparing a pull request against the current specification.
-version: 1.2.0
+version: 1.3.0
 ---
 
 # pr-spec-patch
@@ -37,7 +37,7 @@ PR 변경사항을 현재 스펙과 비교해 `_sdd/pr/spec_patch_draft.md`에 s
 1. `_sdd/spec/` 아래 파일은 생성/수정/삭제하지 않는다.
 2. 이 스킬의 기본 산출물은 `_sdd/pr/spec_patch_draft.md` 하나다.
 3. 스펙 반영은 `/spec-update-todo`로만 수행한다.
-4. 대형 patch 초안은 `$write-phased`로 작성할 수 있다.
+4. 대형 patch 초안은 먼저 `write_skeleton` agent로 skeleton을 만든다. 반환값이 `SKELETON_ONLY`이면 이 skill이 `default` 또는 `worker` agent로 남은 섹션을 채운다.
 5. 대형 PR이나 split spec이면 evidence 수집과 분류를 분리하되, 최종 patch draft는 하나로 통합한다.
 
 ## Input Sources
@@ -105,6 +105,13 @@ PR evidence를 아래 범주로 분류한다.
 - 사용자 피드백을 `add / modify / remove / regenerate / finalize` 관점으로 반영
 - conversation round와 상태를 갱신
 
+초안이 길면 다음 순서를 따른다.
+
+1. `write_skeleton` agent로 patch draft skeleton 생성
+2. 반환값이 `COMPLETE`면 그대로 사용
+3. 반환값이 `SKELETON_ONLY`면 이 skill이 `Sections Remaining`을 기준으로 fill 수행
+4. 의존 섹션은 `default`, 독립 섹션은 `worker`로 채운다
+
 ### Step 5: Finalize the Patch Draft
 
 최종 draft가 아래 질문에 답하는지 확인한다.
@@ -147,4 +154,3 @@ patch content는 `spec-update-todo` 입력으로 재사용 가능해야 한다.
 ## Final Check
 
 Acceptance Criteria가 모두 만족되었나 검증한다. 미충족 항목이 있으면 해당 단계로 돌아가 수정한다.
-

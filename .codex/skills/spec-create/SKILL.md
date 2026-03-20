@@ -1,7 +1,7 @@
 ---
 name: spec-create
 description: This skill should be used when the user asks to "create a spec", "write a spec document", "generate SDD", "create software design document", "document the project", "create spec for project", or mentions "_sdd" directory, specification documents, or project documentation needs.
-version: 1.5.0
+version: 1.6.0
 ---
 
 # spec-create
@@ -43,7 +43,7 @@ version: 1.5.0
 4. 기존 스펙 파일을 덮어쓰기 전에는 `prev/PREV_<filename>_<timestamp>.md`로 백업한다.
 5. `AGENTS.md`, `CLAUDE.md`, `_sdd/env.md`는 없을 때 생성하고, 이미 있으면 필수 안내 문구가 빠진 경우에만 최소 수정한다.
 6. 거버넌스 문서는 기본적으로 `DECISION_LOG.md`까지만 사용한다. 추가 문서는 사용자 요청 시에만 만든다.
-7. 장문 문서가 예상되면 `$write-phased` 전략을 우선 적용한다.
+7. 장문 문서가 예상되면 먼저 `write_skeleton` agent로 skeleton을 만든다. 반환값이 `SKELETON_ONLY`이면 이 skill이 `default` 또는 `worker` agent로 남은 섹션을 채운다.
 8. 중대형 스펙은 canonical index를 먼저 확정한 뒤, 필요 시 하위 spec 작성을 병렬화한다.
 
 ## Structure Decision
@@ -105,6 +105,13 @@ version: 1.5.0
 ### Step 4: Write the Spec
 
 `references/template-compact.md` 또는 `references/template-full.md`를 참고해 spec를 작성한다.
+
+장문 spec이면 다음 순서를 따른다.
+
+1. `write_skeleton` agent로 대상 파일 skeleton 생성
+2. 반환값이 `COMPLETE`면 그대로 사용
+3. 반환값이 `SKELETON_ONLY`면 이 skill이 `Sections Remaining`을 기준으로 fill 수행
+4. 의존 섹션은 `default`, 독립 파일/섹션은 `worker`로 채운다
 
 기본 포함 요소:
 
@@ -168,4 +175,3 @@ spec에는 최소한 아래가 포함되어야 한다.
 ## Final Check
 
 Acceptance Criteria가 모두 만족되었나 검증한다. 미충족 항목이 있으면 해당 단계로 돌아가 수정한다.
-

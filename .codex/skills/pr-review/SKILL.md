@@ -1,7 +1,7 @@
 ---
 name: pr-review
 description: This skill should be used when the user asks to "review PR", "PR review", "review PR against spec", "PR 리뷰", "PR 검증", "스펙 기반 PR 리뷰", "PR 승인 검토", or wants to verify a pull request's implementation against the specification and spec patch draft.
-version: 1.2.0
+version: 1.3.0
 ---
 
 # pr-review
@@ -39,7 +39,7 @@ PR 구현을 현재 스펙과 spec patch draft 기준으로 검증하고 `_sdd/p
 3. spec update가 필요해도 이 스킬에서 직접 수정하지 않는다.
 4. 기본 출력 언어는 한국어로 하되, 사용자/스펙 언어에 맞출 수 있다.
 5. patch draft가 없으면 degraded mode로 계속 진행하되, 낮은 신뢰도를 명시한다.
-6. 긴 보고서나 finding이 많은 경우 `$write-phased`를 우선 사용할 수 있다.
+6. 긴 보고서나 finding이 많은 경우 먼저 `write_skeleton` agent로 skeleton을 만든다. 반환값이 `SKELETON_ONLY`이면 이 skill이 `default` 또는 `worker` agent로 남은 섹션을 채운다.
 7. 로컬 테스트를 돌릴 때는 `_sdd/env.md`를 먼저 확인한다.
 
 ## Model Hint
@@ -119,6 +119,13 @@ verdict 기준:
 - recommendations
 - items requiring spec update
 
+보고서가 길면 다음 순서를 따른다.
+
+1. `write_skeleton` agent로 review report skeleton 생성
+2. 반환값이 `COMPLETE`면 그대로 사용
+3. 반환값이 `SKELETON_ONLY`면 이 skill이 `Sections Remaining`을 기준으로 fill 수행
+4. 의존 finding은 `default`, 독립 finding 묶음은 `worker`로 채운다
+
 기존 보고서가 있으면 `_sdd/pr/prev/PREV_PR_REVIEW_<timestamp>.md`로 백업 후 갱신한다.
 
 ## Output Contract
@@ -158,4 +165,3 @@ verdict 기준:
 ## Final Check
 
 Acceptance Criteria가 모두 만족되었나 검증한다. 미충족 항목이 있으면 해당 단계로 돌아가 수정한다.
-

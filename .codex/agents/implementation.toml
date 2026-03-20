@@ -1,5 +1,5 @@
 name = "implementation"
-description = "Execute an implementation plan with TDD, task tracking, conflict-aware parallelization, and verification."
+description = "Internal agent. Called explicitly by orchestrators or skills via spawn_agent(agent_type=\"implementation\")."
 developer_instructions = '''
 # Implementation Execution
 

@@ -1,7 +1,7 @@
 ---
 name: spec-snapshot
 description: This skill should be used when the user asks to "spec snapshot", "snapshot spec", "translate spec", "export spec", "스펙 스냅샷", "스펙 번역", or wants to create a timestamped snapshot of the current spec with optional translation.
-version: 1.1.0
+version: 1.2.0
 ---
 
 # spec-snapshot
@@ -68,7 +68,12 @@ snapshot 루트에 아래 정보를 담은 `SUMMARY.md`를 만든다.
 - component list
 - open questions summary
 
-장문이면 `write-phased`를 사용할 수 있다.
+장문이면 다음 순서를 따른다.
+
+1. `write_skeleton` agent로 `SUMMARY.md` skeleton 생성
+2. 반환값이 `COMPLETE`면 그대로 사용
+3. 반환값이 `SKELETON_ONLY`면 이 skill이 `Sections Remaining`을 기준으로 fill 수행
+4. 의존 섹션은 `default`, 독립 요약 섹션은 `worker`로 채운다
 
 ### Step 4: Report Completion
 
@@ -110,4 +115,3 @@ snapshot 루트에 아래 정보를 담은 `SUMMARY.md`를 만든다.
 ## Final Check
 
 Acceptance Criteria가 모두 만족되었나 검증한다. 미충족 항목이 있으면 해당 단계로 돌아가 수정한다.
-

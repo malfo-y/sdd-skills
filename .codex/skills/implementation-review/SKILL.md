@@ -1,24 +1,204 @@
 ---
 name: implementation-review
 description: Use this skill to review implementation progress against the plan, verify acceptance criteria, identify issues, and determine next steps. Triggered by "review implementation", "check progress", "verify implementation", "what's done", "implementation status", or "audit the code". Works with or without an implementation plan (Graceful Degradation).
-version: 2.2.0
+version: 3.0.0
 ---
 
-# Implementation Review (Wrapper)
+# Implementation Review
 
-이 스킬은 `implementation_review` custom agent에 작업을 위임합니다.
+| Workflow | Position | When |
+|----------|----------|------|
+| Large | Step 5 of 6 | Phase별 검증 |
+| Medium | Step 3 of 3 | 구현 완료 후 검증 |
+| Small | Optional | 독립 코드 감사 |
+
+이 agent는 구현 상태를 리뷰하고 `_sdd/implementation/IMPLEMENTATION_REVIEW.md`에 findings-first 리포트를 저장한다.
+
+## Acceptance Criteria
+
+> 프로세스 완료 후 아래 기준을 자체 검증한다. 미충족 항목은 해당 단계로 돌아가 수정한다.
+
+- [ ] Tier 1 / 2 / 3 graceful degradation이 정상 동작한다.
+- [ ] 리뷰 결과가 findings-first 구조로 정리된다.
+- [ ] `_sdd/spec/`와 `IMPLEMENTATION_PLAN*.md`는 수정하지 않는다.
+- [ ] 외부 reference/example 문서 없이도 핵심 review 흐름과 severity 기준을 수행할 수 있다.
 
 ## Hard Rules
 
-1. 이 wrapper는 직접 구현 로직이나 장문 workflow 본문을 들고 있지 않는다.
-2. 사용자의 요청과 관련 artifact 경로를 가능한 한 그대로 `implementation_review`에 전달한다.
-3. 결과는 custom agent의 산출물을 기준으로 사용자에게 보고한다.
+1. 이 agent는 **리뷰/검증 및 리포트 생성만** 수행한다.
+2. `_sdd/spec/` 아래 파일은 생성/수정/삭제하지 않는다.
+3. `IMPLEMENTATION_PLAN*.md`와 진행 문서는 수정하지 않는다. 제안은 리포트에만 기록한다.
+4. 모든 커뮤니케이션과 리포트는 한국어로 작성한다.
+5. `_sdd/env.md`가 있으면 환경 설정을 참고해 테스트를 시도하고, 없으면 코드 분석 중심으로 진행한다.
+6. 보안 취약점, 실패 테스트, 핵심 기능 결함은 Critical로 분류한다.
 
-## Output Contract
+## Tier Selection
 
-- 기본 산출물: _sdd/implementation/IMPLEMENTATION_REVIEW.md
-- 세부 workflow, decision gate, hard rule, nested writing 규칙은 `implementation_review` agent 정의가 담당한다.
+리뷰는 다음 우선순위로 결정한다.
 
-## Execution
+- **Tier 1**: Plan 존재 + 현재 코드와 정합성 OK
+- **Tier 2**: Plan 없음 또는 stale + Spec 존재
+- **Tier 3**: Plan/Spec 모두 없거나 요구사항 추출이 불충분
 
-생성된 orchestrator나 직접 호출 흐름 모두 `implementation_review` custom agent를 실행 단위로 사용한다.
+stale 판단 예시:
+- plan이 참조하는 주요 파일/모듈이 없음
+- plan 구조와 현재 코드 구조가 크게 다름
+- plan 생성 이후 대규모 변경이 있었음
+
+## Review Output
+
+기본 저장 경로:
+- `<project-root>/_sdd/implementation/IMPLEMENTATION_REVIEW.md`
+
+기존 파일이 있으면:
+- `<project-root>/_sdd/implementation/prev/PREV_IMPLEMENTATION_REVIEW_<timestamp>.md`로 아카이브 후 새 파일 생성
+
+리포트는 findings-first로 작성한다.
+
+```markdown
+# Implementation Review: [Project Name]
+
+**Review Date**: YYYY-MM-DD
+**Review Mode**: Tier 1 | Tier 2 | Tier 3
+**Reference**: [plan/spec/codebase]
+**Model**: [model]
+
+## 1. Findings
+### Critical
+- [finding]
+### Quality
+- [finding]
+### Improvements
+- [finding]
+
+## 2. Progress Overview
+[요약]
+
+## 3. Verification Summary
+[구현/테스트/정합성]
+
+## 4. Recommendations
+[Must / Should / Could]
+
+## 5. Conclusion
+[한 단락 요약]
+```
+
+## Process
+
+### Step 1: Select Tier and Scope
+
+다음 순서로 입력을 찾는다.
+1. 사용자 지정 경로
+2. `_sdd/implementation/IMPLEMENTATION_PLAN.md`
+3. `_sdd/implementation/IMPLEMENTATION_PLAN_PHASE_<N>.md`
+4. `_sdd/spec/*.md`
+
+여러 phase 파일이 있으면 기본은 최신 phase 우선이다. 범위를 확정할 수 없으면 최신 phase 기준으로 진행하고 가정을 리포트에 적는다.
+
+### Step 2: Inventory
+
+Tier별로 기대 항목을 정리한다.
+
+- Tier 1: plan의 task, acceptance criteria, expected artifacts
+- Tier 2: spec의 요구사항, 핵심 플로우, 제약
+- Tier 3: 최근 변경 범위와 코드 품질 관점
+
+이 단계 산출물:
+- 리뷰 기준 목록
+- expected artifacts 목록
+- 리뷰 범위 가정
+
+### Step 3: Verification
+
+실제 구현 상태를 확인한다.
+
+코드 검증:
+- 파일/함수/모듈 존재 여부
+- 구현 범위 충족 여부
+- 주요 통합 지점
+
+테스트 검증:
+- 테스트 파일 존재 여부
+- 실행 가능 여부
+- PASSING / FAILING / MISSING 분류
+
+상태 마커:
+- 구현: EXISTS / PARTIAL / MISSING
+- 기준 충족: MET / NOT MET / UNTESTED
+- 스펙 정합성: ALIGNED / DRIFT / MISSING
+
+### Step 4: Parallel Review Lanes (Large Scope Only)
+
+리뷰 범위가 큰 경우에만 read-only 병렬 lane을 사용한다.
+
+lane 예시:
+- task/module verification
+- test/quality verification
+- drift/risk verification
+
+규칙:
+- 각 lane은 읽기 전용이다.
+- lane은 서로 겹치지 않는 질문/파일 범위를 가진다.
+- 최종 severity와 next actions는 부모 review가 통합한다.
+
+작은 범위 리뷰는 lane 없이 순차 수행한다.
+
+### Step 5: Assessment
+
+수집한 결과를 기준과 비교한다.
+
+Tier 1:
+- 각 task / AC가 충족되었는지
+
+Tier 2:
+- 구현이 spec과 정합한지
+
+Tier 3:
+- 보안, 에러 처리, 코드 패턴, 성능, 테스트 품질
+
+### Step 6: Findings Classification
+
+발견 사항을 아래 기준으로 분류한다.
+
+- **Critical**: 핵심 기능 누락, 실패 테스트, 보안 취약점, 데이터 손실 위험, breaking change
+- **Quality**: 누락 테스트, 패턴 불일치, 에러 처리 갭, 성능 우려, stale plan
+- **Improvements**: 리팩터링, 문서화, 엣지 케이스, 유지보수성 개선
+
+리포트는 항상 findings-first로 시작한다.
+
+### Step 7: Save Report
+
+리포트에는 다음을 포함한다.
+- findings
+- progress overview
+- verification summary
+- recommended next actions
+- spec/plan 수정이 필요할 경우 후속 스킬 제안
+
+이 agent는 plan/spec를 직접 수정하지 않는다.
+
+## Error Handling
+
+| 상황 | 대응 |
+|------|------|
+| 테스트 실행 실패 | `_sdd/env.md` 확인 후 실패 사실과 원인을 리포트에 기록 |
+| `_sdd/env.md` 없음 | 코드 분석 중심 리뷰로 진행 |
+| Plan이 stale | Tier 2로 fallback하고 stale 사실을 Quality finding으로 기록 |
+| Spec이 비구조화 | 전체적 정합성 판단으로 전환하고 한계를 적는다 |
+| 대규모 코드베이스 | 핵심 컴포넌트 중심으로 범위를 줄이고 가정을 적는다 |
+| 기준이 모호함 | UNTESTED로 표시하고 판단 근거를 적는다 |
+
+## Integration
+
+- `implementation-plan`: 기대 구현 항목의 기준
+- `implementation`: 후속 수정 작업의 입력
+- `spec-update-todo` / `spec-update-done`: 리뷰 결과상 스펙 변경이 필요할 때 후속 스킬로 안내
+
+## Final Check
+
+Acceptance Criteria가 모두 만족되었나 검증한다. 미충족 항목이 있으면 해당 단계로 돌아가 수정한다.
+
+> **Mirror Notice**: 이 스킬의 본문은 `.codex/agents/implementation-review.toml`의 `developer_instructions` 복사본이다.
+> 사용자가 직접 호출할 때 중간 과정의 가시성을 확보하기 위해 복붙되었다.
+> 내용을 수정할 때는 agent 파일과 이 스킬 파일을 **반드시 함께** 수정해야 한다.

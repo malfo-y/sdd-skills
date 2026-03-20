@@ -1,5 +1,5 @@
 name = "implementation_review"
-description = "Review implementation progress against the plan or spec and produce a structured findings-first report."
+description = "Internal agent. Called explicitly by orchestrators or skills via spawn_agent(agent_type=\"implementation_review\")."
 developer_instructions = '''
 # Implementation Review
 

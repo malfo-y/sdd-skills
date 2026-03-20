@@ -1,7 +1,7 @@
 ---
 name: spec-rewrite
 description: This skill should be used when the user asks to "rewrite spec", "refactor spec", "simplify spec", "split spec into files", "clean up spec", "review spec quality", or equivalent phrases indicating they want to reorganize an overly long/complex spec by pruning noise, splitting into hierarchical files, and explicitly listing ambiguities/problems.
-version: 1.4.0
+version: 1.5.0
 ---
 
 # spec-rewrite
@@ -41,7 +41,7 @@ version: 1.4.0
 3. `Source` 필드가 있으면 재구성 후에도 유지한다.
 4. 대규모 구조 변경이나 파일 분할은 계획을 먼저 제시하고 필요한 경우 사용자 확인을 받는다.
 5. 기존 문서 언어를 따른다. 새 프로젝트는 한국어를 기본으로 한다.
-6. 장문 문서나 다중 파일 rewrite는 `$write-phased`를 우선 사용한다.
+6. 장문 문서나 다중 파일 rewrite는 먼저 `write_skeleton` agent로 skeleton을 만든다. 반환값이 `SKELETON_ONLY`이면 이 skill이 `default` 또는 `worker` agent로 남은 섹션을 채운다.
 7. rewrite는 핵심 계약을 더 선명하게 해야지, 내용을 임의로 확장하면 안 된다.
 
 ## Input Sources
@@ -92,6 +92,13 @@ version: 1.4.0
 - appendix 이동, split, pruning을 수행
 - `Source`와 중요한 rationale은 보존
 
+장문 rewrite는 다음 순서를 따른다.
+
+1. `write_skeleton` agent로 대상 파일 skeleton 생성
+2. 반환값이 `COMPLETE`면 그대로 사용
+3. 반환값이 `SKELETON_ONLY`면 이 skill이 `Sections Remaining`을 기준으로 fill 수행
+4. 의존 섹션은 `default`, 독립 파일/섹션은 `worker`로 채운다
+
 구조 개선의 대표 패턴:
 
 - 중복 내용 제거
@@ -138,4 +145,3 @@ version: 1.4.0
 ## Final Check
 
 Acceptance Criteria가 모두 만족되었나 검증한다. 미충족 항목이 있으면 해당 단계로 돌아가 수정한다.
-
