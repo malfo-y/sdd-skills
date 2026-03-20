@@ -165,7 +165,7 @@ ELSE → 미파악 항목 추가 탐색 또는 Open Questions 기록
 
 ```
 Agent(
-  subagent_type="write-skeleton",
+  subagent_type="sdd-skills:write-skeleton",
   prompt="파일 경로: [_sdd/spec/<project>.md 또는 _sdd/spec/main.md]
   [references/template-compact.md §1-§8 + Step 2 분석 결과]"
 )
@@ -173,10 +173,17 @@ Agent(
 
 ##### 멀티파일 (중규모 500-1500줄 / 대규모 1500줄+)
 
+**멀티파일 구조 규칙:**
+
+1. **main.md = 인덱스 + 공통 섹션**: §1 Background, §2 Core Design, §3 Architecture는 main.md에 인라인. §4 이하 컴포넌트는 링크로 분리.
+2. **컴포넌트 파일명 = 컴포넌트명**: `auth.md`, `scheduler.md` 등 접두사 없이 직관적으로 명명.
+3. **main.md 링크 형식**: §4 영역에 `See [Component Name](./component.md)` 형태로 링크. 모든 sub-spec 파일은 main.md에서 링크되어야 함.
+4. **Cross-cutting 섹션**: §7 API, §8 Config 등 여러 컴포넌트에 걸치는 내용은 main.md에 유지하거나 별도 `api.md`, `config.md`로 분리 (규모에 따라 판단).
+
 **Step 3-B-1**: main.md (인덱스) 순차 작성
 ```
-Agent(subagent_type="write-skeleton", prompt="main.md 인덱스 작성.
-  목표/아키텍처 요약/컴포넌트 링크만.
+Agent(subagent_type="sdd-skills:write-skeleton", prompt="main.md 인덱스 작성.
+  §1-§3 인라인 + §4 컴포넌트 링크.
   [references/template-compact.md + Step 2 분석 결과]")
 ```
 

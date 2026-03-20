@@ -89,15 +89,6 @@ Rewrite long or complex specs into a clearer structure by pruning unnecessary co
 
 수정 대상 파일을 `_sdd/spec/prev/PREV_<filename>_<timestamp>.md`로 백업. 디렉토리 미존재 시 `mkdir -p`.
 
-#### 파일 작성 위임
-
-`write-skeleton` 서브에이전트에 위임한다. 반환값이 SKELETON_ONLY이면 Sections Remaining 목록을 보고 Edit으로 채운다.
-- 독립 섹션 2개+ → 병렬 Agent dispatch 가능
-- 의존 섹션 → 순서대로 Edit
-- 완료 후 TODO/Phase 마커 제거
-
-서브에이전트 호출 시 Output Format 전체와 작성에 필요한 맥락을 프롬프트에 포함한다.
-
 ### Step 4: Prune and Appendix Migration
 
 **Tools**: `Edit`, `Write`, `Read`
@@ -111,10 +102,17 @@ Rewrite long or complex specs into a clearer structure by pruning unnecessary co
 
 **Tools**: `Write`, `Bash (mkdir -p)`, `Glob`
 
+**멀티파일 구조 규칙:**
+
+1. **main.md = 인덱스 + 공통 섹션**: §1 Background, §2 Core Design, §3 Architecture는 main.md에 인라인. §4 이하 컴포넌트는 링크로 분리.
+2. **컴포넌트 파일명 = 컴포넌트명**: `auth.md`, `scheduler.md` 등 접두사 없이 직관적으로 명명.
+3. **main.md 링크 형식**: §4 영역에 `See [Component Name](./component.md)` 형태로 링크. 모든 sub-spec 파일은 main.md에서 링크되어야 함.
+4. **Cross-cutting 섹션**: §7 API, §8 Config 등 여러 컴포넌트에 걸치는 내용은 main.md에 유지하거나 별도 `api.md`, `config.md`로 분리 (규모에 따라 판단).
+
 **중규모** 구조:
 ```
 _sdd/spec/
-├── main.md              # 인덱스 (목표, 아키텍처 요약, 컴포넌트 링크)
+├── main.md              # 인덱스 (§1-§3 인라인 + §4 컴포넌트 링크)
 ├── api.md
 ├── database.md
 └── frontend.md
@@ -132,12 +130,18 @@ _sdd/spec/
     └── components.md
 ```
 
-규칙:
-- `main.md`는 항상 인덱스 역할
+추가 규칙:
 - 각 파일/디렉토리는 단일 주제 책임
 - 상대 링크 표준화 및 깨진 링크 수정
 
-#### 멀티파일 write-skeleton 위임
+#### 파일 작성 위임
+
+`sdd-skills:write-skeleton` 서브에이전트에 위임한다. 반환값이 SKELETON_ONLY이면 Sections Remaining 목록을 보고 Edit으로 채운다.
+- 독립 섹션 2개+ → 병렬 Agent dispatch 가능
+- 의존 섹션 → 순서대로 Edit
+- 완료 후 TODO/Phase 마커 제거
+
+서브에이전트 호출 시 Output Format 전체와 작성에 필요한 맥락을 프롬프트에 포함한다.
 
 인덱스-먼저 패턴: (1) main.md 순차 작성 → (2) 컴포넌트 파일 병렬 작성. 독립 컴포넌트 2개 이상이면 병렬 디스패치. 소규모(500줄 이하)는 분할 불필요.
 
