@@ -148,6 +148,7 @@ autopilot에서 custom agent 또는 explorer를 호출할 때의 표준 순서:
 오케스트레이터에 반드시 포함할 내용:
 
 - 파이프라인 목표와 범위
+- "구체화된 요구사항"에서 도출한 기능 수준 Acceptance Criteria
 - step 목록과 순서
 - 각 step의 입력, 실행 단위, 출력 산출물
 - review-fix 및 테스트 전략
@@ -185,7 +186,7 @@ autopilot에서 custom agent 또는 explorer를 호출할 때의 표준 순서:
 
 1. Execute: 관련 skill/custom agent 실행
 2. Collect: `wait_agent(...)` 또는 로컬 결과 수집
-3. Verify: exit criteria, 테스트, 산출물 존재 여부 확인
+3. Verify: exit criteria + 오케스트레이터 AC 기준, 테스트, 산출물 존재 여부 확인
 4. Record: 로그 파일에 상태와 핵심 결정 기록
 
 Verify 실패 시:

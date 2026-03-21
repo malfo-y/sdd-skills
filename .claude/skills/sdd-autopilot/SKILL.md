@@ -154,6 +154,7 @@ Step 1 내재화 + Step 2-3 결과를 바탕으로 추론:
 
 - 의존성 그래프 기반 동적 조합 (템플릿 아님)
 - `references/orchestrator-contract.md` 계약 준수
+- "구체화된 요구사항"에서 기능 수준 Acceptance Criteria를 도출하여 오케스트레이터에 포함
 - `Reasoning Trace` 3-6 bullet 간결 작성
 - 파일 경로: `.claude/skills/orchestrator_<topic>/SKILL.md`
 
@@ -256,6 +257,7 @@ FOR EACH step IN pipeline_steps:
 | 인라인 테스트 | 테스트 실행 완료 + 결과 파일 저장 (`_sdd/implementation/test_results/`) + 전체 통과 (또는 최대 재시도 후 결과 기록) |
 | `sdd-skills:spec-update-done/todo` | `_sdd/spec/` 업데이트 + 내용 반영 |
 | `sdd-skills:spec-review` | 리뷰 결과 반환 + 드리프트/품질 이슈 분류 |
+| 오케스트레이터 AC | 기능 수준 AC 전체 충족 (테스트 통과 + 리뷰 통과 기준) |
 
 #### 7.3 Review-Fix Loop + 테스트 실행 (통합)
 

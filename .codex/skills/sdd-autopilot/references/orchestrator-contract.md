@@ -9,11 +9,12 @@
 
 1. 메타데이터: 기능명, 생성일, 생성자, 필요 시 규모
 2. 기능 설명: 사용자 요청 원문 + 구체화된 요구사항 + 제약 조건
-3. Reasoning Trace: 3-6개 bullet
-4. Pipeline Steps
-5. Review-Fix Loop
-6. Test Strategy
-7. Error Handling
+3. Acceptance Criteria: 기능 수준 검증 기준
+4. Reasoning Trace: 3-6개 bullet
+5. Pipeline Steps
+6. Review-Fix Loop
+7. Test Strategy
+8. Error Handling
 
 ## 2. Step Contract
 
@@ -49,7 +50,23 @@
 - 테스트는 항상 `Execute -> Verify` 구조를 가진다.
 - `ralph_loop_init`은 설정 생성까지만이 아니라 실제 실행 검증까지 포함해야 한다.
 
-## 4. Reasoning Trace
+## 4. Acceptance Criteria Contract
+
+오케스트레이터는 "구체화된 요구사항"에서 도출한 기능 수준 AC를 포함해야 한다.
+
+생성 규칙:
+
+- 각 요구사항을 검증 가능한 조건 1개로 변환한다
+- 프로세스 완료 여부(에이전트 실행됨)가 아니라 기능 동작 여부(결과가 맞음)를 검증한다
+- 테스트로 확인 가능한 항목은 테스트 명령과 연결한다
+
+autopilot은 오케스트레이터 AC를:
+
+- review-fix loop의 리뷰 기준으로 사용한다
+- 테스트 검증의 통과 기준으로 사용한다
+- 최종 보고서에서 충족 여부를 체크한다
+
+## 5. Reasoning Trace
 
 Reasoning Trace는 최소한 아래를 설명해야 한다.
 
@@ -58,7 +75,7 @@ Reasoning Trace는 최소한 아래를 설명해야 한다.
 - 왜 테스트 전략이 inline 또는 `ralph_loop_init`인가
 - 어떤 SDD 원칙이 강하게 작동했는가
 
-## 5. Review-Fix Contract
+## 6. Review-Fix Contract
 
 반드시 포함할 필드:
 
@@ -69,7 +86,7 @@ Reasoning Trace는 최소한 아래를 설명해야 한다.
 리뷰 프롬프트는 심각도 분류를 강제해야 한다.
 fix 프롬프트는 critical/high 이슈만 수정 대상으로 제한해야 한다.
 
-## 6. Test Strategy Contract
+## 7. Test Strategy Contract
 
 반드시 포함할 필드:
 
@@ -87,7 +104,7 @@ fix 프롬프트는 critical/high 이슈만 수정 대상으로 제한해야 한
 - `ralph_loop_init`: setup 검증과 run 결과 검증을 모두 가진다.
 - 테스트 결과는 사용자에게 명시적으로 보고한다 (AC6).
 
-## 7. Error Handling Contract
+## 8. Error Handling Contract
 
 반드시 포함할 필드:
 
@@ -98,7 +115,7 @@ fix 프롬프트는 critical/high 이슈만 수정 대상으로 제한해야 한
 핵심 단계 실패 시 파이프라인은 중단한다.
 비핵심 단계 실패는 로그 기록 후 건너뛸 수 있다.
 
-## 8. Pipeline Log Contract
+## 9. Pipeline Log Contract
 
 로그 파일은 아래 4개 블록만 있으면 충분하다.
 
@@ -153,7 +170,7 @@ fix 프롬프트는 critical/high 이슈만 수정 대상으로 제한해야 한
 - 스펙 동기화 여부
 - 잔여 이슈
 
-## 9. State Handoff
+## 10. State Handoff
 
 상태 전달은 파일 경로만 사용한다.
 
