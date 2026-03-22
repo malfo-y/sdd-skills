@@ -80,11 +80,12 @@ Reasoning Trace는 최소한 아래를 설명해야 한다.
 반드시 포함할 필드:
 
 - 최대 반복 횟수
-- 종료 조건 (`critical = 0 AND high = 0`)
-- 수정 대상 (`critical/high only`)
+- 종료 조건 (`critical = 0 AND high = 0 AND medium = 0`)
+- 수정 대상 (`critical/high/medium`)
+- MAX 도달 시 분기: critical/high 잔존 → 중단, medium만 잔존 → 로그 기록 후 계속 진행
 
 리뷰 프롬프트는 심각도 분류를 강제해야 한다.
-fix 프롬프트는 critical/high 이슈만 수정 대상으로 제한해야 한다.
+fix 프롬프트는 critical/high/medium 이슈를 수정 대상으로 한다.
 
 ## 7. Test Strategy Contract
 

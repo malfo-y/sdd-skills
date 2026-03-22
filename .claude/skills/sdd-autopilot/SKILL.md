@@ -271,11 +271,14 @@ review_count = 0; MAX_REVIEW = 3
 WHILE review_count < MAX_REVIEW:
   review_count += 1
   1. implementation-review 에이전트 호출
-  2. critical/high 이슈 수 추출 → 로그 기록
-  3. critical==0 AND high==0 → BREAK (리뷰 통과)
-     MAX_REVIEW 도달 AND critical/high > 0 → 파이프라인 중단
-  4. Fix: implementation 에이전트로 critical/high만 수정 (medium/low는 로그에만 기록)
+  2. critical/high/medium 이슈 수 추출 → 로그 기록
+  3. critical==0 AND high==0 AND medium==0 → BREAK (리뷰 통과)
+  4. Fix: implementation 에이전트로 critical/high/medium 수정 (low는 로그에만 기록)
   5. → re-review (루프 반복)
+
+MAX_REVIEW 도달 시:
+  critical/high > 0 → 파이프라인 중단
+  medium만 잔존 → 로그 기록 후 파이프라인 계속 진행
 ```
 
 부분 파이프라인("리뷰만 해줘")에서도 이슈 발견 시 fix → re-review 사이클 강제.

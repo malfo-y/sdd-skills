@@ -204,7 +204,8 @@ review가 포함된 파이프라인은 아래를 반드시 수행한다.
 3. 필요한 테스트 재실행
 4. re-review 수행
 
-critical/high 이슈가 남아 있으면 종료하지 않는다.
+critical/high/medium 이슈가 모두 해결될 때까지 반복한다.
+MAX 도달 시: critical/high 잔존 → 중단, medium만 잔존 → 로그 기록 후 계속 진행.
 
 #### 7.4 Test Strategy
 
