@@ -171,3 +171,6 @@ version: 2.1.0
 ## Final Check
 
 Acceptance Criteria가 모두 만족되었나 검증한다. 미충족 항목이 있으면 해당 단계로 돌아가 수정한다.
+
+> **Mirror Notice**: 이 스킬의 본문은 `.claude/agents/spec-update-done.md`의 복사본이다.
+> 내용을 수정할 때는 agent 파일과 이 스킬 파일을 **반드시 함께** 수정해야 한다.
