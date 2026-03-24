@@ -46,6 +46,16 @@ version: 2.0.0
 - 증거는 `path:line`, 테스트명, commit/diff 참조로 뒷받침.
 - Source field가 참조하는 파일·함수가 실존하는지 `Glob`/`Grep`으로 검증.
 
+### Step 3.5: Code Analysis Metrics
+
+`Bash`, `Grep`, `Glob`으로 세 가지 지표를 수집한다:
+
+| 지표 | 측정 방법 | 용도 |
+|------|----------|------|
+| **Hotspots** | `git log --format='' --name-only \| sort \| uniq -c \| sort -rn \| head -20` | 자주 변경되는 파일 → 리뷰 우선순위 |
+| **Focus Score** | 변경 파일 중 스펙 컴포넌트에 속하는 비율 | 변경 집중도 평가 |
+| **Test Coverage** | 스펙 기능별 관련 테스트 파일 존재 여부 (`Grep` 검색) | 테스트 갭 식별 |
+
 ### Step 4: Severity 분류 및 Decision
 
 Severity 기본 매핑:
@@ -94,6 +104,14 @@ Decision 부여:
 
 ## Open Questions
 1. ...
+
+## Code Analysis Metrics
+
+| Metric | Value | Notes |
+|--------|-------|-------|
+| Top Hotspots | file1 (N), file2 (N) | 자주 변경되는 파일 |
+| Focus Score | X% | 스펙 컴포넌트 집중도 |
+| Test Coverage | X/Y features covered | 스펙 기능별 테스트 현황 |
 
 ## Suggested Next Actions
 1. ...

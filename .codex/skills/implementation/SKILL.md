@@ -30,6 +30,8 @@ version: 2.0.0
 3. task는 `Target Files` 경계 밖을 수정하지 않는다. 추가 수정이 필요하면 `UNPLANNED_DEPENDENCY`로 보고한다.
 4. 각 phase/group 이후에는 검증을 수행한다.
 5. Critical 이슈가 남아 있으면 그대로 종료하지 않는다.
+6. **Verification Gate**: "should work" 금지. 코드 변경 후 반드시 테스트를 재실행하고 출력을 근거로 제시한다. 이전 실행 결과 재사용 금지. `_sdd/env.md` 미존재 시 코드 분석 기반 검증을 허용하되, 리포트에 `UNTESTED` 표기.
+7. **Regression Iron Rule**: 기존 테스트 실패 시 (1) 테스트 업데이트 + (2) 회귀 방지 테스트 추가를 사용자 확인 없이 자동 수행한다.
 
 ## Target Files and Conflicts
 

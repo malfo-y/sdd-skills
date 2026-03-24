@@ -1,360 +1,265 @@
-# Implementation Plan: `feature-draft` 스킬
+# Implementation Plan: gstack Patterns for SDD Skills
 
-## 개요
+## Overview
 
-`spec-draft` + `spec-update-todo` + `implementation-plan` 세 스킬의 기능을 하나로 합친 새 스킬.
-사용자와 대화를 통해 요구사항을 수집하고, 스펙 패치 초안과 구현 계획을 **단일 파일**로 출력합니다.
-기존 3단계 워크플로우(3x 토큰)를 1단계(~1x 토큰)로 축소하는 것이 목표입니다.
+gstack 패턴 토론에서 도출된 10개 결정 사항을 9개 파일(기존 7 + 신규 2)에 반영한다. Verification Gate, Regression Iron Rule, Failure Modes, Test Coverage Mapping, Scope Drift Detection, Fix-First, Code Analysis Metrics, Audit Trail, investigate 스킬을 추가한다.
 
-## 범위
+핵심 원칙: **Conciseness** -- 각 수정은 AC 항목 또는 Hard Rule 1-2줄 수준으로 최소화. "이 문장이 없으면 AI가 못 하는가?" 기준 적용.
+
+## Scope
 
 ### In Scope
-
-- 스킬 디렉토리 구조 생성 (`.claude/skills/feature-draft/`)
-- SKILL.md 메인 프롬프트 작성 (7단계 프로세스)
-- 참조 문서 작성 (adaptive-questions.md, output-format.md)
-- 예시 파일 작성 (feature_draft.md)
-- SDD_QUICK_START.md 업데이트 (워크플로우에 feature-draft 추가)
+- 5개 에이전트 파일 수정 (feature-draft, implementation-plan, implementation, implementation-review, spec-review)
+- 2개 스킬 파일 수정 (pr-review, sdd-autopilot)
+- 2개 신규 파일 생성 (investigate 에이전트 + 래퍼 스킬)
 
 ### Out of Scope
+- Mirror Notice 스킬 파일 동기화 (별도 후속 태스크)
+- Codex 에이전트/스킬 파일 (`.codex/`)
+- `_sdd/spec/main.md` 직접 수정 (`spec-update-todo`/`spec-update-done`으로 위임)
+- gstack 패턴 중 미채택 항목 (retro 스킬 등)
 
-- `.codex/skills/` 버전 (사용자 결정에 따라 제외)
-- 기존 스킬 수정 (spec-draft, spec-update-todo, implementation-plan은 그대로 유지)
-- 자동화 스크립트
+## Components
 
-## 설계 결정 사항
+1. **Verification & Regression**: implementation, implementation-review에 Verification Gate + Regression Iron Rule 추가
+2. **Feature Draft Enhancement**: feature-draft에 Failure Modes 테이블 추가
+3. **Implementation Plan Enhancement**: implementation-plan에 Test Coverage Mapping 추가
+4. **PR Review Enhancement**: pr-review에 Scope Drift Detection + Fix-First 추가
+5. **Spec Review Enhancement**: spec-review에 코드 분석 지표 추가
+6. **Autopilot Enhancement**: sdd-autopilot에 Audit Trail + Taste Decision 추가
+7. **Investigate Skill**: 신규 에이전트 + 래퍼 스킬 생성
 
-| 결정 | 선택 | 근거 |
-|------|------|------|
-| 스펙 수정 방식 | 패치 초안만 출력 (read-only) | 안전하고 리뷰 가능 |
-| 입력 수집 방식 | Adaptive (상세하면 skip, 모호하면 질문) | 토큰 절약과 완성도 균형 |
-| 출력 형식 | 단일 파일 (Part 1 + Part 2) | 간단하고 리뷰 용이 |
-| 출력 위치 | `_sdd/drafts/` | 전용 디렉토리로 깔끔한 분리 |
-| spec-update-todo 호환 | Part 1이 "Spec Update Input" 형식 준수 | 자동 적용 가능 |
-| 복수 기능 지원 | 지원하되 사용자에게 먼저 확인 | 유연성 + 명시적 동의 |
-| 파일명 형식 | `feature_draft_<feature_name>.md` (lowercase) | 사용자 선호 |
-| Codex 지원 | Claude only | 사용자 결정 |
+## Implementation Phases
 
-## 컴포넌트
+**전략**: Dependency-Driven -- 신규 파일(investigate)만 내부 의존성이 있고, 나머지 7개 수정은 모두 독립적. Phase 1에서 기존 파일 수정을 병렬 처리하고, Phase 2에서 신규 파일을 순차 생성한다.
 
-1. **SKILL.md**: 메인 스킬 정의 (프로세스 7단계, 규칙, 가이드라인)
-2. **references/adaptive-questions.md**: Adaptive 모드 질문 가이드 (입력 완성도 판단 기준 + 유형별 핵심 질문)
-3. **references/output-format.md**: 출력 파일 상세 포맷 명세
-4. **examples/feature_draft.md**: 완성된 출력 예시 파일
-
-## 구현 단계
-
-### Phase 1: 스킬 구조 설정
-
+### Phase 1: 기존 파일 수정 (전체 병렬)
 | ID | Task | Priority | Dependencies | Component |
 |----|------|----------|--------------|-----------|
-| 1 | `.claude/skills/feature-draft/` 디렉토리 구조 생성 | P0 | - | Infrastructure |
-| 2 | SKILL.md 메타데이터 및 개요 섹션 작성 | P0 | 1 | SKILL.md |
+| 1 | implementation에 Verification Gate + Regression Iron Rule 추가 | P1-High | - | Verification & Regression |
+| 2 | implementation-review에 Fresh Verification 규칙 추가 | P1-High | - | Verification & Regression |
+| 3 | feature-draft에 Failure Modes 테이블 섹션 추가 | P2-Medium | - | Feature Draft Enhancement |
+| 4 | implementation-plan에 Test Coverage Mapping 추가 | P2-Medium | - | Implementation Plan Enhancement |
+| 5 | pr-review에 Scope Drift Detection + Fix-First 추가 | P1-High | - | PR Review Enhancement |
+| 6 | spec-review에 코드 분석 지표 추가 | P3-Low | - | Spec Review Enhancement |
+| 7 | sdd-autopilot에 Audit Trail + Taste Decision 추가 | P1-High | - | Autopilot Enhancement |
 
-### Phase 2: 핵심 프로세스 작성
-
+### Phase 2: 신규 파일 생성 (순차)
 | ID | Task | Priority | Dependencies | Component |
 |----|------|----------|--------------|-----------|
-| 3 | SKILL.md Step 1-3 작성 (입력 분석, 컨텍스트 수집, Adaptive 질문) | P0 | 2 | SKILL.md |
-| 4 | SKILL.md Step 4-5 작성 (피처 설계, 스펙 패치 생성) | P0 | 3 | SKILL.md |
-| 5 | SKILL.md Step 6-7 작성 (구현 계획 생성, 확인 및 완료) | P0 | 4 | SKILL.md |
-| 6 | references/adaptive-questions.md 작성 | P1 | 3 | References |
-| 7 | references/output-format.md 작성 | P1 | 4, 5 | References |
+| 8 | investigate 에이전트 생성 | P3-Low | - | Investigate Skill |
+| 9 | investigate 래퍼 스킬 생성 | P3-Low | 8 | Investigate Skill |
 
-### Phase 3: 예시 및 통합
+## Task Details
 
-| ID | Task | Priority | Dependencies | Component |
-|----|------|----------|--------------|-----------|
-| 8 | examples/feature_draft.md 작성 (완성된 출력 예시) | P1 | 7 | Examples |
-| 9 | SDD_QUICK_START.md 업데이트 (feature-draft 워크플로우 추가) | P2 | 8 | Documentation |
+### Task 1: implementation에 Verification Gate + Regression Iron Rule 추가
+**Component**: Verification & Regression
+**Priority**: P1-High
+**Type**: Improvement
 
-## 태스크 상세
-
-### Task 1: 디렉토리 구조 생성
-
-**Component**: Infrastructure
-**Priority**: P0
-**Type**: Infrastructure
-
-**설명**:
-`.claude/skills/feature-draft/` 디렉토리와 하위 디렉토리를 생성합니다.
-
-**구조**:
-```
-.claude/skills/feature-draft/
-├── SKILL.md
-├── references/
-│   ├── adaptive-questions.md
-│   └── output-format.md
-└── examples/
-    └── feature_draft.md
-```
+**Description**: implementation 에이전트의 Hard Rules에 Verification Gate와 Regression Iron Rule을 추가한다.
 
 **Acceptance Criteria**:
-- [ ] 디렉토리 구조가 기존 스킬과 동일한 패턴
-- [ ] references/, examples/ 하위 디렉토리 존재
+- [ ] Hard Rules에 Verification Gate가 추가되었다 ("should work" 금지, 코드 변경 후 테스트 재실행 필수, 이전 결과 재사용 금지)
+- [ ] Hard Rules에 Regression Iron Rule이 추가되었다 (기존 테스트 실패 시 테스트 업데이트 + 회귀 방지 테스트 추가 필수, 사용자 확인 없이 자동)
+- [ ] env.md 미존재 시 코드 분석 기반 fallback이 명시되었다
+
+**Target Files**:
+- [M] `.claude/agents/implementation.md` -- Hard Rules 섹션에 Verification Gate + Regression Iron Rule 추가
+
+**Technical Notes**: Hard Rules 섹션 마지막에 2개 규칙을 간결하게 추가. 각 규칙 1-2줄. env.md 미존재 시 fallback: 코드 분석 기반 허용, 리포트에 "UNTESTED" 명시.
+**Dependencies**: -
 
 ---
 
-### Task 2: SKILL.md 메타데이터 및 개요 작성
+### Task 2: implementation-review에 Fresh Verification 규칙 추가
+**Component**: Verification & Regression
+**Priority**: P1-High
+**Type**: Improvement
 
-**Component**: SKILL.md
-**Priority**: P0
+**Description**: implementation-review 에이전트의 Hard Rules에 Fresh Verification 규칙을 추가한다.
+
+**Acceptance Criteria**:
+- [ ] Hard Rules에 Fresh Verification 규칙이 추가되었다 (테스트 실행 출력을 근거로 판단, "should work" 금지)
+- [ ] 이전 결과 재사용 금지가 명시되었다
+- [ ] env.md 미존재 시 fallback이 명시되었다
+
+**Target Files**:
+- [M] `.claude/agents/implementation-review.md` -- Hard Rules 섹션에 Fresh Verification 추가
+
+**Technical Notes**: 기존 Hard Rule #7(계획 문서 수정 금지) 뒤에 #8로 추가. 1-2줄로 간결하게.
+**Dependencies**: -
+
+---
+
+### Task 3: feature-draft에 Failure Modes 테이블 섹션 추가
+**Component**: Feature Draft Enhancement
+**Priority**: P2-Medium
 **Type**: Feature
-**Dependencies**: 1
 
-**설명**:
-SKILL.md의 frontmatter (name, description, version)와 Overview, When to Use, Input Sources, Output, Hard Rules 섹션을 작성합니다.
-
-**핵심 내용**:
-- **name**: `feature-draft`
-- **description**: 트리거 키워드 포함 ("feature draft", "기능 초안", "feature plan", "기능 계획", "draft and plan", "초안과 계획")
-- **Hard Rules**:
-  - 스펙 파일 수정 금지 (read-only)
-  - 출력 파일은 `_sdd/drafts/` 디렉토리
-  - 결과 파일 내용은 한국어로 작성
-- **Input Sources**: 사용자 대화, 기존 파일 (user_draft.md, user_spec.md, user_input.md), 코드 변경사항
-- **Output**: `_sdd/drafts/feature_draft_<feature_name>.md`
-- **복수 기능**: 지원하되, 반드시 사용자에게 먼저 확인 ("여러 기능을 한 파일에 포함하시겠습니까?")
+**Description**: feature-draft 에이전트의 Part 1 스펙 패치 출력 템플릿에 Failure Modes 테이블을 항상 포함하도록 추가한다.
 
 **Acceptance Criteria**:
-- [ ] frontmatter가 기존 스킬 패턴과 일관성 유지
-- [ ] 트리거 키워드가 기존 스킬과 충돌하지 않음
-- [ ] Hard Rules 명확히 정의됨
+- [ ] Part 1 출력 템플릿(Step 4)에 Failure Modes 섹션이 추가되었다
+- [ ] 항상 포함, 간단하면 N/A 또는 1-2행 규칙이 명시되었다
+- [ ] 4열 테이블 형식이 정의되었다 (시나리오/실패 시/사용자 가시성/처리 방안)
+
+**Target Files**:
+- [M] `.claude/agents/feature-draft.md` -- Step 4 Part 1 템플릿에 Failure Modes 섹션 추가
+
+**Technical Notes**: `## Notes` 바로 위에 `## Failure Modes` 섹션 추가. 간단한 기능은 "N/A -- 단순 기능, 실패 경로 없음" 1행으로 처리 가능.
+**Dependencies**: -
 
 ---
 
-### Task 3: Step 1-3 작성 (입력 분석 ~ Adaptive 질문)
-
-**Component**: SKILL.md
-**Priority**: P0
+### Task 4: implementation-plan에 Test Coverage Mapping 추가
+**Component**: Implementation Plan Enhancement
+**Priority**: P2-Medium
 **Type**: Feature
-**Dependencies**: 2
 
-**설명**:
-프로세스의 앞부분 3단계를 작성합니다.
-
-**Step 1: 입력 분석 (Input Analysis)**
-- 사용자 대화 내용 확인
-- 기존 파일 확인: `_sdd/spec/user_draft.md`, `_sdd/spec/user_spec.md`, `_sdd/implementation/user_input.md`
-- 코드 변경사항 확인 (git diff 등)
-- 입력 완성도 레벨 판정: HIGH / MEDIUM / LOW
-
-**Step 2: 컨텍스트 수집 (Context Gathering)**
-- 기존 스펙 읽기 (read-only): `_sdd/spec/<project>.md` 또는 `main.md`
-- 스펙 구조 파악 (섹션 목록, 컴포넌트 목록, 기존 기능 목록)
-- 기존 DECISION_LOG.md 확인 (존재 시)
-
-**Step 3: Adaptive 질문 (Adaptive Clarification)**
-- HIGH: 질문 없이 바로 진행
-- MEDIUM: 1-3개 핵심 질문만 (우선순위, 수용 기준, 기술 제약)
-- LOW: 유형별 필수 질문 수행 (references/adaptive-questions.md 참조)
-- AskUserQuestion 도구 활용
+**Description**: implementation-plan 에이전트의 Step 3에 [M] 마커 대상 파일의 기존 테스트 커버리지를 매핑하는 하위 단계를 추가한다.
 
 **Acceptance Criteria**:
-- [ ] 입력 완성도 판정 기준이 명확
-- [ ] Adaptive 질문 로직이 3단계로 분류됨
-- [ ] 기존 스펙 read-only 접근 명시
+- [ ] Step 3에 Test Coverage Mapping 하위 단계가 추가되었다
+- [ ] [M] 마커 조건부 실행이 명시되었다 ([C] 전용이면 스킵)
+- [ ] Grep 기반 테스트 파일/함수 검색 방법이 기술되었다
+
+**Target Files**:
+- [M] `.claude/agents/implementation-plan.md` -- Step 3 "Target Files 검증" 뒤에 Test Coverage Mapping 추가
+
+**Technical Notes**: `Grep`으로 [M] 대상 파일명을 테스트 디렉토리에서 검색, 관련 테스트 파일/함수 목록을 Task의 Technical Notes에 기록. 테스트 디렉토리 미존재 시 스킵.
+**Dependencies**: -
 
 ---
 
-### Task 4: Step 4-5 작성 (피처 설계 ~ 스펙 패치)
-
-**Component**: SKILL.md
-**Priority**: P0
+### Task 5: pr-review에 Scope Drift Detection + Fix-First 추가
+**Component**: PR Review Enhancement
+**Priority**: P1-High
 **Type**: Feature
-**Dependencies**: 3
 
-**설명**:
-피처 분석과 스펙 패치 초안 생성 단계를 작성합니다.
-
-**Step 4: 피처 설계 (Feature Design)**
-- 요구사항을 기능/개선/버그/컴포넌트/설정으로 분류
-- 각 항목의 대상 스펙 섹션 매핑 (section-mapping 참조)
-- 컴포넌트 식별 및 의존성 파악
-
-**Step 5: 스펙 패치 생성 (Spec Patch Generation) = Part 1**
-- "Spec Update Input" 형식으로 작성 (spec-update-todo 호환)
-- 각 항목에 `**Target Section**` 어노테이션 추가 (수동 copy-paste 용)
-- 상태 마커 사용: 📋 계획됨
-- 스펙의 기존 스타일/언어에 맞춤
+**Description**: pr-review 스킬에 (a) Step 2.5 Scope Drift Detection과 (b) Step 5.5 코드 품질 Fix-First를 추가한다.
 
 **Acceptance Criteria**:
-- [ ] "Spec Update Input" 형식 완전 준수
-- [ ] Target Section 어노테이션이 section-mapping 규칙 따름
-- [ ] spec-update-todo에 바로 입력 가능한 포맷
+- [ ] Mode 1에 Step 2.5 Scope Drift Detection이 추가되었다 (PR diff 변경 파일 vs patch draft Target Files 비교)
+- [ ] CLEAN/DRIFT/MISSING 판정이 Output Format에 반영되었다
+- [ ] Step 5.5 코드 품질 Fix-First가 추가되었다
+- [ ] AUTO-FIX 대상(미사용 import, 타입 불일치, 누락된 에러 처리)과 목록 기록 대상(동작 변경 가능성)의 분류 기준이 명시되었다
+- [ ] 기존 스펙 레이어 verdict(APPROVE/REQUEST CHANGES/NEEDS DISCUSSION)는 변경되지 않았다
+
+**Target Files**:
+- [M] `.claude/skills/pr-review/SKILL.md` -- Step 2.5 + Step 5.5 추가, Output Format에 Scope Drift + Fix-First 섹션 추가
+
+**Technical Notes**: Step 2.5는 `gh pr diff --name-only`와 patch draft의 Target Files를 비교. Step 5.5는 Step 5 Gap Analysis 직후 배치. AUTO-FIX는 기계적 수정으로 제한, 동작 변경 가능성은 목록 기록으로 분류.
+**Dependencies**: -
 
 ---
 
-### Task 5: Step 6-7 작성 (구현 계획 ~ 완료)
-
-**Component**: SKILL.md
-**Priority**: P0
+### Task 6: spec-review에 코드 분석 지표 추가
+**Component**: Spec Review Enhancement
+**Priority**: P3-Low
 **Type**: Feature
-**Dependencies**: 4
 
-**설명**:
-구현 계획 생성과 확인/완료 단계를 작성합니다.
-
-**Step 6: 구현 계획 생성 (Implementation Plan Generation) = Part 2**
-- 컴포넌트 식별 (Part 1의 분석 결과 재활용)
-- 태스크 정의 (Title, Component, Priority, Type, Description, Acceptance Criteria, Technical Notes, Dependencies)
-- 의존성 매핑 및 단계 분리 (Phase 1, 2, 3...)
-- 위험 요소 및 대응 방안
-- 미해결 질문 (Open Questions)
-- 모델 추천 (complexity 기반)
-
-**Step 7: 확인 및 완료 (Review & Confirm)**
-- 생성된 초안을 사용자에게 보여줌
-- 수정 사항 반영
-- `_sdd/drafts/` 디렉토리 생성 (없으면)
-- 파일 저장: `_sdd/drafts/feature_draft_<feature_name>.md`
-- 기존 파일이 있으면 `_sdd/drafts/prev/prev_feature_draft_<name>_<timestamp>.md`로 아카이브
-- 입력 파일 처리: `user_draft.md` → `_processed_user_draft.md` 등 (사용된 경우)
-- 다음 단계 안내
+**Description**: spec-review 에이전트의 Step 3(Code Drift 감사)에 핫스팟, Focus Score, Test Coverage 지표를 추가한다.
 
 **Acceptance Criteria**:
-- [ ] 구현 계획 형식이 implementation 스킬에서 바로 사용 가능
-- [ ] 파일 아카이브 규칙이 기존 스킬과 일관성 유지
-- [ ] 다음 단계 안내에 2가지 경로 제시 (수동 copy-paste vs spec-update-todo)
+- [ ] Step 3에 코드 분석 지표 수집 단계가 추가되었다
+- [ ] 핫스팟(자주 변경 파일), Focus Score(변경 집중도), Test Coverage(스펙 기능별 테스트 현황) 세 가지 지표가 정의되었다
+- [ ] Output Format에 Code Analysis Metrics 테이블이 추가되었다
+
+**Target Files**:
+- [M] `.claude/agents/spec-review.md` -- Step 3에 코드 분석 지표 추가, Output Format에 지표 테이블 추가
+
+**Technical Notes**: 핫스팟: `git log --format='' --name-only | sort | uniq -c | sort -rn | head -20`. Focus Score: 변경 파일 중 스펙 컴포넌트에 속하는 비율. Test Coverage: 스펙 기능별 관련 테스트 파일 존재 여부.
+**Dependencies**: -
 
 ---
 
-### Task 6: references/adaptive-questions.md 작성
+### Task 7: sdd-autopilot에 Audit Trail + Taste Decision 추가
+**Component**: Autopilot Enhancement
+**Priority**: P1-High
+**Type**: Improvement
 
-**Component**: References
-**Priority**: P1
+**Description**: sdd-autopilot 스킬의 Step 7.2 실행 루프에 자동 결정 로그 기록을 추가하고, Taste Decision을 Step 8 최종 보고서에 표면화한다.
+
+**Acceptance Criteria**:
+- [ ] Step 7.2에 자동 결정 로그 기록이 추가되었다 (형식: `[DECISION] <what> -- <why> -- <taste: yes/no>`)
+- [ ] Taste Decision 분류 기준이 명시되었다 ("합리적으로 다르게 판단할 수 있는 것")
+- [ ] Step 8 보고서에 Taste Decisions 섹션이 추가되었다
+
+**Target Files**:
+- [M] `.claude/skills/sdd-autopilot/SKILL.md` -- Step 7.2에 Audit Trail 추가, Step 8에 Taste Decision 표면화 추가
+
+**Technical Notes**: Taste decision 예시: 테스트 전략 선택, 병렬 vs 순차 결정, 에러 복구 방식. Step 8.2 보고서 필수 항목에 "Taste Decisions" 추가.
+**Dependencies**: -
+
+---
+
+### Task 8: investigate 에이전트 생성
+**Component**: Investigate Skill
+**Priority**: P3-Low
 **Type**: Feature
-**Dependencies**: 3
 
-**설명**:
-Adaptive 모드의 질문 가이드를 작성합니다. spec-draft의 `question-guide.md`를 기반으로 하되, 3단계 완성도 레벨에 맞게 재구성합니다.
-
-**핵심 내용**:
-
-1. **입력 완성도 판정 기준**:
-   - HIGH: 기능명 + 설명 + 수용 기준 + 우선순위 모두 있음
-   - MEDIUM: 기능명 + 설명은 있으나 수용 기준이나 우선순위 부족
-   - LOW: 모호한 아이디어 수준 ("이런 기능 추가하고 싶어")
-
-2. **레벨별 질문 전략**:
-   - HIGH → 질문 없이 진행 (확인만)
-   - MEDIUM → 핵심 1-3개: 우선순위, acceptance criteria, 기술 제약
-   - LOW → 유형 확인 후 필수 질문 (spec-draft 질문 가이드의 축약 버전)
-
-3. **유형별 핵심 질문** (LOW 레벨용):
-   - 새 기능: 이름, 우선순위, 설명, 수용 기준
-   - 개선: 현재 상태, 제안, 이유
-   - 버그: 심각도, 위치, 재현 방법
+**Description**: 범용 체계적 디버깅 에이전트를 AC-First + Self-Contained 구조로 신규 생성한다.
 
 **Acceptance Criteria**:
-- [ ] 3단계 완성도 레벨이 명확히 정의됨
-- [ ] 레벨별 질문 수가 최소화됨 (토큰 절약 목적)
-- [ ] spec-draft의 question-guide.md 핵심 내용 포함
+- [ ] `.claude/agents/investigate.md`가 AC-First + Self-Contained 구조로 존재한다
+- [ ] 근본원인 우선(Iron Law)이 Hard Rule로 명시되었다 ("증상 패치 금지, 근본원인을 찾아 수정")
+- [ ] 3-strike 에스컬레이션이 Process에 포함되었다 (같은 접근 3회 실패 시 전략 변경)
+- [ ] scope lock이 포함되었다 (초기 범위를 벗어나는 수정 금지)
+- [ ] blast radius gate가 포함되었다 (수정 영향 범위 사전 평가)
+- [ ] fresh verification이 포함되었다 (수정 후 테스트 재실행 필수)
+- [ ] 독립 Agent 교차 검증이 포함되었다 (Agent A 가설 기반 + Agent B 코드 독립 탐지)
+
+**Target Files**:
+- [C] `.claude/agents/investigate.md` -- 범용 체계적 디버깅 에이전트 정의
+
+**Technical Notes**: tools: Read, Write, Edit, Glob, Grep, Bash, Agent. ralph-loop-init과 차별화: investigate는 범용/단발, ralph-loop-init은 장시간 반복 프로세스 전용. 기존 에이전트 패턴(frontmatter + AC + Hard Rules + Process + Final Check) 준수.
+**Dependencies**: -
 
 ---
 
-### Task 7: references/output-format.md 작성
-
-**Component**: References
-**Priority**: P1
+### Task 9: investigate 래퍼 스킬 생성
+**Component**: Investigate Skill
+**Priority**: P3-Low
 **Type**: Feature
-**Dependencies**: 4, 5
 
-**설명**:
-출력 파일의 상세 포맷 명세를 작성합니다.
-
-**핵심 내용**:
-
-1. **파일 구조**:
-   - 헤더 (Feature Name, Date, Author, Target Spec, Status)
-   - Part 1: Spec Patches ("Spec Update Input" 형식 + Target Section 어노테이션)
-   - Part 2: Implementation Plan (표준 구현 계획 형식)
-   - Next Steps 섹션
-
-2. **Part 1 상세 형식**:
-   - "Spec Update Input" 형식의 완전한 명세
-   - Target Section 어노테이션 규칙
-   - section-mapping 참조 테이블 (축약본)
-   - 상태 마커 규칙
-
-3. **Part 2 상세 형식**:
-   - Overview, Scope, Components
-   - Phase별 태스크 테이블
-   - Task Details (acceptance criteria 포함)
-   - Risks & Mitigations
-   - Open Questions
-   - 모델 추천
-
-4. **파일 관리 규칙**:
-   - 파일명: `feature_draft_<feature_name>.md`
-   - 아카이브: `prev/prev_feature_draft_<name>_<timestamp>.md`
-   - 입력 파일 처리 규칙
+**Description**: investigate 에이전트의 래퍼 스킬을 Agent Wrapper 패턴에 따라 생성한다.
 
 **Acceptance Criteria**:
-- [ ] Part 1이 spec-update-todo input-format.md와 호환
-- [ ] Part 2가 implementation-plan의 출력 형식과 호환
-- [ ] 파일 관리 규칙이 기존 스킬과 일관성 유지
+- [ ] `.claude/skills/investigate/SKILL.md`가 래퍼 구조로 존재한다
+- [ ] investigate 에이전트에 올바르게 위임한다 (`Agent(subagent_type="investigate")`)
+- [ ] description에 범용 단발 디버깅 용도가 명시되었다 (ralph-loop-init과 차별화)
 
----
+**Target Files**:
+- [C] `.claude/skills/investigate/SKILL.md` -- investigate 에이전트의 래퍼 스킬
 
-### Task 8: examples/feature_draft.md 작성
-
-**Component**: Examples
-**Priority**: P1
-**Type**: Feature
-**Dependencies**: 7
-
-**설명**:
-완성된 출력의 구체적인 예시 파일을 작성합니다. 실제 프로젝트에서 사용될 수 있는 현실적인 예시로 작성합니다.
-
-**예시 시나리오**: "실시간 알림 시스템" 기능 추가 (spec-draft 예시와 연계)
-
-**Acceptance Criteria**:
-- [ ] Part 1과 Part 2 모두 포함
-- [ ] 현실적이고 구체적인 내용
-- [ ] 모든 포맷 규칙 준수
-
----
-
-### Task 9: SDD_QUICK_START.md 업데이트
-
-**Component**: Documentation
-**Priority**: P2
-**Type**: Documentation
+**Technical Notes**: 기존 래퍼 스킬 패턴(예: `.claude/skills/implementation-review/SKILL.md`) 참고. frontmatter의 description에 트리거 키워드 포함.
 **Dependencies**: 8
 
-**설명**:
-SDD_QUICK_START.md에 feature-draft 스킬을 추가합니다.
-
-**변경 사항**:
-- 스킬 목록에 `feature-draft` 추가
-- 워크플로우 다이어그램에 shortcut 경로 추가
-- 사용 시나리오 예시 추가
-
-**Acceptance Criteria**:
-- [ ] feature-draft가 스킬 목록에 포함됨
-- [ ] 기존 워크플로우와 shortcut 워크플로우 모두 표시됨
-- [ ] 기존 문서 스타일과 일관성 유지
-
 ---
 
-## 위험 요소 및 대응
+## Parallel Execution Summary
 
-| 위험 | 영향 | 대응 |
-|------|------|------|
-| spec-update-todo 입력 형식과 불일치 | Part 1을 spec-update-todo에 넣으면 오류 | input-format.md를 정확히 참조하여 작성 |
-| 단일 파일이 너무 길어짐 | 가독성 저하 | 25 태스크 초과 시 Phase별 분리 옵션 제공 |
-| 기존 스킬 트리거와 키워드 충돌 | 잘못된 스킬 활성화 | 고유한 트리거 키워드 선정 |
-| Adaptive 질문이 너무 적어 품질 저하 | 불완전한 초안 | MEDIUM 레벨에서 핵심 질문 반드시 포함 |
+| Phase | Total Tasks | Max Parallel | File Conflicts |
+|-------|-------------|--------------|----------------|
+| 1 | 7 | 7 | None -- Task 1-7 모두 Target Files 비중복 |
+| 2 | 2 | 1 | Task 9는 Task 8에 의존 (래퍼가 에이전트 구조 참조) |
 
-## 미해결 질문
+## Risks & Mitigations
 
-- [x] ~~`feature-draft`가 여러 기능을 한 번에 처리할 수 있어야 하는가?~~ → 복수 기능 지원, 사용자에게 먼저 확인
-- [x] ~~파일명 형식~~ → `feature_draft_<feature_name>.md` (lowercase)
-- [ ] Part 1과 Part 2 사이의 분리선을 어떻게 명확히 할 것인가? (현재: `---` 구분)
+| Risk | Impact | Mitigation |
+|------|--------|------------|
+| Verification Gate가 테스트 환경 없는 프로젝트에서 blocking | 구현 진행 불가 | env.md 미존재 시 코드 분석 기반 fallback 명시, "UNTESTED" 표기 |
+| investigate가 ralph-loop-init과 역할 혼동 | 사용자가 잘못된 스킬 선택 | description에 범용 단발 vs 장시간 반복 차이를 명확히 기술 |
+| 추가된 규칙이 기존 스킬의 conciseness를 해침 | 컨텍스트 효율 저하 | 모든 추가 내용에 "이 문장이 없으면 AI가 못 하는가?" 기준 적용 |
+| AUTO-FIX가 의도치 않은 코드 변경 발생 | PR에 원치 않는 커밋 추가 | AUTO-FIX 대상을 기계적 수정으로 제한, 동작 변경 가능성은 목록 기록으로 분류 |
+| Mirror Notice 스킬 파일 미동기화 | 에이전트와 스킬 파일 내용 불일치 | Out of Scope로 명시, 별도 후속 태스크로 처리 |
 
-## 모델 추천
+## Open Questions
 
-이 구현은 주로 **문서 작성 작업**이므로 `sonnet` 모델이 적합합니다.
-복잡한 아키텍처 결정이 필요한 경우 `opus`를 고려할 수 있습니다.
+- (없음 -- gstack 토론에서 모든 논점에 결정이 이루어짐)
+
+## Model Recommendation
+
+- **구현**: `sonnet` -- 마크다운 파일 수정은 패턴 매칭 위주로 Sonnet이 효율적
+- **리뷰**: `opus` -- 구조적 정합성 + conciseness 검증에 더 높은 추론 능력 필요

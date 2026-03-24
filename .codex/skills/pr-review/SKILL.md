@@ -90,6 +90,18 @@ degraded mode에서는 다음을 명시한다.
 - spec / patch draft / PR diff / tests를 병렬로 수집
 - acceptance / violation / gap 관점으로 finding lane을 나눈다
 
+### Step 3.5: Scope Drift Detection
+
+PR diff 변경 파일과 patch draft의 Target Files를 비교한다.
+
+| 판정 | 조건 |
+|------|------|
+| **CLEAN** | 변경 파일 == Target Files (완전 일치 또는 부분집합) |
+| **DRIFT** | Target Files에 없는 파일이 변경됨 (범위 이탈) |
+| **MISSING** | Target Files에 있으나 변경되지 않은 파일 존재 (미구현) |
+
+판정 결과를 리포트 상단에 표시한다. Degraded mode(patch draft 없음)에서는 스킵.
+
 ### Step 4: Assess the PR
 
 다음 관점으로 검증한다.
@@ -105,6 +117,17 @@ verdict 기준:
 - `APPROVE`: blocker 없음, 핵심 요구 충족
 - `REQUEST CHANGES`: merge 전 수정 필요
 - `NEEDS DISCUSSION`: 요구 해석, spec, 설계 결정이 모호함
+
+### Step 4.5: Code Quality Fix-First
+
+Verdict 결정 직후, 기계적 코드 품질 이슈를 분류한다.
+
+| 분류 | 대상 | 처리 |
+|------|------|------|
+| **AUTO-FIX** | 미사용 import, 타입 불일치, 누락된 에러 처리 등 기계적 수정 | 즉시 수정 (동작 변경 없음이 확실한 경우만) |
+| **목록 기록** | 동작 변경 가능성이 있는 항목 | 리포트 Recommendations에 기록 |
+
+> 스펙 레이어 verdict(APPROVE/REQUEST CHANGES/NEEDS DISCUSSION)는 이 단계와 독립적으로 유지된다.
 
 ### Step 5: Write the Review Report
 

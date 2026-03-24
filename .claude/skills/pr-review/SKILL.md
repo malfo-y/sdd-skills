@@ -67,6 +67,23 @@ gh pr diff [PR_NUMBER]
 gh pr diff [PR_NUMBER] --name-only
 ```
 
+#### Step 2.5: Scope Drift Detection
+
+PR diff 변경 파일과 patch draft의 Target Files를 비교한다.
+
+```bash
+gh pr diff [PR_NUMBER] --name-only   # 실제 변경 파일
+# patch draft Target Files에서 경로 추출
+```
+
+| 판정 | 조건 |
+|------|------|
+| **CLEAN** | 변경 파일 == Target Files (완전 일치 또는 부분집합) |
+| **DRIFT** | Target Files에 없는 파일이 변경됨 (범위 이탈) |
+| **MISSING** | Target Files에 있으나 변경되지 않은 파일 존재 (미구현) |
+
+판정 결과를 리포트 상단에 표시한다. Degraded mode(patch draft 없음)에서는 스킵.
+
 #### Step 3: Acceptance criteria verification
 
 For each Feature/Improvement/Bug Fix in the patch draft:
@@ -92,6 +109,17 @@ For each Feature/Improvement/Bug Fix in the patch draft:
 | Patch draft vs PR | Items claimed but not implemented; changes in PR but not in patch |
 | Test gaps | AC without tests; failing tests |
 | Documentation gaps | New settings/env vars not documented; API changes not documented |
+
+#### Step 5.5: Code Quality Fix-First
+
+Gap Analysis 직후, 기계적 코드 품질 이슈를 분류한다.
+
+| 분류 | 대상 | 처리 |
+|------|------|------|
+| **AUTO-FIX** | 미사용 import, 타입 불일치, 누락된 에러 처리 등 기계적 수정 | 즉시 수정 (동작 변경 없음이 확실한 경우만) |
+| **목록 기록** | 동작 변경 가능성이 있는 항목 | 리포트 Recommendations에 기록 |
+
+> 스펙 레이어 verdict(APPROVE/REQUEST CHANGES/NEEDS DISCUSSION)는 이 단계와 독립적으로 유지된다.
 
 #### Step 6: Verdict decision
 
@@ -156,6 +184,12 @@ Steps 4, 6, 7 proceed identically.
 **Reviewer**: Claude (<model>)
 **Spec Version**: <version>
 **Patch Draft**: Found / Not Found
+
+---
+
+## Scope Drift
+**[CLEAN / DRIFT / MISSING]**
+<!-- DRIFT/MISSING인 경우 상세 파일 목록 -->
 
 ---
 
@@ -234,6 +268,18 @@ Steps 4, 6, 7 proceed identically.
 
 ### Failed Test Details
 (Per failed test: file, error, related acceptance criteria, severity, action)
+
+---
+
+## Code Quality Fix-First
+
+### Auto-Fixed
+| # | File | Issue | Fix Applied |
+|---|------|-------|-------------|
+
+### Logged (Requires Manual Review)
+| # | File | Issue | Reason |
+|---|------|-------|--------|
 
 ---
 

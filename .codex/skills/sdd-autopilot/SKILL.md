@@ -188,6 +188,8 @@ autopilot에서 custom agent 또는 explorer를 호출할 때의 표준 순서:
 2. Collect: `wait_agent(...)` 또는 로컬 결과 수집
 3. Verify: exit criteria + 오케스트레이터 AC 기준, 테스트, 산출물 존재 여부 확인
 4. Record: 로그 파일에 상태와 핵심 결정 기록
+5. Audit Trail: 모든 자동 결정을 로그에 기록: `[DECISION] <what> -- <why> -- <taste: yes/no>`
+   - Taste decision = "합리적으로 다르게 판단할 수 있는 것" (예: 테스트 전략 선택, 병렬 vs 순차 결정, 에러 복구 방식)
 
 Verify 실패 시:
 
@@ -227,6 +229,7 @@ MAX 도달 시: critical/high 잔존 → 중단, medium만 잔존 → 로그 기
 - review-fix 수행 여부
 - 테스트 결과
 - 남은 리스크, open question, 후속 추천
+- **Taste Decisions**: 파이프라인 중 taste decision으로 분류된 자동 결정 목록 (what/why/대안)
 
 재개가 가능하도록 로그와 보고서가 현재 상태를 충분히 설명해야 한다.
 

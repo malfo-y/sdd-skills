@@ -148,6 +148,14 @@ model: inherit
 **Action**: [action]
 **Expected Result**: [result]
 
+## Failure Modes
+
+> 항상 포함한다. 간단한 기능은 "N/A -- 단순 기능, 실패 경로 없음" 1행으로 처리 가능.
+
+| 시나리오 | 실패 시 | 사용자 가시성 | 처리 방안 |
+|---------|---------|-------------|----------|
+| [scenario] | [impact] | [visibility] | [mitigation] |
+
 ## Notes
 [context, constraints]
 <!-- spec-update-todo-input-end -->

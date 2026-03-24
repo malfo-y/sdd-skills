@@ -26,6 +26,7 @@ version: 3.0.0
 5. **보안 취약점**: 발견 즉시 Critical Issues로 보고한다.
 6. **env.md 우선**: `_sdd/env.md` 존재 시 환경 설정을 적용한 후 테스트를 실행한다. 미존재 시 코드 분석만 수행한다.
 7. **계획 문서 수정 금지**: 이 리뷰 스킬에서는 `IMPLEMENTATION_PLAN*.md`나 진행 상태 문서를 수정하지 않는다. 후속 변경 제안은 리뷰 리포트에만 기록한다.
+8. **Fresh Verification**: "should work" 금지. 테스트 실행 출력을 근거로 판단한다. 이전 실행 결과 재사용 금지. `_sdd/env.md` 미존재 시 코드 분석만 수행하고 리포트에 `UNTESTED` 표기.
 
 ## Process
 

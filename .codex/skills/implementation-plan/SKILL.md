@@ -106,6 +106,12 @@ task를 나눌 때 원칙:
 - file overlap이 적도록 자른다.
 - setup/common groundwork는 별도 task로 분리한다.
 
+### Test Coverage Mapping (조건부)
+
+> `[M]` 마커 대상 파일이 1개 이상일 때만 실행. `[C]` 전용 계획이면 스킵.
+
+`Grep`으로 `[M]` 대상 파일명을 테스트 디렉토리에서 검색하여, 관련 테스트 파일/함수 목록을 해당 Task의 Technical Notes에 기록한다. 테스트 디렉토리 미존재 시 스킵.
+
 ### Step 5: Build Phases
 
 Phase를 구성한다.

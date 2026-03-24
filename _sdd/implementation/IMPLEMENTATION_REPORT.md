@@ -1,79 +1,64 @@
-# Implementation Report: Source 필드 코드 매핑
+## Implementation Report: gstack Patterns for SDD Skills
 
-**날짜**: 2026-03-09
-**Feature Draft**: `_sdd/drafts/feature_draft_source_field_code_mapping.md`
-**토론 근거**: `_sdd/discussion/discussion_spec_code_mapping.md`
-
-## Progress Summary
-
-- **Total Tasks**: 6
-- **Completed**: 6
-- **Failed**: 0
-- **All Passing**: Yes
+### Progress Summary
+- Total Tasks: 9 | Completed: 9 | Tests Added: 0 (markdown-only repo) | All Passing: N/A
 
 ### Parallel Execution Stats
-- Total Groups Dispatched: 3
-- Tasks Run in Parallel: 6 (3 groups × 2 tasks)
-- Sequential Fallbacks: 0
+- Phase 1: 7 tasks parallel (+ 5 Mirror Notice syncs) | Phase 2: 2 tasks sequential
 - Sub-agent Failures: 0
 
-## Completed Tasks
+### Completed Tasks
 
-### Phase 1: 핵심 로직 (spec-create + spec-update-done)
+#### Phase 1: Existing File Modifications (Parallel)
+- [x] Task 1: implementation에 Verification Gate + Regression Iron Rule 추가
+- [x] Task 2: implementation-review에 Fresh Verification 규칙 추가
+- [x] Task 3: feature-draft에 Failure Modes 테이블 섹션 추가
+- [x] Task 4: implementation-plan에 Test Coverage Mapping 추가
+- [x] Task 5: pr-review에 Scope Drift Detection + Fix-First 추가
+- [x] Task 6: spec-review에 코드 분석 지표 추가
+- [x] Task 7: sdd-autopilot에 Audit Trail + Taste Decision 추가
 
-#### Group 1 (병렬):
-- [x] **Task 1**: spec-create SKILL.md에 Source 필드 생성 지시사항 추가
-  - Step 2: Codebase Existence Check 추가 (코드 유무 판단 기준)
-  - Step 3: 컴포넌트 테이블에 조건부 Source 필드 행 추가
-  - Best Practices > Writing Quality: "Link to Code" → Source 필드 포맷 규격으로 확장
-- [x] **Task 3**: spec-update-done SKILL.md에 Source 필드 갱신 로직 추가
-  - Step 2: Source Drift 감지 카테고리 추가
-  - Step 4: Hybrid approach (구현 산출물 우선 + 코드 탐색 보완) 갱신 절차 추가
-  - Best Practices > Preservation: Source mappings 보존 규칙 추가
+#### Phase 2: New File Creation (Sequential)
+- [x] Task 8: investigate 에이전트 생성
+- [x] Task 9: investigate 래퍼 스킬 생성
 
-#### Group 2 (병렬):
-- [x] **Task 2**: spec-create 템플릿/예시에 Source 필드 반영
-  - `references/template-full.md`: Source 필드 행 + 조건부 포함 주석
-  - `examples/complex-project-spec.md`: Product Service, Order Service에 Source 테이블
-  - `examples/simple-project-spec.md`: URL Service에 Source 테이블
-- [x] **Task 4**: spec-update-done 예시에 Source 필드 갱신 사례 추가
-  - `examples/changelog-entry.md`: Source 필드 추가/갱신/삭제 패턴 예시
-  - `examples/review-report.md`: Source Drift 4가지 시나리오 예시
+### Files Modified/Created
 
-### Phase 2: 보존/검증 규칙 (spec-rewrite + spec-review)
+| File | Marker | Task | Change |
+|------|--------|------|--------|
+| `.claude/agents/implementation.md` | [M] | 1 | Hard Rules에 Verification Gate + Regression Iron Rule 추가 |
+| `.claude/skills/implementation/SKILL.md` | [M] | 1 | Mirror Notice 동기화 |
+| `.claude/agents/implementation-review.md` | [M] | 2 | Hard Rules #8 Fresh Verification 추가 |
+| `.claude/skills/implementation-review/SKILL.md` | [M] | 2 | Mirror Notice 동기화 |
+| `.claude/agents/feature-draft.md` | [M] | 3 | Step 4 Part 1 템플릿에 Failure Modes 섹션 추가 |
+| `.claude/skills/feature-draft/SKILL.md` | [M] | 3 | Mirror Notice 동기화 |
+| `.claude/agents/implementation-plan.md` | [M] | 4 | Step 3 뒤에 Test Coverage Mapping 하위 단계 추가 |
+| `.claude/skills/implementation-plan/SKILL.md` | [M] | 4 | Mirror Notice 동기화 |
+| `.claude/skills/pr-review/SKILL.md` | [M] | 5 | Step 2.5 Scope Drift + Step 5.5 Fix-First + Output Format 추가 |
+| `.claude/agents/spec-review.md` | [M] | 6 | Step 3.5 Code Analysis Metrics + Output Format 지표 테이블 추가 |
+| `.claude/skills/spec-review/SKILL.md` | [M] | 6 | Mirror Notice 동기화 |
+| `.claude/skills/sdd-autopilot/SKILL.md` | [M] | 7 | Step 7.2에 Audit Trail + Step 8.2에 Taste Decisions 추가 |
+| `.claude/agents/investigate.md` | [C] | 8 | 범용 체계적 디버깅 에이전트 신규 생성 |
+| `.claude/skills/investigate/SKILL.md` | [C] | 9 | investigate 래퍼 스킬 신규 생성 |
 
-#### Group 1 (병렬):
-- [x] **Task 5**: spec-rewrite SKILL.md에 Source 필드 보존 규칙 추가
-  - Hard Rules #6: Source 필드 보존 규칙
-  - Step 7 Validation: Source 필드 보존 검증 항목
-- [x] **Task 6**: spec-review SKILL.md에 Source 필드 검증 항목 추가
-  - Step 3: Source-field drift (파일/클래스/함수 존재 검증 3항목)
-  - Drift Type Mapping: Source-field → Low severity
+### Mirror Notice Sync Verification
 
-## Modified Files
-
-| File | Lines Changed | Task |
-|------|--------------|------|
-| `.claude/skills/spec-create/SKILL.md` | +21, -1 | Task 1 |
-| `.claude/skills/spec-create/references/template-full.md` | +7 | Task 2 |
-| `.claude/skills/spec-create/examples/complex-project-spec.md` | +15 | Task 2 |
-| `.claude/skills/spec-create/examples/simple-project-spec.md` | +5 | Task 2 |
-| `.claude/skills/spec-update-done/SKILL.md` | +29 | Task 3 |
-| `.claude/skills/spec-update-done/examples/changelog-entry.md` | +35 | Task 4 |
-| `.claude/skills/spec-update-done/examples/review-report.md` | +68 | Task 4 |
-| `.claude/skills/spec-rewrite/SKILL.md` | +2 | Task 5 |
-| `.claude/skills/spec-review/SKILL.md` | +5 | Task 6 |
-| **Total** | **+186, -1** | |
-
-## Quality Assessment
-
-### Cross-Phase Review
-- **일관성**: 모든 스킬에서 동일한 Source 필드 포맷 규격 사용
-- **보존 체인**: spec-create(생성) → spec-update-done(갱신) → spec-rewrite(보존) → spec-review(검증) 전 라이프사이클 커버
-- **조건부 로직**: 코드 없는 프로젝트에서 Source 필드 생략이 모든 관련 스킬에서 일관되게 처리
+| Agent | Skill | Synced |
+|-------|-------|--------|
+| implementation.md | implementation/SKILL.md | YES |
+| implementation-review.md | implementation-review/SKILL.md | YES |
+| feature-draft.md | feature-draft/SKILL.md | YES |
+| implementation-plan.md | implementation-plan/SKILL.md | YES |
+| spec-review.md | spec-review/SKILL.md | YES |
 
 ### Issues Found
-없음. Critical/Quality/Improvement 이슈 모두 0건.
 
-## Conclusion
-**READY** — 모든 6개 task가 성공적으로 완료됨. 스펙 관련 4개 스킬에 Source 필드 코드 매핑 기능이 추가됨.
+없음.
+
+### Spec Drift Notes
+
+`_sdd/spec/main.md`에 10개 결정 사항이 반영되어야 한다. `spec-update-todo` 사용을 권장한다 (feature draft Part 1 참조: `_sdd/drafts/feature_draft_gstack_patterns.md`).
+
+### Conclusion
+
+**READY** -- 9개 태스크 모두 완료. 에이전트/스킬 파일 수정 + 신규 파일 생성 + Mirror Notice 동기화 완료.

@@ -78,6 +78,16 @@ scope가 넓으면 핵심 spec 문서를 우선한다.
 - MISSING
 - UNTESTED
 
+### Step 3.5: Code Analysis Metrics
+
+`Bash`, `Grep`, `Glob`으로 세 가지 지표를 수집한다:
+
+| 지표 | 측정 방법 | 용도 |
+|------|----------|------|
+| **Hotspots** | `git log --format='' --name-only \| sort \| uniq -c \| sort -rn \| head -20` | 자주 변경되는 파일 → 리뷰 우선순위 |
+| **Focus Score** | 변경 파일 중 스펙 컴포넌트에 속하는 비율 | 변경 집중도 평가 |
+| **Test Coverage** | 스펙 기능별 관련 테스트 파일 존재 여부 (`Grep` 검색) | 테스트 갭 식별 |
+
 ### Step 4: Severity and Decision
 
 severity 규칙:
@@ -129,7 +139,15 @@ severity 규칙:
 ## 3. Drift Summary
 ...
 
-## 4. Recommended Next Actions
+## 4. Code Analysis Metrics
+
+| Metric | Value | Notes |
+|--------|-------|-------|
+| Top Hotspots | file1 (N), file2 (N) | 자주 변경되는 파일 |
+| Focus Score | X% | 스펙 컴포넌트 집중도 |
+| Test Coverage | X/Y features covered | 스펙 기능별 테스트 현황 |
+
+## 5. Recommended Next Actions
 ...
 ```
 

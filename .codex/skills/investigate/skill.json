@@ -1,0 +1,6 @@
+{
+  "name": "investigate",
+  "description": "Use this skill when the user asks to \"investigate\", \"debug\", \"find root cause\", \"diagnose\", \"why is this failing\", \"track down bug\", or wants systematic one-shot debugging of a specific issue. For long-running iterative debugging processes, use ralph-loop-init instead.",
+  "instruction_file": "SKILL.md",
+  "version": "1.0.0"
+}

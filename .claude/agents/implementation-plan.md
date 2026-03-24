@@ -116,6 +116,12 @@ f. 중복 파일이 있는 Task는 순차 실행으로 표시
 
 Task가 너무 크면 하위 Task로 분할한다. 인프라/테스트/문서 Task도 누락하지 않는다.
 
+### Test Coverage Mapping (조건부)
+
+> `[M]` 마커 대상 파일이 1개 이상일 때만 실행. `[C]` 전용 계획이면 스킵.
+
+`Grep`으로 `[M]` 대상 파일명을 테스트 디렉토리에서 검색하여, 관련 테스트 파일/함수 목록을 해당 Task의 Technical Notes에 기록한다. 테스트 디렉토리 미존재 시 스킵.
+
 ### Step 4: Phase Decomposition
 
 **Tools**: — (자율 판단)

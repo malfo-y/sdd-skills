@@ -242,6 +242,10 @@ FOR EACH step IN pipeline_steps:
   4. Exit Criteria 검증 (아래 테이블 참조)
   5. 통과 → 로그 완료 기록 + 다음 단계
      미충족 → 에러 핸들링(7.4) → 재시도 또는 중단
+
+  ## Audit Trail
+  6. 모든 자동 결정을 로그에 기록: `[DECISION] <what> -- <why> -- <taste: yes/no>`
+     - Taste decision = "합리적으로 다르게 판단할 수 있는 것" (예: 테스트 전략 선택, 병렬 vs 순차 결정, 에러 복구 방식)
 ```
 
 **단계별 Exit Criteria**:
@@ -334,11 +338,12 @@ ON ERROR:
 
 #### 8.2 최종 정리 보고서
 
-`_sdd/pipeline/report_<topic>_<timestamp>.md` 작성. 필수 3항목:
+`_sdd/pipeline/report_<topic>_<timestamp>.md` 작성. 필수 항목:
 
 1. **뭘 했는가**: 실행 단계, 에이전트 목록, 산출물 경로, review-fix 횟수, 테스트 여부
 2. **어떻게 나왔는가**: 각 단계 성공/실패, 이슈 해결 상태, 테스트 통과율, 스펙 동기화
 3. **뭘 더 해야 하는가**: 미완료 단계, 제한사항/리스크, 후속 작업 제안
+4. **Taste Decisions**: 파이프라인 중 taste decision으로 분류된 자동 결정 목록 (what/why/대안)
 
 > 실패/중단 시에도 반드시 보고서 작성.
 

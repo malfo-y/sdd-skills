@@ -34,7 +34,8 @@
         "./.claude/skills/spec-update-todo",
         "./.claude/skills/spec-upgrade",
         "./.claude/skills/write-phased",
-        "./.claude/skills/sdd-autopilot"
+        "./.claude/skills/sdd-autopilot",
+        "./.claude/skills/investigate"
       ],
       "agents": [
         "./.claude/agents/write-skeleton.md",
@@ -45,7 +46,8 @@
         "./.claude/agents/ralph-loop-init.md",
         "./.claude/agents/spec-review.md",
         "./.claude/agents/spec-update-done.md",
-        "./.claude/agents/spec-update-todo.md"
+        "./.claude/agents/spec-update-todo.md",
+        "./.claude/agents/investigate.md"
       ]
     }
   ]
