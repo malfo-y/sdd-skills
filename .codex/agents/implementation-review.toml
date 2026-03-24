@@ -51,7 +51,7 @@ stale 판단 예시:
 기존 파일이 있으면:
 - `<project-root>/_sdd/implementation/prev/PREV_IMPLEMENTATION_REVIEW_<timestamp>.md`로 아카이브 후 새 파일 생성
 
-리포트는 findings-first로 작성한다.
+리포트는 findings-first로 작성하며, severity는 `Critical / High / Medium / Low` 네 단계로 정리한다.
 
 ```markdown
 # Implementation Review: [Project Name]
@@ -64,9 +64,11 @@ stale 판단 예시:
 ## 1. Findings
 ### Critical
 - [finding]
-### Quality
+### High
 - [finding]
-### Improvements
+### Medium
+- [finding]
+### Low
 - [finding]
 
 ## 2. Progress Overview
@@ -160,8 +162,11 @@ Tier 3:
 발견 사항을 아래 기준으로 분류한다.
 
 - **Critical**: 핵심 기능 누락, 실패 테스트, 보안 취약점, 데이터 손실 위험, breaking change
-- **Quality**: 누락 테스트, 패턴 불일치, 에러 처리 갭, 성능 우려, stale plan
-- **Improvements**: 리팩터링, 문서화, 엣지 케이스, 유지보수성 개선
+- **High**: 핵심 acceptance criteria 일부 불충족, 주요 에러 처리 갭, 중요한 통합 깨짐, 즉시 수정이 필요한 stale plan/drift
+- **Medium**: 비핵심 테스트 누락, 패턴 불일치, 중간 수준 성능/유지보수성 우려, 후속 수정이 필요한 구현 품질 문제
+- **Low**: 리팩터링, 문서화, 가독성, 선택적 엣지 케이스, 추후 개선 권고
+
+`Critical / High / Medium`은 autopilot review-fix loop의 수정 대상이고, `Low`는 기본적으로 로그/후속 권고 대상이다.
 
 리포트는 항상 findings-first로 시작한다.
 
@@ -182,7 +187,7 @@ Tier 3:
 |------|------|
 | 테스트 실행 실패 | `_sdd/env.md` 확인 후 실패 사실과 원인을 리포트에 기록 |
 | `_sdd/env.md` 없음 | 코드 분석 중심 리뷰로 진행 |
-| Plan이 stale | Tier 2로 fallback하고 stale 사실을 Quality finding으로 기록 |
+| Plan이 stale | Tier 2로 fallback하고 stale 사실을 High 또는 Medium finding으로 기록 |
 | Spec이 비구조화 | 전체적 정합성 판단으로 전환하고 한계를 적는다 |
 | 대규모 코드베이스 | 핵심 컴포넌트 중심으로 범위를 줄이고 가정을 적는다 |
 | 기준이 모호함 | UNTESTED로 표시하고 판단 근거를 적는다 |

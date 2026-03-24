@@ -204,7 +204,7 @@ version: <minor 버전 업>
 - Phase 1 (Interactive): Reference Loading(SDD 철학 + 스킬 카탈로그) → 사용자와 인라인 discussion → 코드베이스 탐색 → Reasoning 기반 오케스트레이터 생성 → Orchestrator Verification(구조 + 철학 검증). 시작점/종료점 감지를 통해 기존 산출물을 활용하거나 파이프라인 범위를 조절
 - Phase 1.5 (Checkpoint): 검증된 오케스트레이터 + Pre-flight Check 결과를 사용자에게 제시 → 확인/수정 → 실행 승인
 - Phase 2 (Autonomous): 승인된 오케스트레이터가 에이전트 파이프라인을 자율 실행 → 마일스톤 텍스트 출력 + `_sdd/pipeline/` 로그 기록 (Meta + Status 테이블 포함)
-- 종료 조건: review-fix 루프 최대 3회, critical/high = 0이면 종료. 에러 시 3회 재시도. **Hard Rule #9**: review가 포함된 파이프라인에서는 review → fix → re-review 사이클이 필수이며, 리뷰만 하고 끝나는 것은 허용하지 않는다. 부분 파이프라인/재개에서도 동일 적용. `implementation-review`는 review 포함 시 조건부 핵심 단계로 취급된다. **Hard Rule #10**: 모든 파이프라인 단계는 Execute + Verify 두 페이즈를 반드시 거쳐야 한다.
+- 종료 조건: review-fix 루프 최대 3회, critical/high/medium = 0이면 종료하며 low는 로그/후속 권고로 남길 수 있다. 에러 시 3회 재시도. **Hard Rule #9**: review가 포함된 파이프라인에서는 review → fix → re-review 사이클이 필수이며, 리뷰만 하고 끝나는 것은 허용하지 않는다. 부분 파이프라인/재개에서도 동일 적용. `implementation-review`는 review 포함 시 조건부 핵심 단계로 취급된다. **Hard Rule #10**: 모든 파이프라인 단계는 Execute + Verify 두 페이즈를 반드시 거쳐야 한다.
 - 재개: Status 테이블에서 첫 번째 미완료 스텝을 찾아 해당 스텝부터 실행 재개
 
 ### Common Hard Rules
@@ -509,7 +509,7 @@ PR 생성 → pr-spec-patch → pr-review → (merge 후) spec-update-done
 | **Source** | `.claude/skills/sdd-autopilot/SKILL.md` (v2.0.0) |
 |            | `.claude/skills/sdd-autopilot/references/sdd-reasoning-reference.md`: SDD 철학 + 스킬 카탈로그 (reasoning 기반 파이프라인 구성의 핵심 입력) |
 |            | `.claude/skills/sdd-autopilot/examples/sample-orchestrator.md`: 오케스트레이터 예시 |
-|            | `.codex/skills/sdd-autopilot/SKILL.md` (v2.0.1) |
+|            | `.codex/skills/sdd-autopilot/SKILL.md` (v2.2.0) |
 |            | `.codex/skills/sdd-autopilot/references/sdd-reasoning-reference.md`: Codex용 SDD 철학 + 스킬 카탈로그 |
 |            | `docs/AUTOPILOT_GUIDE.md`: 사용 가이드 + Codex 검증 체크리스트 |
 | **Process** | Step 0 (Pipeline State Detection): 기존 미완료 파이프라인 감지 → 재개/새로 시작 선택 → Phase 1 (Interactive): Step 1 Reference Loading (SDD 철학 + 스킬 카탈로그 내재화) → Step 2 요청 분석 + 인라인 discussion (시작점/종료점 감지, 산출물 스캔, Review-Fix 사이클 필수 검증) → Step 3 코드베이스 탐색 → Step 4 Reasoning 기반 오케스트레이터 생성 + Pre-flight Check(`_sdd/env.md`) → Step 5 Orchestrator Verification (구조 6항목 + 철학 6항목 = 12항목 검증, Producer-Reviewer 패턴) → Phase 1.5 (Checkpoint): 검증 결과 + 파이프라인 요약 + Pre-flight Check → 사용자 확인 → Phase 2 (Autonomous): Claude는 `.claude/agents/`, Codex는 `.codex/agents/`를 직접 사용해 자율 파이프라인 실행 (Execute -> Verify 루프) + 마일스톤 로그 (Meta + Status 테이블). Codex의 장문 planning/review 단계는 필요 시 nested `write_phased`를 사용한다. 완료 후 오케스트레이터를 `_sdd/pipeline/orchestrators/<topic>_<ts>/`로 아카이브. **Hard Rule #9**: review 포함 시 review -> fix -> re-review 사이클 필수. **Hard Rule #10**: 모든 단계에 Execute -> Verify 필수. `implementation-review`는 조건부 핵심 단계 |
@@ -704,7 +704,7 @@ PR 생성 → pr-spec-patch → pr-review → (merge 후) spec-update-done
 | **Purpose** | 장기 실행 프로세스(ML 트레이닝, e2e 테스트, 빌드 파이프라인, 통합 테스트 등)의 자동화 디버그 루프 디렉토리/파일 생성 |
 | **Why** | 장기 실행 프로세스의 반복 디버그 루프를 표준화하여 일관된 실험/테스트 환경을 빠르게 구성한다. |
 | **Input** | 프로젝트 코드, 대상 프로세스 스크립트 |
-| **Output** | `ralph/` 디렉토리 (config.sh, PROMPT.md, run.sh, state.md, CHECKS.md) |
+| **Output** | `ralph/` 디렉토리 (run.sh, state.md, CHECKS.md) |
 | **Source** | `.claude/agents/ralph-loop-init.md` (에이전트 정의, 전체 로직) |
 |            | `.claude/skills/ralph-loop-init/SKILL.md` (래퍼) |
 | **실행 형태** | 래퍼 → 에이전트 (Agent Wrapper 패턴) |

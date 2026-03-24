@@ -19,7 +19,7 @@ version: 2.0.0
 > 프로세스 완료 후 아래 기준을 자체 검증한다. 미충족 항목은 해당 단계로 돌아가 수정한다.
 
 - [ ] `ralph/` 디렉터리가 생성된다.
-- [ ] `CHECKS.md`, `state.md`, `run.sh`가 생성된다.
+- [ ] `CHECKS.md`, `state.md`, 실행 가능한 `run.sh`가 생성된다.
 - [ ] 대상 프로세스의 성공 조건과 관찰 포인트가 문서화된다.
 - [ ] 외부 example/reference 없이도 기본 워크스페이스를 만들 수 있다.
 
@@ -29,6 +29,7 @@ version: 2.0.0
 2. `ralph/` 초기화는 반복 실행 가능한 구조여야 한다.
 3. 성공 조건은 추상적이지 않고 관찰 가능한 체크로 적는다.
 4. 사용자가 특정 프로세스를 명시하지 않으면 현재 프로젝트의 long-running 검증 루프를 best-effort로 추론한다.
+5. `run.sh`는 `#!/usr/bin/env bash` shebang과 실행 권한을 가져야 한다.
 
 ## Required Artifacts
 
@@ -84,10 +85,12 @@ check는 binary하거나 명확한 상태 판정이 가능해야 한다.
 `run.sh`는 기본 실행/재실행 엔트리포인트다.
 
 포함할 내용:
+- `#!/usr/bin/env bash` shebang과 안전한 기본 shell option
 - 환경 준비 힌트
 - 실제 실행 명령
 - 로그/결과 저장 위치
 - 실패 시 재시도 또는 상태 갱신에 필요한 최소 정보
+- 파일 저장 후 실행 권한 부여 (`chmod +x`)
 
 ## Error Handling
 

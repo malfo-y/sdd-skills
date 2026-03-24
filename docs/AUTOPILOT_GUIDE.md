@@ -285,7 +285,7 @@ feature-draft agent → spec-update-todo agent → implementation-plan agent
 [sdd-autopilot] Step 2/5: implementation-plan 완료 -- _sdd/implementation/IMPLEMENTATION_PLAN.md
 [sdd-autopilot] Step 3/5: implementation 완료 -- 7개 파일 생성/수정
 [sdd-autopilot] Review-Fix Round 1/3: critical 1건, high 1건 -- 수정 중...
-[sdd-autopilot] Review-Fix Round 2/3: critical 0건, high 0건 -- 리뷰 통과
+[sdd-autopilot] Review-Fix Round 2/3: critical 0건, high 0건, medium 0건 -- 리뷰 통과
 [sdd-autopilot] 테스트 통과 (18/18)
 [sdd-autopilot] Step 5/5: spec-update-done 완료 -- _sdd/spec/main.md 업데이트
 [sdd-autopilot] 완료 -- 총 소요 시간: 20분
@@ -316,7 +316,7 @@ feature-draft agent → spec-update-todo agent → implementation-plan agent
 [sdd-autopilot] Step 3/7: implementation-plan 완료 -- 3 phase로 분할
 [sdd-autopilot] Step 4/7: implementation 완료 -- 18개 파일 생성/수정
 [sdd-autopilot] Review-Fix Round 1/3: critical 2건 -- 수정 중...
-[sdd-autopilot] Review-Fix Round 2/3: critical 0건, high 0건 -- 리뷰 통과
+[sdd-autopilot] Review-Fix Round 2/3: critical 0건, high 0건, medium 0건 -- 리뷰 통과
 [sdd-autopilot] Step 6/7: 테스트 통과 (32/32)
 [sdd-autopilot] Step 7/7: spec-update-done 완료
 [sdd-autopilot] 완료 -- 총 소요 시간: 45분

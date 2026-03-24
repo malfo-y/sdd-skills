@@ -22,6 +22,8 @@ version: 2.2.0
 - [ ] AC6: 테스트/검증 결과가 사용자에게 명시적으로 보고되었다 (통과/실패 건수, 실패 시 원인 요약, 수동 확인 필요 항목).
 - [ ] AC7: 최종 결과와 후속 조치를 `_sdd/pipeline/report_<topic>_<timestamp>.md`에 정리했다.
 - [ ] AC8: `_sdd/spec/` 직접 수정은 `spec_update_done` 또는 `spec_update_todo` 에이전트에만 위임했다.
+- [ ] AC9: Phase 2 진입 전에 Step 6 checkpoint에서 pre-flight 결과를 공유하고 explicit approval을 받았다.
+- [ ] AC10: 완료된 active orchestrator를 `_sdd/pipeline/orchestrators/<topic>_<timestamp>/`에 아카이브했다.
 
 ## SDD Lens
 
@@ -50,6 +52,8 @@ version: 2.2.0
 9. 모든 단계는 Execute → Verify를 거친다. 생성형 단계도 실제 실행/결과 검증 없이 완료로 처리하지 않는다.
 10. `spawn_agent(...)`로 시작한 실행 단위는 `wait_agent(...)`로 반드시 수집하고, 필요하면 `send_input(...)` 또는 재-spawn으로 보완한다.
 11. 한국어를 기본으로 하되 사용자 언어를 따른다.
+12. Phase 2 진입 전에는 `_sdd/env.md`와 `.codex/config.toml` 기반 pre-flight를 수행하고 explicit approval을 받아야 한다.
+13. 완료된 파이프라인의 active orchestrator는 `_sdd/pipeline/orchestrators/<topic>_<timestamp>/`에 아카이브한다.
 
 ## Agent Lifecycle Contract
 
@@ -165,13 +169,23 @@ autopilot에서 custom agent 또는 explorer를 호출할 때의 표준 순서:
 - 각 step의 input/output이 연결되는가
 - review-fix, Execute → Verify, test, final report 규칙이 포함되는가
 - 시작점/종료점과 기존 산출물 활용이 일관적인가
+- `_sdd/env.md`에서 테스트 명령, 리소스, 환경 갭을 설명 가능한가
+- `.codex/config.toml`에서 `agents.max_depth`, `agents.max_threads`가 계획된 nested writing / 병렬 fan-out과 충돌하지 않는가
 
 그 후 사용자에게 아래만 짧게 공유한다.
 
 - 파이프라인 요약
 - 시작점과 종료점
 - 주요 산출물
+- pre-flight 결과 (`_sdd/env.md`, `.codex/config.toml`, 테스트/리소스 갭)
 - 주된 리스크나 가정
+
+checkpoint 규칙:
+
+- `request_user_input` 또는 동등한 단일 승인 질문으로 `승인 후 실행`, `파이프라인 수정`, `중단` 중 하나를 받는다.
+- `승인 후 실행`일 때만 Step 7로 진행한다.
+- `파이프라인 수정`이면 Step 4 또는 Step 5로 돌아가 오케스트레이터를 조정한 뒤 Step 6을 다시 수행한다.
+- `중단`이면 active orchestrator를 유지하고 현재 상태를 로그에 남긴 뒤 종료한다.
 
 ### Step 7: Execute the Pipeline
 
@@ -230,6 +244,9 @@ MAX 도달 시: critical/high 잔존 → 중단, medium만 잔존 → 로그 기
 - 테스트 결과
 - 남은 리스크, open question, 후속 추천
 - **Taste Decisions**: 파이프라인 중 taste decision으로 분류된 자동 결정 목록 (what/why/대안)
+- active orchestrator archive 경로
+
+그 후 active orchestrator를 `_sdd/pipeline/orchestrators/<topic>_<timestamp>/`에 아카이브한다. 아카이브에는 최소한 `SKILL.md`와 실행 중 생성된 관련 메타데이터를 포함해야 하며, 다음 실행에서 in-progress 상태로 오인되지 않도록 active 경로를 정리한다.
 
 재개가 가능하도록 로그와 보고서가 현재 상태를 충분히 설명해야 한다.
 
@@ -240,6 +257,7 @@ MAX 도달 시: critical/high 잔존 → 중단, medium만 잔존 → 로그 기
 - `.codex/skills/orchestrator_<topic>/SKILL.md`
 - `_sdd/pipeline/log_<topic>_<timestamp>.md`
 - `_sdd/pipeline/report_<topic>_<timestamp>.md`
+- `_sdd/pipeline/orchestrators/<topic>_<timestamp>/`
 
 조건부 산출물:
 
@@ -265,6 +283,7 @@ MAX 도달 시: critical/high 잔존 → 중단, medium만 잔존 → 로그 기
 | reference 파일 누락 | 오케스트레이터 생성 중단, 누락 파일 보고 |
 | 재개 후보가 여러 개 | 후보 요약 후 사용자 선택 요청 |
 | explorer 결과 부족 | 범위를 좁혀 재탐색하거나 보수적으로 파이프라인 구성 |
+| pre-flight에서 설정/리소스 갭 발견 | 승인 전 리스크를 요약하고 파이프라인 수정 또는 중단 선택을 받음 |
 | step 검증 실패 | 다음 단계 진행 중단, 보완 후 재검증 |
 | review 단계 실패 | fix/re-review 없이 종료하지 않음 |
 | 테스트 환경 불명확 | `_sdd/env.md` 확인 후 실패 사실과 제약 기록 |
@@ -272,4 +291,3 @@ MAX 도달 시: critical/high 잔존 → 중단, medium만 잔존 → 로그 기
 ## Final Check
 
 Acceptance Criteria가 모두 만족되었나 검증한다. 미충족 항목이 있으면 해당 단계로 돌아가 수정한다.
-

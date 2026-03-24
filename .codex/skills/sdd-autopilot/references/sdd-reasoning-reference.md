@@ -183,9 +183,9 @@ autopilot이 생성한 오케스트레이터 파이프라인에 조합하는 스
 - **Role**: 장시간 프로세스 자동 디버깅 루프 설정 + 실행
 - **Agent**: `ralph_loop_init`
 - **Input**: 코드 파일 + 실행/검증 명령
-- **Output**: `ralph/` 디렉토리 (run.sh, state.md, PROMPT.md)
+- **Output**: `ralph/` 디렉토리 (run.sh, state.md, CHECKS.md)
 - **Pre-condition**: 구현 완료 + 반복 검증이 필요한 상황
-- **Post-condition**: ralph/ 존재 + run.sh 실행 가능 + state.md 존재
+- **Post-condition**: ralph/ 존재 + run.sh 실행 가능 + state.md 존재 + CHECKS.md 존재
 - **Reasoning note**: 반복 실행→분석→수정 사이클이 필요한 경우 사용 (ML 학습, E2E 테스트, 빌드 파이프라인, 통합 검증 등).
 
 ### 2.3 비오케스트레이션 스킬 (참고용 목록)

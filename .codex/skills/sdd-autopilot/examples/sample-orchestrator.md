@@ -84,18 +84,19 @@ Feature draft: `_sdd/drafts/feature_draft_jwt_auth.md`
 ## Review-Fix Loop
 
 - **최대 반복**: 3회
-- **종료 조건**: critical = 0 AND high = 0
-- **수정 대상**: critical/high만
+- **종료 조건**: critical = 0 AND high = 0 AND medium = 0
+- **수정 대상**: critical/high/medium
 
 ### Review 프롬프트
 - 보안 취약점
 - 에러 핸들링 완전성
 - 기존 코드 패턴 일관성
 - 테스트 커버리지
+- severity를 critical/high/medium/low로 분류
 
 ### Fix 프롬프트
-- critical/high 이슈만 수정
-- medium/low는 로그 기록만
+- critical/high/medium 이슈를 수정
+- low는 로그 기록만
 
 ## Test Strategy
 
@@ -142,7 +143,7 @@ Feature draft: `_sdd/drafts/feature_draft_jwt_auth.md`
 - **수정 결과**: 완료
 
 ### review-fix -- Round 2/3
-- **리뷰 결과**: critical 0건, high 0건, medium 2건, low 0건
+- **리뷰 결과**: critical 0건, high 0건, medium 0건, low 2건
 - **수정 결과**: 종료 조건 충족
 
 ## 최종 요약
