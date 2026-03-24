@@ -69,6 +69,10 @@ version: 1.1.0
 - 충분한 방향성이 확보됨
 - 최대 라운드 도달
 
+**Gate 3→4**: 미결 질문(open_questions)을 확인한다.
+- 0건 → Step 4 진행
+- 1건+ → 미결 질문 목록을 제시하고 추가 논의 여부를 확인한다. 추가 논의 선택 시 Step 3 루프 복귀, 그대로 정리 선택 시 Step 4 진행.
+
 ### Step 4: Write the Discussion Summary
 
 `_sdd/discussion/discussion_<title>.md`에 아래를 저장한다.

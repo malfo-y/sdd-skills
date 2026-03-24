@@ -103,7 +103,7 @@ WHILE round < MAX_ROUNDS:
   3. 사용자 응답 분석 → 내부 상태 업데이트
   4. 필요 시 mid-discussion sub-agent 리서치 수행
 
-  IF 사용자가 "토론 종료" 선택 OR "정리해줘" 입력 → Step 4
+  IF 사용자가 "토론 종료" 선택 OR "정리해줘" 입력 → Gate 3→4
 ```
 
 #### 3.2 질문 생성 전략
@@ -125,6 +125,12 @@ WHILE round < MAX_ROUNDS:
 #### 3.4 중간 상태 추적
 
 매 3라운드마다 (또는 사용자 요청 시) 핵심 논점·결정 사항·미결 질문·실행 항목 카운트를 중간 요약 테이블로 제시.
+
+**Gate 3→4**: `open_questions`를 확인한다.
+- 미결 질문 0건 → Step 4 진행
+- 미결 질문 1건+ → 미결 질문 목록을 제시하고 `AskUserQuestion`: "미결 질문이 N건 남아 있습니다. 추가 논의하시겠습니까?"
+  - "추가 논의" → Step 3 루프 복귀 (미결 질문 중심으로 probing)
+  - "그대로 정리 (미결로 기록)" → Step 4 진행
 
 ### Step 4: Discussion Summary (토론 정리)
 
