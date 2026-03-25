@@ -190,14 +190,15 @@ Implement this feature: [feature description]
 /spec-update-done
 ```
 
-### 7. ML Training Debug Loop
+### 7. Long-Running Debug Loop
 
 ```bash
 /ralph-loop-init
-# Generate automated training debug loop structure in ralph/ directory
+# Generate automated debug loop structure in ralph/ directory
 ```
 
-> Generates an LLM-based automated debug loop for long-running processes.
+> Generates an LLM-based debug loop for long-running processes such as ML, e2e, build, and batch validation.
+> Typical outputs include `CHECKS.md`, `config.sh`, `PROMPT.md`, `run.sh`, `state.md`, and a `results/` directory.
 
 ### 8. PR-Based Spec Patch and Review
 

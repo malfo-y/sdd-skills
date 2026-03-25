@@ -198,8 +198,11 @@ Feature draft: `_sdd/drafts/feature_draft_jwt_auth.md`
 
 **Phase B-1: 설정 검증**
 - `ralph/` 존재
+- `ralph/config.sh` 존재
+- `ralph/PROMPT.md` 존재
 - `ralph/run.sh` 실행 가능
 - `ralph/state.md` 존재
+- `ralph/CHECKS.md` 존재
 
 **Phase A-2: 실제 실행**
 - 학습/디버깅 루프 실행

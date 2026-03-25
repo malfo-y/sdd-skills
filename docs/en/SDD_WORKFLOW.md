@@ -734,7 +734,7 @@ This skill is specifically designed for **debugging where a single turn takes a 
 - Infrastructure/deployment debugging — long build/deploy cycles
 - Data pipeline debugging — needs result verification after large-scale processing
 
-**Core principle**: The cycle `LLM analyzes → writes action.sh → executes script → saves results → LLM analyzes again` repeats until the phase is DONE.
+**Core principle**: Define validation in `CHECKS.md`, freeze runtime variables in `config.sh`, let Codex read `PROMPT.md` and write `action.sh`, execute it through `run.sh`, then refresh `state.md` and `results/` until the phase reaches DONE.
 
 ### Workflow
 
@@ -744,49 +744,53 @@ This skill is specifically designed for **debugging where a single turn takes a 
 /ralph-loop-init
 ```
 
-The following files are generated in the `ralph/` directory:
+The following core files are generated in the `ralph/` directory:
 
 | File | Role |
 |------|------|
-| `PROMPT.md` | System prompt sent to the LLM (project context, instructions) |
-| `state.md` | Current state (phase, iteration, errors, checkpoints, etc.) |
-| `config.sh` | Configuration (timeout, completion promise, etc.) |
-| `run.sh` | Main loop script |
-| `results/` | Directory for storing results per iteration |
+| `CHECKS.md` | Success criteria, failure signals, observation points, and human evidence to inspect |
+| `config.sh` | Loop control variables and project-specific runtime variables |
+| `PROMPT.md` | Loop-specific instructions that Codex reads each iteration |
+| `state.md` | Current state (phase, iteration, blockers, latest result summary, etc.) |
+| `run.sh` | Executable main entrypoint (`#!/usr/bin/env bash`, `--reset`, repeatable execution) |
+| `results/`, `logs/` | Output directories for results, archived actions, and diagnostics |
 
-#### Step 2: Write the Prompt
+#### Step 2: Define Checks and Context
 
-Customize `ralph/PROMPT.md` for your project. Since the LLM reads this prompt and analyzes state every iteration, clearly describe the project context and debugging goals.
+Fill out `ralph/CHECKS.md` with success criteria and validation signals, `ralph/config.sh` with runtime variables and safety knobs, and `ralph/PROMPT.md` with the phase machine and Codex iteration protocol.
 
 #### Step 3: Run the Loop
 
 ```bash
-bash ralph/run.sh          # Start the loop
-bash ralph/run.sh --reset  # Reset state and restart
+bash ralph/run.sh  # Start or rerun the loop
 ```
 
 Per-iteration flow:
 
 ```
 ┌─────────────────────────────────────────┐
-│  LLM analyzes state.md + results/       │
-│  → Writes action.sh                     │
+│  Codex reads PROMPT.md + state.md +     │
+│  results/last_exit_code and analyzes    │
+│  → writes action.sh                     │
 ├─────────────────────────────────────────┤
-│  Execute action.sh (training, tests, etc.) │
-│  → Save results to results/             │
+│  run.sh executes action.sh              │
+│  → training/tests/build/etc.            │
+│  → refresh logs/results outputs         │
 ├─────────────────────────────────────────┤
-│  Update state.md                        │
-│  → If phase is DONE, exit              │
-│  → Otherwise, next iteration           │
+│  Update state.md and last_exit_code     │
+│  → If phase is DONE, exit               │
+│  → Otherwise, next iteration            │
 └─────────────────────────────────────────┘
 ```
 
 #### Step 4: Check Results
 
 ```bash
-ls ralph/results/               # Result files per iteration
-cat ralph/state.md              # Final state
-cat ralph/results/last_exit_code  # Last action exit code
+cat ralph/CHECKS.md
+cat ralph/config.sh
+cat ralph/PROMPT.md
+cat ralph/state.md
+find ralph -maxdepth 2 -type f
 ```
 
 ### state.md Phases
@@ -803,11 +807,11 @@ cat ralph/results/last_exit_code  # Last action exit code
 
 ### Safety Mechanisms
 
-- **Duplicate execution prevention**: Lock directory (`ralph/.ralph.lock.d`) blocks concurrent execution
-- **state.md integrity verification**: Auto-validates phase and iteration after LLM/action.sh execution
-- **state.md backup/recovery**: Auto-backup before action.sh execution, auto-recovery on corruption
-- **LLM failure retry**: Auto-exits after 3 consecutive failures
-- **Completion promise**: When `COMPLETION_PROMISE` is set in config.sh, verifies LLM output at the DONE stage
+- **Repeatable runner**: `run.sh` should be safe to rerun from the same entrypoint and support `--reset`.
+- **Observable checks**: Success and failure conditions in `CHECKS.md` should be binary or clearly judgeable.
+- **Single state document**: Track progress and the latest outcome through `state.md`.
+- **Explicit loop contract**: `PROMPT.md` should include anti-recursion rules, the phase machine, and `action.sh` rules.
+- **Declared output locations**: If `logs/`, `results/`, `last_exit_code`, or archived `action.sh` outputs are used, document them clearly.
 
 ### Usage Examples
 
@@ -817,7 +821,8 @@ When debugging a training loss that won't converge. The LLM analyzes training lo
 
 ```bash
 /ralph-loop-init
-# Describe model structure, dataset, current problem in PROMPT.md
+# Review CHECKS.md / config.sh / PROMPT.md and
+# describe model structure, dataset, current problem, and success criteria
 bash ralph/run.sh
 ```
 
@@ -827,7 +832,8 @@ When full test suite execution takes over 30 minutes. The LLM analyzes failing t
 
 ```bash
 /ralph-loop-init
-# Describe test environment, failure patterns, fix scope in PROMPT.md
+# Update CHECKS.md / config.sh / PROMPT.md with
+# test environment, failure patterns, fix scope, and expected evidence
 bash ralph/run.sh
 ```
 
@@ -837,7 +843,8 @@ When a specific stage fails in a large-scale data processing pipeline. The LLM a
 
 ```bash
 /ralph-loop-init
-# Describe pipeline structure, data scale, error patterns in PROMPT.md
+# Update CHECKS.md / config.sh / PROMPT.md with
+# pipeline structure, data scale, error patterns, and done criteria
 bash ralph/run.sh
 ```
 
@@ -1122,7 +1129,7 @@ Verifies implementation results against plan/spec. Used for phase-by-phase verif
 
 ### ralph-loop-init
 
-Initializes an LLM-based automated debug loop for long-running processes (ralph loop). Generates the `ralph/` directory structure, configuration files, and prompt templates.
+Initializes an LLM-based automated debug loop for long-running processes (ralph loop). Creates a `ralph/` workspace with `CHECKS.md`, `config.sh`, `PROMPT.md`, `state.md`, and an executable `run.sh`.
 
 **Trigger**: "ralph loop", "init ralph", "training debug loop", "set up ralph loop", "automated training loop"
 

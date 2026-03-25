@@ -1,6 +1,6 @@
 ---
 name: spec-review
-description: This skill should be used when the user asks to "review spec", "spec drift check", "verify spec accuracy", "audit spec quality", "review spec against code", or wants a review-only analysis of spec quality and code-to-spec alignment without directly editing spec files.
+description: This skill should be used when the user asks to "review spec", "spec drift check", "verify spec accuracy", "audit spec quality", "review spec against code", "refresh spec review", "스펙 리뷰", "스펙 검토", "스펙 드리프트 점검", or wants a review-only analysis of spec quality and code-to-spec alignment without directly editing spec files.
 version: 2.0.0
 ---
 

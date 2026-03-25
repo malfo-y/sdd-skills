@@ -197,7 +197,8 @@ flowchart LR
 # ralph/ 디렉토리에 자동 디버그 루프 구조 생성
 ```
 
-> LLM 기반 자동 ML 트레이닝 디버깅을 위한 루프 구조를 생성합니다.
+> LLM 기반 장시간 실행 프로세스(ML, e2e, 빌드, 배치 검증 등) 검증/디버깅 루프 구조를 생성합니다.
+> 생성물에는 보통 `CHECKS.md`, `config.sh`, `PROMPT.md`, `run.sh`, `state.md`와 `results/` 디렉토리가 포함됩니다.
 
 ### 8. PR 기반 스펙 패치 및 리뷰
 

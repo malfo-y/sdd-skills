@@ -734,7 +734,7 @@ Ralph Loop는 **human-in-the-loop 디버깅에서 human을 LLM으로 교체**한
 - 인프라/배포 디버깅 — 빌드·배포 사이클이 긴 환경
 - 데이터 파이프라인 디버깅 — 대용량 처리 후 결과 확인이 필요한 경우
 
-**핵심 원리**: `LLM이 분석 → action.sh 작성 → 스크립트 실행 → 결과 저장 → LLM이 다시 분석` 사이클을 phase가 DONE이 될 때까지 반복합니다.
+**핵심 원리**: `CHECKS.md`로 검증 기준을 정리하고, `config.sh`로 런타임 변수를 고정하고, `PROMPT.md`를 통해 Codex가 `action.sh`를 작성하고, `run.sh`가 이를 실행한 뒤 `state.md`와 `results/`를 갱신하는 사이클을 phase가 DONE이 될 때까지 반복합니다.
 
 ### 워크플로우
 
@@ -744,39 +744,41 @@ Ralph Loop는 **human-in-the-loop 디버깅에서 human을 LLM으로 교체**한
 /ralph-loop-init
 ```
 
-`ralph/` 디렉토리에 다음 파일들이 생성됩니다:
+`ralph/` 디렉토리에 다음 핵심 파일들이 생성됩니다:
 
 | 파일 | 역할 |
 |------|------|
-| `PROMPT.md` | LLM에게 전달되는 시스템 프롬프트 (프로젝트 맥락, 지시사항) |
-| `state.md` | 현재 상태 (phase, iteration, 에러, 체크포인트 등) |
-| `config.sh` | 설정 (타임아웃, completion promise 등) |
-| `run.sh` | 메인 루프 스크립트 |
-| `results/` | 매 이터레이션 결과 저장 디렉토리 |
+| `CHECKS.md` | 성공 조건, 실패 신호, 관찰 포인트, 사람이 확인할 증거 |
+| `config.sh` | 루프 제어 변수와 프로젝트별 실행 변수 |
+| `PROMPT.md` | Codex가 매 이터레이션 읽는 loop 전용 지침 |
+| `state.md` | 현재 상태 (phase, iteration, blockers, latest result summary 등) |
+| `run.sh` | 실행 가능한 메인 엔트리포인트 (`#!/usr/bin/env bash`, `--reset`, 반복 실행 가능) |
+| `results/`, `logs/` | 실행 결과, action archive, 진단 로그 저장 위치 |
 
-#### 2단계: 프롬프트 작성
+#### 2단계: 체크와 컨텍스트 정리
 
-`ralph/PROMPT.md`를 프로젝트에 맞게 수정합니다. LLM이 매 이터레이션마다 이 프롬프트를 읽고 상태를 분석하므로, 프로젝트 맥락과 디버깅 목표를 명확히 기술합니다.
+`ralph/CHECKS.md`에는 성공 조건과 검증 포인트를, `ralph/config.sh`에는 실행 변수와 safety knob을, `ralph/PROMPT.md`에는 Codex가 따라야 할 phase/iteration 규칙을 정리합니다.
 
 #### 3단계: 루프 실행
 
 ```bash
-bash ralph/run.sh          # 루프 시작
-bash ralph/run.sh --reset  # 상태 초기화 후 재시작
+bash ralph/run.sh  # 루프 시작 또는 재실행
 ```
 
 매 이터레이션 흐름:
 
 ```
 ┌─────────────────────────────────────────┐
-│  LLM이 state.md + results/ 분석        │
+│  Codex가 PROMPT.md + state.md +         │
+│  results/last_exit_code를 읽고 분석     │
 │  → action.sh 작성                       │
 ├─────────────────────────────────────────┤
-│  action.sh 실행 (트레이닝, 테스트 등)   │
-│  → 결과를 results/에 저장               │
+│  run.sh가 action.sh 실행                │
+│  → 트레이닝/테스트/빌드 등 수행         │
+│  → logs/results/ 산출물 갱신            │
 ├─────────────────────────────────────────┤
-│  state.md 업데이트                      │
-│  → phase가 DONE이면 종료               │
+│  state.md 및 last_exit_code 갱신        │
+│  → phase가 DONE이면 종료                │
 │  → 아니면 다음 이터레이션               │
 └─────────────────────────────────────────┘
 ```
@@ -784,9 +786,11 @@ bash ralph/run.sh --reset  # 상태 초기화 후 재시작
 #### 4단계: 결과 확인
 
 ```bash
-ls ralph/results/               # 이터레이션별 결과 파일
-cat ralph/state.md              # 최종 상태 확인
-cat ralph/results/last_exit_code  # 마지막 액션 종료 코드
+cat ralph/CHECKS.md
+cat ralph/config.sh
+cat ralph/PROMPT.md
+cat ralph/state.md
+find ralph -maxdepth 2 -type f
 ```
 
 ### state.md 페이즈
@@ -803,11 +807,11 @@ cat ralph/results/last_exit_code  # 마지막 액션 종료 코드
 
 ### 안전 장치
 
-- **중복 실행 방지**: lock 디렉토리(`ralph/.ralph.lock.d`)로 동시 실행 차단
-- **state.md 무결성 검증**: LLM/action.sh 실행 후 phase와 iteration 유효성 자동 검사
-- **state.md 백업/복구**: action.sh 실행 전 자동 백업, 손상 시 자동 복구
-- **LLM 실패 재시도**: 최대 3회 연속 실패 시 자동 종료
-- **Completion promise**: config.sh에서 `COMPLETION_PROMISE` 설정 시 DONE 단계에서 LLM 출력 검증
+- **반복 실행 가능 구조**: `run.sh`는 같은 엔트리포인트로 재실행 가능해야 하며 `--reset`으로 초기 상태 복원이 가능해야 합니다.
+- **관찰 가능한 체크**: `CHECKS.md`의 성공/실패 조건은 binary하거나 명확히 판정 가능해야 합니다.
+- **단일 상태 문서**: 진행 상황과 최근 결과 요약은 `state.md`를 기준으로 추적합니다.
+- **명시적 루프 계약**: `PROMPT.md`는 anti-recursion rule, phase machine, action.sh rules를 포함해야 합니다.
+- **출력 위치 명시**: `logs/`, `results/`, `last_exit_code`, archived `action.sh` 위치를 문서에 남깁니다.
 
 ### 사용 예시
 
@@ -817,7 +821,8 @@ cat ralph/results/last_exit_code  # 마지막 액션 종료 코드
 
 ```bash
 /ralph-loop-init
-# PROMPT.md에 모델 구조, 데이터셋, 현재 문제 상황 기술
+# CHECKS.md / config.sh / PROMPT.md를 검토하고
+# 모델 구조, 데이터셋, 현재 문제 상황과 성공 조건을 반영
 bash ralph/run.sh
 ```
 
@@ -827,7 +832,8 @@ bash ralph/run.sh
 
 ```bash
 /ralph-loop-init
-# PROMPT.md에 테스트 환경, 실패 패턴, 수정 범위 기술
+# CHECKS.md / config.sh / PROMPT.md에
+# 테스트 환경, 실패 패턴, 수정 범위와 관찰 증거를 반영
 bash ralph/run.sh
 ```
 
@@ -837,7 +843,8 @@ bash ralph/run.sh
 
 ```bash
 /ralph-loop-init
-# PROMPT.md에 파이프라인 구조, 데이터 규모, 에러 패턴 기술
+# CHECKS.md / config.sh / PROMPT.md에
+# 파이프라인 구조, 데이터 규모, 에러 패턴과 완료 조건을 반영
 bash ralph/run.sh
 ```
 
@@ -1122,7 +1129,7 @@ PR의 구현 내용을 스펙과 스펙 패치 기준으로 검증합니다. 코
 
 ### ralph-loop-init
 
-LLM 기반 장시간 실행 프로세스 자동 디버깅 루프(ralph loop)를 초기화합니다. `ralph/` 디렉토리 구조, 설정 파일, 프롬프트 템플릿을 생성합니다.
+LLM 기반 장시간 실행 프로세스 자동 디버깅 루프(ralph loop)를 초기화합니다. `ralph/` 디렉토리에 `CHECKS.md`, `config.sh`, `PROMPT.md`, `state.md`, 실행 가능한 `run.sh`를 포함한 워크스페이스를 생성합니다.
 
 **트리거**: "ralph loop", "init ralph", "training debug loop", "set up ralph loop", "automated training loop"
 

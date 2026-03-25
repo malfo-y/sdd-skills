@@ -1,44 +1,29 @@
 # _COMMENTS
 
-Generated at: 2026-03-20T01:25:54.320Z
+Generated at: 2026-03-24T09:53:32.588Z
 Total comments: 2
 
 ## Comments
 
-### .codex/skills/write-phased/SKILL.md:L7-L9
+### .claude/skills/spec-create/SKILL.md:L136-L136
 
-얘는 다른 스킬들처럼 AC 기반 -> final check 등이 안 들어가 있어. 다른 스킬과 형식 맞춰 줘.
+프로젝트 내 기능이나 구현을 확인하고 수정할 때는 관련된 스펙 문서를 함께 읽고 참조합니다.
 
-- anchor.hash: 5416f797
-- anchor.snippet: # write-phased: Skeleton → Fill Orchestration
-
-이 스킬은 `write_skeleton` agent를 호출해 골조를 만들고, SKELETON_ONLY이면 호출자(이 스킬)가 직접 채운다.
-- createdAt: 2026-03-20T01:25:29.037Z
+- anchor.hash: 2b7bb289
+- anchor.snippet:    - 프로젝트 스펙 문서는 `_sdd/spec/`를 기준으로 확인합니다.
+- anchor.before:    # Workspace Guidance
+- anchor.after:    - 환경 관련 설정/실행 방법은 `_sdd/env.md`를 기준으로 확인합니다.
+- createdAt: 2026-03-24T09:51:52.948Z
 
 ---
 
-### .codex/skills/write-phased/SKILL.md:L60-L62
+### .claude/skills/spec-create/SKILL.md:L137-L138
 
-이건 틀린 말이야. 스킬은 스킬에서 호출 못 하잖아.
+의존성 설치, 테스트 스크립트 실행 등의 작업 시 _sdd/env.md 파일을 참조합니다.
 
-- anchor.hash: b098de30
-- anchor.snippet: Integration Targets
-
-
-- anchor.before: 다.
-
-## Multi-File Strategy
-
-여러 파일이 필요하면:
-
-1. `write_skeleton`에 모든 대상 파일의 skeleton 작성을 요청한다.
-2. 공통 타입, 기반 모듈, shared helper처럼 선행 의존성이 큰 파일부터 채운다.
-3. 의존성이 낮은 파일은 조사나 초안 단계를 병렬화한다.
-4. 마지막에 import, 링크, 참조 경로를 한 번에 검증한다.
-
-## 
-- anchor.after: 이 스킬은 사용자 직접 호출도 가능하지만, 다른 스킬이나 오케스트레이터가 장문 산출물에 적용하는 전략이기도 하다.
-
-- primary producer targets: `spec-create`, `guide-create`, `pr-spec-patch`, `pr-review`, `spec-summary`, `spec-upgrade`
-- nested producer targets: `feature
-- createdAt: 2026-03-20T01:25:40.398Z
+- anchor.hash: b299faf7
+- anchor.snippet:    - 환경 관련 설정/실행 방법은 `_sdd/env.md`를 기준으로 확인합니다.
+   ```
+- anchor.before:    - 프로젝트 스펙 문서는 `_sdd/spec/`를 기준으로 확인합니다.
+- anchor.after: 3. `CLAUDE.md` 미존재 → 동일 문구로 생성
+- createdAt: 2026-03-24T09:53:18.308Z

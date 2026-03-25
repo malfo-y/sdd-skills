@@ -19,9 +19,9 @@ version: 3.0.0
 > 프로세스 완료 후 아래 기준을 자체 검증한다. 미충족 항목은 해당 단계로 돌아가 수정한다.
 
 - [ ] Tier 1 / 2 / 3 graceful degradation이 정상 동작한다.
-- [ ] 리뷰 결과가 findings-first 구조로 정리된다.
+- [ ] 리뷰 결과가 findings-first 구조와 severity 기준으로 정리된다.
 - [ ] `_sdd/spec/`와 `IMPLEMENTATION_PLAN*.md`는 수정하지 않는다.
-- [ ] 외부 reference/example 문서 없이도 핵심 review 흐름과 severity 기준을 수행할 수 있다.
+- [ ] 장문 리포트에서 `write_skeleton` 기반 skeleton-first 작성 또는 동등한 구조화 작성이 가능하다.
 
 ## Hard Rules
 
@@ -29,9 +29,11 @@ version: 3.0.0
 2. `_sdd/spec/` 아래 파일은 생성/수정/삭제하지 않는다.
 3. `IMPLEMENTATION_PLAN*.md`와 진행 문서는 수정하지 않는다. 제안은 리포트에만 기록한다.
 4. 모든 커뮤니케이션과 리포트는 한국어로 작성한다.
-5. `_sdd/env.md`가 있으면 환경 설정을 참고해 테스트를 시도하고, 없으면 코드 분석 중심으로 진행한다.
-6. 보안 취약점, 실패 테스트, 핵심 기능 결함은 Critical로 분류한다.
-7. **Fresh Verification**: "should work" 금지. 테스트 실행 출력을 근거로 판단한다. 이전 실행 결과 재사용 금지. `_sdd/env.md` 미존재 시 코드 분석만 수행하고 리포트에 `UNTESTED` 표기.
+5. Tier 판별, stale plan 감지, 리뷰 범위 결정은 가능한 한 자율적으로 수행하고 판단 근거를 리포트에 남긴다.
+6. `_sdd/env.md`가 있으면 환경 설정을 참고해 테스트를 시도하고, 없으면 코드 분석 중심으로 진행한다.
+7. 보안 취약점, 실패 테스트, 핵심 기능 결함은 Critical로 분류한다.
+8. **Fresh Verification**: "should work" 금지. 테스트 실행 출력을 근거로 판단한다. 이전 실행 결과 재사용 금지. `_sdd/env.md` 미존재 시 코드 분석만 수행하고 리포트에 `UNTESTED` 표기.
+9. 리포트가 길거나 다중 섹션이면 `write_skeleton`을 사용해 구조를 먼저 만든 뒤 내용을 채운다.
 
 ## Tier Selection
 
@@ -55,6 +57,8 @@ stale 판단 예시:
 - `<project-root>/_sdd/implementation/prev/PREV_IMPLEMENTATION_REVIEW_<timestamp>.md`로 아카이브 후 새 파일 생성
 
 리포트는 findings-first로 작성하며, severity는 `Critical / High / Medium / Low` 네 단계로 정리한다.
+
+장문 리포트는 `write_skeleton`으로 섹션 뼈대를 생성한 뒤 채운다. Tier 3 리뷰는 한계와 추정 범위를 드러내기 위해 `Assumptions` 섹션을 추가한다.
 
 ```markdown
 # Implementation Review: [Project Name]
@@ -85,6 +89,9 @@ stale 판단 예시:
 
 ## 5. Conclusion
 [한 단락 요약]
+
+## 6. Assumptions
+[Tier 3에서만 추가]
 ```
 
 ## Process
@@ -105,7 +112,7 @@ Tier별로 기대 항목을 정리한다.
 
 - Tier 1: plan의 task, acceptance criteria, expected artifacts
 - Tier 2: spec의 요구사항, 핵심 플로우, 제약
-- Tier 3: 최근 변경 범위와 코드 품질 관점
+- Tier 3: `git log`, `git diff`, 최근 변경 파일을 기반으로 현재 코드 변화 범위와 품질 관점을 정의
 
 이 단계 산출물:
 - 리뷰 기준 목록
@@ -175,6 +182,14 @@ Tier 3:
 
 ### Step 7: Save Report
 
+리포트 저장 시 다음 규칙을 따른다.
+
+1. 리포트가 장문이거나 섹션이 많으면 `write_skeleton`을 사용해 구조를 먼저 만든다.
+2. skeleton만 생성되었거나 미완성 섹션이 남으면 의존성 없는 섹션부터 채운다.
+3. 기존 리뷰 파일이 있으면 `prev/`로 아카이브한다.
+4. Tier 3 리뷰는 `Assumptions` 섹션을 포함한다.
+5. 사용자가 빠른 상태 확인만 원했다면 최종 리포트와 별도로 Quick Review 요약을 함께 제공한다.
+
 리포트에는 다음을 포함한다.
 - findings
 - progress overview
@@ -195,10 +210,15 @@ Tier 3:
 | 대규모 코드베이스 | 핵심 컴포넌트 중심으로 범위를 줄이고 가정을 적는다 |
 | 기준이 모호함 | UNTESTED로 표시하고 판단 근거를 적는다 |
 
+## Quick Review
+
+사용자가 빠른 상태 확인을 요청하면 진행률, 핵심 blockers, next action만 3-5줄로 요약한다. 다만 가능하면 정식 리포트도 함께 저장한다.
+
 ## Integration
 
 - `implementation-plan`: 기대 구현 항목의 기준
 - `implementation`: 후속 수정 작업의 입력
+- `write_skeleton`: 장문 리뷰 리포트의 skeleton 작성
 - `spec-update-todo` / `spec-update-done`: 리뷰 결과상 스펙 변경이 필요할 때 후속 스킬로 안내
 
 ## Final Check

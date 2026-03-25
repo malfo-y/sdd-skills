@@ -704,7 +704,7 @@ PR 생성 → pr-spec-patch → pr-review → (merge 후) spec-update-done
 | **Purpose** | 장기 실행 프로세스(ML 트레이닝, e2e 테스트, 빌드 파이프라인, 통합 테스트 등)의 자동화 디버그 루프 디렉토리/파일 생성 |
 | **Why** | 장기 실행 프로세스의 반복 디버그 루프를 표준화하여 일관된 실험/테스트 환경을 빠르게 구성한다. |
 | **Input** | 프로젝트 코드, 대상 프로세스 스크립트 |
-| **Output** | `ralph/` 디렉토리 (run.sh, state.md, CHECKS.md) |
+| **Output** | `ralph/` 디렉토리 (`config.sh`, `PROMPT.md`, `run.sh`, `state.md`, `CHECKS.md`) |
 | **Source** | `.claude/agents/ralph-loop-init.md` (에이전트 정의, 전체 로직) |
 |            | `.claude/skills/ralph-loop-init/SKILL.md` (래퍼) |
 | **실행 형태** | 래퍼 → 에이전트 (Agent Wrapper 패턴) |
