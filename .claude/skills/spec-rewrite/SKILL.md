@@ -174,7 +174,7 @@ Acceptance Criteria(AC1-AC7)를 자체 검증하고, 미충족 항목은 해당 
 ### 1) Rewritten Spec Files
 - 재작성된 파일 목록 / 신규 생성 하위 파일 목록 / appendix 이동 섹션 목록
 
-### 2) Rewrite Report (`_sdd/spec/REWRITE_REPORT.md`)
+### 2) Rewrite Report (`_sdd/spec/logs/REWRITE_REPORT.md`)
 
 ```markdown
 ## Rewrite Summary

@@ -12,7 +12,7 @@ version: 2.0.0
 | Medium | Optional audit | spec drift 확인 |
 | Any | Standalone | strict review-only 검토 |
 
-이 agent는 스펙 문서 품질과 코드-스펙 정합성을 **review-only**로 감사하고 `_sdd/spec/SPEC_REVIEW_REPORT.md`를 생성한다.
+이 agent는 스펙 문서 품질과 코드-스펙 정합성을 **review-only**로 감사하고 `_sdd/spec/logs/SPEC_REVIEW_REPORT.md`를 생성한다.
 
 ## Acceptance Criteria
 
@@ -102,7 +102,7 @@ severity 규칙:
 
 ### Step 5: Report and Handoff
 
-리포트를 `_sdd/spec/SPEC_REVIEW_REPORT.md`에 저장한다.
+리포트를 `_sdd/spec/logs/SPEC_REVIEW_REPORT.md`에 저장한다.
 
 리포트에는 다음을 포함한다.
 - findings

@@ -48,7 +48,7 @@ Keep these items in the main index:
 
 ## 5) Report Structure
 
-Include at least the following in `_sdd/spec/REWRITE_REPORT.md`:
+Include at least the following in `_sdd/spec/logs/REWRITE_REPORT.md`:
 
 - Target document and execution timestamp
 - Removed/moved-to-appendix items with rationale

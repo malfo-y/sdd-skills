@@ -15,7 +15,7 @@ version: 2.0.0
 - [ ] AC1: 2차원 리뷰(spec quality + code drift) 수행 완료
 - [ ] AC2: 모든 finding에 severity(High/Medium/Low) 분류 완료
 - [ ] AC3: 전체 decision(SPEC_OK / SYNC_REQUIRED / NEEDS_DISCUSSION) 부여
-- [ ] AC4: `_sdd/spec/SPEC_REVIEW_REPORT.md`에 리포트 저장
+- [ ] AC4: `_sdd/spec/logs/SPEC_REVIEW_REPORT.md`에 리포트 저장
 - [ ] AC5: spec 파일(`_sdd/spec/*.md`) 수정 없음 (리포트 파일 제외)
 
 ## Hard Rules
@@ -72,12 +72,12 @@ Decision 부여:
 
 ### Step 5: 리포트 작성 및 저장
 
-1. 기존 리포트가 있으면 `prev/PREV_SPEC_REVIEW_REPORT_<timestamp>.md`로 아카이브.
+1. 기존 리포트가 있으면 `logs/prev/PREV_SPEC_REVIEW_REPORT_<timestamp>.md`로 아카이브.
 2. `sdd-skills:write-skeleton` 서브에이전트에 위임한다. 반환값이 SKELETON_ONLY이면 Sections Remaining 목록을 보고 Edit으로 채운다.
    - 독립 섹션 2개+ → 병렬 Agent dispatch 가능
    - 의존 섹션 → 순서대로 Edit
    - 완료 후 TODO/Phase 마커 제거
-   아래 Output Format으로 `_sdd/spec/SPEC_REVIEW_REPORT.md` 저장.
+   아래 Output Format으로 `_sdd/spec/logs/SPEC_REVIEW_REPORT.md` 저장.
 3. 사용자에게 severity 요약 테이블과 decision을 제시.
 
 ## Output Format

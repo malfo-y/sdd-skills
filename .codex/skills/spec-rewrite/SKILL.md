@@ -18,7 +18,7 @@ version: 1.5.0
 - [ ] AC2: `_sdd/spec/prev/`에 안전 백업을 남겼다.
 - [ ] AC3: rewritten spec가 더 명확한 구조를 가지며, 링크와 파일 경로가 유효하다.
 - [ ] AC4: 중요한 rationale과 `Source` 필드는 보존되었다.
-- [ ] AC5: ambiguity, conflict, missing decision이 `_sdd/spec/REWRITE_REPORT.md`에 기록되었다.
+- [ ] AC5: ambiguity, conflict, missing decision이 `_sdd/spec/logs/REWRITE_REPORT.md`에 기록되었다.
 - [ ] AC6: `references/`와 `examples/`는 유지되고, 본문은 rewrite contract를 concise하게 설명한다.
 
 ## SDD Lens
@@ -108,7 +108,7 @@ version: 1.5.0
 
 ### Step 5: Validate and Report
 
-아래를 검증하고 `_sdd/spec/REWRITE_REPORT.md`를 작성한다.
+아래를 검증하고 `_sdd/spec/logs/REWRITE_REPORT.md`를 작성한다.
 
 - 링크와 파일 경로 유효성
 - ambiguity / issue 기록 여부
@@ -121,7 +121,7 @@ version: 1.5.0
 기본 산출물:
 
 - rewritten spec files
-- `_sdd/spec/REWRITE_REPORT.md`
+- `_sdd/spec/logs/REWRITE_REPORT.md`
 
 리포트에 포함할 내용:
 
