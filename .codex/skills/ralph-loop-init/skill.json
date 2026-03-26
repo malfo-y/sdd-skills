@@ -2,5 +2,5 @@
   "name": "ralph-loop-init",
   "description": "Use this skill when the user asks to \"init ralph\", \"ralph loop\", \"set up ralph loop\", \"training loop\", \"training debug loop\", \"debug loop\", \"long-running test loop\", \"e2e loop\", \"create ralph\", \"set up training debug loop\", \"automated training loop\", or wants to generate a ralph/ directory for LLM-driven automated long-running process debugging.",
   "instruction_file": "SKILL.md",
-  "version": "2.0.0"
+  "version": "2.1.0"
 }
