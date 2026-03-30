@@ -75,10 +75,13 @@ Plan 탐색 (사용자 지정 경로 또는 _sdd/implementation/IMPLEMENTATION_P
 
 ### Step 4: Issues — 이슈 분류
 
-이슈를 세 등급으로 분류한다:
-- **Critical**: 핵심 기능 누락, 실패하는 테스트, 보안 취약점, breaking changes
-- **Quality**: 누락된 테스트, 패턴 불일치, 에러 처리 갭, 성능 우려
-- **Improvements**: 코드 정리, 엣지 케이스, 문서화, 최적화
+이슈를 네 등급으로 분류한다:
+- **Critical**: 핵심 기능 누락, 실패하는 테스트, 보안 취약점, 데이터 손실 위험, breaking changes
+- **High**: 핵심 acceptance criteria 일부 불충족, 주요 에러 처리 갭, 중요한 통합 깨짐, 즉시 수정이 필요한 stale plan/drift
+- **Medium**: 비핵심 테스트 누락, 패턴 불일치, 중간 수준 성능/유지보수성 우려, 후속 수정이 필요한 구현 품질 문제
+- **Low**: 리팩터링, 문서화, 가독성, 선택적 엣지 케이스, 추후 개선 권고
+
+`Critical / High / Medium`은 autopilot review-fix loop의 수정 대상이고, `Low`는 기본적으로 로그/후속 권고 대상이다.
 
 ### Step 5: Summary — 리포트 작성 및 저장
 
@@ -112,14 +115,15 @@ Plan 탐색 (사용자 지정 경로 또는 _sdd/implementation/IMPLEMENTATION_P
 
 ## 3. Issues Found
 ### Critical (N)
-### Quality (N)
-### Improvements (N)
+### High (N)
+### Medium (N)
+### Low (N)
 
 ## 4. Test Status
 [테스트 요약 + 미테스트 영역]
 
 ## 5. Recommendations
-### Must Do (Blockers) → Should Do (Quality) → Could Do (Improvements)
+### Must Do (Critical/High) → Should Do (Medium) → Could Do (Low)
 
 ## 6. Conclusion
 [1단락 요약: 준비 상태, 최대 리스크, 가장 중요한 다음 액션]

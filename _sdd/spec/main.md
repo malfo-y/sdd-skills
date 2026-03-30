@@ -191,7 +191,9 @@ version: <minor 버전 업>
 
 **2-Phase Generation 패턴**: `spec-create` [`.claude/skills/spec-create/SKILL.md`], `spec-rewrite`, `spec-upgrade`에서 사용. 대형 스펙 생성 시 골조(skeleton) → 내용 채우기(fill)로 분리하여 LLM 컨텍스트 윈도우 한계와 후반부 품질 저하를 방지한다.
 
-**Agent Wrapper 패턴**: 스킬을 에이전트로 전환할 때 적용한다. Claude에서는 전체 로직을 `.claude/agents/<name>.md` 에이전트 정의로 이동하고, 기존 `.claude/skills/<name>/SKILL.md`는 에이전트에 위임하는 최소한의 래퍼로 전환한다. Codex에서는 같은 역할 분리를 `.codex/agents/<name>.toml` custom agent와 `.codex/skills/<name>/SKILL.md` wrapper로 구현한다. 이를 통해 사용자의 `/스킬명` 호출 인터페이스를 유지하면서 플랫폼별 실행 단위를 재사용할 수 있다. `write-phased`에서 최초 검증된 패턴이며, v3.0 이후 핵심 파이프라인 스킬에 확대 적용하였다.
+**Agent Wrapper 패턴**: 스킬을 에이전트로 전환할 때 적용한다. Claude에서는 전체 로직을 `.claude/agents/<name>.md` 에이전트 정의로 이동하고, 기존 `.claude/skills/<name>/SKILL.md`는 에이전트에 위임하는 최소한의 래퍼로 전환한다. Codex에서는 같은 역할 분리를 `.codex/agents/<name>.toml` custom agent와 `.codex/skills/<name>/SKILL.md` wrapper로 구현한다. 이를 통해 사용자의 `/스킬명` 호출 인터페이스를 유지하면서 플랫폼별 실행 단위를 재사용할 수 있다. `write-phased`에서 최초 검증된 패턴이며, v3.0 이후 핵심 파이프라인 스킬에 확대 적용하였다. 현재 래퍼 스킬은 **Mirror 패턴**(아래)으로 구현되어 있다.
+
+**Mirror 패턴**: Agent Wrapper 패턴의 구현 방식. 래퍼 스킬의 SKILL.md에 에이전트 본문을 전체 복사하고, 파일 하단에 Mirror Notice(`> **Mirror Notice**: 이 스킬의 본문은 <에이전트 파일>의 복사본이다.`)를 추가한다. 사용자가 `/스킬명`으로 직접 호출할 때 중간 과정의 가시성을 확보하기 위한 설계이다. 수정 시 에이전트 파일과 SKILL.md를 **반드시 함께** 수정해야 한다. thin wrapper(Agent() 호출만 포함)에 비해 파일 중복이 발생하지만, 사용자 직접 호출 시 전체 프로세스가 컨텍스트에 로드되어 실행 품질이 높아지는 이점이 있다.
 
 **Autonomous Decision-Making 패턴**: 에이전트가 서브에이전트로 호출될 때 적용한다. AskUserQuestion 대신 가용 정보에서 최선의 추론을 수행하고, 판단 근거를 출력에 기록하며, 추론 불가 항목은 Open Questions에 남긴다. 이를 통해 에이전트가 사용자 인터랙션 없이 non-interactive하게 파이프라인 내에서 실행될 수 있다. v3.1에서 8개 파이프라인 에이전트 전체에 적용하였다.
 
@@ -245,23 +247,23 @@ version: <minor 버전 업>
 사용자 ──→ Claude Code / Codex
               │
               ├── Skill Loader
-              │     ├── .claude/skills/  (Claude Code 스킬 20개)
+              │     ├── .claude/skills/  (Claude Code 스킬 21개)
               │     │     ├── 풀 스킬 (11개) ─── SKILL.md에 AC-First 구조 전체 로직 포함
-              │     │     ├── 래퍼 스킬 (8개) ─── Agent()로 에이전트에 위임
+              │     │     ├── 래퍼 스킬 (9개) ─── Agent()로 에이전트에 위임
               │     │     └── 메타스킬 (1개) ─── sdd-autopilot (오케스트레이터 생성)
-              │     └── .codex/skills/   (Codex 스킬 19개)
-              │           ├── 래퍼/직접 스킬 (17개) ─── user entry + workflow contract
+              │     └── .codex/skills/   (Codex 스킬 20개)
+              │           ├── 래퍼/직접 스킬 (18개) ─── user entry + workflow contract
               │           ├── 유틸리티 스킬 (1개) ─── write-phased
               │           └── 메타스킬 (1개) ─── sdd-autopilot (오케스트레이터 생성)
               │
               ├── Agent Layer
               │     ├── Claude: .claude/agents/
-              │     ├── 파이프라인 에이전트 (8개) ─── 래퍼 스킬에서 위임받아 실행
+              │     ├── 파이프라인 에이전트 (9개) ─── 래퍼 스킬에서 위임받아 실행
               │     └── 유틸리티 에이전트 (1개) ─── write-phased
               │
               ├── Codex Agent Layer
-              │     ├── .codex/agents/  (Codex custom agent 9개)
-              │     ├── 파이프라인 에이전트 (8개) ─── wrapper skill과 orchestrator가 직접 spawn
+              │     ├── .codex/agents/  (Codex custom agent 10개)
+              │     ├── 파이프라인 에이전트 (9개) ─── wrapper skill과 orchestrator가 직접 spawn
               │     └── 유틸리티 에이전트 (1개) ─── write_phased
               │
               └── SDD Workflow Engine
@@ -845,7 +847,7 @@ sdd_skills/
 │   └── AUTOPILOT_GUIDE.md       # sdd-autopilot 메타스킬 사용 가이드
 │
 ├── .claude/
-│   ├── agents/                  # 에이전트 정의 (9개)
+│   ├── agents/                  # 에이전트 정의 (10개)
 │   │   ├── feature-draft.md
 │   │   ├── implementation-plan.md
 │   │   ├── implementation.md
@@ -882,17 +884,18 @@ sdd_skills/
 │
 ├── .codex/
 │   ├── config.toml              # Codex custom agent 실행 설정
-│   ├── agents/                  # Codex custom agent 정의 (9개)
+│   ├── agents/                  # Codex custom agent 정의 (10개)
 │   │   ├── feature-draft.toml
 │   │   ├── implementation-plan.toml
 │   │   ├── implementation.toml
 │   │   ├── implementation-review.toml
+│   │   ├── investigate.toml
 │   │   ├── ralph-loop-init.toml
 │   │   ├── spec-review.toml
 │   │   ├── spec-update-done.toml
 │   │   ├── spec-update-todo.toml
 │   │   └── write-phased.toml
-│   └── skills/                  # Codex 스킬 (19개, git 제외)
+│   └── skills/                  # Codex 스킬 (20개, git 제외)
 │       ├── sdd-autopilot/       # Codex 메타스킬
 │       ├── write-phased/        # 공용 long-form writing utility
 │       └── (wrapper/direct skill layer)
@@ -920,8 +923,8 @@ sdd_skills/
 | 스킬 경로 | `.claude/skills/` | `.codex/skills/` |
 | 에이전트 경로 | `.claude/agents/` | `.codex/agents/` |
 | 설치 방법 | Plugin Marketplace | LobeHub / 수동 복사 |
-| 스킬 수 | 20개 (래퍼 8 + 풀 11 + 메타 1) | 19개 (wrapper/direct 17 + utility 1 + 메타 1) |
-| 에이전트 수 | 9개 | 9개 |
+| 스킬 수 | 21개 (래퍼 9 + 풀 11 + 메타 1) | 20개 (wrapper/direct 18 + utility 1 + 메타 1) |
+| 에이전트 수 | 10개 | 10개 |
 | AskUserQuestion | 풀 스킬에서만 사용 (에이전트는 non-interactive) | `request_user_input` 기반 대화형 처리 |
 | Agent tool | 지원 (서브에이전트 호출) | 지원 (custom agent spawn) |
 | SKILL.md 차이 | 래퍼 또는 풀 | wrapper/direct skill + custom agent + generated orchestration skill |

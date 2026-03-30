@@ -1,7 +1,7 @@
 ---
 name: sdd-autopilot
 description: "적응형 오케스트레이터 메타스킬. /sdd-autopilot으로 호출하여 요구사항 분석부터 스펙 동기화까지 end-to-end SDD 파이프라인을 자율 실행한다."
-version: 2.0.0
+version: 2.3.0
 ---
 
 # SDD Autopilot -- 적응형 오케스트레이터 메타스킬
@@ -15,6 +15,9 @@ version: 2.0.0
 - [ ] AC5: E2E 테스트/검증이 실제로 실행되었다 (인라인 또는 ralph-loop). Execute → Verify 패턴 준수. 결과가 사용자가 볼 수 있는 형태로 저장되었다 (`_sdd/implementation/test_results/` 또는 `ralph/state.md`). 테스트 건너뛰기 금지 — 실행 불가 시 사유와 수동 검증 방법을 보고서에 명시해야 한다.
 - [ ] AC6: 테스트/검증 결과가 사용자에게 명시적으로 보고되었다 (통과/실패 건수, 실패 시 원인 요약, 수동 확인 필요 항목)
 - [ ] AC7: 최종 요약 보고서(`_sdd/pipeline/report_<topic>_<timestamp>.md`)가 작성되고 사용자에게 보고되었다
+- [ ] AC8: `_sdd/spec/` 직접 수정은 `spec-update-done` / `spec-update-todo` 에이전트에만 위임했다
+- [ ] AC9: Phase 2 진입 전에 Step 6 checkpoint에서 pre-flight 결과를 공유하고 explicit approval을 받았다
+- [ ] AC10: 완료된 active orchestrator를 `_sdd/pipeline/orchestrators/<topic>_<timestamp>/`에 아카이브했다
 
 ## Workflow Position
 
@@ -52,6 +55,9 @@ User Request
 4. **에이전트 호출 시 원문 전달**: 사용자의 원래 요청과 관련 컨텍스트 파일 경로를 포함한다. 요약하지 않는다.
 5. **Review-Fix 사이클 필수**: review 포함 파이프라인에서는 review → fix → re-review 사이클을 실행해야 한다. 리뷰만 하고 끝나는 것은 불허. 전체/부분/재개 파이프라인 모두 적용. `implementation-review`는 핵심 단계로 취급하며 실패 시 건너뛸 수 없다.
 6. **Execute → Verify 필수**: 모든 단계는 실행(Execute) + 검증(Verify) 두 페이즈를 거친다. 에이전트 호출만으로 완료 간주 금지. Exit Criteria 미충족 시 다음 단계 진행 불가. 생성 에이전트(ralph-loop-init 등)에도 동일 적용 -- 설정 생성 후 실제 실행하여 결과 확인 필수.
+7. **Pre-flight + approval 필수**: Phase 2 진입 전 `_sdd/env.md`를 읽고 실행 가능성을 점검한 뒤 explicit approval을 받아야 한다.
+8. **Archive 필수**: 완료된 active orchestrator는 `_sdd/pipeline/orchestrators/<topic>_<timestamp>/`에 아카이브한다.
+9. 한국어를 기본으로 하되 사용자 언어를 따른다.
 
 ## Process
 

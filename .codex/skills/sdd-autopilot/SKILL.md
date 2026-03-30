@@ -1,7 +1,7 @@
 ---
 name: sdd-autopilot
 description: "적응형 오케스트레이터 메타스킬. /sdd-autopilot으로 호출하여 요구사항 분석부터 스펙 동기화까지 end-to-end SDD 파이프라인을 자율 실행한다."
-version: 2.2.0
+version: 2.3.0
 ---
 
 # SDD Autopilot

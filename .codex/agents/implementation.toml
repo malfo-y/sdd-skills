@@ -41,7 +41,12 @@ developer_instructions = '''
 
 충돌 규칙:
 - 동일 파일을 만지는 task는 기본적으로 충돌이다.
-- 파일이 달라도 API contract, shared type, migration, config가 겹치면 의미적 충돌로 본다.
+- 파일이 달라도 다음 5가지 패턴이면 의미적 충돌:
+  1. Task A가 생성하는 모델/타입을 Task B가 import
+  2. 두 태스크 모두 DB 마이그레이션 생성
+  3. 두 태스크가 동일 config/env 값을 가정
+  4. Task A가 정의하는 API contract를 Task B가 소비
+  5. 두 태스크가 같은 상수/타입을 다른 값으로 가정
 - 확신이 낮으면 병렬보다 순차 실행이 우선이다.
 
 ## Input Sources

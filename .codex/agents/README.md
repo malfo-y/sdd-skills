@@ -22,6 +22,7 @@
 - `implementation_plan`
 - `implementation`
 - `implementation_review`
+- `investigate`
 - `spec_update_todo`
 - `spec_update_done`
 - `spec_review`

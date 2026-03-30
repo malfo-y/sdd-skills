@@ -111,13 +111,23 @@ task를 나눌 때 원칙:
 
 ### Step 5: Build Phases
 
-Phase를 구성한다.
-- 기반 설정 / 구조 준비
-- 핵심 기능
-- 통합 / 검증
-- 후속 개선
+Phase 전략 선택:
 
-Phase 전략은 단순하고 설명 가능해야 한다. 복잡한 전략보다 실행 가능성이 우선이다.
+| 전략 | 자동 추천 조건 | Phase 구조 |
+|------|---------------|-----------|
+| **MVP-First** | 사용자 대면 기능 존재, 점진적 배포 필요 | Phase 0: 기반 설정 → Phase 1: MVP → Phase 2+: 확장/개선 |
+| **Risk-First** | 고위험/불확실 기술 항목 ≥ 30% | Phase 1: 고위험 (가정 검증) → Phase 2: 핵심 → Phase 3: 저위험 확장 |
+| **Dependency-Driven** | 의존성 체인 깊이 ≥ 3, 계층 명확 | Phase 1: 기반 → Phase 2: 핵심 서비스 → Phase 3: 통합 → Phase 4: 마무리 |
+
+전략 선택 절차:
+1. Task 특성 분석: 의존성 깊이, 위험도 분포, 우선순위 분포, 기반 작업 유무
+2. 테이블 기준으로 최적 전략 자동 선택
+3. 선택 근거를 Plan에 기록
+
+Phase 그룹핑 원칙:
+- 각 Phase에 명확한 목표/테마 부여
+- Phase 내 Task는 가능한 한 독립적으로 실행 가능
+- Phase 간 의존성 최소화
 
 ### Step 6: Map Dependencies and Parallelism
 
