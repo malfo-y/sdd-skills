@@ -74,14 +74,17 @@ Plan 탐색 (사용자 지정 경로 또는 _sdd/implementation/IMPLEMENTATION_P
 
 ### Step 4: Issues — 이슈 분류
 
-이슈를 세 등급으로 분류한다:
-- **Critical**: 핵심 기능 누락, 실패하는 테스트, 보안 취약점, breaking changes
-- **Quality**: 누락된 테스트, 패턴 불일치, 에러 처리 갭, 성능 우려
-- **Improvements**: 코드 정리, 엣지 케이스, 문서화, 최적화
+이슈를 네 등급으로 분류한다:
+- **Critical**: 핵심 기능 누락, 실패하는 테스트, 보안 취약점, 데이터 손실 위험, breaking changes
+- **High**: 핵심 acceptance criteria 일부 불충족, 주요 에러 처리 갭, 중요한 통합 깨짐, 즉시 수정이 필요한 stale plan/drift
+- **Medium**: 비핵심 테스트 누락, 패턴 불일치, 중간 수준 성능/유지보수성 우려, 후속 수정이 필요한 구현 품질 문제
+- **Low**: 리팩터링, 문서화, 가독성, 선택적 엣지 케이스, 추후 개선 권고
+
+`Critical / High / Medium`은 autopilot review-fix loop의 수정 대상이고, `Low`는 기본적으로 로그/후속 권고 대상이다.
 
 ### Step 5: Summary — 리포트 작성 및 저장
 
-`sdd-skills:write-skeleton` 서브에이전트에 위임한다. 반환값이 SKELETON_ONLY이면 Sections Remaining 목록을 보고 Edit으로 채운다.
+`write-skeleton` 서브에이전트에 위임한다. 반환값이 SKELETON_ONLY이면 Sections Remaining 목록을 보고 Edit으로 채운다.
 - 독립 섹션 2개+ → 병렬 Agent dispatch 가능
 - 의존 섹션 → 순서대로 Edit
 - 완료 후 TODO/Phase 마커 제거
@@ -111,14 +114,15 @@ Plan 탐색 (사용자 지정 경로 또는 _sdd/implementation/IMPLEMENTATION_P
 
 ## 3. Issues Found
 ### Critical (N)
-### Quality (N)
-### Improvements (N)
+### High (N)
+### Medium (N)
+### Low (N)
 
 ## 4. Test Status
 [테스트 요약 + 미테스트 영역]
 
 ## 5. Recommendations
-### Must Do (Blockers) → Should Do (Quality) → Could Do (Improvements)
+### Must Do (Critical/High) → Should Do (Medium) → Could Do (Low)
 
 ## 6. Conclusion
 [1단락 요약: 준비 상태, 최대 리스크, 가장 중요한 다음 액션]
@@ -143,9 +147,3 @@ Tier 3의 경우 추가로 **Assumptions** 섹션을 포함한다 (Plan/Spec 미
 ## Final Check
 
 Acceptance Criteria가 모두 만족되었나 검증한다. 미충족 항목이 있으면 해당 단계로 돌아가 수정한다.
-
----
-
-> **Mirror Notice**: 이 스킬의 본문은 `.claude/agents/implementation-review.md`의 복사본이다.
-> 사용자가 직접 호출할 때 중간 과정의 가시성을 확보하기 위해 복붙되었다.
-> 내용을 수정할 때는 agent 파일과 이 스킬 파일을 **반드시 함께** 수정해야 한다.
