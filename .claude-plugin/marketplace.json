@@ -38,7 +38,6 @@
         "./.claude/skills/investigate"
       ],
       "agents": [
-        "./.claude/agents/write-skeleton.md",
         "./.claude/agents/feature-draft.md",
         "./.claude/agents/implementation-plan.md",
         "./.claude/agents/implementation-review.md",
