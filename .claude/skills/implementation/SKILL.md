@@ -1,7 +1,7 @@
 ---
 name: implementation
 description: "Use this skill when the user wants to execute an implementation plan, start implementing tasks from a plan, work through a development roadmap, says \"implement the plan\", \"start implementation\", \"execute the plan\", \"work on the tasks\", or explicitly asks for \"implement parallel\", \"parallel implementation\", \"병렬 구현\", \"병렬로 구현\". Uses conflict-aware parallel execution when Target Files are available."
-version: 2.0.0
+version: 2.0.1
 ---
 
 # Implementation Execution (Parallel TDD)
@@ -160,6 +160,11 @@ For each phase:
 {env_setup}
 {test_framework_info}
 
+## Retry Context (재실행일 때만)
+{failed_ac}
+{failure_reason}
+{open_critical_high_issues}
+
 ## 완료 보고
 ### 결과: SUCCESS / PARTIAL / FAILED
 ### TDD 진행
@@ -168,6 +173,7 @@ For each phase:
 - [C/M] `path` (N lines)
 ### 테스트 결과 (새 테스트 수, 전체 통과 여부)
 ### Unplanned Dependencies (있는 경우)
+### Retry Fix Summary (재실행일 때만: 이전 실패를 어떻게 해소했는지)
 ### 발견 사항
 ```
 
@@ -224,8 +230,8 @@ Phase 리포트 저장: `_sdd/implementation/IMPLEMENTATION_REPORT_PHASE_<N>.md`
 
 > **매 iteration 시작 전에 아래 원칙을 재확인하고 준수한다.** 이전 iteration의 tool output으로 인해 원칙이 묻히는 것을 방지한다.
 >
-> 1. **Skeptical Evaluator**: 증거(테스트 출력/코드 분석) 없으면 NOT_MET. "이전에 봤으니 MET" 금지.
-> 2. **종료 조건**: 모든 AC가 MET 또는 UNTESTED이고 Critical/High == 0 → PASS. 그 외 → 계속.
+> 1. **Skeptical Evaluator**: 테스트 출력이나 `UNTESTED` 판정을 뒷받침할 코드 분석 근거가 없으면 NOT_MET. "이전에 봤으니 MET" 금지.
+> 2. **종료 조건**: 모든 AC가 MET이거나, `UNTESTED`인 경우에도 코드 분석 근거와 사유가 명시되어 있고 Critical/High == 0일 때만 PASS. 그 외 → 계속.
 > 3. **MAX_ITER**: 현재 iteration이 5를 초과하면 TIMEOUT → 사용자 위임.
 > 4. **반복 감지**: 2회 연속 동일 Task 재실행 → 해당 Task "반복 실패" 기록, 스킵.
 > 5. **Spec 불가침**: `_sdd/spec/` 수정 금지.
@@ -238,9 +244,9 @@ Plan의 각 Task별 Acceptance Criteria에 대해 판정:
 
 | 판정 | 기준 |
 |------|------|
-| MET | 테스트 통과 출력 또는 코드 분석으로 충족 확인 |
-| NOT_MET | 증거 부족, 테스트 실패, 구현 누락 |
-| UNTESTED | `_sdd/env.md` 미존재로 테스트 실행 불가 (코드 분석만 수행) |
+| MET | 테스트 통과 출력으로 충족 확인 |
+| NOT_MET | 증거 부족, 테스트 실패, 구현 누락, 또는 `UNTESTED` 판정을 뒷받침할 코드 분석 근거 부족 |
+| UNTESTED | `_sdd/env.md` 미존재 또는 환경 제약으로 테스트 실행이 불가하지만, 코드 분석으로 구현 충족을 설명할 수 있고 그 사유를 리포트에 기록함 |
 
 동시에 Cross-phase 통합 검증 수행:
 - 모듈 간 연동, 보안 경계, 전체 규모 성능
@@ -254,7 +260,7 @@ Plan의 각 Task별 Acceptance Criteria에 대해 판정:
 
 | 조건 | 결과 |
 |------|------|
-| 모든 AC가 MET 또는 UNTESTED이고 Critical/High == 0 | **PASS** → Step 8 진행 |
+| 모든 AC가 MET이거나, `UNTESTED`인 항목마다 코드 분석 근거와 사유가 기록되어 있고 Critical/High == 0 | **PASS** → Step 8 진행 |
 | iteration == MAX_ITER AND (NOT_MET 존재 OR Critical/High > 0) | **TIMEOUT** → 미해결 AC/이슈 목록을 리포트에 기록, 사용자에게 위임 → Step 8 진행 |
 
 #### 7.3 수정 대상 선정
@@ -265,7 +271,7 @@ Plan에서 NOT_MET AC를 포함하는 Task를 역추적한다. AC가 여러 Task
 
 #### 7.4 TDD 재실행
 
-대상 Task를 Step 4-5와 동일 방식(TDD sub-agent dispatch → Integrate & Verify)으로 재실행한다. 재실행 대상 간 충돌 분석(Step 3 알고리즘)을 적용하여 병렬/순차 결정.
+대상 Task를 Step 4-5와 동일 방식(TDD sub-agent dispatch → Integrate & Verify)으로 재실행한다. 재실행 sub-agent prompt에는 현재 iteration에서 확인된 `failed_ac`, `failure_reason`, `open_critical_high_issues`를 반드시 포함한다. 재실행 대상 간 충돌 분석(Step 3 알고리즘)을 적용하여 병렬/순차 결정.
 
 `iteration += 1` → 7.1로 복귀.
 
