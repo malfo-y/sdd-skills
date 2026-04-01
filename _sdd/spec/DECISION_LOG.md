@@ -1,5 +1,39 @@
 # Decision Log
 
+## 2026-04-01 - Tighten implementation review loop exit criteria and retry handoff
+
+### Context
+
+Codex `implementation`에 iteration review loop를 도입한 뒤 첫 implementation-review에서 세 가지 후속 문제가 드러났다. 첫째, `_sdd/env.md`가 없을 때 `UNTESTED`만으로도 PASS가 가능해 검증되지 않은 구현이 종료될 수 있었다. 둘째, `IMPLEMENTATION_REPORT.md` 생성과 `UNTESTED` 근거 기록 요구가 loop 종료 조건과 느슨하게 연결되어 있었다. 셋째, Step 7.4에 retry context를 반드시 다음 worker/sub-agent에 전달하라는 계약이 부족했다. Claude 구현도 같은 review loop semantics를 공유하고 있어 동일한 함정을 갖고 있었다.
+
+### Decision
+
+1. **`UNTESTED` 허용 범위 축소**: `UNTESTED`는 단순 "테스트 못 돌림"이 아니라, 테스트 불가 사유와 코드 분석 근거를 리포트에 명시할 수 있을 때만 허용
+2. **PASS 게이트 강화**: 종료 조건은 "모든 AC가 `MET`이거나, `UNTESTED` 항목마다 근거와 사유가 기록되어 있고 `Critical/High == 0`"으로 고정
+3. **Report requirement 명시**: `implementation` Acceptance Criteria와 Step 8 Report에 `IMPLEMENTATION_REPORT.md` 생성 및 `UNTESTED` 근거 기록 요구를 반영
+4. **Retry handoff contract 필수화**: iteration 재실행 prompt에는 `failed_ac`, `failure_reason`, `open_critical_high_issues`를 반드시 포함하고, worker/sub-agent는 이전 실패를 어떻게 해소했는지 보고
+5. **Claude/Codex parity 유지**: 위 보정을 `.claude`와 `.codex` 양쪽 `implementation` 문서에 동일하게 반영
+
+### Rationale
+
+- raw `UNTESTED` PASS는 검증되지 않은 구현을 조용히 성공 처리하는 위험이 있었다
+- `UNTESTED`를 예외적 상태로 좁혀야 Verification Gate 철학과 iteration review loop가 일관된다
+- retry context가 빠지면 loop가 "같은 작업을 다시 해 본다" 수준으로 약해져 실패 원인 교정 능력이 떨어진다
+- review loop semantics가 런타임마다 갈라지면 spec과 운영 기준이 다시 쉽게 drift한다
+
+### Changes
+
+- `.codex/skills/implementation/SKILL.md` -- `UNTESTED` 판정/종료 조건/Step 7.4 retry handoff/Report requirement 보정
+- `.codex/agents/implementation.toml` -- custom agent mirror 동기화
+- `.claude/skills/implementation/SKILL.md` -- retry context block 추가, `UNTESTED` 종료 기준 보정
+- `.claude/agents/implementation.md` -- sub-agent prompt 및 review loop semantics 동기화
+- `_sdd/spec/main.md` -- implementation component details, changelog 갱신
+
+### References
+
+- 구현 리뷰: `_sdd/implementation/IMPLEMENTATION_REVIEW.md`
+- 구현 리포트: `_sdd/implementation/IMPLEMENTATION_REPORT.md`
+
 ## 2026-04-01 - Remove write_skeleton and adopt producer-owned inline 2-phase writing
 
 ### Context

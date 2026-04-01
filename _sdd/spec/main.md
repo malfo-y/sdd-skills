@@ -2,7 +2,7 @@
 
 > Markdown 기반 스킬 시스템으로 AI 에이전트의 Spec-Driven Development 워크플로우를 구조화한다.
 
-**Version**: 3.8.0
+**Version**: 3.8.1
 **Last Updated**: 2026-04-01
 **Status**: Approved
 
@@ -646,8 +646,10 @@ PR 생성 → pr-spec-patch → pr-review → (merge 후) spec-update-done
 | **Source** | `.claude/agents/implementation.md` (에이전트 정의, AC-First + self-contained) |
 |            | `.claude/skills/implementation/SKILL.md` (래퍼) |
 | **실행 형태** | 래퍼 → 에이전트 (Agent Wrapper 패턴) |
-| **✅ 완료** | **Verification Gate Iron Rule**: "should work" 금지, 코드 변경 후 테스트 재실행 필수, 이전 결과 재사용 금지를 Hard Rule로 추가. env.md 미존재 시 코드 분석 기반 fallback 허용, 리포트에 "UNTESTED" 명시. <!-- 추가됨: 2026-03-24, 완료됨: 2026-03-24 --> |
+| **✅ 완료** | **Verification Gate Iron Rule**: "should work" 금지, 코드 변경 후 테스트 재실행 필수, 이전 결과 재사용 금지를 Hard Rule로 추가. env.md 미존재 시 코드 분석 기반 fallback은 허용하되, `UNTESTED`는 테스트 불가 사유와 코드 분석 근거가 리포트에 명시된 경우에만 허용한다. <!-- 추가됨: 2026-03-24, 보정됨: 2026-04-01 --> |
 | **✅ 완료** | **Regression Iron Rule**: 기존 테스트 실패 시 테스트 업데이트 + 회귀 방지 테스트 추가를 필수 단계로 강제. 사용자 확인 없이 자동. <!-- 추가됨: 2026-03-24, 완료됨: 2026-03-24 --> |
+| **✅ 완료** | **Iteration Review Loop**: 모든 phase 완료 후 Skeptical Evaluator 자세로 Plan의 각 Task별 Acceptance Criteria를 재검증하고, `NOT_MET AC 관련 Task ∪ Critical/High 이슈 관련 Task`만 최대 5회까지 재실행한다. `IMPLEMENTATION_REPORT.md`에는 Iteration History와 필요한 `UNTESTED` 근거를 포함한다. <!-- 추가됨: 2026-04-01, 보정됨: 2026-04-01 --> |
+| **✅ 완료** | **Retry Handoff Contract**: iteration 재실행 prompt에는 `failed_ac`, `failure_reason`, `open_critical_high_issues`를 반드시 포함하고, worker/sub-agent는 이전 실패를 어떻게 해소했는지 보고한다. Claude/Codex runtime 모두 동일 계약을 사용한다. <!-- 추가됨: 2026-04-01 --> |
 
 ### implementation-review
 
@@ -1042,6 +1044,14 @@ sdd_skills/
 | `.codex/skills/write-phased/SKILL.md` | write-phased | Component Details |
 
 ### Changelog
+
+#### v3.8.1 (2026-04-01)
+
+- **implementation review loop gate 보정**: `UNTESTED`를 raw PASS 상태로 두지 않고, 테스트 불가 사유 + 코드 분석 근거가 리포트에 기록된 경우에만 종료 조건에 포함되도록 정리
+- **retry handoff contract 강화**: iteration 재실행 시 `failed_ac`, `failure_reason`, `open_critical_high_issues`를 다음 worker/sub-agent prompt에 필수 전달
+- **Claude/Codex parity sync**: `.claude/skills/implementation/`, `.claude/agents/implementation.md`, `.codex/skills/implementation/`, `.codex/agents/implementation.toml`에 동일 review loop semantics 반영
+- 백업: `_sdd/spec/prev/PREV_main_20260401_164618.md`, `_sdd/spec/prev/PREV_DECISION_LOG_20260401_164618.md`
+- 입력: `_sdd/implementation/IMPLEMENTATION_REPORT.md`, `_sdd/implementation/IMPLEMENTATION_REVIEW.md`
 
 #### v3.8.0 (2026-04-01)
 
