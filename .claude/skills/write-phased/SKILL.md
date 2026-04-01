@@ -1,12 +1,12 @@
 ---
 name: write-phased
-description: Use this skill when the user asks to write, create, or generate a document or code file. Triggers on "write-phased", "문서 작성", "작성해줘", "만들어줘", "코드 작성", "파일 생성", "구현해줘", "write a document", "create a file", "generate code", "implement", or any request to produce a markdown document, code file, config file, or technical writing.
-version: 2.0.0
+description: Use this skill when the user asks to write, create, or generate a document or code file. Triggers on "write-phased", "문서 작성", "작성해줘", "만들어줘", "코드 작성", "파일 생성", "구현해줘", "write a document", "create a file", "generate code", "implement", or any request to produce a markdown document, code file, config file, or technical writing. The caller writes the skeleton inline first, then fills and finalizes in the same flow.
+version: 3.0.0
 ---
 
-# write-phased — Skeleton + Fill Orchestration
+# write-phased — Inline 2-Phase Writing
 
-`sdd-skills:write-skeleton` agent로 파일을 생성하고, 필요하면 직접 Edit으로 내용을 채운다. 모든 중간 과정이 메인 대화에서 실행되어 사용자에게 보인다.
+별도 writing helper agent를 호출하지 않는다. 호출자가 현재 콘텍스트에서 먼저 skeleton/outline/TODO marker를 파일에 기록하고, 같은 흐름에서 내용을 채우고 finalize한다. 모든 중간 과정이 메인 대화에서 실행되어 사용자에게 보인다.
 
 ## Acceptance Criteria
 
@@ -15,39 +15,38 @@ version: 2.0.0
 - [ ] AC1: 요청된 파일이 완성된 상태로 저장되어 있다
 - [ ] AC2: TODO/Phase 마커가 남아있지 않다
 - [ ] AC3: 사용자 요청 언어를 따랐다
+- [ ] AC4: skeleton 작성과 fill이 같은 호출 흐름 안에서 수행되었다
 
 ## Process
 
-### Step 1: Skeleton 생성
+### Step 1: Skeleton 작성
 
-`sdd-skills:write-skeleton` agent를 호출하여 파일을 생성한다:
+대상 파일에 skeleton/outline을 직접 기록한다. 최소한 다음 중 필요한 것을 먼저 만든다.
 
-```
-result = Agent(subagent_type="sdd-skills:write-skeleton", prompt="[사용자 요청 전문]")
-```
+- 문서 제목
+- 주요 섹션 헤더
+- 빈 목록/표 골격
+- `TODO`, `TBD`, `<!-- TODO -->` 같은 placeholder
 
-### Step 2: 반환값 분기
+긴 문서일수록 처음부터 완성본을 한 번에 쓰지 말고, 구조를 먼저 저장한다.
 
-**COMPLETE인 경우**: 파일이 이미 완성됨. Step 4로 건너뛴다.
+### Step 2: Fill
 
-**SKELETON_ONLY인 경우**: 반환된 `Sections Remaining` 목록을 확인하고 Step 3으로 진행한다.
+같은 호출 흐름에서 skeleton의 각 섹션을 채운다.
 
-### Step 3: Fill (SKELETON_ONLY일 때만)
+- **의존 섹션**: 앞 섹션이 정리된 뒤 순서대로 채운다
+- **독립 섹션** 2개 이상: 병렬 보조가 필요하면 bounded helper를 쓸 수 있지만, skeleton ownership은 caller가 유지한다
+- **다중 파일**: 공통 계약이 큰 파일부터 먼저 고정하고, 겹치지 않는 파일만 병렬화한다
 
-반환된 미완성 섹션 목록을 보고 Edit으로 채운다:
-
-- **의존 섹션** (앞 섹션 내용에 의존): 순서대로 Edit
-- **독립 섹션** 2개 이상: 병렬 Agent dispatch 가능
-- **다중 파일**: 파일별 독립 fill 가능
-
-각 섹션의 TODO 마커를 찾아 Edit으로 교체한다:
+각 섹션의 placeholder를 실제 내용으로 교체한다:
 ```
 Edit(old_string="<!-- TODO: ... -->", new_string="[실제 내용]")
 ```
 
-### Step 4: 마커 정리 및 완료
+### Step 3: Finalize
 
 - 파일에 남은 `<!-- TODO -->`, `# TODO:`, `<!-- Phase 2 -->` 등 모든 마커를 제거한다.
+- 섹션 순서, 표/목록/링크, 파일 간 cross-reference를 다시 확인한다.
 - 완료 결과를 사용자에게 보고한다.
 
 ## Final Check

@@ -1,5 +1,39 @@
 # Decision Log
 
+## 2026-04-01 - Remove write_skeleton and adopt producer-owned inline 2-phase writing
+
+### Context
+
+`write_skeleton` helper agent는 skeleton-first writing 품질을 높이려는 의도로 도입되었지만, 실제 운영에서는 caller가 부모 콘텍스트를 다시 말아 전달해야 하는 비용이 컸다. 특히 skeleton 생성은 현재 호출자의 문맥, 직전 판단, 참고 파일 해석에 강하게 의존하여 `fork_context`, handoff contract, 반환 해석 규칙이 늘어나는 문제가 있었다.
+
+### Decision
+
+1. **`write_skeleton` 완전 제거**: `.claude/agents/write-skeleton.md`, `.codex/agents/write-skeleton.toml` 삭제
+2. **Producer-Owned Inline 2-Phase Writing 채택**: 장문 문서/리포트/패치 초안은 caller가 현재 콘텍스트에서 skeleton → fill → finalize를 같은 흐름에서 직접 수행
+3. **`write-phased` 재정의**: helper orchestrator가 아니라 공용 inline writing contract로 유지
+4. **Caller 문구 정리**: Claude/Codex의 `feature-draft`, `implementation-plan`, `implementation-review`, `spec-create`, `guide-create`, `pr-review`, `pr-spec-patch`, `spec-summary`, `spec-upgrade` 등 writing producer 문서에서 helper 호출 전제를 제거
+5. **Spec sync**: `_sdd/spec/main.md`의 agent inventory, directory structure, design pattern, runtime guidance를 현재 구조에 맞게 동기화
+
+### Rationale
+
+- skeleton 생성은 helper 분리보다 부모 콘텍스트 보존이 더 중요했다
+- helper layer는 실제로 handoff complexity와 사용성 비용을 증가시켰다
+- inline 2-phase writing은 중간 구조를 드러내면서도 context re-packaging 없이 품질을 유지한다
+- 플랫폼별 subagent 문법 차이를 줄여 Claude/Codex parity를 단순화할 수 있다
+
+### Changes
+
+- `.claude/agents/write-skeleton.md` -- 삭제
+- `.codex/agents/write-skeleton.toml` -- 삭제
+- `.claude/skills/write-phased/`, `.codex/skills/write-phased/` -- inline 2-phase writing contract로 재작성
+- `.claude/agents/`, `.claude/skills/`, `.codex/agents/`, `.codex/skills/`의 writing producer 문구 -- helper 호출에서 caller-owned skeleton 작성 규칙으로 치환
+- `_sdd/spec/main.md` -- version bump, counts 갱신, Producer-Owned Inline 2-Phase Writing 패턴 반영
+
+### References
+
+- 드래프트: `_sdd/drafts/feature_draft_remove_write_skeleton_inline_writing.md`
+- 토론: `_sdd/discussion/discussion_write_skeleton_removal_and_inline_writing.md`
+
 ## 2026-03-20 - AC-First + Self-Contained 전면 리팩토링 (v3.5.0 -> v3.6.0)
 
 ### Context

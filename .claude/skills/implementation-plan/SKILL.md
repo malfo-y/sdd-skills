@@ -165,23 +165,25 @@ Task 관계를 매핑한다:
 
 #### 파일 작성 위임
 
-`sdd-skills:write-skeleton` 서브에이전트에 위임한다. 반환값이 SKELETON_ONLY이면 Sections Remaining 목록을 보고 Edit으로 채운다.
+현재 콘텍스트에서 먼저 문서 skeleton/섹션 헤더를 기록한 뒤, 같은 흐름에서 Edit으로 내용을 채운다.
 - 독립 섹션 2개+ → 병렬 Agent dispatch 가능
 - 의존 섹션 → 순서대로 Edit
 - 완료 후 TODO/Phase 마커 제거
 
-호출 시 Output Format + 수집 정보를 프롬프트에 포함.
+작성 시작 전에 Output Format + 수집 정보를 skeleton 구조에 반영한다.
 
 **단일 문서 (total_tasks ≤ 25)**:
 ```
-Agent(subagent_type="sdd-skills:write-skeleton", prompt="IMPLEMENTATION_PLAN.md 작성. [Output Format + 수집 정보]")
+Write("IMPLEMENTATION_PLAN.md skeleton 작성. [Output Format + 수집 정보]")
+Edit("각 섹션 TODO를 실제 task/phase 내용으로 채움")
 ```
 
 **Phase별 분할 (total_tasks > 25)**:
 
 Step 6-1: 인덱스 파일 순차 작성
 ```
-Agent(subagent_type="sdd-skills:write-skeleton", prompt="IMPLEMENTATION_PLAN.md 인덱스 작성. Overview/Scope/Components/Phase 요약 + Phase 파일 링크")
+Write("IMPLEMENTATION_PLAN.md 인덱스 skeleton 작성. Overview/Scope/Components/Phase 요약 + Phase 파일 링크")
+Edit("인덱스 설명과 링크를 실제 내용으로 채움")
 ```
 
 Step 6-2: Phase 파일 병렬 작성 (인덱스 완성 후)

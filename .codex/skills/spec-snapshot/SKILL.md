@@ -70,9 +70,9 @@ snapshot 루트에 아래 정보를 담은 `SUMMARY.md`를 만든다.
 
 장문이면 다음 순서를 따른다.
 
-1. `write_skeleton` agent로 `SUMMARY.md` skeleton 생성
-2. 반환값이 `COMPLETE`면 그대로 사용
-3. 반환값이 `SKELETON_ONLY`면 이 skill이 `Sections Remaining`을 기준으로 fill 수행
+1. `SUMMARY.md` skeleton/섹션 헤더를 직접 작성
+2. 같은 흐름에서 요약 내용을 채움
+3. TODO/placeholder를 제거하고 finalize
 4. 의존 섹션은 `default`, 독립 요약 섹션은 `worker`로 채운다
 
 ### Step 4: Report Completion

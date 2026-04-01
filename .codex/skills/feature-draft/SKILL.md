@@ -226,7 +226,7 @@ Task 템플릿:
 
 ## Optional Nested Writing
 
-출력 문서가 길고 구조가 복잡하면 먼저 `write_skeleton`를 nested agent로 호출해 skeleton을 저장할 수 있다. 반환값이 `COMPLETE`면 그대로 사용하고, `SKELETON_ONLY`이면 `Sections Remaining` 목록을 기준으로 이 agent가 직접 남은 섹션을 채운다. 의존 섹션은 `default` agent로 순차 fill하고, 독립 섹션은 `worker` agent로 병렬 fill할 수 있다. nested 사용 여부와 무관하게 이 agent 자체가 draft 구조와 필수 필드를 결정해야 한다.
+출력 문서가 길고 구조가 복잡하면 이 agent가 먼저 skeleton/섹션 헤더를 직접 저장한 뒤 같은 흐름에서 내용을 채운다. 의존 섹션은 순차 fill하고, 독립 섹션은 필요 시 `worker` agent로 bounded 병렬 fill할 수 있다. helper를 쓰더라도 skeleton 구조와 필수 필드는 이 agent가 결정한다.
 
 ## Final Check
 

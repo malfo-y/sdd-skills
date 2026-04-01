@@ -96,7 +96,7 @@ version: 2.2.0
 
 #### 파일 작성 위임
 
-`sdd-skills:write-skeleton` 서브에이전트에 위임한다. 반환값이 SKELETON_ONLY이면 Sections Remaining 목록을 보고 Edit으로 채운다.
+현재 콘텍스트에서 먼저 guide skeleton/섹션 헤더를 기록한 뒤, 같은 흐름에서 Edit으로 내용을 채운다.
 - 독립 섹션 2개+ → 병렬 Agent dispatch 가능
 - 의존 섹션 → 순서대로 Edit
 - 완료 후 TODO/Phase 마커 제거
@@ -177,4 +177,3 @@ Optional appendix: spec references, code references, assumptions/open points
 ## Final Check
 
 Acceptance Criteria가 모두 만족되었나 검증한다. 미충족 항목이 있으면 해당 단계로 돌아가 수정한다.
-

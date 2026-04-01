@@ -152,23 +152,20 @@ ELSE → 미파악 항목 추가 탐색 또는 Open Questions 기록
 
 #### Step 3-B: Write Spec
 
-`sdd-skills:write-skeleton` 서브에이전트에 위임한다. 반환값이 SKELETON_ONLY이면 Sections Remaining 목록을 보고 Edit으로 채운다.
+현재 콘텍스트에서 먼저 spec skeleton/섹션 헤더를 기록한 뒤, 같은 흐름에서 Edit으로 내용을 채운다.
 - 독립 섹션 2개+ → 병렬 Agent dispatch 가능
 - 의존 섹션 → 순서대로 Edit
 - 완료 후 TODO/Phase 마커 제거
 
-호출 시 `references/template-compact.md`의 스펙 템플릿 전체와 Step 2 분석 결과를 프롬프트에 포함한다.
+작성 시작 전에 `references/template-compact.md`의 스펙 템플릿 구조와 Step 2 분석 결과를 skeleton에 반영한다.
 
 > **`references/template-compact.md`를 Read로 읽는다.** §1-§8 섹션 구조, Writing Rules(코드 발췌/인라인 citation/What-Why-How 트라이어드), Modular Spec Guide가 정의되어 있다.
 
 ##### 단일 파일 (소규모, ≤ 500줄)
 
 ```
-Agent(
-  subagent_type="sdd-skills:write-skeleton",
-  prompt="파일 경로: [_sdd/spec/<project>.md 또는 _sdd/spec/main.md]
-  [references/template-compact.md §1-§8 + Step 2 분석 결과]"
-)
+Write("_sdd/spec/<project>.md 또는 _sdd/spec/main.md skeleton 작성. [references/template-compact.md §1-§8 + Step 2 분석 결과]")
+Edit("각 섹션 TODO와 placeholder를 실제 spec 내용으로 채움")
 ```
 
 ##### 멀티파일 (중규모 500-1500줄 / 대규모 1500줄+)
@@ -182,9 +179,8 @@ Agent(
 
 **Step 3-B-1**: main.md (인덱스) 순차 작성
 ```
-Agent(subagent_type="sdd-skills:write-skeleton", prompt="main.md 인덱스 작성.
-  §1-§3 인라인 + §4 컴포넌트 링크.
-  [references/template-compact.md + Step 2 분석 결과]")
+Write("main.md 인덱스 skeleton 작성. §1-§3 인라인 + §4 컴포넌트 링크. [references/template-compact.md + Step 2 분석 결과]")
+Edit("main.md 인덱스 설명과 링크를 실제 내용으로 채움")
 ```
 
 **Step 3-B-2**: 컴포넌트 파일 병렬 작성 (main.md 완성 후)
@@ -261,4 +257,3 @@ Decision log entry format:
 ## Final Check
 
 Acceptance Criteria가 모두 만족되었나 검증한다. 미충족 항목이 있으면 해당 단계로 돌아가 수정한다.
-

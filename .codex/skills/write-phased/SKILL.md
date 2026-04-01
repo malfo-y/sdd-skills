@@ -1,12 +1,12 @@
 ---
 name: write-phased
-description: 'This skill should be used when the user asks to "write-phased", "문서 작성", "작성해줘", "만들어줘", "코드 작성", "파일 생성", "구현해줘", "write a document", "create a file", "generate code", "implement", or any request to produce a markdown document, code file, config file, or technical writing. Orchestrates skeleton-first writing: spawns write_skeleton for structure, then fills sections.'
-version: 2.1.0
+description: 'This skill should be used when the user asks to "write-phased", "문서 작성", "작성해줘", "만들어줘", "코드 작성", "파일 생성", "구현해줘", "write a document", "create a file", "generate code", "implement", or any request to produce a markdown document, code file, config file, or technical writing. The caller writes the skeleton inline first, then fills and finalizes in the same flow.'
+version: 3.0.0
 ---
 
-# write-phased — Skeleton + Fill Orchestration
+# write-phased — Inline 2-Phase Writing
 
-`write_skeleton` agent로 파일을 생성하고, SKELETON_ONLY이면 직접 섹션을 채운다.
+별도 writing helper agent를 spawn하지 않는다. 호출자가 현재 콘텍스트에서 먼저 skeleton/outline/TODO marker를 파일에 기록하고, 같은 흐름에서 내용을 채우고 finalize한다.
 
 ## Acceptance Criteria
 
@@ -15,48 +15,43 @@ version: 2.1.0
 - [ ] AC1: 요청된 파일이 완성된 상태로 저장되어 있다
 - [ ] AC2: TODO/Phase 마커가 남아있지 않다
 - [ ] AC3: 사용자 요청 언어를 따랐다
+- [ ] AC4: skeleton 작성과 fill이 같은 호출 흐름 안에서 수행되었다
 
 ## Hard Rules
 
-1. 다른 skill을 중첩 호출하지 않는다. skeleton 생성은 `write_skeleton` agent만 사용한다.
-2. fill 책임은 이 skill에 있다. `SKELETON_ONLY`이면 `default` 또는 `worker` agent를 사용해 남은 섹션을 채운다.
-3. `spawn_agent(...)` 결과는 항상 `wait_agent(ids=[...])`로 수집한다.
+1. skeleton 생성과 fill은 같은 호출 흐름에서 수행한다. helper agent로 skeleton ownership을 넘기지 않는다.
+2. 긴 문서일수록 먼저 outline/heading/placeholder를 저장한 뒤 내용을 채운다.
+3. bounded helper를 쓰더라도 caller가 skeleton 구조와 최종 통합 책임을 유지한다.
 4. 독립 섹션이 아니면 병렬화하지 않는다.
 
 ## Process
 
-### Step 1: Skeleton 생성
+### Step 1: Skeleton 작성
 
-`write_skeleton` agent를 spawn한다:
+대상 파일에 skeleton/outline을 직접 기록한다. 최소한 다음 중 필요한 것을 먼저 만든다.
 
-```
-writer_id = spawn_agent(agent_type="write_skeleton", message="[사용자 요청 전문]")
-wait_agent(ids=[writer_id])
-```
+- 문서 제목
+- 주요 섹션 헤더
+- 빈 목록/표 골격
+- `TODO`, `TBD`, `<!-- TODO -->` 같은 placeholder
 
-### Step 2: 반환값 분기
+### Step 2: Fill
 
-**COMPLETE인 경우**: 파일이 이미 완성됨. Step 4로 건너뛴다.
+같은 호출 흐름에서 skeleton의 각 섹션을 채운다.
 
-**SKELETON_ONLY인 경우**: 반환된 `Sections Remaining` 목록을 확인하고 Step 3으로 진행한다.
-
-### Step 3: Fill (SKELETON_ONLY일 때만)
-
-반환된 미완성 섹션 목록을 보고 채운다:
-
-- **의존 섹션** 또는 작은 단일 파일: `spawn_agent(agent_type="default", message="...")`로 순차 fill
-- **독립 섹션** 2개 이상: 섹션별 또는 파일별로 `spawn_agent(agent_type="worker", message="...")`를 병렬 호출
+- **의존 섹션** 또는 작은 단일 파일: caller가 순서대로 채운다
+- **독립 섹션** 2개 이상: 필요 시 `default` 또는 `worker` agent를 bounded helper로 사용할 수 있다
 - **다중 파일**: 공통 의존성이 큰 파일을 먼저 채우고, 겹치지 않는 파일만 병렬 fill
 
-fill agent에 전달할 최소 정보:
+helper를 쓰는 경우에도 최소한 아래를 넘긴다.
 
 - 대상 파일 경로
-- `Sections Remaining` 목록
-- 유지해야 할 기존 skeleton 구조
+- 채워야 할 섹션 또는 책임 범위
+- 유지해야 할 skeleton 구조
 - 언어/톤/출력 형식
-- TODO 마커를 실제 내용으로 치환하라는 지시
+- placeholder를 실제 내용으로 치환하라는 지시
 
-### Step 4: 마커 정리 및 완료
+### Step 3: Finalize
 
 - 파일에 남은 `<!-- TODO -->`, `# TODO:`, `<!-- Phase 2 -->` 등 모든 마커를 제거한다.
 - 다중 파일이면 파일 간 이름, import, 참조 관계를 교차 검증한다.

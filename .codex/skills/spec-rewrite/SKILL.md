@@ -41,7 +41,7 @@ version: 1.5.0
 3. `Source` 필드가 있으면 재구성 후에도 유지한다.
 4. 대규모 구조 변경이나 파일 분할은 계획을 먼저 제시하고 필요한 경우 사용자 확인을 받는다.
 5. 기존 문서 언어를 따른다. 새 프로젝트는 한국어를 기본으로 한다.
-6. 장문 문서나 다중 파일 rewrite는 먼저 `write_skeleton` agent로 skeleton을 만든다. 반환값이 `SKELETON_ONLY`이면 이 skill이 `default` 또는 `worker` agent로 남은 섹션을 채운다.
+6. 장문 문서나 다중 파일 rewrite는 caller가 먼저 skeleton/섹션 헤더를 직접 기록한 뒤, 같은 흐름에서 내용을 채운다.
 7. rewrite는 핵심 계약을 더 선명하게 해야지, 내용을 임의로 확장하면 안 된다.
 
 ## Input Sources
@@ -94,9 +94,9 @@ version: 1.5.0
 
 장문 rewrite는 다음 순서를 따른다.
 
-1. `write_skeleton` agent로 대상 파일 skeleton 생성
-2. 반환값이 `COMPLETE`면 그대로 사용
-3. 반환값이 `SKELETON_ONLY`면 이 skill이 `Sections Remaining`을 기준으로 fill 수행
+1. 대상 파일 skeleton/섹션 헤더를 직접 작성
+2. 같은 흐름에서 각 섹션 내용을 채움
+3. TODO/placeholder를 제거하고 finalize
 4. 의존 섹션은 `default`, 독립 파일/섹션은 `worker`로 채운다
 
 구조 개선의 대표 패턴:

@@ -37,7 +37,7 @@ PR 변경사항을 현재 스펙과 비교해 `_sdd/pr/spec_patch_draft.md`에 s
 1. `_sdd/spec/` 아래 파일은 생성/수정/삭제하지 않는다.
 2. 이 스킬의 기본 산출물은 `_sdd/pr/spec_patch_draft.md` 하나다.
 3. 스펙 반영은 `/spec-update-todo`로만 수행한다.
-4. 대형 patch 초안은 먼저 `write_skeleton` agent로 skeleton을 만든다. 반환값이 `SKELETON_ONLY`이면 이 skill이 `default` 또는 `worker` agent로 남은 섹션을 채운다.
+4. 대형 patch 초안은 caller가 먼저 skeleton/섹션 헤더를 직접 기록한 뒤, 같은 흐름에서 내용을 채운다.
 5. 대형 PR이나 split spec이면 evidence 수집과 분류를 분리하되, 최종 patch draft는 하나로 통합한다.
 
 ## Input Sources
@@ -107,9 +107,9 @@ PR evidence를 아래 범주로 분류한다.
 
 초안이 길면 다음 순서를 따른다.
 
-1. `write_skeleton` agent로 patch draft skeleton 생성
-2. 반환값이 `COMPLETE`면 그대로 사용
-3. 반환값이 `SKELETON_ONLY`면 이 skill이 `Sections Remaining`을 기준으로 fill 수행
+1. patch draft skeleton/섹션 헤더를 직접 작성
+2. 같은 흐름에서 evidence와 patch 내용을 채움
+3. TODO/placeholder를 제거하고 finalize
 4. 의존 섹션은 `default`, 독립 섹션은 `worker`로 채운다
 
 ### Step 5: Finalize the Patch Draft

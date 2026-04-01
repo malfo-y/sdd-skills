@@ -41,7 +41,7 @@ version: 1.7.0
 3. 기존 `SUMMARY.md`가 있으면 `prev/PREV_SUMMARY_<timestamp>.md`로 백업 후 갱신한다.
 4. README는 전체를 덮어쓰지 않는다. `spec-summary` marker block만 갱신하거나 없으면 안전하게 추가한다.
 5. 문서 언어는 기존 스펙/문서를 따른다. 기존 스펙이 없으면 한국어를 기본으로 한다.
-6. summary가 길거나 구조적으로 복잡하면 먼저 `write_skeleton` agent로 skeleton을 만든다. 반환값이 `SKELETON_ONLY`이면 이 skill이 `default` 또는 `worker` agent로 남은 섹션을 채운다.
+6. summary가 길거나 구조적으로 복잡하면 caller가 먼저 skeleton/섹션 헤더를 직접 기록한 뒤, 같은 흐름에서 내용을 채운다.
 7. split spec 또는 컴포넌트 수가 많으면 병렬 추출 후 부모가 최종 summary를 통합한다.
 
 ## Input Sources
@@ -135,8 +135,8 @@ completed / (completed + in-progress + planned)
 
 - 섹션별 핵심 포인트 추출을 병렬 수행
 - 부모가 completion, risk, next steps를 통합
-- 먼저 `write_skeleton` agent로 `SUMMARY.md` skeleton을 저장
-- 결과가 `SKELETON_ONLY`이면 `default` 또는 `worker` agent로 `Sections Remaining`을 채운다
+- 먼저 `SUMMARY.md` skeleton/섹션 헤더를 직접 저장
+- 같은 흐름에서 각 섹션 내용을 채운다
 
 ### Step 6: Optional README Sync
 
@@ -199,7 +199,7 @@ README block 원칙:
 | 구현 문서 없음 | spec만 기준으로 요약하고 상태 신뢰도 낮음을 명시 |
 | README 요청이 없는데 README 관련 문서만 있음 | README는 수정하지 않음 |
 | README marker 없음 | 새 managed block 추가 |
-| 문서가 너무 큼 | `write_skeleton` + caller fill 또는 fan-out으로 분리 작성 |
+| 문서가 너무 큼 | caller가 skeleton을 먼저 저장한 뒤 같은 흐름에서 fill 또는 bounded fan-out |
 
 ## Final Check
 
