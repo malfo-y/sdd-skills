@@ -111,7 +111,7 @@ version: 1.6.0
 - ambiguity / risk / unresolved decision
 - whitepaper 기준에서 경고만 남길 항목
 
-대규모 구조 변경이면 여기서 사용자 확인을 받는다.
+대규모 구조 변경이면 여기서 `request_user_input`으로 명시적 승인을 받는다. 승인 없이 Step 3으로 진행하지 않는다.
 
 ### Step 3: Create Safety Backups
 

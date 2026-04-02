@@ -85,7 +85,7 @@ Rewrite long or complex specs into a clearer structure by pruning unnecessary co
 
 **Tools**: `AskUserQuestion`
 
-사용자에게 아래 구조의 리라이트 계획을 제시하고 승인을 받는다:
+사용자에게 아래 구조의 리라이트 계획을 제시하고, `AskUserQuestion`으로 명시적 승인을 받은 뒤에만 다음 단계로 진행한다:
 
 ```markdown
 ## Spec Rewrite Plan
