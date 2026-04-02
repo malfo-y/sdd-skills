@@ -19,18 +19,18 @@ version: 2.1.0
 > 프로세스 완료 후 아래 기준을 자체 검증한다. 미충족 항목은 해당 단계로 돌아가 수정한다.
 
 - [ ] AC1: 3가지 입력 소스 (대화, `user_spec.md`, `user_draft.md`) 중 하나 이상을 파싱하여 요구사항 추출
-- [ ] AC2: 스펙 백업(`prev/PREV_*`) → 섹션 매핑 → 업데이트 적용 → 버전(patch) 증가 완료
+- [ ] AC2: 스펙 백업(`prev/prev_*`) → 섹션 매핑 → 업데이트 적용 → 버전(patch) 증가 완료
 - [ ] AC3: 처리된 입력 파일에 `_processed_` 접두사 추가 및 처리 메타데이터 기록
 - [ ] AC4: 업데이트 요약 보고(변경 섹션·항목 테이블, 입력 파일 상태, 후속 안내) 출력
 - [ ] AC5: 분할 스펙에서 각 항목이 의미적으로 적합한 파일에 배치되고, 신규 파일 생성 시 main.md 인덱스에 링크 추가됨
 
 ## Hard Rules
 
-1. **백업 필수**: 스펙 수정 전 `_sdd/spec/prev/PREV_<filename>_<timestamp>.md`로 백업한다.
+1. **백업 필수**: 스펙 수정 전 `_sdd/spec/prev/prev_<filename>_<timestamp>.md`로 백업한다.
 2. **입력 파일 리네임**: 처리 완료 시 `_processed_` 접두사로 이름 변경한다.
 3. **언어 규칙**: 기존 스펙 언어를 따른다. 새 프로젝트는 한국어 기본. 사용자 명시 시 해당 언어. 섹션 내 언어 혼합 금지.
 4. **스펙 구조 보존**: 기존 구조·스타일 유지, 필요한 항목만 추가한다.
-5. **DECISION_LOG 최소화**: 결정 기록은 `DECISION_LOG.md`에만. 추가 문서는 사용자 요청 시에만 생성한다.
+5. **decision_log 최소화**: 결정 기록은 `decision_log.md`에만. 추가 문서는 사용자 요청 시에만 생성한다.
 6. **양 파일 공존 시**: `user_draft.md` 우선, `user_spec.md` 보조 병합. 가정은 Update Plan에 기록한다.
 7. **main.md 인덱스 동기화**: 새 sub-spec 파일 생성 시 반드시 main.md 인덱스에 링크를 추가한다. 고아 파일 금지.
 8. **기존 스펙 구조 보존**: 기존 파일 분할 구조를 변경하지 않는다. 파일 추가만 허용, 기존 구조 재편성 금지.
@@ -42,7 +42,7 @@ version: 2.1.0
 | 대화 | 현재 대화 | 기능 설명, 요구사항, 개선 요청 등 |
 | user_spec.md | `_sdd/spec/user_spec.md` | 사용자 작성 스펙 입력 (구조화/자유 형식 모두 가능) |
 | user_draft.md | `_sdd/spec/user_draft.md` | 사용자 작성 초안 |
-| DECISION_LOG | `_sdd/spec/DECISION_LOG.md` | (optional) 기존 결정·제약 참조용 |
+| decision_log | `_sdd/spec/decision_log.md` | (optional) 기존 결정·제약 참조용 |
 
 ## Process
 
@@ -62,7 +62,7 @@ version: 2.1.0
 2. 스펙 내용 읽기
    - 단일 파일: 해당 파일 읽기
    - 분할 스펙: main.md 인덱스에서 링크된 sub-spec 파일 목록 구성, 각 파일의 주제·섹션 구조 파악
-3. `DECISION_LOG.md` 존재 시 참조
+3. `decision_log.md` 존재 시 참조
 4. 입력에서 기능명, 설명, 우선순위, 수용 기준 등 구조화 정보 추출
 
 ### Step 3: 섹션 매핑 & Update Plan
@@ -107,7 +107,7 @@ Update Plan을 작업 로그로 출력한 뒤 Step 4로 자동 진행한다.
 2. 적절한 섹션에 항목 삽입 (기존 스타일·언어 유지)
    2-1. 신규 sub-spec 파일 생성 시: 파일 생성 → main.md 인덱스에 링크 추가
 3. 버전 patch 증가 (X.Y.Z → X.Y.Z+1), 날짜 갱신, Changelog 항목 추가
-4. 필요 시 `DECISION_LOG.md`에 항목 추가
+4. 필요 시 `decision_log.md`에 항목 추가
 5. 처리된 입력 파일을 `_processed_` 접두사로 이름 변경, 처리 메타데이터 추가
 
 ### Step 5: 검증 & 요약 보고

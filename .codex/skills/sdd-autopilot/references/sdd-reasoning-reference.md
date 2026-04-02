@@ -151,7 +151,7 @@ autopilot이 생성한 오케스트레이터 파이프라인에 조합하는 스
 - **Role**: phase별 상세 구현 계획 수립
 - **Agent**: `implementation-plan`
 - **Input**: `_sdd/drafts/feature_draft_<topic>.md` + `_sdd/spec/main.md`
-- **Output**: `_sdd/implementation/IMPLEMENTATION_PLAN.md`
+- **Output**: `_sdd/implementation/implementation_plan.md`
 - **Pre-condition**: feature_draft 존재
 - **Post-condition**: 구현 계획 존재 + 태스크 1개 이상 정의
 - **Reasoning note**: 대규모 구현에서 phase별 계획 필요 시. 중규모에서는 feature-draft의 Part 2가 대체.
@@ -160,7 +160,7 @@ autopilot이 생성한 오케스트레이터 파이프라인에 조합하는 스
 
 - **Role**: TDD 기반 코드 구현
 - **Agent**: `implementation`
-- **Input**: `_sdd/implementation/IMPLEMENTATION_PLAN.md` 또는 feature_draft
+- **Input**: `_sdd/implementation/implementation_plan.md` 또는 feature_draft
 - **Output**: 코드 파일들
 - **Pre-condition**: 구현 계획 또는 feature_draft 존재
 - **Post-condition**: 구현 대상 파일 생성/수정 + 구문 에러 없음

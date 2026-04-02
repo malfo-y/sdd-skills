@@ -81,7 +81,7 @@ These elements MUST be preserved during spec rewrite/restructuring.
 
 ### Component Preservation
 
-- **Why fields**: component-level `Why` fields must remain inline, not moved to `DECISION_LOG.md` or appendix
+- **Why fields**: component-level `Why` fields must remain inline, not moved to `decision_log.md` or appendix
 - **Source fields**: implementation file mappings must be preserved during section moves
 
 ## 5) Rewrite Boundary

@@ -259,7 +259,7 @@ FOR EACH step IN pipeline_steps:
 | 에이전트 | Exit Criteria |
 |---------|--------------|
 | `sdd-skills:feature-draft` | `_sdd/drafts/feature_draft_<topic>.md` 존재 + 요구사항/제약조건 비어있지 않음 |
-| `sdd-skills:implementation-plan` | `IMPLEMENTATION_PLAN.md` 존재 + 태스크 1개+ |
+| `sdd-skills:implementation-plan` | `implementation_plan.md` 존재 + 태스크 1개+ |
 | `sdd-skills:implementation` | 대상 파일 생성/수정 + 구문 에러 없음 |
 | `sdd-skills:implementation-review` | 심각도 분류(critical/high/medium/low) 포함 |
 | `sdd-skills:ralph-loop-init` | `ralph/` + `run.sh` 실행 가능 + `state.md` 존재 |

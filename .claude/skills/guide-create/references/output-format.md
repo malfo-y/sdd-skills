@@ -15,7 +15,7 @@
 ## 2. 백업 규칙
 
 - 대상 파일이 이미 존재하면 새 파일을 쓰기 전에 `_sdd/guides/prev/`에 백업한다.
-- 백업 파일명: `PREV_guide_<slug>_<timestamp>.md`
+- 백업 파일명: `prev_guide_<slug>_<timestamp>.md`
 - timestamp 형식: `YYYYMMDD_HHMMSS`
 
 ## 3. Writing Rules

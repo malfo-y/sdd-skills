@@ -27,7 +27,7 @@
 
 - Move long batch execution logs to appendix
 - Collapse duplicate API response tables into one canonical table
-- Prune low-value historical commentary after preserving the rationale in `DECISION_LOG.md`
+- Prune low-value historical commentary after preserving the rationale in `decision_log.md`
 
 ## Split Map
 
@@ -48,7 +48,7 @@ _sdd/spec/
 - `Component Separation`: move operations and interfaces into dedicated files
 - `Findability`: turn `main` into a link-first hub so core topics stay within two hops
 - `Repo Purpose Clarity`: keep project purpose and usage path in `main`
-- `Why/Decision Preservation`: move only low-value bulk text and preserve rationale in-line or in `DECISION_LOG.md`
+- `Why/Decision Preservation`: move only low-value bulk text and preserve rationale in-line or in `decision_log.md`
 
 ## Ambiguities / Risks / Unresolved Decisions
 
@@ -66,7 +66,7 @@ _sdd/spec/
 1. Rewrite `main` as the index hub
 2. Create split files and move existing content
 3. Validate links and citation headers
-4. Write `REWRITE_REPORT.md` with any deviations from this plan
+4. Write `rewrite_report.md` with any deviations from this plan
 
 ## Approval Status
 

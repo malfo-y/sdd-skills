@@ -14,12 +14,12 @@ version: 1.4.0
 ## Acceptance Criteria
 > 프로세스 완료 후 아래 기준을 자체 검증한다. 미충족 항목은 해당 단계로 돌아가 수정한다.
 
-- [ ] AC1: `Glob("_sdd/spec/SUMMARY.md")` → 파일 존재 확인
-- [ ] AC2: SUMMARY.md가 정확한 진행률(완료/진행중/계획)을 포함한다
+- [ ] AC1: `Glob("_sdd/spec/summary.md")` → 파일 존재 확인
+- [ ] AC2: summary.md가 정확한 진행률(완료/진행중/계획)을 포함한다
 - [ ] AC3: 핵심 기능별 plain-text 설명(what/how/why/status)이 포함된다
 - [ ] AC4: 권장 다음 단계(Immediate/Short-term/Long-term)가 구체적이고 time-bound이다
 - [ ] AC5: Executive Summary에서 What/Why/Status를 2분 내 파악 가능하다
-- [ ] AC6: 기존 SUMMARY.md가 있었으면 `prev/PREV_SUMMARY_<timestamp>.md`로 백업되었다
+- [ ] AC6: 기존 summary.md가 있었으면 `prev/prev_summary_<timestamp>.md`로 백업되었다
 - [ ] AC7: (README 요청 시) marker block만 업데이트되고 다른 README 내용은 보존된다
 
 ## Overview
@@ -30,7 +30,7 @@ version: 1.4.0
 
 | 항목 | 값 |
 |------|-----|
-| Primary file | `_sdd/spec/SUMMARY.md` |
+| Primary file | `_sdd/spec/summary.md` |
 | Optional file | `README.md` (사용자 명시 요청 시만) |
 | Format | Layered markdown (executive summary → technical details) |
 | Audience | Mixed (stakeholders + developers) |
@@ -38,25 +38,25 @@ version: 1.4.0
 
 ## Hard Rules
 
-1. **Spec read-only**: `_sdd/spec/*.md` 파일은 읽기 전용이다 (`SUMMARY.md` 제외). 스펙 내용을 수정하지 않는다.
+1. **Spec read-only**: `_sdd/spec/*.md` 파일은 읽기 전용이다 (`summary.md` 제외). 스펙 내용을 수정하지 않는다.
 2. **README sync on explicit request only**: README 업데이트는 사용자가 명시적으로 요청할 때만 수행한다.
 3. **언어 규칙**: 기존 스펙/문서의 언어를 따른다. 새 프로젝트(기존 스펙 없음)는 한국어 기본. 사용자 명시 지정 시 해당 언어 사용.
-4. **백업 후 덮어쓰기**: 기존 `SUMMARY.md` 존재 시 `prev/PREV_SUMMARY_<timestamp>.md`로 백업 후 새로 생성한다.
+4. **백업 후 덮어쓰기**: 기존 `summary.md` 존재 시 `prev/prev_summary_<timestamp>.md`로 백업 후 새로 생성한다.
 
 ## Input Sources
 
 ### Primary Source
 - **Main spec**: `_sdd/spec/<project>.md` 또는 `_sdd/spec/main.md`
 - **Sub-specs**: index/main spec에서 참조하는 하위 스펙 파일 (e.g. `<project>_API.md`, `<project>_DATA_MODEL.md`)
-  - `SUMMARY.md`, `prev/PREV_*.md`는 제외
+  - `summary.md`, `prev/prev_*.md`는 제외
 
 ### Secondary Sources (Optional)
 
 | Source | Path | Usage |
 |--------|------|-------|
-| Implementation progress | `_sdd/implementation/IMPLEMENTATION_PROGRESS.md` | 현재 진행 상황 |
-| Implementation progress (phases) | `_sdd/implementation/IMPLEMENTATION_PROGRESS_PHASE_<n>.md` | 최신 phase 우선 |
-| Implementation review | `_sdd/implementation/IMPLEMENTATION_REVIEW.md` | 리뷰 결과 |
+| Implementation progress | `_sdd/implementation/implementation_progress.md` | 현재 진행 상황 |
+| Implementation progress (phases) | `_sdd/implementation/implementation_progress_phase_<n>.md` | 최신 phase 우선 |
+| Implementation review | `_sdd/implementation/implementation_review.md` | 리뷰 결과 |
 | Project README | `README.md` | README sync 요청 시만 |
 | Environment guide | `_sdd/env.md` | 로컬 검증 필요 시 |
 
@@ -88,7 +88,7 @@ Whitepaper-style (§1~§8)과 legacy 포맷 모두 지원. Whitepaper 섹션은 
 
 1. `_sdd/spec/`에서 main spec 검색: `<project>.md` → `main.md` → 후보 제시
 2. Split spec: index/links 따라 sub-spec 수집
-3. Implementation 파일 확인: `IMPLEMENTATION_PROGRESS*.md`, `IMPLEMENTATION_REVIEW.md`
+3. Implementation 파일 확인: `implementation_progress*.md`, `implementation_review.md`
 4. 로컬 검증 필요 시 `_sdd/env.md` 참조
 
 > No spec found → `/spec-create` 권장. 읽기 불가 → 오류 메시지 후 중지.
@@ -115,8 +115,8 @@ Whitepaper-style (§1~§8)과 legacy 포맷 모두 지원. Whitepaper 섹션은 
 
 #### From Implementation Files (If Exist)
 
-- `IMPLEMENTATION_PROGRESS.md`: 현재 태스크, 블로커, 마일스톤
-- `IMPLEMENTATION_REVIEW.md`: 리뷰 결과, 품질 이슈, 권장 액션
+- `implementation_progress.md`: 현재 태스크, 블로커, 마일스톤
+- `implementation_review.md`: 리뷰 결과, 품질 이슈, 권장 액션
 
 ### Step 3: Analyze Status
 
@@ -166,11 +166,11 @@ Output Format 전체와 수집 맥락을 프롬프트에 포함.
    - §2 존재 → Core Design Highlights 포함, 없으면 생략
    - §5 존재 → Usage Scenarios 포함, 없으면 생략
    - §1 존재 → Executive Summary "Why" 강화
-2. 기존 `SUMMARY.md` → `prev/PREV_SUMMARY_<timestamp>.md` 백업
-3. `_sdd/spec/SUMMARY.md` 생성
+2. 기존 `summary.md` → `prev/prev_summary_<timestamp>.md` 백업
+3. `_sdd/spec/summary.md` 생성
 4. 타임스탬프/메타데이터 추가
 
-> SUMMARY.md 생성 완료 + README 요청 → Step 6 / README 미요청 → 완료 / 미생성 → Step 5 재실행
+> summary.md 생성 완료 + README 요청 → Step 6 / README 미요청 → 완료 / 미생성 → Step 5 재실행
 
 ### Step 6: Optional README Sync (On Request Only)
 
@@ -346,8 +346,8 @@ Based on current spec state and progress:
 
 ### Key Files
 - **Spec Document** (스펙 문서): `_sdd/spec/<project>.md`
-- **Implementation Progress** (구현 진행): `_sdd/implementation/IMPLEMENTATION_PROGRESS.md` (if exists)
-- **Latest Review** (최근 리뷰): `_sdd/implementation/IMPLEMENTATION_REVIEW.md` (if exists)
+- **Implementation Progress** (구현 진행): `_sdd/implementation/implementation_progress.md` (if exists)
+- **Latest Review** (최근 리뷰): `_sdd/implementation/implementation_review.md` (if exists)
 
 ### Related Commands
 - `/spec-update-todo` - Add new features to spec
@@ -382,7 +382,7 @@ README sync 요청 시 `README.md`에 삽입/갱신하는 marker block:
 ### 2. [Feature Name]
 [Plain-text what/how/why/status paragraph]
 
-More details: [`_sdd/spec/SUMMARY.md`](_sdd/spec/SUMMARY.md)
+More details: [`_sdd/spec/summary.md`](_sdd/spec/summary.md)
 <!-- spec-summary:end -->
 ```
 

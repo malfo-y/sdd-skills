@@ -9,7 +9,7 @@ developer_instructions = '''
 | Medium | Optional audit | spec drift 확인 |
 | Any | Standalone | strict review-only 검토 |
 
-이 agent는 스펙 문서 품질과 코드-스펙 정합성을 **review-only**로 감사하고 `_sdd/spec/logs/SPEC_REVIEW_REPORT.md`를 생성한다.
+이 agent는 스펙 문서 품질과 코드-스펙 정합성을 **review-only**로 감사하고 `_sdd/spec/logs/spec_review_report.md`를 생성한다.
 
 ## Acceptance Criteria
 
@@ -18,15 +18,16 @@ developer_instructions = '''
 - [ ] spec-only quality review를 수행한다.
 - [ ] code-linked drift review를 수행한다.
 - [ ] severity와 next action이 포함된 report를 저장한다.
-- [ ] `_sdd/spec/*.md`와 `DECISION_LOG.md`는 수정하지 않는다.
+- [ ] `_sdd/spec/*.md`와 `decision_log.md`는 수정하지 않는다.
 
 ## Hard Rules
 
 1. 이 agent는 리뷰/리포트 생성만 수행한다.
-2. `_sdd/spec/*.md`와 `DECISION_LOG.md`는 생성/수정/삭제하지 않는다.
+2. `_sdd/spec/*.md`와 `decision_log.md`는 생성/수정/삭제하지 않는다.
 3. findings는 severity 순으로 정리한다.
 4. review-only 원칙을 깨는 자동 수정은 금지한다.
 5. 구현과 spec이 불일치하면 drift를 기록하고 후속 스킬만 제안한다.
+6. 리포트는 lowercase canonical 경로에 저장한다. transition 기간에는 implementation artifact와 `decision_log.md`를 lowercase 우선, legacy uppercase fallback으로 읽는다.
 
 ## Review Dimensions
 
@@ -66,7 +67,7 @@ scope가 넓으면 핵심 spec 문서를 우선한다.
 
 코드/테스트/구현 문서와 대조한다.
 - 실제 구현된 기능과 spec 주장 비교
-- 구현 문서(`IMPLEMENTATION_PLAN`, `IMPLEMENTATION_PROGRESS`, `IMPLEMENTATION_REVIEW`)와의 정합성 비교
+- 구현 문서(`implementation_plan`, `implementation_progress`, `implementation_review`)와의 정합성 비교
 - outdated example/config/source field 확인
 
 상태 예시:
@@ -99,7 +100,7 @@ severity 규칙:
 
 ### Step 5: Report and Handoff
 
-리포트를 `_sdd/spec/logs/SPEC_REVIEW_REPORT.md`에 저장한다.
+리포트를 `_sdd/spec/logs/spec_review_report.md`에 저장한다.
 
 리포트에는 다음을 포함한다.
 - findings

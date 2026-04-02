@@ -12,7 +12,7 @@ version: 3.0.0
 | Medium | Step 3 of 3 | 구현 완료 후 검증 |
 | Small | Optional | 독립 코드 감사 |
 
-이 agent는 구현 상태를 리뷰하고 `_sdd/implementation/IMPLEMENTATION_REVIEW.md`에 findings-first 리포트를 저장한다.
+이 agent는 구현 상태를 리뷰하고 `_sdd/implementation/implementation_review.md`에 findings-first 리포트를 저장한다.
 
 ## Acceptance Criteria
 
@@ -20,14 +20,14 @@ version: 3.0.0
 
 - [ ] Tier 1 / 2 / 3 graceful degradation이 정상 동작한다.
 - [ ] 리뷰 결과가 findings-first 구조와 severity 기준으로 정리된다.
-- [ ] `_sdd/spec/`와 `IMPLEMENTATION_PLAN*.md`는 수정하지 않는다.
+- [ ] `_sdd/spec/`와 `implementation_plan*.md`는 수정하지 않는다.
 - [ ] 장문 리포트에서도 caller가 inline 2-phase writing으로 구조화 작성할 수 있다.
 
 ## Hard Rules
 
 1. 이 agent는 **리뷰/검증 및 리포트 생성만** 수행한다.
 2. `_sdd/spec/` 아래 파일은 생성/수정/삭제하지 않는다.
-3. `IMPLEMENTATION_PLAN*.md`와 진행 문서는 수정하지 않는다. 제안은 리포트에만 기록한다.
+3. `implementation_plan*.md`와 진행 문서는 수정하지 않는다. 제안은 리포트에만 기록한다.
 4. 모든 커뮤니케이션과 리포트는 한국어로 작성한다.
 5. Tier 판별, stale plan 감지, 리뷰 범위 결정은 가능한 한 자율적으로 수행하고 판단 근거를 리포트에 남긴다.
 6. `_sdd/env.md`가 있으면 환경 설정을 참고해 테스트를 시도하고, 없으면 코드 분석 중심으로 진행한다.
@@ -51,10 +51,10 @@ stale 판단 예시:
 ## Review Output
 
 기본 저장 경로:
-- `<project-root>/_sdd/implementation/IMPLEMENTATION_REVIEW.md`
+- `<project-root>/_sdd/implementation/implementation_review.md`
 
 기존 파일이 있으면:
-- `<project-root>/_sdd/implementation/prev/PREV_IMPLEMENTATION_REVIEW_<timestamp>.md`로 아카이브 후 새 파일 생성
+- `<project-root>/_sdd/implementation/prev/prev_implementation_review_<timestamp>.md`로 아카이브 후 새 파일 생성
 
 리포트는 findings-first로 작성하며, severity는 `Critical / High / Medium / Low` 네 단계로 정리한다.
 
@@ -100,8 +100,8 @@ stale 판단 예시:
 
 다음 순서로 입력을 찾는다.
 1. 사용자 지정 경로
-2. `_sdd/implementation/IMPLEMENTATION_PLAN.md`
-3. `_sdd/implementation/IMPLEMENTATION_PLAN_PHASE_<N>.md`
+2. `_sdd/implementation/implementation_plan.md`
+3. `_sdd/implementation/implementation_plan_phase_<n>.md`
 4. `_sdd/spec/*.md`
 
 여러 phase 파일이 있으면 기본은 최신 phase 우선이다. 범위를 확정할 수 없으면 최신 phase 기준으로 진행하고 가정을 리포트에 적는다.

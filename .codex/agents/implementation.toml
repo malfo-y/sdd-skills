@@ -16,7 +16,7 @@ developer_instructions = '''
 > 프로세스 완료 후 아래 기준을 자체 검증한다. 미충족 항목은 해당 단계로 돌아가 수정한다.
 
 - [ ] plan을 읽고 실행 가능한 task 단위로 파싱한다.
-- [ ] `_sdd/implementation/IMPLEMENTATION_PROGRESS.md`를 갱신한다.
+- [ ] `_sdd/implementation/implementation_progress.md`를 갱신한다.
 - [ ] Target Files 기반 병렬/순차 실행 판단이 가능하다.
 - [ ] 테스트/검증/리포트까지 포함한 구현 사이클이 완료된다.
 
@@ -29,6 +29,7 @@ developer_instructions = '''
 5. Critical 이슈가 남아 있으면 그대로 종료하지 않는다.
 6. **Verification Gate**: "should work" 금지. 코드 변경 후 반드시 테스트를 재실행하고 출력을 근거로 제시한다. 이전 실행 결과 재사용 금지. `_sdd/env.md` 미존재 시 코드 분석 기반 검증을 허용하되, 리포트에 `UNTESTED` 표기.
 7. **Regression Iron Rule**: 기존 테스트 실패 시 (1) 테스트 업데이트 + (2) 회귀 방지 테스트 추가를 사용자 확인 없이 자동 수행한다.
+8. 출력 artifact는 lowercase canonical 경로에 저장한다. transition 기간에는 plan/progress/report 입력에서 legacy uppercase 경로도 fallback으로 함께 확인한다.
 
 ## Target Files and Conflicts
 
@@ -53,9 +54,10 @@ developer_instructions = '''
 
 우선순위:
 1. 사용자 지정 경로
-2. `_sdd/implementation/IMPLEMENTATION_PLAN.md`
-3. `_sdd/implementation/IMPLEMENTATION_PLAN_PHASE_<N>.md`
-4. `_sdd/drafts/feature_draft_<name>.md`의 Part 2
+2. `_sdd/implementation/implementation_plan.md`
+3. `_sdd/implementation/implementation_plan_phase_<n>.md`
+4. legacy uppercase fallback: `_sdd/implementation/IMPLEMENTATION_PLAN.md`, `_sdd/implementation/IMPLEMENTATION_PLAN_PHASE_<N>.md`
+5. `_sdd/drafts/feature_draft_<name>.md`의 Part 2
 
 ## Process
 
@@ -73,7 +75,7 @@ plan이 없으면 `implementation-plan` 또는 `feature-draft` 후속 사용을 
 
 ### Step 2: Initialize Task Tracking
 
-`_sdd/implementation/IMPLEMENTATION_PROGRESS.md`에 tracking row를 만든다.
+`_sdd/implementation/implementation_progress.md`에 tracking row를 만든다.
 
 기본 필드:
 - task_id
@@ -141,11 +143,11 @@ phase 종료 후 경량 리뷰를 수행한다.
 
 Critical 이슈가 있으면 수정 후 다시 검증한다.
 
-phase 리포트는 필요 시 `_sdd/implementation/IMPLEMENTATION_REPORT_PHASE_<N>.md`로 저장한다.
+phase 리포트는 필요 시 `_sdd/implementation/implementation_report_phase_<N>.md`로 저장한다.
 
 ### Step 7: Final Report
 
-최종 결과를 `_sdd/implementation/IMPLEMENTATION_REPORT.md`에 저장한다.
+최종 결과를 `_sdd/implementation/implementation_report.md`에 저장한다.
 
 포함 내용:
 - 완료 task
@@ -154,7 +156,7 @@ phase 리포트는 필요 시 `_sdd/implementation/IMPLEMENTATION_REPORT_PHASE_<
 - unplanned dependency
 - critical/quality follow-up
 
-기존 리포트가 있으면 `prev/PREV_IMPLEMENTATION_REPORT_<timestamp>.md`로 아카이브한다.
+기존 리포트가 있으면 `prev/prev_implementation_report_<timestamp>.md`로 아카이브한다.
 
 ## Worker Prompt Contract
 

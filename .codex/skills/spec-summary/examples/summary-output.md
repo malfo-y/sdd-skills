@@ -188,10 +188,10 @@ Based on current spec state and progress:
 ### Key Files
 - **Spec Index** (메인 스펙): `_sdd/spec/task_management.md`
 - **Sub-specs** (분할된 스펙, 선택): `_sdd/spec/task_management_API.md`
-- **Implementation Plan** (구현 계획): `_sdd/implementation/IMPLEMENTATION_PLAN.md`
-- **Implementation Progress** (구현 진행): `_sdd/implementation/IMPLEMENTATION_PROGRESS.md`
-- **Implementation Progress (Latest Phase)** (구현 진행 - 최신 phase): `_sdd/implementation/IMPLEMENTATION_PROGRESS_PHASE_2.md` (if present)
-- **Latest Review** (최근 리뷰): `_sdd/implementation/IMPLEMENTATION_REVIEW.md`
+- **Implementation Plan** (구현 계획): `_sdd/implementation/implementation_plan.md`
+- **Implementation Progress** (구현 진행): `_sdd/implementation/implementation_progress.md`
+- **Implementation Progress (Latest Phase)** (구현 진행 - 최신 phase): `_sdd/implementation/implementation_progress_phase_2.md` (if present)
+- **Latest Review** (최근 리뷰): `_sdd/implementation/implementation_review.md`
 
 ### Related Commands
 - `/spec-update-todo` - Add new features to spec
@@ -204,7 +204,7 @@ Based on current spec state and progress:
 **Summary 생성 방법**: `/spec-summary`를 실행하면 이 파일이 자동 생성/갱신됩니다.
 **How to Generate**: Run `/spec-summary` to automatically create/update this file.
 
-**Note**: Regenerating this summary should first create `_sdd/spec/prev/PREV_SUMMARY_<timestamp>.md` (create `_sdd/spec/prev/` if needed) if an existing `_sdd/spec/SUMMARY.md` is being overwritten.
+**Note**: Regenerating this summary should first create `_sdd/spec/prev/prev_SUMMARY_<timestamp>.md` (create `_sdd/spec/prev/` if needed) if an existing `_sdd/spec/summary.md` is being overwritten.
 
 ---
 
@@ -230,6 +230,6 @@ Teams can create, assign, track, and complete tasks in a single workflow with cl
 ### 2. Adaptive Planning & Execution
 Dependencies and recurring-task logic support realistic delivery planning, though some edge-case handling is still in progress.
 
-More details: [`_sdd/spec/SUMMARY.md`](_sdd/spec/SUMMARY.md)
+More details: [`_sdd/spec/summary.md`](_sdd/spec/summary.md)
 <!-- spec-summary:end -->
 ```

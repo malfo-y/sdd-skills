@@ -8,7 +8,7 @@ version: 1.2.0
 
 ## Goal
 
-현재 `_sdd/spec/` 전체를 타임스탬프 디렉토리에 보존하고, 필요하면 지정한 언어로 번역한 snapshot을 만든다. 원본 스펙은 절대 수정하지 않고, snapshot 루트에는 `SUMMARY.md`를 함께 생성해 보관본을 빠르게 훑을 수 있게 한다.
+현재 `_sdd/spec/` 전체를 타임스탬프 디렉토리에 보존하고, 필요하면 지정한 언어로 번역한 snapshot을 만든다. 원본 스펙은 절대 수정하지 않고, snapshot 루트에는 `summary.md`를 함께 생성해 보관본을 빠르게 훑을 수 있게 한다.
 
 ## Acceptance Criteria
 
@@ -18,14 +18,14 @@ version: 1.2.0
 - [ ] AC2: `_sdd/snapshots/<timestamp>_<lang>/` 아래에 원본 구조를 보존한 snapshot을 만들었다.
 - [ ] AC3: `prev/`를 제외한 모든 `.md` 파일이 포함되었다.
 - [ ] AC4: 대상 언어가 일관되게 적용되었고, 코드 관련 용어는 원문을 유지했다.
-- [ ] AC5: snapshot 루트에 `SUMMARY.md`를 생성했다.
+- [ ] AC5: snapshot 루트에 `summary.md`를 생성했다.
 
 ## Hard Rules
 
 1. `_sdd/spec/` 원본 파일은 수정하지 않는다.
 2. snapshot은 원본 디렉토리 구조를 유지한다.
 3. `prev/` 백업 디렉토리는 snapshot 대상에서 제외한다.
-4. 모든 `.md` 파일을 포함한다. `DECISION_LOG.md`도 포함한다.
+4. 모든 `.md` 파일을 포함한다. `decision_log.md`도 포함한다.
 5. 한 snapshot 안의 번역 언어는 일관되어야 한다.
 6. 코드 블록, 파일 경로, 심볼명, 명령어, 설정 키는 번역하지 않는다.
 7. 파일 수가 많으면 batch 단위 병렬 처리 후 부모가 누락 여부를 검증한다.
@@ -55,9 +55,9 @@ version: 1.2.0
 - 나머지는 2-4개 batch로 나눠 병렬 처리
 - 부모가 누락 파일, 경로 보존, 언어 일관성을 검증
 
-### Step 3: Create Snapshot `SUMMARY.md`
+### Step 3: Create Snapshot `summary.md`
 
-snapshot 루트에 아래 정보를 담은 `SUMMARY.md`를 만든다.
+snapshot 루트에 아래 정보를 담은 `summary.md`를 만든다.
 
 - source path
 - snapshot path
@@ -70,7 +70,7 @@ snapshot 루트에 아래 정보를 담은 `SUMMARY.md`를 만든다.
 
 장문이면 다음 순서를 따른다.
 
-1. `SUMMARY.md` skeleton/섹션 헤더를 직접 작성
+1. `summary.md` skeleton/섹션 헤더를 직접 작성
 2. 같은 흐름에서 요약 내용을 채움
 3. TODO/placeholder를 제거하고 finalize
 4. 의존 섹션은 `default`, 독립 요약 섹션은 `worker`로 채운다
@@ -89,9 +89,9 @@ snapshot 루트에 아래 정보를 담은 `SUMMARY.md`를 만든다.
 기본 산출물:
 
 - `_sdd/snapshots/<timestamp>_<lang>/...`
-- `_sdd/snapshots/<timestamp>_<lang>/SUMMARY.md`
+- `_sdd/snapshots/<timestamp>_<lang>/summary.md`
 
-`SUMMARY.md`에는 최소한 아래가 포함되어야 한다.
+`summary.md`에는 최소한 아래가 포함되어야 한다.
 
 - Source
 - Snapshot

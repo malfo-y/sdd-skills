@@ -228,7 +228,7 @@ Phase 2 진입 후 `request_user_input`은 호출하지 않는다. 마일스톤 
 | 에이전트 | Exit Criteria |
 |---------|--------------|
 | `feature_draft` | `_sdd/drafts/feature_draft_<topic>.md` 존재 + 요구사항/제약조건 비어있지 않음 |
-| `implementation_plan` | `IMPLEMENTATION_PLAN.md` 또는 phase plan 존재 + task 1개 이상 |
+| `implementation_plan` | `implementation_plan.md` 또는 phase plan 존재 + task 1개 이상 |
 | `implementation` | 대상 파일 생성/수정 + 구문 에러 없음 |
 | `implementation_review` | severity 분류 포함 + 리뷰 리포트 저장 |
 | `ralph_loop_init` | `ralph/` 존재 + `config.sh` + `PROMPT.md` + `run.sh` + `state.md` + `CHECKS.md` 존재 + `run.sh` 실행 가능 |

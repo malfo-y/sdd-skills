@@ -1,29 +1,27 @@
 # _COMMENTS
 
-Generated at: 2026-03-24T09:53:32.588Z
+Generated at: 2026-04-02T08:14:49.400Z
 Total comments: 2
 
 ## Comments
 
-### .claude/skills/spec-create/SKILL.md:L136-L136
+### _sdd/discussion/discussion_pr_review_unification.md:L51-L51
 
-프로젝트 내 기능이나 구현을 확인하고 수정할 때는 관련된 스펙 문서를 함께 읽고 참조합니다.
+from-branch의 spec 기반 검증
 
-- anchor.hash: 2b7bb289
-- anchor.snippet:    - 프로젝트 스펙 문서는 `_sdd/spec/`를 기준으로 확인합니다.
-- anchor.before:    # Workspace Guidance
-- anchor.after:    - 환경 관련 설정/실행 방법은 `_sdd/env.md`를 기준으로 확인합니다.
-- createdAt: 2026-03-24T09:51:52.948Z
+- anchor.hash: bc4d9467
+- anchor.snippet:   → spec 기반 검증 (spec 있을 때) OR 코드 품질 검증 (spec 없을 때)
+- anchor.before:   → PR diff 분석
+- anchor.after:   → verdict (APPROVE / REQUEST CHANGES / NEEDS DISCUSSION)
+- createdAt: 2026-04-02T08:13:51.605Z
 
 ---
 
-### .claude/skills/spec-create/SKILL.md:L137-L138
+### _sdd/discussion/discussion_pr_review_unification.md:L68-L68
 
-의존성 설치, 테스트 스크립트 실행 등의 작업 시 _sdd/env.md 파일을 참조합니다.
+AC 검증: from-branch spec 기반 AC 검증
 
-- anchor.hash: b299faf7
-- anchor.snippet:    - 환경 관련 설정/실행 방법은 `_sdd/env.md`를 기준으로 확인합니다.
-   ```
-- anchor.before:    - 프로젝트 스펙 문서는 `_sdd/spec/`를 기준으로 확인합니다.
-- anchor.after: 3. `CLAUDE.md` 미존재 → 동일 문구로 생성
-- createdAt: 2026-03-24T09:53:18.308Z
+- anchor.hash: 2247ee7a
+- anchor.snippet: | Spec-based (추가) | from-branch에 spec 존재 시 | code-only + AC 검증, spec compliance, gap analysis |
+- anchor.before: | Code-only (베이스) | 항상 실행 | PR 설명 기반 AC 추론, 코드 품질, 에러 처리, 테스트, 보안 |
+- createdAt: 2026-04-02T08:14:14.563Z

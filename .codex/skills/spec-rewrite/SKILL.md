@@ -8,7 +8,7 @@ version: 1.7.0
 
 ## Goal
 
-비대하거나 혼란스러운 스펙을 더 읽기 쉽고 유지보수 가능한 구조로 재작성한다. 재작성 전에 현재 스펙을 8개 핵심 품질 metric과 spec-as-whitepaper 기준으로 진단하고, 그 진단을 근거로 `_sdd/spec/logs/spec-rewrite-plan.md`와 `REWRITE_REPORT.md`를 만든다.
+비대하거나 혼란스러운 스펙을 더 읽기 쉽고 유지보수 가능한 구조로 재작성한다. 재작성 전에 현재 스펙을 8개 핵심 품질 metric과 spec-as-whitepaper 기준으로 진단하고, 그 진단을 근거로 `_sdd/spec/logs/spec-rewrite-plan.md`와 `rewrite_report.md`를 만든다.
 
 핵심 내용은 보존하고, 저가치 내용은 appendix로 이동하거나 제거하며, ambiguity와 unresolved issue는 명시적으로 남긴다. `spec-rewrite-plan.md`는 rewrite 실행의 source of truth로 사용한다. `spec-rewrite`는 정리/재배치 도구이지, 누락된 whitepaper 섹션을 자동 생성하는 스킬이 아니다.
 
@@ -21,7 +21,7 @@ version: 1.7.0
 - [ ] AC3: `_sdd/spec/prev/`에 안전 백업을 남겼다.
 - [ ] AC4: rewritten spec가 plan 기준으로 더 명확한 구조를 가지며, 링크와 파일 경로가 유효하다.
 - [ ] AC5: 중요한 rationale, `Why`, `Source`, inline citation, code excerpt header는 보존되었다.
-- [ ] AC6: `REWRITE_REPORT.md`가 metric scorecard, whitepaper 적합성 평가, unresolved warning, plan 대비 주요 deviation을 포함한다.
+- [ ] AC6: `rewrite_report.md`가 metric scorecard, whitepaper 적합성 평가, unresolved warning, plan 대비 주요 deviation을 포함한다.
 - [ ] AC7: `references/`와 `examples/`는 유지되고, 본문은 rewrite contract를 concise하게 설명한다.
 
 ## SDD Lens
@@ -42,8 +42,8 @@ version: 1.7.0
 
 ## Hard Rules
 
-1. 수정 전 반드시 `_sdd/spec/prev/PREV_<filename>_<timestamp>.md`로 백업한다.
-2. 삭제하는 내용에 중요한 rationale이 있으면 `DECISION_LOG.md` 또는 rewrite report에 보존한다.
+1. 수정 전 반드시 `_sdd/spec/prev/prev_<filename>_<timestamp>.md`로 백업한다.
+2. 삭제하는 내용에 중요한 rationale이 있으면 `decision_log.md` 또는 rewrite report에 보존한다.
 3. `Source`, component-level `Why`, inline citation, code excerpt header가 있으면 재구성 후에도 유지한다.
 4. `_sdd/spec/logs/spec-rewrite-plan.md`를 rewrite 시작 전에 반드시 저장하고, 이후 실행은 이 파일을 기준으로 진행한다.
 5. 대규모 구조 변경이나 파일 분할은 계획 파일을 먼저 저장한 뒤 필요한 경우 사용자 확인을 받는다.
@@ -60,7 +60,7 @@ version: 1.7.0
 
 1. `_sdd/spec/main.md` 또는 대표 spec
 2. linked sub-spec
-3. `_sdd/spec/DECISION_LOG.md`
+3. `_sdd/spec/decision_log.md`
 4. `_sdd/implementation/` 산출물
 5. `docs/SDD_SPEC_DEFINITION.md`
 
@@ -172,7 +172,7 @@ plan에는 아래를 포함한다.
 
 ### Step 5: Validate and Report
 
-아래를 검증하고 `_sdd/spec/logs/REWRITE_REPORT.md`를 작성한다.
+아래를 검증하고 `_sdd/spec/logs/rewrite_report.md`를 작성한다.
 
 - 링크와 파일 경로 유효성
 - 8개 핵심 metric scorecard
@@ -189,7 +189,7 @@ plan에는 아래를 포함한다.
 
 - rewritten spec files
 - `_sdd/spec/logs/spec-rewrite-plan.md`
-- `_sdd/spec/logs/REWRITE_REPORT.md`
+- `_sdd/spec/logs/rewrite_report.md`
 
 리포트에 포함할 내용:
 
@@ -218,9 +218,9 @@ plan에는 아래를 포함한다.
 | spec 없음 | `/spec-create` 먼저 권장 |
 | 잘 구조화된 spec | 불필요한 rewrite를 피하고 개선점만 보고 |
 | split 후 링크 깨짐 | 경로 검증 후 수정 |
-| DECISION_LOG 없음 | 필요 시 새로 생성 |
+| decision_log 없음 | 필요 시 새로 생성 |
 | 범위가 너무 큼 | index 중심으로 나누고 점진적으로 rewrite |
-| whitepaper narrative 누락 | 자동 생성하지 말고 REWRITE_REPORT에 경고 |
+| whitepaper narrative 누락 | 자동 생성하지 말고 rewrite_report에 경고 |
 
 ## Final Check
 

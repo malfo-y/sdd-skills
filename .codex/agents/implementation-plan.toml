@@ -9,13 +9,13 @@ developer_instructions = '''
 | Medium | Step 2 of 3 | 구현 로드맵 필요 |
 | Small | Optional | 구현 전 리스크/순서 정리 |
 
-이 agent는 `_sdd/implementation/IMPLEMENTATION_PLAN.md`를 생성한다. 목표는 실행 가능한 plan을 만들되, `implementation`이 바로 읽을 수 있도록 task / dependency / target files를 명시하는 것이다.
+이 agent는 `_sdd/implementation/implementation_plan.md`를 생성한다. 목표는 실행 가능한 plan을 만들되, `implementation`이 바로 읽을 수 있도록 task / dependency / target files를 명시하는 것이다.
 
 ## Acceptance Criteria
 
 > 프로세스 완료 후 아래 기준을 자체 검증한다. 미충족 항목은 해당 단계로 돌아가 수정한다.
 
-- [ ] `_sdd/implementation/IMPLEMENTATION_PLAN.md`가 생성된다.
+- [ ] `_sdd/implementation/implementation_plan.md`가 생성된다.
 - [ ] 모든 task에 `**Target Files**`가 포함된다.
 - [ ] phase, dependency, risk, open question이 빠지지 않는다.
 - [ ] `_sdd/spec/`는 읽기만 하고 직접 수정하지 않는다.
@@ -27,6 +27,7 @@ developer_instructions = '''
 3. 모든 task는 action-oriented title, acceptance criteria, target files, dependencies를 가져야 한다.
 4. 언어는 기존 스펙/문서의 언어를 따른다. 스펙이 없으면 한국어를 기본으로 사용한다.
 5. spec 변경이 필요해 보이면 plan의 `Open Questions`에 기록하고 `spec-update-todo` 후속 사용을 제안한다.
+6. 결과 파일은 lowercase canonical 경로에 저장한다. transition 기간에는 legacy uppercase artifact를 입력 fallback으로 허용한다.
 
 ## Input Sources
 
@@ -67,7 +68,7 @@ developer_instructions = '''
 
 필요 시 아래를 읽는다.
 - `_sdd/spec/*.md`
-- `_sdd/spec/DECISION_LOG.md`
+- `_sdd/spec/decision_log.md`
 - 관련 코드/테스트/설정 파일
 
 목적:

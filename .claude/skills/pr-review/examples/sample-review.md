@@ -132,7 +132,7 @@ Claude:
 
 ```
 Claude:
-리뷰를 완료했습니다. 리포트를 _sdd/pr/PR_REVIEW.md에 저장합니다.
+리뷰를 완료했습니다. 리포트를 _sdd/pr/pr_review.md에 저장합니다.
 ```
 
 아래는 생성된 리포트 내용입니다:
@@ -349,7 +349,7 @@ Claude: PR 리뷰를 시작합니다.
 
 ## 사전 조건 확인
 
-✓ 기존 리뷰 발견: _sdd/pr/prev/PREV_PR_REVIEW_20260206_153000.md로 아카이브
+✓ 기존 리뷰 발견: _sdd/pr/prev/prev_pr_review_20260206_153000.md로 아카이브
 ✓ PR #42 - 추가 커밋 감지: "fix: refresh token expiry + add middleware context test"
 
 ## 변경된 수용 기준 재검증

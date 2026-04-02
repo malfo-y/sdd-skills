@@ -27,7 +27,7 @@ version: 2.2.0
 ## Hard Rules
 
 1. **Spec/code read-only**: `_sdd/spec/`, 애플리케이션 코드, 설정, 테스트 수정 금지.
-2. **Allowed outputs**: `_sdd/guides/guide_<slug>.md`와 `_sdd/guides/prev/PREV_guide_<slug>_<timestamp>.md`만 생성/교체.
+2. **Allowed outputs**: `_sdd/guides/guide_<slug>.md`와 `_sdd/guides/prev/prev_guide_<slug>_<timestamp>.md`만 생성/교체.
 3. **Non-interactive**: 추론 가능하면 묻지 않는다. 확인 불가 시 가정을 명시한다.
 4. **Spec-first**: `_sdd/spec/`이 primary source. 코드는 구현 디테일 보완용.
 5. **Per-feature output**: 복수 기능 → 기능당 1 파일.
@@ -129,7 +129,7 @@ Optional appendix: spec references, code references, assumptions/open points
 **Tools**: `Bash (mkdir -p, cp/mv)`, `Write`
 
 1. `_sdd/guides/` 존재 확인 (mkdir -p).
-2. 기존 파일 → `_sdd/guides/prev/PREV_guide_<slug>_<timestamp>.md` 백업.
+2. 기존 파일 → `_sdd/guides/prev/prev_guide_<slug>_<timestamp>.md` 백업.
 3. `guide_<slug>.md` 작성.
 4. 생성 경로를 사용자에게 보고.
 

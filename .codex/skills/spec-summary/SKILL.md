@@ -8,13 +8,13 @@ version: 1.7.0
 
 ## Goal
 
-현재 스펙과 구현 상태를 읽어 `_sdd/spec/SUMMARY.md`에 사람이 빠르게 훑을 수 있는 layered summary를 만든다. 필요할 때만 `README.md`의 managed block을 갱신해, 짧은 스냅샷과 전체 요약 문서를 연결한다.
+현재 스펙과 구현 상태를 읽어 `_sdd/spec/summary.md`에 사람이 빠르게 훑을 수 있는 layered summary를 만든다. 필요할 때만 `README.md`의 managed block을 갱신해, 짧은 스냅샷과 전체 요약 문서를 연결한다.
 
 ## Acceptance Criteria
 
 > 완료 전 아래 기준을 자체 검증한다. 미충족 항목이 있으면 해당 단계로 돌아가 수정한다.
 
-- [ ] AC1: `_sdd/spec/SUMMARY.md`를 생성하거나 안전하게 갱신했다.
+- [ ] AC1: `_sdd/spec/summary.md`를 생성하거나 안전하게 갱신했다.
 - [ ] AC2: summary에 프로젝트 목표, 핵심 기능, 구조, 진행 상태, 주요 이슈, 다음 단계가 포함된다.
 - [ ] AC3: split spec과 구현 진행 문서가 있으면 이를 반영해 현재 상태를 왜곡 없이 요약했다.
 - [ ] AC4: README 갱신은 사용자가 명시적으로 요청한 경우에만 수행했다.
@@ -36,9 +36,9 @@ version: 1.7.0
 
 ## Hard Rules
 
-1. `_sdd/spec/*.md`는 읽기 전용이다. 단, `SUMMARY.md`는 생성/갱신할 수 있다.
+1. `_sdd/spec/*.md`는 읽기 전용이다. 단, `summary.md`는 생성/갱신할 수 있다.
 2. README 갱신은 사용자가 명시적으로 요청한 경우에만 수행한다.
-3. 기존 `SUMMARY.md`가 있으면 `prev/PREV_SUMMARY_<timestamp>.md`로 백업 후 갱신한다.
+3. 기존 `summary.md`가 있으면 `prev/prev_summary_<timestamp>.md`로 백업 후 갱신한다.
 4. README는 전체를 덮어쓰지 않는다. `spec-summary` marker block만 갱신하거나 없으면 안전하게 추가한다.
 5. 문서 언어는 기존 스펙/문서를 따른다. 기존 스펙이 없으면 한국어를 기본으로 한다.
 6. summary가 길거나 구조적으로 복잡하면 caller가 먼저 skeleton/섹션 헤더를 직접 기록한 뒤, 같은 흐름에서 내용을 채운다.
@@ -50,14 +50,15 @@ version: 1.7.0
 
 1. `_sdd/spec/main.md` 또는 프로젝트 index spec
 2. index spec이 가리키는 sub-spec 파일
-3. `_sdd/implementation/IMPLEMENTATION_PROGRESS*.md`
-4. `_sdd/implementation/IMPLEMENTATION_REVIEW.md`
+3. `_sdd/implementation/implementation_progress*.md`
+4. `_sdd/implementation/implementation_review.md`
 5. `README.md` (README sync 요청 시만)
 6. `_sdd/env.md` (로컬 검증이 필요할 때만)
 
 주의:
 
-- `SUMMARY.md`와 `prev/PREV_*.md`는 입력 후보에서 제외한다.
+- `summary.md`와 `prev/prev_*.md`는 입력 후보에서 제외한다.
+- transition 기간에는 `summary.md` / implementation artifact의 lowercase canonical 경로를 우선 보고, 파일이 없으면 legacy uppercase 경로도 fallback으로 확인한다.
 - split spec인데 링크가 불명확하면 관련 spec 집합을 사용자에게 확인한다.
 
 ## Process
@@ -110,7 +111,7 @@ completed / (completed + in-progress + planned)
 
 ### Step 4: Build the Summary Shape
 
-`SUMMARY.md`는 아래 순서를 기본으로 한다.
+`summary.md`는 아래 순서를 기본으로 한다.
 
 1. Executive summary
 2. Project motivation / goals
@@ -127,15 +128,15 @@ completed / (completed + in-progress + planned)
 - 구현 세부사항은 압축하고, 상태와 의미를 더 강조한다
 - 모르는 정보는 추측하지 않고 명시적으로 `Unknown` 또는 open question으로 남긴다
 
-### Step 5: Write `SUMMARY.md`
+### Step 5: Write `summary.md`
 
-`references/summary-template.md`를 기반으로 내용을 채우고 `_sdd/spec/SUMMARY.md`를 작성한다.
+`references/summary-template.md`를 기반으로 내용을 채우고 `_sdd/spec/summary.md`를 작성한다.
 
 문서가 길거나 컴포넌트가 많으면:
 
 - 섹션별 핵심 포인트 추출을 병렬 수행
 - 부모가 completion, risk, next steps를 통합
-- 먼저 `SUMMARY.md` skeleton/섹션 헤더를 직접 저장
+- 먼저 `summary.md` skeleton/섹션 헤더를 직접 저장
 - 같은 흐름에서 각 섹션 내용을 채운다
 
 ### Step 6: Optional README Sync
@@ -145,7 +146,7 @@ completed / (completed + in-progress + planned)
 - `README.md`에 `spec-summary` marker가 있으면 해당 블록만 갱신
 - marker가 없으면 새 managed block을 안전하게 추가
 - 전체 README는 보존
-- README에는 짧은 snapshot만 두고, 자세한 내용은 `_sdd/spec/SUMMARY.md`로 연결
+- README에는 짧은 snapshot만 두고, 자세한 내용은 `_sdd/spec/summary.md`로 연결
 
 권장 README 블록 요소:
 
@@ -167,13 +168,13 @@ completed / (completed + in-progress + planned)
 
 기본 산출물:
 
-- `_sdd/spec/SUMMARY.md`
+- `_sdd/spec/summary.md`
 
 조건부 산출물:
 
 - `README.md`의 `spec-summary` managed block
 
-`SUMMARY.md`에 포함할 핵심 섹션:
+`summary.md`에 포함할 핵심 섹션:
 
 - Executive Summary
 - Goals / Motivation

@@ -40,9 +40,9 @@ version: 1.6.0
 1. `src/`, `tests/` 등 구현 코드 파일은 수정하지 않는다.
 2. 문서 언어는 기존 스펙/문서를 따른다. 기존 스펙이 없으면 한국어를 기본으로 한다.
 3. 스펙 출력은 `_sdd/spec/`에만 저장한다.
-4. 기존 스펙 파일을 덮어쓰기 전에는 `prev/PREV_<filename>_<timestamp>.md`로 백업한다.
+4. 기존 스펙 파일을 덮어쓰기 전에는 `prev/prev_<filename>_<timestamp>.md`로 백업한다.
 5. `AGENTS.md`, `CLAUDE.md`, `_sdd/env.md`는 없을 때 생성하고, 이미 있으면 필수 안내 문구가 빠진 경우에만 최소 수정한다.
-6. 거버넌스 문서는 기본적으로 `DECISION_LOG.md`까지만 사용한다. 추가 문서는 사용자 요청 시에만 만든다.
+6. 거버넌스 문서는 기본적으로 `decision_log.md`까지만 사용한다. 추가 문서는 사용자 요청 시에만 만든다.
 7. 장문 문서가 예상되면 caller가 먼저 skeleton/섹션 헤더를 직접 기록한 뒤, 같은 흐름에서 내용을 채운다.
 8. 중대형 스펙은 canonical index를 먼저 확정한 뒤, 필요 시 하위 spec 작성을 병렬화한다.
 
@@ -71,7 +71,7 @@ version: 1.6.0
 1. 현재 사용자 요청
 2. `_sdd/spec/user_draft.md` 또는 사용자 지정 요구사항 파일
 3. 기존 README / docs / config / comments
-4. 기존 `_sdd/spec/DECISION_LOG.md`
+4. 기존 `_sdd/spec/decision_log.md`
 5. 코드베이스 구조와 핵심 엔트리포인트
 
 요구사항이 모호해서 스펙 방향이 크게 달라질 때만 `request_user_input`으로 짧게 보완한다.
@@ -148,7 +148,7 @@ version: 1.6.0
 
 - `_sdd/spec/<component>.md`
 - `_sdd/spec/<component>/...`
-- `_sdd/spec/DECISION_LOG.md`
+- `_sdd/spec/decision_log.md`
 - `AGENTS.md`
 - `CLAUDE.md`
 - `_sdd/env.md`

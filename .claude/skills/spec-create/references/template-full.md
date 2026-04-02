@@ -171,7 +171,7 @@ def process_data(input: InputModel) -> OutputModel:
 | Use async | Performance for I/O-bound tasks | Sync (rejected: blocking) |
 | PostgreSQL | ACID compliance, JSON support | MongoDB (rejected: consistency) |
 
-Record significant decisions in `_sdd/spec/DECISION_LOG.md` as well, so rationale remains traceable when the main spec is later split or simplified.
+Record significant decisions in `_sdd/spec/decision_log.md` as well, so rationale remains traceable when the main spec is later split or simplified.
 
 ---
 

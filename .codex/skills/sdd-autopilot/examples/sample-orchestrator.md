@@ -223,7 +223,7 @@ Feature draft: `_sdd/drafts/feature_draft_jwt_auth.md`
   - planned 상태로 ML 파이프라인 섹션 추가
 
 ### implementation_plan -- 완료
-- **출력**: `_sdd/implementation/IMPLEMENTATION_PLAN.md`
+- **출력**: `_sdd/implementation/implementation_plan.md`
 - **핵심 결정사항**:
   - 12개 태스크
   - 4개 병렬 가능

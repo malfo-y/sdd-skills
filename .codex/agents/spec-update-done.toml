@@ -9,7 +9,7 @@ developer_instructions = '''
 | Medium | Final | 구현 반영 마무리 |
 | Any | Standalone | code-to-spec sync |
 
-이 agent는 구현 결과를 읽고 `_sdd/spec/*.md`와 필요 시 `_sdd/spec/DECISION_LOG.md`를 동기화한다.
+이 agent는 구현 결과를 읽고 `_sdd/spec/*.md`와 필요 시 `_sdd/spec/decision_log.md`를 동기화한다.
 
 ## Acceptance Criteria
 
@@ -26,7 +26,7 @@ developer_instructions = '''
 1. 변경 적용 전 Change Report를 먼저 정리한다.
 2. 스펙 파일 수정 전 `prev/` 백업을 만든다.
 3. 구현되지 않은 계획을 spec에 완료된 사실처럼 쓰지 않는다.
-4. 결정 기록은 필요 시 `DECISION_LOG.md`에만 추가한다.
+4. 결정 기록은 필요 시 `decision_log.md`에만 추가한다.
 5. 코드/구현 문서를 직접 수정하지 않는다. 이 agent의 대상은 spec이다.
 6. 새 sub-spec 파일 생성 시 반드시 main.md 인덱스에 링크를 추가한다. 고아 파일 금지.
 7. 기존 파일 분할 구조를 변경하지 않는다. 파일 추가만 허용, 기존 구조 재편성 금지.
@@ -35,12 +35,12 @@ developer_instructions = '''
 
 우선순위:
 1. 실제 코드 변경
-2. `_sdd/implementation/IMPLEMENTATION_PLAN.md`
-3. `_sdd/implementation/IMPLEMENTATION_PROGRESS.md`
-4. `_sdd/implementation/IMPLEMENTATION_REVIEW.md`
-5. `_sdd/implementation/IMPLEMENTATION_REPORT*.md`
+2. `_sdd/implementation/implementation_plan.md`
+3. `_sdd/implementation/implementation_progress.md`
+4. `_sdd/implementation/implementation_review.md`
+5. `_sdd/implementation/implementation_report*.md`
 6. `_sdd/spec/*.md`
-7. `_sdd/spec/DECISION_LOG.md`
+7. `_sdd/spec/decision_log.md`
 
 ## Drift Types
 
@@ -109,7 +109,7 @@ spec 문서를 수정한다.
 - outdated claim 제거
 - 구현 완료된 사실 반영
 - 신규 sub-spec 파일 생성 시: 파일 생성 → main.md 인덱스에 링크 추가
-- rationale 변화가 있으면 `DECISION_LOG.md` 업데이트
+- rationale 변화가 있으면 `decision_log.md` 업데이트
 
 ### Step 5: Validate Updates
 
@@ -152,7 +152,7 @@ spec 문서를 수정한다.
 | 구현 상태가 불분명 | 미확정 내용은 반영하지 않고 `Open Questions`에 남긴다 |
 | spec와 코드가 크게 다름 | drift를 명시하고 보수적으로 sync한다 |
 | 백업 경로 없음 | `prev/`를 생성하고 진행한다 |
-| 결정 근거가 애매함 | `DECISION_LOG.md`에 최소 기록만 남긴다 |
+| 결정 근거가 애매함 | `decision_log.md`에 최소 기록만 남긴다 |
 | 파일 배치 판단 모호 | 가장 관련도 높은 기존 파일에 보수적 배치, Change Report에 근거 기록 |
 
 ## Integration

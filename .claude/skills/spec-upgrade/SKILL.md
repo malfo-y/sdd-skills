@@ -18,7 +18,7 @@ version: 1.3.0
 
 - [ ] AC1: §1-§8 필수 섹션이 모두 존재하며 서사 섹션(§1, §2, §5)에 실질적 내용이 있다
 - [ ] AC2: 코드 citation `[filepath:functionName]`이 주요 함수/클래스에 삽입되어 있다
-- [ ] AC3: 백업 파일 `_sdd/spec/prev/PREV_<filename>_<timestamp>.md`가 존재한다
+- [ ] AC3: 백업 파일 `_sdd/spec/prev/prev_<filename>_<timestamp>.md`가 존재한다
 - [ ] AC4: 기존 스펙 내용이 삭제 없이 §1-§8에 재배치되었다
 - [ ] AC5: Appendix: Code Reference Index에 모든 인라인 citation이 정리되어 있다
 - [ ] AC6: 인라인 citation의 filepath가 실제 파일로 존재한다
@@ -29,9 +29,9 @@ version: 1.3.0
 1. **코드 파일 수정 금지**: `src/`, `tests/` 등 구현 코드 파일은 수정하지 않는다.
 2. **언어 규칙**: 기존 스펙의 언어를 따른다. 한국어 스펙이면 한국어로, 영어 스펙이면 영어로 업그레이드한다.
 3. **기존 내용 보존**: 구 형식 스펙의 기존 내용은 최대한 보존한다. 삭제하지 않고 §1-§8에 재배치한다.
-4. **백업 필수**: 변환 전 반드시 `_sdd/spec/prev/PREV_<filename>_<timestamp>.md`로 백업한다.
+4. **백업 필수**: 변환 전 반드시 `_sdd/spec/prev/prev_<filename>_<timestamp>.md`로 백업한다.
 5. **Checkpoint 필수**: Step 3에서 Gap 분석 결과와 업그레이드 계획을 먼저 보고한다. 대상 파일이나 구조가 모호할 때만 사용자 확인을 요청한다.
-6. **DECISION_LOG.md 보존**: 기존 DECISION_LOG.md가 있으면 보존한다. 업그레이드 과정의 주요 결정도 추가 기록한다.
+6. **decision_log.md 보존**: 기존 decision_log.md가 있으면 보존한다. 업그레이드 과정의 주요 결정도 추가 기록한다.
 7. **In-place 덮어쓰기**: 업그레이드 결과는 기존 파일 경로에 덮어쓴다 (백업 후).
 
 ## Process
@@ -112,7 +112,7 @@ Gap 분석 결과를 아래 형식으로 보고 후 자동 진행:
 
 ```
 1. mkdir -p _sdd/spec/prev/
-2. 각 스펙 파일을 prev/PREV_<filename>_<YYYYMMDD_HHMMSS>.md로 복사
+2. 각 스펙 파일을 prev/prev_<filename>_<YYYYMMDD_HHMMSS>.md로 복사
 ```
 
 #### 4.2 멀티파일 업그레이드 (해당 시)
@@ -152,7 +152,7 @@ Step 4.3 변환 규칙 + Gap/코드 분석 결과 + 기존 스펙 내용을 skel
 | 4. Index | Appendix: Code Reference Index — 모든 인라인 citation을 파일별 테이블로 정리 |
 | 5. 메타 | Version, Last Updated, Status, ToC 갱신 |
 
-#### 4.4 DECISION_LOG.md 업데이트
+#### 4.4 decision_log.md 업데이트
 
 ```markdown
 ## YYYY-MM-DD - Spec Upgrade to Whitepaper Format
@@ -191,14 +191,14 @@ Step 4.3 변환 규칙 + Gap/코드 분석 결과 + 기존 스펙 내용을 skel
 
 #### 5.3 백업 검증
 
-`Glob("_sdd/spec/prev/PREV_*.md")` → 백업 파일 존재 확인
+`Glob("_sdd/spec/prev/prev_*.md")` → 백업 파일 존재 확인
 
 #### 5.4 완료 보고
 
 | 항목 | 내용 |
 |------|------|
 | 업그레이드 파일 | `<target path(s)>` |
-| 백업 파일 | `_sdd/spec/prev/PREV_<name>_<ts>.md` |
+| 백업 파일 | `_sdd/spec/prev/prev_<name>_<ts>.md` |
 | 변환 전/후 줄 수 | N줄 → N줄 |
 | 신규/보강 섹션 | §1, §2, §5 등 |
 | 코드 citation | N개 |
@@ -216,7 +216,7 @@ Step 4.3 변환 규칙 + Gap/코드 분석 결과 + 기존 스펙 내용을 skel
 | 멀티파일 통합 실패 | 개별 파일 상태 보고, 수동 통합 안내 |
 | canonical spec 모호 | 최소 확인 후 진행 |
 | 코드 citation 경로 무효 | 무효 목록 보고, TODO 마커 삽입 |
-| DECISION_LOG.md 충돌 | 기존 보존, 새 항목만 추가 |
+| decision_log.md 충돌 | 기존 보존, 새 항목만 추가 |
 | 백업 디렉토리 생성 실패 | 오류 보고, 업그레이드 중단 |
 
 ## Additional Resources

@@ -50,7 +50,7 @@ model: inherit
 4. 코드베이스 탐색 (`Grep`, `Glob`):
    - 프로젝트 구조, 기존 패턴, 파일 위치 파악
    - Target Files 후보 경로 확인
-5. `DECISION_LOG.md` 확인 (있으면)
+5. `decision_log.md` 확인 (있으면)
 
 **Gate**: `_sdd/spec/`에 프로젝트 스펙 파일이 없으면 → Part 2만 생성 (Part 1 생략, 사유 기록)
 

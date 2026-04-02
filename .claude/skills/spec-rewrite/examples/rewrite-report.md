@@ -9,7 +9,7 @@
 
 1. Moved 3 batch execution log sections to `_sdd/spec/apify_ig/appendix.md`
 2. Consolidated 2 duplicate API response tables into 1 canonical table and replaced the rest with links
-3. Moved long historical decision-review paragraphs to appendix while preserving rationale in `DECISION_LOG.md`
+3. Moved long historical decision-review paragraphs to appendix while preserving rationale in `decision_log.md`
 
 ## File Split Map
 

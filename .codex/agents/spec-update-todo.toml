@@ -26,7 +26,7 @@ developer_instructions = '''
 1. spec 수정 전 `prev/` 백업을 만든다.
 2. 코드와 구현 문서는 수정하지 않는다.
 3. 충돌하거나 불명확한 요구사항은 비파괴적으로 처리하고 `Open Questions`에 남긴다.
-4. 결정 기록이 필요하면 `DECISION_LOG.md`에 최소한으로 남긴다.
+4. 결정 기록이 필요하면 `decision_log.md`에 최소한으로 남긴다.
 5. 이미 완료된 구현 sync는 이 agent가 아니라 `spec-update-done`의 책임이다.
 6. 새 sub-spec 파일 생성 시 반드시 main.md 인덱스에 링크를 추가한다. 고아 파일 금지.
 7. 기존 파일 분할 구조를 변경하지 않는다. 파일 추가만 허용, 기존 구조 재편성 금지.
@@ -36,7 +36,7 @@ developer_instructions = '''
 1. 사용자 대화
 2. `_sdd/spec/user_spec.md`
 3. `_sdd/spec/user_draft.md`
-4. `_sdd/spec/DECISION_LOG.md`
+4. `_sdd/spec/decision_log.md`
 
 처리 후 rename:
 - `user_spec.md` → `_processed_user_spec.md`
@@ -55,7 +55,7 @@ developer_instructions = '''
 
 다음을 읽는다.
 - `_sdd/spec/*.md`
-- `_sdd/spec/DECISION_LOG.md`
+- `_sdd/spec/decision_log.md`
 
 목적:
 - 현재 섹션 구조 파악

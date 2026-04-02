@@ -103,7 +103,7 @@ Part 2 필수 요소:
 필요한 컨텍스트를 읽는다.
 
 1. `_sdd/spec/*.md`
-2. `_sdd/spec/DECISION_LOG.md` (있다면)
+2. `_sdd/spec/decision_log.md` (있다면)
 3. 관련 코드/테스트/설정 파일
 
 수집 목적:

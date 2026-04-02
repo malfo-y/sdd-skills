@@ -15,8 +15,8 @@ Create and manage Software Design Description (SDD) spec documents for projects.
 - [ ] AC2: Bootstrap 파일 처리 완료 — `AGENTS.md`, `CLAUDE.md`, `_sdd/env.md` 존재하며 필수 안내 문구 포함
 - [ ] AC3: 필수 섹션 §1-§8 포함 (Background & Motivation, Core Design, Architecture, Component Details, Environment 등)
 - [ ] AC4: 500줄 초과 시 모듈 분할(인덱스 + 컴포넌트 파일) 적용
-- [ ] AC5: 기존 스펙 파일이 있었다면 `prev/PREV_<filename>_<timestamp>.md`로 백업됨
-- [ ] AC6: 결정 사항이 있었다면 `DECISION_LOG.md` 생성/갱신됨
+- [ ] AC5: 기존 스펙 파일이 있었다면 `prev/prev_<filename>_<timestamp>.md`로 백업됨
+- [ ] AC6: 결정 사항이 있었다면 `decision_log.md` 생성/갱신됨
 
 ## Workflow Position
 
@@ -29,9 +29,9 @@ Create and manage Software Design Description (SDD) spec documents for projects.
 1. **코드 파일 수정 금지**: `src/`, `tests/` 등 구현 코드 파일은 수정하지 않는다.
 2. **언어 규칙**: 기존 스펙/문서의 언어를 따른다. 새 프로젝트(기존 스펙 없음)는 한국어 기본. 사용자 명시 지정 시 해당 언어 사용.
 3. **출력 위치 준수**: 스펙은 `_sdd/spec/`에 저장하고, 초기 부트스트랩 파일은 `<project_root>/AGENTS.md`, `<project_root>/CLAUDE.md`, `<project_root>/_sdd/env.md`에만 생성한다.
-4. **기존 스펙 보존**: 이미 스펙 파일이 존재하면 덮어쓰기 전 반드시 `prev/PREV_<filename>_<timestamp>.md`로 백업한다.
+4. **기존 스펙 보존**: 이미 스펙 파일이 존재하면 덮어쓰기 전 반드시 `prev/prev_<filename>_<timestamp>.md`로 백업한다.
 5. **부트스트랩 파일 최소 수정 원칙**: `AGENTS.md`, `CLAUDE.md`, `_sdd/env.md`가 이미 존재할 때 필수 안내 문구가 누락된 경우, 반드시 사용자 확인 후 필요한 문구만 최소 추가한다.
-6. **DECISION_LOG.md 최소화**: 결정 로그는 `DECISION_LOG.md`에만 기록하며, 추가 거버넌스 문서는 사용자 요청 시에만 생성한다.
+6. **decision_log.md 최소화**: 결정 로그는 `decision_log.md`에만 기록하며, 추가 거버넌스 문서는 사용자 요청 시에만 생성한다.
 
 ## Directory Structure
 
@@ -45,9 +45,9 @@ Create and manage Software Design Description (SDD) spec documents for projects.
     │   ├── main.md             # 전체 스펙 또는 인덱스
     │   ├── <component>.md      # 컴포넌트별 스펙
     │   ├── user_draft.md       # 사용자 요구사항 (있으면)
-    │   └── DECISION_LOG.md     # 결정 로그 (선택, 권장)
+    │   └── decision_log.md     # 결정 로그 (선택, 권장)
     └── implementation/
-        └── IMPLEMENTATION_PLAN.md
+        └── implementation_plan.md
 ```
 
 | 규모 | 구조 | 기준 |
@@ -65,7 +65,7 @@ Create and manage Software Design Description (SDD) spec documents for projects.
 수집 대상:
 - 사용자 입력 / `_sdd/spec/user_draft.md`
 - 기존 코드·README·설정 파일 분석
-- `_sdd/spec/DECISION_LOG.md` (있으면)
+- `_sdd/spec/decision_log.md` (있으면)
 - Bootstrap 대상 파일 존재 여부: `AGENTS.md`, `CLAUDE.md`, `_sdd/env.md`
 - 불명확한 요구사항 → `AskUserQuestion`
 
@@ -204,7 +204,7 @@ Agent("_sdd/spec/<comp_N>.md [컴포넌트 분석 + §4 템플릿]")  ─┘
 | 필수 섹션 | §1-§8 포함 (Background & Motivation, Core Design, Architecture, Component Details, Environment 등) |
 | 모듈 분할 | 500줄 초과 시 분할 적용 |
 | Bootstrap 파일 | `AGENTS.md`, `CLAUDE.md`, `_sdd/env.md` 필수 문구 포함 |
-| Decision Log | 결정 사항이 있었으면 `DECISION_LOG.md` 생성/갱신 |
+| Decision Log | 결정 사항이 있었으면 `decision_log.md` 생성/갱신 |
 | 링크/경로 유효성 | 내부 링크 정상 |
 
 Decision log entry format:
@@ -237,12 +237,12 @@ Decision log entry format:
 | `AGENTS.md` / `CLAUDE.md` 미존재 | 표준 안내 문구로 생성 |
 | `_sdd/env.md` 미존재 | TODO 템플릿 생성 |
 | 기존 Bootstrap 파일에 문구 누락 | `AskUserQuestion` 후 승인 시 최소 추가 |
-| 기존 스펙 파일 존재 | `prev/PREV_<filename>_<timestamp>.md` 백업 후 생성 |
+| 기존 스펙 파일 존재 | `prev/prev_<filename>_<timestamp>.md` 백업 후 생성 |
 | 프로젝트 코드 접근 불가 | 경로 확인 요청 |
 | user_draft.md 형식 오류 | 오류 위치 보고, 자유 형식으로 해석 시도 |
 | 불완전한 사용자 입력 | 가용 정보로 진행, Open Questions 기록 |
 | 대형 프로젝트 (200+ 파일) | `Grep`/`Glob` 위주, 핵심 컴포넌트만 문서화 |
-| DECISION_LOG.md 충돌 | 기존 항목 보존, 새 항목만 추가 |
+| decision_log.md 충돌 | 기존 항목 보존, 새 항목만 추가 |
 
 ## Additional Resources
 

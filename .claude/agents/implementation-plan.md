@@ -23,13 +23,14 @@ model: inherit
 
 - [ ] 스펙 분석 → 컴포넌트 식별 → 태스크 정의 (모든 Task에 AC + Target Files 필수)
 - [ ] Phase 분해 (MVP-First / Risk-First / Dependency-Driven 자동 선택, 근거 기록)
-- [ ] `IMPLEMENTATION_PLAN.md` (≤25 tasks) 또는 phase-split 파일 (>25 tasks) 생성
+- [ ] `implementation_plan.md` (≤25 tasks) 또는 phase-split 파일 (>25 tasks) 생성
 
 ## Hard Rules
 
 - **Spec Read-Only**: `_sdd/spec/` 하위 파일은 읽기만 가능. 변경 필요 시 Open Questions에 기록하고 `spec-update-todo`로 유도.
 - **모든 Task에 AC + Target Files 필수**: 하나라도 누락 시 다음 Step으로 진행 불가.
 - **자율 결정**: 모호한 요구사항은 최선 추론 후 진행, 판단 근거를 Plan에 기록. 사용자 확인을 기다리지 않는다.
+- **Artifact Naming Transition**: 결과 파일은 lowercase canonical 경로에 저장하고, transition 기간에는 legacy uppercase artifact를 입력 fallback으로 허용한다.
 
 ## Language
 
@@ -38,7 +39,7 @@ model: inherit
 ## Input Sources (우선순위 순)
 
 1. **스펙의 📋 항목**: `_sdd/spec/` 내 📋 (계획됨) 상태 마커가 붙은 기능/태스크
-2. **Feature Draft Part 2**: `_sdd/drafts/feature_draft_*.md`의 Implementation Plan 섹션
+2. **Feature Draft Part 2**: `_sdd/drafts/feature_draft_*.md`의 implementation_plan 섹션
 3. **사용자 입력**: 대화 또는 `_sdd/implementation/user_input.md`
 4. 위 모두 불명확하면 사용자에게 확인을 요청한다.
 
@@ -175,7 +176,7 @@ Task 관계를 매핑한다:
 
 **단일 문서 (total_tasks ≤ 25)**:
 ```
-Write("IMPLEMENTATION_PLAN.md skeleton 작성. [Output Format + 수집 정보]")
+Write("implementation_plan.md skeleton 작성. [Output Format + 수집 정보]")
 Edit("각 섹션 TODO를 실제 task/phase 내용으로 채움")
 ```
 
@@ -183,15 +184,15 @@ Edit("각 섹션 TODO를 실제 task/phase 내용으로 채움")
 
 Step 6-1: 인덱스 파일 순차 작성
 ```
-Write("IMPLEMENTATION_PLAN.md 인덱스 skeleton 작성. Overview/Scope/Components/Phase 요약 + Phase 파일 링크")
+Write("implementation_plan.md 인덱스 skeleton 작성. Overview/Scope/Components/Phase 요약 + Phase 파일 링크")
 Edit("인덱스 설명과 링크를 실제 내용으로 채움")
 ```
 
 Step 6-2: Phase 파일 병렬 작성 (인덱스 완성 후)
 ```
-Agent("IMPLEMENTATION_PLAN_PHASE_1.md [Phase 1]")  ─┐
-Agent("IMPLEMENTATION_PLAN_PHASE_2.md [Phase 2]")  ─┤ 동시
-Agent("IMPLEMENTATION_PLAN_PHASE_N.md [Phase N]")  ─┘
+Agent("implementation_plan_phase_1.md [Phase 1]")  ─┐
+Agent("implementation_plan_phase_2.md [Phase 2]")  ─┤ 동시
+Agent("implementation_plan_phase_n.md [Phase N]")  ─┘
 ```
 
 > 독립 Phase 파일 2개 이상이면 병렬 디스패치.
@@ -244,7 +245,7 @@ Agent("IMPLEMENTATION_PLAN_PHASE_N.md [Phase N]")  ─┘
 
 ## Output Location
 
-1. 기존 파일이 있으면 `_sdd/implementation/prev/PREV_IMPLEMENTATION_PLAN_<timestamp>.md`로 아카이브.
+1. 기존 파일이 있으면 `_sdd/implementation/prev/prev_implementation_plan_<timestamp>.md`로 아카이브.
 2. 기본 저장 경로: `<project_root>/_sdd/implementation/`
 3. 사용자 지정 경로가 있으면 해당 경로 사용.
 

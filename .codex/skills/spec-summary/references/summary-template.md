@@ -23,11 +23,11 @@ Some sections should only appear if data is available:
 
 | Section | Condition | Action if Missing |
 |---------|-----------|-------------------|
-| Implementation Progress | `IMPLEMENTATION_PROGRESS.md` exists | Omit from Quick Reference |
-| Implementation Progress (Phases) | Any `IMPLEMENTATION_PROGRESS_PHASE_<n>.md` exists | Include **latest phase** in Quick Reference; omit if none |
-| Implementation Review | `IMPLEMENTATION_REVIEW.md` exists | Omit from Quick Reference |
+| Implementation Progress | `implementation_progress.md` exists | Omit from Quick Reference |
+| Implementation Progress (Phases) | Any `implementation_progress_phase_<n>.md` exists | Include **latest phase** in Quick Reference; omit if none |
+| Implementation Review | `implementation_review.md` exists | Omit from Quick Reference |
 | Split Specs | Index spec links to other `_sdd/spec/*.md` files | Include linked sub-specs in Quick Reference; omit if not split |
-| Summary Backup | `_sdd/spec/SUMMARY.md` already exists | Create `_sdd/spec/prev/PREV_SUMMARY_<timestamp>.md` before overwriting |
+| Summary Backup | `_sdd/spec/summary.md` already exists | Create `_sdd/spec/prev/prev_summary_<timestamp>.md` before overwriting |
 | On Hold Features | Any ⏸️ markers in spec | Omit "On Hold" subsection |
 | High Priority Issues | Any high-priority items | Show "No high-priority issues" |
 | Architecture Diagram | 2+ components | Generate ASCII diagram |
@@ -251,7 +251,7 @@ Database       Cache (Redis)
 [LOGIC:]
 - IF high-priority issues exist → "Fix [issue title]"
 - IF features at 80%+ progress → "Complete [feature name]"
-- IF blockers in IMPLEMENTATION_REVIEW.md → "Unblock [task]"
+- IF blockers in implementation_review.md → "Unblock [task]"
 - IF no urgent items → "Continue current work"
 
 - [ ] **[Action item with verb]** - [Why this matters / Expected outcome]
@@ -302,10 +302,10 @@ Database       Cache (Redis)
 [List actual file paths from project]
 - **Spec Index** (메인 스펙): `_sdd/spec/<project>.md`
 - **Sub-specs** (분할된 스펙, 선택): `_sdd/spec/<project>_API.md`, `_sdd/spec/<project>_DATA_MODEL.md`, ...
-- **Implementation Plan** (구현 계획): `_sdd/implementation/IMPLEMENTATION_PLAN.md` [IF exists, else OMIT]
-- **Implementation Progress** (구현 진행): `_sdd/implementation/IMPLEMENTATION_PROGRESS.md` [IF exists, else OMIT]
-- **Implementation Progress (Latest Phase)** (구현 진행 - 최신 phase): `_sdd/implementation/IMPLEMENTATION_PROGRESS_PHASE_<n>.md` [IF exists, else OMIT]
-- **Latest Review** (최근 리뷰): `_sdd/implementation/IMPLEMENTATION_REVIEW.md` [IF exists, else OMIT]
+- **Implementation Plan** (구현 계획): `_sdd/implementation/implementation_plan.md` [IF exists, else OMIT]
+- **Implementation Progress** (구현 진행): `_sdd/implementation/implementation_progress.md` [IF exists, else OMIT]
+- **Implementation Progress (Latest Phase)** (구현 진행 - 최신 phase): `_sdd/implementation/implementation_progress_phase_<n>.md` [IF exists, else OMIT]
+- **Latest Review** (최근 리뷰): `_sdd/implementation/implementation_review.md` [IF exists, else OMIT]
 
 ### Related Commands
 - `/spec-update-todo` - Add new features to spec
@@ -341,7 +341,7 @@ Use this template only when the user requests README create/update:
 ### 2. [Feature Name]
 [Plain-text what/how/why/status paragraph]
 
-More details: [`_sdd/spec/SUMMARY.md`](_sdd/spec/SUMMARY.md)
+More details: [`_sdd/spec/summary.md`](_sdd/spec/summary.md)
 <!-- spec-summary:end -->
 ```
 
@@ -349,7 +349,7 @@ More details: [`_sdd/spec/SUMMARY.md`](_sdd/spec/SUMMARY.md)
 - Never overwrite full `README.md`
 - Replace only content between markers if markers already exist
 - If markers are missing, insert block after first H1; if no H1, append to EOF
-- Keep README snapshot concise and defer deep details to `SUMMARY.md`
+- Keep README snapshot concise and defer deep details to `summary.md`
 
 ## Template Usage Guide
 
@@ -357,8 +357,8 @@ More details: [`_sdd/spec/SUMMARY.md`](_sdd/spec/SUMMARY.md)
 ```bash
 # List candidate spec files (exclude generated/backup files)
 candidates=$(find _sdd/spec -path "*/prev/*" -prune -o -name "*.md" \
-  -not -name "SUMMARY.md" \
-  -not -name "PREV_*.md" \
+  -not -name "summary.md" \
+  -not -name "prev_*.md" \
   -print)
 
 echo "$candidates"
@@ -499,10 +499,10 @@ if user_requested_readme_sync:
 | Key features too abstract | Explain each feature with what/how/why/status in plain text |
 | Listing all components | Focus on key components and omit low-value details |
 | Overwriting entire README | Update only managed marker block |
-| README grows too long | Keep snapshot short and link to `SUMMARY.md` |
+| README grows too long | Keep snapshot short and link to `summary.md` |
 | Vague next steps | Make specific and time-bound |
 | Wrong status calculation | Exclude ⏸️ from total count |
-| Summarizing generated/backup files | Exclude `SUMMARY.md` and `prev/PREV_*.md` from spec inputs; pick the index spec explicitly |
+| Summarizing generated/backup files | Exclude `summary.md` and `prev/prev_*.md` from spec inputs; pick the index spec explicitly |
 | Missing split sub-specs | Prefer index/link-based discovery and read linked `_sdd/spec/<project>_*.md` files |
 | Missing conditional sections | Check if data exists before adding section |
 | Hardcoded file paths | Use actual project file paths |

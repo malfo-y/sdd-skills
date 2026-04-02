@@ -1,16 +1,14 @@
-# Implementation Progress: spec-rewrite Quality Rubric and Whitepaper Alignment
+# Implementation Progress: lowercase artifact canonical naming rollout
 
 **Date**: 2026-04-02
-**Source Draft**: `_sdd/drafts/feature_draft_spec_rewrite_quality_rubric.md`
-**Status**: COMPLETE_WITH_DEFERRED_SPEC_SYNC
+**Source Draft**: `_sdd/drafts/feature_draft_lowercase_artifact_filenames.md`
+**Status**: COMPLETE
 
 | Task ID | Title | Phase | Dependencies | Status | Owner | Notes |
 |---------|-------|-------|--------------|--------|-------|-------|
-| T1 | Define 8-metric rubric and scoring contract in spec-rewrite SKILLs | Phase 1 | None | DONE | implementation | `.codex` / `.claude` SKILL.md 모두 `0-3` scoring + metric vocabulary 반영 |
-| T2 | Connect plan/validation/output contract to rubric | Phase 1 | T1 | DONE | implementation | metric-driven rationale, whitepaper warnings, report contract 강화 |
-| T3 | Add metric scorecard + whitepaper fit assessment to rewrite report examples | Phase 1 | T1, T2 | DONE | implementation | 양쪽 example 리포트에 scorecard / unresolved warnings 추가 |
-| T4 | Rebuild rewrite-checklist as question-style rubric | Phase 2 | T1 | DONE | implementation | 8개 metric 각각에 질문형 rubric 추가 |
-| T5 | Align spec-format reference with `docs/SDD_SPEC_DEFINITION.md` | Phase 2 | T1 | DONE | implementation | section presence + explanation quality + rewrite boundary 반영 |
-| T6 | Sync `.codex` and `.claude` spec-rewrite document sets and bump versions | Phase 2 | T1, T2, T3, T4, T5 | DONE | implementation | `skill.json` 양쪽 `1.6.0`으로 갱신 |
-| T7 | Update `_sdd/spec/main.md` spec-rewrite description | Phase 3 | T1, T2, T3, T4, T5, T6 | DEFERRED | implementation | `implementation` Hard Rule 1에 따라 `_sdd/spec/` 수정 불가. 후속 `spec-update-done` 또는 별도 작업으로 이관 |
-| T8 | Run consistency and hygiene verification | Phase 3 | T6 | DONE | implementation | `git diff --check` PASS, metric vocabulary grep PASS |
+| T1 | Add lowercase canonical artifact naming policy and path map to repo spec | Phase 1 | None | DONE | implementation | `_sdd/spec/main.md`에 artifact naming policy, lowercase canonical artifact map, transition fallback 규칙 반영 |
+| T2 | Update implementation-family skill and agent contracts to lowercase canonical paths | Phase 2 | T1 | DONE | implementation | `feature-draft`, `implementation-plan`, `implementation`, `implementation-review`, `sdd-autopilot`, mirror agents에 lowercase canonical path + legacy uppercase fallback 반영 |
+| T3 | Update spec/reporting-family skill and agent contracts to lowercase canonical paths | Phase 2 | T1 | DONE | implementation | `spec-summary`, `spec-review`, `spec-rewrite`, `spec-snapshot`, `spec-create`, `spec-update-done`, `spec-update-todo`, `spec-upgrade` 관련 경로 및 mirror 정렬 |
+| T4 | Normalize supporting skills and backup/archive rules | Phase 3 | T1 | DONE | implementation | `pr-review`, `guide-create`와 backup/archive prefix를 `prev_*` canonical로 정리 |
+| T5 | Sync examples, templates, and orchestrator references | Phase 3 | T2, T3, T4 | DONE | implementation | `.codex` / `.claude` example/reference/template/orchestrator 문서를 canonical lowercase path 기준으로 동기화 |
+| T6 | Verify repo-wide path consistency and document deferred historical rename scope | Phase 4 | T2, T3, T4, T5 | DONE | implementation | `git diff --check` PASS, 잔여 uppercase reference는 intentional fallback 또는 historical changelog로만 남김 |

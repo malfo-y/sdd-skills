@@ -44,7 +44,7 @@ version: 2.4.0
 4. 기본은 non-interactive다. 방향이 크게 달라지는 ambiguity가 아니면 deterministic default로 계속 진행한다.
 5. spec를 primary source로 사용하고, 코드는 citation과 구현 디테일 보강에 사용한다.
 6. 확정할 수 없는 정보는 assumption/unknown으로 표시한다.
-7. 기존 guide를 덮어쓸 때는 `_sdd/guides/prev/PREV_guide_<slug>_<timestamp>.md`로 백업한다.
+7. 기존 guide를 덮어쓸 때는 `_sdd/guides/prev/prev_guide_<slug>_<timestamp>.md`로 백업한다.
 8. 장문 guide는 caller가 먼저 skeleton/섹션 헤더를 직접 기록한 뒤, 같은 흐름에서 내용을 채운다.
 
 ## Input Sources

@@ -14,7 +14,7 @@ version: 3.0.0
 
 - [ ] AC1: Tier 자동 판별 정상 동작 (Plan 유효→Tier1, Plan stale/없음+Spec→Tier2, 둘 다 없음→Tier3)
 - [ ] AC2: 5-step review 수행 (Inventory → Verification → Assessment → Issues → Summary)
-- [ ] AC3: `_sdd/implementation/IMPLEMENTATION_REVIEW.md`에 리포트 저장 (기존 파일은 `prev/`로 아카이브)
+- [ ] AC3: `_sdd/implementation/implementation_review.md`에 리포트 저장 (기존 파일은 `prev/`로 아카이브)
 - [ ] AC4: `_sdd/spec/` 파일은 절대 수정하지 않음
 
 ## Hard Rules
@@ -25,7 +25,7 @@ version: 3.0.0
 4. **모호한 기준**: 가용 증거 기반으로 최선의 판단 후 UNTESTED로 표시, 판단 근거를 리포트에 기록한다.
 5. **보안 취약점**: 발견 즉시 Critical Issues로 보고한다.
 6. **env.md 우선**: `_sdd/env.md` 존재 시 환경 설정을 적용한 후 테스트를 실행한다. 미존재 시 코드 분석만 수행한다.
-7. **계획 문서 수정 금지**: 이 리뷰 스킬에서는 `IMPLEMENTATION_PLAN*.md`나 진행 상태 문서를 수정하지 않는다. 후속 변경 제안은 리뷰 리포트에만 기록한다.
+7. **계획 문서 수정 금지**: 이 리뷰 스킬에서는 `implementation_plan*.md`나 진행 상태 문서를 수정하지 않는다. 후속 변경 제안은 리뷰 리포트에만 기록한다.
 8. **Fresh Verification**: "should work" 금지. 테스트 실행 출력을 근거로 판단한다. 이전 실행 결과 재사용 금지. `_sdd/env.md` 미존재 시 코드 분석만 수행하고 리포트에 `UNTESTED` 표기.
 
 ## Process
@@ -35,7 +35,7 @@ version: 3.0.0
 Plan/Spec 존재 여부에 따라 자동으로 Tier를 결정한다.
 
 ```
-Plan 탐색 (사용자 지정 경로 또는 _sdd/implementation/IMPLEMENTATION_PLAN*.md)
+Plan 탐색 (사용자 지정 경로 또는 _sdd/implementation/implementation_plan*.md)
   → 발견 → 코드베이스와 정합성 검증
     → OK → Tier 1 (Plan 기반 전체 리뷰)
     → 불일치 (stale) → Tier 2로 fallback, 리포트에 "⚠️ Stale Plan detected" 기록
@@ -52,7 +52,7 @@ Plan 탐색 (사용자 지정 경로 또는 _sdd/implementation/IMPLEMENTATION_P
 
 | Tier | 소스 | 작업 |
 |------|------|------|
-| Tier 1 | IMPLEMENTATION_PLAN.md | Task/Criteria/예상 산출물 추출 |
+| Tier 1 | implementation_plan.md | Task/Criteria/예상 산출물 추출 |
 | Tier 2 | `_sdd/spec/` | 요구사항 추출 (구조화→체크리스트, 비구조화→정합성 모드) |
 | Tier 3 | git log/diff | 최근 변경 범위 결정 (기본 2주/20커밋, 규모별 범위 조정) |
 
@@ -89,8 +89,8 @@ Plan 탐색 (사용자 지정 경로 또는 _sdd/implementation/IMPLEMENTATION_P
 - 의존 섹션 → 순서대로 Edit
 - 완료 후 TODO/Phase 마커 제거
 
-**저장 경로**: 사용자 지정 또는 `_sdd/implementation/IMPLEMENTATION_REVIEW.md`
-- 기존 파일이 있으면 `prev/PREV_IMPLEMENTATION_REVIEW_<timestamp>.md`로 아카이브 후 새로 생성
+**저장 경로**: 사용자 지정 또는 `_sdd/implementation/implementation_review.md`
+- 기존 파일이 있으면 `prev/prev_implementation_review_<timestamp>.md`로 아카이브 후 새로 생성
 
 리뷰 결과를 바탕으로 TODOs, 상태, acceptance criteria 관련 후속 액션을 리포트에 기록한다. 구현 계획 문서 자체는 이 스킬에서 수정하지 않는다.
 

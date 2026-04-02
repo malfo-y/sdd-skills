@@ -18,7 +18,7 @@ user_invocable: true
 
 - [ ] AC1: `_sdd/snapshots/<timestamp>_<lang>/` 디렉토리가 생성되었다
 - [ ] AC2: 원본 `_sdd/spec/`의 모든 `.md` 파일이 번역되어 스냅샷에 포함되었다 (`prev/` 제외)
-- [ ] AC3: 스냅샷 디렉토리 루트에 `SUMMARY.md`가 생성되었다
+- [ ] AC3: 스냅샷 디렉토리 루트에 `summary.md`가 생성되었다
 - [ ] AC4: 원본 `_sdd/spec/` 파일이 수정되지 않았다
 
 **사용 예시**: `/sdd-skills:spec-snapshot en` (영어) · `ja` (일본어) · `ko` (한국어 원본) · 미지정 시 원본 언어 그대로
@@ -28,7 +28,7 @@ user_invocable: true
 1. **구현 코드 수정 금지**: `src/`, `tests/` 등 구현 코드 파일은 수정하지 않는다.
 2. **원본 스펙 수정 금지**: `_sdd/spec/` 원본 파일은 절대 수정하지 않는다. 읽기만 한다.
 3. **전체 복사 + 구조 보존**: `_sdd/spec/` 아래 모든 `.md` 파일을 스냅샷에 포함하되 (`prev/` 제외), 원본 디렉토리 구조를 그대로 유지한다.
-4. **SUMMARY.md 생성**: 스냅샷 디렉토리 루트에 `SUMMARY.md`를 생성한다.
+4. **summary.md 생성**: 스냅샷 디렉토리 루트에 `summary.md`를 생성한다.
 5. **번역 일관성**: 한 스냅샷 내 모든 파일은 동일한 대상 언어로 번역한다.
 6. **도메인 용어 보존**: 코드 경로, 심볼명, 명령어, 설정 키 등 코드 관련 용어는 번역하지 않고 원문 그대로 유지한다.
 
@@ -37,9 +37,9 @@ user_invocable: true
 ```
 _sdd/snapshots/
 └── 2026-03-09T14-30_en/
-    ├── SUMMARY.md                    # 번역된 스펙 요약 (자동 생성)
+    ├── summary.md                    # 번역된 스펙 요약 (자동 생성)
     ├── main.md                       # 번역된 메인 스펙
-    ├── DECISION_LOG.md               # 번역된 결정 로그
+    ├── decision_log.md               # 번역된 결정 로그
     ├── auth.md                       # 번역된 컴포넌트 스펙 (플랫 구조)
     ├── billing/                      # subdirectory 구조 보존
     │   ├── billing.md
@@ -80,13 +80,13 @@ _sdd/snapshots/
 - 파일 경로, 심볼명, 명령어는 번역하지 않음
 - 섹션 헤딩은 번역하되, 앵커 링크가 깨지지 않도록 주의
 
-독립 파일 2개 이상이면 병렬 디스패치. SUMMARY.md는 Step 3에서 순차 생성.
+독립 파일 2개 이상이면 병렬 디스패치. summary.md는 Step 3에서 순차 생성.
 
-### Step 3: SUMMARY.md 생성
+### Step 3: summary.md 생성
 
 **Tools**: `Write`
 
-스냅샷 디렉토리 루트에 `SUMMARY.md` 생성. 내용:
+스냅샷 디렉토리 루트에 `summary.md` 생성. 내용:
 
 ```markdown
 # Spec Snapshot Summary

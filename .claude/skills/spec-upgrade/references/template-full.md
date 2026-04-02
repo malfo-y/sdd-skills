@@ -131,7 +131,7 @@ def process_data(input: InputModel) -> OutputModel:
 |----------|-----------|------------------------|
 | ... | ... | ... |
 
-Record significant decisions in `_sdd/spec/DECISION_LOG.md` as well, so rationale remains traceable when the main spec is later split or simplified.
+Record significant decisions in `_sdd/spec/decision_log.md` as well, so rationale remains traceable when the main spec is later split or simplified.
 
 ---
 

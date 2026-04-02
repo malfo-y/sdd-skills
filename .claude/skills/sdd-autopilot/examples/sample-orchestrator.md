@@ -77,7 +77,7 @@ test/
 
 **에이전트**: implementation-plan
 **입력 파일**: `_sdd/drafts/feature_draft_jwt_auth.md`
-**출력 파일**: `_sdd/implementation/IMPLEMENTATION_PLAN.md`
+**출력 파일**: `_sdd/implementation/implementation_plan.md`
 
 **프롬프트**:
 다음 feature draft를 기반으로 구현 계획을 작성하세요.
@@ -95,7 +95,7 @@ Feature draft: `_sdd/drafts/feature_draft_jwt_auth.md`
 ### Step 3: implementation
 
 **에이전트**: implementation
-**입력 파일**: `_sdd/implementation/IMPLEMENTATION_PLAN.md`
+**입력 파일**: `_sdd/implementation/implementation_plan.md`
 **출력 파일**: 코드 파일 (예상 6-8개)
   - `src/middleware/auth.js` (인증 미들웨어)
   - `src/routes/auth.js` (인증 라우트)
@@ -108,7 +108,7 @@ Feature draft: `_sdd/drafts/feature_draft_jwt_auth.md`
 **프롬프트**:
 구현 계획을 실행하세요.
 
-구현 계획: `_sdd/implementation/IMPLEMENTATION_PLAN.md`
+구현 계획: `_sdd/implementation/implementation_plan.md`
 
 TDD 방식으로 진행하세요:
 1. 테스트 먼저 작성
@@ -131,7 +131,7 @@ TDD 방식으로 진행하세요:
 JWT 인증 시스템 구현이 완료되었습니다. 스펙 문서를 실제 구현과 동기화하세요.
 
 스펙 문서: `_sdd/spec/main.md`
-구현 계획: `_sdd/implementation/IMPLEMENTATION_PLAN.md`
+구현 계획: `_sdd/implementation/implementation_plan.md`
 Feature draft: `_sdd/drafts/feature_draft_jwt_auth.md`
 
 구현된 주요 파일:
@@ -154,7 +154,7 @@ Feature draft: `_sdd/drafts/feature_draft_jwt_auth.md`
 ### Review 프롬프트:
 구현 결과를 리뷰하세요.
 
-구현 계획: `_sdd/implementation/IMPLEMENTATION_PLAN.md`
+구현 계획: `_sdd/implementation/implementation_plan.md`
 
 리뷰 대상 파일:
 - `src/middleware/auth.js`
@@ -236,7 +236,7 @@ medium/low 이슈는 무시하세요.
 
 ### implementation-plan -- 완료
 - **시간**: 14:37:30 ~ 14:39:15 (1분 45초)
-- **출력**: `_sdd/implementation/IMPLEMENTATION_PLAN.md`
+- **출력**: `_sdd/implementation/implementation_plan.md`
 - **핵심 결정사항**:
   - 7개 태스크로 분할 (3개 병렬 가능)
   - TDD 방식 채택
@@ -387,7 +387,7 @@ Feature draft: `_sdd/drafts/feature_draft_image_cls_finetune.md`
 
 **에이전트**: implementation-plan
 **입력 파일**: `_sdd/drafts/feature_draft_image_cls_finetune.md`
-**출력 파일**: `_sdd/implementation/IMPLEMENTATION_PLAN.md`
+**출력 파일**: `_sdd/implementation/implementation_plan.md`
 
 **프롬프트**:
 다음 feature draft를 기반으로 구현 계획을 작성하세요.
@@ -405,7 +405,7 @@ Feature draft: `_sdd/drafts/feature_draft_image_cls_finetune.md`
 ### Step 4: implementation
 
 **에이전트**: implementation
-**입력 파일**: `_sdd/implementation/IMPLEMENTATION_PLAN.md`
+**입력 파일**: `_sdd/implementation/implementation_plan.md`
 **출력 파일**: 코드 파일 (예상 10-15개)
   - `src/models/vit_classifier.py` (모델 정의)
   - `src/data/cls_dataset.py` (데이터셋/로더)
@@ -423,7 +423,7 @@ Feature draft: `_sdd/drafts/feature_draft_image_cls_finetune.md`
 **프롬프트**:
 구현 계획을 실행하세요.
 
-구현 계획: `_sdd/implementation/IMPLEMENTATION_PLAN.md`
+구현 계획: `_sdd/implementation/implementation_plan.md`
 
 주의사항:
 - DDP 환경에서 동작하도록 구현하세요
@@ -483,7 +483,7 @@ ralph loop를 background로 실행하여 학습-디버깅 루프를 수행한다
 이미지 분류 fine-tuning 파이프라인 구현이 완료되었습니다. 스펙 문서를 실제 구현과 동기화하세요.
 
 스펙 문서: `_sdd/spec/main.md`
-구현 계획: `_sdd/implementation/IMPLEMENTATION_PLAN.md`
+구현 계획: `_sdd/implementation/implementation_plan.md`
 Feature draft: `_sdd/drafts/feature_draft_image_cls_finetune.md`
 
 구현된 주요 파일:
@@ -505,7 +505,7 @@ Feature draft: `_sdd/drafts/feature_draft_image_cls_finetune.md`
 ### Review 프롬프트:
 구현 결과를 리뷰하세요.
 
-구현 계획: `_sdd/implementation/IMPLEMENTATION_PLAN.md`
+구현 계획: `_sdd/implementation/implementation_plan.md`
 
 리뷰 대상 파일:
 - `src/models/vit_classifier.py`
@@ -575,7 +575,7 @@ medium/low 이슈는 무시하세요.
 |------|-------|--------|--------|
 | 1 | feature-draft | completed | `_sdd/drafts/feature_draft_image_cls_finetune.md` |
 | 2 | spec-update-todo | completed | `_sdd/spec/main.md` |
-| 3 | implementation-plan | completed | `_sdd/implementation/IMPLEMENTATION_PLAN.md` |
+| 3 | implementation-plan | completed | `_sdd/implementation/implementation_plan.md` |
 | 4 | implementation | completed | 12개 파일 |
 | 5 | review-fix | completed | Round 2 통과 |
 | 6 | ralph-loop | completed | ralph/state.md phase=DONE |
@@ -600,7 +600,7 @@ medium/low 이슈는 무시하세요.
 
 ### implementation-plan -- 완료
 - **시간**: 10:09:45 ~ 10:12:00 (2분 15초)
-- **출력**: `_sdd/implementation/IMPLEMENTATION_PLAN.md`
+- **출력**: `_sdd/implementation/implementation_plan.md`
 - **핵심 결정사항**:
   - 12개 태스크로 분할 (4개 병렬 가능)
   - 데이터 파이프라인과 모델 정의를 병렬 구현

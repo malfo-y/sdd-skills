@@ -35,7 +35,7 @@ These elements MUST be preserved during spec upgrade/restructuring:
 - **Code Reference Index**: The appendix table mapping files to citations must be updated if sections are moved
 
 ### Component Preservation
-- **Why fields**: Component-level "Why" fields must remain inline (not moved to DECISION_LOG or appendix)
+- **Why fields**: Component-level "Why" fields must remain inline (not moved to decision_log or appendix)
 - **Source fields**: Implementation file mappings must be preserved during section moves
 
 ## Section Quality Criteria

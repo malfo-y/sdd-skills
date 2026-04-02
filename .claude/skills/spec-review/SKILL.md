@@ -15,22 +15,23 @@ version: 2.0.0
 - [ ] AC1: 2차원 리뷰(spec quality + code drift) 수행 완료
 - [ ] AC2: 모든 finding에 severity(High/Medium/Low) 분류 완료
 - [ ] AC3: 전체 decision(SPEC_OK / SYNC_REQUIRED / NEEDS_DISCUSSION) 부여
-- [ ] AC4: `_sdd/spec/logs/SPEC_REVIEW_REPORT.md`에 리포트 저장
+- [ ] AC4: `_sdd/spec/logs/spec_review_report.md`에 리포트 저장
 - [ ] AC5: spec 파일(`_sdd/spec/*.md`) 수정 없음 (리포트 파일 제외)
 
 ## Hard Rules
 
-- `_sdd/spec/` 하위 파일을 생성·수정·삭제하지 않는다 (SPEC_REVIEW_REPORT.md 제외).
-- `DECISION_LOG.md` 변경은 리포트 내 제안으로만 기록한다.
+- `_sdd/spec/` 하위 파일을 생성·수정·삭제하지 않는다 (spec_review_report.md 제외).
+- `decision_log.md` 변경은 리포트 내 제안으로만 기록한다.
 - 추정을 사실처럼 제시하지 않는다; 증거 없는 항목은 UNTESTED로 표시한다.
 - 로컬 테스트 실행 시 반드시 `_sdd/env.md`를 따른다; 없으면 사용자에게 확인한다.
+- transition 기간에는 `decision_log.md`와 implementation artifact를 lowercase canonical 우선, legacy uppercase fallback으로 읽는다.
 
 ## Process
 
 ### Step 1: Scope 확정
 
 1. `Glob`으로 `_sdd/spec/*.md` 스펙 파일 식별 (SUMMARY, prev/ 제외).
-2. `DECISION_LOG.md` 존재 여부 확인.
+2. `decision_log.md` 존재 여부 확인.
 3. 리뷰 범위 결정: Spec-only / Spec+Code(기본값).
 
 ### Step 2: Spec Quality 감사
@@ -72,12 +73,12 @@ Decision 부여:
 
 ### Step 5: 리포트 작성 및 저장
 
-1. 기존 리포트가 있으면 `logs/prev/PREV_SPEC_REVIEW_REPORT_<timestamp>.md`로 아카이브.
+1. 기존 리포트가 있으면 `logs/prev/prev_spec_review_report_<timestamp>.md`로 아카이브.
 2. 현재 콘텍스트에서 먼저 리포트 skeleton/섹션 헤더를 기록한 뒤, 같은 흐름에서 Edit으로 내용을 채운다.
    - 독립 섹션 2개+ → 병렬 Agent dispatch 가능
    - 의존 섹션 → 순서대로 Edit
    - 완료 후 TODO/Phase 마커 제거
-   아래 Output Format으로 `_sdd/spec/logs/SPEC_REVIEW_REPORT.md` 저장.
+   아래 Output Format으로 `_sdd/spec/logs/spec_review_report.md` 저장.
 3. 사용자에게 severity 요약 테이블과 decision을 제시.
 
 ## Output Format

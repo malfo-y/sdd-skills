@@ -21,10 +21,10 @@ version: 2.1.0
 ## Hard Rules
 
 1. **Report before changing**: 변경 사항을 적용하기 전에 반드시 Change Report를 사용자에게 먼저 제시한다.
-2. **Always backup to prev/**: 스펙 파일 수정 전 `_sdd/spec/prev/PREV_<filename>_<timestamp>.md`로 백업한다.
+2. **Always backup to prev/**: 스펙 파일 수정 전 `_sdd/spec/prev/prev_<filename>_<timestamp>.md`로 백업한다.
 3. **Copy-only archive**: 구현 산출물은 복사만 하며 원본을 이동/삭제하지 않는다.
 4. **언어 규칙**: 기존 스펙/문서의 언어를 따른다. 새 프로젝트(기존 스펙 없음)는 한국어 기본. 사용자 명시 지정 시 해당 언어 사용.
-5. **DECISION_LOG.md 최소화**: 결정 로그는 `DECISION_LOG.md`에만 기록하며, 추가 거버넌스 문서는 사용자 요청 시에만 생성한다.
+5. **decision_log.md 최소화**: 결정 로그는 `decision_log.md`에만 기록하며, 추가 거버넌스 문서는 사용자 요청 시에만 생성한다.
 6. **main.md 인덱스 동기화**: 새 sub-spec 파일 생성 시 반드시 main.md 인덱스에 링크를 추가한다. 고아 파일 금지.
 7. **기존 스펙 구조 보존**: 기존 파일 분할 구조를 변경하지 않는다. 파일 추가만 허용, 기존 구조 재편성 금지.
 
@@ -33,14 +33,14 @@ version: 2.1.0
 | 소스 | 경로/방법 | 용도 |
 |------|-----------|------|
 | 스펙 문서 | `_sdd/spec/main.md` 또는 `<project-name>.md` | 현재 스펙 상태 |
-| 의사결정 로그 | `_sdd/spec/DECISION_LOG.md` | 결정 근거 추적 |
-| 구현 로그 | `_sdd/implementation/IMPLEMENTATION_*.md`, `TEST_SUMMARY.md` | 구현 상태/결과 |
+| 의사결정 로그 | `_sdd/spec/decision_log.md` | 결정 근거 추적 |
+| 구현 로그 | `_sdd/implementation/implementation_*.md`, `test_summary.md` | 구현 상태/결과 |
 | Feature 드래프트 | `_sdd/drafts/feature_draft_<name>.md` | 스펙 패치 + 구현 계획 |
 | 코드 변경 | `git diff`, `git log`, `git status` | 실제 변경 사항 |
 | 실행 환경 | `_sdd/env.md` | 로컬 검증 시 환경 설정 |
 | 사용자 대화 | 피드백, 새 요구사항, 동작 명확화 | 직접 입력 |
-| 이전 버전 | `_sdd/spec/prev/PREV_*.md`, `_sdd/implementation/prev/PREV_*.md` | 히스토리 컨텍스트 |
-| 아카이브 인덱스 | `_sdd/implementation/IMPLEMENTATION_INDEX.md` | feature별 아카이브 이력 |
+| 이전 버전 | `_sdd/spec/prev/prev_*.md`, `_sdd/implementation/prev/prev_*.md` | 히스토리 컨텍스트 |
+| 아카이브 인덱스 | `_sdd/implementation/implementation_index.md` | feature별 아카이브 이력 |
 
 ## Drift Pattern Reference
 
@@ -63,10 +63,10 @@ version: 2.1.0
 1. 현재 스펙 문서 읽기
    - 단일 파일: 해당 파일 읽기
    - 분할 스펙: main.md 인덱스에서 링크된 sub-spec 파일 목록 구성, 각 파일의 주제·섹션 구조 파악
-2. 구현 로그 읽기: `IMPLEMENTATION_PLAN.md`, `IMPLEMENTATION_PROGRESS.md`, `IMPLEMENTATION_REVIEW.md`, `IMPLEMENTATION_REPORT*.md`, `TEST_SUMMARY.md`
+2. 구현 로그 읽기: `implementation_plan.md`, `implementation_progress.md`, `implementation_review.md`, `implementation_report*.md`, `test_summary.md`
 3. Feature 드래프트 확인: `_sdd/drafts/feature_draft_<name>.md` (있는 경우)
 4. 코드 변경 분석: `git status`, `git diff`, `git log --oneline -20`
-5. `_sdd/spec/DECISION_LOG.md` 확인 (있는 경우)
+5. `_sdd/spec/decision_log.md` 확인 (있는 경우)
 6. 로컬 실행/테스트가 필요하면 `_sdd/env.md` 로드 후 환경 설정 적용
 7. `feature_id` 결정: 사용자 명시값 → 드래프트/리포트 제목에서 도출 → 컨텍스트에서 자동 생성
 
@@ -99,7 +99,7 @@ version: 2.1.0
 3. Source field 갱신 (구현 산출물의 파일 경로 → Grep/Glob으로 검증)
 4. 버전 갱신: patch(소규모), minor(피처), major(아키텍처)
 5. Changelog 항목 추가 (prev/ 백업 참조 포함)
-6. 행동/아키텍처 의도 변경 시 `DECISION_LOG.md`에 항목 추가
+6. 행동/아키텍처 의도 변경 시 `decision_log.md`에 항목 추가
 
 **Source field 형식:**
 ```markdown
@@ -121,9 +121,9 @@ version: 2.1.0
 
 1. `mkdir -p _sdd/implementation/features/<feature_id>/`
 2. 루트 `_sdd/implementation/` 파일은 제자리 유지 (이동/삭제 금지)
-3. 관련 파일 복사: `IMPLEMENTATION_PLAN*.md`, `IMPLEMENTATION_PROGRESS*.md`, `IMPLEMENTATION_REVIEW.md`, `IMPLEMENTATION_REPORT*.md`, `TEST_SUMMARY.md`
+3. 관련 파일 복사: `implementation_plan*.md`, `implementation_progress*.md`, `implementation_review.md`, `implementation_report*.md`, `test_summary.md`
 4. 타임스탬프 파일명: `SYNC_<YYYYMMDD_HHMMSS>_<original_filename>`
-5. `IMPLEMENTATION_INDEX.md` 갱신: feature_id별 섹션에 sync 항목 추가 (`synced_at`, 파일 매핑, 비고)
+5. `implementation_index.md` 갱신: feature_id별 섹션에 sync 항목 추가 (`synced_at`, 파일 매핑, 비고)
 
 ## Output Format
 
@@ -157,7 +157,7 @@ version: 2.1.0
 | git 이력 없음 | 코드 직접 분석으로 대체 |
 | `_sdd/env.md` 미존재 | 로컬 실행 건너뛰고 사용자에게 환경 확인 |
 | feature_id 모호 | 컨텍스트에서 자동 생성 (커밋 메시지, 변경 파일명 활용) |
-| 충돌하는 변경 | 최선 판단 후 진행, `DECISION_LOG.md`에 근거 기록 |
+| 충돌하는 변경 | 최선 판단 후 진행, `decision_log.md`에 근거 기록 |
 | 파일 배치 판단 모호 | 가장 관련도 높은 기존 파일에 보수적 배치, Change Report에 근거 기록 |
 
 ## Workflow Position

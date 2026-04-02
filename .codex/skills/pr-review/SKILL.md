@@ -6,11 +6,11 @@ version: 2.0.0
 
 # PR Review - Unified PR Verification and Verdict
 
-PR의 코드 품질을 검증하고, from-branch에 spec이 있으면 spec 기반 추가 검증을 수행한 뒤, 구조화된 리뷰 리포트(`_sdd/pr/PR_REVIEW.md`)를 생성한다.
+PR의 코드 품질을 검증하고, from-branch에 spec이 있으면 spec 기반 추가 검증을 수행한 뒤, 구조화된 리뷰 리포트(`_sdd/pr/pr_review.md`)를 생성한다.
 
 ## Acceptance Criteria
 
-- [ ] AC1: `_sdd/pr/PR_REVIEW.md` 리뷰 리포트가 Output Format에 맞게 생성되었다
+- [ ] AC1: `_sdd/pr/pr_review.md` 리뷰 리포트가 Output Format에 맞게 생성되었다
 - [ ] AC2: Verdict(APPROVE / REQUEST CHANGES / NEEDS DISCUSSION)가 근거와 함께 부여되었다
 - [ ] AC3: Code-only 검증(코드 품질, 에러 처리, 테스트, 보안)이 항상 수행되었다
 - [ ] AC4: from-branch에 spec 존재 시 spec 기반 AC 검증, compliance, gap analysis가 추가 수행되었다
@@ -47,7 +47,7 @@ gh pr diff [PR]
 gh pr diff [PR] --name-only
 ```
 
-`_sdd/pr/` 디렉토리가 없으면 생성. 기존 `PR_REVIEW.md`가 있으면 `_sdd/pr/prev/PREV_PR_REVIEW_<timestamp>.md`로 아카이브.
+`_sdd/pr/` 디렉토리가 없으면 생성. 기존 `pr_review.md`가 있으면 `_sdd/pr/prev/prev_pr_review_<timestamp>.md`로 아카이브.
 
 ### Step 2: Load Spec (from-branch 우선)
 
@@ -101,7 +101,7 @@ Step 3 위에 다음을 추가 수행:
 
 ### Step 6: Report Generation
 
-`_sdd/pr/PR_REVIEW.md`를 Output Format에 맞게 생성한다.
+`_sdd/pr/pr_review.md`를 Output Format에 맞게 생성한다.
 
 현재 콘텍스트에서 skeleton을 먼저 기록한 뒤, 같은 흐름에서 Edit으로 내용을 채운다.
 
