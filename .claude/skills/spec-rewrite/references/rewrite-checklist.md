@@ -15,6 +15,7 @@ Use the same `0-3` scale across every metric.
 
 - [ ] Identify the main target spec file (`_sdd/spec/main.md` or `_sdd/spec/<project>.md`)
 - [ ] Collect the list of linked sub-spec files
+- [ ] Write `_sdd/spec/logs/spec-rewrite-plan.md` before backup or rewrite work starts
 - [ ] Confirm backup policy (`_sdd/spec/prev/PREV_<filename>_<timestamp>.md`)
 - [ ] Load `_sdd/spec/DECISION_LOG.md` if present
 - [ ] Read `docs/SDD_SPEC_DEFINITION.md`
@@ -138,6 +139,7 @@ Include at least the following in `_sdd/spec/logs/REWRITE_REPORT.md`:
 - Ambiguities and issues list
 - Priority-based recommended resolutions
 - Warnings intentionally left unresolved
+- Deviations from `_sdd/spec/logs/spec-rewrite-plan.md`
 - Decision-log additions when rationale was moved out of main body
 
 ## 7) Exit Criteria
@@ -146,6 +148,7 @@ Include at least the following in `_sdd/spec/logs/REWRITE_REPORT.md`:
 - [ ] Detailed content is discoverable through topic-based sub-files
 - [ ] Cross-document duplication is minimized
 - [ ] Unresolved ambiguities remain explicitly documented
+- [ ] `_sdd/spec/logs/spec-rewrite-plan.md` exists and matches the executed rewrite scope, or deviations are documented
 - [ ] Essential rationale is preserved when removed from main spec
 - [ ] Component-level `Why` fields are preserved inline
 - [ ] Whitepaper narrative sections (§1, §2, §5) remain inline if they existed

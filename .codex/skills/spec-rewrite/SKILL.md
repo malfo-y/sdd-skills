@@ -1,27 +1,27 @@
 ---
 name: spec-rewrite
 description: This skill should be used when the user asks to "rewrite spec", "refactor spec", "simplify spec", "split spec into files", "clean up spec", "review spec quality", or equivalent phrases indicating they want to reorganize an overly long/complex spec by pruning noise, splitting into hierarchical files, and explicitly listing ambiguities/problems.
-version: 1.6.0
+version: 1.7.0
 ---
 
 # spec-rewrite
 
 ## Goal
 
-비대하거나 혼란스러운 스펙을 더 읽기 쉽고 유지보수 가능한 구조로 재작성한다. 재작성 전에 현재 스펙을 8개 핵심 품질 metric과 spec-as-whitepaper 기준으로 진단하고, 그 진단을 근거로 rewrite plan과 `REWRITE_REPORT.md`를 만든다.
+비대하거나 혼란스러운 스펙을 더 읽기 쉽고 유지보수 가능한 구조로 재작성한다. 재작성 전에 현재 스펙을 8개 핵심 품질 metric과 spec-as-whitepaper 기준으로 진단하고, 그 진단을 근거로 `_sdd/spec/logs/spec-rewrite-plan.md`와 `REWRITE_REPORT.md`를 만든다.
 
-핵심 내용은 보존하고, 저가치 내용은 appendix로 이동하거나 제거하며, ambiguity와 unresolved issue는 명시적으로 남긴다. `spec-rewrite`는 정리/재배치 도구이지, 누락된 whitepaper 섹션을 자동 생성하는 스킬이 아니다.
+핵심 내용은 보존하고, 저가치 내용은 appendix로 이동하거나 제거하며, ambiguity와 unresolved issue는 명시적으로 남긴다. `spec-rewrite-plan.md`는 rewrite 실행의 source of truth로 사용한다. `spec-rewrite`는 정리/재배치 도구이지, 누락된 whitepaper 섹션을 자동 생성하는 스킬이 아니다.
 
 ## Acceptance Criteria
 
 > 완료 전 아래 기준을 자체 검증한다. 미충족 항목이 있으면 해당 단계로 돌아가 수정한다.
 
 - [ ] AC1: 리라이트 대상과 범위를 8개 핵심 metric으로 진단하고, 점수 또는 동등한 판단 근거를 남겼다.
-- [ ] AC2: rewrite plan이 metric 기반 rationale, split map, ambiguity/risk를 포함한 상태로 먼저 제시되었다.
+- [ ] AC2: `_sdd/spec/logs/spec-rewrite-plan.md`가 metric 기반 rationale, split map, ambiguity/risk를 포함한 상태로 먼저 저장되었다.
 - [ ] AC3: `_sdd/spec/prev/`에 안전 백업을 남겼다.
-- [ ] AC4: rewritten spec가 더 명확한 구조를 가지며, 링크와 파일 경로가 유효하다.
+- [ ] AC4: rewritten spec가 plan 기준으로 더 명확한 구조를 가지며, 링크와 파일 경로가 유효하다.
 - [ ] AC5: 중요한 rationale, `Why`, `Source`, inline citation, code excerpt header는 보존되었다.
-- [ ] AC6: `REWRITE_REPORT.md`가 metric scorecard, whitepaper 적합성 평가, unresolved warning을 포함한다.
+- [ ] AC6: `REWRITE_REPORT.md`가 metric scorecard, whitepaper 적합성 평가, unresolved warning, plan 대비 주요 deviation을 포함한다.
 - [ ] AC7: `references/`와 `examples/`는 유지되고, 본문은 rewrite contract를 concise하게 설명한다.
 
 ## SDD Lens
@@ -36,6 +36,7 @@ version: 1.6.0
 - `references/template-compact.md`
 - `references/spec-format.md`
 - `references/rewrite-checklist.md`
+- `examples/rewrite-plan.md`
 - `examples/rewrite-report.md`
 - `docs/SDD_SPEC_DEFINITION.md`
 
@@ -44,12 +45,14 @@ version: 1.6.0
 1. 수정 전 반드시 `_sdd/spec/prev/PREV_<filename>_<timestamp>.md`로 백업한다.
 2. 삭제하는 내용에 중요한 rationale이 있으면 `DECISION_LOG.md` 또는 rewrite report에 보존한다.
 3. `Source`, component-level `Why`, inline citation, code excerpt header가 있으면 재구성 후에도 유지한다.
-4. 대규모 구조 변경이나 파일 분할은 계획을 먼저 제시하고 필요한 경우 사용자 확인을 받는다.
-5. 기존 문서 언어를 따른다. 새 프로젝트는 한국어를 기본으로 한다.
-6. 장문 문서나 다중 파일 rewrite는 caller가 먼저 skeleton/섹션 헤더를 직접 기록한 뒤, 같은 흐름에서 내용을 채운다.
-7. rewrite는 핵심 계약을 더 선명하게 해야지, 내용을 임의로 확장하면 안 된다.
-8. §1, §2, §5 같은 whitepaper 핵심 narrative 섹션이 원문에 존재하면 prune/appendix 이동으로 약화시키지 않는다.
-9. 누락된 whitepaper 섹션은 경고할 수 있지만 자동 생성하지 않는다. 생성/보강은 `spec-create` 또는 `spec-upgrade`의 역할이다.
+4. `_sdd/spec/logs/spec-rewrite-plan.md`를 rewrite 시작 전에 반드시 저장하고, 이후 실행은 이 파일을 기준으로 진행한다.
+5. 대규모 구조 변경이나 파일 분할은 계획 파일을 먼저 저장한 뒤 필요한 경우 사용자 확인을 받는다.
+6. rewrite 도중 scope, split map, prune 기준이 크게 바뀌면 plan 파일부터 갱신한 후 계속 진행한다.
+7. 기존 문서 언어를 따른다. 새 프로젝트는 한국어를 기본으로 한다.
+8. 장문 문서나 다중 파일 rewrite는 caller가 먼저 skeleton/섹션 헤더를 직접 기록한 뒤, 같은 흐름에서 내용을 채운다.
+9. rewrite는 핵심 계약을 더 선명하게 해야지, 내용을 임의로 확장하면 안 된다.
+10. §1, §2, §5 같은 whitepaper 핵심 narrative 섹션이 원문에 존재하면 prune/appendix 이동으로 약화시키지 않는다.
+11. 누락된 whitepaper 섹션은 경고할 수 있지만 자동 생성하지 않는다. 생성/보강은 `spec-create` 또는 `spec-upgrade`의 역할이다.
 
 ## Input Sources
 
@@ -100,9 +103,11 @@ version: 1.6.0
 - 사용 가이드와 기대 결과 존재 여부
 - 참조형 보조 정보와 narrative 섹션의 균형
 
-### Step 2: Propose the Rewrite Plan
+### Step 2: Write the Rewrite Plan
 
-실제 수정 전에 아래를 정리해 제시한다.
+실제 수정 전에 `_sdd/spec/logs/`를 준비하고 `_sdd/spec/logs/spec-rewrite-plan.md`를 저장한다.
+
+plan에는 아래를 포함한다.
 
 - main에 남길 내용
 - appendix로 이동할 내용
@@ -110,8 +115,27 @@ version: 1.6.0
 - 낮은 점수 metric을 어떻게 개선할지에 대한 rationale
 - ambiguity / risk / unresolved decision
 - whitepaper 기준에서 경고만 남길 항목
+- rewrite 대상 파일 목록
+- 실행 순서와 plan deviation 기록 규칙
 
-대규모 구조 변경이면 여기서 `request_user_input`으로 명시적 승인을 받는다. 승인 없이 Step 3으로 진행하지 않는다.
+권장 구조:
+
+```markdown
+# Spec Rewrite Plan
+
+## Rewrite Context
+## Diagnosis Summary
+## Keep in Main
+## Move / Prune / Appendix
+## Split Map
+## Metric Improvement Rationale
+## Ambiguities / Risks / Unresolved Decisions
+## Whitepaper Warnings
+## Execution Order
+## Approval Status
+```
+
+대규모 구조 변경이면 plan 파일 저장 후 `request_user_input`으로 명시적 승인을 받는다. 승인 없이 Step 3으로 진행하지 않는다.
 
 ### Step 3: Create Safety Backups
 
@@ -122,12 +146,14 @@ version: 1.6.0
 
 원칙:
 
+- `spec-rewrite-plan.md`를 실행 기준으로 삼는다.
 - index/main은 먼저 고정
 - 이동 대상과 신규 파일 경로를 확정
 - 필요 시 파일별 rewrite를 병렬화
 - appendix 이동, split, pruning을 수행
 - `Source`, `Why`, 중요한 rationale, inline citation, code excerpt header는 보존
 - 없는 whitepaper narrative를 새로 만들어 넣지 말고, 누락은 report에 경고로 남김
+- 실행 중 plan과 달라진 점이 생기면 rewrite 전에 plan 파일부터 갱신
 
 장문 rewrite는 다음 순서를 따른다.
 
@@ -153,6 +179,7 @@ version: 1.6.0
 - whitepaper 적합성 평가
 - ambiguity / issue 기록 여부
 - pruning / move / split 결과
+- `spec-rewrite-plan.md` 대비 실제 실행 결과와 deviation
 - decision log 추가 여부
 - 자동 보강하지 않고 경고만 남긴 항목
 
@@ -161,6 +188,7 @@ version: 1.6.0
 기본 산출물:
 
 - rewritten spec files
+- `_sdd/spec/logs/spec-rewrite-plan.md`
 - `_sdd/spec/logs/REWRITE_REPORT.md`
 
 리포트에 포함할 내용:
@@ -180,6 +208,7 @@ version: 1.6.0
 - ambiguities and issues
 - whitepaper fit assessment
 - warnings intentionally left unresolved
+- notable deviations from `spec-rewrite-plan.md`
 - decision log additions
 
 ## Error Handling

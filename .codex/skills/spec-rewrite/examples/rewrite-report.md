@@ -3,6 +3,7 @@
 - **Target Document**: `_sdd/spec/apify_ig.md`
 - **Execution Date**: 2026-04-02
 - **Goal**: improve structure and readability while preserving whitepaper qualities and documenting unresolved gaps
+- **Plan Artifact**: `_sdd/spec/logs/spec-rewrite-plan.md`
 
 ## What Was Pruned or Moved
 
@@ -80,6 +81,11 @@ _sdd/spec/
 - Missing §2-quality design narrative was flagged but not auto-generated
 - Missing inline citations were flagged but not synthesized
 - Weak usage outcome descriptions were flagged for follow-up via `spec-create` or `spec-upgrade`
+
+## Plan Deviations
+
+- Added `operations.md` only after link validation showed the original interfaces split still mixed runtime procedures
+- Kept one short historical rationale paragraph in `main` because moving it would have weakened the §1 motivation narrative
 
 > **Recommendation**: Use `spec-create` or `spec-upgrade` if the project needs missing whitepaper narrative to be authored, not just preserved.
 
