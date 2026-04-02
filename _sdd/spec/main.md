@@ -2,8 +2,8 @@
 
 > Markdown 기반 스킬 시스템으로 AI 에이전트의 Spec-Driven Development 워크플로우를 구조화한다.
 
-**Version**: 3.8.1
-**Last Updated**: 2026-04-01
+**Version**: 3.8.2
+**Last Updated**: 2026-04-02
 **Status**: Approved
 
 ## Table of Contents
@@ -410,7 +410,7 @@ PR 생성 → pr-spec-patch → pr-review → (merge 후) spec-update-done
 | `_sdd/spec/<project>.md` | spec-create | 메인 스펙 문서 |
 | `_sdd/spec/SUMMARY.md` | spec-summary | 스펙 요약 |
 | `_sdd/spec/SPEC_REVIEW_REPORT.md` | spec-review | 리뷰 리포트 |
-| `_sdd/spec/REWRITE_REPORT.md` | spec-rewrite | 리라이트 리포트 |
+| `_sdd/spec/logs/REWRITE_REPORT.md` | spec-rewrite | 리라이트 리포트 |
 | `_sdd/spec/DECISION_LOG.md` | spec-create, feature-draft | 의사결정 로그 |
 | `_sdd/drafts/feature_draft_*.md` | feature-draft | 피처 드래프트 |
 | `_sdd/guides/guide_*.md` | guide-create | 기능별 가이드 |
@@ -586,11 +586,13 @@ PR 생성 → pr-spec-patch → pr-review → (merge 후) spec-update-done
 
 | Aspect | Description |
 |--------|-------------|
-| **Purpose** | 과도하게 긴/복잡한 스펙을 구조 재정리 (파일 분할, 부록 이동) |
-| **Why** | 스펙이 커지면 AI 에이전트가 전체를 컨텍스트에 로드하기 어렵고, 사용자도 관리가 힘들다. 구조 재정리를 별도 스킬로 분리하여 안전하게 수행한다. |
-| **Input** | 기존 스펙 파일 |
-| **Output** | 재구성된 스펙 파일 + `REWRITE_REPORT.md` |
+| **Purpose** | 과도하게 긴/복잡한 스펙을 8개 품질 metric과 whitepaper 기준으로 진단한 뒤 구조 재정리 (파일 분할, 부록 이동, 탐색성 개선) |
+| **Why** | 스펙이 커지면 AI 에이전트가 전체를 컨텍스트에 로드하기 어렵고, 사용자도 목적/구조/사용법을 빠르게 파악하기 힘들다. `spec-rewrite`를 단순 정리 도구가 아니라 품질 진단 기반 재작성 스킬로 분리하여, readability와 spec-as-whitepaper 성질을 함께 보호한다. |
+| **Input** | 기존 스펙 파일, linked sub-spec, `_sdd/spec/DECISION_LOG.md`, `_sdd/implementation/` 산출물, `docs/SDD_SPEC_DEFINITION.md` |
+| **Output** | 재구성된 스펙 파일 + `_sdd/spec/logs/REWRITE_REPORT.md` |
 | **Source** | `.claude/skills/spec-rewrite/SKILL.md` |
+| **진단 기준** | `Component Separation`, `Findability`, `Repo Purpose Clarity`, `Architecture Clarity`, `Usage Completeness`, `Environment Reproducibility`, `Ambiguity Control`, `Why/Decision Preservation` |
+| **운영 규칙** | 질문형 rubric은 `references/rewrite-checklist.md`를 canonical source로 사용하고, `spec-rewrite`는 missing whitepaper narrative를 자동 생성하지 않고 경고/보존/재배치에 집중한다. |
 
 ### spec-summary
 
@@ -1044,6 +1046,15 @@ sdd_skills/
 | `.codex/skills/write-phased/SKILL.md` | write-phased | Component Details |
 
 ### Changelog
+
+#### v3.8.2 (2026-04-02)
+
+- **spec-rewrite 품질 진단 강화**: `spec-rewrite`를 단순 prune/split 도구에서 8개 핵심 metric 기반 진단 후 재작성하는 스킬로 설명 갱신
+- **question-style rubric 반영**: component 분리, 탐색성, 레포 목적 이해도, 아키텍처 이해도, 사용법 완결성, 환경 재현성, 모호성 통제, Why/decision 보존도를 기준 축으로 명시
+- **spec-as-whitepaper 정렬**: `docs/SDD_SPEC_DEFINITION.md`를 상위 평가 기준으로 반영하고, missing whitepaper narrative는 `spec-rewrite`가 자동 생성하지 않고 경고만 남긴다는 경계 추가
+- **artifact path 수정**: `REWRITE_REPORT` 경로를 `_sdd/spec/logs/REWRITE_REPORT.md`로 정정
+- 백업: `_sdd/spec/prev/PREV_main_20260402_210232.md`
+- 입력: `_sdd/implementation/IMPLEMENTATION_REPORT.md`, `_sdd/drafts/feature_draft_spec_rewrite_quality_rubric.md`
 
 #### v3.8.1 (2026-04-01)
 
