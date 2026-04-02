@@ -35,7 +35,8 @@
         "./.claude/skills/spec-upgrade",
         "./.claude/skills/write-phased",
         "./.claude/skills/sdd-autopilot",
-        "./.claude/skills/investigate"
+        "./.claude/skills/investigate",
+        "./.claude/skills/second-opinion"
       ],
       "agents": [
         "./.claude/agents/feature-draft.md",
