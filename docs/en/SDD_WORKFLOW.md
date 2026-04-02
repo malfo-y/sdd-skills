@@ -30,7 +30,7 @@ Spec-Driven Development (SDD) is a methodology where the **spec document** serve
 SDD manages documents in two levels: the **global spec** and **temporary specs**.
 
 - **Global Spec** (`_sdd/spec/main.md`): The project's Single Source of Truth, replacing `CLAUDE.md`. Contains all project information including goals, architecture, and component details. All skills operate based on this document.
-- **Temporary Specs** (`feature_draft`, `spec_patch_draft`, `user_draft`): **Change proposals** for the global spec. Like Git feature branches, they are created first, validated, then merged into the global spec and archived.
+- **Temporary Specs** (`feature_draft`, `user_draft`): **Change proposals** for the global spec. Like Git feature branches, they are created first, validated, then merged into the global spec and archived.
 
 > Detailed explanation of the two-level structure and lifecycle: [SDD_CONCEPT.md](SDD_CONCEPT.md)
 
@@ -47,7 +47,7 @@ flowchart LR
     classDef step fill:#E3F2FD,stroke:#1565C0,stroke-width:1.5px,color:#0D47A1;
 ```
 
-### Currently Available SDD Skills (18)
+### Currently Available SDD Skills (16)
 
 | Skill | Trigger | Purpose |
 |-------|---------|---------|
@@ -59,8 +59,7 @@ flowchart LR
 | **spec-summary** | "spec summary", "project overview" | Generate spec summary (for status overview) |
 | **spec-rewrite** | "spec rewrite", "clean up spec" | Restructure long/complex specs (file splitting/appendix migration) + issue report |
 | **spec-upgrade** | "spec upgrade", "convert to whitepaper" | Convert old-format specs to whitepaper §1-§8 structure (migration) |
-| **pr-spec-patch** | "PR spec patch", "prep PR review" | Generate patch draft by comparing PR with spec |
-| **pr-review** | "PR review", "verify PR" | Verify PR implementation against spec and render verdict |
+| **pr-review** | "PR review", "verify PR" | Unified PR verification (code quality + spec-based verification when from-branch spec exists) |
 | **implementation-plan** | "create implementation plan" | Generate phase-by-phase implementation plan (for large-scale) |
 | **implementation** | "implement plan", "start implementation" | Execute TDD-based implementation |
 | **implementation-review** | "review implementation", "check progress" | Verify implementation against plan (phase-by-phase for large-scale) |
@@ -120,7 +119,6 @@ project/
 │   │   └── prev/                      # Spec backups (PREV_*.md)
 │   │
 │   ├── pr/
-│   │   ├── spec_patch_draft.md       # PR-based spec patch draft (reflect in spec via spec-update-todo)
 │   │   ├── PR_REVIEW.md              # PR review report
 │   │   └── prev/                      # PR report backups (PREV_*.md)
 │   │
@@ -497,20 +495,16 @@ ls ralph/results/
 
 > For detailed workflow and examples, see [6. Long-Running Debugging — Ralph Loop](#6-long-running-debugging--ralph-loop).
 
-#### Scenario 8: PR-Based Spec Patch and Review
+#### Scenario 8: PR Review and Spec Reflection
 
 ```bash
-# 1. Generate patch draft by comparing PR with spec
-/pr-spec-patch
-
-# 2. PR review
+# 1. PR review (code quality + spec-based verification when from-branch spec exists)
 /pr-review
 
-# 3. (If needed) Reflect in spec
-# Move patch draft to user_draft.md, then
+# 2. (After merge) Reflect in spec
 /spec-update-todo
 
-# 4. (If needed) Sync spec
+# 3. (If needed) Sync spec
 /spec-update-done
 ```
 
@@ -562,8 +556,8 @@ flowchart LR
 | New requirement discovered | Generate combined draft with `/feature-draft` |
 | Planned feature removed | Generate patch draft with `/feature-draft` |
 | API change | Update component details in spec |
-| After PR creation for spec reflection | Generate `/pr-spec-patch` → `/pr-review` → (patch draft as input) `/spec-update-todo` |
-| Spec-based verification before PR merge | `/pr-spec-patch` → verify with `/pr-review` then merge |
+| After PR creation for spec reflection | `/pr-review` → (after merge) `/spec-update-todo` |
+| Spec-based verification before PR merge | Verify with `/pr-review` then merge |
 | Results seem unusual or ambiguous | Auxiliary verification with `/spec-review` (report only) |
 | Final check right after large update | Running `/spec-review` after completing `/spec-update-done` is recommended |
 
@@ -592,11 +586,7 @@ flowchart LR
 |------|---------|-----------------|
 | `_sdd/spec/user_spec.md` | User input (draft spec, new features/requirements, etc.) | → `_processed_user_spec.md` |
 | `_sdd/spec/user_draft.md` | User input (recommended format; Spec Update Input) | → `_processed_user_draft.md` |
-| `_sdd/pr/spec_patch_draft.md` | PR-based spec patch draft | Reflect in spec via `/spec-update-todo` |
 | `_sdd/implementation/user_input.md` | Implementation request | → `_processed_user_input.md` |
-
-> Note: Contents of `_sdd/pr/spec_patch_draft.md` are not automatically reflected in the spec.
-> Move patch contents to `_sdd/spec/user_draft.md` (recommended) or `_sdd/spec/user_spec.md`, then run `/spec-update-todo` to reflect.
 
 #### PREV Backup Storage Rules
 
@@ -863,8 +853,7 @@ bash ralph/run.sh
 | `/spec-review` | Optional auxiliary verification (anomaly signs/after large updates) |
 | `/spec-summary` | Spec status overview and summary generation |
 | `/spec-rewrite` | Restructure long/complex specs (file splitting/appendix migration) |
-| `/pr-spec-patch` | Generate patch draft by comparing PR with spec |
-| `/pr-review` | Verify PR implementation against spec/patch draft and render verdict |
+| `/pr-review` | Unified PR verification (code quality + spec-based verification when from-branch spec exists) |
 | `/implementation-plan` | Generate phase-by-phase implementation plan (for large-scale) |
 | `/implementation` | Execute TDD-based implementation |
 | `/implementation-review` | Verify implementation against plan (phase-by-phase for large-scale) |
@@ -903,7 +892,6 @@ Direct implementation (→ /implementation-review) (→ /spec-update-done)
 | Spec summary | `_sdd/spec/SUMMARY.md` |
 | Spec review report | `_sdd/spec/SPEC_REVIEW_REPORT.md` |
 | Decision/rationale log (optional) | `_sdd/spec/DECISION_LOG.md` |
-| PR patch draft | `_sdd/pr/spec_patch_draft.md` |
 | PR review report | `_sdd/pr/PR_REVIEW.md` |
 | Implementation plan (index) | `_sdd/implementation/IMPLEMENTATION_PLAN.md` |
 | Implementation plan (phase split) | `_sdd/implementation/IMPLEMENTATION_PLAN_PHASE_<n>.md` |
@@ -1071,27 +1059,16 @@ Reorganizes spec documents when they've become bloated. Removes noise and splits
 - "Split the spec into module-specific files."
 - "Remove unnecessary content and rewrite the spec cleanly."
 
-### pr-spec-patch
-
-Analyzes PR changes and generates a spec patch document. Used for preparing spec reflection before PR merge.
-
-**Trigger**: "PR spec patch", "prep PR review", "generate spec patch", "compare PR with spec"
-
-**Usage examples**:
-- "Create a spec patch from PR #42's changes."
-- "Before merging this PR, organize what needs to be reflected in the spec."
-- "Compare the PR with the current spec and generate a patch document."
-
 ### pr-review
 
-Verifies PR implementation against spec and spec patch criteria. Checks code quality, spec compliance, and omissions.
+Performs unified PR verification. Collects PR data, then always runs code quality verification. If a from-branch spec exists, also performs spec-based verification.
 
 **Trigger**: "PR review", "verify PR", "spec-based PR review", "review PR against spec"
 
 **Usage examples**:
-- "Review PR #42 against the spec."
+- "Review PR #42."
 - "Verify if this PR can be approved."
-- "Check if the PR changes match the spec patch content."
+- "Check if the PR changes align with the spec."
 
 ### implementation-plan
 

@@ -30,7 +30,7 @@ Claude와 함께하는 소프트웨어 개발을 위한 SDD 스킬 종합 가이
 SDD는 **글로벌 스펙**과 **임시 스펙**, 두 단계로 문서를 관리합니다.
 
 - **글로벌 스펙** (`_sdd/spec/main.md`): `CLAUDE.md`를 대체하는 프로젝트의 Single Source of Truth. 목표, 아키텍처, 컴포넌트 상세 등 모든 프로젝트 정보를 담으며, 모든 스킬이 이 문서를 기준으로 동작합니다.
-- **임시 스펙** (`feature_draft`, `spec_patch_draft`, `user_draft`): 글로벌 스펙에 대한 **변경 제안서**. Git의 feature branch처럼 먼저 만들고, 검증 후 글로벌 스펙에 병합한 뒤 아카이브됩니다.
+- **임시 스펙** (`feature_draft`, `user_draft`): 글로벌 스펙에 대한 **변경 제안서**. Git의 feature branch처럼 먼저 만들고, 검증 후 글로벌 스펙에 병합한 뒤 아카이브됩니다.
 
 > 두 단계 구조의 상세 설명과 생명주기: [SDD_CONCEPT.md](SDD_CONCEPT.md)
 
@@ -47,7 +47,7 @@ flowchart LR
     classDef step fill:#E3F2FD,stroke:#1565C0,stroke-width:1.5px,color:#0D47A1;
 ```
 
-### 현재 제공 SDD 스킬(17개)
+### 현재 제공 SDD 스킬(16개)
 
 | 스킬 | 트리거 | 목적 |
 |------|--------|------|
@@ -59,8 +59,7 @@ flowchart LR
 | **spec-summary** | "스펙 요약", "프로젝트 개요" | 스펙의 요약본 생성 (현황 파악용) |
 | **spec-rewrite** | "스펙 리라이트", "스펙 정리" | 긴/복잡한 스펙을 구조 재정리(파일 분할/부록 이동) + 이슈 리포트 |
 | **spec-upgrade** | "스펙 업그레이드", "스펙 변환" | 구 형식 스펙을 whitepaper §1-§8 형식으로 변환 (migration) |
-| **pr-spec-patch** | "PR 스펙 패치", "PR 리뷰 준비" | PR과 스펙 비교하여 패치 초안 생성 |
-| **pr-review** | "PR 리뷰", "PR 검증" | PR 구현을 스펙 대비 검증 및 판정 |
+| **pr-review** | "PR 리뷰", "PR 검증" | PR 통합 검증 (코드 품질 + from-branch 스펙 존재 시 스펙 기반 검증) |
 | **implementation-plan** | "구현 계획 생성" | phase별 구현 계획 생성 (대규모 구현 시) |
 | **implementation** | "계획 구현", "구현 시작" | TDD 기반 구현 실행 |
 | **implementation-review** | "구현 리뷰", "진행 상황 확인" | 계획 대비 구현 검증 (대규모 phase별 검증) |
@@ -120,7 +119,6 @@ project/
 │   │   └── prev/                      # 스펙 백업 (PREV_*.md)
 │   │
 │   ├── pr/
-│   │   ├── spec_patch_draft.md       # PR 기반 스펙 패치 초안 (스펙 반영은 spec-update-todo로)
 │   │   ├── PR_REVIEW.md              # PR 리뷰 리포트
 │   │   └── prev/                      # PR 리포트 백업 (PREV_*.md)
 │   │
@@ -497,20 +495,16 @@ ls ralph/results/
 
 > 상세 워크플로우와 사용 예시는 [6. 장기 실행 디버깅 — Ralph Loop](#6-장기-실행-디버깅--ralph-loop) 참고.
 
-#### 시나리오 8: PR 기반 스펙 패치 및 리뷰
+#### 시나리오 8: PR 리뷰 및 스펙 반영
 
 ```bash
-# 1. PR과 스펙 비교하여 패치 초안 생성
-/pr-spec-patch
-
-# 2. PR 리뷰
+# 1. PR 리뷰 (코드 품질 + from-branch 스펙 존재 시 스펙 기반 검증)
 /pr-review
 
-# 3. (필요 시) 스펙에 반영
-# 패치 초안을 user_draft.md로 옮긴 뒤
+# 2. (머지 후) 스펙에 반영
 /spec-update-todo
 
-# 4. (필요 시) 스펙 동기화
+# 3. (필요 시) 스펙 동기화
 /spec-update-done
 ```
 
@@ -562,8 +556,8 @@ flowchart LR
 | 새 요구사항 발견 | `/feature-draft`로 통합 초안 생성 |
 | 계획된 기능 제거 | `/feature-draft`로 패치 초안 생성 |
 | API 변경 | 스펙의 컴포넌트 상세 업데이트 |
-| PR 생성 후 스펙 반영 | `/pr-spec-patch` 생성 → `/pr-review` → (패치 초안을 입력으로) `/spec-update-todo` |
-| PR 머지 전 스펙 기반 검증 | `/pr-spec-patch` → `/pr-review`로 검증 후 머지 |
+| PR 생성 후 스펙 반영 | `/pr-review` → (머지 후) `/spec-update-todo` |
+| PR 머지 전 스펙 기반 검증 | `/pr-review`로 검증 후 머지 |
 | 결과가 이상하거나 모호함 | `/spec-review`로 보조 검증 (리포트 전용) |
 | 대규모 업데이트 직후 최종 점검 | `/spec-update-done` 완료 후 `/spec-review` 실행 권장 |
 
@@ -592,11 +586,7 @@ flowchart LR
 |------|------|---------|
 | `_sdd/spec/user_spec.md` | 사용자 입력 (드래프트 스펙, 새 기능/요구사항 등) | → `_processed_user_spec.md` |
 | `_sdd/spec/user_draft.md` | 사용자 입력 (권장 포맷; Spec Update Input) | → `_processed_user_draft.md` |
-| `_sdd/pr/spec_patch_draft.md` | PR 기반 스펙 패치 초안 | 스펙 반영은 `/spec-update-todo`로 진행 |
 | `_sdd/implementation/user_input.md` | 구현 요청 | → `_processed_user_input.md` |
-
-> 참고: `_sdd/pr/spec_patch_draft.md`의 내용은 그대로 스펙에 자동 반영되지 않습니다.
-> 패치 내용을 `_sdd/spec/user_draft.md`(권장) 또는 `_sdd/spec/user_spec.md`로 옮긴 뒤 `/spec-update-todo`를 실행해 반영합니다.
 
 #### PREV 백업 저장 위치 규칙
 
@@ -863,8 +853,7 @@ bash ralph/run.sh
 | `/spec-review` | 선택적 보조 검증 (이상 징후/대규모 업데이트 후) |
 | `/spec-summary` | 스펙 현황 파악 및 요약본 생성 |
 | `/spec-rewrite` | 긴/복잡한 스펙 구조 재정리(파일 분할/부록 이동) |
-| `/pr-spec-patch` | PR과 스펙 비교하여 패치 초안 생성 |
-| `/pr-review` | PR 구현을 스펙/패치 초안 대비 검증 및 판정 |
+| `/pr-review` | PR 통합 검증 (코드 품질 + from-branch 스펙 존재 시 스펙 기반 검증) |
 | `/implementation-plan` | phase별 구현 계획 생성 (대규모 구현 시) |
 | `/implementation` | TDD 기반 구현 실행 |
 | `/implementation-review` | 계획 대비 구현 검증 (대규모 phase별 검증) |
@@ -903,7 +892,6 @@ bash ralph/run.sh
 | 스펙 요약 | `_sdd/spec/SUMMARY.md` |
 | 스펙 리뷰 리포트 | `_sdd/spec/SPEC_REVIEW_REPORT.md` |
 | 결정/근거 로그(선택) | `_sdd/spec/DECISION_LOG.md` |
-| PR 패치 초안 | `_sdd/pr/spec_patch_draft.md` |
 | PR 리뷰 리포트 | `_sdd/pr/PR_REVIEW.md` |
 | 구현 계획 (인덱스) | `_sdd/implementation/IMPLEMENTATION_PLAN.md` |
 | 구현 계획 (phase 분할 시) | `_sdd/implementation/IMPLEMENTATION_PLAN_PHASE_<n>.md` |
@@ -1071,27 +1059,16 @@ flowchart TB
 - "스펙을 모듈별로 파일 분할해 줘."
 - "불필요한 내용 정리하고 스펙 깔끔하게 다시 써 줘."
 
-### pr-spec-patch
-
-PR의 변경사항을 분석하여 스펙 패치 문서를 생성합니다. PR 머지 전에 스펙 반영 준비를 할 때 사용합니다.
-
-**트리거**: "PR 스펙 패치", "PR 리뷰 준비", "스펙 패치 생성", "PR 변경사항 스펙 반영", "create spec patch from PR", "compare PR with spec"
-
-**사용 예시**:
-- "PR #42의 변경사항으로 스펙 패치 만들어 줘."
-- "이 PR 머지하기 전에 스펙에 반영할 내용 정리해 줘."
-- "PR이랑 현재 스펙 비교해서 패치 문서 생성해 줘."
-
 ### pr-review
 
-PR의 구현 내용을 스펙과 스펙 패치 기준으로 검증합니다. 코드 품질, 스펙 준수, 누락 사항을 확인합니다.
+PR 통합 검증을 수행합니다. PR 데이터 수집 후 코드 품질 검증은 항상 실행하며, from-branch 스펙이 존재하면 스펙 기반 검증도 함께 수행합니다.
 
 **트리거**: "PR 리뷰", "PR 검증", "스펙 기반 PR 리뷰", "PR 승인 검토", "review PR", "review PR against spec", "PR review"
 
 **사용 예시**:
-- "PR #42 스펙 기준으로 리뷰해 줘."
+- "PR #42 리뷰해 줘."
 - "이 PR 승인해도 되는지 검증해 줘."
-- "PR 변경사항이 스펙 패치 내용과 일치하는지 확인해 줘."
+- "PR 변경사항이 스펙과 일치하는지 확인해 줘."
 
 ### implementation-plan
 

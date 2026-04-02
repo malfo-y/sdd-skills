@@ -1,189 +1,212 @@
 ---
 name: pr-review
-description: This skill should be used when the user asks to "review PR", "PR review", "review PR against spec", "PR 리뷰", "PR 검증", "스펙 기반 PR 리뷰", "PR 승인 검토", or wants to verify a pull request's implementation against the specification and spec patch draft.
-version: 1.3.0
+description: "Use this skill when the user asks to \"review PR\", \"PR review\", \"PR 리뷰\", \"PR 검증\", \"PR spec patch\", \"PR 스펙 패치\", \"PR 리뷰 준비\", or wants to verify a pull request against the specification or codebase."
+version: 2.0.0
 ---
 
-# pr-review
+# PR Review - Unified PR Verification and Verdict
 
-## Goal
-
-PR 구현을 현재 스펙과 spec patch draft 기준으로 검증하고 `_sdd/pr/PR_REVIEW.md`에 structured review report를 만든다. verdict와 blocker를 명확히 제시하되, 스펙 수정은 직접 하지 않는다.
+PR의 코드 품질을 검증하고, from-branch에 spec이 있으면 spec 기반 추가 검증을 수행한 뒤, 구조화된 리뷰 리포트(`_sdd/pr/PR_REVIEW.md`)를 생성한다.
 
 ## Acceptance Criteria
 
-> 완료 전 아래 기준을 자체 검증한다. 미충족 항목이 있으면 해당 단계로 돌아가 수정한다.
-
-- [ ] AC1: PR metadata, diff, baseline spec를 읽었다.
-- [ ] AC2: patch draft가 있으면 preferred mode, 없으면 degraded mode로 실행했다.
-- [ ] AC3: `_sdd/pr/PR_REVIEW.md`를 생성하거나 갱신했다.
-- [ ] AC4: verdict가 `APPROVE`, `REQUEST CHANGES`, `NEEDS DISCUSSION` 중 하나로 명확히 결정되었다.
-- [ ] AC5: acceptance criteria verification, spec compliance, gap analysis, recommendations가 보고서에 포함되었다.
-- [ ] AC6: spec update가 필요한 항목은 보고서에만 기록하고 실제 수정은 하지 않았다.
-
-## SDD Lens
-
-- PR review는 단순 코드 리뷰가 아니라 spec과 구현의 정합성 검증이다.
-- patch draft가 있으면 “주장된 변경”과 “실제 구현”을 비교하고, 없으면 PR과 spec만 비교한다.
-- 보고서는 findings-first여야 하고 merge decision에 직접 도움이 되어야 한다.
-
-## Companion Assets
-
-- `references/review-checklist.md`
-- `examples/sample-review.md`
+- [ ] AC1: `_sdd/pr/PR_REVIEW.md` 리뷰 리포트가 Output Format에 맞게 생성되었다
+- [ ] AC2: Verdict(APPROVE / REQUEST CHANGES / NEEDS DISCUSSION)가 근거와 함께 부여되었다
+- [ ] AC3: Code-only 검증(코드 품질, 에러 처리, 테스트, 보안)이 항상 수행되었다
+- [ ] AC4: from-branch에 spec 존재 시 spec 기반 AC 검증, compliance, gap analysis가 추가 수행되었다
+- [ ] AC5: 기존 리뷰 파일이 있으면 `_sdd/pr/prev/`로 아카이브되었다
 
 ## Hard Rules
 
-1. `_sdd/spec/`는 읽기 전용이다.
-2. 기본 산출물은 `_sdd/pr/PR_REVIEW.md` 하나다.
-3. spec update가 필요해도 이 스킬에서 직접 수정하지 않는다.
-4. 기본 출력 언어는 한국어로 하되, 사용자/스펙 언어에 맞출 수 있다.
-5. patch draft가 없으면 degraded mode로 계속 진행하되, 낮은 신뢰도를 명시한다.
-6. 긴 보고서나 finding이 많은 경우 caller가 먼저 skeleton/섹션 헤더를 직접 기록한 뒤, 같은 흐름에서 내용을 채운다.
-7. 로컬 테스트를 돌릴 때는 `_sdd/env.md`를 먼저 확인한다.
-
-## Model Hint
-
-사용자가 Opus/Sonnet/Haiku 같은 라벨을 언급하면 `gpt-5.3-codex` 계열 reasoning 수준으로 매핑하되, 보고서 계약은 동일하다.
-
-## Input Sources
-
-1. `_sdd/spec/`
-2. `_sdd/pr/spec_patch_draft.md`
-3. `gh` CLI 기반 PR 데이터
-4. test results / CI or local execution
-5. `_sdd/env.md`
+- `_sdd/spec/` 파일은 **읽기 전용**. 수정이 필요하면 리포트에 기록하고 `/spec-update-todo` 사용을 안내한다.
+- 리뷰 리포트 언어는 spec 언어를 따른다. Spec 없으면 한국어.
+- PR title/description은 원문 유지.
 
 ## Process
 
-### Step 1: Verify Prerequisites
+### Step 1: Collect PR Data
 
-- `gh auth status` 확인
-- PR 번호 확인
-- `_sdd/pr/` 디렉토리 준비
-- baseline spec와 patch draft 존재 여부 확인
-- 로컬 테스트 예정이면 `_sdd/env.md` 확인
+PR 번호 미지정 시 현재 브랜치에서 자동 감지.
 
-### Step 2: Choose Review Mode
+```bash
+gh auth status
+gh pr view --json number --jq '.number'
+gh pr view [PR] --json title,body,author,state,url,additions,deletions,changedFiles,headRefName,baseRefName,commits,comments,reviews
+gh pr diff [PR]
+gh pr diff [PR] --name-only
+```
 
-- preferred mode: patch draft 있음
-- degraded mode: patch draft 없음
+`_sdd/pr/` 디렉토리가 없으면 생성. 기존 `PR_REVIEW.md`가 있으면 `_sdd/pr/prev/PREV_PR_REVIEW_<timestamp>.md`로 아카이브.
 
-degraded mode에서는 다음을 명시한다.
+### Step 2: Load Spec (from-branch 우선)
 
-- patch draft 없음
-- acceptance criteria는 PR description / commits / diff에서 추론
-- 전체 신뢰도 낮음
+from-branch(head)의 spec을 검증 기준으로 사용한다.
 
-### Step 3: Gather Evidence
+1. `gh pr diff [PR] --name-only`에서 `_sdd/spec/` 경로 파일 확인
+2. 존재하면 `git show origin/[headRefName]:_sdd/spec/main.md`로 from-branch spec 읽기
+3. from-branch에 spec 없으면 → **code-only 모드**로 진행 (to-branch spec은 사용하지 않음)
 
-다음을 수집한다.
+> to-branch spec은 이전 계약이므로 검증 기준으로 사용하지 않는다. 변경 비교 참고용으로만 읽을 수 있다.
 
-- PR metadata와 changed files
-- baseline spec 요구사항
-- patch draft의 claimed changes
-- 실제 구현 evidence
-- 테스트 상태
+### Step 3: Code-only 검증 (항상 실행)
 
-대형 PR이면:
+PR diff와 코드를 기반으로 다음을 검증한다:
 
-- spec / patch draft / PR diff / tests를 병렬로 수집
-- acceptance / violation / gap 관점으로 finding lane을 나눈다
-
-### Step 3.5: Scope Drift Detection
-
-PR diff 변경 파일과 patch draft의 Target Files를 비교한다.
-
-| 판정 | 조건 |
+| 항목 | 내용 |
 |------|------|
-| **CLEAN** | 변경 파일 == Target Files (완전 일치 또는 부분집합) |
-| **DRIFT** | Target Files에 없는 파일이 변경됨 (범위 이탈) |
-| **MISSING** | Target Files에 있으나 변경되지 않은 파일 존재 (미구현) |
+| AC 추론 | PR title, body, commit 메시지에서 의도된 변경 사항과 AC를 추론 |
+| 코드 품질 | 네이밍, 패턴, 중복, 프로젝트 컨벤션 |
+| 에러 처리 | 일관된 응답 형식, 로깅, graceful degradation |
+| 테스트 | 새 코드에 대한 테스트 존재 여부, 테스트 통과 여부 (CI 또는 로컬) |
+| 보안 | OWASP Top 10, hardcoded secrets, 인증/인가 |
+| 성능 | N+1 쿼리, 불필요 I/O, async 블로킹 |
+| 문서화 | 새 env vars, API 변경, breaking changes 문서화 여부 |
 
-판정 결과를 리포트 상단에 표시한다. Degraded mode(patch draft 없음)에서는 스킵.
+`_sdd/env.md` 존재 시 환경 설정을 적용하여 로컬 테스트를 실행한다.
 
-### Step 4: Assess the PR
+### Step 4: Spec-based 검증 (from-branch spec 존재 시 추가)
 
-다음 관점으로 검증한다.
+Step 3 위에 다음을 추가 수행:
 
-- acceptance criteria fulfillment
-- spec compliance
-- patch draft vs implementation gap
-- test gaps
-- blocker / recommended / optional follow-up
+| 항목 | 내용 |
+|------|------|
+| AC 검증 | spec의 각 Feature/Improvement/Bug Fix에 대해 구현 + 테스트 확인. MET(✓) / NOT MET(✗) / PARTIAL(△) |
+| Spec Compliance | 기존 spec 요구사항 위반 여부, breaking changes, API contract 변경 |
+| Gap Analysis | spec에 있으나 미구현 항목, PR에 있으나 spec에 없는 항목 |
 
-verdict 기준:
+### Step 5: Verdict
 
-- `APPROVE`: blocker 없음, 핵심 요구 충족
-- `REQUEST CHANGES`: merge 전 수정 필요
-- `NEEDS DISCUSSION`: 요구 해석, spec, 설계 결정이 모호함
+| Verdict | 조건 |
+|---------|------|
+| **APPROVE** | 모든 AC 충족 + spec 위반 없음 + 테스트 통과 |
+| **REQUEST CHANGES** | Critical AC 미충족 / spec 위반 / 테스트 실패 / 보안 이슈 |
+| **NEEDS DISCUSSION** | 의도적 spec 변경 / 설계 트레이드오프 / 범위 모호 |
 
-### Step 4.5: Code Quality Fix-First
+### Step 6: Report Generation
 
-Verdict 결정 직후, 기계적 코드 품질 이슈를 분류한다.
+`_sdd/pr/PR_REVIEW.md`를 Output Format에 맞게 생성한다.
 
-| 분류 | 대상 | 처리 |
-|------|------|------|
-| **AUTO-FIX** | 미사용 import, 타입 불일치, 누락된 에러 처리 등 기계적 수정 | 즉시 수정 (동작 변경 없음이 확실한 경우만) |
-| **목록 기록** | 동작 변경 가능성이 있는 항목 | 리포트 Recommendations에 기록 |
+현재 콘텍스트에서 skeleton을 먼저 기록한 뒤, 같은 흐름에서 Edit으로 내용을 채운다.
 
-> 스펙 레이어 verdict(APPROVE/REQUEST CHANGES/NEEDS DISCUSSION)는 이 단계와 독립적으로 유지된다.
+## Output Format
 
-### Step 5: Write the Review Report
+```markdown
+# PR Review Report
 
-`_sdd/pr/PR_REVIEW.md`에 다음을 정리한다.
+**PR**: #<number> - <title>
+**PR Author**: <author>
+**Review Date**: YYYY-MM-DD
+**Reviewer**: Claude (<model>)
+**Spec**: Found (from-branch) / Not Found (code-only mode)
 
-- verdict
-- metrics summary
-- acceptance criteria verification
-- spec compliance verification
-- gap analysis
-- test status
-- recommendations
-- items requiring spec update
+---
 
-보고서가 길면 다음 순서를 따른다.
+## Verdict
 
-1. review report skeleton/섹션 헤더를 직접 작성
-2. 같은 흐름에서 findings와 supporting sections를 채움
-3. TODO/placeholder를 제거하고 finalize
-4. 의존 finding은 `default`, 독립 finding 묶음은 `worker`로 채운다
+**[APPROVE / REQUEST CHANGES / NEEDS DISCUSSION]**
 
-기존 보고서가 있으면 `_sdd/pr/prev/PREV_PR_REVIEW_<timestamp>.md`로 백업 후 갱신한다.
+**Rationale**: <1-2 sentence rationale>
+**Key Findings**:
+- <finding 1>
+- <finding 2>
 
-## Output Contract
+---
 
-기본 산출물:
+## Metrics Summary
 
-- `_sdd/pr/PR_REVIEW.md`
+| Item | Count |
+|------|-------|
+| Acceptance criteria | N (inferred) or N (from spec) |
+| Met (✓) | X (Y%) |
+| Not met (✗) | A (B%) |
+| Partially met (△) | C (D%) |
+| Spec violations | E |
+| Test pass rate | F% |
 
-핵심 섹션:
+---
 
-- Verdict
-- Metrics Summary
-- Acceptance Criteria Verification
-- Spec Compliance Verification
-- Gap Analysis
-- Test Status
-- Recommendations
-- Items Requiring Spec Update
+## Code-only Verification
 
-최종 사용자 보고에는 아래가 포함되어야 한다.
+### Inferred Acceptance Criteria
+| # | Criterion (from PR description) | Implementation | Test | Status | Notes |
+|---|--------------------------------|----------------|------|--------|-------|
 
-- verdict
-- blocker 개수와 핵심 finding
-- 테스트 상태
-- spec update 필요 여부
+### Code Quality
+[findings]
+
+### Security & Performance
+[findings]
+
+---
+
+## Spec-based Verification
+<!-- 이 섹션은 from-branch에 spec이 있을 때만 포함 -->
+
+### Spec AC Verification
+| # | Acceptance Criterion (from spec) | Implementation | Test | Status | Notes |
+|---|----------------------------------|----------------|------|--------|-------|
+
+### Spec Compliance
+[violations or "None"]
+
+### Gap Analysis
+#### In spec but not in PR
+#### In PR but not in spec
+
+---
+
+## Recommendations
+
+### Pre-merge Blockers
+| Priority | Item | Severity | Action |
+|----------|------|----------|--------|
+
+### Suggested Improvements
+| Priority | Item | Benefit |
+|----------|------|---------|
+
+---
+
+## Next Steps
+
+1. [ ] Take action based on Verdict
+2. [ ] (if Approve) After merge, run `/spec-update-todo` if spec updates needed
+
+---
+
+## Metadata
+
+**Review version**: <count>
+**PR commit SHA**: <sha>
+**Spec source**: from-branch / none
+**Generated at**: YYYY-MM-DD HH:MM:SS
+```
+
+## Edge Cases
+
+| 상황 | 대응 |
+|------|------|
+| No spec in from-branch | Code-only mode. to-branch spec은 사용하지 않음 |
+| No PR / `gh` not authenticated | 설치/인증 안내 |
+| Multiple spec files in from-branch | AskUserQuestion으로 선택 |
+| Existing review file | `_sdd/pr/prev/`로 아카이브 후 생성 |
+| Already merged PR | 허용 (retroactive review). merge 상태 표기 |
+| Large PR (50+ files) | 디렉토리/컴포넌트 수준 요약, spec 관련 파일 집중 |
 
 ## Error Handling
 
 | 상황 | 대응 |
 |------|------|
-| `gh` 인증 실패 | 인증 필요 사실을 보고하고 중단 |
-| patch draft 없음 | degraded mode로 진행 |
-| PR 번호 미확정 | 자동 감지 시도, 실패 시 사용자 확인 |
-| 테스트 환경 불명확 | `_sdd/env.md` 확인 후 미실행 사실을 기록 |
-| diff가 너무 큼 | evidence를 lane별로 분리해 수집 후 통합 |
+| `gh` CLI not installed | `brew install gh` 안내 |
+| `gh auth` failure | `gh auth login` 안내 |
+| Wrong PR number | 에러 메시지, 올바른 번호 요청 |
+| from-branch spec 읽기 실패 | code-only mode로 fallback |
+| `_sdd/pr/` directory missing | 자동 생성 |
+
+## Additional Resources
+
+- **`references/review-checklist.md`** - PR 리뷰 체크리스트
+- **`references/gh-commands.md`** - `gh` CLI 커맨드 레퍼런스
 
 ## Final Check
 

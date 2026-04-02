@@ -23,7 +23,6 @@
         "./.claude/skills/implementation-plan",
         "./.claude/skills/implementation-review",
         "./.claude/skills/pr-review",
-        "./.claude/skills/pr-spec-patch",
         "./.claude/skills/ralph-loop-init",
         "./.claude/skills/spec-create",
         "./.claude/skills/spec-review",
