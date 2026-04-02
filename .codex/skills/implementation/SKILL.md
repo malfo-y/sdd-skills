@@ -1,10 +1,10 @@
 ---
 name: implementation
 description: Use this skill when the user wants to execute an implementation plan, start implementing tasks from a plan, work through a development roadmap, says "implement the plan", "start implementation", "execute the plan", "work on the tasks", or explicitly asks for "implement parallel", "parallel implementation", "병렬 구현", "병렬로 구현". Uses conflict-aware parallel execution when Target Files are available.
-version: 2.1.1
+version: 2.0.0
 ---
 
-# Implementation Execution (Parallel TDD)
+# Implementation Execution
 
 | Workflow | Position | When |
 |----------|----------|------|
@@ -12,7 +12,7 @@ version: 2.1.1
 | Medium | Step 3 of 3 | 구현 단계 |
 | Small | Direct | 단일 변경 구현 |
 
-이 agent는 implementation plan 또는 feature draft의 Part 2를 실행해 코드 변경과 `_sdd/implementation/` 진행 아티팩트를 만든다. Phase별 실행과 검증 뒤에는 iteration review loop를 수행해 review-fix cycle을 자체적으로 닫는다.
+이 agent는 implementation plan 또는 feature draft의 Part 2를 실행해 코드 변경과 `_sdd/implementation/` 진행 아티팩트를 만든다.
 
 ## Acceptance Criteria
 
@@ -21,9 +21,7 @@ version: 2.1.1
 - [ ] plan을 읽고 실행 가능한 task 단위로 파싱한다.
 - [ ] `_sdd/implementation/IMPLEMENTATION_PROGRESS.md`를 갱신한다.
 - [ ] Target Files 기반 병렬/순차 실행 판단이 가능하다.
-- [ ] Phase별 실행 → 검증 → Phase Review → Iteration Review Loop가 완료된다.
-- [ ] `_sdd/implementation/IMPLEMENTATION_REPORT.md`를 생성한다.
-- [ ] `IMPLEMENTATION_REPORT.md`에 Iteration History와 필요한 `UNTESTED` 근거가 포함된다.
+- [ ] 테스트/검증/리포트까지 포함한 구현 사이클이 완료된다.
 
 ## Hard Rules
 
@@ -148,64 +146,9 @@ Critical 이슈가 있으면 수정 후 다시 검증한다.
 
 phase 리포트는 필요 시 `_sdd/implementation/IMPLEMENTATION_REPORT_PHASE_<N>.md`로 저장한다.
 
-### Step 7: Iteration Review Loop
+### Step 7: Final Report
 
-모든 phase 완료 후, Skeptical Evaluator 자세로 Plan의 각 Task별 Acceptance Criteria를 검증하고 미충족 항목을 재실행하는 루프를 수행한다.
-
-최대 5회 iteration을 반복한다. 매 iteration 시작 시 Re-anchor 블록을 재확인하고 7.1(AC 검증) → 7.2(종료 판단)를 수행한다. 종료 조건을 충족하면 Step 8로 진행하고, 미충족이면 7.3(수정 대상 선정) → 7.4(TDD 재실행) 후 다음 iteration으로 돌아간다.
-
-#### Re-anchor (매 iteration 시작 시 재확인)
-
-> **매 iteration 시작 전에 아래 원칙을 재확인하고 준수한다.**
->
-> 1. **Skeptical Evaluator**: 테스트 출력이나 `UNTESTED` 판정을 뒷받침할 코드 분석 근거가 없으면 `NOT_MET`이다. "이전에 봤으니 MET"라고 판단하지 않는다.
-> 2. **종료 조건**: 모든 AC가 `MET`이거나, `UNTESTED`인 경우에도 코드 분석 근거와 사유가 명시되어 있고 `Critical/High == 0`일 때만 PASS다.
-> 3. **MAX_ITER**: iteration은 최대 5회까지만 반복한다. 초과 시 TIMEOUT으로 종료한다.
-> 4. **반복 감지**: 2회 연속 동일 task가 재실행 대상이면 `반복 실패`로 기록하고 스킵한다.
-> 5. **Spec 불가침**: `_sdd/spec/` 아래 파일은 수정하지 않는다.
-
-#### 7.1 Skeptical AC 검증
-
-Plan의 각 Task별 Acceptance Criteria에 대해 아래 기준으로 판정한다.
-
-| 판정 | 기준 |
-|------|------|
-| MET | 테스트 통과 출력으로 충족 확인 |
-| NOT_MET | 증거 부족, 테스트 실패, 구현 누락, 또는 `UNTESTED` 판정을 뒷받침할 코드 분석 근거 부족 |
-| UNTESTED | `_sdd/env.md` 미존재 또는 환경 제약으로 테스트 실행이 불가하지만, 코드 분석으로 구현 충족을 설명할 수 있고 그 사유를 리포트에 기록함 |
-
-동시에 cross-phase 통합 검증을 수행한다.
-- 모듈 간 연동
-- 보안 경계
-- 전체 규모 성능
-- Step 6 품질 체크 카테고리(Security, Error Handling, Code Patterns, Performance, Test Quality, Integration) 재적용
-
-이슈 분류:
-- **Critical**: 핵심 기능 누락, 실패 테스트, 보안 취약점, 데이터 손실 위험
-- **High**: AC 일부 불충족, 주요 에러 처리 갭, 중요 통합 깨짐
-
-#### 7.2 종료 판단
-
-| 조건 | 결과 |
-|------|------|
-| 모든 AC가 `MET`이거나, `UNTESTED`인 항목마다 코드 분석 근거와 사유가 기록되어 있고 `Critical/High == 0` | **PASS** → Step 8 진행 |
-| `iteration == MAX_ITER` 이고 `NOT_MET` 존재 또는 `Critical/High > 0` | **TIMEOUT** → 미해결 AC/이슈 목록을 리포트에 기록하고 Step 8 진행 |
-
-#### 7.3 수정 대상 선정
-
-Plan에서 `NOT_MET` AC를 포함하는 task를 역추적한다. AC가 여러 task에 걸치면 모두 포함한다. 재실행 대상은 `NOT_MET AC 관련 Task ∪ Critical/High 이슈 관련 Task`의 합집합이다.
-
-> **반복 감지**: 2회 연속 동일 task가 재실행 대상이면 해당 task를 리포트에 `반복 실패`로 기록하고 나머지 task만 재실행한다. 모든 대상이 반복 실패면 TIMEOUT과 동일하게 처리한다.
-
-#### 7.4 TDD 재실행
-
-재실행 대상 task를 Step 4-5와 동일한 worker fan-out 또는 순차 실행 방식으로 다시 수행한다. 재실행 worker prompt에는 현재 iteration에서 확인된 `failed_ac`, `failure_reason`, `open_critical_high_issues`를 반드시 포함한다. 재실행 대상 간에도 Step 3의 충돌 분석 규칙을 적용해 병렬/순차를 다시 결정한다.
-
-`iteration += 1` 후 7.1로 복귀한다.
-
-### Step 8: Report
-
-Iteration Review Loop 종료 후(PASS 또는 TIMEOUT) 최종 결과를 `_sdd/implementation/IMPLEMENTATION_REPORT.md`에 저장한다.
+최종 결과를 `_sdd/implementation/IMPLEMENTATION_REPORT.md`에 저장한다.
 
 포함 내용:
 - 완료 task
@@ -213,47 +156,8 @@ Iteration Review Loop 종료 후(PASS 또는 TIMEOUT) 최종 결과를 `_sdd/imp
 - 테스트 결과
 - unplanned dependency
 - critical/quality follow-up
-- iteration history
-- untested ac rationale (해당하는 경우)
 
 기존 리포트가 있으면 `prev/PREV_IMPLEMENTATION_REPORT_<timestamp>.md`로 아카이브한다.
-
-리포트 형식 예시:
-
-```markdown
-# Implementation Report: [Topic]
-
-## Progress Summary
-- Total Tasks: X | Completed: Y | Partial: Z
-
-## Parallel Execution Stats
-- Groups Dispatched: X | Parallel Tasks: Y | Sequential Fallbacks: Z
-- Worker Failures: X (retried: Y, resolved: Z)
-
-## Iteration History
-| Iteration | AC Status (MET/Total) | Critical | High | Re-executed Tasks | Result |
-|-----------|----------------------|----------|------|-------------------|--------|
-
-## Completed Tasks
-- [x] Task ...
-
-## Quality Assessment
-| Phase | Critical | Quality | Improvements | Groups | Status |
-|-------|----------|---------|--------------|--------|--------|
-
-## Cross-Phase Review
-- Integration / Security / Performance / Consistency
-
-## Issues Found
-| # | Severity | Description | Phase | Status |
-
-## Recommendations
-1. ...
-
-## Conclusion
-[READY / NEEDS WORK / BLOCKED]
-Iterations: N | Exit: PASS / TIMEOUT
-```
 
 ## Worker Prompt Contract
 
@@ -264,14 +168,12 @@ worker 또는 하위 실행 단위에 전달할 핵심 정보:
 - target files
 - technical notes
 - env / test hints
-- retry context (재실행일 때만): failed_ac, failure_reason, open_critical_high_issues
 
 worker 결과에는 최소한 다음이 있어야 한다.
 - 결과 상태
 - 생성/수정 파일
 - 테스트 결과
 - unplanned dependency
-- retry context를 받았을 때는 이전 실패 사유를 어떻게 해소했는지
 
 ## Error Handling
 
