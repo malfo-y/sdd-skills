@@ -2,15 +2,77 @@
 
 Checklist to reduce omissions during spec rewrite work.
 
+## 0) Scoring
+
+Use the same `0-3` scale across every metric.
+
+- `0`: almost absent; a reader cannot reliably understand or act
+- `1`: partial / fragmented; meaningful gaps remain
+- `2`: mostly sufficient; some confusion or omissions remain
+- `3`: clear, consistent, and easy to use
+
 ## 1) Pre-Check
 
 - [ ] Identify the main target spec file (`_sdd/spec/main.md` or `_sdd/spec/<project>.md`)
 - [ ] Collect the list of linked sub-spec files
 - [ ] Confirm backup policy (`_sdd/spec/prev/PREV_<filename>_<timestamp>.md`)
 - [ ] Load `_sdd/spec/DECISION_LOG.md` if present
+- [ ] Read `docs/SDD_SPEC_DEFINITION.md`
 - [ ] Confirm with the user before large-scale file splitting
 
-## 2) Prune / Appendix Decision Rules
+## 2) Core Quality Scorecard
+
+Record a `0-3` score and short evidence for each metric.
+
+### 2.1 Component Separation
+
+- [ ] Does each major component map to one representative section or file?
+- [ ] Are responsibilities separated by component/topic rather than mixed together?
+- [ ] Can a reader find the owner section for a component without scanning the whole spec?
+
+### 2.2 Findability
+
+- [ ] Can required information be found from `main` within two hops?
+- [ ] Does the index clearly tell the reader where to go next?
+- [ ] Are there any orphan files or orphan sections not linked from the main path?
+
+### 2.3 Repo Purpose Clarity
+
+- [ ] Can a first-time reader explain the repo purpose and key features in three sentences after reading `main`?
+- [ ] Does `main` explain what problem the project solves and why it exists?
+- [ ] Are scope and non-goals clear enough to avoid false assumptions?
+
+### 2.4 Architecture Clarity
+
+- [ ] Can a reader explain the core flow without confusing component responsibilities?
+- [ ] Are system boundaries and major interactions visible?
+- [ ] Is the high-level architecture easier to understand than the file tree alone?
+
+### 2.5 Usage Completeness
+
+- [ ] Can a new reader execute the representative scenario from the document alone?
+- [ ] Are setup, action, and expected result described together?
+- [ ] Are failure modes or user-visible edge cases covered where they matter?
+
+### 2.6 Environment Reproducibility
+
+- [ ] Can runtime dependencies, config, and prerequisites be reconstructed from the spec?
+- [ ] Are required environment variables or external services explicit?
+- [ ] Is the execution environment documented enough for review / verification?
+
+### 2.7 Ambiguity Control
+
+- [ ] Are measurable criteria present where the spec makes a promise?
+- [ ] Are ownership, exceptions, and failure paths defined?
+- [ ] Are undefined terms, abbreviations, or vague phrases kept to a minimum?
+
+### 2.8 Why / Decision Preservation
+
+- [ ] Were important design reasons preserved inline rather than silently removed?
+- [ ] Did component-level `Why` remain in the component section?
+- [ ] If rationale was moved out of main, was it preserved in `DECISION_LOG.md` or `REWRITE_REPORT.md`?
+
+## 3) Prune / Appendix Decision Rules
 
 Prioritize moving these items to appendix:
 
@@ -21,59 +83,71 @@ Prioritize moving these items to appendix:
 
 Keep these items in the main index:
 
-- Goal, Scope, and Non-Goals
+- Goal, scope, and non-goals
 - Core architecture summary
 - Primary component responsibilities
-- **Component-level "Why" fields** (existence reason, design motivation — these are execution-critical, not supplementary rationale)
+- Component-level `Why`
 - Acceptance or completion criteria
 - Link hub for sub-documents
+- Repo purpose and key usage path
 
-## 3) Hierarchical Split Rules
+## 4) Whitepaper Fit Checks
 
-- [ ] Index file: `_sdd/spec/<project>.md`
-- [ ] Sub-directory: `_sdd/spec/<project>/`
-- [ ] Consistent filename pattern using component/topic names directly (for example `api.md`, `database.md`, or `<component>/overview.md`)
+Evaluate the spec against `docs/SDD_SPEC_DEFINITION.md`.
+
+### 4.1 Presence Checks
+
+- [ ] §1 Background & Motivation section exists
+- [ ] §2 Core Design section exists
+- [ ] §5 Usage Guide & Expected Results section exists
+- [ ] Inline citations `[filepath:functionName]` are preserved and valid
+- [ ] Code blocks with `# [filepath:functionName]` headers are intact
+- [ ] Appendix: Code Reference Index is present and up-to-date if code excerpts exist
+
+### 4.2 Explanation Quality Checks
+
+- [ ] Does the spec explain the problem, motivation, and chosen approach rather than listing components only?
+- [ ] Does the spec describe the core design as a narrative/logic flow, not just reference tables?
+- [ ] Does the spec connect explanation to actual code or source mappings?
+- [ ] Does the spec show how to use the project and what result to expect?
+- [ ] Are reference sections balanced with the narrative sections rather than replacing them?
+
+### 4.3 Rewrite Boundary
+
+- [ ] Missing whitepaper sections are flagged in `REWRITE_REPORT.md`
+- [ ] Missing whitepaper sections are not auto-generated by `spec-rewrite`
+
+## 5) Hierarchical Split Rules
+
+- [ ] Index file: `_sdd/spec/<project>.md` or `_sdd/spec/main.md`
+- [ ] Consistent filename pattern using component/topic names directly
 - [ ] Each sub-file follows single-topic responsibility
 - [ ] Every sub-file is reachable from the index
 - [ ] Zero broken links
+- [ ] Split improves component separation and findability rather than creating navigation noise
 
-## 4) Ambiguity Detection Checklist
-
-- [ ] Requirements without measurable criteria (for example: "quickly", "appropriately")
-- [ ] Conflicting rules or procedures
-- [ ] Missing exception or failure scenarios
-- [ ] Undefined terms or abbreviations
-- [ ] Unclear ownership (team/component responsibility)
-- [ ] Missing acceptance criteria
-
-## 5) Report Structure
+## 6) Report Structure
 
 Include at least the following in `_sdd/spec/logs/REWRITE_REPORT.md`:
 
 - Target document and execution timestamp
 - Removed/moved-to-appendix items with rationale
 - File split map
+- `0-3` scorecard for all 8 core metrics with short evidence
+- Whitepaper fit assessment
 - Ambiguities and issues list
 - Priority-based recommended resolutions
-- Decision-log additions (when rationale was moved out of main body)
+- Warnings intentionally left unresolved
+- Decision-log additions when rationale was moved out of main body
 
-## 5.5) Whitepaper Format Checks
-
-- [ ] §1 Background & Motivation section exists (problem statement, approach rationale, core value)
-- [ ] §2 Core Design section exists (key idea narrative, algorithm/logic flow, design rationale)
-- [ ] §5 Usage Guide & Expected Results section exists (scenario-based usage with expected outcomes)
-- [ ] Inline citations `[filepath:functionName]` are preserved and valid
-- [ ] Code blocks with `# [filepath:functionName]` headers are intact
-- [ ] Appendix: Code Reference Index is present and up-to-date (if code excerpts exist)
-- [ ] If any whitepaper sections are missing, they are flagged in REWRITE_REPORT
-
-## 6) Exit Criteria
+## 7) Exit Criteria
 
 - [ ] Core decisions are understandable from the main index alone
 - [ ] Detailed content is discoverable through topic-based sub-files
 - [ ] Cross-document duplication is minimized
 - [ ] Unresolved ambiguities remain explicitly documented
-- [ ] Essential rationale is preserved in `_sdd/spec/DECISION_LOG.md` when removed from main spec
-- [ ] Component-level Why fields are preserved inline (not moved to DECISION_LOG or appendix)
-- [ ] Whitepaper narrative sections (§1, §2, §5) are preserved inline (not pruned to appendix)
-- [ ] Inline citations and code excerpt headers are intact after restructuring
+- [ ] Essential rationale is preserved when removed from main spec
+- [ ] Component-level `Why` fields are preserved inline
+- [ ] Whitepaper narrative sections (§1, §2, §5) remain inline if they existed
+- [ ] Inline citations and code excerpt headers remain intact after restructuring
+- [ ] The post-rewrite document scores better or has a documented rationale for any unchanged low-score metric

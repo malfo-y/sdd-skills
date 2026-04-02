@@ -1,14 +1,14 @@
 ## Rewrite Summary
 
 - **Target Document**: `_sdd/spec/apify_ig.md`
-- **Execution Date**: 2026-02-07
-- **Goal**: simplify a long spec, split it hierarchically, and document ambiguities explicitly
+- **Execution Date**: 2026-04-02
+- **Goal**: improve structure and readability while preserving whitepaper qualities and documenting unresolved gaps
 
 ## What Was Pruned or Moved
 
 1. Moved 3 batch execution log sections to `_sdd/spec/apify_ig/appendix.md`
 2. Consolidated 2 duplicate API response tables into 1 canonical table and replaced the rest with links
-3. Moved long historical decision-review paragraphs to appendix
+3. Moved long historical decision-review paragraphs to appendix while preserving rationale in `DECISION_LOG.md`
 
 ## File Split Map
 
@@ -16,22 +16,34 @@
 _sdd/spec/
 ├── apify_ig.md
 └── apify_ig/
-    ├── 01-overview.md
-    ├── 02-architecture.md
-    ├── 03-components.md
-    ├── 04-interfaces.md
-    ├── 05-operational-guides.md
+    ├── overview.md
+    ├── architecture.md
+    ├── components.md
+    ├── interfaces.md
+    ├── operations.md
     └── appendix.md
 ```
 
 ## Main Index Changes
 
 - Rewrote `apify_ig.md` as a link-first index hub
-- Kept only core sections:
-  - Goal / Scope / Non-Goals
+- Kept only core sections that help the reader orient quickly:
+  - Background / Scope / Non-Goals
   - Architecture Snapshot
   - Component Index
+  - Usage Entry Point
   - Open Questions
+
+## Metric Scorecard
+
+- **Component Separation**: `2` -- major components now map to dedicated files, but operations and interfaces still partially overlap
+- **Findability**: `3` -- all core topics are reachable from `main` within two hops
+- **Repo Purpose Clarity**: `2` -- main explains what the project does, but motivation is still thin
+- **Architecture Clarity**: `2` -- core flow is visible, but retry/queue ownership remains hard to follow
+- **Usage Completeness**: `1` -- examples exist, but representative setup/action/result flow is incomplete
+- **Environment Reproducibility**: `2` -- dependencies and config are listed, but test/runtime prerequisites need tightening
+- **Ambiguity Control**: `1` -- several non-measurable phrases remain and some ownership is undefined
+- **Why/Decision Preservation**: `3` -- component `Why` fields and moved rationale were preserved
 
 ## Ambiguities and Issues
 
@@ -55,19 +67,26 @@ _sdd/spec/
 - **Impact**: High implementation variance
 - **Recommended Action**: Replace wording with numeric SLA/SLO targets
 
-## Whitepaper Section Status
+## Whitepaper Fit Assessment
 
-- §1 Background & Motivation: **Missing** — spec lacks problem statement and approach rationale
-- §2 Core Design: **Missing** — no narrative design explanation or code excerpts
-- §5 Usage Guide & Expected Results: **Missing** — usage examples exist but lack expected results
-- Inline citations: None found
-- Code Reference Index: Not present
+- **Background & Motivation**: partial -- problem statement is present, but the reason this approach was chosen is still weak
+- **Core Design Narrative**: partial -- architecture exists, but the main logic is still more tabular than narrative
+- **Code Grounding / Citation**: weak -- no inline citations were found and the code reference index is missing
+- **Usage Guide & Expected Results**: weak -- usage examples exist, but expected results are not explicit
+- **Reference Balance**: partial -- reference sections are strong, but they still dominate the narrative sections
 
-> **Recommendation**: Consider running `spec-create` to add missing whitepaper sections (§1, §2, §5).
+## Warnings Left Unresolved
+
+- Missing §2-quality design narrative was flagged but not auto-generated
+- Missing inline citations were flagged but not synthesized
+- Weak usage outcome descriptions were flagged for follow-up via `spec-create` or `spec-upgrade`
+
+> **Recommendation**: Use `spec-create` or `spec-upgrade` if the project needs missing whitepaper narrative to be authored, not just preserved.
 
 ## Validation Result
 
 - Link check: pass (0 broken links)
 - Duplicate sections: reduced from 6 to 1
-- Main document length: reduced from 1200 lines to 280 lines
-- Component Why fields: all preserved inline (not moved to appendix or DECISION_LOG)
+- Main document length: reduced from 1200 lines to 310 lines
+- Component `Why` fields: preserved inline
+- Deferred warning count: 3
