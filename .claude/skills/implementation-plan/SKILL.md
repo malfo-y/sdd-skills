@@ -1,120 +1,135 @@
 ---
 name: implementation-plan
-description: "This skill should be used when the user asks to \"create an implementation plan\", \"plan the implementation\", \"break down this spec\", \"create a development roadmap\", \"analyze requirements and create tasks\", \"create a parallel implementation plan\", \"plan parallel implementation\", \"병렬 구현 계획\", \"create parallel development roadmap\", or wants a structured implementation plan with Target Files for parallel execution support."
-version: 2.0.0
+description: This skill should be used when the user asks to "create an implementation plan", "plan the implementation", "break down this spec", "create a development roadmap", "analyze requirements and create tasks", "create a parallel implementation plan", "plan parallel implementation", "병렬 구현 계획", "create parallel development roadmap", or wants a structured implementation plan with Target Files for parallel execution support.
+version: 2.2.0
 ---
 
-# Implementation Plan Creation (Parallel-Ready)
+# Implementation Plan Creation
 
 | Workflow | Position | When |
 |----------|----------|------|
-| Large | Step 3 of 6 | Phase별 구현 계획 수립 (standalone) |
-| Medium | — | feature-draft가 통합 처리 |
-| Small | — | 직접 구현 |
+| Large | Step 2 of 6 | feature draft 이후 상세 구현 계획 |
+| Medium | Step 2 of 3 | 구현 로드맵 필요 |
+| Small | Optional | 구현 전 리스크/순서 정리 |
 
-> `feature-draft`가 스펙 패치 + 구현 계획을 통합 생성하므로, 이 스킬은 계획을 별도 단계로 실행할 때 사용한다.
-
-스펙 문서를 분석하여, **Target Files**가 포함된 단계별 구현 계획을 생성한다.
+이 agent는 `_sdd/implementation/implementation_plan.md`를 생성한다. 목표는 temporary spec의 delta를 실행 가능한 plan으로 세분화하되, `implementation`이 바로 읽을 수 있도록 task / dependency / target files를 명시하는 것이다.
 
 ## Acceptance Criteria
 
 > 프로세스 완료 후 아래 기준을 자체 검증한다. 미충족 항목은 해당 단계로 돌아가 수정한다.
 
-- [ ] 스펙 분석 → 컴포넌트 식별 → 태스크 정의 (모든 Task에 AC + Target Files 필수)
-- [ ] Phase 분해 (MVP-First / Risk-First / Dependency-Driven 자동 선택, 근거 기록)
-- [ ] `implementation_plan.md` (≤25 tasks) 또는 phase-split 파일 (>25 tasks) 생성
+- [ ] `_sdd/implementation/implementation_plan.md`가 생성된다.
+- [ ] 모든 task에 `**Target Files**`가 포함된다.
+- [ ] `Contract/Invariant Delta`와 `Validation Plan` linkage가 plan에 보존된다.
+- [ ] phase, dependency, risk, open question이 빠지지 않는다.
+- [ ] `_sdd/spec/`는 읽기만 하고 직접 수정하지 않는다.
 
 ## Hard Rules
 
-- **Spec Read-Only**: `_sdd/spec/` 하위 파일은 읽기만 가능. 변경 필요 시 Open Questions에 기록하고 `spec-update-todo`로 유도.
-- **모든 Task에 AC + Target Files 필수**: 하나라도 누락 시 다음 Step으로 진행 불가.
-- **자율 결정**: 모호한 요구사항은 최선 추론 후 진행, 판단 근거를 Plan에 기록. 사용자 확인을 기다리지 않는다.
-- **Artifact Naming Transition**: 결과 파일은 lowercase canonical 경로에 저장하고, transition 기간에는 legacy uppercase artifact를 입력 fallback으로 허용한다.
+1. 이 agent는 스펙을 입력으로 읽을 수 있지만 `_sdd/spec/` 파일은 수정하지 않는다.
+2. 구현에 필요한 정보가 부족해도 멈추지 않고 deterministic defaults로 진행한다.
+3. 모든 task는 action-oriented title, acceptance criteria, target files, dependencies를 가져야 한다.
+4. `Contract/Invariant Delta`와 `Validation Plan`의 ID linkage를 plan에서 잃으면 안 된다.
+5. 언어는 기존 스펙/문서의 언어를 따른다. 스펙이 없으면 한국어를 기본으로 사용한다.
+6. spec 변경이 필요해 보이면 plan의 `Open Questions`에 기록하고 `spec-update-todo` 후속 사용을 제안한다.
+7. 결과 파일은 lowercase canonical 경로에 저장한다. transition 기간에는 legacy uppercase artifact를 입력 fallback으로 허용한다.
 
-## Language
+## Input Sources
 
-기존 스펙/문서의 언어를 따른다. 새 프로젝트(기존 스펙 없음)는 한국어 기본. 사용자 명시 지정 시 해당 언어 사용.
+우선순위:
 
-## Input Sources (우선순위 순)
+1. 사용자 요청
+2. `_sdd/implementation/user_input.md` (있다면)
+3. `_sdd/drafts/feature_draft_<name>.md`
+4. `_sdd/spec/*.md`
+5. 코드베이스 구조 및 현재 파일 패턴
 
-1. **스펙의 📋 항목**: `_sdd/spec/` 내 📋 (계획됨) 상태 마커가 붙은 기능/태스크
-2. **Feature Draft Part 2**: `_sdd/drafts/feature_draft_*.md`의 implementation_plan 섹션
-3. **사용자 입력**: 대화 또는 `_sdd/implementation/user_input.md`
-4. 위 모두 불명확하면 사용자에게 확인을 요청한다.
+`user_input.md`를 사용했다면 처리 후 `_processed_user_input.md`로 이름을 바꾼다.
 
-`user_input.md` 처리 후 `_processed_user_input.md`로 rename.
+## Target Files Rules
+
+```markdown
+**Target Files**:
+- [C] `path/to/new_file.ts`
+- [M] `path/to/existing.ts`
+- [D] `path/to/old.ts`
+- [TBD] 경로 미정 -- 사유
+```
+
+- `[C]` Create, `[M]` Modify, `[D]` Delete
+- 읽기 전용 참조 파일은 포함하지 않는다.
+- 동일 파일이 여러 task에 반복되면 병렬 충돌 가능성을 고려해 phase/dependency를 조정한다.
 
 ## Process
 
-### Step 1: Specification Analysis
+### Step 1: Analyze Inputs
 
-**Tools**: `Read`, `Glob`
+다음 정보를 정리한다.
 
-스펙 문서를 읽고 분석한다:
+- 구현 대상 기능/범위
+- 필수 제약과 acceptance criteria
+- 관련 컴포넌트/모듈
+- temporary spec 여부와 delta 범위
+- 환경/테스트/배포 영향
 
-- **Core Requirements**: 시스템이 해야 할 것
-- **Technical Constraints**: 언어, 프레임워크, 통합, 성능 요구
-- **Scope Boundaries**: 명시적 범위 내/외
-- **Success Criteria**: 완료 측정 기준
-- **Unknowns/Risks**: 확인/연구 필요 항목
+### Step 2: Read Spec and Code Context
 
-불명확한 스펙은 가용 정보에서 최선 추론하고, 모호 항목은 Open Questions에 기록한다.
+필요 시 아래를 읽는다.
 
-### Step 2: Component Identification
+- `_sdd/spec/*.md`
+- `_sdd/spec/decision_log.md`
+- `_sdd/drafts/feature_draft_<name>.md`
+- 관련 코드/테스트/설정 파일
 
-**Tools**: `Glob`, `Grep`, `Read`
+목적:
 
-시스템을 논리적 컴포넌트로 분해:
+- 현재 global spec과 temporary spec의 관계 파악
+- `Contract/Invariant Delta`, `Touchpoints`, `Validation Plan` 추출
+- naming convention과 파일 구조 파악
+- task별 Target Files 후보 도출
 
-- 관련 기능을 모듈로 그룹핑
-- 공유 유틸리티 및 공통 패턴 식별
-- 외부 의존성/통합 파악
-- 데이터 모델 및 저장소 요구사항 파악
+### Step 3: Identify Components and Delta Coverage
 
-### Step 3: Task Definition with Target Files
+요구사항을 구현 컴포넌트로 나눈다.
 
-**Tools**: `Glob`, `Grep`, `Read`
+- core module
+- shared utilities
+- integration points
+- tests
+- configuration / migration / docs
 
-각 컴포넌트에 대해 아래 구조의 Task를 생성한다:
+동시에 아래 표를 만든다.
 
-```
-### Task [ID]: [액션 중심 제목]
-**Component**: [컴포넌트]
-**Priority**: [P0-Critical | P1-High | P2-Medium | P3-Low]
-**Type**: [Feature | Bug | Refactor | Research | Infrastructure | Test]
+```markdown
+## Contract/Invariant Delta Coverage
 
-**Description**: [상세 설명]
-
-**Acceptance Criteria**:
-- [ ] [구체적, 측정 가능한 기준]
-
-**Target Files**:
-- [C] `path/to/new_file.py` -- 설명
-- [M] `path/to/existing_file.py` -- 변경 내용
-- [C] `tests/test_file.py` -- 테스트
-
-**Technical Notes**: [구현 힌트]
-**Dependencies**: [blocking task IDs]
+| Target | Planned Tasks | Validation Link |
+|--------|---------------|-----------------|
+| C1 | T1, T3 | V1 |
+| I1 | T2 | V1 |
 ```
 
-### Target Files 규격
+### Step 4: Define Tasks
 
-- 모든 태스크에 `**Target Files**:` 필드 필수
-- 마커: `[C]` 생성, `[M]` 수정, `[D]` 삭제
-- 형식: `- [마커] \`relative/path/to/file.ext\` -- 설명`
-- 충돌 규칙: 동일 파일을 둘 이상의 태스크가 참조하면 마커 종류와 무관하게 충돌 (순차 실행)
-- 읽기 전용 참조는 Target Files에 포함하지 않음
+task는 실행 가능한 단위여야 한다.
 
-### Target Files 검증 (Glob 기반)
+각 task 필수 필드:
 
-a. 모든 Task에 Target Files 필드 존재 확인
-b. `[M]` 파일: `Glob`으로 존재 확인 → 미존재 시 `[C]`로 변경 또는 경로 수정
-c. `[C]` 파일: `Glob`으로 미존재 확인 → 이미 존재하면 `[M]`으로 변경
-d. `[C]` 파일의 상위 디렉토리 존재 확인
-e. 전체 Target Files 수집 → 중복 파일 감지 → Parallel Execution Summary에 반영
-f. 중복 파일이 있는 Task는 순차 실행으로 표시
+- Component
+- Priority
+- Type
+- Description
+- Acceptance Criteria
+- Target Files
+- Technical Notes
+- Dependencies
 
-Task가 너무 크면 하위 Task로 분할한다. 인프라/테스트/문서 Task도 누락하지 않는다.
+task를 나눌 때 원칙:
+
+- 하나의 task는 하나의 명확한 목적을 가진다.
+- file overlap이 적도록 자른다.
+- setup/common groundwork는 별도 task로 분리한다.
+- `Technical Notes`에 관련 `C*`, `I*`, `V*` 링크를 남긴다.
 
 ### Test Coverage Mapping (조건부)
 
@@ -122,149 +137,97 @@ Task가 너무 크면 하위 Task로 분할한다. 인프라/테스트/문서 Ta
 
 `Grep`으로 `[M]` 대상 파일명을 테스트 디렉토리에서 검색하여, 관련 테스트 파일/함수 목록을 해당 Task의 Technical Notes에 기록한다. 테스트 디렉토리 미존재 시 스킵.
 
-### Step 4: Phase Decomposition
+### Step 5: Build Phases
 
-**Tools**: — (자율 판단)
-
-정의된 Task들을 분석하여 Phase로 그룹핑한다.
-
-#### Phase 전략 선택 테이블
+Phase 전략 선택:
 
 | 전략 | 자동 추천 조건 | Phase 구조 |
 |------|---------------|-----------|
 | **MVP-First** | 사용자 대면 기능 존재, 점진적 배포 필요 | Phase 0: 기반 설정 → Phase 1: MVP → Phase 2+: 확장/개선 |
 | **Risk-First** | 고위험/불확실 기술 항목 ≥ 30% | Phase 1: 고위험 (가정 검증) → Phase 2: 핵심 → Phase 3: 저위험 확장 |
-| **Dependency-Driven** | 의존성 체인 깊이 ≥ 3, 계층 명확 | Phase 1: 기반 (의존 없음) → Phase 2: 핵심 서비스 → Phase 3: 통합 → Phase 4: 마무리 |
+| **Dependency-Driven** | 의존성 체인 깊이 ≥ 3, 계층 명확 | Phase 1: 기반 → Phase 2: 핵심 서비스 → Phase 3: 통합 → Phase 4: 마무리 |
 
-**전략 선택 절차**:
+전략 선택 절차:
+
 1. Task 특성 분석: 의존성 깊이, 위험도 분포, 우선순위 분포, 기반 작업 유무
 2. 테이블 기준으로 최적 전략 자동 선택
-3. 선택 근거를 Plan에 기록 (사용자 확인을 기다리지 않음)
+3. 선택 근거를 Plan에 기록
 
-**Phase 그룹핑 원칙**:
-- 각 Phase에 명확한 목표/테마 부여
-- Phase 내 Task는 가능한 한 독립적으로 실행 가능
-- Phase 간 의존성 최소화 (Phase N은 Phase N-1 완료 후 시작)
+### Step 6: Map Dependencies and Parallelism
 
-Phase 구성 요약 테이블을 Plan에 기록한 후 바로 Step 5로 진행한다.
+dependency를 정리한다.
 
-### Step 5: Dependency Mapping
+- blocking prerequisites
+- shared file conflicts
+- integration order
+- delta/validation sequencing
 
-**Tools**: `Glob` (Target Files 중복 확인)
+병렬 가능성은 `Target Files` 겹침과 의미적 충돌 기준으로 판단한다.
 
-Task 관계를 매핑한다:
+### Step 7: Write the Plan
 
-- **Blocks**: 선행 완료 필수
-- **Related**: 컨텍스트 공유, 비차단
-- **Parallel**: 동시 실행 가능 (Target Files 비중복)
-
-병렬 대상 Task의 Target Files 중복 여부를 검증한다. 순환 의존성 발견 시 Task 분할로 해소.
-
-### Step 6: Plan Output
-
-**Tools**: `Write`, `Bash (mkdir -p)`
-
-#### 파일 작성 위임
-
-현재 콘텍스트에서 먼저 문서 skeleton/섹션 헤더를 기록한 뒤, 같은 흐름에서 Edit으로 내용을 채운다.
-- 독립 섹션 2개+ → 병렬 Agent dispatch 가능
-- 의존 섹션 → 순서대로 Edit
-- 완료 후 TODO/Phase 마커 제거
-
-작성 시작 전에 Output Format + 수집 정보를 skeleton 구조에 반영한다.
-
-**단일 문서 (total_tasks ≤ 25)**:
-```
-Write("implementation_plan.md skeleton 작성. [Output Format + 수집 정보]")
-Edit("각 섹션 TODO를 실제 task/phase 내용으로 채움")
-```
-
-**Phase별 분할 (total_tasks > 25)**:
-
-Step 6-1: 인덱스 파일 순차 작성
-```
-Write("implementation_plan.md 인덱스 skeleton 작성. Overview/Scope/Components/Phase 요약 + Phase 파일 링크")
-Edit("인덱스 설명과 링크를 실제 내용으로 채움")
-```
-
-Step 6-2: Phase 파일 병렬 작성 (인덱스 완성 후)
-```
-Agent("implementation_plan_phase_1.md [Phase 1]")  ─┐
-Agent("implementation_plan_phase_2.md [Phase 2]")  ─┤ 동시
-Agent("implementation_plan_phase_n.md [Phase N]")  ─┘
-```
-
-> 독립 Phase 파일 2개 이상이면 병렬 디스패치.
-
-## Output Format
+다음 구조로 저장한다.
 
 ```markdown
-# Implementation Plan: [Project Name]
+# Implementation Plan
 
 ## Overview
-[Brief summary]
-
 ## Scope
 ### In Scope
-- [Feature/capability]
 ### Out of Scope
-- [Explicitly excluded]
-
 ## Components
-1. **[Component Name]**: [Brief description]
-
+## Contract/Invariant Delta Coverage
 ## Implementation Phases
-
-### Phase 1: [Foundation/Setup]
-| ID | Task | Priority | Dependencies | Component |
-|----|------|----------|--------------|-----------|
-| 1  | ...  | P0       | -            | Core      |
-
-### Phase 2: [Core Features]
-...
-
 ## Task Details
-[Expanded task definitions with AC AND Target Files]
-
 ## Parallel Execution Summary
-| Phase | Total Tasks | Max Parallel | File Conflicts |
-|-------|-------------|--------------|----------------|
-| 1     | N           | N            | None           |
-
-## Risks & Mitigations
-| Risk | Impact | Mitigation |
-|------|--------|------------|
-
+## Risks and Mitigations
 ## Open Questions
-- [ ] [Question]
-
-## Model Recommendation
-[Model recommendation based on complexity — refer "Model aliases" at https://code.claude.com/docs/en/model-config]
 ```
 
-## Output Location
+Task 템플릿:
 
-1. 기존 파일이 있으면 `_sdd/implementation/prev/prev_implementation_plan_<timestamp>.md`로 아카이브.
-2. 기본 저장 경로: `<project_root>/_sdd/implementation/`
-3. 사용자 지정 경로가 있으면 해당 경로 사용.
+```markdown
+### Task [ID]: [title]
+**Component**: ...
+**Priority**: P0 | P1 | P2 | P3
+**Type**: Feature | Bug | Refactor | Infrastructure | Test
+
+**Description**: ...
+
+**Acceptance Criteria**:
+- [ ] ...
+
+**Target Files**:
+- [M] `...`
+
+**Technical Notes**: Covers C1, I1, validated by V1
+**Dependencies**: ...
+```
 
 ## Error Handling
 
 | 상황 | 대응 |
 |------|------|
-| 스펙 파일 미발견 | `spec-create` 먼저 실행 권장 |
-| 스펙 내용 모호 | 최선 추론, 모호 항목은 Open Questions에 기록 |
-| Target Files 경로 확인 불가 | `[TBD] <reason>` 마커 사용 |
-| 순환 의존성 발견 | Task 분할로 해소 |
-| 기존 Plan 파일 존재 | `prev/`로 아카이브 |
-| 모호한 우선순위 | 의존성 분석 기반 자동 배정 |
-| user_input.md 형식 오류 | 자유 형식으로 해석 시도 |
+| spec 없음 | codebase 기반 plan 생성, 한계를 `Open Questions`에 적는다 |
+| user input 모호 | best-effort defaults를 적용하고 가정을 남긴다 |
+| 파일 경로 불명확 | `[TBD]`를 사용하고 사유를 남긴다 |
+| task가 너무 많음 | phase로 나누고 overview/index를 유지한다 |
+| spec 갭 발견 | plan 수정으로 덮지 말고 `Open Questions`에 기록한다 |
+
+## Integration
+
+- `feature-draft`: temporary spec + 구현 계획 입력 원천
+- `implementation`: 이 plan을 직접 실행
+- `implementation-review`: task/AC 검증 기준
+- `spec-update-todo`: spec gap 후속 반영
+
+## Optional Writing Helper
+
+문서가 길어지면 이 agent가 먼저 skeleton/섹션 헤더를 직접 저장한 뒤 같은 흐름에서 내용을 채운다. 의존 섹션은 순차 fill하고, 독립 섹션은 필요 시 `worker` agent로 bounded 병렬 fill할 수 있다. plan의 필수 구조와 task 내용 결정은 이 agent가 책임진다.
 
 ## Final Check
 
 Acceptance Criteria가 모두 만족되었나 검증한다. 미충족 항목이 있으면 해당 단계로 돌아가 수정한다.
-
----
 
 > **Mirror Notice**: 이 스킬의 본문은 `.claude/agents/implementation-plan.md`의 복사본이다.
 > 사용자가 직접 호출할 때 중간 과정의 가시성을 확보하기 위해 복붙되었다.

@@ -1,169 +1,130 @@
-# SDD Core Concept: Two-Level Spec Structure
+# SDD Core Concept: Global Specs and Temporary Specs
 
-A guide to the core concepts for users new to Spec-Driven Development (SDD).
+This document explains the two-level spec model in SDD. The point is not to create more documents. The point is to separate long-lived truth from change execution.
 
----
-
-## 1. What is SDD? — A Global Spec That Replaces CLAUDE.md
-
-In a typical Claude Code project, you write project context in `CLAUDE.md`. But as a project grows, `CLAUDE.md` alone cannot adequately cover architecture, component details, requirements, issue tracking, and more.
-
-In SDD, `CLAUDE.md` is used only as a **pointer**, while the actual project documentation lives in the **global spec** (`_sdd/spec/main.md`).
-
-```
-CLAUDE.md                          _sdd/spec/main.md (Global Spec)
-┌─────────────────────┐            ┌─────────────────────────────┐
-│ "Refer to _sdd/spec/│            │ Goal, Architecture,         │
-│  for project spec   │──points──▶│ Component Details,          │
-│  documents"         │            │ Issues, Usage Examples ...  │
-└─────────────────────┘            └─────────────────────────────┘
-    Pointer (brief)                    Single Source of Truth (detailed)
-```
-
-**What the global spec does:**
-- Documents the project's goals, architecture, and component details
-- All SDD skills use this document as their reference
-- A living document that evolves alongside the code (synced after implementation)
-
-For a definition of what kind of document a spec itself should be, see [SDD_SPEC_DEFINITION.md](SDD_SPEC_DEFINITION.md).
+Related documents:
+- [SDD_SPEC_DEFINITION.md](SDD_SPEC_DEFINITION.md)
+- [SDD_WORKFLOW.md](SDD_WORKFLOW.md)
+- [sdd.md](sdd.md)
 
 ---
 
-## 2. Two-Level Spec Structure — Think of It Like Git Branches
+## 1. What the Global Spec Is
 
-In SDD, the global spec is **never modified directly**. Instead, you first create a **temporary spec** (a blueprint for implementation), validate it, implement features according to that spec, then merge it into the global spec after completion.
+The global spec is the project's Single Source of Truth. But it is no longer treated as a full implementation inventory.
 
-A temporary spec is not merely a "document change proposal." It is a **blueprint for implementing features**. A temporary spec contains both what to build (spec patch) and how to build it (implementation plan).
+What the global spec preserves:
+- the problem and high-level concept
+- scope, non-goals, and guardrails
+- core design and key decisions
+- `Contract / Invariants / Verifiability`
+- decision-bearing structure
+- expected usage and outcomes
 
-This structure follows the same principle as Git branches:
+In other words, the global spec is not "everything in the codebase written again." It is the durable reference that keeps humans and agents aligned.
 
-```
-Git Workflow                       SDD Workflow
-────────────                       ────────────
+### What to Keep vs What Not to Force
 
-main branch          ←→           Global Spec (main.md)
-  │                                   │
-  ├─ feature branch  ←→           Temporary Spec (feature_draft, spec_patch_draft)
-  │    │                               │
-  │    ├─ development ←→           Implementation (/implementation)
-  │    │                               │
-  │    └─ PR review   ←→           User Verification
-  │         │                          │
-  └─ merge  ←────────→           Merge into Global Spec (spec-update-done)
-       │                               │
-  branch delete      ←→           Archive (_processed_*, prev/)
-```
-
-**Why not modify directly?**
-- **Implementation foundation**: The temporary spec serves as a blueprint, providing clear criteria before implementation
-- **Change tracking**: Records of what changed and why are preserved
-- **User verification**: Changes can be reviewed before implementation
-- **Original preservation**: Previous versions (`prev/`) allow rollback if issues arise
+| Keep | Do not force as default body structure |
+|------|----------------------------------------|
+| high-level concept | full implementation inventory |
+| scope / non-goals / guardrails | exhaustive component narration |
+| key decisions | code copied into prose |
+| CIV | local implementation detail |
+| decision-bearing structure | low-signal file lists |
 
 ---
 
-## 3. Lifecycle of a Temporary Spec
+## 2. What a Temporary Spec Is
 
-A temporary spec is created, validated, **features are implemented according to it**, then it is merged into the global spec and archived.
+A temporary spec is not a summary of the global spec. It is an execution blueprint for a change.
 
-```
-Create              Validate          Implement          Merge              Archive
-─────              ─────             ─────             ─────              ─────
+Canonical seven sections:
+- Change Summary
+- Scope Delta
+- Contract/Invariant Delta
+- Touchpoints
+- Implementation Plan
+- Validation Plan
+- Risks / Open Questions
 
-/feature-draft → User review  → /implementation → /spec-update-done → Move to prev/
-  feature_draft    (refine via       Code impl          Update main.md
-                    conversation)
-```
+Its job is to:
+- fix the change boundary
+- make contract and invariant deltas explicit
+- expose the relevant code touchpoints
+- connect validation directly to the delta
 
-There are two paths depending on scale:
-
-### Medium-Scale: Implement Then Merge
-
-The most basic flow. Create a temporary spec, implement it, then reflect the results in the global spec.
-
-```
-/feature-draft → User review → /implementation → /spec-update-done
-  (create blueprint)  (review)   (write code)     (reflect results in global spec)
-```
-
-1. `/feature-draft` → Creates `_sdd/drafts/feature_draft_<name>.md` (spec patch + implementation plan)
-2. User reviews and refines the content
-3. `/implementation` → Implements code based on the temporary spec
-4. `/spec-update-done` → Reflects implementation results in the global spec
-
-### Large-Scale: Pre-Register Then Implement
-
-For large features, the temporary spec is first **pre-registered as planned status** in the global spec before implementation. This path prevents drift from the global spec during long implementation periods.
-
-```
-/feature-draft → /spec-update-todo → /implementation-plan → /implementation → /spec-update-done
-  (create blueprint)  (pre-register as     (phase-by-phase      (write code)     (update status
-                       📋Planned in          planning)                              to ✅Done)
-                       global spec)
-```
-
-1. `/feature-draft` → Create temporary spec
-2. `/spec-update-todo` → Pre-register as planned status (📋) in global spec
-3. `/implementation-plan` → Develop detailed phase-by-phase implementation plan
-4. `/implementation` → Implement by phase (iterate)
-5. `/spec-update-done` → Update completed items' status to ✅Done
-
-> **Key difference**: Medium-scale reflects changes in the global spec after implementation is complete, while large-scale registers the plan in the global spec before implementation begins.
-
-### PR-Based Spec Reflection
-
-A path for reflecting changes from PRs into the spec.
-
-1. `/pr-spec-patch` → Creates `_sdd/pr/spec_patch_draft.md`
-2. User reviews and refines the content
-3. Move patch content to `_sdd/spec/user_draft.md`
-4. `/spec-update-todo` → Merge into global spec
+That is why a temporary spec is closer to an execution artifact than a permanent reference.
 
 ---
 
-## 4. Spec File Categories — Permanent vs Temporary
+## 3. Why the Two Spec Types Are Asymmetric
 
-Files under `_sdd/` are categorized as **permanent documents** and **temporary inputs**.
+Humans and LLMs do not need the same information density.
 
-### Permanent Documents (Always Maintained)
+- Humans need concept, scope, and guardrails first.
+- LLMs can inspect code quickly, so persistent prose does not need to explain every implementation detail.
+- Both still benefit from explicit contracts, invariants, verification, and strategic code-entry hints.
 
-| File | Role |
-|------|------|
-| `_sdd/spec/main.md` | Global Spec (Single Source of Truth) |
-| `_sdd/spec/DECISION_LOG.md` | Decision records with rationale |
-| `_sdd/spec/SUMMARY.md` | Spec summary (generated by spec-summary) |
-| `_sdd/spec/prev/PREV_*.md` | Previous version backups |
-| `_sdd/env.md` | Environment configuration guide |
+So SDD intentionally adopts this asymmetry:
 
-### Temporary Inputs (Create → Process → Archive)
-
-| File | Role | After Processing |
-|------|------|-----------------|
-| `_sdd/spec/user_draft.md` | User input (recommended format) | `_processed_user_draft.md` |
-| `_sdd/spec/user_spec.md` | User input (free format) | `_processed_user_spec.md` |
-| `_sdd/drafts/feature_draft_*.md` | Feature draft (patch + plan) | Moved to `_sdd/drafts/prev/` |
-| `_sdd/pr/spec_patch_draft.md` | PR-based patch draft | Moved to `_sdd/pr/prev/` |
-
-### Key Rules
-
-- **Permanent documents** can only be modified by designated skills (`spec-update-todo`, `spec-update-done`)
-- **Temporary inputs** must be archived after processing (to prevent reprocessing)
-- **Previous versions** must not be deleted until project stabilization
+- global spec: thin durable reference
+- temporary spec: delta- and execution-heavy blueprint
 
 ---
 
-## Summary
+## 4. Lifecycle
 
-```
-CLAUDE.md (pointer)
-    │
-    ▼
-Global Spec (main.md) ◀──── Single Source of Truth
-    ▲                          │
-    │ Merge                    │ Reference
-    │                          ▼
-Temporary Spec (blueprint) ────→ Implementation ────→ Reflect in Global Spec
-(feature_draft)                  (write code)          (spec-update-done)
+### Medium-Scale Path
+
+```text
+feature-draft -> implementation -> spec-update-done
 ```
 
-For detailed workflows and skill usage: [SDD_WORKFLOW.md](SDD_WORKFLOW.md)
+- `feature-draft` creates the temporary spec and implementation plan together.
+- after implementation, `spec-update-done` syncs persistent truth back into the global spec
+
+### Large-Scale Path
+
+```text
+feature-draft -> spec-update-todo -> implementation-plan -> implementation -> implementation-review -> spec-update-done
+```
+
+- `spec-update-todo` can register planned persistent information in advance
+- `implementation-plan` expands delta and validation linkage into phases and tasks
+- `implementation-review` verifies the plan against actual implementation
+
+---
+
+## 5. Artifact Types
+
+### Persistent Documents
+
+| Location | Role |
+|----------|------|
+| `_sdd/spec/` | global spec and supporting spec |
+| `_sdd/env.md` | environment and verification hints |
+| `_sdd/spec/decision_log.md` | durable decision records |
+
+### Execution Artifacts
+
+| Location | Role |
+|----------|------|
+| `_sdd/drafts/` | temporary spec drafts |
+| `_sdd/implementation/` | plans, progress, reports, reviews |
+| `_sdd/discussion/` | discussion handoffs |
+| `_sdd/guides/` | feature guides |
+
+Operating rule:
+- the normal path treats global spec sync as a skillchain operation
+- temporary specs and plans exist to drive execution, then get archived or absorbed into later steps
+
+---
+
+## 6. Summary
+
+In one sentence:
+
+> The global spec fixes long-lived truth, and the temporary spec fixes the execution blueprint for the current change.
+
+This asymmetry is what lets SDD reduce drift without turning documentation into an implementation dump.

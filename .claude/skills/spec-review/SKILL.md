@@ -1,112 +1,178 @@
 ---
 name: spec-review
-description: "This skill should be used when the user asks to \"review spec\", \"spec drift check\", \"verify spec accuracy\", \"audit spec quality\", \"review spec against code\", \"refresh spec review\", \"스펙 리뷰\", \"스펙 검토\", \"스펙 드리프트 점검\", or wants a review-only analysis of spec quality and code-to-spec alignment without directly editing spec files."
-version: 2.0.0
+description: This skill should be used when the user asks to "review spec", "spec drift check", "verify spec accuracy", "audit spec quality", "review spec against code", "refresh spec review", "스펙 리뷰", "스펙 검토", "스펙 드리프트 점검", or wants a review-only analysis of spec quality and code-to-spec alignment without directly editing spec files.
+version: 2.1.0
 ---
 
 # Spec Review
 
-스펙 품질과 코드-스펙 드리프트를 읽기 전용으로 감사하고, 리뷰 리포트를 생성한다. 스펙 파일은 절대 수정하지 않는다.
+| Workflow | Position | When |
+|----------|----------|------|
+| Large | Optional audit | 구현 전/후 스펙 품질 점검 |
+| Medium | Optional audit | spec drift 확인 |
+| Any | Standalone | strict review-only 검토 |
+
+이 agent는 global spec 또는 temporary spec의 품질과 코드-스펙 정합성을 **review-only**로 감사하고 `_sdd/spec/logs/spec_review_report.md`를 생성한다.
 
 ## Acceptance Criteria
 
 > 프로세스 완료 후 아래 기준을 자체 검증한다. 미충족 항목은 해당 단계로 돌아가 수정한다.
 
-- [ ] AC1: 2차원 리뷰(spec quality + code drift) 수행 완료
-- [ ] AC2: 모든 finding에 severity(High/Medium/Low) 분류 완료
-- [ ] AC3: 전체 decision(SPEC_OK / SYNC_REQUIRED / NEEDS_DISCUSSION) 부여
-- [ ] AC4: `_sdd/spec/logs/spec_review_report.md`에 리포트 저장
-- [ ] AC5: spec 파일(`_sdd/spec/*.md`) 수정 없음 (리포트 파일 제외)
+- [ ] spec type을 식별하고 global/temporary rubric을 구분 적용한다.
+- [ ] spec-only quality review와 code-linked drift review를 모두 수행한다.
+- [ ] findings를 severity 순으로 정리하고 next action을 제시한다.
+- [ ] `_sdd/spec/*.md`와 `decision_log.md`는 수정하지 않는다.
 
 ## Hard Rules
 
-- `_sdd/spec/` 하위 파일을 생성·수정·삭제하지 않는다 (spec_review_report.md 제외).
-- `decision_log.md` 변경은 리포트 내 제안으로만 기록한다.
-- 추정을 사실처럼 제시하지 않는다; 증거 없는 항목은 UNTESTED로 표시한다.
-- 로컬 테스트 실행 시 반드시 `_sdd/env.md`를 따른다; 없으면 사용자에게 확인한다.
-- transition 기간에는 `decision_log.md`와 implementation artifact를 lowercase canonical 우선, legacy uppercase fallback으로 읽는다.
+1. 이 agent는 리뷰와 리포트 생성만 수행한다.
+2. `_sdd/spec/*.md`와 `decision_log.md`는 생성/수정/삭제하지 않는다.
+3. findings는 `Critical`, `Quality`, `Improvements` 순으로 정리한다.
+4. 근거 없는 추정은 사실처럼 쓰지 않는다. 검증되지 않은 항목은 `UNTESTED`로 둔다.
+5. 구현과 spec이 불일치하면 drift를 기록하고 후속 스킬만 제안한다.
+6. 리포트는 lowercase canonical 경로에 저장한다. transition 기간에는 implementation artifact를 lowercase 우선, legacy uppercase fallback으로 읽는다.
+
+## Review Dimensions
+
+### Global Spec Quality
+
+- `배경 및 high-level concept`가 문제와 framing을 분명히 고정하는가
+- `Scope / Non-goals / Guardrails`가 책임 범위와 out-of-scope를 명시하는가
+- `핵심 설계와 주요 결정`이 decision-bearing structure를 유지하는가
+- `Contract / Invariants / Verifiability`가 명시적이며 추적 가능한가
+- `Decision-bearing structure`가 시스템 경계, ownership, cross-component contract, extension point, invariant hotspot을 담는가
+- `Strategic Code Map`이 appendix-level manual curated hint로 유지되는가
+
+### Temporary Spec Quality
+
+- `Change Summary`가 변경의 목적과 범위를 요약하는가
+- `Scope Delta`가 global spec 대비 변경 경계를 분명히 하는가
+- `Contract/Invariant Delta`가 `C*` / `I*` ID를 사용해 delta를 명시하는가
+- `Touchpoints`가 실제 변경 지점을 전략적으로 식별하는가
+- `Implementation Plan`이 delta를 실행 가능한 작업으로 연결하는가
+- `Validation Plan`이 delta ID를 `V*` 검증 항목에 연결하는가
+- `Risks / Open Questions`가 미해결 가정과 위험을 숨기지 않는가
+
+### Code-Linked Drift
+
+- 구현/테스트/실행 흐름이 spec과 맞는가
+- implementation artifact와 spec의 계약이 맞는가
+- outdated section, stale example, broken path/reference가 남아 있지 않은가
+- global spec에는 지속 정보만, temporary spec에는 실행 정보가 남아 있는가
 
 ## Process
 
-### Step 1: Scope 확정
+### Step 1: Scope and Spec Type Selection
 
-1. `Glob`으로 `_sdd/spec/*.md` 스펙 파일 식별 (SUMMARY, prev/ 제외).
-2. `decision_log.md` 존재 여부 확인.
-3. 리뷰 범위 결정: Spec-only / Spec+Code(기본값).
+다음 입력을 찾는다.
 
-### Step 2: Spec Quality 감사
+- 사용자 지정 경로
+- `_sdd/spec/*.md`
+- `_sdd/drafts/*.md`
+- 관련 구현 파일 / 테스트 / `_sdd/implementation/*`
 
-`Read`로 스펙 파일을 읽고 아래 항목을 평가:
-- Clarity / Completeness / Consistency / Testability / Structure / Ownership
-- 각 컴포넌트에 _why_(설계 동기)가 있는지 확인; Purpose만 있으면 지적.
+spec type 판별 규칙:
 
-### Step 3: Code Drift 감사
+- global spec: canonical global 섹션(`Scope / Non-goals / Guardrails`, `Contract / Invariants / Verifiability`)이 중심
+- temporary spec: canonical 7섹션(`Change Summary`, `Scope Delta`, `Contract/Invariant Delta`, `Touchpoints`, `Implementation Plan`, `Validation Plan`, `Risks / Open Questions`)이 중심
+- 혼합/애매한 문서는 가장 지배적인 구조로 판정하고 근거를 리포트에 적는다
 
-`Grep`, `Glob`, `Read`로 스펙 주장과 구현을 비교:
-- Architecture / Feature / API / Config / Issue / Decision-log / Source-field drift
-- 증거는 `path:line`, 테스트명, commit/diff 참조로 뒷받침.
-- Source field가 참조하는 파일·함수가 실존하는지 `Glob`/`Grep`으로 검증.
+### Step 2: Spec Quality Audit
+
+스펙만 보고 품질을 평가한다.
+
+- 용어 정의와 경계가 명확한가
+- 필수 canonical section이 빠지지 않았는가
+- CIV 또는 delta/validation linkage가 추적 가능한가
+- 구조가 현재 canonical model과 맞는가
+- 과도한 implementation inventory가 본문을 오염시키지 않는가
+
+### Step 3: Code Drift Audit
+
+코드/테스트/구현 문서와 대조한다.
+
+- 실제 구현된 기능과 spec 주장 비교
+- implementation 문서와의 정합성 비교
+- delta ID와 validation evidence의 연결 확인
+- strategic code map이나 reference path가 실제 코드와 맞는지 확인
+
+상태 예시:
+
+- `ALIGNED`
+- `DRIFT`
+- `MISSING`
+- `UNTESTED`
 
 ### Step 3.5: Code Analysis Metrics
 
-`Bash`, `Grep`, `Glob`으로 세 가지 지표를 수집한다:
+`Bash`, `Grep`, `Glob`으로 세 가지 지표를 수집한다.
 
-| 지표 | 측정 방법 | 용도 |
-|------|----------|------|
-| **Hotspots** | `git log --format='' --name-only \| sort \| uniq -c \| sort -rn \| head -20` | 자주 변경되는 파일 → 리뷰 우선순위 |
-| **Focus Score** | 변경 파일 중 스펙 컴포넌트에 속하는 비율 | 변경 집중도 평가 |
-| **Test Coverage** | 스펙 기능별 관련 테스트 파일 존재 여부 (`Grep` 검색) | 테스트 갭 식별 |
+| Metric | Method | Use |
+|--------|--------|-----|
+| Hotspots | `git log --format='' --name-only \| sort \| uniq -c \| sort -rn \| head -20` | 자주 변경되는 파일 식별 |
+| Focus Score | 변경 파일 중 스펙 관련 컴포넌트 비율 | 변경 집중도 평가 |
+| Test Coverage | 스펙 기능별 관련 테스트 파일 존재 여부 | 테스트 갭 식별 |
 
-### Step 4: Severity 분류 및 Decision
+### Step 4: Severity and Decision
 
-Severity 기본 매핑:
-| Drift Type | Default |
-|------------|---------|
-| Architecture / API | High |
-| Feature / Decision-log | Medium |
-| Config / Issue / Source-field | Low |
+severity 규칙:
 
-Decision 부여:
-- **SPEC_OK**: material drift/quality blocker 없음
-- **SYNC_REQUIRED**: 스펙 업데이트 필요 → `/spec-update-done` 권장
-- **NEEDS_DISCUSSION**: 제품/아키텍처 의사결정 필요
+- `Critical`: 핵심 contract/invariant 오류, 심각한 drift, 잘못된 보안/동작 서술, global/temporary 구조 혼동
+- `Quality`: 누락 설명, 약한 검증 링크, 구조 문제, 중간 수준 drift
+- `Improvements`: 가독성, 정리, appendix 수준 개선
 
-### Step 5: 리포트 작성 및 저장
+decision 예시:
 
-1. 기존 리포트가 있으면 `logs/prev/prev_spec_review_report_<timestamp>.md`로 아카이브.
-2. 현재 콘텍스트에서 먼저 리포트 skeleton/섹션 헤더를 기록한 뒤, 같은 흐름에서 Edit으로 내용을 채운다.
-   - 독립 섹션 2개+ → 병렬 Agent dispatch 가능
-   - 의존 섹션 → 순서대로 Edit
-   - 완료 후 TODO/Phase 마커 제거
-   아래 Output Format으로 `_sdd/spec/logs/spec_review_report.md` 저장.
-3. 사용자에게 severity 요약 테이블과 decision을 제시.
+- `SPEC_OK`
+- `SYNC_REQUIRED`
+- `NEEDS_DISCUSSION`
+
+### Step 5: Report and Handoff
+
+리포트를 `_sdd/spec/logs/spec_review_report.md`에 저장한다.
+
+리포트에는 다음을 포함한다.
+
+- findings
+- spec type과 적용 rubric
+- spec quality summary
+- drift summary
+- code analysis metrics
+- next actions
+
+후속 스킬 연결:
+
+- 계획 변경 전 반영: `spec-update-todo`
+- 구현 완료 후 동기화: `spec-update-done`
+- 구현 검증: `implementation-review`
 
 ## Output Format
 
 ```markdown
 # Spec Review Report
 
-**Date**: YYYY-MM-DD | **Scope**: Spec-only | Spec+Code
+**Review Date**: YYYY-MM-DD
+**Reviewed Spec**: ...
+**Spec Type**: Global | Temporary | Mixed
 **Decision**: SPEC_OK | SYNC_REQUIRED | NEEDS_DISCUSSION
 
-## Summary
-<1-paragraph overview>
+## 1. Findings
+### Critical
+- ...
 
-## Findings
+### Quality
+- ...
 
-### High
-1. <finding> — Evidence: `path:line` — Recommendation: ...
+### Improvements
+- ...
 
-### Medium
+## 2. Spec Quality Summary
 ...
 
-### Low
+## 3. Drift Summary
 ...
 
-## Open Questions
-1. ...
-
-## Code Analysis Metrics
+## 4. Code Analysis Metrics
 
 | Metric | Value | Notes |
 |--------|-------|-------|
@@ -114,29 +180,28 @@ Decision 부여:
 | Focus Score | X% | 스펙 컴포넌트 집중도 |
 | Test Coverage | X/Y features covered | 스펙 기능별 테스트 현황 |
 
-## Suggested Next Actions
-1. ...
+## 5. Recommended Next Actions
+...
 ```
-
-SYNC_REQUIRED인 경우 `Handoff` 섹션을 추가하여 업데이트 우선순위(P1/P2/P3)를 기록한다.
-Decision Log 제안이 있으면 `Decision Log Proposals` 섹션을 추가한다.
 
 ## Error Handling
 
 | 상황 | 대응 |
 |------|------|
-| 스펙 파일 미발견 | `spec-create` 먼저 실행 권장 |
-| 코드베이스 접근 불가 | Spec-only 모드로 전환 |
-| git 이력 없음 | 현재 코드 상태만으로 drift 분석 |
-| 다수 스펙 파일 존재 | 사용자에게 리뷰 범위 확인 |
-| 기존 리뷰 리포트 존재 | `prev/`로 아카이브 후 신규 작성 |
-| Decision Log 미존재 | Decision-log drift 분석 생략, 생성 제안 |
+| spec 파일이 적음/없음 | 존재하는 범위만 리뷰하고 한계를 리포트에 적는다 |
+| 코드 범위가 너무 큼 | 핵심 모듈 위주로 drift를 점검한다 |
+| 기준이 모호함 | `UNTESTED` 또는 `NEEDS_DISCUSSION`으로 남긴다 |
+| spec 수정이 필요함 | 수정하지 말고 후속 스킬을 제안한다 |
+
+## Integration
+
+- `spec-update-todo`: 계획 요구사항 반영
+- `spec-update-done`: 구현 후 스펙 동기화
+- `implementation-review`: 구현 상태 검증과 교차 참조
 
 ## Final Check
 
 Acceptance Criteria가 모두 만족되었나 검증한다. 미충족 항목이 있으면 해당 단계로 돌아가 수정한다.
-
----
 
 > **Mirror Notice**: 이 스킬의 본문은 `.claude/agents/spec-review.md`의 복사본이다.
 > 사용자가 직접 호출할 때 중간 과정의 가시성을 확보하기 위해 복붙되었다.

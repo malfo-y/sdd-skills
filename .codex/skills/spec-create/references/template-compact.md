@@ -1,6 +1,6 @@
-# SDD Spec Generation Template (Compact)
+# SDD Global Spec Template (Compact)
 
-> Canonical generation template for SDD spec documents. All spec-related skills (spec-create, spec-upgrade, spec-rewrite) reference this template for consistent §1-§8 structure with What/Why/How triad enforcement.
+> Canonical generation template for current SDD global specs. All spec-related skills should treat this as the default global-spec shape. It is intentionally thinner than the old architecture/component-inventory-heavy model.
 
 ---
 
@@ -8,279 +8,159 @@
 
 > 아래 규칙은 모든 섹션에 적용된다.
 
-**Document Metadata** — 스펙 상단에 포함:
+**Document Metadata**:
 - **Title**: 프로젝트 이름
 - **Version**: X.Y.Z
 - **Status**: Draft | In Review | Approved | Deprecated
 - **Last Updated**: YYYY-MM-DD
 
-**Code Excerpt Rules**:
-- ≤30줄 함수 → 전문(full body) 발췌
-- >30줄 함수 → 시그니처 + 핵심 로직만
-- 코드 블록 시작에 `# [filepath:functionName]` 헤더 부착
+**Narrative Rules**:
+- 배경과 개념은 사람과 LLM이 같은 경계를 이해하도록 짧고 명료하게 쓴다.
+- scope는 할 수 있는 것만이 아니라 책임 범위와 out-of-scope를 함께 고정한다.
+- 본문은 decision-bearing structure 중심으로 유지한다.
+- 구현 inventory나 단순 파일 목록은 reference 또는 appendix로 내린다.
 
-**Inline Citation**:
-- 본문에서 코드 참조 시 `[filepath:functionName]` 형식 사용
-- 예: "검증 단계 `[src/validator.py:validate]`에서 데이터 무결성을 확인한다."
+**Code Reference Rules**:
+- inline citation은 필요할 때만 사용한다: `[path/to/file.py:function_name]`
+- strategic code map은 appendix-level hint다.
+- strategic code map은 manual curated를 기본값으로 한다.
+- entrypoint, invariant hotspot, extension point, change hotspot 같은 탐색 힌트를 우선한다.
 
-**What/Why/How Triad** — 컴포넌트, 설계 결정, 의존성에 필수:
-- **What**: 무엇을 하는가 (Purpose, description)
-- **Why**: 왜 이렇게 하는가 (Rationale, alternatives considered)
-- **How**: 어떻게 구현하는가 (Implementation approach, code references)
-
-**Source Field**:
-- 형식: `<path>`: ClassName, function_name()
-- 코드베이스가 존재할 때만 포함. 그린필드 프로젝트는 생략.
-
-**Component Why Style**:
-- 자연스러운 산문체로 작성: "인증 로직을 API 레이어에서 분리하여 독립 테스트와 재사용이 가능하도록 했다"
-- 레이블 패턴 금지: "~의 이유: ..." 형태 사용 금지
+**CIV Rules**:
+- `Contract / Invariants / Verifiability`는 독립 필수 섹션이다.
+- Contract ID는 `C1`, Invariant ID는 `I1`, Verifiability ID는 `V1` 형식을 사용한다.
+- `Verification Method` enum: `test`, `review`, `runtime-check`, `manual-check`
+- 각 셀은 짧은 규범 문장으로 쓴다.
 
 ---
 
-## §1 Background & Motivation
+# <Project Name>
 
-*이 섹션에서는 프로젝트가 해결하는 문제, 이 접근법을 선택한 이유, 핵심 가치 제안을 서술한다.*
+> One-line description of what this project is for
 
-### Problem Statement [What]
+**Version**: X.Y.Z
+**Last Updated**: YYYY-MM-DD
+**Status**: Draft | In Review | Approved | Deprecated
 
-[이 프로젝트가 해결하는 문제와 기존 상태의 고통점]
+## 1. 배경 및 high-level concept
 
-### Why This Approach [Why]
+### Problem
 
-[대안 비교를 통해 이 접근법이 선택된 이유]
+[이 프로젝트가 해결하는 문제]
 
-| Approach | Pros | Cons | Decision |
-|----------|------|------|----------|
-| This project | ... | ... | **Chosen** |
-| Alternative A | ... | ... | Rejected: ... |
+### Why This Matters Now
 
-### Core Value Proposition / Key Features / Target Users
+[왜 이 문제가 중요한가]
 
-[핵심 가치, 주요 기능, 대상 사용자를 간결하게 서술]
+### High-Level Concept
 
-### Success Criteria / Non-Goals
+[이 프로젝트를 어떤 관점과 아이디어로 이해해야 하는가]
 
-- [ ] Criterion 1
-- Non-goal 1
+### Alternatives Considered
 
----
-
-## §2 Core Design
-
-*이 섹션에서는 프로젝트의 핵심 설계 아이디어와 알고리즘을 서사 형식으로 서술한다.*
-
-### Key Idea [What]
-
-[핵심 설계 아이디어를 내러티브 형식으로 서술. 어떤 문제를 만났고, 어떤 해결책을 고안했으며, 왜 작동하는지.]
-
-### Algorithm / Logic Flow [How]
-
-[주요 알고리즘 또는 처리 흐름. 실제 코드 발췌를 포함한다.]
-
-```python
-# [src/core/processor.py:process_data]
-def process_data(input):
-    validated = validate(input)
-    return transform(validated)
-```
-
-> 30줄 규칙 적용: ≤30줄 함수는 전문, >30줄 함수는 시그니처+핵심 로직만 발췌.
-
-### Design Rationale [Why]
-
-| Choice | Rationale | Alternatives |
-|--------|-----------|-------------|
-| ... | Why chosen | What else considered |
-
----
-
-## §3 Architecture Overview
-
-*이 섹션에서는 시스템의 전체 구조를 다이어그램과 테이블로 제시한다.*
-
-### System Diagram (ASCII)
-
-```
-[시스템 아키텍처 ASCII 다이어그램]
-```
-
-### Technology Stack
-
-| Layer | Technology | Purpose |
-|-------|------------|---------|
+| Approach | Why Considered | Why Not Chosen |
+|----------|----------------|----------------|
 | ... | ... | ... |
 
-### Design Decisions
+## 2. Scope / Non-goals / Guardrails
 
-| Decision | Rationale | Alternatives |
-|----------|-----------|-------------|
-| ... | ... | ... |
+### In Scope
 
----
-
-## §4 Component Details
-
-*이 섹션은 주요 컴포넌트마다 반복한다. 각 컴포넌트에 What/Why/How 트라이어드를 강제한다.*
-
-*스펙의 규모가 클 경우 각 컴포넌트는 별개의 파일로 작성되거나 subdirectory로 나뉠 수 있다. `Modular Spec Guide` 참고*
-
-### [Component Name]
-
-**Motivation [Why]**:
-- 이 컴포넌트가 존재하는 이유 (Writing Rules 참조)
-
-**Purpose [What]**:
-- 이 컴포넌트가 하는 일
-
-**Input/Output**:
-- 입출력 형식과 데이터
-
-**Dependencies**:
-- 의존성과 이유: "X에 의존 — Y 때문"
-
-**Source**: (코드베이스 존재 시)
-- `<path>`: Class, function()
-- `<path>`: Class, function()
 - ...
 
-**Architecture Details [How]**:
-- 구현 접근 방식과 선택 이유
-- 핵심 클래스/함수
-- 사용된 디자인 패턴
+### Non-goals
 
-**How to Use**:
-- API/인터페이스 예시
-- 설정 옵션
+- ...
 
-**Known Issues**:
-- 현재 제한사항과 개선 계획
+### Guardrails
 
----
+- ...
 
-## §5 Usage Guide & Expected Results
+## 3. 핵심 설계와 주요 결정
 
-*이 섹션에서는 시나리오 기반 사용법과 기대 결과를 서술한다.*
+### Core Design
+
+[핵심 아이디어와 유지해야 할 구조]
+
+### Key Decisions
+
+| Decision | Why | What Must Stay True |
+|----------|-----|---------------------|
+| ... | ... | ... |
+
+## 4. Contract / Invariants / Verifiability
+
+### Contract
+
+| ID | Subject | Inputs/Outputs | Preconditions | Postconditions | Failure Guarantees |
+|----|---------|----------------|---------------|----------------|--------------------|
+| C1 | ... | ... | ... | ... | ... |
+
+### Invariants
+
+| ID | Scope | Invariant | Why It Matters |
+|----|-------|-----------|----------------|
+| I1 | ... | ... | ... |
+
+### Verifiability
+
+| ID | Targets | Verification Method | Evidence / Notes |
+|----|---------|---------------------|------------------|
+| V1 | C1, I1 | review | ... |
+
+## 5. 사용 가이드 & 기대 결과
 
 ### Scenario: [Name]
 
-**Setup**: 전제 조건 및 준비 단계
+**Setup**: ...
 
-**Action**: 사용자가 수행하는 작업
+**Action**: ...
 
-**Expected Result**: 관찰 가능한 결과 (구체적 값/동작 포함)
+**Expected Result**: ...
 
----
+## 6. Decision-bearing structure
 
-## §6 Data Models / API Reference (조건부)
+- 시스템 경계: ...
+- ownership: ...
+- cross-component contract: ...
+- extension point: ...
+- invariant hotspot: ...
 
-*데이터 모델이나 API가 있는 경우에만 포함한다.*
+## 7. 참조 정보
 
 ### Data Models
 
-[엔티티 정의, 제약 조건, 관계]
+[조건부]
 
 ### API Reference
 
-[엔드포인트, 요청/응답 스키마, 에러 코드]
+[조건부]
 
----
+### Environment & Dependencies
 
-## §7 Environment & Dependencies
+[조건부]
 
-*이 섹션에서는 프로젝트 실행 환경과 의존성을 서술한다.*
+## Appendix A. Strategic Code Map
 
-### Directory Structure
+| Kind | Path / Symbol | Why It Matters |
+|------|----------------|----------------|
+| Entrypoint | `...` | ... |
+| Invariant Hotspot | `...` | ... |
+| Extension Point | `...` | ... |
+| Change Hotspot | `...` | ... |
 
-```
-project/
-├── src/
-├── tests/
-└── ...
-```
+## Appendix B. Related Docs & Code References
 
-### Dependencies
-
-- Runtime / Development 의존성
-
-### Configuration
-
-- 환경 변수
-- 설정 파일
-- 필수 인증 정보
-
----
-
-## §8 Identified Issues & Appendix
-
-*이 섹션에서는 알려진 이슈와 코드 참조 인덱스를 정리한다.*
-
-### Issues
-
-- [ ] Critical bugs
-- [ ] Code quality issues
-- [ ] Missing features
-
-### Appendix: Code Reference Index
-
-| File | Functions / Classes | Referenced In |
-|------|---------------------|---------------|
-| `src/...` | function(), Class | §2, §4 |
+- ...
 
 ---
 
 ## Modular Spec Guide
 
-*프로젝트 규모에 따라 스펙 파일 구조를 결정한다.*
+| 규모 | 구조 |
+|------|------|
+| 소규모 | `main.md` 단일 파일 |
+| 중규모 | `main.md` + supporting reference files |
+| 대규모 | `main.md` + domain files/directories |
 
-### Scale Criteria
-
-| 규모 | 줄 수 | 구조 |
-|------|-------|------|
-| 소규모 | ~500줄 이하 | 단일 `main.md` |
-| 중규모 | 500–1500줄 | `main.md` (인덱스) + `<component>.md` 파일 |
-| 대규모 | 1500줄 초과 | `main.md` (인덱스) + `<component>/` 서브디렉토리 |
-
-### 소규모 — 단일 파일
-
-```
-_sdd/spec/
-└── main.md
-```
-
-### 중규모 — 인덱스 + 컴포넌트 파일
-
-```
-_sdd/spec/
-├── main.md              # 인덱스: §1-§3 인라인, §4 컴포넌트 링크
-├── api.md
-├── database.md
-└── frontend.md
-```
-
-### 대규모 — 인덱스 + 컴포넌트 서브디렉토리
-
-```
-_sdd/spec/
-├── main.md              # 인덱스: §1-§3 인라인, §4 서브디렉토리 링크
-├── api/
-│   ├── overview.md
-│   └── endpoints.md
-└── database/
-    ├── overview.md
-    └── schema.md
-```
-
-### main.md 인덱스 형식
-
-- §1-§3은 `main.md`에 인라인으로 유지
-- §4 컴포넌트는 링크로 분리: `See [Component Name](./component.md)`
-- §5-§8은 길이에 따라 인라인 또는 링크
-
-### 서브 스펙 파일 형식
-
-각 서브 스펙 파일도 동일한 What/Why/How 구조를 준수한다:
-- 컴포넌트 레벨 Purpose/Why/How 테이블
-- Architecture Details + 코드 발췌
-- Source 필드 매핑
-- 해당 컴포넌트의 Known Issues
+global spec core는 항상 `1~6`을 유지한다. `7`과 appendices는 필요할 때만 추가한다.

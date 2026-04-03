@@ -1,176 +1,193 @@
 ---
 name: spec-update-done
-description: "This skill should be used when the user asks to \"update spec from code\", \"sync spec with implementation\", \"apply implementation changes to spec\", \"reflect completed work in spec\", \"refresh spec after implementation\", \"implementation done sync\", or mentions spec document maintenance tied to completed code changes."
-version: 2.1.0
+description: This skill should be used when the user asks to "update spec from code", "sync spec with implementation", "apply implementation changes to spec", "reflect completed work in spec", "refresh spec after implementation", "implementation done sync", or mentions spec document maintenance tied to completed code changes.
+version: 2.2.0
 ---
 
 # Spec Sync and Update
 
-코드 변경사항을 SDD 스펙 문서에 반영하고, 드리프트를 감지하여 스펙을 동기화한다.
+| Workflow | Position | When |
+|----------|----------|------|
+| Large | Step 6 of 6 | 구현 완료 후 global spec 동기화 |
+| Medium | Final | 구현 반영 마무리 |
+| Any | Standalone | code-to-spec sync |
+
+이 agent는 구현 결과와 temporary spec을 읽고 `_sdd/spec/*.md`를 동기화한다. 핵심 원칙은 **temporary execution detail은 버리고, 구현되어 검증된 지속 정보만 global spec에 올린다**는 것이다.
 
 ## Acceptance Criteria
 
 > 프로세스 완료 후 아래 기준을 자체 검증한다. 미충족 항목은 해당 단계로 돌아가 수정한다.
 
-- [ ] AC1: 9가지 드리프트 패턴을 감지하고 분류 완료
-- [ ] AC2: Change Report 테이블을 생성하여 사용자에게 제시한 후 스펙 업데이트 적용
-- [ ] AC3: 구현 산출물을 feature별로 copy-only 아카이브 완료
-- [ ] AC4: Source field가 현재 코드와 동기화됨
-- [ ] AC5: 분할 스펙에서 드리프트 항목이 의미적으로 적합한 파일에 반영되고, 신규 파일 생성 시 main.md 인덱스에 링크 추가됨
+- [ ] 구현 산출물 기준으로 spec drift를 식별한다.
+- [ ] temporary spec delta와 실제 구현 상태를 비교한다.
+- [ ] Change Report를 작성하고 반영 내용을 요약한다.
+- [ ] 필요한 global spec 업데이트를 적용한다.
+- [ ] 검증되지 않았거나 미구현인 planned change를 완료된 사실처럼 쓰지 않는다.
 
 ## Hard Rules
 
-1. **Report before changing**: 변경 사항을 적용하기 전에 반드시 Change Report를 사용자에게 먼저 제시한다.
-2. **Always backup to prev/**: 스펙 파일 수정 전 `_sdd/spec/prev/prev_<filename>_<timestamp>.md`로 백업한다.
-3. **Copy-only archive**: 구현 산출물은 복사만 하며 원본을 이동/삭제하지 않는다.
-4. **언어 규칙**: 기존 스펙/문서의 언어를 따른다. 새 프로젝트(기존 스펙 없음)는 한국어 기본. 사용자 명시 지정 시 해당 언어 사용.
-5. **decision_log.md 최소화**: 결정 로그는 `decision_log.md`에만 기록하며, 추가 거버넌스 문서는 사용자 요청 시에만 생성한다.
-6. **main.md 인덱스 동기화**: 새 sub-spec 파일 생성 시 반드시 main.md 인덱스에 링크를 추가한다. 고아 파일 금지.
-7. **기존 스펙 구조 보존**: 기존 파일 분할 구조를 변경하지 않는다. 파일 추가만 허용, 기존 구조 재편성 금지.
+1. 변경 적용 전 Change Report를 먼저 정리한다.
+2. 스펙 파일 수정 전 `prev/` 백업을 만든다.
+3. 구현되지 않았거나 검증되지 않은 계획을 global spec에 완료된 사실처럼 쓰지 않는다.
+4. temporary spec의 `Touchpoints`, `Implementation Plan`, `Validation Plan`, transient risk log를 global spec 본문에 그대로 남기지 않는다.
+5. 코드/구현 문서를 직접 수정하지 않는다. 이 agent의 대상은 global spec이다.
+6. 새 sub-spec 파일 생성 시 반드시 main.md 인덱스에 링크를 추가한다. 고아 파일 금지.
+7. 기존 파일 분할 구조를 변경하지 않는다. 파일 추가만 허용, 기존 구조 재편성 금지.
+8. rationale 변화가 실제로 발생했을 때만 `decision_log.md`를 업데이트한다.
 
 ## Input Sources
 
-| 소스 | 경로/방법 | 용도 |
-|------|-----------|------|
-| 스펙 문서 | `_sdd/spec/main.md` 또는 `<project-name>.md` | 현재 스펙 상태 |
-| 의사결정 로그 | `_sdd/spec/decision_log.md` | 결정 근거 추적 |
-| 구현 로그 | `_sdd/implementation/implementation_*.md`, `test_summary.md` | 구현 상태/결과 |
-| Feature 드래프트 | `_sdd/drafts/feature_draft_<name>.md` | 스펙 패치 + 구현 계획 |
-| 코드 변경 | `git diff`, `git log`, `git status` | 실제 변경 사항 |
-| 실행 환경 | `_sdd/env.md` | 로컬 검증 시 환경 설정 |
-| 사용자 대화 | 피드백, 새 요구사항, 동작 명확화 | 직접 입력 |
-| 이전 버전 | `_sdd/spec/prev/prev_*.md`, `_sdd/implementation/prev/prev_*.md` | 히스토리 컨텍스트 |
-| 아카이브 인덱스 | `_sdd/implementation/implementation_index.md` | feature별 아카이브 이력 |
+우선순위:
 
-## Drift Pattern Reference
+1. 실제 코드 변경
+2. `_sdd/drafts/feature_draft_<name>.md`
+3. `_sdd/implementation/implementation_plan.md`
+4. `_sdd/implementation/implementation_progress.md`
+5. `_sdd/implementation/implementation_review.md`
+6. `_sdd/implementation/implementation_report*.md`
+7. `_sdd/spec/*.md`
+8. `_sdd/spec/decision_log.md`
 
-| # | 패턴 | 감지 기준 | 해결 방향 |
-|---|------|-----------|-----------|
-| 1 | Architecture | 새 컴포넌트/디렉토리 미문서화, 제거된 컴포넌트 잔존, 의존성 변경 | 컴포넌트 섹션 추가/제거, 아키텍처 다이어그램 갱신 |
-| 2 | Feature | 구현됐으나 미문서화, 계획만 있고 미구현, 동작 변경 | 피처 상태 갱신, 예시 업데이트, breaking change 표기 |
-| 3 | API | 엔드포인트 URL/메서드 변경, 요청/응답 스키마 변경 | API 레퍼런스 갱신, 마이그레이션 가이드 |
-| 4 | Config | 새 환경변수 미문서화, 기본값 변경 | 환경변수 테이블 갱신, .env.example 동기화 |
-| 5 | Issue | 해결된 이슈 잔존, 새 이슈 미등록, TODO/FIXME 미반영 | 이슈 상태 갱신, 신규 이슈 등록 |
-| 6 | Documentation | 예시 코드 실패, 깨진 링크, 경로 변경 | 예시 갱신, 링크 수정 |
-| 7 | Environment | env.md 내 환경변수/셋업 명령 불일치 | env.md 동기화, 서비스 요구사항 갱신 |
-| 8 | Decision Log | 결정 근거 무효화, 누락된 결정 | Superseded 표기, 소급 결정 추가 |
-| 9 | Code Snippet | 임베딩 코드 불일치, 인라인 인용 경로 변경 | 코드 재추출 (≤30줄 전체, >30줄 시그니처+핵심), 인용 갱신 |
+## Drift Types
+
+다음 drift를 기본적으로 본다.
+
+- Scope drift
+- Contract drift
+- Invariant drift
+- Verifiability drift
+- Usage / expected-result drift
+- Decision-bearing structure drift
+- Config / environment drift
+- Reference / code-map drift
 
 ## Process
 
 ### Step 1: Gather Context
 
-1. 현재 스펙 문서 읽기
-   - 단일 파일: 해당 파일 읽기
-   - 분할 스펙: main.md 인덱스에서 링크된 sub-spec 파일 목록 구성, 각 파일의 주제·섹션 구조 파악
-2. 구현 로그 읽기: `implementation_plan.md`, `implementation_progress.md`, `implementation_review.md`, `implementation_report*.md`, `test_summary.md`
-3. Feature 드래프트 확인: `_sdd/drafts/feature_draft_<name>.md` (있는 경우)
-4. 코드 변경 분석: `git status`, `git diff`, `git log --oneline -20`
-5. `_sdd/spec/decision_log.md` 확인 (있는 경우)
-6. 로컬 실행/테스트가 필요하면 `_sdd/env.md` 로드 후 환경 설정 적용
-7. `feature_id` 결정: 사용자 명시값 → 드래프트/리포트 제목에서 도출 → 컨텍스트에서 자동 생성
+다음을 읽는다.
 
-**Gate → Step 2**: 스펙 로드 완료 AND (구현 로그 OR git diff OR 사용자 피드백) 존재 시 진행. 스펙 미발견 시 `spec-create` 권장. 소스 미존재 시 git diff 기반 Quick Sync로 전환.
+- 현재 global spec
+- feature draft의 Part 1 temporary spec
+- 구현 관련 `_sdd/implementation/*`
+- 실제 코드/테스트/설정
 
-### Step 2: Identify Spec Drift
+목적:
 
-위 Drift Pattern Reference 9가지 패턴을 기준으로 스펙과 실제 코드 간 불일치를 식별한다. Source field 드리프트(파일 경로 변경, 함수 이동/삭제)도 함께 점검한다.
+- 완료된 구현 범위 파악
+- delta ID별 구현 및 검증 상태 파악
+- global spec와 다른 지속 정보 파악
+- 분할 스펙이면 main.md 인덱스와 sub-spec 관계 파악
+
+### Step 2: Compare Delta to Reality
+
+temporary spec의 각 delta 항목을 아래 중 하나로 분류한다.
+
+- `IMPLEMENTED`
+- `PARTIAL`
+- `NOT_IMPLEMENTED`
+- `UNVERIFIED`
+
+중요 기준:
+
+- 실제 코드와 evidence가 있는 항목만 global spec에 반영한다.
+- `Validation Plan`과 implementation evidence가 연결되지 않으면 `UNVERIFIED`로 남긴다.
+- 임시 실행 메모는 반영 대상이 아니다.
 
 #### File Placement Decision (분할 스펙 전용)
 
 단일 파일 스펙이면 건너뛴다.
 
-1. **기존 파일 매칭**: 드리프트 항목의 컴포넌트/기능이 기존 sub-spec 파일과 일치 → 해당 파일에 반영
-2. **Cross-cutting 항목**: 환경변수, 글로벌 설정 등은 해당 §이 위치한 파일에 반영
-3. **신규 파일 생성**: 새 컴포넌트가 코드에 추가되었으나 매칭 없으면 새 파일 생성 (파일명 = 컴포넌트명). main.md 인덱스에 링크 필수
-4. **소규모 병합**: 생성될 내용이 50줄 미만이면 가장 관련도 높은 기존 파일에 병합
+1. 기존 파일 매칭: 드리프트 항목의 컴포넌트/기능이 기존 sub-spec 파일과 일치 → 해당 파일에 반영
+2. Cross-cutting 항목: 환경변수, 글로벌 설정 등은 해당 section이 위치한 파일에 반영
+3. 신규 파일 생성: 새 지속 개념이 생겼으나 매칭 없으면 새 파일 생성 후 main.md 인덱스에 링크 추가
+4. 소규모 병합: 생성될 내용이 작으면 가장 관련도 높은 기존 파일에 병합
 
 ### Step 3: Generate Change Report
 
-사용자에게 제시할 구조화된 변경 리포트를 생성한다.
+변경 전 요약을 만든다.
 
-**Gate → Step 4**: Change Report를 사용자에게 제시 완료 후 바로 Step 4 진행 (사용자 확인을 기다리지 않는다).
+포함 내용:
+
+- 어떤 global spec section이 바뀌는지
+- 어떤 delta ID가 반영되는지
+- 어떤 delta ID는 미구현/미검증이라 보류되는지
+- drift type
+- 적용 action
 
 ### Step 4: Apply Updates
 
-1. `mkdir -p _sdd/spec/prev/` 후 백업 생성
-2. 정확한 기존 내용은 보존하며, 변경/추가/제거 적용
-   2-1. 신규 sub-spec 파일 생성 시: 파일 생성 → main.md 인덱스에 링크 추가
-3. Source field 갱신 (구현 산출물의 파일 경로 → Grep/Glob으로 검증)
-4. 버전 갱신: patch(소규모), minor(피처), major(아키텍처)
-5. Changelog 항목 추가 (prev/ 백업 참조 포함)
-6. 행동/아키텍처 의도 변경 시 `decision_log.md`에 항목 추가
+global spec 문서를 수정한다.
 
-**Source field 형식:**
-```markdown
-| **Source** | `src/auth/token.py`: verify_token(), decode_jwt() |
-|            | `src/auth/handler.py`: AuthHandler |
-```
+적용 원칙:
+
+- outdated claim 제거
+- 구현 완료되고 검증된 사실 반영
+- `Contract/Invariant Delta`가 반영될 때는 canonical CIV 표를 갱신
+- user-visible behavior 변화는 `사용 가이드 & 기대 결과`를 갱신
+- structural change는 `Decision-bearing structure`를 갱신
+- manual curated `Strategic Code Map`이 필요할 때만 appendix를 갱신
+- 신규 sub-spec 파일 생성 시 파일 생성 후 main.md 인덱스에 링크 추가
 
 ### Step 5: Validate Updates
 
-- 모든 파일 경로/링크가 유효한지 확인
-- 의존성 버전 일치 확인
-- 기존 정확한 내용이 보존되었는지 확인
-- (분할 스펙) 신규 파일이 main.md 인덱스에 링크됨
-- 로컬 검증 시 `_sdd/env.md` 설정 먼저 적용. 미존재 시 사용자에게 환경 확인
+수정 후 확인한다.
 
-**Gate → Step 6**: 경로 유효 AND 버전 일치 AND 기존 내용 보존 시 진행. 실패 항목은 수정 후 재검증.
+- path / reference / code map이 최신 코드와 맞는가
+- 구현되지 않은 내용이 완료된 것처럼 남지 않았는가
+- CIV와 usage가 실제 구현과 모순되지 않는가
+- (분할 스펙) 신규 파일이 main.md 인덱스에 링크되는가
 
 ### Step 6: Archive Implementation Artifacts (Copy-only)
 
-1. `mkdir -p _sdd/implementation/features/<feature_id>/`
-2. 루트 `_sdd/implementation/` 파일은 제자리 유지 (이동/삭제 금지)
-3. 관련 파일 복사: `implementation_plan*.md`, `implementation_progress*.md`, `implementation_review.md`, `implementation_report*.md`, `test_summary.md`
-4. 타임스탬프 파일명: `SYNC_<YYYYMMDD_HHMMSS>_<original_filename>`
-5. `implementation_index.md` 갱신: feature_id별 섹션에 sync 항목 추가 (`synced_at`, 파일 매핑, 비고)
+필요 시 구현 산출물을 feature 기준으로 copy-only 아카이브한다.
+
+- 원본은 수정하지 않는다.
+- spec sync 근거를 남기기 위한 보조 아카이브다.
 
 ## Output Format
 
-```markdown
-## Spec Review Report
+변경 요약은 최소한 아래 내용을 포함한다.
 
-**Reviewed**: YYYY-MM-DD | **Spec Version**: X.Y.Z → X.Y.Z' | **Code State**: <commit hash>
+```markdown
+## Spec Sync Report
+
+**Reviewed**: YYYY-MM-DD
+**Code State**: [summary]
 
 ### Change Summary
-| 항목 | 수량 |
-|------|------|
-| 변경 섹션 | N개 |
-| 추가 항목 | N개 |
-| 제거/아카이브 | N개 |
+| Section | Delta IDs | Status | Action |
 
-### Changes
-| Target File | Section | Current Spec | Actual State | Drift Type | Action |
-|------------|---------|-------------|--------------|------------|--------|
-| ... | ... | ... | ... | Architecture/Feature/... | Add/Update/Remove |
+### Applied Updates
+- ...
+
+### Deferred Items
+- ...
 
 ### Open Questions
-- [모호한 항목에 대한 판단 근거와 질문]
+- ...
 ```
 
 ## Error Handling
 
 | 상황 | 대응 |
 |------|------|
-| `_sdd/spec/` 미존재 | `spec-create` 먼저 실행 권장 |
-| 구현 로그 미존재 | git diff 기반 Quick Sync 모드로 전환 |
-| git 이력 없음 | 코드 직접 분석으로 대체 |
-| `_sdd/env.md` 미존재 | 로컬 실행 건너뛰고 사용자에게 환경 확인 |
-| feature_id 모호 | 컨텍스트에서 자동 생성 (커밋 메시지, 변경 파일명 활용) |
-| 충돌하는 변경 | 최선 판단 후 진행, `decision_log.md`에 근거 기록 |
+| 구현 상태가 불분명 | 미확정 내용은 반영하지 않고 `Open Questions`에 남긴다 |
+| spec와 코드가 크게 다름 | drift를 명시하고 보수적으로 sync한다 |
+| 백업 경로 없음 | `prev/`를 생성하고 진행한다 |
+| 결정 근거가 애매함 | `decision_log.md`에 최소 기록만 남긴다 |
 | 파일 배치 판단 모호 | 가장 관련도 높은 기존 파일에 보수적 배치, Change Report에 근거 기록 |
 
-## Workflow Position
+## Integration
 
-| Workflow | Position | When |
-|----------|----------|------|
-| Large | Step 6 of 6 | 구현 완료 후 스펙 동기화 |
-| Medium | Step 3 of 3 | 구현 완료 후 스펙 동기화 |
-| Small | Optional | 스펙에 영향 있는 변경 시 |
+- `implementation-review`: 검증된 findings를 sync 근거로 사용
+- `spec-review`: sync 후 품질 점검
+- `spec-update-todo`: 아직 구현되지 않은 계획 요구사항은 여기로 넘긴다
 
 ## Final Check
 
 Acceptance Criteria가 모두 만족되었나 검증한다. 미충족 항목이 있으면 해당 단계로 돌아가 수정한다.
 
 > **Mirror Notice**: 이 스킬의 본문은 `.claude/agents/spec-update-done.md`의 복사본이다.
+> 사용자가 직접 호출할 때 중간 과정의 가시성을 확보하기 위해 복붙되었다.
 > 내용을 수정할 때는 agent 파일과 이 스킬 파일을 **반드시 함께** 수정해야 한다.

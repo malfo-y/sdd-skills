@@ -1,22 +1,23 @@
 ---
 name: feature-draft
 description: This skill should be used when the user asks to "feature draft", "draft feature", "feature plan", "plan feature", "draft and plan", "feature draft parallel", "parallel feature draft", "병렬 기능 초안", "parallel feature plan", or wants to combine requirements gathering, spec patch drafting, and implementation planning with Target Files for parallel execution support.
-version: 2.1.0
+version: 2.2.0
 ---
 
 # Feature Draft
 
 | Workflow | Position | When |
 |----------|----------|------|
-| Large | Step 1 of 6 | 스펙 패치 초안 + 구현 계획 생성 |
-| Medium | Step 1 of 3 | 스펙 패치 초안 + 구현 계획 생성 |
+| Large | Step 1 of 6 | temporary spec 초안 + 구현 계획 생성 |
+| Medium | Step 1 of 3 | temporary spec 초안 + 구현 계획 생성 |
 | Small | Optional | 구현 전 요구사항/계획 정리 |
 
 이 agent는 `_sdd/drafts/feature_draft_<feature_name>.md` 한 파일에 다음 두 파트를 함께 생성한다.
-- Part 1: `spec-update-todo` 호환 스펙 패치 초안
+
+- Part 1: `spec-update-todo` 호환 temporary spec draft
 - Part 2: `implementation`이 바로 사용할 수 있는 Target Files 기반 구현 계획
 
-Wrapper skill은 사용자 진입점이고, generated orchestrator는 이 custom agent를 직접 실행한다. 두 경로 모두 동일한 output contract를 사용한다.
+Part 1은 current canonical temporary spec 7섹션을 직접 담고, Part 2는 그 delta를 task와 phase로 전개한다.
 
 ## Acceptance Criteria
 
@@ -24,18 +25,20 @@ Wrapper skill은 사용자 진입점이고, generated orchestrator는 이 custom
 
 - [ ] `_sdd/drafts/feature_draft_<feature_name>.md`가 생성된다.
 - [ ] Part 1이 `<!-- spec-update-todo-input-start -->` / `<!-- spec-update-todo-input-end -->` 마커를 포함한다.
+- [ ] Part 1이 temporary spec 7섹션을 모두 포함한다.
+- [ ] Part 1의 `Contract/Invariant Delta`와 `Validation Plan`이 ID 기반으로 연결된다.
 - [ ] Part 2의 모든 task가 `**Target Files**`를 가진다.
-- [ ] 외부 reference/example 문서가 없어도 draft 생성에 필요한 핵심 규칙을 이 파일만으로 수행할 수 있다.
 
 ## Hard Rules
 
 1. `_sdd/spec/` 파일은 읽기만 한다. 이 agent는 스펙 파일을 직접 수정하지 않는다.
 2. 출력 파일은 반드시 `_sdd/drafts/` 아래에 저장한다.
 3. 기존 스펙/문서의 언어를 따르고, 스펙이 없으면 한국어를 기본으로 사용한다.
-4. 사용자가 모호하게 요청해도 멈추지 않고 best-effort로 진행한다. 저확신 항목은 `Open Questions`에 기록한다.
-5. 여러 관련 기능이 보이면 기본적으로 하나의 draft로 묶고, 분리 필요성은 `Open Questions`에 기록한다.
+4. 사용자가 모호하게 요청해도 멈추지 않고 best-effort로 진행한다. 저확신 항목은 `Risks / Open Questions`에 기록한다.
+5. 여러 관련 기능이 보여도 기본적으로 하나의 temporary spec으로 묶고, 분리 필요성은 `Risks / Open Questions`에 기록한다.
 6. Part 2의 모든 task에는 `**Target Files**`가 있어야 한다.
 7. `Target Files`에서 경로를 확정할 수 없으면 `[TBD] <reason>`를 사용한다.
+8. Part 1과 Part 2는 같은 delta 범위를 다뤄야 하며, validation linkage를 잃으면 안 된다.
 
 ## Required Output
 
@@ -45,24 +48,34 @@ Wrapper skill은 사용자 진입점이고, generated orchestrator는 이 custom
 # Feature Draft: [title]
 
 <!-- spec-update-todo-input-start -->
-# Part 1: Spec Patch Draft
-# Spec Update Input
-...
+# Part 1: Temporary Spec Draft
+## Change Summary
+## Scope Delta
+## Contract/Invariant Delta
+## Touchpoints
+## Implementation Plan
+## Validation Plan
+## Risks / Open Questions
 <!-- spec-update-todo-input-end -->
 
 # Part 2: Implementation Plan
 ...
 ```
 
-Part 1 필수 요소:
-- `Spec Update Input`
-- `Date`, `Author`, `Target Spec`, `Spec Update Classification`
-- 변경 항목별 `**Target Section**`
+Part 1 필수 규칙:
+
+- canonical temporary spec 7섹션을 그대로 사용한다.
+- `Contract/Invariant Delta`는 `C*`, `I*` ID를 사용한다.
+- `Validation Plan`은 `V*` ID를 사용하고 `Targets`로 delta ID를 연결한다.
+- `Touchpoints`는 실행에 중요한 code area만 전략적으로 적는다.
+- `Implementation Plan`은 실행 순서와 intent를 요약한다.
 
 Part 2 필수 요소:
+
 - `Overview`
 - `Scope`
 - `Components`
+- `Contract/Invariant Delta Coverage`
 - `Implementation Phases`
 - `Task Details`
 - `Parallel Execution Summary`
@@ -91,12 +104,14 @@ Part 2 필수 요소:
 ### Step 1: Input Analysis
 
 사용자 요청에서 다음을 뽑는다.
+
 - feature name / draft title
 - 요구사항 유형: New Feature / Improvement / Bug / Refactor / Configuration
 - 구현 범위와 제약
 - 기대 산출물이나 연동 대상
 
 입력이 충분하지 않으면 다음 규칙으로 보완한다.
+
 - priority는 사용자 톤과 영향도로 추론
 - acceptance criteria는 명시된 기대 동작에서 추론
 - technical notes는 현재 spec/code 패턴에서 추론
@@ -110,70 +125,63 @@ Part 2 필수 요소:
 3. 관련 코드/테스트/설정 파일
 
 수집 목적:
-- 기존 스펙 구조 파악
-- 중복 기능/충돌 판단
+
+- 기존 global spec 구조 파악
+- delta가 영향을 주는 범위 식별
 - 언어/서술 스타일 맞춤
 - 실제 Target Files 후보 추출
 
-컨텍스트가 커도 전체를 그대로 인용하지 말고 핵심만 추려 사용한다.
-
 ### Step 3: Requirement Completion
 
-입력 완성도를 HIGH / MEDIUM / LOW로 나눠 처리한다.
+입력 완성도를 `HIGH` / `MEDIUM` / `LOW`로 나눠 처리한다.
 
-- HIGH: 구조만 정리하고 바로 진행
-- MEDIUM: 누락된 planning metadata만 보완
-- LOW: best-effort assumptions로 진행하고 불확실성은 `Open Questions`에 기록
+- `HIGH`: 구조만 정리하고 바로 진행
+- `MEDIUM`: 누락된 planning metadata만 보완
+- `LOW`: best-effort assumptions로 진행하고 불확실성은 `Risks / Open Questions`에 기록
 
-사용자에게 확인이 꼭 필요하지 않으면 멈추지 않는다.
+### Step 4: Delta Design
 
-### Step 4: Feature Design
+요구사항을 temporary spec 축으로 정리한다.
 
-요구사항을 다음 축으로 정리한다.
-- Background / Motivation
-- Design Changes
-- New Features
-- Improvements
-- Bug Reports
-- Configuration / API / Testing 영향
-
-각 항목마다 다음을 정한다.
-- target spec section
-- target component
-- implementation component
-- 관련 파일 후보
+- `Change Summary`: 무엇이 왜 바뀌는가
+- `Scope Delta`: in-scope / out-of-scope / guardrail delta
+- `Contract/Invariant Delta`: 추가/수정/삭제되는 contract와 invariant
+- `Touchpoints`: 바뀌는 코드 지점과 이유
+- `Implementation Plan`: 실행 순서 요약
+- `Validation Plan`: delta ID와 검증 방식 연결
+- `Risks / Open Questions`: 미해결 가정과 위험
 
 ### Step 5: Generate Part 1
 
 Part 1은 `spec-update-todo` 입력으로 바로 사용할 수 있어야 한다.
 
-필수 규칙:
-- 시작/끝 마커 포함
-- 각 항목에 `**Target Section**` 포함
-- 상태는 planned change로 서술
-- 기존 spec 스타일과 언어를 따른다
+canonical compact example:
 
-권장 섹션:
-- Background & Motivation Updates
-- Design Changes
-- New Features
-- Improvements
-- Failure Modes
-- Notes
-- Open Questions
+```markdown
+## Contract/Invariant Delta
 
-Failure Modes 규칙:
-- 항상 포함한다. 간단한 기능은 "N/A -- 단순 기능, 실패 경로 없음" 1행으로 처리 가능.
-- 형식: `| 시나리오 | 실패 시 | 사용자 가시성 | 처리 방안 |`
+| ID | Type | Change | Why |
+|----|------|--------|-----|
+| C1 | Modify | draft output must include CIV section | rollout contract 유지 |
+| I1 | Add | temporary spec must preserve delta-to-validation traceability | 계획과 검증 연결 유지 |
+
+## Validation Plan
+
+| ID | Targets | Verification Method | Evidence / Notes |
+|----|---------|---------------------|------------------|
+| V1 | C1, I1 | review, test | verify generated draft structure and template output |
+```
 
 ### Step 6: Generate Part 2
 
 Part 2는 `implementation` 실행을 위한 계획이다.
 
 필수 규칙:
-- phase와 task를 action-oriented하게 작성
-- 각 task에 priority, description, acceptance criteria, target files, dependencies 포함
-- 병렬 가능성을 파일 겹침 기준으로 설명
+
+- phase와 task를 action-oriented하게 작성한다.
+- 각 task에 priority, description, acceptance criteria, target files, dependencies를 포함한다.
+- `Technical Notes`나 `Contract/Invariant Delta Coverage`에서 관련 `C*`, `I*`, `V*` 링크를 보존한다.
+- 병렬 가능성을 파일 겹침 기준으로 설명한다.
 
 Task 템플릿:
 
@@ -191,19 +199,22 @@ Task 템플릿:
 **Target Files**:
 - [M] `...`
 
-**Technical Notes**: ...
+**Technical Notes**: Covers C1, I1, validated by V1
 **Dependencies**: ...
 ```
 
 ### Step 7: Review and Save
 
 저장 전 아래를 점검한다.
+
 - feature title이 파일명과 자연스럽게 연결되는가
-- Part 1과 Part 2가 같은 범위를 다루는가
+- Part 1과 Part 2가 같은 delta 범위를 다루는가
+- `Contract/Invariant Delta`와 `Validation Plan`의 ID linkage가 살아 있는가
 - 모든 task에 `Target Files`가 있는가
 - `_sdd/` artifact 경로가 실제 워크플로우와 맞는가
 
 파일명 규칙:
+
 - 기본: `_sdd/drafts/feature_draft_<feature_name>.md`
 - `feature_name`은 소문자 snake_case
 - 여러 기능을 묶은 경우 대표 범위 이름을 사용
@@ -214,15 +225,16 @@ Task 템플릿:
 |------|------|
 | 스펙이 없음 | spec 없는 상태로 draft 생성, `Target Spec`은 예상 경로 또는 `TBD`로 표기 |
 | 구현 파일 구조가 불명확 | `[TBD]` 경로를 허용하고 이유를 적는다 |
-| 관련 기능이 여러 개임 | 하나의 draft로 묶고 분리 권고를 `Open Questions`에 기록 |
-| 기존 결정과 충돌 | 충돌 내용을 `Notes` 또는 `Open Questions`에 명시 |
-| 요청이 지나치게 모호함 | best-effort draft를 만들고 missing axes를 `Open Questions`에 정리 |
+| 관련 기능이 여러 개임 | 하나의 draft로 묶고 분리 권고를 `Risks / Open Questions`에 기록 |
+| 기존 결정과 충돌 | 충돌 내용을 `Risks / Open Questions`에 명시 |
+| 요청이 지나치게 모호함 | best-effort draft를 만들고 missing axes를 `Risks / Open Questions`에 정리 |
 
 ## Integration
 
-- `spec-update-todo`: Part 1 입력으로 직접 사용 가능해야 한다.
+- `spec-update-todo`: Part 1 temporary spec draft를 global spec planned update 입력으로 사용한다.
 - `implementation`: Part 2를 바로 읽고 실행 가능해야 한다.
-- `spec-update-done`: 구현 완료 후 Part 1/2와 실제 변경을 비교해 스펙 동기화한다.
+- `implementation-plan`: 필요 시 Part 1/2를 더 세분화해 별도 plan으로 확장한다.
+- `spec-update-done`: 구현 완료 후 Part 1/2와 실제 변경을 비교해 global spec을 동기화한다.
 
 ## Optional Nested Writing
 

@@ -1,258 +1,207 @@
 ---
 name: spec-create
 description: This skill should be used when the user asks to "create a spec", "write a spec document", "generate SDD", "create software design document", "document the project", "create spec for project", or mentions "_sdd" directory, specification documents, or project documentation needs.
-version: 1.4.0
+version: 1.7.1
 ---
 
-# Spec Document Creation and Management
+# spec-create
 
-Create and manage Software Design Description (SDD) spec documents for projects. Spec documents provide comprehensive technical documentation including goals, architecture, components, and usage examples.
-기존 스펙/문서의 언어를 따른다. 새 프로젝트는 한국어 기본.
+## Goal
+
+프로젝트의 요구사항, 코드베이스, 기존 문서를 바탕으로 `_sdd/spec/` 아래에 현재 SDD canonical model에 맞는 글로벌 스펙을 만든다. 필요하면 `AGENTS.md`, `CLAUDE.md`, `_sdd/env.md` 같은 최소 부트스트랩 파일도 함께 정리해 이후 스킬이 같은 기준으로 작업할 수 있게 한다.
+
+글로벌 스펙은 구현 inventory 문서가 아니라 얇고 지속적인 기준 문서다. temporary spec은 이후 `feature-draft`, `implementation-plan`, `spec-update-todo` 계열에서 다루는 실행 청사진이다.
 
 ## Acceptance Criteria
-> 프로세스 완료 후 아래 기준을 자체 검증한다. 미충족 항목은 해당 단계로 돌아가 수정한다.
-- [ ] AC1: 스펙 파일이 `_sdd/spec/` 아래에 생성되었다 (`<project>.md` 또는 `main.md`)
-- [ ] AC2: Bootstrap 파일 처리 완료 — `AGENTS.md`, `CLAUDE.md`, `_sdd/env.md` 존재하며 필수 안내 문구 포함
-- [ ] AC3: 필수 섹션 §1-§8 포함 (Background & Motivation, Core Design, Architecture, Component Details, Environment 등)
-- [ ] AC4: 500줄 초과 시 모듈 분할(인덱스 + 컴포넌트 파일) 적용
-- [ ] AC5: 기존 스펙 파일이 있었다면 `prev/prev_<filename>_<timestamp>.md`로 백업됨
-- [ ] AC6: 결정 사항이 있었다면 `decision_log.md` 생성/갱신됨
 
-## Workflow Position
+> 완료 전 아래 기준을 자체 검증한다. 미충족 항목이 있으면 해당 단계로 돌아가 수정한다.
 
-| Workflow | Position | When |
-|----------|----------|------|
-| All | Pre-step | 스펙이 없을 때 먼저 실행 |
+- [ ] AC1: `_sdd/spec/` 아래에 canonical global spec 파일을 생성했다.
+- [ ] AC2: 프로젝트 규모에 맞는 spec 구조를 선택했다. 단일 파일이면 `main.md` 또는 대표 spec, 분할 구조면 index + supporting spec 구성이 명확하다.
+- [ ] AC3: 글로벌 스펙 본문이 `배경/개념`, `Scope / Non-goals / Guardrails`, `핵심 설계와 주요 결정`, `Contract / Invariants / Verifiability`, `사용 가이드 & 기대 결과`, `Decision-bearing structure`를 포함한다.
+- [ ] AC4: 코드베이스가 있으면 스펙이 실제 코드 구조와 naming을 반영하고, strategic code map은 필요 시 manual curated appendix로만 포함한다.
+- [ ] AC5: 참조형 정보(`데이터 모델`, `API`, `환경/의존성`)는 필요할 때만 추가되고, 구현 inventory를 본문 기본 구조로 강제하지 않는다.
+- [ ] AC6: 필요한 경우에만 `AGENTS.md`, `CLAUDE.md`, `_sdd/env.md`를 최소 범위로 생성/보강했다.
+- [ ] AC7: `references/`와 `examples/`는 유지되고, 본문은 실행 계약과 작성 기준을 self-contained하게 설명한다.
+
+## SDD Lens
+
+- 글로벌 스펙은 얇은 기준 문서다.
+- temporary spec은 delta와 execution을 담는 별도 문서다.
+- `Contract / Invariants / Verifiability`는 글로벌 스펙의 독립 필수 축이다.
+- architecture/component 정보는 decision-bearing structure 또는 reference information으로 남긴다.
+- strategic code map은 appendix-level hint이며, 기본 운영 방식은 manual curated다.
+
+## Companion Assets
+
+- `references/template-compact.md`: 기본 canonical global spec template
+- `references/template-full.md`: richer global spec template
+- `examples/simple-project-spec.md`, `examples/complex-project-spec.md`, `examples/additional-specs.md`: output examples
+
+위 자산은 품질을 높이기 위한 companion asset이다. 하지만 본문만 읽어도 입력, 구조 선택, 출력 계약을 이해할 수 있어야 한다.
 
 ## Hard Rules
 
-1. **코드 파일 수정 금지**: `src/`, `tests/` 등 구현 코드 파일은 수정하지 않는다.
-2. **언어 규칙**: 기존 스펙/문서의 언어를 따른다. 새 프로젝트(기존 스펙 없음)는 한국어 기본. 사용자 명시 지정 시 해당 언어 사용.
-3. **출력 위치 준수**: 스펙은 `_sdd/spec/`에 저장하고, 초기 부트스트랩 파일은 `<project_root>/AGENTS.md`, `<project_root>/CLAUDE.md`, `<project_root>/_sdd/env.md`에만 생성한다.
-4. **기존 스펙 보존**: 이미 스펙 파일이 존재하면 덮어쓰기 전 반드시 `prev/prev_<filename>_<timestamp>.md`로 백업한다.
-5. **부트스트랩 파일 최소 수정 원칙**: `AGENTS.md`, `CLAUDE.md`, `_sdd/env.md`가 이미 존재할 때 필수 안내 문구가 누락된 경우, 반드시 사용자 확인 후 필요한 문구만 최소 추가한다.
-6. **decision_log.md 최소화**: 결정 로그는 `decision_log.md`에만 기록하며, 추가 거버넌스 문서는 사용자 요청 시에만 생성한다.
+1. `src/`, `tests/` 등 구현 코드 파일은 수정하지 않는다.
+2. 문서 언어는 기존 스펙/문서를 따른다. 기존 스펙이 없으면 한국어를 기본으로 한다.
+3. 스펙 출력은 `_sdd/spec/`에만 저장한다.
+4. 기존 스펙 파일을 덮어쓰기 전에는 `prev/prev_<filename>_<timestamp>.md`로 백업한다.
+5. `AGENTS.md`, `CLAUDE.md`, `_sdd/env.md`는 없을 때 생성하고, 이미 있으면 필수 안내 문구가 빠진 경우에만 최소 수정한다.
+6. 거버넌스 문서는 기본적으로 `decision_log.md`까지만 사용한다. 추가 문서는 사용자 요청 시에만 만든다.
+7. 장문 문서가 예상되면 caller가 먼저 skeleton/섹션 헤더를 직접 기록한 뒤, 같은 흐름에서 내용을 채운다.
+8. 중대형 스펙은 canonical index를 먼저 확정한 뒤, 필요 시 하위 spec 작성을 병렬화한다.
+9. 코드 citation은 선택적으로 사용한다. 코드 전체를 문서로 복제하지 않는다.
 
-## Directory Structure
+## Structure Decision
 
-```
-<project-root>/
-├── AGENTS.md             # Codex 작업 가이드 (없으면 생성)
-├── CLAUDE.md             # Claude Code 작업 가이드 (없으면 생성)
-└── _sdd/
-    ├── env.md            # 환경/실행 가이드 (없으면 생성)
-    ├── spec/
-    │   ├── main.md             # 전체 스펙 또는 인덱스
-    │   ├── <component>.md      # 컴포넌트별 스펙
-    │   ├── user_draft.md       # 사용자 요구사항 (있으면)
-    │   └── decision_log.md     # 결정 로그 (선택, 권장)
-    └── implementation/
-        └── implementation_plan.md
-```
+규모에 따라 아래 중 하나를 선택한다.
 
-| 규모 | 구조 | 기준 |
-|------|------|------|
-| 소규모 | `main.md` 단일 파일 | ≤ 500줄 |
-| 중규모 | `main.md` (인덱스) + `<component>.md` | 500–1500줄 |
-| 대규모 | `main.md` (인덱스) + `<component>/` 서브디렉토리 | > 1500줄 |
+- 소규모: `_sdd/spec/main.md` 단일 파일
+- 중규모: `_sdd/spec/main.md` + supporting reference files
+- 대규모: `_sdd/spec/main.md` + `<domain>.md` 또는 `<domain>/overview.md` 등 계층형 구조
 
-## Spec Document Creation Process
+선택 기준:
 
-### Step 1: Gather Information
+- 500줄 이하 예상: 단일 파일
+- 500~1500줄 예상: index + supporting files
+- 1500줄 초과 예상: index + domain directories
 
-**Tools**: `Read`, `Glob`, `AskUserQuestion`
+global spec core는 항상 유지한다.
 
-수집 대상:
-- 사용자 입력 / `_sdd/spec/user_draft.md`
-- 기존 코드·README·설정 파일 분석
-- `_sdd/spec/decision_log.md` (있으면)
-- Bootstrap 대상 파일 존재 여부: `AGENTS.md`, `CLAUDE.md`, `_sdd/env.md`
-- 불명확한 요구사항 → `AskUserQuestion`
+- 1. 배경 및 high-level concept
+- 2. Scope / Non-goals / Guardrails
+- 3. 핵심 설계와 주요 결정
+- 4. Contract / Invariants / Verifiability
+- 5. 사용 가이드 & 기대 결과
+- 6. Decision-bearing structure
 
-**Decision Gate 1→2**:
-```
-input_sufficient = (사용자 입력 OR user_draft.md OR 기존 문서) 중 하나 이상 존재
-project_readable = 프로젝트 코드/README 등 분석 가능한 소스 존재
+필요 시에만 아래를 추가한다.
 
-IF input_sufficient AND project_readable → Step 2 진행
-ELSE IF NOT input_sufficient → AskUserQuestion: 프로젝트 설명 요청
-ELSE IF NOT project_readable → AskUserQuestion: 프로젝트 경로/접근 방법 확인
-```
+- 7. 참조 정보: 데이터 모델 / API / 환경 및 설정
+- Appendix A. Strategic Code Map
+- Appendix B. 관련 문서 및 코드 레퍼런스
+
+## Process
+
+### Step 1: Gather Inputs
+
+다음 입력을 우선순위대로 수집한다.
+
+1. 현재 사용자 요청
+2. `_sdd/spec/user_draft.md` 또는 사용자 지정 요구사항 파일
+3. 기존 README / docs / config / comments
+4. 기존 `_sdd/spec/decision_log.md`
+5. 코드베이스 구조와 핵심 엔트리포인트
+
+요구사항이 모호해서 스펙 방향이 크게 달라질 때만 `AskUserQuestion`으로 짧게 보완한다.
 
 ### Step 2: Analyze the Project
 
-**Tools**: `Grep`, `Glob`, `Read`
+다음을 파악한다.
 
-#### Codebase Existence Check
+- 프로젝트 목표와 해결하려는 문제
+- high-level concept와 핵심 가치
+- 주요 경계와 scope / non-goals
+- 유지해야 할 설계 결정
+- contract/invariant 후보
+- 참조형 정보 필요 여부
+- strategic code map이 정말 필요한지 여부
 
-`Glob`으로 구현 소스 파일(`*.py`, `*.ts`, `*.java` 등) 존재 여부를 판단한다.
-- **있음** → 컴포넌트 테이블에 `Source` 필드 포함
-- **없음** (greenfield) → `Source` 필드 생략
+그 후 사용자에게 핵심 분석 결과를 짧은 표나 요약으로 보여주고 계속 진행한다. 다만 canonical 구조 선택이 매우 불안정할 때만 추가 확인을 요청한다.
 
-#### Exploration
+### Step 3: Bootstrap Workspace Guidance
 
-- 프로젝트 구조·파일 조직
-- 진입점·주요 컴포넌트
-- 의존성·외부 연동
-- 데이터 흐름·아키텍처 패턴
-- 알려진 이슈·제약
+필요 시 아래 파일을 보강한다.
 
-### Step 2.5: 분석 결과 확인 (Checkpoint)
+- `AGENTS.md`
+- `CLAUDE.md`
+- `_sdd/env.md`
 
-**Tools**: — (보고 단계), `AskUserQuestion` (critical ambiguity only)
+기본 원칙:
 
-**① 분석 결과 테이블을 텍스트로 출력한다:**
+- 없으면 생성
+- 있으면 필요한 안내만 최소 추가
+- `_sdd/env.md`는 TODO가 있는 최소 실행 가이드라도 남긴다
 
-```markdown
-| 항목 | 파악 내용 |
-|------|----------|
-| 프로젝트 목표 | (분석 결과) |
-| 주요 컴포넌트 | N개 식별: (목록) |
-| 기술 스택 | (분석 결과) |
-| 아키텍처 패턴 | (분석 결과) |
-| 이슈/개선사항 | N개 발견 |
-```
+### Step 4: Write the Spec
 
-**② 진행 규칙:**
-- 기본: 보고 후 자동 진행
-- `AskUserQuestion` 사용 조건: 목표/범위가 복수 해석 가능 / 출력 구조 판단 근거 부족 / 기존 문서·코드·입력 간 핵심 충돌
+`references/template-compact.md` 또는 `references/template-full.md`를 참고해 글로벌 스펙을 작성한다.
 
-**Decision Gate 2→3**:
-```
-IF has_goal AND has_architecture AND has_components → Step 3 진행
-ELSE → 미파악 항목 추가 탐색 또는 Open Questions 기록
-```
+장문 spec이면 다음 순서를 따른다.
 
-### Step 3: Bootstrap + Write the Spec Document
+1. 대상 파일 skeleton/섹션 헤더를 직접 작성
+2. 같은 흐름에서 각 섹션 내용을 채움
+3. TODO/placeholder를 제거하고 finalize
+4. 의존 섹션은 `default`, 독립 파일/섹션은 `worker`로 채운다
 
-**Tools**: `Read`, `Edit`, `Write`, `Bash (mkdir -p)`
+글로벌 스펙 본문 필수 요소:
 
-#### Step 3-A: Create missing workspace guidance files
+- 배경 및 high-level concept
+- Scope / Non-goals / Guardrails
+- 핵심 설계와 주요 결정
+- Contract / Invariants / Verifiability
+- 사용 가이드 / 기대 결과
+- Decision-bearing structure
 
-1. `_sdd/`, `_sdd/spec/` 디렉토리 확보
-2. `AGENTS.md` 미존재 → 표준 안내 문구로 생성:
-   ```markdown
-   # Workspace Guidance
-   - 프로젝트 스펙 문서는 `_sdd/spec/`를 기준으로 확인합니다. 프로젝트 내 기능이나 구현을 확인하고 수정할 때는 관련된 스펙 문서를 함께 읽고 참조합니다.
-   - 환경 관련 설정/실행 방법은 `_sdd/env.md`를 기준으로 확인합니다. 의존성 설치, 테스트 스크립트 실행 등의 작업 시 이 파일을 참조합니다.
-   ```
-3. `CLAUDE.md` 미존재 → 동일 문구로 생성
-4. `_sdd/env.md` 미존재 → TODO 주석 포함 템플릿 생성:
-   ```markdown
-   # Environment Setup Guide
-   <!-- TODO: 프로젝트 실행/테스트에 필요한 환경 정보를 여기에 작성하세요. -->
-   ## Runtime
-   - <!-- 예: Python 3.11 -->
-   ## Environment Variables
-   - <!-- 예: OPENAI_API_KEY=... -->
-   ## Setup Commands
-   - <!-- 예: conda activate myenv -->
-   ```
-5. 기존 파일에 필수 문구 누락 시 → `AskUserQuestion`으로 확인 → 승인 시 최소 추가
+조건부 요소:
 
-#### Step 3-B: Write Spec
+- 데이터 모델 / API / 환경 및 설정
+- Strategic Code Map appendix
+- related docs / code references appendix
 
-현재 콘텍스트에서 먼저 spec skeleton/섹션 헤더를 기록한 뒤, 같은 흐름에서 Edit으로 내용을 채운다.
-- 독립 섹션 2개+ → 병렬 Agent dispatch 가능
-- 의존 섹션 → 순서대로 Edit
-- 완료 후 TODO/Phase 마커 제거
+작성 원칙:
 
-작성 시작 전에 `references/template-compact.md`의 스펙 템플릿 구조와 Step 2 분석 결과를 skeleton에 반영한다.
+- scope는 기능 목록만이 아니라 책임 범위와 out-of-scope 경계를 같이 고정한다.
+- architecture/component inventory는 본문 기본 구조로 강제하지 않는다.
+- decision-bearing structure만 남기고, 단순 implementation detail inventory는 코드와 온디맨드 분석에 맡긴다.
+- strategic code map은 entrypoint, invariant hotspot, extension point, change hotspot 같은 탐색 힌트만 담는다.
 
-> **`references/template-compact.md`를 Read로 읽는다.** §1-§8 섹션 구조, Writing Rules(코드 발췌/인라인 citation/What-Why-How 트라이어드), Modular Spec Guide가 정의되어 있다.
+### Step 5: Validate and Save
 
-##### 단일 파일 (소규모, ≤ 500줄)
+마지막으로 아래를 점검한다.
 
-```
-Write("_sdd/spec/<project>.md 또는 _sdd/spec/main.md skeleton 작성. [references/template-compact.md §1-§8 + Step 2 분석 결과]")
-Edit("각 섹션 TODO와 placeholder를 실제 spec 내용으로 채움")
-```
+- spec 구조가 프로젝트 규모에 맞는가
+- 글로벌 스펙 core가 빠지지 않았는가
+- CIV table 또는 동등한 구조가 실제 계약을 담고 있는가
+- 코드베이스와 naming/경로가 크게 어긋나지 않는가
+- strategic code map이 appendix-level hint로 유지되는가
+- bootstrap 문서가 최소 기준을 충족하는가
 
-##### 멀티파일 (중규모 500-1500줄 / 대규모 1500줄+)
+## Output Contract
 
-**멀티파일 구조 규칙:**
+기본 산출물:
 
-1. **main.md = 인덱스 + 공통 섹션**: §1 Background, §2 Core Design, §3 Architecture는 main.md에 인라인. §4 이하 컴포넌트는 링크로 분리.
-2. **컴포넌트 파일명 = 컴포넌트명**: `auth.md`, `scheduler.md` 등 접두사 없이 직관적으로 명명.
-3. **main.md 링크 형식**: §4 영역에 `See [Component Name](./component.md)` 형태로 링크. 모든 sub-spec 파일은 main.md에서 링크되어야 함.
-4. **Cross-cutting 섹션**: §7 API, §8 Config 등 여러 컴포넌트에 걸치는 내용은 main.md에 유지하거나 별도 `api.md`, `config.md`로 분리 (규모에 따라 판단).
+- `_sdd/spec/main.md` 또는 `_sdd/spec/<project>.md`
 
-**Step 3-B-1**: main.md (인덱스) 순차 작성
-```
-Write("main.md 인덱스 skeleton 작성. §1-§3 인라인 + §4 컴포넌트 링크. [references/template-compact.md + Step 2 분석 결과]")
-Edit("main.md 인덱스 설명과 링크를 실제 내용으로 채움")
-```
+조건부 산출물:
 
-**Step 3-B-2**: 컴포넌트 파일 병렬 작성 (main.md 완성 후)
+- `_sdd/spec/<domain>.md`
+- `_sdd/spec/<domain>/...`
+- `_sdd/spec/decision_log.md`
+- `AGENTS.md`
+- `CLAUDE.md`
+- `_sdd/env.md`
 
-각 Agent에 포함: 파일 경로, 컴포넌트 분석 결과, §4 템플릿, 언어/스타일, main.md 링크 구조
+global spec에는 최소한 아래가 포함되어야 한다.
 
-```
-Agent("_sdd/spec/<comp_1>.md [컴포넌트 분석 + §4 템플릿]")  ─┐
-Agent("_sdd/spec/<comp_2>.md [컴포넌트 분석 + §4 템플릿]")  ─┤ 동시
-Agent("_sdd/spec/<comp_N>.md [컴포넌트 분석 + §4 템플릿]")  ─┘
-```
+- 프로젝트 문제와 high-level concept
+- scope / non-goals / guardrails
+- 핵심 설계와 주요 결정
+- Contract / Invariants / Verifiability
+- 사용 흐름 또는 기대 결과
+- decision-bearing structure
 
-> 독립 컴포넌트 2개 이상이면 병렬 디스패치.
-
-### Step 4: 출력 검증
-
-| 검증 항목 | 기준 |
-|-----------|------|
-| 스펙 파일 존재 | `_sdd/spec/<project>.md` 또는 `main.md` |
-| Split spec 링크 | 분할 시 sub-spec 파일 모두 존재 |
-| 필수 섹션 | §1-§8 포함 (Background & Motivation, Core Design, Architecture, Component Details, Environment 등) |
-| 모듈 분할 | 500줄 초과 시 분할 적용 |
-| Bootstrap 파일 | `AGENTS.md`, `CLAUDE.md`, `_sdd/env.md` 필수 문구 포함 |
-| Decision Log | 결정 사항이 있었으면 `decision_log.md` 생성/갱신 |
-| 링크/경로 유효성 | 내부 링크 정상 |
-
-Decision log entry format:
-```markdown
-## YYYY-MM-DD - [Decision Title]
-- Context:
-- Decision:
-- Rationale:
-- Alternatives considered:
-- Impact / follow-up:
-```
-
-## Progressive Disclosure (완료 시)
-
-완료 요약 테이블을 제시한 후 전체 문서 요약을 바로 출력한다:
-
-| 항목 | 내용 |
-|------|------|
-| 생성 파일 | `_sdd/spec/<project>.md` |
-| 부트스트랩 파일 | `AGENTS.md` / `CLAUDE.md` / `_sdd/env.md` |
-| 총 줄 수 | N줄 |
-| 주요 섹션 | Goal, Architecture, Components, ... |
-| Decision Log | 생성됨/미생성 |
+참조 정보와 appendices는 필요할 때만 추가한다.
 
 ## Error Handling
 
 | 상황 | 대응 |
 |------|------|
-| `_sdd/spec/` 미존재 | 자동 생성 (`mkdir -p`) |
-| `AGENTS.md` / `CLAUDE.md` 미존재 | 표준 안내 문구로 생성 |
-| `_sdd/env.md` 미존재 | TODO 템플릿 생성 |
-| 기존 Bootstrap 파일에 문구 누락 | `AskUserQuestion` 후 승인 시 최소 추가 |
-| 기존 스펙 파일 존재 | `prev/prev_<filename>_<timestamp>.md` 백업 후 생성 |
-| 프로젝트 코드 접근 불가 | 경로 확인 요청 |
-| user_draft.md 형식 오류 | 오류 위치 보고, 자유 형식으로 해석 시도 |
-| 불완전한 사용자 입력 | 가용 정보로 진행, Open Questions 기록 |
-| 대형 프로젝트 (200+ 파일) | `Grep`/`Glob` 위주, 핵심 컴포넌트만 문서화 |
-| decision_log.md 충돌 | 기존 항목 보존, 새 항목만 추가 |
-
-## Additional Resources
-
-- **`references/template-compact.md`** — §1-§8 generation template (What/Why/How triad + Modular Spec Guide)
-- **`references/template-full.md`** — Complete template with detailed examples
-- **`examples/simple-project-spec.md`** — 소규모 스펙 예시
-- **`examples/complex-project-spec.md`** — 대규모 스펙 예시
-- **`examples/additional-specs.md`** — CLI, Web API, Data Pipeline 예시
-
-연관 skill: `feature-draft` → `implementation` → `spec-update-done`
+| 입력 정보 부족 | `AskUserQuestion`으로 최소 보완 |
+| 코드베이스 없음 | greenfield/spec-only 문서로 계속 진행하고 low confidence 영역을 표시 |
+| 기존 스펙 존재 | 백업 후 갱신 |
+| canonical 구조 불명확 | 후보를 비교하고 사용자 확인 |
+| 환경 정보 부족 | `_sdd/env.md`에 TODO 기반 최소 가이드 생성 |
 
 ## Final Check
 

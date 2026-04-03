@@ -1,7 +1,7 @@
 ---
 name: spec-summary
 description: This skill should be used when the user asks to "summarize spec", "spec summary", "show spec overview", "스펙 요약", "스펙 개요", "show spec status", "스펙 현황", "project overview", "프로젝트 개요", "what's the current state", "현재 상태는", or wants a human-readable summary of the current specification for quick understanding.
-version: 1.7.0
+version: 1.8.0
 ---
 
 # spec-summary
@@ -10,26 +10,29 @@ version: 1.7.0
 
 현재 스펙과 구현 상태를 읽어 `_sdd/spec/summary.md`에 사람이 빠르게 훑을 수 있는 layered summary를 만든다. 필요할 때만 `README.md`의 managed block을 갱신해, 짧은 스냅샷과 전체 요약 문서를 연결한다.
 
+summary는 current canonical model을 반영해야 한다. 즉 글로벌 스펙은 `concept / scope / CIV / decision-bearing structure / usage` 중심으로, temporary spec은 `change delta / touchpoints / implementation / validation / risks` 중심으로 요약한다.
+
 ## Acceptance Criteria
 
 > 완료 전 아래 기준을 자체 검증한다. 미충족 항목이 있으면 해당 단계로 돌아가 수정한다.
 
 - [ ] AC1: `_sdd/spec/summary.md`를 생성하거나 안전하게 갱신했다.
-- [ ] AC2: summary에 프로젝트 목표, 핵심 기능, 구조, 진행 상태, 주요 이슈, 다음 단계가 포함된다.
-- [ ] AC3: split spec과 구현 진행 문서가 있으면 이를 반영해 현재 상태를 왜곡 없이 요약했다.
-- [ ] AC4: README 갱신은 사용자가 명시적으로 요청한 경우에만 수행했다.
-- [ ] AC5: summary와 README는 기존 문서 언어를 따르며, README는 marker block만 갱신했다.
-- [ ] AC6: 본문만 읽어도 실행 계약은 이해 가능하고, `references/summary-template.md`와 `examples/summary-output.md`는 품질 향상을 위한 companion asset으로 유지된다.
+- [ ] AC2: 대상 문서가 global spec인지 temporary spec인지 먼저 판별했다.
+- [ ] AC3: global spec이면 concept, scope, CIV, decision-bearing structure, usage를 왜곡 없이 요약했다.
+- [ ] AC4: temporary spec이면 change summary, scope delta, contract/invariant delta, touchpoints, implementation/validation, risks를 왜곡 없이 요약했다.
+- [ ] AC5: split spec과 구현 진행 문서가 있으면 이를 반영해 현재 상태를 요약했다.
+- [ ] AC6: README 갱신은 사용자가 명시적으로 요청한 경우에만 수행했다.
 
 ## SDD Lens
 
-- summary는 스펙의 대체물이 아니라, `_sdd/spec/`를 빠르게 이해하기 위한 안내 문서다.
-- summary는 spec, implementation progress, implementation review를 연결해 현재 상태를 설명해야 한다.
-- 문서 작성은 간결해야 하지만, 상태/리스크/다음 단계 같은 운영 정보는 빠뜨리면 안 된다.
+- summary는 spec의 대체물이 아니라, `_sdd/spec/`를 빠르게 이해하기 위한 안내 문서다.
+- global spec summary는 "이 프로젝트가 무엇을 하고 어떤 계약을 가지는가"를 빠르게 잡아줘야 한다.
+- temporary spec summary는 "이번 변경이 무엇을 바꾸고 어떻게 검증되는가"를 빠르게 잡아줘야 한다.
+- summary는 문서 구조를 요약하는 것이 아니라 운영상 중요한 신호를 압축해야 한다.
 
 ## Companion Assets
 
-- `references/summary-template.md`: SUMMARY 구조 템플릿
+- `references/summary-template.md`: summary 구조 템플릿
 - `examples/summary-output.md`: 완성 예시
 
 긴 문서일수록 위 자산을 적극 활용하되, 본문 자체가 입력 소스와 출력 계약을 설명해야 한다.
@@ -48,18 +51,18 @@ version: 1.7.0
 
 우선순위:
 
-1. `_sdd/spec/main.md` 또는 프로젝트 index spec
-2. index spec이 가리키는 sub-spec 파일
-3. `_sdd/implementation/implementation_progress*.md`
-4. `_sdd/implementation/implementation_review.md`
-5. `README.md` (README sync 요청 시만)
-6. `_sdd/env.md` (로컬 검증이 필요할 때만)
+1. 사용자 지정 spec 경로
+2. `_sdd/spec/main.md` 또는 프로젝트 index spec
+3. index spec이 가리키는 sub-spec 파일
+4. `_sdd/implementation/implementation_progress*.md`
+5. `_sdd/implementation/implementation_review.md`
+6. `README.md` (README sync 요청 시만)
+7. `_sdd/env.md` (로컬 검증이 필요할 때만)
 
 주의:
 
 - `summary.md`와 `prev/prev_*.md`는 입력 후보에서 제외한다.
-- transition 기간에는 `summary.md` / implementation artifact의 lowercase canonical 경로를 우선 보고, 파일이 없으면 legacy uppercase 경로도 fallback으로 확인한다.
-- split spec인데 링크가 불명확하면 관련 spec 집합을 사용자에게 확인한다.
+- transition 기간에는 lowercase canonical 경로를 우선 보고, 없으면 legacy uppercase fallback도 확인한다.
 
 ## Process
 
@@ -69,30 +72,49 @@ version: 1.7.0
 
 - 후보: `_sdd/spec/main.md`, `_sdd/spec/<project>.md`
 - split spec이면 index에서 링크된 파일을 우선 사용
-- 링크가 불명확하면 `_sdd/spec/<project>_*.md`를 후보로 모아 확인
 - implementation progress/review 파일 존재 여부도 함께 확인
 
 스펙이 없으면 `/spec-create`를 먼저 권장하고 종료한다.
 
-### Step 2: Extract the Facts
+### Step 2: Determine Spec Kind
 
-아래 항목을 스펙과 보조 문서에서 추출한다.
+대상 문서를 아래 둘 중 하나로 판별한다.
+
+- **Global Spec**
+- **Temporary Spec**
+
+판별 기준:
+
+- global spec 신호: `배경`, `Scope / Non-goals / Guardrails`, `Contract / Invariants / Verifiability`, `Decision-bearing structure`
+- temporary spec 신호: `Change Summary`, `Scope Delta`, `Contract/Invariant Delta`, `Touchpoints`, `Implementation Plan`, `Validation Plan`
+
+혼합 문서라면 dominant purpose를 기준으로 정하고, 나머지는 notes로 정리한다.
+
+### Step 3: Extract the Facts
+
+global spec이면 아래를 추출한다.
 
 - 프로젝트 이름, 버전, 최근 변경 시점
-- 목표와 해결하려는 문제
-- 핵심 기능과 현재 상태
-- 주요 아키텍처/컴포넌트
-- 진행률과 blocker
-- 구현 리뷰 결과와 주요 이슈
-- 다음 단계 후보
+- 문제와 high-level concept
+- scope / non-goals / guardrails
+- 핵심 설계와 주요 결정
+- CIV snapshot
+- decision-bearing structure
+- 사용 시나리오와 기대 결과
 
-whitepaper 섹션이 있으면 다음을 추가로 활용한다.
+temporary spec이면 아래를 추출한다.
 
-- §1 Background & Motivation → why
-- §2 Core Design → 핵심 설계 요약
-- §5 Usage Guide & Expected Results → 대표 사용 시나리오
+- change summary
+- scope delta
+- contract/invariant delta
+- touchpoints
+- implementation plan highlights
+- validation linkage
+- risks / open questions
 
-### Step 3: Compute Status
+구현 문서가 있으면 현재 상태, blocker, next step을 함께 추출한다.
+
+### Step 4: Compute Status
 
 상태 마커와 구현 문서를 바탕으로 현재 상태를 계산한다.
 
@@ -101,45 +123,42 @@ whitepaper 섹션이 있으면 다음을 추가로 활용한다.
 - `📋` 계획됨
 - `⏸️` 보류
 
-기본 completion 계산:
-
-```text
-completed / (completed + in-progress + planned)
-```
-
 필요하면 구현 progress/review 문서의 최근 상태로 보정한다.
 
-### Step 4: Build the Summary Shape
+### Step 5: Build the Summary Shape
 
-`summary.md`는 아래 순서를 기본으로 한다.
+global spec summary 기본 순서:
 
-1. Executive summary
-2. Project motivation / goals
-3. Core design highlights (있는 경우)
-4. Key feature explanations
-5. Architecture snapshot
-6. Status dashboard
-7. Issues and improvements
-8. Recommended next steps
+1. Executive Summary
+2. Problem & High-Level Concept
+3. Scope Snapshot
+4. CIV Snapshot
+5. Decision-Bearing Structure
+6. Usage & Expected Results
+7. Status / Issues / Next Steps
 
-원칙:
+temporary spec summary 기본 순서:
 
-- summary는 읽기 쉬운 narrative + 표를 섞는다
-- 구현 세부사항은 압축하고, 상태와 의미를 더 강조한다
-- 모르는 정보는 추측하지 않고 명시적으로 `Unknown` 또는 open question으로 남긴다
+1. Executive Summary
+2. Change Summary
+3. Scope Delta
+4. Contract / Invariant Delta Snapshot
+5. Touchpoints
+6. Implementation / Validation Snapshot
+7. Risks / Open Questions
 
-### Step 5: Write `summary.md`
+### Step 6: Write `summary.md`
 
 `references/summary-template.md`를 기반으로 내용을 채우고 `_sdd/spec/summary.md`를 작성한다.
 
 문서가 길거나 컴포넌트가 많으면:
 
 - 섹션별 핵심 포인트 추출을 병렬 수행
-- 부모가 completion, risk, next steps를 통합
+- 부모가 status, risk, next steps를 통합
 - 먼저 `summary.md` skeleton/섹션 헤더를 직접 저장
 - 같은 흐름에서 각 섹션 내용을 채운다
 
-### Step 6: Optional README Sync
+### Step 7: Optional README Sync
 
 사용자가 명시적으로 요청한 경우에만 수행한다.
 
@@ -148,21 +167,14 @@ completed / (completed + in-progress + planned)
 - 전체 README는 보존
 - README에는 짧은 snapshot만 두고, 자세한 내용은 `_sdd/spec/summary.md`로 연결
 
-권장 README 블록 요소:
-
-- 프로젝트 한 줄 요약
-- 현재 상태
-- 핵심 기능 3-5개
-- 전체 summary 링크
-
-### Step 7: Final Check
+### Step 8: Final Check
 
 마지막으로 아래를 점검한다.
 
-- summary가 스펙의 핵심을 왜곡 없이 요약하는가
+- summary가 스펙 kind에 맞는 shape를 가졌는가
+- CIV, delta, validation 등 핵심 신호를 놓치지 않았는가
 - 진행 상태와 이슈가 최신 문서와 충돌하지 않는가
 - README를 요청하지 않았는데 수정하지 않았는가
-- backup/marker 규칙을 지켰는가
 
 ## Output Contract
 
@@ -174,23 +186,6 @@ completed / (completed + in-progress + planned)
 
 - `README.md`의 `spec-summary` managed block
 
-`summary.md`에 포함할 핵심 섹션:
-
-- Executive Summary
-- Goals / Motivation
-- Core Design Highlights (있으면)
-- Key Feature Explanations
-- Architecture Snapshot
-- Status Dashboard
-- Issues & Improvements
-- Recommended Next Steps
-
-README block 원칙:
-
-- concise snapshot만 제공
-- 전체 요약 문서 링크 포함
-- unrelated README 내용은 보존
-
 ## Error Handling
 
 | 상황 | 대응 |
@@ -198,8 +193,8 @@ README block 원칙:
 | spec 없음 | `/spec-create` 먼저 권장 |
 | split spec 범위 불명확 | 후보를 제시하고 사용자 확인 |
 | 구현 문서 없음 | spec만 기준으로 요약하고 상태 신뢰도 낮음을 명시 |
+| global/temporary 판별 모호 | dominant purpose를 기준으로 판단하고 notes에 기록 |
 | README 요청이 없는데 README 관련 문서만 있음 | README는 수정하지 않음 |
-| README marker 없음 | 새 managed block 추가 |
 | 문서가 너무 큼 | caller가 skeleton을 먼저 저장한 뒤 같은 흐름에서 fill 또는 bounded fan-out |
 
 ## Final Check

@@ -1,39 +1,39 @@
 # What Is a Spec in SDD?
 
-This document defines what a "spec" means in SDD, why it is more than simple documentation, and what kind of structure and qualities it should have.
+This document defines what a spec means in SDD, why it is more than simple documentation, and what structure and qualities it should have.
 
 Related documents:
-- [SDD_CONCEPT.md](SDD_CONCEPT.md): the two-level structure of global specs and temporary specs
-- [SDD_WORKFLOW.md](SDD_WORKFLOW.md): how specs are used in the actual development loop
-- [sdd.md](../sdd.md): the broader philosophy and motivation behind SDD
+- [SDD_CONCEPT.md](SDD_CONCEPT.md)
+- [SDD_WORKFLOW.md](SDD_WORKFLOW.md)
+- [sdd.md](sdd.md)
 
 ---
 
 ## 1. Why Define the Spec Explicitly?
 
-In SDD, a spec is not just a document. When humans and AI agents build software together, the spec is the anchor that fixes what should be built, why the design looks the way it does, and what must not be broken.
+In SDD, a spec is not just another document. When humans and AI agents build software together, the spec is the anchor that fixes what should be built, why it should be built that way, and what must not be broken.
 
-When the definition of a spec is weak, the same problems keep returning:
+Without an explicit definition, the same problems keep returning:
 
-- the spec collapses into a component list or an API list
-- design rationale disappears, so humans and AI keep re-deriving intent
-- usage and expected outcomes are missing, so verification becomes vague
-- the connection between code and documentation is too weak to manage drift well
+- the spec collapses into a feature list or API list
+- design intent disappears, so people and agents keep re-deriving it
+- expected results become vague, so review and verification drift
+- code and documentation lose their connection
 
-That is why SDD needs an explicit definition of what belongs in a spec.
+That is why SDD needs a clear definition of what belongs in a spec.
 
 ---
 
 ## 2. What a Spec Is Not
 
-In SDD, a spec should not be reduced to any of the following:
+An SDD spec should not be reduced to:
 
-- a simple feature checklist
-- a collection of API, CLI, or configuration references
-- a report written only after implementation is finished
+- a simple checklist
+- an API, CLI, or config reference dump
+- a report written only after implementation
 - a manual that merely repeats facts already visible in the code
 
-Those artifacts are still useful, but they do not explain why the structure exists, what the core idea is, or what outcomes the system is expected to produce.
+Those artifacts can still be useful, but they are not enough to preserve intent, boundaries, or verification.
 
 ---
 
@@ -41,158 +41,246 @@ Those artifacts are still useful, but they do not explain why the structure exis
 
 In SDD, a spec has the following character:
 
-> A spec is a whitepaper-like Single Source of Truth that captures the problem, background, motivation, core design, expected behavior, and code-grounded evidence of a project.
+> A spec is a whitepaper-style Single Source of Truth that aligns humans and AI by capturing the problem, high-level concept, scope, non-goals, guardrails, key decisions, Contract / Invariants / Verifiability, expected results, and, when needed, strategic hints for entering the code.
 
-That means a spec must do all of the following at once:
+That means a spec must do all of the following:
 
-- explain the problem: what this project is trying to solve
-- explain the motivation: why this approach was chosen
-- explain the core design: what ideas and structures make it work
-- connect to implementation evidence: where this explanation maps to real code
-- guide usage and verification: how it should be used and what results should be expected
+- explain the problem and concept
+- fix scope and boundaries
+- declare guardrails and protected decisions
+- describe the core design
+- make contracts and invariants explicit
+- provide implementation entry hints when useful
+- guide usage and verification
 
-From this perspective, a spec is closer to a technical whitepaper than a software manual.
-
----
-
-## 4. Why a Whitepaper-Like Structure?
-
-A whitepaper or technical paper does not just list outputs. It provides background, frames the problem, explains the core method, and connects implementation to results. SDD specs should follow the same flow.
-
-The reason is practical:
-
-- humans understand design decisions through background and motivation
-- AI aligns to explicit intent and constraints instead of filling gaps by guesswork
-- reviewers gain something verifiable by connecting expected outcomes to code evidence
-
-So the whitepaper style is not an aesthetic preference. It is a structural device for preserving design intent.
+The important point is that an SDD spec is not a full implementation inventory. It is a high-signal reference that reduces guesswork.
 
 ---
 
-## 5. Mapping Paper Elements to Code Specs
+## 4. Why Whitepaper Style?
 
-| Academic document element | SDD spec counterpart |
-|---------------------------|----------------------|
-| Abstract | Project overview and core value |
-| Introduction / Motivation | Background, problem framing, and why this project exists |
+Whitepaper style matters because humans and agents do not need the same information density.
+
+- Humans need background, concept, scope, and guardrails before they can reason well.
+- LLMs can inspect code quickly, so they do not need every implementation detail preserved in persistent prose.
+- Reviewers need explicit contracts, expected results, and code-entry hints to verify changes.
+
+So the whitepaper shape is not an aesthetic choice. It is a structural choice that preserves intent without turning the global spec into an implementation encyclopedia.
+
+---
+
+## 5. Mapping Paper Elements to SDD Specs
+
+| Paper element | SDD counterpart |
+|---------------|-----------------|
+| Abstract | Project overview, high-level concept, core value |
+| Introduction / Motivation | Background, problem framing, reason for existence |
 | Related Work | Alternative approaches and why this one was chosen |
-| Core Method / Algorithm | Core design, logic flow, and major algorithms |
-| Implementation Details | Component details, data flow, and implementation specifics |
-| Experiments | Usage scenarios, operating flows, and verification scenarios |
-| Results | Expected outcomes, acceptance criteria, and observable behavior |
-| References | Code citations, reference lists, and related document links |
+| Core Method / Algorithm | Core design, preserved structure, key decisions |
+| Implementation Details | Decision-bearing structure, temporary-spec touchpoints and implementation plan, or appendix-level strategic code map |
+| Experiments | Usage scenarios, validation plan, verification scenarios |
+| Results | Expected outcomes, observable behavior, failure guarantees |
+| References | Code citations, related docs, appendix references |
 
-The goal is not to imitate academic formatting literally, but to translate the explanatory structure of a paper into a code-centered specification.
+The goal is not to imitate academic formatting literally. The goal is to translate explanatory structure into a code-centered operating model.
 
 ---
 
 ## 6. What an SDD Spec Must Contain
 
-Based on the discussions so far, an SDD spec should include at least the following axes.
+All specs share a common core, but global specs and temporary specs have different density.
 
-### 1) Background and Motivation
+### 1) Shared core
+
+#### a. Background and high-level concept
 
 - the problem being solved
-- why this problem matters now
-- why this approach was chosen over alternatives
+- why it matters now
+- how this project should be understood
+- why this approach was chosen
 
-### 2) Core Design
+#### b. Scope / Non-goals / Guardrails
+
+- what the system provides
+- what responsibilities it owns
+- what it intentionally does not do
+- what constraints and prohibitions must hold
+
+Scope is not just a feature list. It is a boundary declaration.
+
+#### c. Core design and key decisions
 
 - the central system idea
-- the logic flow or algorithmic shape
-- the reasoning behind the chosen structure
+- the main logic shape
+- why the structure looks this way
+- which decisions should survive future changes
 
-### 3) Implementation Evidence and Code Mapping
+#### d. Contract / Invariants / Verifiability
 
-- the explanation should connect to real code
-- core design sections may include code citations or code excerpts
-- a reader should be able to tell where to look in the codebase
+This axis becomes more important as the persistent spec gets thinner.
 
-### 4) Usage Guide and Expected Results
+For global specs, the canonical shape is:
 
-- the scenarios in which the system is used
-- what results should appear when it is used correctly
+**Contract**
+
+| ID | Subject | Inputs/Outputs | Preconditions | Postconditions | Failure Guarantees |
+|----|---------|----------------|---------------|----------------|--------------------|
+| C1 | ... | ... | ... | ... | ... |
+
+**Invariants**
+
+| ID | Scope | Invariant | Why It Matters |
+|----|-------|-----------|----------------|
+| I1 | ... | ... | ... |
+
+**Verifiability**
+
+| ID | Targets | Verification Method | Evidence / Notes |
+|----|---------|---------------------|------------------|
+| V1 | C1, I1 | test | ... |
+
+Rules:
+- keep the cells short and normative
+- use verification enum values: `test`, `review`, `runtime-check`, `manual-check`
+- keep ID linkage explicit even if multi-value surface formatting stays flexible
+
+In temporary specs, the same meaning appears as `Contract/Invariant Delta` and `Validation Plan`.
+
+#### e. Usage guide and expected results
+
+- where the system is used
+- what results should appear
 - what is guaranteed in failure or edge cases
 
-### 5) Supporting Reference Material
+### 2) Additional requirements for global specs
+
+#### a. Decision-bearing structure
+
+Global specs should preserve structural judgments such as:
+
+- system boundaries
+- ownership
+- cross-component contracts
+- extension points
+- invariant hotspots
+
+This is different from keeping a full component inventory.
+
+#### b. Supporting reference information
 
 - data model
 - API reference
 - environment and configuration
 
-Supporting reference material still matters, but it is not sufficient on its own to make a true spec.
+#### c. Appendix-level strategic code map
+
+The spec should connect to code, but it should not duplicate the codebase. A strategic code map should stay in an appendix or later support section and focus on:
+
+- entrypoints
+- invariant hotspots
+- extension points
+- change hotspots
+
+### 3) Additional requirements for temporary specs
+
+A temporary spec is an execution blueprint, not a compressed copy of the global spec.
+
+Its canonical sections are:
+
+- Change Summary
+- Scope Delta
+- Contract/Invariant Delta
+- Touchpoints
+- Implementation Plan
+- Validation Plan
+- Risks / Open Questions
+
+Important rules:
+
+- `Touchpoints` is mandatory
+- `Validation Plan` should link directly to delta IDs
+- invariant changes should be explicit, not hidden inside generic contract prose
 
 ---
 
-## 7. Recommended Spec Shape
+## 7. Recommended Shapes
 
-Based on the current direction, an SDD spec should naturally evolve toward a structure like this:
+Global spec:
 
 ```markdown
-# Project Spec
+# Project Global Spec
 
-## 1. Background and Motivation
-## 2. Core Design
-## 3. Architecture Details
-## 4. Component Details
-## 5. Usage Guide & Expected Results
-## 6. Data Model
-## 7. API Reference
-## 8. Environment and Configuration
+## 1. Background and high-level concept
+## 2. Scope / Non-goals / Guardrails
+## 3. Core design and key decisions
+## 4. Contract / Invariants / Verifiability
+## 5. Usage guide & expected results
+## 6. Decision-bearing structure
+## 7. Reference information
+### Data model
+### API reference
+### Environment and configuration
 
-## Appendix: Code Reference List
+## Appendix A. Strategic Code Map
+## Appendix B. Related docs and code references
 ```
 
-The important point is not to discard the existing reference-style sections, but to strengthen them with background, design narrative, and expected outcomes.
+Temporary spec:
+
+```markdown
+# Feature Temporary Spec
+
+## 1. Change Summary
+## 2. Scope Delta
+## 3. Contract/Invariant Delta
+## 4. Touchpoints
+## 5. Implementation Plan
+## 6. Validation Plan
+## 7. Risks / Open Questions
+```
+
+Architecture details or component details are not banned. They are simply no longer forced as the default top-level body shape.
 
 ---
 
-## 8. How a Spec Connects to Code
+## 8. How Specs Connect to Code
 
-An SDD spec should not be a loosely related document. It should be able to speak directly to the codebase.
+An SDD spec should talk to the codebase directly.
 
 Recommended principles:
 
-- connect core design sections to real code
-- use inline citations in a form like `[filepath:functionName]`
-- prefer real code excerpts over pseudocode for critical logic
-- if an excerpt is 30 lines or fewer, include it in full; if it is longer, include the signature and the key logic
-- place less critical implementation evidence in an appendix or source table
+- cite real code when it materially supports the explanation
+- prefer navigation hints over large implementation dumps
+- use appendices for supporting code references
+- keep the global body focused on decisions and contracts
 
-This gives humans a navigation path and gives AI precise grounding.
+Humans need orientation. LLMs need grounding. A good spec serves both without becoming a duplicate code tour.
 
 ---
 
-## 9. This Definition Applies to Both Global and Temporary Specs
+## 9. Global and Temporary Specs Share a Core but Not the Same Density
 
-SDD has both global specs and temporary specs. Their roles differ, but they share the same definition of what a spec is.
+Global and temporary specs are not two names for the same document.
 
-### Global Spec
+- the global spec is the long-lived reference
+- the temporary spec is the change blueprint
+- both share the same conceptual core
+- they differ in density, time horizon, and operational role
 
-- the stable Single Source of Truth for the project
-- captures the current state and accepted design
-- is realigned with code after implementation through `spec-update-done`
-
-### Temporary Spec
-
-- the blueprint for change
-- fixes what will change and how it will be implemented
-- leads into implementation after validation, then gets merged into the global spec
-
-In other words, a temporary spec is not just a change proposal. It is also a whitepaper-like implementation blueprint.
+This asymmetry is part of the canonical SDD model.
 
 ---
 
 ## 10. How to Judge Whether a Spec Is Good
 
-A good spec should be able to answer these questions:
+A good spec should answer:
 
 - Why does this project or feature exist?
+- What is in scope and out of scope?
 - What must it guarantee?
-- How does the core design work?
-- Where should someone look in the real code?
-- What outcomes should a user expect?
-- What must not be broken in the next change?
+- What invariants must survive changes?
+- How will those guarantees be verified?
+- Where should a reader or agent look in the code when deeper grounding is needed?
 
 If a document cannot answer those questions, it may still be useful, but it is not yet a strong SDD spec.
 
@@ -200,4 +288,4 @@ If a document cannot answer those questions, it may still be useful, but it is n
 
 ## 11. One-Sentence Definition
 
-In SDD, a spec is not just explanatory documentation. It is a whitepaper-like reference document that aligns humans and AI around implementation, review, and synchronization by capturing the problem, motivation, core design, expected results, and code-grounded evidence together.
+In SDD, a spec is a whitepaper-style reference that aligns humans and AI by preserving concept, boundaries, contracts, verification, and strategic code-entry hints in one durable Source of Truth.

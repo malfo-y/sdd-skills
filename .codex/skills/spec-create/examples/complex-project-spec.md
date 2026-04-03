@@ -1,493 +1,127 @@
 # Complex Project Spec Example
 
-Use this template for larger projects with multiple components, integrations, and teams.
+Example of a larger global spec under the current SDD canonical model.
 
 ---
 
 # E-Commerce Platform
 
+> 멀티벤더 전자상거래 플랫폼
+
 **Version**: 2.0.0
-**Last Updated**: 2024-01-15
-**Status**: In Development
-
-## Goal
-
-Build a scalable e-commerce platform supporting multi-vendor marketplace operations with real-time inventory, order management, and payment processing.
-
-### Key Features
-1. Multi-vendor marketplace with vendor onboarding
-2. Real-time inventory synchronization
-3. Multi-currency payment processing
-4. Order lifecycle management
-5. Customer reviews and ratings
-6. Search with faceted filtering
-7. Recommendation engine
-8. Admin dashboard
-
-### Target Users
-
-| User Type | Use Case |
-|-----------|----------|
-| Customers | Browse, purchase, track orders |
-| Vendors | List products, manage inventory, fulfill orders |
-| Admins | Platform management, analytics, support |
-
-### Success Criteria
-- [ ] Handle 10,000 concurrent users
-- [ ] 99.9% uptime SLA
-- [ ] <200ms API response time (p95)
-- [ ] PCI-DSS compliance for payments
-
-### Non-Goals
-- Physical store POS integration
-- B2B wholesale features
-- Subscription/recurring billing
-
-## Architecture Overview
-
-### System Diagram
-
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│                          Client Layer                                │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐              │
-│  │   Web App    │  │  Mobile App  │  │  Vendor App  │              │
-│  │   (React)    │  │   (React     │  │   (React)    │              │
-│  │              │  │    Native)   │  │              │              │
-│  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘              │
-└─────────┼─────────────────┼─────────────────┼───────────────────────┘
-          │                 │                 │
-          └─────────────────┼─────────────────┘
-                            │
-┌───────────────────────────┼─────────────────────────────────────────┐
-│                           ▼                                          │
-│  ┌─────────────────────────────────────────────────────┐            │
-│  │              API Gateway (Kong)                      │            │
-│  │    Rate Limiting │ Auth │ Load Balancing            │            │
-│  └─────────────────────────────────────────────────────┘            │
-│                           │                                          │
-│            ┌──────────────┼──────────────┐                          │
-│            ▼              ▼              ▼                          │
-│     ┌────────────┐ ┌────────────┐ ┌────────────┐                   │
-│     │  Product   │ │   Order    │ │   User     │                   │
-│     │  Service   │ │  Service   │ │  Service   │                   │
-│     │  (Python)  │ │  (Python)  │ │  (Python)  │                   │
-│     └─────┬──────┘ └─────┬──────┘ └─────┬──────┘                   │
-│           │              │              │                           │
-│     ┌─────┴──────┐ ┌─────┴──────┐ ┌─────┴──────┐                   │
-│     │  Payment   │ │ Inventory  │ │Notification│                   │
-│     │  Service   │ │  Service   │ │  Service   │                   │
-│     │  (Python)  │ │  (Python)  │ │  (Python)  │                   │
-│     └────────────┘ └────────────┘ └────────────┘                   │
-└─────────────────────────────────────────────────────────────────────┘
-                            │
-┌───────────────────────────┼─────────────────────────────────────────┐
-│                           ▼                                          │
-│  ┌────────────┐  ┌────────────┐  ┌────────────┐  ┌────────────┐   │
-│  │ PostgreSQL │  │   Redis    │  │Elasticsearch│ │    S3      │   │
-│  │  (Orders,  │  │  (Cache,   │  │  (Search)   │ │  (Media)   │   │
-│  │   Users)   │  │  Sessions) │  │             │ │            │   │
-│  └────────────┘  └────────────┘  └────────────┘  └────────────┘   │
-│                                                                      │
-│  ┌────────────┐  ┌────────────┐                                     │
-│  │   Kafka    │  │ TimescaleDB│                                     │
-│  │  (Events)  │  │ (Analytics)│                                     │
-│  └────────────┘  └────────────┘                                     │
-└─────────────────────────────────────────────────────────────────────┘
-```
-
-### Service Communication
-
-| Source | Destination | Protocol | Purpose |
-|--------|-------------|----------|---------|
-| Gateway | All Services | REST/gRPC | API requests |
-| Services | Kafka | Async | Event publishing |
-| Services | Redis | TCP | Caching, sessions |
-| Order | Payment | gRPC | Payment processing |
-
-### Technology Stack
-
-| Layer | Technology | Version | Purpose |
-|-------|------------|---------|---------|
-| Frontend | React | 18.x | Web application |
-| Mobile | React Native | 0.72 | iOS/Android apps |
-| Gateway | Kong | 3.x | API management |
-| Backend | Python/FastAPI | 3.11/0.100 | Microservices |
-| Database | PostgreSQL | 15 | Primary data store |
-| Cache | Redis | 7.x | Caching, sessions |
-| Search | Elasticsearch | 8.x | Product search |
-| Queue | Kafka | 3.x | Event streaming |
-| Storage | S3 | - | Media files |
-
-## Component Details
-
-### Component: Product Service
-
-#### Overview
-Manages product catalog, categories, and vendor listings.
-
-#### Why
-Separated as an independent service because product catalog operations (search, browse, CRUD) have fundamentally different scaling and caching requirements from order/payment flows. Decoupling allows Elasticsearch indexing and S3 media handling without impacting transactional services.
-
-#### Responsibilities
-- CRUD operations for products
-- Category management
-- Vendor product association
-- Price and inventory sync triggers
-
-#### Interface
-
-**Endpoints:**
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | /products | List products (paginated) |
-| POST | /products | Create product |
-| GET | /products/{id} | Get product details |
-| PUT | /products/{id} | Update product |
-| DELETE | /products/{id} | Delete product |
-| GET | /products/search | Search products |
-| POST | /products/{id}/images | Upload images |
-
-**Events Published:**
-- `product.created` - New product added
-- `product.updated` - Product modified
-- `product.deleted` - Product removed
-- `product.price_changed` - Price update
-
-#### Implementation Details
-
-**Key Files:**
-- `services/product/src/main.py` - FastAPI app
-- `services/product/src/models/` - SQLAlchemy models
-- `services/product/src/api/` - Route handlers
-- `services/product/src/events/` - Kafka publishers
-
-**Design Patterns:**
-- Repository pattern for data access
-- CQRS for read/write separation
-- Event sourcing for audit trail
-
-#### Source
-
-- `services/product/src/main.py`: create_app(), configure_routes()
-- `services/product/src/api/products.py`: list_products(), create_product(), get_product(), update_product(), delete_product()
-- `services/product/src/api/search.py`: search_products(), build_query()
-- `services/product/src/models/product.py`: Product, ProductVariant, ProductImage
-- `services/product/src/events/publishers.py`: publish_product_event()
-
-#### Dependencies
-
-| Service | Type | Purpose | Why |
-|---------|------|---------|-----|
-| PostgreSQL | Database | Product storage | ACID compliance needed for catalog consistency; JSON column support for flexible attributes |
-| Elasticsearch | Search | Full-text search | Relational DB full-text too slow at scale; ES provides faceted filtering and relevance scoring |
-| S3 | Storage | Product images | Object storage for cost-effective, CDN-friendly media serving |
-| Kafka | Queue | Event publishing | Async event propagation to decouple services; chosen over RabbitMQ for replay and partition support |
-| Inventory Service | Internal | Stock levels | Inventory has its own consistency domain; direct DB access would break service boundaries |
-
-#### Error Handling
-
-| Error | HTTP | Handling |
-|-------|------|----------|
-| ProductNotFound | 404 | Return error with ID |
-| ValidationError | 400 | Return field errors |
-| DuplicateSKU | 409 | Conflict response |
-
----
-
-### Component: Order Service
-
-#### Overview
-Handles order lifecycle from creation to fulfillment.
-
-#### Why
-Order processing requires strong consistency guarantees (saga pattern, compensating transactions) that conflict with the eventual-consistency model used in product/search. Isolated as a service to enforce transactional boundaries and enable independent failure handling.
-
-#### Responsibilities
-- Order creation and validation
-- Payment orchestration
-- Fulfillment coordination
-- Refund processing
-
-#### Source
-
-- `services/order/src/api/orders.py`: create_order(), cancel_order(), get_order_status()
-- `services/order/src/services/saga.py`: OrderCreationSaga, compensate()
-- `services/order/src/services/fulfillment.py`: FulfillmentCoordinator, process_refund()
-- `services/order/src/models/order.py`: Order, OrderItem, OrderStatus
-
-#### Order State Machine
-
-```
-┌────────┐    ┌─────────┐    ┌───────────┐    ┌─────────┐
-│ Draft  │───▶│ Pending │───▶│ Confirmed │───▶│ Shipped │
-└────────┘    └─────────┘    └───────────┘    └─────────┘
-                  │                │               │
-                  ▼                ▼               ▼
-              ┌────────┐    ┌───────────┐   ┌───────────┐
-              │Cancelled│   │  Failed   │   │ Delivered │
-              └────────┘    └───────────┘   └───────────┘
-```
-
-#### Implementation Details
-
-**Saga Pattern for Order Creation:**
-1. Reserve inventory
-2. Process payment
-3. Confirm order
-4. Notify vendor
-5. (Compensate on failure)
-
----
-
-### Component: Payment Service
-
-#### Overview
-PCI-DSS compliant payment processing with multiple gateway support.
-
-#### Why
-PCI-DSS compliance requires strict network isolation and audit logging. Separating payment into its own service confines the compliance boundary — only this service handles tokenized card data, reducing the PCI scope for the rest of the platform.
-
-#### Supported Gateways
-- Stripe (primary)
-- PayPal
-- Local payment methods (region-specific)
-
-#### Security Measures
-- No card data stored (tokenization)
-- All PCI data in isolated subnet
-- Audit logging for all transactions
-- 3D Secure for high-risk transactions
-
----
-
-## Data Models
-
-### Product
-
-```python
-class Product(Base):
-    __tablename__ = "products"
-
-    id: UUID = Column(UUID, primary_key=True)
-    vendor_id: UUID = Column(UUID, ForeignKey("vendors.id"))
-    sku: str = Column(String(50), unique=True)
-    name: str = Column(String(255))
-    description: str = Column(Text)
-    base_price: Decimal = Column(Numeric(10, 2))
-    currency: str = Column(String(3), default="USD")
-    status: str = Column(String(20))  # draft, active, archived
-    created_at: datetime = Column(DateTime, default=utcnow)
-    updated_at: datetime = Column(DateTime, onupdate=utcnow)
-
-    # Relationships
-    vendor: Vendor = relationship("Vendor")
-    categories: List[Category] = relationship(secondary="product_categories")
-    variants: List[ProductVariant] = relationship("ProductVariant")
-    images: List[ProductImage] = relationship("ProductImage")
-```
-
-### Order
-
-```python
-class Order(Base):
-    __tablename__ = "orders"
-
-    id: UUID = Column(UUID, primary_key=True)
-    customer_id: UUID = Column(UUID, ForeignKey("users.id"))
-    status: str = Column(String(20))
-    subtotal: Decimal = Column(Numeric(10, 2))
-    tax: Decimal = Column(Numeric(10, 2))
-    shipping: Decimal = Column(Numeric(10, 2))
-    total: Decimal = Column(Numeric(10, 2))
-    currency: str = Column(String(3))
-
-    # Relationships
-    items: List[OrderItem] = relationship("OrderItem")
-    shipping_address: Address = relationship("Address")
-    payments: List[Payment] = relationship("Payment")
-```
-
----
-
-## Environment & Dependencies
-
-### Directory Structure
-
-```
-ecommerce-platform/
-├── services/
-│   ├── product/
-│   │   ├── src/
-│   │   ├── tests/
-│   │   ├── Dockerfile
-│   │   └── pyproject.toml
-│   ├── order/
-│   ├── user/
-│   ├── payment/
-│   ├── inventory/
-│   └── notification/
-├── shared/
-│   ├── proto/           # gRPC definitions
-│   ├── events/          # Event schemas
-│   └── libs/            # Shared libraries
-├── infra/
-│   ├── k8s/             # Kubernetes manifests
-│   ├── terraform/       # Infrastructure as code
-│   └── docker-compose/  # Local development
-├── gateway/
-│   └── kong.yaml        # API gateway config
-└── docs/
-    └── api/             # OpenAPI specs
-```
-
-### Environment Variables
-
-| Variable | Service | Description |
-|----------|---------|-------------|
-| DATABASE_URL | All | PostgreSQL connection |
-| REDIS_URL | All | Redis connection |
-| KAFKA_BROKERS | All | Kafka broker list |
-| STRIPE_SECRET_KEY | Payment | Stripe API key |
-| AWS_ACCESS_KEY_ID | Product | S3 access |
-| ELASTICSEARCH_URL | Product | Search cluster |
-
----
-
-## Identified Issues & Improvements
-
-### Critical Bugs
-- [ ] **BUG-142**: Race condition in inventory reservation
-  - Location: `services/inventory/src/services/reservation.py:89`
-  - Impact: Overselling during flash sales
-  - Status: Fix in review
-
-### Code Quality
-- [ ] Inconsistent error response formats across services
-- [ ] Missing OpenTelemetry instrumentation in payment service
-- [ ] Test coverage below 70% in order service
-
-### Missing Features
-- [ ] Wishlist functionality
-- [ ] Product comparison
-- [ ] Multi-language support
-- [ ] Guest checkout
-
-### Performance
-- [ ] Add read replicas for product queries
-- [ ] Implement GraphQL for mobile app
-- [ ] Add CDN for product images
-
-### Technical Debt
-- [ ] Migrate from REST to gRPC for inter-service calls
-- [ ] Implement circuit breakers
-- [ ] Add distributed tracing
-
----
-
-## Usage Examples
-
-### Local Development
-
-```bash
-# Start all services
-docker-compose up -d
-
-# Run migrations
-make migrate-all
-
-# Seed test data
-make seed-dev
-
-# Run tests
-make test
-```
-
-### API Examples
-
-**Create Product:**
-```bash
-curl -X POST http://localhost:8000/api/v1/products \
-  -H "Authorization: Bearer $TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "name": "Wireless Headphones",
-    "sku": "WH-001",
-    "base_price": 99.99,
-    "category_ids": ["cat_electronics", "cat_audio"]
-  }'
-```
-
-**Create Order:**
-```bash
-curl -X POST http://localhost:8000/api/v1/orders \
-  -H "Authorization: Bearer $TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "items": [
-      {"product_id": "prod_123", "variant_id": "var_456", "quantity": 2}
-    ],
-    "shipping_address_id": "addr_789",
-    "payment_method_id": "pm_stripe_abc"
-  }'
-```
-
----
-
-## Testing
-
-### Test Pyramid
-
-| Level | Coverage Target | Run Time |
-|-------|----------------|----------|
-| Unit | 80% | <5 min |
-| Integration | 60% | <15 min |
-| E2E | Critical paths | <30 min |
-
-### Running Tests
-
-```bash
-# Unit tests
-pytest services/product/tests/unit/
-
-# Integration tests (requires Docker)
-pytest services/product/tests/integration/
-
-# E2E tests
-pytest tests/e2e/
-```
-
----
-
-## Deployment
-
-### Environments
-
-| Environment | Purpose | URL |
-|-------------|---------|-----|
-| Development | Local testing | localhost:8000 |
-| Staging | Pre-production | staging.example.com |
-| Production | Live | api.example.com |
-
-### Deployment Pipeline
-
-```
-┌─────────┐   ┌──────┐   ┌─────────┐   ┌────────┐   ┌──────────┐
-│  Push   │──▶│Build │──▶│  Test   │──▶│ Deploy │──▶│Production│
-│ to main │   │Image │   │(staging)│   │(canary)│   │(100%)    │
-└─────────┘   └──────┘   └─────────┘   └────────┘   └──────────┘
-```
-
----
-
-## Changelog
-
-### [2.0.0] - 2024-01-15
-- Added multi-vendor marketplace support
-- Migrated to microservices architecture
-- Implemented event-driven inventory sync
-
-### [1.5.0] - 2023-09-01
-- Added Elasticsearch for product search
-- Implemented real-time order tracking
-- Added mobile app API support
+**Last Updated**: 2026-04-04
+**Status**: In Review
+
+## 1. Background & High-Level Concept
+
+이 플랫폼은 고객, 벤더, 운영자가 하나의 거래 시스템 위에서 다른 요구를 동시에 만족해야 하는 문제를 다룬다. 상품 탐색은 읽기 중심이고, 주문과 결제는 강한 일관성이 필요하며, 재고는 이벤트 지연에 민감하다.
+
+high-level concept는 "탐색, 거래, 운영을 같은 제품 위에 두되, contract가 다른 경계는 명시적으로 분리한다"는 것이다. 따라서 검색과 카탈로그는 고확장 읽기 경계로, 주문과 결제는 강일관 거래 경계로 취급한다.
+
+## 2. Scope / Non-goals / Guardrails
+
+### In Scope
+
+- 멀티벤더 상품 등록과 카탈로그 탐색
+- 주문 생성, 결제 승인, 주문 상태 전이
+- 운영자용 기본 관리 기능
+
+### Non-goals
+
+- 오프라인 POS 연동
+- B2B 대량 주문
+- 구독 결제
+
+### Guardrails
+
+- 주문 확정 경로는 결제/재고 contract 없이 우회되면 안 된다.
+- 검색 인덱스 지연은 허용되지만 주문 일관성은 희생하지 않는다.
+
+## 3. 핵심 설계와 주요 결정
+
+플랫폼은 "카탈로그-거래 비대칭"을 전제로 한다. 상품 탐색과 추천은 결국 지연 허용 읽기 경계지만, 주문/결제는 후행 정합성이 아니라 강한 계약이 핵심이다.
+
+| Decision | Why | What Must Stay True |
+|----------|-----|---------------------|
+| catalog와 order를 다른 경계로 둔다 | 읽기 확장성과 거래 일관성의 요구가 다르기 때문에 | 검색 지연은 허용해도 주문 계약은 약화하지 않는다 |
+| payment는 order와 분리된 책임을 가진다 | 외부 승인 흐름과 장애 모델이 다르기 때문에 | order는 payment result contract를 명시적으로 소비한다 |
+| inventory sync는 event 기반으로 다룬다 | 실시간 fan-out과 재고 갱신 분리가 필요하기 때문에 | oversell 방지 invariant는 별도 hot path에서 지킨다 |
+
+## 4. Contract / Invariants / Verifiability
+
+### Contract
+
+| ID | Subject | Inputs/Outputs | Preconditions | Postconditions | Failure Guarantees |
+|----|---------|----------------|---------------|----------------|--------------------|
+| C1 | Order creation | cart + buyer context -> order draft | 재고 검증이 선행된다 | 주문 draft가 생성된다 | 검증 실패 시 partial order를 남기지 않는다 |
+| C2 | Payment confirmation | payment intent -> approved order state | payment provider 응답이 유효하다 | 주문 상태가 confirmed로 이동한다 | 승인 실패 시 order state는 rollback-safe 상태를 유지한다 |
+| C3 | Catalog query | filters -> product list | 인덱스가 사용 가능하다 | 정렬/필터가 적용된 결과를 반환한다 | 인덱스 지연은 허용하되 잘못된 주문 상태를 만들지 않는다 |
+
+### Invariants
+
+| ID | Scope | Invariant | Why It Matters |
+|----|-------|-----------|----------------|
+| I1 | Order lifecycle | confirmed order는 유효한 payment confirmation 없이 존재할 수 없다 | 거래 무결성 핵심 |
+| I2 | Inventory | reservable stock보다 큰 확정 판매는 발생하면 안 된다 | oversell 방지 |
+| I3 | Catalog boundary | catalog 지연은 order consistency invariant를 침범하지 않는다 | 읽기/거래 경계 분리 |
+
+### Verifiability
+
+| ID | Targets | Verification Method | Evidence / Notes |
+|----|---------|---------------------|------------------|
+| V1 | C1, I2 | test | stock reservation 및 partial failure 테스트 |
+| V2 | C2, I1 | test, review | payment callback과 order transition 리뷰/통합 테스트 |
+| V3 | C3, I3 | review | catalog latency가 order contract를 침범하지 않는지 아키텍처 리뷰 |
+
+## 5. 사용 가이드 & 기대 결과
+
+### Scenario: 주문 확정
+
+**Setup**: 고객이 장바구니에 상품을 담고 체크아웃을 시작한다.
+
+**Action**: 주문 생성 후 결제 승인 콜백을 처리한다.
+
+**Expected Result**: 승인 전에는 draft 상태가 유지되고, 승인 후에만 confirmed로 이동한다.
+
+### Scenario: 검색 지연
+
+**Setup**: 상품 가격이 갱신되었지만 인덱스 반영이 아직 끝나지 않았다.
+
+**Action**: 사용자가 검색 결과를 본다.
+
+**Expected Result**: catalog 결과는 잠시 stale할 수 있지만, 주문 확정 경로는 최신 계약을 사용한다.
+
+## 6. Decision-bearing structure
+
+- 시스템 경계: catalog/search, order, payment, inventory, admin 운영 경계를 분리한다.
+- ownership: order domain이 거래 lifecycle ownership을 갖고, payment는 승인 결과 ownership을 갖는다.
+- cross-component contract: payment result -> order state transition, inventory reservation -> order draft creation
+- extension point: recommendation engine, vendor policy engine
+- invariant hotspot: order confirmation path, inventory reservation path
+
+## 7. 참조 정보
+
+### Data Models
+
+- Order
+- PaymentIntent
+- InventoryReservation
+- ProductCatalogEntry
+
+### Environment & Dependencies
+
+- React / React Native
+- FastAPI services
+- PostgreSQL
+- Redis
+- Elasticsearch
+- Kafka
+
+## Appendix A. Strategic Code Map
+
+| Kind | Path / Symbol | Why It Matters |
+|------|----------------|----------------|
+| Entrypoint | `services/order/src/main.py:create_app` | order 경계 진입점 |
+| Invariant Hotspot | `services/order/src/application/confirm_order.py:confirm_order` | payment-confirmed invariant 핵심 |
+| Invariant Hotspot | `services/inventory/src/application/reserve.py:reserve_inventory` | oversell 방지 핵심 |
+| Extension Point | `services/catalog/src/search/query_builder.py:build_query` | search/filter 확장 지점 |

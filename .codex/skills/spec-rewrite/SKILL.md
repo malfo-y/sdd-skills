@@ -1,35 +1,35 @@
 ---
 name: spec-rewrite
 description: This skill should be used when the user asks to "rewrite spec", "refactor spec", "simplify spec", "split spec into files", "clean up spec", "review spec quality", or equivalent phrases indicating they want to reorganize an overly long/complex spec by pruning noise, splitting into hierarchical files, and explicitly listing ambiguities/problems.
-version: 1.7.0
+version: 1.8.0
 ---
 
 # spec-rewrite
 
 ## Goal
 
-비대하거나 혼란스러운 스펙을 더 읽기 쉽고 유지보수 가능한 구조로 재작성한다. 재작성 전에 현재 스펙을 8개 핵심 품질 metric과 spec-as-whitepaper 기준으로 진단하고, 그 진단을 근거로 `_sdd/spec/logs/spec-rewrite-plan.md`와 `rewrite_report.md`를 만든다.
+비대하거나 혼란스러운 스펙을 current canonical model에 더 잘 맞는 구조로 재작성한다. 재작성 전에 현재 스펙을 핵심 품질 metric과 canonical-fit 기준으로 진단하고, 그 진단을 근거로 `_sdd/spec/logs/spec-rewrite-plan.md`와 `rewrite_report.md`를 만든다.
 
-핵심 내용은 보존하고, 저가치 내용은 appendix로 이동하거나 제거하며, ambiguity와 unresolved issue는 명시적으로 남긴다. `spec-rewrite-plan.md`는 rewrite 실행의 source of truth로 사용한다. `spec-rewrite`는 정리/재배치 도구이지, 누락된 whitepaper 섹션을 자동 생성하는 스킬이 아니다.
+핵심 내용은 보존하고, 저가치 내용은 appendix로 이동하거나 제거하며, ambiguity와 unresolved issue는 명시적으로 남긴다. `spec-rewrite`는 missing content authoring 도구가 아니라 구조 개선 도구다.
 
 ## Acceptance Criteria
 
 > 완료 전 아래 기준을 자체 검증한다. 미충족 항목이 있으면 해당 단계로 돌아가 수정한다.
 
-- [ ] AC1: 리라이트 대상과 범위를 8개 핵심 metric으로 진단하고, 점수 또는 동등한 판단 근거를 남겼다.
-- [ ] AC2: `_sdd/spec/logs/spec-rewrite-plan.md`가 metric 기반 rationale, split map, ambiguity/risk를 포함한 상태로 먼저 저장되었다.
+- [ ] AC1: 리라이트 대상과 범위를 핵심 metric으로 진단하고 근거를 남겼다.
+- [ ] AC2: `_sdd/spec/logs/spec-rewrite-plan.md`가 canonical-fit rationale, split map, ambiguity/risk를 포함한 상태로 먼저 저장되었다.
 - [ ] AC3: `_sdd/spec/prev/`에 안전 백업을 남겼다.
-- [ ] AC4: rewritten spec가 plan 기준으로 더 명확한 구조를 가지며, 링크와 파일 경로가 유효하다.
-- [ ] AC5: 중요한 rationale, `Why`, `Source`, inline citation, code excerpt header는 보존되었다.
-- [ ] AC6: `rewrite_report.md`가 metric scorecard, whitepaper 적합성 평가, unresolved warning, plan 대비 주요 deviation을 포함한다.
-- [ ] AC7: `references/`와 `examples/`는 유지되고, 본문은 rewrite contract를 concise하게 설명한다.
+- [ ] AC4: rewritten spec가 현재 canonical model에 더 잘 맞는 구조를 가진다.
+- [ ] AC5: 중요한 rationale, `Why`, inline citation, code excerpt header는 보존되었다.
+- [ ] AC6: `rewrite_report.md`가 metric scorecard, canonical-fit 평가, unresolved warning, plan 대비 주요 deviation을 포함한다.
+- [ ] AC7: 누락된 내용을 임의로 창작하지 않고, 필요한 경우 warning으로 남겼다.
 
 ## SDD Lens
 
 - spec-rewrite는 feature 추가가 아니라 문서 구조 개선 작업이다.
-- 정보 손실보다 구조 개선이 중요하지만, why-context를 잃어서는 안 된다.
-- “깔끔해 보이게” 만드는 것보다 이후 `implementation-plan`, `spec-summary`, `guide-create`가 읽기 쉽게 만드는 것이 목표다.
-- `docs/SDD_SPEC_DEFINITION.md`가 말하는 화이트페이퍼형 Single Source of Truth를 훼손하지 않는지가 핵심 검증 축이다.
+- current canonical model에서 global spec은 얇은 기준 문서이고, temporary spec은 실행 청사진이다.
+- rewrite의 목적은 inventory-heavy 문서를 decision-bearing structure와 explicit CIV 중심 문서로 정렬하는 것이다.
+- appendix와 reference information은 장려되지만, 본문 핵심을 대체하면 안 된다.
 
 ## Companion Assets
 
@@ -51,8 +51,7 @@ version: 1.7.0
 7. 기존 문서 언어를 따른다. 새 프로젝트는 한국어를 기본으로 한다.
 8. 장문 문서나 다중 파일 rewrite는 caller가 먼저 skeleton/섹션 헤더를 직접 기록한 뒤, 같은 흐름에서 내용을 채운다.
 9. rewrite는 핵심 계약을 더 선명하게 해야지, 내용을 임의로 확장하면 안 된다.
-10. §1, §2, §5 같은 whitepaper 핵심 narrative 섹션이 원문에 존재하면 prune/appendix 이동으로 약화시키지 않는다.
-11. 누락된 whitepaper 섹션은 경고할 수 있지만 자동 생성하지 않는다. 생성/보강은 `spec-create` 또는 `spec-upgrade`의 역할이다.
+10. missing global spec core 또는 temporary spec core는 경고할 수 있지만 자동 생성하지 않는다. 생성/보강은 `spec-create` 또는 `spec-upgrade`의 역할이다.
 
 ## Input Sources
 
@@ -75,33 +74,24 @@ version: 1.7.0
 - `references/rewrite-checklist.md`
 - `docs/SDD_SPEC_DEFINITION.md`
 
-진단은 아래 8개 핵심 metric을 기준으로 수행한다. 상세 질문형 rubric은 `references/rewrite-checklist.md`를 canonical source로 사용한다.
+진단은 아래 축을 기준으로 수행한다.
 
-평점 기준:
+- `Component Separation`
+- `Findability`
+- `Repo Purpose Clarity`
+- `Architecture Clarity`
+- `Usage Completeness`
+- `Environment Reproducibility`
+- `Ambiguity Control`
+- `Why/Decision Preservation`
+- `Canonical Fit`
 
-- `0`: 거의 없음. 사용자가 이 정보로 판단/행동하기 어렵다.
-- `1`: 일부 존재하지만 불완전하거나 많이 흩어져 있다.
-- `2`: 대체로 충분하지만 핵심 공백이나 혼동 지점이 있다.
-- `3`: 명확하고 일관되며, 사용자가 쉽게 이해하고 활용할 수 있다.
+`Canonical Fit`에서 특히 본다.
 
-핵심 metric:
-
-- `Component Separation` (`component 분리 적절성`): 각 주요 component가 대표 섹션/파일에 귀속되는가
-- `Findability` (`탐색성`): 필요한 정보를 main 기준 2-hop 이내에 찾을 수 있는가
-- `Repo Purpose Clarity` (`레포 목적 이해도`): main만 읽고 3문장 안에 레포 목적과 핵심 기능을 설명할 수 있는가
-- `Architecture Clarity` (`아키텍처 이해도`): 핵심 흐름과 component 책임을 혼동 없이 설명할 수 있는가
-- `Usage Completeness` (`사용법 완결성`): 신규 사용자가 대표 시나리오를 문서만 보고 실행할 수 있는가
-- `Environment Reproducibility` (`환경 재현성`): 실행 조건, 의존성, 설정을 문서만으로 재현할 수 있는가
-- `Ambiguity Control` (`모호성 수준`): 측정 불가능한 표현, 책임 불명확, 미정의 용어가 적절히 통제되는가
-- `Why/Decision Preservation` (`Why/decision 보존도`): 중요한 설계 이유와 결정 배경이 삭제되거나 appendix로 밀려나지 않았는가
-
-추가로 `docs/SDD_SPEC_DEFINITION.md` 기준 whitepaper 적합성을 함께 본다.
-
-- 배경 및 동기 설명 여부
-- 핵심 설계 서사와 로직 흐름 설명 여부
-- 구현 근거와 코드 매핑 존재 여부
-- 사용 가이드와 기대 결과 존재 여부
-- 참조형 보조 정보와 narrative 섹션의 균형
+- global spec인지 temporary spec인지 문서 목적이 선명한가
+- global spec이면 CIV, decision-bearing structure, usage가 보이는가
+- temporary spec이면 delta / touchpoints / validation linkage가 보이는가
+- appendix/reference가 본문을 대체하지 않는가
 
 ### Step 2: Write the Rewrite Plan
 
@@ -114,28 +104,9 @@ plan에는 아래를 포함한다.
 - split map 또는 파일 재배치 계획
 - 낮은 점수 metric을 어떻게 개선할지에 대한 rationale
 - ambiguity / risk / unresolved decision
-- whitepaper 기준에서 경고만 남길 항목
+- canonical-fit 기준에서 warning만 남길 항목
 - rewrite 대상 파일 목록
-- 실행 순서와 plan deviation 기록 규칙
-
-권장 구조:
-
-```markdown
-# Spec Rewrite Plan
-
-## Rewrite Context
-## Diagnosis Summary
-## Keep in Main
-## Move / Prune / Appendix
-## Split Map
-## Metric Improvement Rationale
-## Ambiguities / Risks / Unresolved Decisions
-## Whitepaper Warnings
-## Execution Order
-## Approval Status
-```
-
-대규모 구조 변경이면 plan 파일 저장 후 `request_user_input`으로 명시적 승인을 받는다. 승인 없이 Step 3으로 진행하지 않는다.
+- 실행 순서와 deviation 기록 규칙
 
 ### Step 3: Create Safety Backups
 
@@ -147,13 +118,11 @@ plan에는 아래를 포함한다.
 원칙:
 
 - `spec-rewrite-plan.md`를 실행 기준으로 삼는다.
-- index/main은 먼저 고정
-- 이동 대상과 신규 파일 경로를 확정
-- 필요 시 파일별 rewrite를 병렬화
-- appendix 이동, split, pruning을 수행
-- `Source`, `Why`, 중요한 rationale, inline citation, code excerpt header는 보존
-- 없는 whitepaper narrative를 새로 만들어 넣지 말고, 누락은 report에 경고로 남김
-- 실행 중 plan과 달라진 점이 생기면 rewrite 전에 plan 파일부터 갱신
+- index/main은 먼저 고정한다.
+- 필요한 경우 global spec core를 더 잘 드러내도록 구조를 재배치한다.
+- decision-bearing value가 없는 inventory는 reference 또는 appendix로 내린다.
+- `Source`, `Why`, 중요한 rationale, inline citation, code excerpt header는 보존한다.
+- 없는 canonical content를 새로 만들어 넣지 말고, 누락은 report에 warning으로 남긴다.
 
 장문 rewrite는 다음 순서를 따른다.
 
@@ -162,26 +131,17 @@ plan에는 아래를 포함한다.
 3. TODO/placeholder를 제거하고 finalize
 4. 의존 섹션은 `default`, 독립 파일/섹션은 `worker`로 채운다
 
-구조 개선의 대표 패턴:
-
-- 중복 내용 제거
-- 긴 역사/로그는 appendix나 report로 이동
-- component별 파일 분리
-- 인덱스 문서에서 전체 구조와 링크를 명확히 함
-- 레포 목적, 핵심 흐름, 사용법이 main에서 더 빨리 파악되도록 정보 재배치
-
 ### Step 5: Validate and Report
 
 아래를 검증하고 `_sdd/spec/logs/rewrite_report.md`를 작성한다.
 
 - 링크와 파일 경로 유효성
-- 8개 핵심 metric scorecard
-- whitepaper 적합성 평가
+- 핵심 metric scorecard
+- canonical-fit 평가
 - ambiguity / issue 기록 여부
 - pruning / move / split 결과
 - `spec-rewrite-plan.md` 대비 실제 실행 결과와 deviation
-- decision log 추가 여부
-- 자동 보강하지 않고 경고만 남긴 항목
+- 자동 보강하지 않고 warning만 남긴 항목
 
 ## Output Contract
 
@@ -190,26 +150,6 @@ plan에는 아래를 포함한다.
 - rewritten spec files
 - `_sdd/spec/logs/spec-rewrite-plan.md`
 - `_sdd/spec/logs/rewrite_report.md`
-
-리포트에 포함할 내용:
-
-- rewrite summary
-- pruned / moved sections
-- file split map
-- metric scorecard (`0-3`)와 핵심 근거
-  - `Component Separation`
-  - `Findability`
-  - `Repo Purpose Clarity`
-  - `Architecture Clarity`
-  - `Usage Completeness`
-  - `Environment Reproducibility`
-  - `Ambiguity Control`
-  - `Why/Decision Preservation`
-- ambiguities and issues
-- whitepaper fit assessment
-- warnings intentionally left unresolved
-- notable deviations from `spec-rewrite-plan.md`
-- decision log additions
 
 ## Error Handling
 
@@ -220,7 +160,7 @@ plan에는 아래를 포함한다.
 | split 후 링크 깨짐 | 경로 검증 후 수정 |
 | decision_log 없음 | 필요 시 새로 생성 |
 | 범위가 너무 큼 | index 중심으로 나누고 점진적으로 rewrite |
-| whitepaper narrative 누락 | 자동 생성하지 말고 rewrite_report에 경고 |
+| canonical core 누락 | 자동 생성하지 말고 rewrite_report에 경고 |
 
 ## Final Check
 

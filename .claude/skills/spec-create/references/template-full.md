@@ -1,621 +1,227 @@
-# Complete Spec Document Template
+# Complete Global Spec Template
 
-This is the full template with all possible sections. Adapt as needed for each project.
+This is the richer template for current SDD global specs. Use it when the project is large enough that the compact template would become ambiguous, but keep the same canonical section order and philosophy.
 
 ---
 
 # <Project Name>
 
-> One-line description of what this project does
+> One-line description of what this project is for
 
 **Version**: X.Y.Z
 **Last Updated**: YYYY-MM-DD
-**Status**: [Draft | In Review | Approved | Deprecated]
+**Status**: Draft | In Review | Approved | Deprecated
 
 ## Table of Contents
 
-- [Background & Motivation](#background--motivation)
-- [Core Design](#core-design)
-- [Architecture Overview](#architecture-overview)
-- [Component Details](#component-details)
-- [Usage Guide & Expected Results](#usage-guide--expected-results)
-- [Data Models](#data-models)
-- [API Reference](#api-reference)
-- [Environment & Dependencies](#environment--dependencies)
-- [Configuration](#configuration)
-- [Security Considerations](#security-considerations)
-- [Performance Considerations](#performance-considerations)
-- [Identified Issues & Improvements](#identified-issues--improvements)
-- [Testing](#testing)
-- [Deployment](#deployment)
-- [Appendix: Code Reference Index](#appendix-code-reference-index)
-- [Changelog](#changelog)
+- [1. Background & High-Level Concept](#1-background--high-level-concept)
+- [2. Scope / Non-goals / Guardrails](#2-scope--non-goals--guardrails)
+- [3. Core Design & Key Decisions](#3-core-design--key-decisions)
+- [4. Contract / Invariants / Verifiability](#4-contract--invariants--verifiability)
+- [5. Usage Guide & Expected Results](#5-usage-guide--expected-results)
+- [6. Decision-Bearing Structure](#6-decision-bearing-structure)
+- [7. Reference Information](#7-reference-information)
+- [Appendix A. Strategic Code Map](#appendix-a-strategic-code-map)
+- [Appendix B. Related Docs & Code References](#appendix-b-related-docs--code-references)
 
 ---
 
-## Background & Motivation
+## 1. Background & High-Level Concept
 
-### Problem Statement [What]
+### Problem Statement
 
-[What problem does this project solve? What pain point or gap exists without it?]
+[What problem exists today and what pain or cost does it create?]
 
-### Why This Approach [Why]
+### Why This Matters Now
 
-[Why was this approach chosen over alternatives? Briefly compare with key alternatives considered.]
+[Why the problem is worth solving now, not later.]
+
+### High-Level Concept
+
+[Describe the framing or insight that makes this project coherent.]
+
+### Alternatives Considered
 
 | Approach | Pros | Cons | Decision |
 |----------|------|------|----------|
-| This project's approach | ... | ... | **Chosen** |
+| Proposed approach | ... | ... | Chosen |
 | Alternative A | ... | ... | Rejected: ... |
+| Alternative B | ... | ... | Rejected: ... |
 
-### Core Value Proposition
+### Core Value
 
-[What is the key value this project delivers? One paragraph summarizing the essential insight.]
-
-### Primary Objective
-
-[Clear statement of what the project aims to achieve]
-
-### Key Features
-
-1. **Feature 1**: Description
-2. **Feature 2**: Description
-3. **Feature 3**: Description
-
-### Target Users / Use Cases
-
-| User Type | Use Case | Priority |
-|-----------|----------|----------|
-| Developer | ... | High |
-| Admin | ... | Medium |
-
-### Success Criteria
-
-- [ ] Criterion 1
-- [ ] Criterion 2
-- [ ] Criterion 3
-
-### Non-Goals (Out of Scope)
-
-- Item 1
-- Item 2
+[One concise paragraph explaining the key value delivered.]
 
 ---
 
-## Core Design
+## 2. Scope / Non-goals / Guardrails
 
-### Key Idea [What]
+### In Scope
 
-[Narrative explanation of the core design idea. What is the central insight or approach that drives this project's architecture? Write as a story — what problem was encountered, what solution was devised, and why it works.]
+- ...
+- ...
 
-### Algorithm / Logic Flow [How]
+### Non-goals
 
-[Describe the main algorithm or processing flow. Include actual code excerpts for key functions.]
+- ...
+- ...
 
-> **Code Excerpt Rule**: Functions ≤30 lines → include full body. Functions >30 lines → include signature + core logic only.
+### Guardrails
 
-```python
-# [src/core/processor.py:process_data]
-def process_data(input: InputModel) -> OutputModel:
-    """Core processing logic."""
-    validated = validate(input)
-    result = transform(validated)
-    return OutputModel(result=result)
-```
+- ...
+- ...
 
-> **Inline Citation Format**: Reference code in prose as `[filepath:functionName]`.
-> Example: "The validation step `[src/core/validator.py:validate]` ensures data integrity before the transform `[src/core/processor.py:transform]`."
+### Scope Notes
 
-### Design Rationale [Why]
-
-[Why was this structure chosen? What constraints or goals drove the design decisions?]
-
-| Design Choice | Rationale | Alternatives Considered |
-|---------------|-----------|------------------------|
-| Choice 1 | Why this was chosen | What else was considered |
-| Choice 2 | Why this was chosen | What else was considered |
+[Clarify boundaries that may be confused with adjacent work.]
 
 ---
 
-## Architecture Overview
+## 3. Core Design & Key Decisions
 
-### System Diagram
+### Core Design Narrative
 
-```
-┌─────────────────────────────────────────────────────┐
-│                    Client Layer                      │
-│  ┌──────────┐  ┌──────────┐  ┌──────────┐          │
-│  │   Web    │  │  Mobile  │  │   CLI    │          │
-│  └────┬─────┘  └────┬─────┘  └────┬─────┘          │
-└───────┼─────────────┼─────────────┼─────────────────┘
-        │             │             │
-        └─────────────┼─────────────┘
-                      │
-┌─────────────────────┼───────────────────────────────┐
-│                     ▼                                │
-│              ┌─────────────┐                         │
-│              │  API Layer  │                         │
-│              └──────┬──────┘                         │
-│                     │                                │
-│         ┌───────────┼───────────┐                   │
-│         ▼           ▼           ▼                   │
-│   ┌──────────┐ ┌──────────┐ ┌──────────┐           │
-│   │ Service  │ │ Service  │ │ Service  │           │
-│   │    A     │ │    B     │ │    C     │           │
-│   └────┬─────┘ └────┬─────┘ └────┬─────┘           │
-└────────┼────────────┼────────────┼──────────────────┘
-         │            │            │
-         └────────────┼────────────┘
-                      │
-┌─────────────────────┼───────────────────────────────┐
-│                     ▼                                │
-│              ┌─────────────┐                         │
-│              │  Database   │                         │
-│              └─────────────┘                         │
-└─────────────────────────────────────────────────────┘
-```
+[Explain the main structure or flow that must be preserved.]
 
-### Technology Stack
+### Key Decisions
 
-| Layer | Technology | Version | Purpose |
-|-------|------------|---------|---------|
-| Runtime | Python | 3.11+ | Primary language |
-| Framework | FastAPI | 0.100+ | Web framework |
-| Database | PostgreSQL | 15+ | Data storage |
-| Cache | Redis | 7+ | Caching layer |
+| Decision | Why It Was Chosen | What Must Stay True |
+|----------|-------------------|---------------------|
+| ... | ... | ... |
 
-### Design Decisions
+### Failure-Sensitive Decisions
 
-| Decision | Rationale | Alternatives Considered |
-|----------|-----------|------------------------|
-| Use async | Performance for I/O-bound tasks | Sync (rejected: blocking) |
-| PostgreSQL | ACID compliance, JSON support | MongoDB (rejected: consistency) |
-
-Record significant decisions in `_sdd/spec/decision_log.md` as well, so rationale remains traceable when the main spec is later split or simplified.
+| Area | Sensitive Assumption | Consequence If Broken |
+|------|----------------------|-----------------------|
+| ... | ... | ... |
 
 ---
 
-## Component Details
+## 4. Contract / Invariants / Verifiability
 
-> 각 컴포넌트에 What/Why/How 트라이어드를 적용한다. 스펙 규모가 클 경우 각 컴포넌트는 별개의 파일로 분리될 수 있다 — Modular Spec Guide 참고.
+### Contract
 
-### Component: <Name>
+| ID | Subject | Inputs/Outputs | Preconditions | Postconditions | Failure Guarantees |
+|----|---------|----------------|---------------|----------------|--------------------|
+| C1 | ... | ... | ... | ... | ... |
+| C2 | ... | ... | ... | ... | ... |
 
-#### Motivation [Why]
+### Invariants
 
-Why this component exists — what problem it solves, why it's a separate component rather than part of something else. Write as natural prose, NOT as a label pattern like "~의 이유: ..." (e.g., "Separated from X because Y to enable independent scaling").
+| ID | Scope | Invariant | Why It Matters |
+|----|-------|-----------|----------------|
+| I1 | ... | ... | ... |
+| I2 | ... | ... | ... |
 
-#### Purpose [What]
+### Verifiability
 
-Brief description of what this component does.
+| ID | Targets | Verification Method | Evidence / Notes |
+|----|---------|---------------------|------------------|
+| V1 | C1, I1 | test | ... |
+| V2 | C2 | review | ... |
 
-- Primary: What it does
-- Secondary: Supporting functions
-
-#### Input/Output
-
-**Input:**
-```python
-# Input type/schema
-class InputModel:
-    field1: str
-    field2: int
-```
-
-**Output:**
-```python
-# Output type/schema
-class OutputModel:
-    result: str
-    status: str
-```
-
-#### Dependencies
-
-- **ComponentB** (Internal) — Data processing. Separated processing logic to allow independent scaling and testing.
-- **redis** (External) — Caching. In-memory store needed for sub-millisecond lookups; chosen over local cache for multi-instance consistency.
-
-<!-- Include Source field only when documenting an existing codebase -->
-#### Source
-
-- `src/components/name/main.py`: ClassName.method(), entry_point()
-- `src/components/name/utils.py`: helper_function(), parse_input()
-- `src/components/name/models.py`: InputModel, OutputModel
-
-#### Architecture Details [How]
-
-**Key Files:**
-- `src/components/name/main.py` - Entry point
-- `src/components/name/utils.py` - Helper functions
-- `src/components/name/models.py` - Data models
-
-**Key Classes/Functions:**
-- `ClassName.method()` - Description
-- `function_name()` - Description
-
-**Design Patterns Used:**
-- Strategy pattern for...
-- Factory pattern for...
-
-#### How to Use
-
-- API/interface examples
-- Configuration options
-
-#### Error Handling
-
-| Error | Cause | Handling |
-|-------|-------|----------|
-| ValidationError | Invalid input | Return 400 with details |
-| TimeoutError | Slow downstream | Retry with backoff |
-
-#### Known Issues
-
-- **Issue 1**: Description (Workaround: ...)
-- **Issue 2**: Description (Planned fix: ...)
+`Verification Method`는 `test`, `review`, `runtime-check`, `manual-check` 중 하나 이상을 사용한다.
 
 ---
 
-## Data Models
+## 5. Usage Guide & Expected Results
 
-### Model: <EntityName>
+### Scenario: [Primary Flow]
 
-```python
-class EntityName:
-    id: UUID
-    created_at: datetime
-    updated_at: datetime
+**Setup**: ...
 
-    # Core fields
-    name: str
-    status: Enum['active', 'inactive']
+**Action**: ...
 
-    # Relationships
-    parent_id: Optional[UUID]
-    children: List[EntityName]
-```
+**Expected Result**: ...
 
-**Constraints:**
-- `name` must be unique within scope
-- `status` defaults to 'active'
+### Scenario: [Failure or Edge Case]
 
-**Indexes:**
-- Primary: `id`
-- Unique: `(scope_id, name)`
-- Index: `created_at`
+**Setup**: ...
+
+**Action**: ...
+
+**Expected Result**: ...
 
 ---
 
-## API Reference
+## 6. Decision-Bearing Structure
 
-### Endpoint: `GET /api/v1/resource`
+### System Boundary
 
-**Description:** Retrieve list of resources
+[What is inside and outside the system boundary?]
 
-**Request:**
-```
-GET /api/v1/resource?page=1&limit=20
-Authorization: Bearer <token>
-```
+### Ownership
 
-**Response:**
-```json
-{
-  "data": [
-    {"id": "...", "name": "..."}
-  ],
-  "pagination": {
-    "page": 1,
-    "limit": 20,
-    "total": 100
-  }
-}
-```
+| Area | Owner / Responsible Layer | Why |
+|------|---------------------------|-----|
+| ... | ... | ... |
 
-**Error Responses:**
-| Status | Reason |
-|--------|--------|
-| 401 | Invalid token |
-| 403 | Insufficient permissions |
+### Cross-Component Contracts
+
+| Boundary | Contract | Risk If Broken |
+|----------|----------|----------------|
+| ... | ... | ... |
+
+### Extension Points
+
+- ...
+
+### Invariant Hotspots
+
+- ...
 
 ---
 
-## Environment & Dependencies
+## 7. Reference Information
 
-### Directory Structure
+### Data Models
 
-```
-project/
-├── src/
-│   ├── __init__.py
-│   ├── main.py           # Application entry point
-│   ├── config.py         # Configuration management
-│   ├── components/       # Core components
-│   │   ├── __init__.py
-│   │   └── component_a/
-│   ├── models/           # Data models
-│   ├── services/         # Business logic
-│   └── utils/            # Shared utilities
-├── tests/
-│   ├── unit/
-│   ├── integration/
-│   └── e2e/
-├── docs/
-├── scripts/
-├── .env.example
-├── pyproject.toml
-└── README.md
-```
+[Only if materially useful.]
 
-### Dependencies
+### API Reference
 
-**Runtime:**
-```toml
-[project.dependencies]
-python = "^3.11"
-fastapi = "^0.100.0"
-pydantic = "^2.0"
-```
+[Only if materially useful.]
 
-**Development:**
-```toml
-[project.optional-dependencies]
-dev = [
-    "pytest",
-    "black",
-    "mypy",
-]
-```
+### Environment & Dependencies
 
-### System Requirements
+| Category | Item | Why It Matters |
+|----------|------|----------------|
+| Runtime | ... | ... |
+| External | ... | ... |
 
-- Python 3.11+
-- PostgreSQL 15+
-- Redis 7+
-- 2GB RAM minimum
+### Configuration
+
+| Key | Required | Purpose |
+|-----|----------|---------|
+| ... | ... | ... |
 
 ---
 
-## Configuration
+## Appendix A. Strategic Code Map
 
-### Environment Variables
+Use this only when it materially improves navigation. Keep it manual curated and selective.
 
-| Variable | Required | Default | Description |
-|----------|----------|---------|-------------|
-| DATABASE_URL | Yes | - | PostgreSQL connection string |
-| REDIS_URL | No | localhost:6379 | Redis connection |
-| LOG_LEVEL | No | INFO | Logging verbosity |
+| Kind | Path / Symbol | Why It Matters | When to Read It |
+|------|----------------|----------------|-----------------|
+| Entrypoint | `...` | ... | ... |
+| Invariant Hotspot | `...` | ... | ... |
+| Extension Point | `...` | ... | ... |
+| Change Hotspot | `...` | ... | ... |
 
-### Configuration Files
+## Appendix B. Related Docs & Code References
 
-**config.yaml:**
-```yaml
-server:
-  host: 0.0.0.0
-  port: 8000
-  workers: 4
-
-database:
-  pool_size: 10
-  max_overflow: 5
-```
+- `...`
 
 ---
 
-## Security Considerations
-
-### Authentication
-
-- JWT-based authentication
-- Token expiry: 1 hour
-- Refresh token: 7 days
-
-### Authorization
-
-| Role | Permissions |
-|------|-------------|
-| admin | All operations |
-| user | Read, create own |
-| viewer | Read only |
-
-### Data Protection
-
-- Passwords hashed with bcrypt
-- Sensitive data encrypted at rest
-- HTTPS enforced in production
-
----
-
-## Performance Considerations
-
-### Benchmarks
-
-| Operation | Target | Current |
-|-----------|--------|---------|
-| List (100 items) | <100ms | 85ms |
-| Create | <50ms | 42ms |
-| Search | <200ms | 180ms |
-
-### Optimization Strategies
-
-- Database query optimization
-- Redis caching for hot data
-- Connection pooling
-
-### Scaling Considerations
-
-- Horizontal scaling via container orchestration
-- Database read replicas for heavy read loads
-- CDN for static assets
-
----
-
-## Identified Issues & Improvements
-
-### Critical Bugs
-
-- [ ] **BUG-001**: Memory leak in long-running processes
-  - Location: `src/services/processor.py:145`
-  - Impact: High
-  - Status: Investigating
-
-### Code Quality Issues
-
-- [ ] Missing type hints in legacy modules
-- [ ] Inconsistent error handling patterns
-- [ ] Duplicate code in utils
-
-### Missing Features
-
-- [ ] Batch operations API
-- [ ] Export functionality
-- [ ] Audit logging
-
-### Technical Debt
-
-- [ ] Migrate from deprecated library X
-- [ ] Refactor monolithic service
-- [ ] Add comprehensive test coverage
-
----
-
-## Usage Guide & Expected Results
-
-### Scenario 1: [Basic Usage]
-
-**Setup:**
-```bash
-# Prerequisites and setup steps
-```
-
-**Action:**
-```bash
-# What the user does
-```
-
-**Expected Result:**
-```
-# What should happen — expected output, state changes, or observable effects
-```
-
-### Scenario 2: [Advanced Usage]
-
-**Setup:** [Prerequisites]
-
-**Action:** [Steps]
-
-**Expected Result:** [Observable outcome with specific values/behaviors]
-
-### Installation
-
-```bash
-# Clone repository
-git clone https://github.com/org/project.git
-cd project
-
-# Install dependencies
-pip install -e ".[dev]"
-
-# Set up environment
-cp .env.example .env
-```
-
-### Running Locally
-
-```bash
-# Start dependencies
-docker-compose up -d db redis
-
-# Run migrations
-python scripts/migrate.py
-
-# Start development server
-python -m src.main
-```
-
-### Common Operations
-
-**Creating a resource:**
-```bash
-curl -X POST http://localhost:8000/api/v1/resource \
-  -H "Authorization: Bearer $TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{"name": "example"}'
-```
-
-**Querying resources:**
-```bash
-curl http://localhost:8000/api/v1/resource?status=active \
-  -H "Authorization: Bearer $TOKEN"
-```
-
----
-
-## Testing
-
-### Running Tests
-
-```bash
-# All tests
-pytest
-
-# Unit tests only
-pytest tests/unit/
-
-# With coverage
-pytest --cov=src --cov-report=html
-```
-
-### Test Coverage Goals
-
-| Module | Target | Current |
-|--------|--------|---------|
-| Core | 90% | 85% |
-| Services | 80% | 72% |
-| Utils | 70% | 68% |
-
----
-
-## Deployment
-
-### Production Checklist
-
-- [ ] Environment variables configured
-- [ ] Database migrations applied
-- [ ] SSL certificates installed
-- [ ] Monitoring configured
-- [ ] Backup strategy in place
-
-### Deployment Commands
-
-```bash
-# Build container
-docker build -t project:latest .
-
-# Deploy
-kubectl apply -f k8s/
-```
-
----
-
-## Appendix: Code Reference Index
-
-All code references cited in this spec, organized by file.
-
-| File | Functions / Classes | Referenced In |
-|------|---------------------|---------------|
-| `src/core/processor.py` | process_data(), transform() | Core Design, Component Details |
-| `src/core/validator.py` | validate(), ValidationRule | Core Design |
-| `src/api/handler.py` | APIHandler, handle_request() | Component Details |
-
----
-
-## Changelog
-
-### [Unreleased]
-- Feature: ...
-- Fix: ...
-
-### [1.0.0] - YYYY-MM-DD
-- Initial release
-- Core functionality implemented
+## Temporary Spec Note
+
+Global spec과 별도로, 실행 청사진이 필요한 변경 작업은 temporary spec을 사용한다. Temporary spec의 canonical shape는 아래와 같다.
+
+1. `Change Summary`
+2. `Scope Delta`
+3. `Contract/Invariant Delta`
+4. `Touchpoints`
+5. `Implementation Plan`
+6. `Validation Plan`
+7. `Risks / Open Questions`

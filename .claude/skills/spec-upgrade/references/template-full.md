@@ -1,304 +1,227 @@
-# Complete Spec Document Template
+# Complete Global Spec Template
 
-This is the full template with all possible sections. Adapt as needed for each project.
+This is the richer template for current SDD global specs. Use it when the project is large enough that the compact template would become ambiguous, but keep the same canonical section order and philosophy.
 
 ---
 
 # <Project Name>
 
-> One-line description of what this project does
+> One-line description of what this project is for
 
 **Version**: X.Y.Z
 **Last Updated**: YYYY-MM-DD
-**Status**: [Draft | In Review | Approved | Deprecated]
+**Status**: Draft | In Review | Approved | Deprecated
 
 ## Table of Contents
 
-- [Background & Motivation](#background--motivation)
-- [Core Design](#core-design)
-- [Architecture Overview](#architecture-overview)
-- [Component Details](#component-details)
-- [Usage Guide & Expected Results](#usage-guide--expected-results)
-- [Data Models](#data-models)
-- [API Reference](#api-reference)
-- [Environment & Dependencies](#environment--dependencies)
-- [Appendix: Code Reference Index](#appendix-code-reference-index)
+- [1. Background & High-Level Concept](#1-background--high-level-concept)
+- [2. Scope / Non-goals / Guardrails](#2-scope--non-goals--guardrails)
+- [3. Core Design & Key Decisions](#3-core-design--key-decisions)
+- [4. Contract / Invariants / Verifiability](#4-contract--invariants--verifiability)
+- [5. Usage Guide & Expected Results](#5-usage-guide--expected-results)
+- [6. Decision-Bearing Structure](#6-decision-bearing-structure)
+- [7. Reference Information](#7-reference-information)
+- [Appendix A. Strategic Code Map](#appendix-a-strategic-code-map)
+- [Appendix B. Related Docs & Code References](#appendix-b-related-docs--code-references)
 
 ---
 
-## Background & Motivation
+## 1. Background & High-Level Concept
 
-### Problem Statement [What]
+### Problem Statement
 
-[What problem does this project solve? What pain point or gap exists without it?]
+[What problem exists today and what pain or cost does it create?]
 
-### Why This Approach [Why]
+### Why This Matters Now
 
-[Why was this approach chosen over alternatives? Briefly compare with key alternatives considered.]
+[Why the problem is worth solving now, not later.]
+
+### High-Level Concept
+
+[Describe the framing or insight that makes this project coherent.]
+
+### Alternatives Considered
 
 | Approach | Pros | Cons | Decision |
 |----------|------|------|----------|
-| This project's approach | ... | ... | **Chosen** |
+| Proposed approach | ... | ... | Chosen |
 | Alternative A | ... | ... | Rejected: ... |
+| Alternative B | ... | ... | Rejected: ... |
 
-### Core Value Proposition
+### Core Value
 
-[What is the key value this project delivers? One paragraph summarizing the essential insight.]
-
-### Primary Objective
-
-[Clear statement of what the project aims to achieve]
-
-### Key Features
-
-1. **Feature 1**: Description
-2. **Feature 2**: Description
-3. **Feature 3**: Description
-
-### Target Users / Use Cases
-
-| User Type | Use Case | Priority |
-|-----------|----------|----------|
-| Developer | ... | High |
-| Admin | ... | Medium |
-
-### Success Criteria
-
-- [ ] Criterion 1
-- [ ] Criterion 2
-- [ ] Criterion 3
-
-### Non-Goals (Out of Scope)
-
-- Item 1
-- Item 2
+[One concise paragraph explaining the key value delivered.]
 
 ---
 
-## Core Design
+## 2. Scope / Non-goals / Guardrails
 
-### Key Idea [What]
+### In Scope
 
-[Narrative explanation of the core design idea. What is the central insight or approach that drives this project's architecture? Write as a story — what problem was encountered, what solution was devised, and why it works.]
+- ...
+- ...
 
-### Algorithm / Logic Flow [How]
+### Non-goals
 
-[Describe the main algorithm or processing flow. Include actual code excerpts for key functions.]
+- ...
+- ...
 
-> **Code Excerpt Rule**: Functions ≤30 lines → include full body. Functions >30 lines → include signature + core logic only.
+### Guardrails
 
-```python
-# [src/core/processor.py:process_data]
-def process_data(input: InputModel) -> OutputModel:
-    """Core processing logic."""
-    validated = validate(input)
-    result = transform(validated)
-    return OutputModel(result=result)
-```
+- ...
+- ...
 
-> **Inline Citation Format**: Reference code in prose as `[filepath:functionName]`.
-> Example: "The validation step `[src/core/validator.py:validate]` ensures data integrity before the transform `[src/core/processor.py:transform]`."
+### Scope Notes
 
-### Design Rationale [Why]
-
-[Why was this structure chosen? What constraints or goals drove the design decisions?]
-
-| Design Choice | Rationale | Alternatives Considered |
-|---------------|-----------|------------------------|
-| Choice 1 | Why this was chosen | What else was considered |
-| Choice 2 | Why this was chosen | What else was considered |
+[Clarify boundaries that may be confused with adjacent work.]
 
 ---
 
-## Architecture Overview
+## 3. Core Design & Key Decisions
 
-### System Diagram
+### Core Design Narrative
 
-```
-[ASCII diagram of system architecture]
-```
+[Explain the main structure or flow that must be preserved.]
 
-### Technology Stack
+### Key Decisions
 
-| Layer | Technology | Version | Purpose |
-|-------|------------|---------|---------|
-| Runtime | Python | 3.11+ | Primary language |
-| Framework | FastAPI | 0.100+ | Web framework |
-
-### Design Decisions
-
-| Decision | Rationale | Alternatives Considered |
-|----------|-----------|------------------------|
+| Decision | Why It Was Chosen | What Must Stay True |
+|----------|-------------------|---------------------|
 | ... | ... | ... |
 
-Record significant decisions in `_sdd/spec/decision_log.md` as well, so rationale remains traceable when the main spec is later split or simplified.
+### Failure-Sensitive Decisions
+
+| Area | Sensitive Assumption | Consequence If Broken |
+|------|----------------------|-----------------------|
+| ... | ... | ... |
 
 ---
 
-## Component Details
+## 4. Contract / Invariants / Verifiability
 
-> 각 컴포넌트에 What/Why/How 트라이어드를 적용한다. 스펙 규모가 클 경우 각 컴포넌트는 별개의 파일로 분리될 수 있다 — Modular Spec Guide 참고.
+### Contract
 
-### Component: <Name>
+| ID | Subject | Inputs/Outputs | Preconditions | Postconditions | Failure Guarantees |
+|----|---------|----------------|---------------|----------------|--------------------|
+| C1 | ... | ... | ... | ... | ... |
+| C2 | ... | ... | ... | ... | ... |
 
-#### Motivation [Why]
+### Invariants
 
-Why this component exists — what problem it solves, why it's a separate component rather than part of something else. Write as natural prose, NOT as a label pattern like "~의 이유: ..." (e.g., "Separated from X because Y to enable independent scaling").
+| ID | Scope | Invariant | Why It Matters |
+|----|-------|-----------|----------------|
+| I1 | ... | ... | ... |
+| I2 | ... | ... | ... |
 
-#### Purpose [What]
+### Verifiability
 
-Brief description of what this component does.
+| ID | Targets | Verification Method | Evidence / Notes |
+|----|---------|---------------------|------------------|
+| V1 | C1, I1 | test | ... |
+| V2 | C2 | review | ... |
 
-- Primary: What it does
-- Secondary: Supporting functions
-
-#### Input/Output
-
-**Input:**
-```python
-# Input type/schema
-```
-
-**Output:**
-```python
-# Output type/schema
-```
-
-#### Dependencies
-
-- **ComponentB** (Internal) — Data processing. Separated processing logic to allow independent scaling and testing.
-
-<!-- Include Source field only when documenting an existing codebase -->
-#### Source
-
-- `src/components/name/main.py`: ClassName.method(), entry_point()
-- `src/components/name/utils.py`: helper_function(), parse_input()
-
-#### Architecture Details [How]
-
-**Key Files:**
-- `src/components/name/main.py` - Entry point
-
-**Key Classes/Functions:**
-- `ClassName.method()` - Description
-
-#### How to Use
-
-- API/interface examples
-- Configuration options
-
-#### Known Issues
-
-- Current limitations and planned improvements
+`Verification Method`는 `test`, `review`, `runtime-check`, `manual-check` 중 하나 이상을 사용한다.
 
 ---
 
-## Usage Guide & Expected Results
+## 5. Usage Guide & Expected Results
 
-### Scenario 1: [Basic Usage]
+### Scenario: [Primary Flow]
 
-**Setup:**
-```bash
-# Prerequisites and setup steps
-```
+**Setup**: ...
 
-**Action:**
-```bash
-# What the user does
-```
+**Action**: ...
 
-**Expected Result:**
-```
-# What should happen — expected output, state changes, or observable effects
-```
+**Expected Result**: ...
 
-### Scenario 2: [Advanced Usage]
+### Scenario: [Failure or Edge Case]
 
-**Setup:** [Prerequisites]
+**Setup**: ...
 
-**Action:** [Steps]
+**Action**: ...
 
-**Expected Result:** [Observable outcome with specific values/behaviors]
+**Expected Result**: ...
 
 ---
 
-## Data Models
+## 6. Decision-Bearing Structure
 
-### Model: <EntityName>
+### System Boundary
 
-```python
-class EntityName:
-    id: UUID
-    name: str
-    status: Enum['active', 'inactive']
-```
+[What is inside and outside the system boundary?]
 
-**Constraints:**
-- `name` must be unique within scope
+### Ownership
 
-**Indexes:**
-- Primary: `id`
+| Area | Owner / Responsible Layer | Why |
+|------|---------------------------|-----|
+| ... | ... | ... |
 
----
+### Cross-Component Contracts
 
-## API Reference
+| Boundary | Contract | Risk If Broken |
+|----------|----------|----------------|
+| ... | ... | ... |
 
-### Endpoint: `GET /api/v1/resource`
+### Extension Points
 
-**Description:** Retrieve list of resources
+- ...
 
-**Request:**
-```
-GET /api/v1/resource?page=1&limit=20
-Authorization: Bearer <token>
-```
+### Invariant Hotspots
 
-**Response:**
-```json
-{
-  "data": [{"id": "...", "name": "..."}],
-  "pagination": {"page": 1, "limit": 20, "total": 100}
-}
-```
+- ...
 
 ---
 
-## Environment & Dependencies
+## 7. Reference Information
 
-### Directory Structure
+### Data Models
 
-```
-project/
-├── src/
-├── tests/
-└── ...
-```
+[Only if materially useful.]
 
-### Dependencies
+### API Reference
 
-**Runtime:**
-```toml
-[project.dependencies]
-```
+[Only if materially useful.]
 
-**Development:**
-```toml
-[project.optional-dependencies]
-```
+### Environment & Dependencies
+
+| Category | Item | Why It Matters |
+|----------|------|----------------|
+| Runtime | ... | ... |
+| External | ... | ... |
 
 ### Configuration
 
-| Variable | Required | Default | Description |
-|----------|----------|---------|-------------|
-| ... | ... | ... | ... |
+| Key | Required | Purpose |
+|-----|----------|---------|
+| ... | ... | ... |
 
 ---
 
-## Appendix: Code Reference Index
+## Appendix A. Strategic Code Map
 
-All code references cited in this spec, organized by file.
+Use this only when it materially improves navigation. Keep it manual curated and selective.
 
-| File | Functions / Classes | Referenced In |
-|------|---------------------|---------------|
-| `src/core/processor.py` | process_data(), transform() | Core Design, Component Details |
-| `src/core/validator.py` | validate(), ValidationRule | Core Design |
+| Kind | Path / Symbol | Why It Matters | When to Read It |
+|------|----------------|----------------|-----------------|
+| Entrypoint | `...` | ... | ... |
+| Invariant Hotspot | `...` | ... | ... |
+| Extension Point | `...` | ... | ... |
+| Change Hotspot | `...` | ... | ... |
+
+## Appendix B. Related Docs & Code References
+
+- `...`
+
+---
+
+## Temporary Spec Note
+
+Global spec과 별도로, 실행 청사진이 필요한 변경 작업은 temporary spec을 사용한다. Temporary spec의 canonical shape는 아래와 같다.
+
+1. `Change Summary`
+2. `Scope Delta`
+3. `Contract/Invariant Delta`
+4. `Touchpoints`
+5. `Implementation Plan`
+6. `Validation Plan`
+7. `Risks / Open Questions`

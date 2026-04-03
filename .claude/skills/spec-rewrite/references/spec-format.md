@@ -1,99 +1,69 @@
-# Spec Format Reference (Whitepaper Style)
+# Spec Rewrite Format Reference (Current Canonical Model)
 
 Validation and preservation reference aligned with `docs/SDD_SPEC_DEFINITION.md`.
-This is NOT a generation template. It defines what qualities and sections a rewrite must preserve or evaluate.
+This is not a generation template. It defines what structure and explanation quality the rewrite should preserve or improve.
 
 ---
 
-## 1) SDD Definition Lens
+## Global Spec Canonical Shape
 
-According to `docs/SDD_SPEC_DEFINITION.md`, a good SDD spec is a whitepaper-style single source of truth that explains:
+| Order | Section | Required |
+|------|---------|----------|
+| 1 | Background & High-Level Concept | Yes |
+| 2 | Scope / Non-goals / Guardrails | Yes |
+| 3 | Core Design & Key Decisions | Yes |
+| 4 | Contract / Invariants / Verifiability | Yes |
+| 5 | Usage Guide & Expected Results | Yes |
+| 6 | Decision-Bearing Structure | Yes |
+| 7 | Reference Information | If useful |
+| A | Strategic Code Map | Optional appendix |
 
-- the problem and motivation
-- the core design and logic flow
-- the code grounding / implementation mapping
-- the usage path and expected results
-- the supporting reference information without letting reference sections replace the narrative
+## Temporary Spec Canonical Shape
 
-Presence alone is not enough. The rewrite should validate both section existence and explanation quality.
+| Order | Section | Required |
+|------|---------|----------|
+| 1 | Change Summary | Yes |
+| 2 | Scope Delta | Yes |
+| 3 | Contract/Invariant Delta | Yes |
+| 4 | Touchpoints | Yes |
+| 5 | Implementation Plan | Yes |
+| 6 | Validation Plan | Yes |
+| 7 | Risks / Open Questions | Yes |
 
-## 2) Expected Section Structure
+## Explanation Quality Checks
 
-| # | Section | Purpose | Required |
-|---|---------|---------|----------|
-| 1 | Background & Motivation | Problem, why this approach, core value proposition | Yes |
-| 2 | Core Design | Key idea narrative, algorithm/logic flow with code excerpts, design rationale | Yes |
-| 3 | Architecture Overview | System diagram, technology stack, high-level design | Yes |
-| 4 | Component Details | Per-component purpose/why/responsibility/interface/source | Yes |
-| 5 | Usage Guide & Expected Results | Scenario-based usage with expected outcomes | Yes |
-| 6 | Data Models | Entity definitions, constraints, indexes | If applicable |
-| 7 | API Reference | Endpoints, request/response schemas | If applicable |
-| 8 | Environment & Dependencies | Directory structure, dependencies, configuration | Yes |
-| - | Appendix: Code Reference Index | All inline citations organized by file | If code excerpts exist |
+### Global Spec
 
-## 3) Explanation Quality Checks
+- 문제와 high-level concept가 보이는가
+- scope와 non-goals가 경계 역할을 하는가
+- CIV가 명시되어 있는가
+- decision-bearing structure가 inventory보다 앞서는가
+- usage와 expected result가 있는가
 
-### 3.1 Problem / Motivation
+### Temporary Spec
 
-- Does the spec explain what problem the project solves?
-- Does it explain why this approach was chosen?
-- Can a reader understand the repo purpose without reading code first?
+- 이번 변경의 목적과 delta가 명확한가
+- contract/invariant delta와 validation linkage가 보이는가
+- touchpoints와 implementation plan이 실행 가능성을 주는가
 
-### 3.2 Core Design Narrative
+## Preservation Rules
 
-- Does the spec describe the main logic as a narrative or flow rather than only tables?
-- Does it explain why the structure works?
-- Are the key design decisions visible to a reviewer?
+- inline citation과 code excerpt header는 보존한다.
+- component-level `Why`는 사라지면 안 된다.
+- existing rationale는 appendix 이동 시에도 보존 위치를 남긴다.
+- strategic code map은 selective appendix로 유지한다.
 
-### 3.3 Code Grounding
-
-- Does the explanation point to real code or `Source` mappings?
-- Are inline citations preserved?
-- If code excerpts exist, is the appendix index maintained?
-
-### 3.4 Usage and Expected Results
-
-- Does the spec show how the project is used?
-- Does it describe expected outputs or observable outcomes?
-- Are failure or exception paths covered where they matter?
-
-### 3.5 Reference Balance
-
-- Are API/data/config sections supporting the narrative rather than replacing it?
-- Can the reader understand the product without starting from raw reference tables?
-
-## 4) Preservation Rules
-
-These elements MUST be preserved during spec rewrite/restructuring.
-
-### Section Preservation
-
-- **Background & Motivation** (§1): problem statement, approach rationale, and core value proposition must not be pruned or moved to appendix if already present
-- **Core Design** (§2): key idea narrative and design rationale must remain in the main document if already present
-- **Usage Guide & Expected Results** (§5): scenario-based expected results must not be removed if already present
-
-### Code Excerpt Preservation
-
-- **Inline citations**: `[filepath:functionName]` references in prose must be preserved during restructuring
-- **Code blocks with citation headers**: blocks starting with `# [filepath:functionName]` must be kept intact
-- **30-line rule**: code excerpts follow the 30-line rule (≤30 lines: full body; >30 lines: signature + core logic)
-- **Code Reference Index**: the appendix table mapping files to citations must be updated if sections are moved
-
-### Component Preservation
-
-- **Why fields**: component-level `Why` fields must remain inline, not moved to `decision_log.md` or appendix
-- **Source fields**: implementation file mappings must be preserved during section moves
-
-## 5) Rewrite Boundary
+## Rewrite Boundary
 
 `spec-rewrite` should:
 
-- preserve what already exists
-- improve clarity, structure, findability, and readability
-- warn when whitepaper qualities are missing
+- preserve existing valuable content
+- improve clarity, structure, findability, and canonical fit
+- compress or relocate low-value inventory
+- warn when canonical core is missing
 
-`spec-rewrite` should NOT:
+`spec-rewrite` should not:
 
-- invent missing whitepaper narrative out of thin air
-- act as `spec-create` or `spec-upgrade`
-- silently convert a weak spec into a richer spec without calling out that the content was missing
+- invent missing CIV or missing temporary delta out of thin air
+- silently upgrade a weak spec into a richer one
+- treat inventory-heavy detail as mandatory main-body structure

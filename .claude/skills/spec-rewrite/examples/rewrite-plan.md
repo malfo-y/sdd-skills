@@ -3,73 +3,61 @@
 ## Rewrite Context
 
 - **Target Document**: `_sdd/spec/apify_ig.md`
-- **Execution Date**: 2026-04-02
-- **Goal**: improve structure and findability without inventing missing whitepaper narrative
+- **Execution Date**: 2026-04-04
+- **Goal**: improve canonical fit and findability without inventing missing CIV or missing temporary-spec detail
 
 ## Diagnosis Summary
 
-- **Primary Pain**: `main` mixes architecture, operations, and historical logs, so component boundaries are hard to follow
+- **Primary Pain**: `main` mixes global rationale, operational notes, and implementation inventory, so the canonical shape is hard to see
 - **Lowest Metrics**:
-  - `Usage Completeness`: `1` -- representative scenario lacks expected result
-  - `Ambiguity Control`: `1` -- several promises are non-measurable
-  - `Architecture Clarity`: `2` -- queue/retry ownership is scattered
-- **Whitepaper Risk**: §2 narrative exists but is buried under reference-heavy sections
+  - `Canonical Fit`: weak — CIV and decision-bearing structure are buried
+  - `Findability`: weak — key sections are harder to locate than necessary
+  - `Ambiguity Control`: weak — scope and ownership boundaries are vague
 
 ## Keep in Main
 
-- Background / scope / non-goals
-- Architecture snapshot and core flow
-- Component index with direct links
-- Primary usage entry point
-- Open questions that affect implementation or review
+- problem / concept / scope / guardrails
+- key design decisions
+- CIV
+- usage and expected results
+- decision-bearing structure
 
 ## Move / Prune / Appendix
 
-- Move long batch execution logs to appendix
-- Collapse duplicate API response tables into one canonical table
-- Prune low-value historical commentary after preserving the rationale in `decision_log.md`
+- move long file-by-file inventories to reference sections
+- compress duplicate setup notes
+- keep only selective navigation hints in strategic code map appendix
 
 ## Split Map
 
 ```text
 _sdd/spec/
 ├── apify_ig.md
-└── apify_ig/
-    ├── overview.md
-    ├── architecture.md
-    ├── components.md
-    ├── interfaces.md
-    ├── operations.md
-    └── appendix.md
+├── api-reference.md
+├── environment.md
+└── appendix.md
 ```
 
 ## Metric Improvement Rationale
 
-- `Component Separation`: move operations and interfaces into dedicated files
-- `Findability`: turn `main` into a link-first hub so core topics stay within two hops
-- `Repo Purpose Clarity`: keep project purpose and usage path in `main`
-- `Why/Decision Preservation`: move only low-value bulk text and preserve rationale in-line or in `decision_log.md`
+- `Canonical Fit`: expose global spec core directly
+- `Findability`: make `main` the shortest path to concept, CIV, and usage
+- `Why/Decision Preservation`: keep rationale inline instead of burying it in appendices
 
 ## Ambiguities / Risks / Unresolved Decisions
 
-- Rate limit is inconsistent across two source sections (`20/min` vs `30/min`)
-- Alert ownership is still undefined
-- Missing quantitative done criteria for sync reliability
+- rate-limit contract appears in two inconsistent places
+- ownership for failure alerting is still unclear
+- some config notes may need their own reference file
 
-## Whitepaper Warnings
+## Canonical Warnings
 
-- Do not author missing inline citations automatically
-- If §5 expected results are absent, warn in the report instead of inventing them
+- missing or weak CIV must be flagged, not authored from scratch
+- if usage outcomes remain vague, leave explicit warnings in `rewrite_report.md`
 
 ## Execution Order
 
-1. Rewrite `main` as the index hub
-2. Create split files and move existing content
-3. Validate links and citation headers
-4. Write `rewrite_report.md` with any deviations from this plan
-
-## Approval Status
-
-- **Approval Required**: yes
-- **Approval Reason**: new subdirectory split and section relocation
-- **Status**: pending
+1. Rewrite `main` to expose global core
+2. Move inventory-heavy detail to reference files
+3. Validate links and citations
+4. Write `rewrite_report.md` with deviations

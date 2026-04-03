@@ -1,265 +1,390 @@
-# Implementation Plan: gstack Patterns for SDD Skills
+# Implementation Plan: SDD Canonical Model Rollout
 
 ## Overview
 
-gstack 패턴 토론에서 도출된 10개 결정 사항을 9개 파일(기존 7 + 신규 2)에 반영한다. Verification Gate, Regression Iron Rule, Failure Modes, Test Coverage Mapping, Scope Drift Detection, Fix-First, Code Analysis Metrics, Audit Trail, investigate 스킬을 추가한다.
+`docs/SDD_SPEC_DEFINITION.md`에서 확정한 새 canonical model을 실제 시스템 전반에 반영한다. 구현 대상은 생성/변환 스킬, 소비/검증/계획 스킬, 한국어 docs, 영문 미러, 최종 drift audit까지다.
 
-핵심 원칙: **Conciseness** -- 각 수정은 AC 항목 또는 Hard Rule 1-2줄 수준으로 최소화. "이 문장이 없으면 AI가 못 하는가?" 기준 적용.
+이번 작업은 문서만 바꾸는 마이그레이션이 아니라, 스킬이 생성하고 읽고 검증하는 contract 자체를 바꾸는 rollout이다. 따라서 실행 순서는 `definition -> generators/transformers -> consumers/planners -> docs -> english mirrors -> audit`로 고정한다.
+
+작업 브랜치는 `feat/review-sdd-definition`이다. `docs/SDD_SPEC_DEFINITION.md`는 이미 수정되었고, 이번 plan에서는 이를 입력 계약으로 취급한다.
+
+테스트 관점에서는 전통적인 `tests/` 디렉토리가 확인되지 않았다. 따라서 phase별 검증은 다음 조합으로 수행한다.
+
+- target file diff spot review
+- `.codex/` / `.claude/` mirror parity review
+- `rg` 기반 old canonical wording 탐색
+- 최종 spec review report 작성
 
 ## Scope
 
 ### In Scope
-- 5개 에이전트 파일 수정 (feature-draft, implementation-plan, implementation, implementation-review, spec-review)
-- 2개 스킬 파일 수정 (pr-review, sdd-autopilot)
-- 2개 신규 파일 생성 (investigate 에이전트 + 래퍼 스킬)
+
+- `.codex/skills` generator/transformer 레이어를 새 canonical global/temporary model에 맞게 재작성
+- `.claude/skills` generator/transformer mirror를 Codex와 semantic parity로 동기화
+- `spec-review`, `spec-summary`, `spec-rewrite`를 새 CIV + global/temporary asymmetry rubric으로 재정렬
+- `feature-draft`, `implementation-plan`, `spec-update-todo`, `spec-update-done`, `sdd-autopilot`을 temporary spec 실행 청사진 모델로 전환
+- `docs/SDD_WORKFLOW.md`, `docs/SDD_QUICK_START.md`, `docs/SDD_CONCEPT.md`, `docs/sdd.md` 동기화
+- `docs/en/SDD_*` 동기화 및 `docs/en/sdd.md` 생성
+- repo-wide drift audit 및 최종 review report 작성
 
 ### Out of Scope
-- Mirror Notice 스킬 파일 동기화 (별도 후속 태스크)
-- Codex 에이전트/스킬 파일 (`.codex/`)
-- `_sdd/spec/main.md` 직접 수정 (`spec-update-todo`/`spec-update-done`으로 위임)
-- gstack 패턴 중 미채택 항목 (retro 스킬 등)
+
+- 기존 사용자 프로젝트 스펙 일괄 migration
+- spec 관련이 아닌 unrelated skill behavior 변경
+- strategic code map 자동 생성 도구 구현
+- `_sdd/spec/main.md` 자체의 대규모 재작성
+- legacy uppercase implementation artifact 정리 작업
 
 ## Components
 
-1. **Verification & Regression**: implementation, implementation-review에 Verification Gate + Regression Iron Rule 추가
-2. **Feature Draft Enhancement**: feature-draft에 Failure Modes 테이블 추가
-3. **Implementation Plan Enhancement**: implementation-plan에 Test Coverage Mapping 추가
-4. **PR Review Enhancement**: pr-review에 Scope Drift Detection + Fix-First 추가
-5. **Spec Review Enhancement**: spec-review에 코드 분석 지표 추가
-6. **Autopilot Enhancement**: sdd-autopilot에 Audit Trail + Taste Decision 추가
-7. **Investigate Skill**: 신규 에이전트 + 래퍼 스킬 생성
+1. **Generator / Transformer Layer**: `spec-create`, `spec-upgrade`, template/reference/example
+2. **Consumer / Review Layer**: `spec-review`, `spec-summary`, `spec-rewrite`
+3. **Planning / Update / Orchestration Layer**: `feature-draft`, `implementation-plan`, `spec-update-todo`, `spec-update-done`, `sdd-autopilot`
+4. **Korean Docs Layer**: `docs/SDD_WORKFLOW.md`, `docs/SDD_QUICK_START.md`, `docs/SDD_CONCEPT.md`, `docs/sdd.md`
+5. **English Mirror Layer**: `docs/en/SDD_*`, `docs/en/sdd.md`
+6. **Validation Layer**: repo-wide grep audit, mirror parity review, final report
 
 ## Implementation Phases
 
-**전략**: Dependency-Driven -- 신규 파일(investigate)만 내부 의존성이 있고, 나머지 7개 수정은 모두 독립적. Phase 1에서 기존 파일 수정을 병렬 처리하고, Phase 2에서 신규 파일을 순차 생성한다.
+**Strategy**: Dependency-Driven
 
-### Phase 1: 기존 파일 수정 (전체 병렬)
-| ID | Task | Priority | Dependencies | Component |
-|----|------|----------|--------------|-----------|
-| 1 | implementation에 Verification Gate + Regression Iron Rule 추가 | P1-High | - | Verification & Regression |
-| 2 | implementation-review에 Fresh Verification 규칙 추가 | P1-High | - | Verification & Regression |
-| 3 | feature-draft에 Failure Modes 테이블 섹션 추가 | P2-Medium | - | Feature Draft Enhancement |
-| 4 | implementation-plan에 Test Coverage Mapping 추가 | P2-Medium | - | Implementation Plan Enhancement |
-| 5 | pr-review에 Scope Drift Detection + Fix-First 추가 | P1-High | - | PR Review Enhancement |
-| 6 | spec-review에 코드 분석 지표 추가 | P3-Low | - | Spec Review Enhancement |
-| 7 | sdd-autopilot에 Audit Trail + Taste Decision 추가 | P1-High | - | Autopilot Enhancement |
+선택 이유:
 
-### Phase 2: 신규 파일 생성 (순차)
-| ID | Task | Priority | Dependencies | Component |
-|----|------|----------|--------------|-----------|
-| 8 | investigate 에이전트 생성 | P3-Low | - | Investigate Skill |
-| 9 | investigate 래퍼 스킬 생성 | P3-Low | 8 | Investigate Skill |
+- 새 canonical semantics를 먼저 generator/transformer에 반영하지 않으면 이후 consumer와 docs가 거짓말이 된다.
+- consumer/planning layer는 generator layer의 새 구조를 전제로 읽어야 한다.
+- docs는 실제 skill behavior가 안정된 뒤에만 정확하게 다시 쓸 수 있다.
+- english mirror와 final audit은 한국어 원문 및 실제 skill behavior가 고정된 뒤 수행하는 편이 drift를 줄인다.
+
+### Phase 1: Generator / Transformer Canonicalization
+
+목표: `spec-create`와 `spec-upgrade`가 새 global/temporary canonical shape를 실제로 생성하고 변환하게 만든다.
+
+포함 task:
+
+- FD-01
+- FD-02
+
+Phase Exit Criteria:
+
+- `spec-create`와 `spec-upgrade` 양쪽 플랫폼이 더 이상 `whitepaper §1-§8`를 canonical goal로 설명하지 않는다.
+- template/example이 `Contract / Invariants / Verifiability`, decision-bearing structure, appendix-level strategic code map, temporary 7-section schema를 반영한다.
+- strategic code map은 manual curated appendix로 취급된다.
+
+### Phase 2: Consumer / Planning Skillchain Realignment
+
+목표: reader, reviewer, planner, updater, orchestrator가 새 canonical model을 읽고 쓰게 만든다.
+
+포함 task:
+
+- FD-03
+- FD-04
+
+Phase Exit Criteria:
+
+- `spec-review`, `spec-summary`, `spec-rewrite`가 새 quality rubric을 사용한다.
+- `feature-draft`, `implementation-plan`, `spec-update-todo`, `spec-update-done`, `sdd-autopilot`이 temporary spec의 delta/validation linkage를 다룬다.
+- CIV ID와 temporary delta linkage가 문서와 예시에서 모두 확인된다.
+
+### Phase 3: Korean Docs Sync
+
+목표: 한국어 안내 문서가 새 skill behavior와 canonical definition을 설명하게 만든다.
+
+포함 task:
+
+- FD-05
+
+Phase Exit Criteria:
+
+- `docs/SDD_WORKFLOW.md`와 `docs/SDD_QUICK_START.md`가 더 이상 `spec-upgrade = §1-§8 migration`을 설명하지 않는다.
+- `docs/SDD_CONCEPT.md`와 `docs/sdd.md`가 global/temporary asymmetry와 CIV 중심 모델을 설명한다.
+
+### Phase 4: English Mirror Sync
+
+목표: 영문 surface가 한국어 문서와 같은 model을 설명하도록 맞추고, 영어 self-contained philosophy doc를 추가한다.
+
+포함 task:
+
+- FD-06
+
+Phase Exit Criteria:
+
+- `docs/en/SDD_SPEC_DEFINITION.md`, `docs/en/SDD_WORKFLOW.md`, `docs/en/SDD_QUICK_START.md`, `docs/en/SDD_CONCEPT.md`가 새 canonical model을 설명한다.
+- `docs/en/sdd.md`가 생성된다.
+
+### Phase 5: Drift Audit and Closeout
+
+목표: rollout 후 잔존 old wording, mirror drift, low-impact collateral references를 정리하고 최종 review report를 남긴다.
+
+포함 task:
+
+- FD-07
+
+Phase Exit Criteria:
+
+- 주요 target surfaces에서 old `whitepaper §1-§8` canonical wording이 제거되거나 의도적으로 재해석된다.
+- `.codex/`와 `.claude/` mirror pair가 필요한 범위에서 동기화되었다.
+- 최종 review report가 생성된다.
 
 ## Task Details
 
-### Task 1: implementation에 Verification Gate + Regression Iron Rule 추가
-**Component**: Verification & Regression
-**Priority**: P1-High
-**Type**: Improvement
+### Task FD-01: Codex generator/transformer layer를 새 canonical model로 재작성
+**Component**: Generator / Transformer Layer
+**Priority**: P0
+**Type**: Refactor
 
-**Description**: implementation 에이전트의 Hard Rules에 Verification Gate와 Regression Iron Rule을 추가한다.
-
-**Acceptance Criteria**:
-- [ ] Hard Rules에 Verification Gate가 추가되었다 ("should work" 금지, 코드 변경 후 테스트 재실행 필수, 이전 결과 재사용 금지)
-- [ ] Hard Rules에 Regression Iron Rule이 추가되었다 (기존 테스트 실패 시 테스트 업데이트 + 회귀 방지 테스트 추가 필수, 사용자 확인 없이 자동)
-- [ ] env.md 미존재 시 코드 분석 기반 fallback이 명시되었다
-
-**Target Files**:
-- [M] `.claude/agents/implementation.md` -- Hard Rules 섹션에 Verification Gate + Regression Iron Rule 추가
-
-**Technical Notes**: Hard Rules 섹션 마지막에 2개 규칙을 간결하게 추가. 각 규칙 1-2줄. env.md 미존재 시 fallback: 코드 분석 기반 허용, 리포트에 "UNTESTED" 명시.
-**Dependencies**: -
-
----
-
-### Task 2: implementation-review에 Fresh Verification 규칙 추가
-**Component**: Verification & Regression
-**Priority**: P1-High
-**Type**: Improvement
-
-**Description**: implementation-review 에이전트의 Hard Rules에 Fresh Verification 규칙을 추가한다.
+**Description**: Codex용 `spec-create`와 `spec-upgrade`를 새 canonical global/temporary model 기준으로 다시 쓴다. old `§1-§8` canonical assumption을 제거하고, CIV, decision-bearing structure, appendix-level strategic code map, temporary 7-section schema를 생성 규칙에 반영한다.
 
 **Acceptance Criteria**:
-- [ ] Hard Rules에 Fresh Verification 규칙이 추가되었다 (테스트 실행 출력을 근거로 판단, "should work" 금지)
-- [ ] 이전 결과 재사용 금지가 명시되었다
-- [ ] env.md 미존재 시 fallback이 명시되었다
+- [ ] `.codex/skills/spec-create/SKILL.md`가 새 global spec structure와 temporary spec concept를 기준으로 설명한다.
+- [ ] `.codex/skills/spec-upgrade/`가 더 이상 `whitepaper §1-§8 형식으로 변환`을 canonical goal로 말하지 않는다.
+- [ ] codex template/reference/example이 `Contract / Invariants / Verifiability`, decision-bearing structure, appendix-level `Strategic Code Map`을 반영한다.
+- [ ] strategic code map은 manual curated appendix로 설명된다.
+- [ ] temporary spec 예시 또는 설명에 `Change Summary`, `Scope Delta`, `Contract/Invariant Delta`, `Touchpoints`, `Implementation Plan`, `Validation Plan`, `Risks / Open Questions`가 드러난다.
 
 **Target Files**:
-- [M] `.claude/agents/implementation-review.md` -- Hard Rules 섹션에 Fresh Verification 추가
+- [M] `.codex/skills/spec-create/SKILL.md`
+- [M] `.codex/skills/spec-create/references/template-compact.md`
+- [M] `.codex/skills/spec-create/references/template-full.md`
+- [M] `.codex/skills/spec-create/examples/simple-project-spec.md`
+- [M] `.codex/skills/spec-create/examples/complex-project-spec.md`
+- [M] `.codex/skills/spec-create/examples/additional-specs.md`
+- [M] `.codex/skills/spec-upgrade/SKILL.md`
+- [M] `.codex/skills/spec-upgrade/skill.json`
+- [M] `.codex/skills/spec-upgrade/references/template-compact.md`
+- [M] `.codex/skills/spec-upgrade/references/template-full.md`
+- [M] `.codex/skills/spec-upgrade/references/spec-format.md`
+- [M] `.codex/skills/spec-upgrade/references/upgrade-mapping.md`
+- [M] `.codex/skills/spec-upgrade/examples/before-upgrade.md`
+- [M] `.codex/skills/spec-upgrade/examples/after-upgrade.md`
 
-**Technical Notes**: 기존 Hard Rule #7(계획 문서 수정 금지) 뒤에 #8로 추가. 1-2줄로 간결하게.
-**Dependencies**: -
+**Technical Notes**: `spec-upgrade`는 migration semantics 자체가 바뀌므로 description, AC, process, reference, examples를 한 번에 수정하는 편이 안전하다. 테스트 디렉토리는 없으므로 verification은 template/example spot review와 `rg` 탐색 중심으로 수행한다.
+**Dependencies**: `docs/SDD_SPEC_DEFINITION.md`
 
----
+### Task FD-02: Claude generator/transformer mirror를 Codex canonical semantics에 맞춰 동기화
+**Component**: Generator / Transformer Layer
+**Priority**: P0
+**Type**: Refactor
 
-### Task 3: feature-draft에 Failure Modes 테이블 섹션 추가
-**Component**: Feature Draft Enhancement
-**Priority**: P2-Medium
-**Type**: Feature
-
-**Description**: feature-draft 에이전트의 Part 1 스펙 패치 출력 템플릿에 Failure Modes 테이블을 항상 포함하도록 추가한다.
+**Description**: Claude용 `spec-create` / `spec-upgrade` 자산을 Codex와 같은 canonical semantics로 맞춘다. 플랫폼별 표현 차이는 허용하되, spec shape와 migration semantics는 동일해야 한다.
 
 **Acceptance Criteria**:
-- [ ] Part 1 출력 템플릿(Step 4)에 Failure Modes 섹션이 추가되었다
-- [ ] 항상 포함, 간단하면 N/A 또는 1-2행 규칙이 명시되었다
-- [ ] 4열 테이블 형식이 정의되었다 (시나리오/실패 시/사용자 가시성/처리 방안)
+- [ ] `.claude/skills/spec-create/`와 `.claude/skills/spec-upgrade/`가 codex와 같은 canonical structure를 전제로 한다.
+- [ ] template/reference/example drift가 codex 쌍과 비교했을 때 해소된다.
+- [ ] `whitepaper §1-§8` canonical wording이 claude generator/upgrade layer에서 제거된다.
 
 **Target Files**:
-- [M] `.claude/agents/feature-draft.md` -- Step 4 Part 1 템플릿에 Failure Modes 섹션 추가
+- [M] `.claude/skills/spec-create/SKILL.md`
+- [M] `.claude/skills/spec-create/references/template-compact.md`
+- [M] `.claude/skills/spec-create/references/template-full.md`
+- [M] `.claude/skills/spec-create/examples/simple-project-spec.md`
+- [M] `.claude/skills/spec-create/examples/complex-project-spec.md`
+- [M] `.claude/skills/spec-create/examples/additional-specs.md`
+- [M] `.claude/skills/spec-upgrade/SKILL.md`
+- [M] `.claude/skills/spec-upgrade/skill.json`
+- [M] `.claude/skills/spec-upgrade/references/template-compact.md`
+- [M] `.claude/skills/spec-upgrade/references/template-full.md`
+- [M] `.claude/skills/spec-upgrade/references/spec-format.md`
+- [M] `.claude/skills/spec-upgrade/references/upgrade-mapping.md`
+- [M] `.claude/skills/spec-upgrade/examples/before-upgrade.md`
+- [M] `.claude/skills/spec-upgrade/examples/after-upgrade.md`
 
-**Technical Notes**: `## Notes` 바로 위에 `## Failure Modes` 섹션 추가. 간단한 기능은 "N/A -- 단순 기능, 실패 경로 없음" 1행으로 처리 가능.
-**Dependencies**: -
+**Technical Notes**: Codex patch를 먼저 만든 뒤 semantic parity 체크리스트로 Claude에 이식하는 편이 drift를 줄인다. mirror review는 file-by-file diff rather than line-by-line copy를 권장한다.
+**Dependencies**: FD-01
 
----
+### Task FD-03: Consumer / review layer를 새 canonical quality rubric으로 재정렬
+**Component**: Consumer / Review Layer
+**Priority**: P0
+**Type**: Refactor
 
-### Task 4: implementation-plan에 Test Coverage Mapping 추가
-**Component**: Implementation Plan Enhancement
-**Priority**: P2-Medium
-**Type**: Feature
-
-**Description**: implementation-plan 에이전트의 Step 3에 [M] 마커 대상 파일의 기존 테스트 커버리지를 매핑하는 하위 단계를 추가한다.
+**Description**: `spec-review`, `spec-summary`, `spec-rewrite`가 새 canonical global/temporary 구조, CIV 섹션, decision-bearing structure, appendix-level code map을 기준으로 읽고 평가하도록 수정한다.
 
 **Acceptance Criteria**:
-- [ ] Step 3에 Test Coverage Mapping 하위 단계가 추가되었다
-- [ ] [M] 마커 조건부 실행이 명시되었다 ([C] 전용이면 스킵)
-- [ ] Grep 기반 테스트 파일/함수 검색 방법이 기술되었다
+- [ ] `spec-review`가 CIV, global/temporary asymmetry, appendix code map, decision-bearing structure를 quality/drift dimension으로 본다.
+- [ ] `spec-summary`가 global spec과 temporary spec을 다른 방식으로 요약한다.
+- [ ] `spec-rewrite`가 old `whitepaper §1-§8` 중심 판단보다 새 canonical model을 우선한다.
+- [ ] mirror notice가 있는 파일은 agent와 wrapper가 함께 동기화된다.
 
 **Target Files**:
-- [M] `.claude/agents/implementation-plan.md` -- Step 3 "Target Files 검증" 뒤에 Test Coverage Mapping 추가
+- [M] `.codex/skills/spec-review/SKILL.md`
+- [M] `.codex/agents/spec-review.toml`
+- [M] `.claude/skills/spec-review/SKILL.md`
+- [M] `.claude/agents/spec-review.md`
+- [M] `.codex/skills/spec-summary/SKILL.md`
+- [M] `.codex/skills/spec-summary/references/summary-template.md`
+- [M] `.codex/skills/spec-summary/examples/summary-output.md`
+- [M] `.claude/skills/spec-summary/SKILL.md`
+- [M] `.claude/skills/spec-summary/references/summary-template.md`
+- [M] `.claude/skills/spec-summary/examples/summary-output.md`
+- [M] `.codex/skills/spec-rewrite/SKILL.md`
+- [M] `.codex/skills/spec-rewrite/references/spec-format.md`
+- [M] `.codex/skills/spec-rewrite/references/rewrite-checklist.md`
+- [M] `.codex/skills/spec-rewrite/references/template-compact.md`
+- [M] `.codex/skills/spec-rewrite/examples/rewrite-plan.md`
+- [M] `.codex/skills/spec-rewrite/examples/rewrite-report.md`
+- [M] `.claude/skills/spec-rewrite/SKILL.md`
+- [M] `.claude/skills/spec-rewrite/references/spec-format.md`
+- [M] `.claude/skills/spec-rewrite/references/rewrite-checklist.md`
+- [M] `.claude/skills/spec-rewrite/references/template-compact.md`
+- [M] `.claude/skills/spec-rewrite/examples/rewrite-plan.md`
+- [M] `.claude/skills/spec-rewrite/examples/rewrite-report.md`
 
-**Technical Notes**: `Grep`으로 [M] 대상 파일명을 테스트 디렉토리에서 검색, 관련 테스트 파일/함수 목록을 Task의 Technical Notes에 기록. 테스트 디렉토리 미존재 시 스킵.
-**Dependencies**: -
+**Technical Notes**: 이 레이어는 새 문서를 잘못된 기준으로 평가하면 안 되므로 wording뿐 아니라 report/summary output contract까지 같이 점검해야 한다.
+**Dependencies**: FD-01, FD-02
 
----
+### Task FD-04: Planning / update / orchestration layer를 temporary spec 실행 청사진 모델로 전환
+**Component**: Planning / Update / Orchestration Layer
+**Priority**: P0
+**Type**: Refactor
 
-### Task 5: pr-review에 Scope Drift Detection + Fix-First 추가
-**Component**: PR Review Enhancement
-**Priority**: P1-High
-**Type**: Feature
-
-**Description**: pr-review 스킬에 (a) Step 2.5 Scope Drift Detection과 (b) Step 5.5 코드 품질 Fix-First를 추가한다.
+**Description**: `feature-draft`, `implementation-plan`, `spec-update-todo`, `spec-update-done`, `sdd-autopilot`이 새 temporary spec model을 쓰고 읽도록 수정한다. 특히 `Contract/Invariant Delta`, `Touchpoints`, `Validation Plan`, CIV ID 연결을 명시적으로 다룬다.
 
 **Acceptance Criteria**:
-- [ ] Mode 1에 Step 2.5 Scope Drift Detection이 추가되었다 (PR diff 변경 파일 vs patch draft Target Files 비교)
-- [ ] CLEAN/DRIFT/MISSING 판정이 Output Format에 반영되었다
-- [ ] Step 5.5 코드 품질 Fix-First가 추가되었다
-- [ ] AUTO-FIX 대상(미사용 import, 타입 불일치, 누락된 에러 처리)과 목록 기록 대상(동작 변경 가능성)의 분류 기준이 명시되었다
-- [ ] 기존 스펙 레이어 verdict(APPROVE/REQUEST CHANGES/NEEDS DISCUSSION)는 변경되지 않았다
+- [ ] `feature-draft`가 temporary spec 7섹션을 직접적으로 모델링한다.
+- [ ] `implementation-plan`이 contract/invariant delta와 validation linkage를 읽고 phase/task에 연결할 수 있다.
+- [ ] `spec-update-todo` / `spec-update-done`이 global spec과 temporary spec의 비대칭 구조를 설명하고 처리한다.
+- [ ] `sdd-autopilot` reasoning reference가 새 canonical model을 기반으로 pipeline을 조립한다.
+- [ ] temporary spec template/example이 `Contract/Invariant Delta`와 `Validation Plan`의 ID 매핑 compact example을 포함한다.
+- [ ] mirror notice가 있는 codex skill은 agent file과 함께 업데이트된다.
 
 **Target Files**:
-- [M] `.claude/skills/pr-review/SKILL.md` -- Step 2.5 + Step 5.5 추가, Output Format에 Scope Drift + Fix-First 섹션 추가
+- [M] `.codex/skills/feature-draft/SKILL.md`
+- [M] `.codex/agents/feature-draft.toml`
+- [M] `.claude/skills/feature-draft/SKILL.md`
+- [M] `.claude/agents/feature-draft.md`
+- [M] `.codex/skills/implementation-plan/SKILL.md`
+- [M] `.codex/agents/implementation-plan.toml`
+- [M] `.claude/skills/implementation-plan/SKILL.md`
+- [M] `.claude/agents/implementation-plan.md`
+- [M] `.codex/skills/spec-update-todo/SKILL.md`
+- [M] `.codex/agents/spec-update-todo.toml`
+- [M] `.claude/skills/spec-update-todo/SKILL.md`
+- [M] `.claude/agents/spec-update-todo.md`
+- [M] `.codex/skills/spec-update-done/SKILL.md`
+- [M] `.codex/agents/spec-update-done.toml`
+- [M] `.claude/skills/spec-update-done/SKILL.md`
+- [M] `.claude/agents/spec-update-done.md`
+- [M] `.codex/skills/sdd-autopilot/SKILL.md`
+- [M] `.codex/skills/sdd-autopilot/references/sdd-reasoning-reference.md`
+- [M] `.codex/skills/sdd-autopilot/references/orchestrator-contract.md`
+- [M] `.codex/skills/sdd-autopilot/examples/sample-orchestrator.md`
+- [M] `.claude/skills/sdd-autopilot/SKILL.md`
+- [M] `.claude/skills/sdd-autopilot/references/sdd-reasoning-reference.md`
+- [M] `.claude/skills/sdd-autopilot/references/orchestrator-contract.md`
+- [M] `.claude/skills/sdd-autopilot/examples/sample-orchestrator.md`
 
-**Technical Notes**: Step 2.5는 `gh pr diff --name-only`와 patch draft의 Target Files를 비교. Step 5.5는 Step 5 Gap Analysis 직후 배치. AUTO-FIX는 기계적 수정으로 제한, 동작 변경 가능성은 목록 기록으로 분류.
-**Dependencies**: -
+**Technical Notes**: `feature-draft`와 `implementation-plan`은 temporary spec shape를 가장 직접적으로 표면화하는 진입점이다. 여기서 wording drift를 허용하면 하위 skill 전체가 다시 old model로 끌려간다.
+**Dependencies**: FD-01, FD-02, FD-03
 
----
+### Task FD-05: Korean docs를 새 canonical model의 설명 계층으로 재작성
+**Component**: Korean Docs Layer
+**Priority**: P1
+**Type**: Documentation
 
-### Task 6: spec-review에 코드 분석 지표 추가
-**Component**: Spec Review Enhancement
-**Priority**: P3-Low
-**Type**: Feature
-
-**Description**: spec-review 에이전트의 Step 3(Code Drift 감사)에 핫스팟, Focus Score, Test Coverage 지표를 추가한다.
+**Description**: 한국어 docs를 새 canonical model과 실제 skill behavior에 맞게 다시 쓴다. old `whitepaper §1-§8` canonical framing, architecture/component-heavy default framing, docs-first 설명 순서를 제거한다.
 
 **Acceptance Criteria**:
-- [ ] Step 3에 코드 분석 지표 수집 단계가 추가되었다
-- [ ] 핫스팟(자주 변경 파일), Focus Score(변경 집중도), Test Coverage(스펙 기능별 테스트 현황) 세 가지 지표가 정의되었다
-- [ ] Output Format에 Code Analysis Metrics 테이블이 추가되었다
+- [ ] `docs/SDD_WORKFLOW.md`가 새 global/temporary structure와 skills-first rollout order를 설명한다.
+- [ ] `docs/SDD_QUICK_START.md`가 새 canonical definition을 짧게 전달한다.
+- [ ] `docs/SDD_CONCEPT.md`가 global spec을 inventory 문서가 아닌 기준 문서로 설명한다.
+- [ ] `docs/sdd.md`가 contract / invariant / verifiability와 새 operational model을 연결한다.
+- [ ] 한국어 docs가 현재 skill behavior와 모순되지 않는다.
 
 **Target Files**:
-- [M] `.claude/agents/spec-review.md` -- Step 3에 코드 분석 지표 추가, Output Format에 지표 테이블 추가
+- [M] `docs/SDD_WORKFLOW.md`
+- [M] `docs/SDD_QUICK_START.md`
+- [M] `docs/SDD_CONCEPT.md`
+- [M] `docs/sdd.md`
 
-**Technical Notes**: 핫스팟: `git log --format='' --name-only | sort | uniq -c | sort -rn | head -20`. Focus Score: 변경 파일 중 스펙 컴포넌트에 속하는 비율. Test Coverage: 스펙 기능별 관련 테스트 파일 존재 여부.
-**Dependencies**: -
+**Technical Notes**: `docs/SDD_SPEC_DEFINITION.md`는 이미 기준 문서로 수정되어 있으므로, 이 task는 하위 설명 계층을 동기화하는 역할에 집중한다.
+**Dependencies**: FD-03, FD-04
 
----
+### Task FD-06: English mirrors를 동기화하고 `docs/en/sdd.md`를 생성
+**Component**: English Mirror Layer
+**Priority**: P1
+**Type**: Documentation
 
-### Task 7: sdd-autopilot에 Audit Trail + Taste Decision 추가
-**Component**: Autopilot Enhancement
-**Priority**: P1-High
-**Type**: Improvement
-
-**Description**: sdd-autopilot 스킬의 Step 7.2 실행 루프에 자동 결정 로그 기록을 추가하고, Taste Decision을 Step 8 최종 보고서에 표면화한다.
+**Description**: 영문 미러 문서를 한국어 canonical docs와 같은 수준으로 맞춘다. 번역 수준이 아니라 semantic parity가 목표다.
 
 **Acceptance Criteria**:
-- [ ] Step 7.2에 자동 결정 로그 기록이 추가되었다 (형식: `[DECISION] <what> -- <why> -- <taste: yes/no>`)
-- [ ] Taste Decision 분류 기준이 명시되었다 ("합리적으로 다르게 판단할 수 있는 것")
-- [ ] Step 8 보고서에 Taste Decisions 섹션이 추가되었다
+- [ ] `docs/en/SDD_SPEC_DEFINITION.md`가 새 canonical definition을 반영한다.
+- [ ] `docs/en/SDD_WORKFLOW.md`, `docs/en/SDD_QUICK_START.md`, `docs/en/SDD_CONCEPT.md`가 한국어 원문과 동일한 model을 설명한다.
+- [ ] `docs/en/sdd.md`가 생성되고, 한국어 `docs/sdd.md`와 철학 계층에서 semantic parity를 가진다.
+- [ ] 영문 문서에서 old `whitepaper §1-§8` canonical wording이 제거되거나 재해석된다.
 
 **Target Files**:
-- [M] `.claude/skills/sdd-autopilot/SKILL.md` -- Step 7.2에 Audit Trail 추가, Step 8에 Taste Decision 표면화 추가
+- [M] `docs/en/SDD_SPEC_DEFINITION.md`
+- [M] `docs/en/SDD_WORKFLOW.md`
+- [M] `docs/en/SDD_QUICK_START.md`
+- [M] `docs/en/SDD_CONCEPT.md`
+- [C] `docs/en/sdd.md`
 
-**Technical Notes**: Taste decision 예시: 테스트 전략 선택, 병렬 vs 순차 결정, 에러 복구 방식. Step 8.2 보고서 필수 항목에 "Taste Decisions" 추가.
-**Dependencies**: -
+**Technical Notes**: 영어 독자도 self-contained philosophy surface를 가져야 하므로 `docs/en/sdd.md`를 이번 rollout에서 함께 생성한다.
+**Dependencies**: FD-05
 
----
+### Task FD-07: Cross-surface drift audit를 수행하고 잔여 저충격 참조를 정리
+**Component**: Validation Layer
+**Priority**: P1
+**Type**: Test
 
-### Task 8: investigate 에이전트 생성
-**Component**: Investigate Skill
-**Priority**: P3-Low
-**Type**: Feature
-
-**Description**: 범용 체계적 디버깅 에이전트를 AC-First + Self-Contained 구조로 신규 생성한다.
+**Description**: 전체 rollout 후 repo-wide search와 spec review를 수행해 old canonical references, mirror drift, docs-skill mismatch를 정리한다. audit 중 발견되는 low-impact collateral references는 같은 phase에서 정리한다.
 
 **Acceptance Criteria**:
-- [ ] `.claude/agents/investigate.md`가 AC-First + Self-Contained 구조로 존재한다
-- [ ] 근본원인 우선(Iron Law)이 Hard Rule로 명시되었다 ("증상 패치 금지, 근본원인을 찾아 수정")
-- [ ] 3-strike 에스컬레이션이 Process에 포함되었다 (같은 접근 3회 실패 시 전략 변경)
-- [ ] scope lock이 포함되었다 (초기 범위를 벗어나는 수정 금지)
-- [ ] blast radius gate가 포함되었다 (수정 영향 범위 사전 평가)
-- [ ] fresh verification이 포함되었다 (수정 후 테스트 재실행 필수)
-- [ ] 독립 Agent 교차 검증이 포함되었다 (Agent A 가설 기반 + Agent B 코드 독립 탐지)
+- [ ] 주요 target surfaces에서 old `whitepaper §1-§8` canonical wording이 제거되거나 의도적으로 재해석되었다.
+- [ ] `.codex/`와 `.claude/` mirror pair가 필요한 범위에서 동기화되었다.
+- [ ] `guide-create` 같은 collateral reference가 새 canonical model을 명백히 거스르지 않는다.
+- [ ] docs와 skills가 `docs/SDD_SPEC_DEFINITION.md`와 모순되지 않는다.
+- [ ] 최종 review report가 생성된다.
 
 **Target Files**:
-- [C] `.claude/agents/investigate.md` -- 범용 체계적 디버깅 에이전트 정의
+- [M] `.codex/skills/guide-create/references/template-compact.md`
+- [M] `.claude/skills/guide-create/references/template-compact.md`
+- [C] `_sdd/spec/logs/spec_review_report_canonical_model_rollout.md`
 
-**Technical Notes**: tools: Read, Write, Edit, Glob, Grep, Bash, Agent. ralph-loop-init과 차별화: investigate는 범용/단발, ralph-loop-init은 장시간 반복 프로세스 전용. 기존 에이전트 패턴(frontmatter + AC + Hard Rules + Process + Final Check) 준수.
-**Dependencies**: -
-
----
-
-### Task 9: investigate 래퍼 스킬 생성
-**Component**: Investigate Skill
-**Priority**: P3-Low
-**Type**: Feature
-
-**Description**: investigate 에이전트의 래퍼 스킬을 Agent Wrapper 패턴에 따라 생성한다.
-
-**Acceptance Criteria**:
-- [ ] `.claude/skills/investigate/SKILL.md`가 래퍼 구조로 존재한다
-- [ ] investigate 에이전트에 올바르게 위임한다 (`Agent(subagent_type="investigate")`)
-- [ ] description에 범용 단발 디버깅 용도가 명시되었다 (ralph-loop-init과 차별화)
-
-**Target Files**:
-- [C] `.claude/skills/investigate/SKILL.md` -- investigate 에이전트의 래퍼 스킬
-
-**Technical Notes**: 기존 래퍼 스킬 패턴(예: `.claude/skills/implementation-review/SKILL.md`) 참고. frontmatter의 description에 트리거 키워드 포함.
-**Dependencies**: 8
-
----
+**Technical Notes**: validation은 `rg` + spot review + 최종 report 조합으로 수행한다. low-impact collateral cleanup은 audit 결과가 명확한 경우에만 수행하고, 범위가 커지면 follow-up task로 분리한다.
+**Dependencies**: FD-06
 
 ## Parallel Execution Summary
 
-| Phase | Total Tasks | Max Parallel | File Conflicts |
-|-------|-------------|--------------|----------------|
-| 1 | 7 | 7 | None -- Task 1-7 모두 Target Files 비중복 |
-| 2 | 2 | 1 | Task 9는 Task 8에 의존 (래퍼가 에이전트 구조 참조) |
+| Phase | Tasks | Max Parallel | File Conflict Notes |
+|------|-------|--------------|---------------------|
+| 1 | FD-01, FD-02 | 1 | FD-02는 FD-01 결과를 mirror해야 하므로 순차가 안전 |
+| 2 | FD-03, FD-04 | 2 | write set이 분리되어 있어 병렬 가능. 둘 다 Phase 1 완료 후 시작 |
+| 3 | FD-05 | 1 | skill behavior 확정 후 수행 |
+| 4 | FD-06 | 1 | 한국어 docs wording 안정화 후 수행 |
+| 5 | FD-07 | 1 | 모든 수정 후 단일 verification pass |
 
-## Risks & Mitigations
+실행 권장 순서:
 
-| Risk | Impact | Mitigation |
-|------|--------|------------|
-| Verification Gate가 테스트 환경 없는 프로젝트에서 blocking | 구현 진행 불가 | env.md 미존재 시 코드 분석 기반 fallback 명시, "UNTESTED" 표기 |
-| investigate가 ralph-loop-init과 역할 혼동 | 사용자가 잘못된 스킬 선택 | description에 범용 단발 vs 장시간 반복 차이를 명확히 기술 |
-| 추가된 규칙이 기존 스킬의 conciseness를 해침 | 컨텍스트 효율 저하 | 모든 추가 내용에 "이 문장이 없으면 AI가 못 하는가?" 기준 적용 |
-| AUTO-FIX가 의도치 않은 코드 변경 발생 | PR에 원치 않는 커밋 추가 | AUTO-FIX 대상을 기계적 수정으로 제한, 동작 변경 가능성은 목록 기록으로 분류 |
-| Mirror Notice 스킬 파일 미동기화 | 에이전트와 스킬 파일 내용 불일치 | Out of Scope로 명시, 별도 후속 태스크로 처리 |
+1. Phase 1 완료
+2. Phase 1 grep gate 통과 확인
+3. Phase 2 병렬 또는 순차 수행
+4. docs sync
+5. english sync
+6. final audit
+
+## Risks and Mitigations
+
+1. **Risk**: generator layer보다 docs를 먼저 바꾸면 설명과 실제 output이 갈라질 수 있다.  
+   **Mitigation**: FD-01/02/03/04 완료 전에는 docs task를 시작하지 않는다.
+
+2. **Risk**: `.codex/`와 `.claude/` 쌍이 부분적으로만 업데이트되어 platform drift가 생길 수 있다.  
+   **Mitigation**: mirror/agent pair를 task target files에 명시하고, Phase 5에서 pairwise review를 수행한다.
+
+3. **Risk**: old examples/reference가 남아 future generation을 다시 old model로 끌어갈 수 있다.  
+   **Mitigation**: generator, consumer, orchestrator task에 example/reference 파일을 함께 포함한다.
+
+4. **Risk**: CIV schema는 도입됐지만 planning/update layer가 ID를 활용하지 못할 수 있다.  
+   **Mitigation**: FD-04에서 feature-draft, implementation-plan, spec-update-todo/done, autopilot reference를 함께 갱신한다.
+
+5. **Risk**: temporary spec 7섹션 구조가 일부 skill에서 암묵적으로만 적용되어 명시성이 떨어질 수 있다.  
+   **Mitigation**: FD-04 acceptance criteria에 delta/touchpoints/validation linkage를 직접 넣고, Phase 5에서 output contract drift를 재검토한다.
+
+6. **Risk**: strategic code map을 반자동 생성 전제로 설계하면 appendix 품질이 inventory 나열로 다시 무너질 수 있다.  
+   **Mitigation**: 이번 rollout에서는 manual curated를 canonical default로 고정하고, 자동 생성은 후속 별도 기능으로 분리한다.
+
+7. **Risk**: secondary references like `guide-create` template가 old spec numbering을 계속 가르칠 수 있다.  
+   **Mitigation**: Phase 5 audit에서 low-impact collateral references를 sweep하고, 범위가 커지면 follow-up task로 격리한다.
 
 ## Open Questions
 
-- (없음 -- gstack 토론에서 모든 논점에 결정이 이루어짐)
-
-## Model Recommendation
-
-- **구현**: `sonnet` -- 마크다운 파일 수정은 패턴 매칭 위주로 Sonnet이 효율적
-- **리뷰**: `opus` -- 구조적 정합성 + conciseness 검증에 더 높은 추론 능력 필요
+- 없음

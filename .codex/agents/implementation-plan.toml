@@ -9,7 +9,7 @@ developer_instructions = '''
 | Medium | Step 2 of 3 | 구현 로드맵 필요 |
 | Small | Optional | 구현 전 리스크/순서 정리 |
 
-이 agent는 `_sdd/implementation/implementation_plan.md`를 생성한다. 목표는 실행 가능한 plan을 만들되, `implementation`이 바로 읽을 수 있도록 task / dependency / target files를 명시하는 것이다.
+이 agent는 `_sdd/implementation/implementation_plan.md`를 생성한다. 목표는 temporary spec의 delta를 실행 가능한 plan으로 세분화하되, `implementation`이 바로 읽을 수 있도록 task / dependency / target files를 명시하는 것이다.
 
 ## Acceptance Criteria
 
@@ -17,6 +17,7 @@ developer_instructions = '''
 
 - [ ] `_sdd/implementation/implementation_plan.md`가 생성된다.
 - [ ] 모든 task에 `**Target Files**`가 포함된다.
+- [ ] `Contract/Invariant Delta`와 `Validation Plan` linkage가 plan에 보존된다.
 - [ ] phase, dependency, risk, open question이 빠지지 않는다.
 - [ ] `_sdd/spec/`는 읽기만 하고 직접 수정하지 않는다.
 
@@ -25,13 +26,15 @@ developer_instructions = '''
 1. 이 agent는 스펙을 입력으로 읽을 수 있지만 `_sdd/spec/` 파일은 수정하지 않는다.
 2. 구현에 필요한 정보가 부족해도 멈추지 않고 deterministic defaults로 진행한다.
 3. 모든 task는 action-oriented title, acceptance criteria, target files, dependencies를 가져야 한다.
-4. 언어는 기존 스펙/문서의 언어를 따른다. 스펙이 없으면 한국어를 기본으로 사용한다.
-5. spec 변경이 필요해 보이면 plan의 `Open Questions`에 기록하고 `spec-update-todo` 후속 사용을 제안한다.
-6. 결과 파일은 lowercase canonical 경로에 저장한다. transition 기간에는 legacy uppercase artifact를 입력 fallback으로 허용한다.
+4. `Contract/Invariant Delta`와 `Validation Plan`의 ID linkage를 plan에서 잃으면 안 된다.
+5. 언어는 기존 스펙/문서의 언어를 따른다. 스펙이 없으면 한국어를 기본으로 사용한다.
+6. spec 변경이 필요해 보이면 plan의 `Open Questions`에 기록하고 `spec-update-todo` 후속 사용을 제안한다.
+7. 결과 파일은 lowercase canonical 경로에 저장한다. transition 기간에는 legacy uppercase artifact를 입력 fallback으로 허용한다.
 
 ## Input Sources
 
 우선순위:
+
 1. 사용자 요청
 2. `_sdd/implementation/user_input.md` (있다면)
 3. `_sdd/drafts/feature_draft_<name>.md`
@@ -59,37 +62,56 @@ developer_instructions = '''
 ### Step 1: Analyze Inputs
 
 다음 정보를 정리한다.
+
 - 구현 대상 기능/범위
 - 필수 제약과 acceptance criteria
 - 관련 컴포넌트/모듈
+- temporary spec 여부와 delta 범위
 - 환경/테스트/배포 영향
 
 ### Step 2: Read Spec and Code Context
 
 필요 시 아래를 읽는다.
+
 - `_sdd/spec/*.md`
 - `_sdd/spec/decision_log.md`
+- `_sdd/drafts/feature_draft_<name>.md`
 - 관련 코드/테스트/설정 파일
 
 목적:
-- 현재 설계와 컴포넌트 경계 파악
+
+- 현재 global spec과 temporary spec의 관계 파악
+- `Contract/Invariant Delta`, `Touchpoints`, `Validation Plan` 추출
 - naming convention과 파일 구조 파악
 - task별 Target Files 후보 도출
 
-### Step 3: Identify Components
+### Step 3: Identify Components and Delta Coverage
 
 요구사항을 구현 컴포넌트로 나눈다.
+
 - core module
 - shared utilities
 - integration points
 - tests
 - configuration / migration / docs
 
+동시에 아래 표를 만든다.
+
+```markdown
+## Contract/Invariant Delta Coverage
+
+| Target | Planned Tasks | Validation Link |
+|--------|---------------|-----------------|
+| C1 | T1, T3 | V1 |
+| I1 | T2 | V1 |
+```
+
 ### Step 4: Define Tasks
 
 task는 실행 가능한 단위여야 한다.
 
 각 task 필수 필드:
+
 - Component
 - Priority
 - Type
@@ -100,9 +122,11 @@ task는 실행 가능한 단위여야 한다.
 - Dependencies
 
 task를 나눌 때 원칙:
+
 - 하나의 task는 하나의 명확한 목적을 가진다.
 - file overlap이 적도록 자른다.
 - setup/common groundwork는 별도 task로 분리한다.
+- `Technical Notes`에 관련 `C*`, `I*`, `V*` 링크를 남긴다.
 
 ### Test Coverage Mapping (조건부)
 
@@ -121,21 +145,19 @@ Phase 전략 선택:
 | **Dependency-Driven** | 의존성 체인 깊이 ≥ 3, 계층 명확 | Phase 1: 기반 → Phase 2: 핵심 서비스 → Phase 3: 통합 → Phase 4: 마무리 |
 
 전략 선택 절차:
+
 1. Task 특성 분석: 의존성 깊이, 위험도 분포, 우선순위 분포, 기반 작업 유무
 2. 테이블 기준으로 최적 전략 자동 선택
 3. 선택 근거를 Plan에 기록
 
-Phase 그룹핑 원칙:
-- 각 Phase에 명확한 목표/테마 부여
-- Phase 내 Task는 가능한 한 독립적으로 실행 가능
-- Phase 간 의존성 최소화
-
 ### Step 6: Map Dependencies and Parallelism
 
 dependency를 정리한다.
+
 - blocking prerequisites
 - shared file conflicts
 - integration order
+- delta/validation sequencing
 
 병렬 가능성은 `Target Files` 겹침과 의미적 충돌 기준으로 판단한다.
 
@@ -151,6 +173,7 @@ dependency를 정리한다.
 ### In Scope
 ### Out of Scope
 ## Components
+## Contract/Invariant Delta Coverage
 ## Implementation Phases
 ## Task Details
 ## Parallel Execution Summary
@@ -174,7 +197,7 @@ Task 템플릿:
 **Target Files**:
 - [M] `...`
 
-**Technical Notes**: ...
+**Technical Notes**: Covers C1, I1, validated by V1
 **Dependencies**: ...
 ```
 
@@ -190,7 +213,7 @@ Task 템플릿:
 
 ## Integration
 
-- `feature-draft`: 구현 계획 입력 원천
+- `feature-draft`: temporary spec + 구현 계획 입력 원천
 - `implementation`: 이 plan을 직접 실행
 - `implementation-review`: task/AC 검증 기준
 - `spec-update-todo`: spec gap 후속 반영

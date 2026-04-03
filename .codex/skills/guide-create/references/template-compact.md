@@ -1,6 +1,6 @@
 # SDD Guide Generation Template (Compact)
 
-> Canonical generation template for SDD guide documents. guide-create skill references this template for consistent §1-§5 structure with What/Why/How triad enforcement. Guide는 프로젝트 전체가 아닌 단일 기능 deep-dive이므로, spec의 §1-§8을 그대로 쓰지 않고 guide 고유 §1-§5 구조를 사용하되 § numbering과 Writing Rules를 공유한다.
+> Canonical generation template for SDD guide documents. guide-create skill references this template for a consistent §1-§5 structure with What/Why/How triad enforcement. A guide is a feature-specific deep-dive, so it does not mirror the full global spec outline. Instead, it borrows the current canonical language around scope, decisions, CIV, and verification while keeping a guide-specific §1-§5 structure.
 
 ---
 
@@ -43,14 +43,14 @@
 
 ## Section-to-Spec Mapping
 
-| Guide | Spec | 비고 |
-|-------|------|------|
-| §1 Background & Motivation | spec §1 | 직접 대응 |
-| §2 Core Design | spec §2 | 직접 대응 |
-| §3 Usage Scenario Guide | spec §5 확장 | guide 특화 |
-| §4 API Reference | spec §6 확장 | guide 특화 |
-| §5 Implementation Guide | guide 고유 | 체크리스트/안티패턴 |
-| Appendix | spec §8 패턴 | 동일 패턴 |
+| Guide | Canonical global spec anchor | 비고 |
+|-------|------------------------------|------|
+| §1 Background & Motivation | `배경 및 high-level concept` + `Scope / Non-goals / Guardrails` | 기능의 문제와 경계 설명 |
+| §2 Core Design | `핵심 설계와 주요 결정` + `Decision-bearing structure` | 기능 단위 설계 판단 설명 |
+| §3 Usage Scenario Guide | `사용 가이드 & 기대 결과` | 시나리오와 기대 결과 확장 |
+| §4 API Reference | `참조 정보` 또는 코드 기반 interface detail | 기능 인터페이스 정리 |
+| §5 Implementation Guide | temporary spec의 `Touchpoints` / `Implementation Plan` / `Validation Plan` | guide 고유 실행 규칙 |
+| Appendix | `Strategic Code Map` / 관련 코드 레퍼런스 | 선택적 탐색 힌트 |
 
 ---
 

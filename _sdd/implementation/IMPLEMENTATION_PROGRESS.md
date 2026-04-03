@@ -1,14 +1,16 @@
-# Implementation Progress: lowercase artifact canonical naming rollout
+# Implementation Progress: SDD Canonical Model Rollout
 
-**Date**: 2026-04-02
-**Source Draft**: `_sdd/drafts/feature_draft_lowercase_artifact_filenames.md`
-**Status**: COMPLETE
+**Date**: 2026-04-04
+**Source Draft**: `_sdd/drafts/feature_draft_sdd_canonical_model_rollout.md`
+**Source Plan**: `_sdd/implementation/implementation_plan.md`
+**Status**: DONE
 
 | Task ID | Title | Phase | Dependencies | Status | Owner | Notes |
 |---------|-------|-------|--------------|--------|-------|-------|
-| T1 | Add lowercase canonical artifact naming policy and path map to repo spec | Phase 1 | None | DONE | implementation | `_sdd/spec/main.md`에 artifact naming policy, lowercase canonical artifact map, transition fallback 규칙 반영 |
-| T2 | Update implementation-family skill and agent contracts to lowercase canonical paths | Phase 2 | T1 | DONE | implementation | `feature-draft`, `implementation-plan`, `implementation`, `implementation-review`, `sdd-autopilot`, mirror agents에 lowercase canonical path + legacy uppercase fallback 반영 |
-| T3 | Update spec/reporting-family skill and agent contracts to lowercase canonical paths | Phase 2 | T1 | DONE | implementation | `spec-summary`, `spec-review`, `spec-rewrite`, `spec-snapshot`, `spec-create`, `spec-update-done`, `spec-update-todo`, `spec-upgrade` 관련 경로 및 mirror 정렬 |
-| T4 | Normalize supporting skills and backup/archive rules | Phase 3 | T1 | DONE | implementation | `pr-review`, `guide-create`와 backup/archive prefix를 `prev_*` canonical로 정리 |
-| T5 | Sync examples, templates, and orchestrator references | Phase 3 | T2, T3, T4 | DONE | implementation | `.codex` / `.claude` example/reference/template/orchestrator 문서를 canonical lowercase path 기준으로 동기화 |
-| T6 | Verify repo-wide path consistency and document deferred historical rename scope | Phase 4 | T2, T3, T4, T5 | DONE | implementation | `git diff --check` PASS, 잔여 uppercase reference는 intentional fallback 또는 historical changelog로만 남김 |
+| FD-01 | Codex generator/transformer layer를 새 canonical model로 재작성 | Phase 1 | `docs/SDD_SPEC_DEFINITION.md` | DONE | implementation | `spec-create` / `spec-upgrade` SKILL, template, migration reference, examples를 current canonical model 기준으로 재작성 |
+| FD-02 | Claude generator/transformer mirror 동기화 | Phase 1 | FD-01 | DONE | implementation | `.claude/skills/spec-create` / `.claude/skills/spec-upgrade` mirror를 Codex current canonical semantics와 semantic parity로 동기화했고, review follow-up으로 Claude-native interaction contract drift를 보정 |
+| FD-03 | Consumer / review layer 재정렬 | Phase 2 | FD-01, FD-02 | DONE | implementation | `spec-review`, `spec-summary`, `spec-rewrite`의 global/temporary rubric과 rewrite template를 current canonical model 기준으로 정렬 |
+| FD-04 | Planning / update / orchestration layer 전환 | Phase 2 | FD-01, FD-02, FD-03 | DONE | implementation | `feature-draft`, `implementation-plan`, `spec-update-*`, `sdd-autopilot`을 temporary spec delta/validation model로 전환했고, review follow-up으로 Claude wrapper의 Codex-only primitive/drift를 제거 |
+| FD-05 | Korean docs sync | Phase 3 | FD-03, FD-04 | DONE | implementation | `docs/SDD_WORKFLOW.md`, `docs/SDD_QUICK_START.md`, `docs/SDD_CONCEPT.md`, `docs/sdd.md`를 새 canonical model과 current skill behavior 기준으로 재작성 |
+| FD-06 | English mirror sync | Phase 4 | FD-05 | DONE | implementation | `docs/en/SDD_SPEC_DEFINITION.md`, `docs/en/SDD_WORKFLOW.md`, `docs/en/SDD_QUICK_START.md`, `docs/en/SDD_CONCEPT.md`를 semantic parity로 동기화하고 `docs/en/sdd.md`를 생성 |
+| FD-07 | Cross-surface drift audit | Phase 5 | FD-06 | DONE | implementation | `guide-create` collateral template를 갱신하고 target-surface grep audit 및 `_sdd/spec/logs/spec_review_report_canonical_model_rollout.md`를 생성. repo-wide residual drift는 out-of-scope follow-up으로 기록 |

@@ -1,182 +1,188 @@
 ---
 name: spec-update-todo
-description: "This skill should be used when the user asks to \"update spec with features\", \"add features to spec\", \"update spec from input\", \"add requirements to spec\", \"spec update\", \"expand spec\", \"add to-do to spec\", \"add to-implement to spec\", or mentions adding new features, requirements, or planned improvements to an existing specification document."
-version: 2.1.0
+description: This skill should be used when the user asks to "update spec with features", "add features to spec", "update spec from input", "add requirements to spec", "spec update", "expand spec", "add to-do to spec", "add to-implement to spec", or mentions adding new features, requirements, or planned improvements to an existing specification document.
+version: 2.2.0
 ---
 
-# Spec Update from User Input
-
-사용자 입력/파일로부터 새로운 기능·요구사항을 파싱하여 기존 스펙 문서에 "to-add / to-implement" 항목으로 반영한다.
+# Spec Update from Planned Change
 
 | Workflow | Position | When |
 |----------|----------|------|
-| Large | Step 2 of 6 | feature-draft 후 스펙에 사전 반영 (드리프트 방지) |
-| Medium | — | feature-draft가 통합 처리 |
-| Small | — | 직접 구현 |
+| Large | Spec planning 단계 | 구현 전 global spec 반영 |
+| Medium | Step 1 or 2 | feature draft 이후 planned delta 반영 |
+| Any | Standalone | user input 기반 spec update |
+
+이 agent는 사용자 요구사항이나 temporary spec draft를 읽어 `_sdd/spec/*.md`에 **planned global-spec change**를 반영한다. temporary spec의 실행 상세를 그대로 복사하지 않고, global spec에 남아야 할 지속 정보를 선별해 올린다.
 
 ## Acceptance Criteria
 
 > 프로세스 완료 후 아래 기준을 자체 검증한다. 미충족 항목은 해당 단계로 돌아가 수정한다.
 
-- [ ] AC1: 3가지 입력 소스 (대화, `user_spec.md`, `user_draft.md`) 중 하나 이상을 파싱하여 요구사항 추출
-- [ ] AC2: 스펙 백업(`prev/prev_*`) → 섹션 매핑 → 업데이트 적용 → 버전(patch) 증가 완료
-- [ ] AC3: 처리된 입력 파일에 `_processed_` 접두사 추가 및 처리 메타데이터 기록
-- [ ] AC4: 업데이트 요약 보고(변경 섹션·항목 테이블, 입력 파일 상태, 후속 안내) 출력
-- [ ] AC5: 분할 스펙에서 각 항목이 의미적으로 적합한 파일에 배치되고, 신규 파일 생성 시 main.md 인덱스에 링크 추가됨
+- [ ] 입력 소스를 식별하고 파싱한다.
+- [ ] temporary spec 또는 user input을 global spec canonical section에 매핑한다.
+- [ ] global spec에 planned change만 반영하고, 실행 전용 정보는 남기지 않는다.
+- [ ] 업데이트 적용 후 요약을 남긴다.
+- [ ] 처리한 input file은 `_processed_*`로 마킹한다.
 
 ## Hard Rules
 
-1. **백업 필수**: 스펙 수정 전 `_sdd/spec/prev/prev_<filename>_<timestamp>.md`로 백업한다.
-2. **입력 파일 리네임**: 처리 완료 시 `_processed_` 접두사로 이름 변경한다.
-3. **언어 규칙**: 기존 스펙 언어를 따른다. 새 프로젝트는 한국어 기본. 사용자 명시 시 해당 언어. 섹션 내 언어 혼합 금지.
-4. **스펙 구조 보존**: 기존 구조·스타일 유지, 필요한 항목만 추가한다.
-5. **decision_log 최소화**: 결정 기록은 `decision_log.md`에만. 추가 문서는 사용자 요청 시에만 생성한다.
-6. **양 파일 공존 시**: `user_draft.md` 우선, `user_spec.md` 보조 병합. 가정은 Update Plan에 기록한다.
-7. **main.md 인덱스 동기화**: 새 sub-spec 파일 생성 시 반드시 main.md 인덱스에 링크를 추가한다. 고아 파일 금지.
-8. **기존 스펙 구조 보존**: 기존 파일 분할 구조를 변경하지 않는다. 파일 추가만 허용, 기존 구조 재편성 금지.
+1. spec 수정 전 `prev/` 백업을 만든다.
+2. 코드와 구현 문서는 수정하지 않는다.
+3. 충돌하거나 불명확한 요구사항은 비파괴적으로 처리하고 `Open Questions`에 남긴다.
+4. decision 기록이 필요하면 `decision_log.md`에 최소한으로 남긴다.
+5. 이미 완료된 구현 sync는 이 agent가 아니라 `spec-update-done`의 책임이다.
+6. temporary spec의 `Touchpoints`, `Implementation Plan`, `Validation Plan` 전체를 global spec 본문에 복사하지 않는다.
+7. global spec에는 `Scope`, `Key Decisions`, `Contract / Invariants / Verifiability`, `Usage`, `Decision-bearing structure`처럼 지속 정보만 남긴다.
+8. 새 sub-spec 파일 생성 시 반드시 main.md 인덱스에 링크를 추가한다. 고아 파일 금지.
+9. 기존 파일 분할 구조를 변경하지 않는다. 파일 추가만 허용, 기존 구조 재편성 금지.
 
 ## Input Sources
 
-| 소스 | 경로 / 출처 | 설명 |
-|------|------------|------|
-| 대화 | 현재 대화 | 기능 설명, 요구사항, 개선 요청 등 |
-| user_spec.md | `_sdd/spec/user_spec.md` | 사용자 작성 스펙 입력 (구조화/자유 형식 모두 가능) |
-| user_draft.md | `_sdd/spec/user_draft.md` | 사용자 작성 초안 |
-| decision_log | `_sdd/spec/decision_log.md` | (optional) 기존 결정·제약 참조용 |
+1. 사용자 대화
+2. `_sdd/spec/user_spec.md`
+3. `_sdd/spec/user_draft.md`
+4. `_sdd/drafts/feature_draft_<name>.md`
+5. `_sdd/spec/decision_log.md`
+
+처리 후 rename:
+
+- `user_spec.md` → `_processed_user_spec.md`
+- `user_draft.md` → `_processed_user_draft.md`
 
 ## Process
 
-### Step 1: 입력 소스 확인
+### Step 1: Identify Input Source
 
-**Tools**: `Glob`, `Read`
+입력이 어디서 왔는지 결정한다.
 
-1. 대화에서 요구사항 유무 확인
-2. `_sdd/spec/user_draft.md` → `_sdd/spec/user_spec.md` 순으로 파일 존재 확인
-3. 입력이 하나도 없으면 → 짧은 보고 후 종료
+- 직접 요청
+- 구조화된 spec input file
+- feature draft의 Part 1 temporary spec
 
-### Step 2: 현재 스펙 로드 & 입력 파싱
+### Step 2: Load Current Global Spec
 
-**Tools**: `Read`, `Glob`
+다음을 읽는다.
 
-1. 메인 스펙 탐색 우선순위: `<project>.md` → `main.md` → 단일 `.md` → 2개 이상이면 인덱스 역할 파일 선택 (근거 기록)
-2. 스펙 내용 읽기
-   - 단일 파일: 해당 파일 읽기
-   - 분할 스펙: main.md 인덱스에서 링크된 sub-spec 파일 목록 구성, 각 파일의 주제·섹션 구조 파악
-3. `decision_log.md` 존재 시 참조
-4. 입력에서 기능명, 설명, 우선순위, 수용 기준 등 구조화 정보 추출
+- `_sdd/spec/*.md`
+- `_sdd/spec/decision_log.md`
 
-### Step 3: 섹션 매핑 & Update Plan
+목적:
 
-**Tools**: — (분류·보고 단계)
+- 현재 global spec 구조 파악
+- 기존 terminology/style 파악
+- 변경 충돌 여부 파악
+- 분할 스펙이면 main.md 인덱스와 sub-spec 관계 파악
 
-입력 항목을 스펙 섹션에 매핑한다.
+### Step 3: Parse Planned Delta
 
-| Category | Target Section | Update Type |
-|----------|---------------|-------------|
-| Background/Motivation | 배경 및 동기 (§1) | Update narrative |
-| Design Change | 핵심 설계 (§2) | Update design |
-| New Feature | 목표 > 주요 기능 | Add to list |
-| Enhancement | 개선 필요사항 > 개선 제안 | Add with priority |
-| Bug Fix | 발견된 이슈 > 버그 | Add to issues |
-| Component Change | 컴포넌트 상세 (§4) | Update/add section |
-| Usage Scenario | 사용 가이드 (§5) | Add scenario |
-| Configuration | 설정 (§8) | Add options |
-| API Change | API 레퍼런스 (§7) | Add endpoints |
+입력을 다음 축으로 분해한다.
+
+- `Change Summary`
+- `Scope Delta`
+- `Contract/Invariant Delta`
+- `Touchpoints`
+- `Implementation Plan`
+- `Validation Plan`
+- `Risks / Open Questions`
+
+또는 user input을 위 구조로 best-effort 정규화한다.
+
+### Step 4: Map to Global Spec Sections
+
+planned delta를 global spec canonical section에 매핑한다.
+
+예시:
+
+- `Change Summary` → `배경 및 high-level concept` 또는 `핵심 설계와 주요 결정`
+- `Scope Delta` → `Scope / Non-goals / Guardrails`
+- `Contract/Invariant Delta` → `Contract / Invariants / Verifiability`
+- persistent touchpoint implication → `Decision-bearing structure`
+- user-visible behavior change → `사용 가이드 & 기대 결과`
+
+매핑하지 않는 것:
+
+- task breakdown
+- validation execution detail
+- transient risk log
+- exhaustive file inventory
 
 #### File Placement Decision (분할 스펙 전용)
 
 단일 파일 스펙이면 건너뛴다.
 
-1. **기존 파일 매칭**: 항목의 컴포넌트/기능이 기존 sub-spec 파일과 일치 → 해당 파일에 배치
-2. **Cross-cutting 항목**: 환경변수, 글로벌 설정 등은 해당 §이 위치한 파일에 배치
-3. **신규 파일 생성**: 매칭 없으면 새 파일 생성 (파일명 = 컴포넌트명, 예: `proxy.md`). main.md 인덱스에 링크 필수
-4. **소규모 병합**: 생성될 내용이 50줄 미만이면 가장 관련도 높은 기존 파일에 병합 (소규모 = 잘못된 분할)
+1. 기존 파일 매칭: 항목의 컴포넌트/기능이 기존 sub-spec 파일과 일치 → 해당 파일에 배치
+2. Cross-cutting 항목: 환경변수, 글로벌 설정 등은 해당 section이 위치한 파일에 배치
+3. 신규 파일 생성: 매칭 없으면 새 파일 생성 후 main.md 인덱스에 링크 추가
+4. 소규모 병합: 생성될 내용이 작으면 가장 관련도 높은 기존 파일에 병합
 
-Update Plan에 파일 배치 결정을 포함한다:
+### Step 5: Generate Update Plan
 
-| Item | Target File | Action | Reason |
-|------|------------|--------|--------|
+적용 전 요약을 만든다.
 
-Update Plan을 작업 로그로 출력한 뒤 Step 4로 자동 진행한다.
+- 어떤 delta를 어느 global section에 넣는지
+- global spec에 남길 정보와 버릴 실행 정보가 무엇인지
+- existing spec과 충돌하는지
+- 후속 구현이 필요한지
 
-### Step 4: 업데이트 적용
+### Step 6: Apply Updates
 
-**Tools**: `Edit`, `Write`, `Bash (mkdir -p, mv)`
+spec를 갱신한다.
 
-1. `mkdir -p _sdd/spec/prev/` → 백업 생성
-2. 적절한 섹션에 항목 삽입 (기존 스타일·언어 유지)
-   2-1. 신규 sub-spec 파일 생성 시: 파일 생성 → main.md 인덱스에 링크 추가
-3. 버전 patch 증가 (X.Y.Z → X.Y.Z+1), 날짜 갱신, Changelog 항목 추가
-4. 필요 시 `decision_log.md`에 항목 추가
-5. 처리된 입력 파일을 `_processed_` 접두사로 이름 변경, 처리 메타데이터 추가
+원칙:
 
-### Step 5: 검증 & 요약 보고
+- 기존 문체와 언어를 맞춘다.
+- 중복 서술을 만들지 않는다.
+- 구현 완료처럼 쓰지 않고 planned requirement로 쓴다.
+- `Contract/Invariant Delta`가 global spec에 들어갈 때는 canonical CIV 표 형식으로 정리한다.
+- 신규 sub-spec 파일 생성 시 파일 생성 후 main.md 인덱스에 링크를 추가한다.
 
-**Tools**: `Glob`
+### Step 7: Process Input Files
 
-검증 체크리스트:
-- 수정된 스펙 파일 존재
-- Changelog 항목·버전 증가·백업 파일 존재
-- 입력 파일 `_processed_` 리네임 완료
-- (분할 스펙) 신규 파일이 main.md 인덱스에 링크됨
+input file을 사용했다면 `_processed_*` 이름으로 변경한다.
 
 ## Update Template
 
-새 항목 삽입 시 기존 스타일에 맞추되, 아래를 기본 형식으로 참조한다.
+필요 시 아래 형식으로 정리해 생각한다.
 
 ```markdown
-N. **[NEW] 항목명**: 설명  <!-- 추가됨: YYYY-MM-DD -->
-   - 수용 기준 / 상세 (있을 경우)
+### Update Item: [title]
+**Type**: Scope | Contract | Invariant | Usage | Decision
+**Target Section**: ...
+**Current**: ...
+**Proposed**: ...
+**Reason**: ...
 ```
-
-상태 마커: 📋 계획됨 (새 항목 기본값) · 🚧 진행중 · ✅ 완료 · ⏸️ 보류
 
 ## Output Format
 
-```markdown
-## Spec Update Complete
+최종 보고에는 최소한 아래를 포함한다.
 
-**File**: `_sdd/spec/<spec>.md`
-**Version**: X.Y.Z → X.Y.(Z+1)
-**Date**: YYYY-MM-DD
-
-### Applied Changes
-
-| File | Section | Change | Item |
-|------|---------|--------|------|
-| ... | ... | ADD | ... |
-
-### Input File Status
-- [x] `user_draft.md` → `_processed_user_draft.md` (if used)
-- [x] `user_spec.md` → `_processed_user_spec.md` (if used)
-
-### Next Steps
-- Run `/spec-update-done` after implementation to sync spec with code
-```
+- 변경된 파일/섹션
+- 반영된 planned delta 요약
+- global spec에 반영하지 않은 실행 정보
+- 남은 open questions
+- 후속 추천 스킬
 
 ## Error Handling
 
-| Situation | Action |
-|-----------|--------|
-| Spec file not found | `spec-create` 먼저 실행 안내 |
-| Ambiguous input | 최선 해석으로 진행, 판단 불가 시 Open Questions에 기록 |
-| Conflicting requirements | Update Plan + Open Questions에 기록, 비파괴적 방향만 적용 |
-| Invalid input file format | 파싱 오류 보고, 수정 제안 |
-| 백업 디렉토리 미존재 | `mkdir -p` 자동 생성 |
-| 섹션 매핑 불가 | 보수적 섹션에 반영, 불확실 항목은 Open Questions에 기록 |
+| 상황 | 대응 |
+|------|------|
+| 입력이 매우 모호함 | best-effort 반영 후 `Open Questions`에 불확실성 기록 |
+| spec section 매핑이 어려움 | 가장 가까운 canonical section에 보수적으로 반영 |
+| 충돌 요구사항 발견 | 비파괴적 방향만 적용하고 충돌을 남긴다 |
+| input file 형식이 거칠음 | 핵심 delta만 추출하고 나머지는 notes로 남긴다 |
 | 파일 배치 판단 모호 | 가장 관련도 높은 기존 파일에 보수적 배치, Update Plan에 근거 기록 |
 
 ## Integration
 
-```
-Large:  feature-draft → spec-update-todo → implementation-plan → implementation → implementation-review → spec-update-done
-Medium: feature-draft → implementation → spec-update-done
-Small:  직접 구현 (→ spec-update-done)
-```
+- `feature-draft`: Part 1 temporary spec draft를 직접 입력으로 받을 수 있다.
+- `implementation-plan`: 반영된 global spec와 temporary spec를 기준으로 계획 생성
+- `spec-review`: 반영 후 품질 감사
 
 ## Final Check
 
 Acceptance Criteria가 모두 만족되었나 검증한다. 미충족 항목이 있으면 해당 단계로 돌아가 수정한다.
 
 > **Mirror Notice**: 이 스킬의 본문은 `.claude/agents/spec-update-todo.md`의 복사본이다.
+> 사용자가 직접 호출할 때 중간 과정의 가시성을 확보하기 위해 복붙되었다.
 > 내용을 수정할 때는 agent 파일과 이 스킬 파일을 **반드시 함께** 수정해야 한다.

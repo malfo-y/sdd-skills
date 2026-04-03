@@ -1,55 +1,89 @@
-# Spec Format Reference (Whitepaper Style)
+# Spec Format Reference (Current Canonical Model)
 
-Checklist-style reference for the expected spec section structure and preservation rules.
-This is NOT a generation template — it defines "what sections should exist" for validation and preservation.
+Checklist-style reference for the expected section structure and preservation rules. This is not a generation template. It defines what the current SDD global spec model expects after migration.
 
 ---
 
-## Expected Section Structure
+## Global Spec Core
 
-| # | Section | Purpose | Required |
-|---|---------|---------|----------|
-| 1 | Background & Motivation | Problem, why this approach, core value proposition | Yes |
-| 2 | Core Design | Key idea narrative, algorithm/logic flow with code excerpts, design rationale | Yes |
-| 3 | Architecture Overview | System diagram, technology stack, high-level design | Yes |
-| 4 | Component Details | Per-component purpose/why/responsibility/interface/source | Yes |
-| 5 | Usage Guide & Expected Results | Scenario-based usage with expected outcomes | Yes |
-| 6 | Data Models | Entity definitions, constraints, indexes | If applicable |
-| 7 | API Reference | Endpoints, request/response schemas | If applicable |
-| 8 | Environment & Dependencies | Directory structure, dependencies, configuration | Yes |
-| - | Appendix: Code Reference Index | All inline citations organized by file | If code excerpts exist |
+| Order | Section | Purpose | Required |
+|------|---------|---------|----------|
+| 1 | Background & High-Level Concept | 문제, 개념, 대안 대비 선택 이유 | Yes |
+| 2 | Scope / Non-goals / Guardrails | 책임 범위와 경계 고정 | Yes |
+| 3 | Core Design & Key Decisions | 유지해야 할 설계 구조와 핵심 결정 | Yes |
+| 4 | Contract / Invariants / Verifiability | 계약, 불변조건, 검증 연결 | Yes |
+| 5 | Usage Guide & Expected Results | 시나리오와 기대 결과 | Yes |
+| 6 | Decision-Bearing Structure | 시스템 경계, ownership, cross-component contract 등 | Yes |
+| 7 | Reference Information | 데이터 모델, API, 환경 및 설정 | If useful |
+| A | Strategic Code Map | selective navigation hint | Optional appendix |
+| B | Related Docs & Code References | 관련 문서 / citation index | Optional appendix |
+
+## Temporary Spec Reference
+
+Temporary spec은 global spec과 다른 shape를 가진다.
+
+| Order | Section | Required |
+|------|---------|----------|
+| 1 | Change Summary | Yes |
+| 2 | Scope Delta | Yes |
+| 3 | Contract/Invariant Delta | Yes |
+| 4 | Touchpoints | Yes |
+| 5 | Implementation Plan | Yes |
+| 6 | Validation Plan | Yes |
+| 7 | Risks / Open Questions | Yes |
+
+## CIV Canonical Shape
+
+### Contract
+
+| ID | Subject | Inputs/Outputs | Preconditions | Postconditions | Failure Guarantees |
+|----|---------|----------------|---------------|----------------|--------------------|
+
+### Invariants
+
+| ID | Scope | Invariant | Why It Matters |
+|----|-------|-----------|----------------|
+
+### Verifiability
+
+| ID | Targets | Verification Method | Evidence / Notes |
+|----|---------|---------------------|------------------|
+
+`Verification Method` enum:
+
+- `test`
+- `review`
+- `runtime-check`
+- `manual-check`
 
 ## Preservation Rules
 
-These elements MUST be preserved during spec upgrade/restructuring:
+These elements must be preserved or explicitly reconstructed during migration.
 
-### Section Preservation
-- **Background & Motivation** (§1): Problem statement, approach rationale, and core value proposition must not be pruned or moved to appendix
-- **Core Design** (§2): Key idea narrative and design rationale must remain in main document
-- **Usage Guide & Expected Results** (§5): Scenario-based expected results must not be removed
+### Must Preserve
 
-### Code Excerpt Preservation
-- **Inline citations**: `[filepath:functionName]` references in prose must be preserved during restructuring
-- **Code blocks with citation headers**: Blocks starting with `# [filepath:functionName]` must be kept intact
-- **30-line rule**: Code excerpts follow the 30-line rule (≤30 lines: full body; >30 lines: signature + core logic)
-- **Code Reference Index**: The appendix table mapping files to citations must be updated if sections are moved
+- 문제 정의와 high-level concept
+- scope와 non-goals 경계
+- 유지해야 할 핵심 설계 결정
+- 실제로 중요한 contract와 invariant
+- 사용 시나리오와 기대 결과
 
-### Component Preservation
-- **Why fields**: Component-level "Why" fields must remain inline (not moved to decision_log or appendix)
-- **Source fields**: Implementation file mappings must be preserved during section moves
+### Must Reconstruct If Missing
 
-## Section Quality Criteria
+- `Contract / Invariants / Verifiability`
+- explicit scope / non-goals / guardrails
+- decision-bearing structure
 
-### §1 Background & Motivation — Minimum Content
-- Problem statement: 이 프로젝트가 해결하는 문제가 명시됨
-- Why this approach: 대안 대비 현재 접근의 이유가 설명됨
-- Core value proposition: 핵심 가치가 한 문단 이상으로 서술됨
+### Must Not Be Treated As Mandatory Main-Body Structure
 
-### §2 Core Design — Minimum Content
-- Key idea narrative: 핵심 설계 아이디어가 서사적으로 설명됨 (단순 목록이 아님)
-- Algorithm/logic flow: 주요 로직 흐름이 코드 발췌와 함께 설명됨
-- Design rationale: 왜 이 구조를 택했는지 설명됨
+- exhaustive architecture inventory
+- exhaustive component inventory
+- class/function list copied from code
+- implementation details that do not carry decisions
 
-### §5 Usage Guide & Expected Results — Minimum Content
-- Scenario-based: 최소 1개 이상의 사용 시나리오가 Setup → Action → Expected Result 형식으로 있음
-- Expected outcomes: 각 시나리오의 기대 결과가 구체적으로 명시됨
+### Strategic Code Map Rule
+
+- appendix-level hint로만 유지
+- manual curated가 기본값
+- entrypoint / invariant hotspot / extension point / change hotspot 위주
+- 단순 파일 나열은 금지
