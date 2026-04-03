@@ -15,7 +15,7 @@ version: 2.3.0
 > 완료 전 아래 기준을 자체 검증한다. 미충족 항목이 있으면 해당 단계로 돌아가 수정한다.
 
 - [ ] AC1: 8-step pipeline(Step 0~8)이 순서대로 실행 완료되었다 (부분 파이프라인은 해당 범위 내 완료)
-- [ ] AC2: `.codex/skills/orchestrator_<topic>/SKILL.md`에 generated orchestrator를 저장하고 검증을 통과했다
+- [ ] AC2: `_sdd/pipeline/orchestrators/orchestrator_<topic>.md`에 generated orchestrator를 저장하고 검증을 통과했다
 - [ ] AC3: orchestrator 기반 Phase 2 자율 실행이 완료되었다 (에이전트 호출 + Exit Criteria 검증)
 - [ ] AC4: review 포함 파이프라인에서 review-fix loop가 정상 동작했다
 - [ ] AC5: E2E 테스트/검증이 실제로 실행되었다 (인라인 또는 ralph-loop). Execute → Verify 패턴 준수. 결과가 사용자가 볼 수 있는 형태로 저장되었다 (`_sdd/implementation/test_results/` 또는 `ralph/state.md`). 테스트 건너뛰기 금지 — 실행 불가 시 사유와 수동 검증 방법을 보고서에 명시해야 한다.
@@ -23,7 +23,6 @@ version: 2.3.0
 - [ ] AC7: 최종 결과와 후속 조치를 `_sdd/pipeline/report_<topic>_<timestamp>.md`에 정리했다
 - [ ] AC8: `_sdd/spec/` 직접 수정은 `spec_update_done` 또는 `spec_update_todo` 에이전트에만 위임했다
 - [ ] AC9: Phase 2 진입 전에 Step 6 checkpoint에서 pre-flight 결과를 공유하고 explicit approval을 받았다
-- [ ] AC10: 완료된 active orchestrator를 `_sdd/pipeline/orchestrators/<topic>_<timestamp>/`에 아카이브했다
 
 ## Workflow Position
 
@@ -47,20 +46,20 @@ User Request
                       |- 파이프라인 단계 순차 실행
                       |- review-fix loop
                       |- 테스트 (인라인 or Ralph)
-                      `- 최종 요약 + 보고 + archive
+                      `- 최종 요약 + 보고
 ```
 
 ## Hard Rules
 
 1. **Discussion 인라인 실행 + `_sdd/spec/` 직접 수정 금지**: Step 2 대화는 autopilot 본문에서 직접 수행한다. 스펙 파일 수정은 반드시 `spec_update_done` / `spec_update_todo` 에이전트에 위임한다.
 2. **Phase 2 무중단 + 파일 기반 상태 전달**: Phase 2 진입 후 `request_user_input` 금지. 에이전트에는 파일 경로만 전달하며, 전체 출력을 부모 컨텍스트에 누적하지 않는다.
-3. **오케스트레이터 저장 + 공유 로그 필수**: 오케스트레이터는 `.codex/skills/orchestrator_<topic>/SKILL.md`에 저장한다. 실행 시 `_sdd/pipeline/log_<topic>_<timestamp>.md`를 생성하고 각 단계 완료 후 핵심 결정사항을 기록한다.
+3. **오케스트레이터 저장 + 공유 로그 필수**: 오케스트레이터는 `_sdd/pipeline/orchestrators/orchestrator_<topic>.md`에 저장한다. 실행 시 `_sdd/pipeline/log_<topic>_<timestamp>.md`를 생성하고 각 단계 완료 후 핵심 결정사항을 기록한다.
 4. **에이전트 호출 시 원문 전달**: 사용자의 원래 요청과 관련 컨텍스트 파일 경로를 포함한다. 의미를 잃을 정도로 축약하지 않는다.
 5. **Review-Fix 사이클 필수**: review 포함 파이프라인에서는 review → fix → re-review 사이클을 실행해야 한다. 리뷰만 하고 끝나는 것은 불허한다.
 6. **Execute → Verify 필수**: 모든 단계는 실행(Execute) + 검증(Verify) 두 페이즈를 거친다. 에이전트 호출만으로 완료 간주 금지. Exit Criteria 미충족 시 다음 단계 진행 불가.
 7. **Pre-flight + approval 필수**: Phase 2 진입 전 `_sdd/env.md`와 `.codex/config.toml`을 읽고 실행 가능성을 점검한 뒤 explicit approval을 받아야 한다.
 8. **Agent lifecycle 수집 필수**: `spawn_agent(...)`로 시작한 실행 단위는 `wait_agent(...)`로 반드시 수집하고, 필요 시 `send_input(...)` 또는 재-spawn으로 보완한다.
-9. **Archive 필수**: 완료된 active orchestrator는 `_sdd/pipeline/orchestrators/<topic>_<timestamp>/`에 아카이브한다.
+9. **로그 기반 상태 관리**: 오케스트레이터는 `_sdd/pipeline/orchestrators/`에 유지. 활성/완료 구분은 로그 파일 status로 판단한다.
 10. 한국어를 기본으로 하되 사용자 언어를 따른다.
 
 ## Process
@@ -151,7 +150,7 @@ Step 1 내재화 + Step 2~3 결과를 바탕으로 추론한다.
 - `references/orchestrator-contract.md` 계약 준수
 - "구체화된 요구사항"에서 기능 수준 Acceptance Criteria 도출
 - Reasoning Trace 3-6 bullet 간결 작성
-- 저장 경로: `.codex/skills/orchestrator_<topic>/SKILL.md`
+- 저장 경로: `_sdd/pipeline/orchestrators/orchestrator_<topic>.md`
 
 Pre-flight Check:
 - `_sdd/env.md`와 대조하여 테스트/리소스 갭 분석
@@ -312,9 +311,7 @@ ON ERROR:
 2. 어떻게 나왔는가: 각 단계 성공/실패, 이슈 해결 상태, 테스트 통과율, 스펙 동기화
 3. 뭘 더 해야 하는가: 미완료 단계, 제한사항/리스크, 후속 작업 제안
 4. Taste Decisions: 파이프라인 중 taste decision으로 분류된 자동 결정 목록
-5. active orchestrator archive 경로
-
-그 후 active orchestrator를 `_sdd/pipeline/orchestrators/<topic>_<timestamp>/`에 아카이브한다. 아카이브에는 최소한 `SKILL.md`와 실행 중 생성된 관련 메타데이터를 포함해야 하며, active 경로가 다음 실행에서 in-progress 상태로 오인되지 않도록 정리한다.
+5. 오케스트레이터 경로 및 상태 확인 (로그 기반)
 
 ## Reference Files
 

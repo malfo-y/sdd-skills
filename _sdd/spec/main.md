@@ -331,10 +331,8 @@ version: <minor 버전 업>
     ├── _sdd/drafts/         (피처 드래프트)
     ├── _sdd/implementation/  (구현 계획/리포트)
     ├── _sdd/pr/             (PR 리뷰/패치)
-    └── _sdd/pipeline/       (파이프라인 실행 로그 + 완료 오케스트레이터 아카이브)
-    │
-    ▼
-[.claude/skills/orchestrator_<topic>/ or .codex/skills/orchestrator_<topic>/]  (활성 오케스트레이터)
+    └── _sdd/pipeline/       (파이프라인 실행 로그 + 오케스트레이터)
+    │     └── orchestrators/   (오케스트레이터 저장 — 활성/완료 구분은 로그 status로 판단)
 ```
 
 ### Workflow
@@ -426,10 +424,9 @@ Artifact naming policy:
 | `_sdd/implementation/implementation_report*.md` | implementation | 구현 리포트 |
 | `_sdd/implementation/implementation_review.md` | implementation-review | 구현 검증 |
 | `_sdd/pr/pr_review.md` | pr-review | PR 리뷰 (spec 존재 시 spec-patch 기능 포함) |
-| `.claude/skills/orchestrator_<topic>/SKILL.md` 또는 `.codex/skills/orchestrator_<topic>/SKILL.md` | sdd-autopilot | 실행 중 활성 오케스트레이터 (스킬로 재사용/재개 가능) |
+| `_sdd/pipeline/orchestrators/orchestrator_<topic>.md` | sdd-autopilot | 오케스트레이터 (활성/완료 구분은 로그 status로 판단) |
 | `_sdd/pipeline/log_<topic>_<ts>.md` | sdd-autopilot | 파이프라인 실행 로그 (Meta + Status 테이블 + Execution Log) |
 | `_sdd/pipeline/report_<topic>_<ts>.md` | sdd-autopilot | 파이프라인 최종 요약 리포트 (실행 결과, 리뷰 결과, 잔여 이슈) |
-| `_sdd/pipeline/orchestrators/<topic>_<ts>/` | sdd-autopilot | 완료된 오케스트레이터 아카이브 |
 | `ralph/` | ralph-loop-init | 장기 실행 프로세스 자동화 디버그 루프 |
 
 ### Technology Stack
@@ -600,7 +597,7 @@ sdd_skills/
     ├── discussion/              # 토론 기록
     ├── drafts/                  # 피처 드래프트
     ├── implementation/          # 구현 계획/리포트
-    └── pipeline/                # [신규] sdd-autopilot 파이프라인 실행 로그 + 완료 오케스트레이터 아카이브
+    └── pipeline/                # [신규] sdd-autopilot 파이프라인 실행 로그 + 오케스트레이터
 ```
 
 ### Platform Differences
@@ -619,7 +616,7 @@ sdd_skills/
 
 **Codex 제한 사항:**
 - `AskUserQuestion` 도구 미지원 → `request_user_input` 기반으로 대화형 단계를 처리
-- 활성 오케스트레이터는 `.codex/skills/orchestrator_<topic>/`에 두고, 완료 후 `_sdd/pipeline/orchestrators/<topic>_<ts>/`로 이동한다
+- 오케스트레이터는 `_sdd/pipeline/orchestrators/orchestrator_<topic>.md`에 저장 (양쪽 플랫폼 동일 경로)
 - `git`은 Claude Code 전용이며, 나머지 핵심 워크플로우 스킬은 Codex에서도 지원한다
 
 ### Installation

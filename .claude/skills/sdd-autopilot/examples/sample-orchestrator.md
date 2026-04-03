@@ -221,7 +221,7 @@ medium/low 이슈는 무시하세요.
 **시작**: 2026-03-16T14:35:00
 **규모**: 중규모
 **파이프라인**: feature-draft -> implementation-plan -> implementation -> review-fix -> inline-test -> spec-update-done
-**오케스트레이터**: _sdd/pipeline/orchestrator_jwt_auth_20260316_143000.md
+**오케스트레이터**: _sdd/pipeline/orchestrators/orchestrator_jwt_auth.md
 
 ## 실행 로그
 
@@ -568,7 +568,7 @@ medium/low 이슈는 무시하세요.
 **시작**: 2026-03-17T10:05:00
 **규모**: 대규모
 **파이프라인**: feature-draft -> spec-update-todo -> implementation-plan -> implementation -> review-fix -> ralph-loop -> spec-update-done
-**오케스트레이터**: .claude/skills/orchestrator_image_cls_finetune/SKILL.md
+**오케스트레이터**: _sdd/pipeline/orchestrators/orchestrator_image_cls_finetune.md
 
 ## Status
 | Step | Agent | Status | Output |

@@ -190,5 +190,5 @@ fix 프롬프트는 critical/high/medium 이슈를 수정 대상으로 한다.
 
 - `_sdd/drafts/feature_draft_<topic>.md` -> `implementation` 또는 `implementation_plan`
 - `_sdd/implementation/implementation_plan.md` -> `implementation`
-- `.codex/skills/orchestrator_<topic>/SKILL.md` -> autopilot 실행 입력
+- `_sdd/pipeline/orchestrators/orchestrator_<topic>.md` -> autopilot 실행 입력
 - `_sdd/pipeline/log_<topic>_<timestamp>.md` -> autopilot 관리 로그

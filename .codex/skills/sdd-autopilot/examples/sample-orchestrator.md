@@ -118,7 +118,7 @@ Feature draft: `_sdd/drafts/feature_draft_jwt_auth.md`
 
 ## Meta
 - **request**: "JWT 기반 인증 시스템 구현해줘. 로그인, 로그아웃, 토큰 갱신 포함."
-- **orchestrator**: `.codex/skills/orchestrator_jwt_auth/SKILL.md`
+- **orchestrator**: `_sdd/pipeline/orchestrators/orchestrator_jwt_auth.md`
 - **started**: 2026-03-16T14:35:00
 - **pipeline**: feature_draft -> implementation -> review-fix -> inline-test -> spec_update_done
 
