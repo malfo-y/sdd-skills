@@ -85,7 +85,7 @@ Feature draft: `_sdd/drafts/feature_draft_jwt_auth.md`
 
 - **최대 반복**: 3회
 - **종료 조건**: critical = 0 AND high = 0 AND medium = 0
-- **수정 대상**: critical/high/medium
+- **수정 대상**: critical/high/medium/low
 
 ### Review 프롬프트
 - 보안 취약점
@@ -95,8 +95,7 @@ Feature draft: `_sdd/drafts/feature_draft_jwt_auth.md`
 - severity를 critical/high/medium/low로 분류
 
 ### Fix 프롬프트
-- critical/high/medium 이슈를 수정
-- low는 로그 기록만
+- critical/high/medium/low 이슈를 전부 수정
 
 ## Test Strategy
 

@@ -11,7 +11,7 @@ version: 2.3.0
 - [ ] AC1: 8-step pipeline(Step 0~8)이 순서대로 실행 완료되었다 (부분 파이프라인은 해당 범위 내 완료)
 - [ ] AC2: orchestrator 파일이 `_sdd/pipeline/orchestrators/orchestrator_<topic>.md`에 생성되고, 검증(12항목)을 통과했다
 - [ ] AC3: orchestrator 기반 Phase 2 자율 실행이 완료되었다 (에이전트 호출 + Exit Criteria 검증)
-- [ ] AC4: review-fix loop가 정상 동작했다 (이슈 발견 시 fix → re-review 사이클 실행, critical/high 0건 또는 MAX_REVIEW 도달 시 중단)
+- [ ] AC4: review-fix loop가 정상 동작했다 (이슈 발견 시 fix → re-review 사이클 실행, critical/high/medium 0건 또는 MAX_REVIEW 도달 시 중단)
 - [ ] AC5: E2E 테스트/검증이 실제로 실행되었다 (인라인 또는 ralph-loop). Execute → Verify 패턴 준수. 결과가 사용자가 볼 수 있는 형태로 저장되었다 (`_sdd/implementation/test_results/` 또는 `ralph/state.md`). 테스트 건너뛰기 금지 — 실행 불가 시 사유와 수동 검증 방법을 보고서에 명시해야 한다.
 - [ ] AC6: 테스트/검증 결과가 사용자에게 명시적으로 보고되었다 (통과/실패 건수, 실패 시 원인 요약, 수동 확인 필요 항목)
 - [ ] AC7: 최종 요약 보고서(`_sdd/pipeline/report_<topic>_<timestamp>.md`)가 작성되고 사용자에게 보고되었다
@@ -283,7 +283,7 @@ WHILE review_count < MAX_REVIEW:
   1. implementation-review 에이전트 호출
   2. critical/high/medium 이슈 수 추출 → 로그 기록
   3. critical==0 AND high==0 AND medium==0 → BREAK (리뷰 통과)
-  4. Fix: implementation 에이전트로 critical/high/medium 수정 (low는 로그에만 기록)
+  4. Fix: implementation 에이전트로 critical/high/medium/low 전부 수정
   5. → re-review (루프 반복)
 
 MAX_REVIEW 도달 시:

@@ -148,8 +148,8 @@ Feature draft: `_sdd/drafts/feature_draft_jwt_auth.md`
 ## Review-Fix Loop
 
 - **최대 반복**: 3회
-- **종료 조건**: critical = 0 AND high = 0
-- **수정 대상**: critical/high만 (medium/low는 로그 기록)
+- **종료 조건**: critical = 0 AND high = 0 AND medium = 0
+- **수정 대상**: critical/high/medium/low 전부
 
 ### Review 프롬프트:
 구현 결과를 리뷰하세요.
@@ -173,15 +173,13 @@ Feature draft: `_sdd/drafts/feature_draft_jwt_auth.md`
 
 리뷰 결과에 critical/high/medium/low 심각도를 반드시 포함하세요.
 
-### Fix 프롬프트 (critical/high 이슈 발견 시):
-리뷰에서 발견된 critical/high 이슈를 수정하세요.
+### Fix 프롬프트 (이슈 발견 시):
+리뷰에서 발견된 이슈를 전부 수정하세요.
 
 리뷰 리포트: <리뷰 결과>
 
 수정 대상 이슈:
-- <critical/high 이슈 목록>
-
-medium/low 이슈는 무시하세요.
+- <전체 이슈 목록 (critical/high/medium/low)>
 
 ## Test Strategy
 
@@ -257,15 +255,13 @@ medium/low 이슈는 무시하세요.
 - **수정 대상**:
   - [critical] refresh token 갱신 시 이전 토큰 무효화 누락
   - [high] 비밀번호 비교 시 timing attack 취약점
+  - [medium] 에러 메시지 국제화 미지원
+  - [low] 로그 레벨 일관성
 - **수정 결과**: 완료
 
 ### review-fix -- Round 2/3
-- **리뷰 결과**: critical 0건, high 0건, medium 2건, low 1건
-- **종료**: critical/high = 0 -> 리뷰 통과
-- **로그된 minor 이슈**:
-  - [medium] 에러 메시지 국제화 미지원
-  - [medium] rate limiting 미적용
-  - [low] 로그 레벨 일관성
+- **리뷰 결과**: critical 0건, high 0건, medium 0건, low 0건
+- **종료**: critical/high/medium = 0 -> 리뷰 통과
 
 ### 인라인 테스트 -- 완료
 - **시간**: 14:52:00 ~ 14:53:30 (1분 30초)
@@ -288,7 +284,7 @@ medium/low 이슈는 무시하세요.
 - **Review 횟수**: 2회 (Round 2에서 통과)
 - **테스트 결과**: 통과 18/18
 - **스펙 동기화**: 완료
-- **잔여 이슈**: medium 2건, low 1건 (로그에 기록)
+- **잔여 이슈**: 없음
 ```
 
 ---
@@ -498,9 +494,9 @@ Feature draft: `_sdd/drafts/feature_draft_image_cls_finetune.md`
 ## Review-Fix Loop
 
 - **최대 반복**: 3회
-- **종료 조건**: critical = 0 AND high = 0
+- **종료 조건**: critical = 0 AND high = 0 AND medium = 0
 - **MAX_REVIEW 도달 시**: critical/high 미해결이면 **파이프라인 중단** (Hard Rule #9, #10)
-- **수정 대상**: critical/high만 (medium/low는 로그 기록)
+- **수정 대상**: critical/high/medium/low 전부
 
 ### Review 프롬프트:
 구현 결과를 리뷰하세요.
@@ -529,15 +525,13 @@ Feature draft: `_sdd/drafts/feature_draft_image_cls_finetune.md`
 
 리뷰 결과에 critical/high/medium/low 심각도를 반드시 포함하세요.
 
-### Fix 프롬프트 (critical/high 이슈 발견 시):
-리뷰에서 발견된 critical/high 이슈를 수정하세요.
+### Fix 프롬프트 (이슈 발견 시):
+리뷰에서 발견된 이슈를 전부 수정하세요.
 
 리뷰 리포트: <리뷰 결과>
 
 수정 대상 이슈:
-- <critical/high 이슈 목록>
-
-medium/low 이슈는 무시하세요.
+- <전체 이슈 목록 (critical/high/medium/low)>
 
 ## Test Strategy
 
@@ -622,17 +616,16 @@ medium/low 이슈는 무시하세요.
   - [critical] DDP에서 모든 rank가 체크포인트를 저장하는 race condition
   - [high] GradScaler가 gradient accumulation과 호환되지 않는 사용법
   - [high] 데이터 로더 num_workers가 DDP rank마다 중복 fork
-- **수정 결과**: 완료
-
-### review-fix -- Round 2/3
-- **리뷰 결과**: critical 0건, high 0건, medium 3건, low 2건
-- **종료**: critical/high = 0 -> 리뷰 통과
-- **로그된 minor 이슈**:
   - [medium] learning rate warmup 미구현
   - [medium] 학습 중단 시 resume 로직 미구현
   - [medium] 데이터셋 캐싱 미적용
   - [low] config 주석 부족
   - [low] 타입 힌트 일부 누락
+- **수정 결과**: 완료
+
+### review-fix -- Round 2/3
+- **리뷰 결과**: critical 0건, high 0건, medium 0건, low 0건
+- **종료**: critical/high/medium = 0 -> 리뷰 통과
 
 ### ralph-loop-init -- 완료 (Phase A-1, B-1)
 - **시간**: 10:35:00 ~ 10:37:00 (2분)
@@ -671,5 +664,5 @@ medium/low 이슈는 무시하세요.
 - **Review 횟수**: 2회 (Round 2에서 통과)
 - **테스트 결과**: ralph loop 3 iterations, 최종 val_accuracy=0.847
 - **스펙 동기화**: 완료
-- **잔여 이슈**: medium 3건, low 2건 (로그에 기록)
+- **잔여 이슈**: 없음
 ```

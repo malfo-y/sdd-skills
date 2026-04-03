@@ -248,8 +248,8 @@ WHILE review_count < MAX_REVIEW:
   review_count += 1
   1. implementation_review 실행
   2. severity counts 추출
-  3. blocking/fix-required 이슈가 0이면 BREAK
-  4. implementation으로 이슈 수정
+  3. critical == 0 AND high == 0 AND medium == 0이면 BREAK
+  4. implementation으로 critical/high/medium/low 전부 수정
   5. 재테스트 후 re-review
 ```
 
@@ -258,8 +258,8 @@ Severity 해석:
 - Claude parity schema가 남아 있으면 `Critical` = blocking, `Quality` = fix-required, `Improvements` = follow-up 으로 해석
 
 MAX_REVIEW 도달 시:
-- blocking/fix-required 잔존 → 파이프라인 중단
-- follow-up만 잔존 → 로그 기록 후 진행
+- critical/high 잔존 → 파이프라인 중단
+- medium만 잔존 → 로그 기록 후 진행
 
 테스트 실행:
 
