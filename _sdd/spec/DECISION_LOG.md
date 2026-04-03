@@ -1,5 +1,40 @@
 # Decision Log
 
+## 2026-04-03 - Spec rewrite: single-file to index + sub-file structure (v3.8.2 → v3.9.0)
+
+### Context
+
+main.md가 1206줄(32,933 토큰)으로 비대해져 AI 에이전트의 컨텍스트 로드와 사용자의 정보 탐색 모두 비효율적이었다. 8개 핵심 metric 진단 결과 Component Separation과 Findability가 2점(3점 만점)으로, 구조적 개선이 필요했다. Whitepaper 핵심 narrative(§1-§3)는 양호하나 Component Details, Usage Guide, Changelog가 본문에 포함되어 불필요한 길이를 차지하고 있었다.
+
+### Decision
+
+1. **main.md를 인덱스로 전환**: §1-§3(Background, Core Design, Architecture)은 인라인 유지, §4 상세/§5/Changelog는 별도 파일로 분리
+2. **신규 파일 3개 생성**: `components.md`(§4 + Code Reference Index), `usage-guide.md`(§5), `logs/changelog.md`(Changelog 이동)
+3. **해결 완료 이슈 삭제**: #1-4, #8-16번을 본문에서 제거 (changelog에서 이미 추적 가능)
+4. **§4 요약 테이블 + 에이전트 목록은 main에 유지**: 컴포넌트 탐색 진입점 역할
+
+### Rationale
+
+- template-compact.md 기준 중규모(500-1500줄) 스펙은 인덱스 + 컴포넌트 파일 구조가 권장됨
+- main.md 경량화로 AI 에이전트의 컨텍스트 효율이 향상됨 (668줄, 45% 감축)
+- whitepaper 핵심 narrative(§1, §2, §5)는 모두 보존됨 — §5는 별도 파일이지만 1-hop 접근 가능
+- 모든 컴포넌트의 Why 필드, Design Rationale 테이블, Source 매핑이 원본 그대로 보존됨
+
+### Changes
+
+- `_sdd/spec/main.md` — v3.8.2 → v3.9.0 (1206줄 → 668줄)
+- `_sdd/spec/components.md` — 신규 생성 (303줄)
+- `_sdd/spec/usage-guide.md` — 신규 생성 (84줄)
+- `_sdd/spec/logs/changelog.md` — 신규 생성 (Changelog 이동)
+- `_sdd/spec/logs/spec-rewrite-plan.md` — 진단 및 계획
+- `_sdd/spec/logs/rewrite_report.md` — 실행 결과 리포트
+- `_sdd/spec/prev/prev_main.md_20260403_000930.md` — 백업
+
+### References
+
+- 진단/계획: `_sdd/spec/logs/spec-rewrite-plan.md`
+- 실행 리포트: `_sdd/spec/logs/rewrite_report.md`
+
 ## 2026-04-01 - Tighten implementation review loop exit criteria and retry handoff
 
 ### Context
