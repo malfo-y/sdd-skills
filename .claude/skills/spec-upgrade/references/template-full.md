@@ -19,5 +19,6 @@
 ## Optional Supporting Notes
 ### Repo-wide Invariant Note
 ### Supporting References
+### Feature-Level Guide
 ### Appendix-Level Code Map
 ```
