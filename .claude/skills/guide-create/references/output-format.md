@@ -148,8 +148,8 @@ API가 없는 기능(내부 로직, UI 컴포넌트 등)인 경우:
 
 - 파일 경로만 적지 말고 가능한 경우 섹션명까지 같이 적는다.
 - 예:
-  - `_sdd/spec/my_project.md` → `목표 > 결제 승인`
-  - `_sdd/spec/my_project_API.md` → `API Reference > POST /payments/confirm`
+  - `_sdd/spec/main.md` → `목표 > 결제 승인`
+  - `_sdd/spec/api.md` → `API Reference > POST /payments/confirm`
 
 ### 관련 코드 레퍼런스
 

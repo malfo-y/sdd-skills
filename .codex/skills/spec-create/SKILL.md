@@ -166,7 +166,7 @@ SDD(Spec-Driven Development)는 스펙을 판단 기준으로 고정하고,
 
 기본 산출물:
 
-- `_sdd/spec/main.md` 또는 `_sdd/spec/<project>.md`
+- `_sdd/spec/main.md`
 
 조건부 산출물:
 
