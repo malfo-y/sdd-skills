@@ -68,7 +68,7 @@
 - only if truly global
 
 ### Feature-Level Guide
-<!-- 특정 기능의 사용법, 구조, 리뷰 가이드가 필요하면 `/guide-create`로 생성할 수 있다. -->
+- 특정 기능의 사용법, 구조, 리뷰 가이드가 필요하면 `/guide-create`로 생성할 수 있다.
 
 ### Supporting References
 <!-- 관련 docs, README, guide, external resource 링크. -->
