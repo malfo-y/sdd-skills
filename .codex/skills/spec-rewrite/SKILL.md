@@ -36,7 +36,7 @@ version: 1.9.0
 - `references/rewrite-checklist.md`
 - `examples/rewrite-plan.md`
 - `examples/rewrite-report.md`
-- `docs/SDD_SPEC_DEFINITION.md`
+- SDD 정의 문서: https://github.com/malfo-y/sdd-skills/tree/main/docs
 
 ## Hard Rules
 

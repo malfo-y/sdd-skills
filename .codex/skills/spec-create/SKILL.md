@@ -121,6 +121,15 @@ global spec core는 항상 유지한다.
 - `CLAUDE.md`
 - `_sdd/env.md`
 
+`CLAUDE.md`와 `AGENTS.md` 생성/보강 시 아래 SDD 참조 블록을 포함한다.
+
+```markdown
+## SDD란
+SDD(Spec-Driven Development)는 스펙을 판단 기준으로 고정하고,
+그 기준에 따라 구현·검증·동기화하는 개발 방식이다.
+상세 정의: https://github.com/malfo-y/sdd-skills/tree/main/docs
+```
+
 ### Step 4: Write the Spec
 
 글로벌 스펙 본문 필수 요소:
