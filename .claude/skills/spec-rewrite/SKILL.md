@@ -77,7 +77,16 @@ plan에는 아래를 포함한다.
 
 - main에 남길 내용
 - appendix 또는 support surface로 이동할 내용
-- split map 또는 파일 재배치 계획
+- split map 또는 파일 재배치 계획 (분할이 필요하면 아래 축 선택 기준 적용)
+
+multi-file 분할이 필요할 때 축 선택:
+
+| repo 성격 | 분할 축 | 예시 |
+|-----------|---------|------|
+| 독립적인 사용자 기능/endpoint가 여러 개 | domain | `auth.md`, `payments.md` |
+| 기능은 단일에 가까우나 repo가 큼 | topic | `architecture.md`, `data-conventions.md` |
+
+어떤 축이든 각 파일에 담는 건 global-level 결정만이다.
 - 낮은 점수 metric을 어떻게 개선할지에 대한 rationale
 - ambiguity / risk / unresolved decision
 - warning만 남길 항목

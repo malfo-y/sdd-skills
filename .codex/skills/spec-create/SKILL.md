@@ -73,8 +73,18 @@ Negative example:
 규모에 따라 아래 중 하나를 선택한다.
 
 - 소규모: `_sdd/spec/main.md` 단일 파일
-- 중규모: `_sdd/spec/main.md` + supporting reference files
-- 대규모: `_sdd/spec/main.md` + `<domain>.md` 또는 `<domain>/overview.md` 등 계층형 구조
+- 중규모 이상: `_sdd/spec/main.md` + 추가 파일
+
+중규모 이상에서 multi-file로 분할할 때는 repo 성격에 따라 축을 선택한다.
+
+| repo 성격 | 분할 축 | 예시 |
+|-----------|---------|------|
+| 독립적인 사용자 기능/endpoint가 여러 개 | domain | `auth.md`, `payments.md` |
+| 기능은 단일에 가까우나 repo가 큼 | topic | `architecture.md`, `data-conventions.md` |
+
+어떤 축이든 각 파일에 담는 건 global-level 결정만이다. domain 축의 `payments.md`여도 그 안에 들어가는 건 payments 도메인의 장기 설계 판단이지, feature-level validation이나 API response schema가 아니다.
+
+초기에는 대부분 `main.md` 단일 파일로 충분하다. 분할이 필요해지는 시점에 `spec-rewrite`로 축을 잡는다.
 
 global spec core는 항상 유지한다.
 
