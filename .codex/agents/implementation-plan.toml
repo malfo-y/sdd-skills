@@ -24,12 +24,13 @@ developer_instructions = '''
 ## Hard Rules
 
 1. 이 agent는 스펙을 입력으로 읽을 수 있지만 `_sdd/spec/` 파일은 수정하지 않는다.
-2. 구현에 필요한 정보가 부족해도 멈추지 않고 deterministic defaults로 진행한다.
+2. 구조, task boundary, target files, verification 전략을 실질적으로 바꾸는 핵심 ambiguity면 질문 1회를 추가한다. 그 외 부족 정보는 deterministic defaults로 진행한다.
 3. 모든 task는 action-oriented title, acceptance criteria, target files, dependencies를 가져야 한다.
 4. `Contract/Invariant Delta`와 `Validation Plan`의 ID linkage를 plan에서 잃으면 안 된다.
 5. 언어는 기존 스펙/문서의 언어를 따른다. 스펙이 없으면 한국어를 기본으로 사용한다.
 6. spec 변경이 필요해 보이면 plan의 `Open Questions`에 기록하고 `spec-update-todo` 후속 사용을 제안한다.
 7. 결과 파일은 lowercase canonical 경로에 저장한다. transition 기간에는 legacy uppercase artifact를 입력 fallback으로 허용한다.
+8. `feature-draft` Part 2가 이미 충분히 명확하면 plan 전체를 다시 쓰지 말고 unresolved dependency나 phase detail만 보강한다.
 
 ## Input Sources
 
@@ -56,6 +57,14 @@ developer_instructions = '''
 - `[C]` Create, `[M]` Modify, `[D]` Delete
 - 읽기 전용 참조 파일은 포함하지 않는다.
 - 동일 파일이 여러 task에 반복되면 병렬 충돌 가능성을 고려해 phase/dependency를 조정한다.
+- 파일이 달라도 아래 패턴이면 의미적 충돌로 본다.
+  1. 한 task가 만드는 모델/타입을 다른 task가 import한다.
+  2. 두 task가 모두 DB migration을 만든다.
+  3. 두 task가 같은 config/env 값을 가정한다.
+  4. 한 task가 정의한 API contract를 다른 task가 소비한다.
+  5. 두 task가 같은 상수/타입을 다른 값으로 가정한다.
+- 의미적 충돌 가능성이 있으면 같은 phase에 두거나 명시적 dependency를 추가한다.
+- 판단 확신이 낮으면 병렬보다 순차/의존성 보강이 우선이다.
 
 ## Process
 
@@ -74,7 +83,7 @@ developer_instructions = '''
 필요 시 아래를 읽는다.
 
 - `_sdd/spec/*.md`
-- `_sdd/spec/decision_log.md`
+- lowercase canonical `_sdd/spec/decision_log.md`, legacy uppercase `_sdd/spec/DECISION_LOG.md` fallback
 - `_sdd/drafts/feature_draft_<name>.md`
 - 관련 코드/테스트/설정 파일
 
@@ -127,6 +136,7 @@ task를 나눌 때 원칙:
 - file overlap이 적도록 자른다.
 - setup/common groundwork는 별도 task로 분리한다.
 - `Technical Notes`에 관련 `C*`, `I*`, `V*` 링크를 남긴다.
+- 작은 delta는 compact linkage만 유지하고, 형식적 세분화를 위해 task나 CIV 표를 불필요하게 늘리지 않는다.
 
 ### Test Coverage Mapping (조건부)
 
@@ -206,14 +216,14 @@ Task 템플릿:
 | 상황 | 대응 |
 |------|------|
 | spec 없음 | codebase 기반 plan 생성, 한계를 `Open Questions`에 적는다 |
-| user input 모호 | best-effort defaults를 적용하고 가정을 남긴다 |
+| user input 모호 | 방향을 바꿀 핵심 ambiguity면 질문 1회 후 defaults를 적용하고 가정을 남긴다 |
 | 파일 경로 불명확 | `[TBD]`를 사용하고 사유를 남긴다 |
 | task가 너무 많음 | phase로 나누고 overview/index를 유지한다 |
 | spec 갭 발견 | plan 수정으로 덮지 말고 `Open Questions`에 기록한다 |
 
 ## Integration
 
-- `feature-draft`: temporary spec + 구현 계획 입력 원천
+- `feature-draft`: Part 2가 task 25개 이하, delta coverage complete, phase/dependency가 명확하면 별도 implementation-plan 없이 `implementation` 입력으로 충분할 수 있다.
 - `implementation`: 이 plan을 직접 실행
 - `implementation-review`: task/AC 검증 기준
 - `spec-update-todo`: spec gap 후속 반영

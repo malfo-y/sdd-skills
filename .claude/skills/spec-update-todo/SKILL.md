@@ -1,7 +1,7 @@
 ---
 name: spec-update-todo
 description: This skill should be used when the user asks to "update spec with features", "add features to spec", "update spec from input", "add requirements to spec", "spec update", "expand spec", "add to-do to spec", "add to-implement to spec", or mentions adding new features, requirements, or planned improvements to an existing specification document.
-version: 2.2.0
+version: 2.3.0
 ---
 
 # Spec Update from Planned Change
@@ -12,15 +12,13 @@ version: 2.2.0
 | Medium | Step 1 or 2 | feature draft 이후 planned delta 반영 |
 | Any | Standalone | user input 기반 spec update |
 
-이 agent는 사용자 요구사항이나 temporary spec draft를 읽어 `_sdd/spec/*.md`에 **planned global-spec change**를 반영한다. temporary spec의 실행 상세를 그대로 복사하지 않고, global spec에 남아야 할 지속 정보를 선별해 올린다.
+이 agent는 사용자 요구사항이나 temporary spec draft를 읽어 `_sdd/spec/*.md`에 planned global change를 반영한다. 핵심 원칙은 temporary spec의 실행 상세를 그대로 복사하지 않고, global spec에 남아야 할 persistent repo-wide information만 선별해 올리는 것이다.
 
 ## Acceptance Criteria
 
-> 프로세스 완료 후 아래 기준을 자체 검증한다. 미충족 항목은 해당 단계로 돌아가 수정한다.
-
 - [ ] 입력 소스를 식별하고 파싱한다.
-- [ ] temporary spec 또는 user input을 global spec canonical section에 매핑한다.
-- [ ] global spec에 planned change만 반영하고, 실행 전용 정보는 남기지 않는다.
+- [ ] temporary spec 또는 user input을 global spec의 thin core에 매핑한다.
+- [ ] global spec에 planned persistent information만 반영하고, execution-only detail은 남기지 않는다.
 - [ ] 업데이트 적용 후 요약을 남긴다.
 - [ ] 처리한 input file은 `_processed_*`로 마킹한다.
 
@@ -32,9 +30,11 @@ version: 2.2.0
 4. decision 기록이 필요하면 `decision_log.md`에 최소한으로 남긴다.
 5. 이미 완료된 구현 sync는 이 agent가 아니라 `spec-update-done`의 책임이다.
 6. temporary spec의 `Touchpoints`, `Implementation Plan`, `Validation Plan` 전체를 global spec 본문에 복사하지 않는다.
-7. global spec에는 `Scope`, `Key Decisions`, `Contract / Invariants / Verifiability`, `Usage`, `Decision-bearing structure`처럼 지속 정보만 남긴다.
-8. 새 sub-spec 파일 생성 시 반드시 main.md 인덱스에 링크를 추가한다. 고아 파일 금지.
-9. 기존 파일 분할 구조를 변경하지 않는다. 파일 추가만 허용, 기존 구조 재편성 금지.
+7. global spec에는 배경/개념, scope/non-goals/guardrails, key decisions 같은 지속 정보만 남긴다.
+8. repo-wide invariant가 정말 필요한 경우만 guardrails 또는 key decisions에 반영한다.
+9. 새 sub-spec 파일 생성 시 반드시 main.md 인덱스에 링크를 추가한다. 고아 파일 금지.
+10. 기존 파일 분할 구조를 변경하지 않는다. 파일 추가만 허용, 기존 구조 재편성 금지.
+11. `_sdd/` artifact 경로는 lowercase canonical을 기본으로 하되, 입력을 읽을 때는 legacy uppercase fallback도 허용한다.
 
 ## Input Sources
 
@@ -46,8 +46,8 @@ version: 2.2.0
 
 처리 후 rename:
 
-- `user_spec.md` → `_processed_user_spec.md`
-- `user_draft.md` → `_processed_user_draft.md`
+- `user_spec.md` -> `_processed_user_spec.md`
+- `user_draft.md` -> `_processed_user_draft.md`
 
 ## Process
 
@@ -66,13 +66,6 @@ version: 2.2.0
 - `_sdd/spec/*.md`
 - `_sdd/spec/decision_log.md`
 
-목적:
-
-- 현재 global spec 구조 파악
-- 기존 terminology/style 파악
-- 변경 충돌 여부 파악
-- 분할 스펙이면 main.md 인덱스와 sub-spec 관계 파악
-
 ### Step 3: Parse Planned Delta
 
 입력을 다음 축으로 분해한다.
@@ -89,31 +82,38 @@ version: 2.2.0
 
 ### Step 4: Map to Global Spec Sections
 
-planned delta를 global spec canonical section에 매핑한다.
+planned delta를 thin global core에 보수적으로 매핑한다.
+
+#### Repo-wide Invariant Test
+
+invariant를 global spec에 올리려면 아래 3가지를 모두 만족해야 한다.
+
+1. 코드를 한두 파일 읽는 것만으로 안정적으로 복구되지 않는다.
+2. 두 개 이상 feature/module/workflow에 공통 적용된다.
+3. 틀리게 가정하면 repo-level reasoning, review, implementation 판단이 어긋난다.
+
+예: "모든 API는 Bearer token 인증 필수" → repo-wide ✓
+예: "User 엔드포인트의 response schema" → feature-level ✗
+
+#### 매핑 규칙
 
 예시:
 
-- `Change Summary` → `배경 및 high-level concept` 또는 `핵심 설계와 주요 결정`
-- `Scope Delta` → `Scope / Non-goals / Guardrails`
-- `Contract/Invariant Delta` → `Contract / Invariants / Verifiability`
-- persistent touchpoint implication → `Decision-bearing structure`
-- user-visible behavior change → `사용 가이드 & 기대 결과`
+- framing 변화 -> `배경 및 high-level concept`
+- shared scope or non-goal 변화 -> `Scope / Non-goals / Guardrails`
+- repo-wide operating rule 변화 -> `Scope / Non-goals / Guardrails`
+- 장기 설계 판단 변화 -> `핵심 설계와 주요 결정`
+- `Repo-wide Invariant Test` 통과 항목 -> guardrails 또는 key decisions 문장
 
-매핑하지 않는 것:
+기본적으로 global spec에 올리지 않는 것:
 
-- task breakdown
+- feature-level contract table
 - validation execution detail
+- task breakdown
+- touchpoint 목록
 - transient risk log
+- user-facing usage guide
 - exhaustive file inventory
-
-#### File Placement Decision (분할 스펙 전용)
-
-단일 파일 스펙이면 건너뛴다.
-
-1. 기존 파일 매칭: 항목의 컴포넌트/기능이 기존 sub-spec 파일과 일치 → 해당 파일에 배치
-2. Cross-cutting 항목: 환경변수, 글로벌 설정 등은 해당 section이 위치한 파일에 배치
-3. 신규 파일 생성: 매칭 없으면 새 파일 생성 후 main.md 인덱스에 링크 추가
-4. 소규모 병합: 생성될 내용이 작으면 가장 관련도 높은 기존 파일에 병합
 
 ### Step 5: Generate Update Plan
 
@@ -133,33 +133,20 @@ spec를 갱신한다.
 - 기존 문체와 언어를 맞춘다.
 - 중복 서술을 만들지 않는다.
 - 구현 완료처럼 쓰지 않고 planned requirement로 쓴다.
-- `Contract/Invariant Delta`가 global spec에 들어갈 때는 canonical CIV 표 형식으로 정리한다.
+- repo-wide가 아닌 contract/validation detail은 global spec 밖에 둔다.
 - 신규 sub-spec 파일 생성 시 파일 생성 후 main.md 인덱스에 링크를 추가한다.
 
 ### Step 7: Process Input Files
 
 input file을 사용했다면 `_processed_*` 이름으로 변경한다.
 
-## Update Template
-
-필요 시 아래 형식으로 정리해 생각한다.
-
-```markdown
-### Update Item: [title]
-**Type**: Scope | Contract | Invariant | Usage | Decision
-**Target Section**: ...
-**Current**: ...
-**Proposed**: ...
-**Reason**: ...
-```
-
 ## Output Format
 
 최종 보고에는 최소한 아래를 포함한다.
 
 - 변경된 파일/섹션
-- 반영된 planned delta 요약
-- global spec에 반영하지 않은 실행 정보
+- 반영된 planned persistent information 요약
+- global spec에 반영하지 않은 execution detail
 - 남은 open questions
 - 후속 추천 스킬
 
@@ -168,10 +155,10 @@ input file을 사용했다면 `_processed_*` 이름으로 변경한다.
 | 상황 | 대응 |
 |------|------|
 | 입력이 매우 모호함 | best-effort 반영 후 `Open Questions`에 불확실성 기록 |
-| spec section 매핑이 어려움 | 가장 가까운 canonical section에 보수적으로 반영 |
+| spec section 매핑이 어려움 | 가장 가까운 thin global section에 보수적으로 반영 |
 | 충돌 요구사항 발견 | 비파괴적 방향만 적용하고 충돌을 남긴다 |
-| input file 형식이 거칠음 | 핵심 delta만 추출하고 나머지는 notes로 남긴다 |
-| 파일 배치 판단 모호 | 가장 관련도 높은 기존 파일에 보수적 배치, Update Plan에 근거 기록 |
+| input file 형식이 거칠음 | 핵심 persistent 정보만 추출하고 나머지는 notes로 남긴다 |
+| 파일 배치 판단 모호 | 가장 관련도 높은 기존 파일에 보수적 배치 |
 
 ## Integration
 
@@ -183,6 +170,5 @@ input file을 사용했다면 `_processed_*` 이름으로 변경한다.
 
 Acceptance Criteria가 모두 만족되었나 검증한다. 미충족 항목이 있으면 해당 단계로 돌아가 수정한다.
 
-> **Mirror Notice**: 이 스킬의 본문은 `.claude/agents/spec-update-todo.md`의 복사본이다.
-> 사용자가 직접 호출할 때 중간 과정의 가시성을 확보하기 위해 복붙되었다.
+> **Mirror Notice**: 이 스킬은 `.claude/agents/spec-update-todo.md`와 동일한 계약을 공유한다.
 > 내용을 수정할 때는 agent 파일과 이 스킬 파일을 **반드시 함께** 수정해야 한다.

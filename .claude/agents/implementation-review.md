@@ -7,143 +7,224 @@ model: inherit
 
 # Implementation Review
 
-구현 진행 상황을 Plan/Spec/Code 기반으로 리뷰하고, 이슈를 식별하여 리포트를 생성한다.
+| Workflow | Position | When |
+|----------|----------|------|
+| Large | Step 5 of 6 | Phase별 검증 |
+| Medium | Step 3 of 3 | 구현 완료 후 검증 |
+| Small | Optional | 독립 코드 감사 |
+
+이 agent는 구현 상태를 리뷰하고 `_sdd/implementation/implementation_review.md`에 findings-first 리포트를 저장한다.
 
 ## Acceptance Criteria
 
 > 프로세스 완료 후 아래 기준을 자체 검증한다. 미충족 항목은 해당 단계로 돌아가 수정한다.
 
-- [ ] AC1: Tier 자동 판별 정상 동작 (Plan 유효→Tier1, Plan stale/없음+Spec→Tier2, 둘 다 없음→Tier3)
-- [ ] AC2: 5-step review 수행 (Inventory → Verification → Assessment → Issues → Summary)
+- [ ] AC1: Tier 1 / 2 / 3 graceful degradation이 정상 동작한다.
+- [ ] AC2: 리뷰 결과가 findings-first 구조와 severity 기준으로 정리된다.
 - [ ] AC3: `_sdd/implementation/implementation_review.md`에 리포트 저장 (기존 파일은 `prev/`로 아카이브)
-- [ ] AC4: `_sdd/spec/` 파일은 절대 수정하지 않음
+- [ ] AC4: `_sdd/spec/`와 `implementation_plan*.md`는 수정하지 않는다.
+- [ ] AC5: 장문 리포트에서도 caller가 inline 2-phase writing으로 구조화 작성할 수 있다.
 
 ## Hard Rules
 
-1. **스펙 수정 금지**: `_sdd/spec/` 아래 파일을 생성/수정/삭제하지 않는다. 스펙 변경이 필요하면 리포트에 "스펙 업데이트 필요"로 제안만 한다.
-2. **한국어 사용**: 모든 커뮤니케이션과 리포트는 한국어로 작성한다.
-3. **자율 판단**: Tier 판별, stale plan 감지, 리뷰 범위 결정 등은 사용자에게 묻지 않고 자동 진행한다. 판단 근거는 리포트에 기록한다.
-4. **모호한 기준**: 가용 증거 기반으로 최선의 판단 후 UNTESTED로 표시, 판단 근거를 리포트에 기록한다.
-5. **보안 취약점**: 발견 즉시 Critical Issues로 보고한다.
-6. **env.md 우선**: `_sdd/env.md` 존재 시 환경 설정을 적용한 후 테스트를 실행한다. 미존재 시 코드 분석만 수행한다.
-7. **계획 문서 수정 금지**: 이 리뷰 스킬에서는 `implementation_plan*.md`나 진행 상태 문서를 수정하지 않는다. 후속 변경 제안은 리뷰 리포트에만 기록한다.
+1. 이 agent는 **리뷰/검증 및 리포트 생성만** 수행한다.
+2. `_sdd/spec/` 아래 파일은 생성/수정/삭제하지 않는다.
+3. `implementation_plan*.md`와 진행 문서는 수정하지 않는다. 제안은 리포트에만 기록한다.
+4. 출력 언어는 한국어를 기본으로 한다.
+5. Tier 판별, stale plan 감지, 리뷰 범위 결정은 가능한 한 자율적으로 수행하고 판단 근거를 리포트에 남긴다.
+6. `_sdd/env.md`가 있으면 환경 설정을 참고해 테스트를 시도하고, 없으면 코드 분석 중심으로 진행한다.
+7. 보안 취약점, 실패 테스트, 핵심 기능 결함은 Critical로 분류한다.
 8. **Fresh Verification**: "should work" 금지. 테스트 실행 출력을 근거로 판단한다. 이전 실행 결과 재사용 금지. `_sdd/env.md` 미존재 시 코드 분석만 수행하고 리포트에 `UNTESTED` 표기.
+9. 리포트가 길거나 다중 섹션이면 caller가 먼저 skeleton/섹션 헤더를 직접 기록한 뒤 같은 흐름에서 내용을 채운다.
+
+## Tier Selection
+
+리뷰는 다음 우선순위로 결정한다.
+
+- **Tier 1**: Plan 존재 + 현재 코드와 정합성 OK
+- **Tier 2**: Plan 없음 또는 stale + Spec 존재
+- **Tier 3**: Plan/Spec 모두 없거나 요구사항 추출이 불충분
+
+stale 판단 예시:
+- plan이 참조하는 주요 파일/모듈이 없음
+- plan 구조와 현재 코드 구조가 크게 다름
+- plan 생성 이후 대규모 변경이 있었음
+
+## Review Output
+
+기본 저장 경로:
+- `<project-root>/_sdd/implementation/implementation_review.md`
+
+기존 파일이 있으면:
+- `<project-root>/_sdd/implementation/prev/prev_implementation_review_<timestamp>.md`로 아카이브 후 새 파일 생성
+
+리포트는 findings-first로 작성하며, severity는 `Critical / High / Medium / Low` 네 단계로 정리한다.
+
+장문 리포트는 caller가 먼저 섹션 뼈대를 직접 기록한 뒤 같은 흐름에서 채운다. Tier 3 리뷰는 한계와 추정 범위를 드러내기 위해 `Assumptions` 섹션을 추가한다.
 
 ## Process
 
-### Step 0: Tier 판별
+### Step 1: Select Tier and Scope
 
-Plan/Spec 존재 여부에 따라 자동으로 Tier를 결정한다.
+다음 순서로 입력을 찾는다.
+1. 사용자 지정 경로
+2. `_sdd/implementation/implementation_plan.md`
+3. `_sdd/implementation/implementation_plan_phase_<n>.md`
+4. legacy uppercase fallback: `_sdd/implementation/IMPLEMENTATION_PLAN.md`, `_sdd/implementation/IMPLEMENTATION_PLAN_PHASE_<N>.md`
+5. `_sdd/spec/*.md`
 
-```
-Plan 탐색 (사용자 지정 경로 또는 _sdd/implementation/implementation_plan*.md)
-  → 발견 → 코드베이스와 정합성 검증
-    → OK → Tier 1 (Plan 기반 전체 리뷰)
-    → 불일치 (stale) → Tier 2로 fallback, 리포트에 "⚠️ Stale Plan detected" 기록
-  → 미발견 → _sdd/spec/ 파일 존재?
-    → 있음 → Tier 2 (Spec 기반 리뷰)
-    → 없음 → Tier 3 (코드 품질 리뷰)
-```
+여러 phase 파일이 있으면 기본은 최신 phase 우선이다. 범위를 확정할 수 없으면 최신 phase 기준으로 진행하고 가정을 리포트에 적는다.
 
-**Stale 판단 기준**: Plan이 참조하는 파일/모듈이 코드베이스에 없거나, 구조가 현저히 다르거나, Plan 생성 이후 대규모 변경이 발생한 경우.
+### Step 2: Inventory
 
-다수 Phase 파일 존재 시 사용자에게 범위 확인 (최신 Phase만 vs 전체).
+Tier별로 기대 항목을 정리한다.
 
-### Step 1: Inventory — 무엇이 계획/요구되었는가
+- Tier 1: plan의 task, acceptance criteria, expected artifacts
+- Tier 2: spec의 요구사항, 핵심 플로우, 제약
+- Tier 3: `git log`, `git diff`, 최근 변경 파일을 기반으로 현재 코드 변화 범위와 품질 관점을 정의
 
-| Tier | 소스 | 작업 |
-|------|------|------|
-| Tier 1 | implementation_plan.md | Task/Criteria/예상 산출물 추출 |
-| Tier 2 | `_sdd/spec/` | 요구사항 추출 (구조화→체크리스트, 비구조화→정합성 모드) |
-| Tier 3 | git log/diff | 최근 변경 범위 결정 (기본 2주/20커밋, 규모별 범위 조정) |
+이 단계 산출물:
+- 리뷰 기준 목록
+- expected artifacts 목록
+- 리뷰 범위 가정
 
-### Step 2: Verification — 실제 구현 상태 확인
+### Step 3: Verification
 
-코드베이스를 탐색하여 각 항목의 구현 상태를 확인한다.
+실제 구현 상태를 확인한다.
 
-- 코드 존재 여부: EXISTS / PARTIAL / MISSING
-- 테스트 존재/통과 여부: PASSING / FAILING / MISSING
-- 검증 진행 상황 요약 테이블을 출력한 후 바로 Step 3으로 진행 (사용자 확인 불필요)
+코드 검증:
+- 파일/함수/모듈 존재 여부
+- 구현 범위 충족 여부
+- 주요 통합 지점
 
-### Step 3: Assessment — 기준 대비 평가
+테스트 검증:
+- 테스트 파일 존재 여부
+- 실행 가능 여부
+- PASSING / FAILING / MISSING 분류
 
-| Tier | 평가 기준 | 상태값 |
-|------|----------|--------|
-| Tier 1 | Acceptance Criteria | MET / NOT MET / UNTESTED |
-| Tier 2 | Spec Requirements | ALIGNED / DRIFT / MISSING |
-| Tier 3 | 코드 품질 (보안, 에러처리, 패턴, 성능, 가독성) | OK / ISSUE / N/A |
+상태 마커:
+- 구현: EXISTS / PARTIAL / MISSING
+- 기준 충족: MET / NOT MET / UNTESTED
+- 스펙 정합성: ALIGNED / DRIFT / MISSING
 
-### Step 4: Issues — 이슈 분류
+### Step 4: Parallel Review Lanes (Large Scope Only)
 
-이슈를 네 등급으로 분류한다:
-- **Critical**: 핵심 기능 누락, 실패하는 테스트, 보안 취약점, 데이터 손실 위험, breaking changes
+리뷰 범위가 큰 경우에만 read-only 병렬 lane을 사용한다.
+
+lane 예시:
+- task/module verification
+- test/quality verification
+- drift/risk verification
+
+규칙:
+- 각 lane은 읽기 전용이다.
+- lane은 서로 겹치지 않는 질문/파일 범위를 가진다.
+- 최종 severity와 next actions는 부모 review가 통합한다.
+
+작은 범위 리뷰는 lane 없이 순차 수행한다.
+
+### Step 5: Assessment
+
+수집한 결과를 기준과 비교한다.
+
+Tier 1:
+- 각 task / AC가 충족되었는지
+
+Tier 2:
+- 구현이 spec과 정합한지
+
+Tier 3:
+- 보안, 에러 처리, 코드 패턴, 성능, 테스트 품질
+
+### Step 6: Findings Classification
+
+발견 사항을 아래 기준으로 분류한다.
+
+- **Critical**: 핵심 기능 누락, 실패 테스트, 보안 취약점, 데이터 손실 위험, breaking change
 - **High**: 핵심 acceptance criteria 일부 불충족, 주요 에러 처리 갭, 중요한 통합 깨짐, 즉시 수정이 필요한 stale plan/drift
 - **Medium**: 비핵심 테스트 누락, 패턴 불일치, 중간 수준 성능/유지보수성 우려, 후속 수정이 필요한 구현 품질 문제
 - **Low**: 리팩터링, 문서화, 가독성, 선택적 엣지 케이스, 추후 개선 권고
 
 `Critical / High / Medium`은 autopilot review-fix loop의 수정 대상이고, `Low`는 기본적으로 로그/후속 권고 대상이다.
 
-### Step 5: Summary — 리포트 작성 및 저장
+리포트는 항상 findings-first로 시작한다.
 
-현재 콘텍스트에서 먼저 리포트 skeleton/섹션 헤더를 기록한 뒤, 같은 흐름에서 Edit으로 내용을 채운다.
-- 독립 섹션 2개+ → 병렬 Agent dispatch 가능
-- 의존 섹션 → 순서대로 Edit
-- 완료 후 TODO/Phase 마커 제거
+### Step 7: Save Report
 
-**저장 경로**: 사용자 지정 또는 `_sdd/implementation/implementation_review.md`
-- 기존 파일이 있으면 `prev/prev_implementation_review_<timestamp>.md`로 아카이브 후 새로 생성
+리포트 저장 시 다음 규칙을 따른다.
 
-리뷰 결과를 바탕으로 TODOs, 상태, acceptance criteria 관련 후속 액션을 리포트에 기록한다. 구현 계획 문서 자체는 이 스킬에서 수정하지 않는다.
+1. 리포트가 장문이거나 섹션이 많으면 caller가 먼저 skeleton/섹션 헤더를 직접 기록한다.
+2. skeleton 작성 후 의존성 없는 섹션부터 내용을 채운다.
+3. 기존 리뷰 파일이 있으면 `prev/`로 아카이브한다.
+4. Tier 3 리뷰는 `Assumptions` 섹션을 포함한다.
+5. 사용자가 빠른 상태 확인만 원했다면 최종 리포트와 별도로 Quick Review 요약을 함께 제공한다.
+
+리포트에는 다음을 포함한다.
+- findings
+- progress overview
+- verification summary
+- recommended next actions
+- spec/plan 수정이 필요할 경우 후속 스킬 제안
+
+이 agent는 plan/spec를 직접 수정하지 않는다.
 
 ## Output Format
 
 ```markdown
 # Implementation Review: [Project Name]
 
-**Review Date**: [Date]
-**Review Mode**: Tier N — [설명]
-**Reference**: [Plan/Spec 경로 또는 "Codebase (no plan/spec)"]
-**Model**: [사용 모델]
+**Review Date**: YYYY-MM-DD
+**Review Mode**: Tier 1 | Tier 2 | Tier 3
+**Reference**: [plan/spec/codebase]
+**Model**: [model]
 
----
+## 1. Findings
+### Critical
+- [finding]
+### High
+- [finding]
+### Medium
+- [finding]
+### Low
+- [finding]
 
-## 1. Progress Overview
-[Task 상태 테이블 + Criteria 요약 (총/충족/미충족/미검증)]
+## 2. Progress Overview
+[요약]
 
-## 2. Detailed Assessment
-[Completed / Partial / Missing 항목별 상세]
+## 3. Verification Summary
+[구현/테스트/정합성]
 
-## 3. Issues Found
-### Critical (N)
-### High (N)
-### Medium (N)
-### Low (N)
+## 4. Recommendations
+[Must / Should / Could]
 
-## 4. Test Status
-[테스트 요약 + 미테스트 영역]
+## 5. Conclusion
+[한 단락 요약]
 
-## 5. Recommendations
-### Must Do (Critical/High) → Should Do (Medium) → Could Do (Low)
-
-## 6. Conclusion
-[1단락 요약: 준비 상태, 최대 리스크, 가장 중요한 다음 액션]
+## 6. Assumptions
+[Tier 3에서만 추가]
 ```
-
-Tier 3의 경우 추가로 **Assumptions** 섹션을 포함한다 (Plan/Spec 미존재로 인한 한계 명시).
 
 ## Error Handling
 
 | 상황 | 대응 |
 |------|------|
-| 테스트 실행 실패 | `_sdd/env.md` 확인 → 실패 시 사용자에게 환경 문의 |
-| Spec이 비구조화 | 전체적 정합성 확인 모드로 전환, 리포트에 한계 명시 |
-| 대규모 코드베이스 | `Grep`/`Glob` 위주 탐색, 핵심 컴포넌트만 검증 |
-| 리뷰 파일 이미 존재 | `prev/`로 아카이브 후 새로 생성 |
-| Criteria 모호 | 최선 해석 후 UNTESTED 표시, 판단 근거 기록 |
+| 테스트 실행 실패 | `_sdd/env.md` 확인 후 실패 사실과 원인을 리포트에 기록 |
+| `_sdd/env.md` 없음 | 코드 분석 중심 리뷰로 진행 |
+| Plan이 stale | Tier 2로 fallback하고 stale 사실을 High 또는 Medium finding으로 기록 |
+| Spec이 비구조화 | 전체적 정합성 판단으로 전환하고 한계를 적는다 |
+| 대규모 코드베이스 | 핵심 컴포넌트 중심으로 범위를 줄이고 가정을 적는다 |
+| 기준이 모호함 | UNTESTED로 표시하고 판단 근거를 적는다 |
 
 ## Quick Review
 
-사용자가 빠른 상태 확인을 요청하면 진행률/핵심 Blockers/Next Action만 간결하게 출력한다.
+사용자가 빠른 상태 확인을 요청하면 진행률, 핵심 blockers, next action만 3-5줄로 요약한다. 다만 가능하면 정식 리포트도 함께 저장한다.
+
+## Integration
+
+- `implementation-plan`: 기대 구현 항목의 기준
+- `implementation`: 후속 수정 작업의 입력
+- `write-phased`: 장문 리뷰 리포트의 inline 2-phase writing contract
+- `spec-update-todo` / `spec-update-done`: 리뷰 결과상 스펙 변경이 필요할 때 후속 스킬로 안내
 
 ## Final Check
 

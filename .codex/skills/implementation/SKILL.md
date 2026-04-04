@@ -43,9 +43,18 @@ version: 2.0.0
 - [D] `...`
 ```
 
-충돌 규칙:
-- 동일 파일을 만지는 task는 기본적으로 충돌이다.
-- 파일이 달라도 다음 5가지 패턴이면 의미적 충돌:
+**파일 충돌 매트릭스** — 동일 파일이 두 태스크의 Target Files에 등장하면 마커 무관하게 모두 충돌:
+
+| 조합 | 이유 |
+|------|------|
+| `[C]+[C]` | 동시 생성 |
+| `[M]+[M]` | 동시 수정 |
+| `[C]+[M]` | 순서 의존 |
+| `[M]+[D]` | 순서 의존 |
+| `[C]+[D]` | 순서 의존 |
+| `[D]+[D]` | 중복 삭제 |
+
+**의미적 충돌** — 파일이 겹치지 않아도 다음 5가지 패턴이면 충돌:
   1. Task A가 생성하는 모델/타입을 Task B가 import
   2. 두 태스크 모두 DB 마이그레이션 생성
   3. 두 태스크가 동일 config/env 값을 가정
@@ -101,10 +110,33 @@ Target Files와 dependency를 기준으로 병렬 그룹을 만든다.
 - 일부만 있으면 있는 task만 병렬 분석
 - target files가 없거나 불명확하면 순차 fallback
 
-병렬 그룹을 만들 때:
-- 파일 겹침 없는 task 우선
-- shared contract 충돌 없는 task만 같은 group
-- 큰 phase는 group 크기를 작게 유지
+#### 3.1 그룹화 알고리즘
+
+```
+function buildParallelGroups(unblockedTasks):
+    groups = []
+    remaining = sort(unblockedTasks, by=[priority DESC, id ASC])
+
+    while remaining is not empty:
+        currentGroup = []
+        usedFiles = {}
+
+        for task in remaining:
+            # 파일 충돌 + 의미적 충돌 모두 확인
+            if task.targetFiles ∩ usedFiles == ∅
+               AND no semantic conflict with currentGroup:
+                currentGroup.append(task)
+                usedFiles = usedFiles ∪ task.targetFiles
+
+        groups.append(currentGroup)
+        remaining = remaining - currentGroup
+
+    return groups
+```
+
+> 대규모 Phase (10+ unblocked tasks): 그룹 크기를 최대 5로 제한.
+
+실행 전 사용자에게 그룹 구성과 예상 효율을 보여준다.
 
 ### Step 4: Execute Tasks
 
@@ -163,19 +195,40 @@ phase 리포트는 필요 시 `_sdd/implementation/implementation_report_phase_<
 
 ## Worker Prompt Contract
 
-worker 또는 하위 실행 단위에 전달할 핵심 정보:
-- task id / title
-- description
-- acceptance criteria
-- target files
-- technical notes
-- env / test hints
+worker에 전달하는 프롬프트 템플릿:
 
-worker 결과에는 최소한 다음이 있어야 한다.
-- 결과 상태
-- 생성/수정 파일
-- 테스트 결과
-- unplanned dependency
+```
+당신은 TDD 구현 worker입니다.
+
+## Task {id}: {title}
+- Component: {component}
+- Priority: {priority}
+- Description: {description}
+- Acceptance Criteria: {acceptance_criteria}
+- Technical Notes: {technical_notes}
+
+## Target Files (수정 허용 범위)
+{target_files_list}
+
+## 규칙
+1. TDD 필수: 각 AC마다 RED → GREEN → REFACTOR
+2. 파일 경계: Target Files만 생성/수정/삭제. 그 외는 읽기만.
+3. Target Files 외 수정 필요 시: UNPLANNED_DEPENDENCY: {경로} - {설명}
+
+## 환경
+{env_setup}
+{test_framework_info}
+
+## 완료 보고
+### 결과: SUCCESS / PARTIAL / FAILED
+### TDD 진행
+| Criterion | RED | GREEN | REFACTOR | 상태 |
+### 생성/수정 파일
+- [C/M] `path` (N lines)
+### 테스트 결과 (새 테스트 수, 전체 통과 여부)
+### Unplanned Dependencies (있는 경우)
+### 발견 사항
+```
 
 ## Error Handling
 
@@ -193,6 +246,17 @@ worker 결과에는 최소한 다음이 있어야 한다.
 - `feature-draft`: plan 부재 시 대체 입력
 - `implementation-review`: 구현 후 검증
 - `spec-update-done`: 구현 완료 후 스펙 동기화
+
+## Autonomous Decision-Making
+
+다음 상황에서는 사용자에게 묻지 않고 최선의 판단으로 자율 진행:
+
+- **Target Files 불명확**: 최선의 추론 후 진행, 저확신 시 순차 fallback
+- **테스트 불명확**: 기존 패턴 참고하여 작성
+- **모호한 요구사항**: 합리적 해석으로 진행, 가정을 리포트에 명시
+- **범위 결정**: 계획 범위 내에서만 작업, 범위 밖 발견사항은 리포트에 기록
+- **기술 선택**: 기존 코드베이스 패턴 준수, 판단 근거를 리포트에 기록
+- **블로커**: 외부 의존성은 mock 처리, 해결 불가 항목은 리포트에 기록
 
 ## Final Check
 

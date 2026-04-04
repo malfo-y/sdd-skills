@@ -1,7 +1,7 @@
 ---
 name: sdd-autopilot
 description: "적응형 오케스트레이터 메타스킬. /sdd-autopilot으로 호출하여 요구사항 분석부터 스펙 동기화까지 end-to-end SDD 파이프라인을 자율 실행한다."
-version: 2.3.1
+version: 2.3.0
 ---
 
 # SDD Autopilot
@@ -52,15 +52,17 @@ User Request
 ## Hard Rules
 
 1. **Discussion 인라인 실행 + `_sdd/spec/` 직접 수정 금지**: Step 2 대화는 autopilot 본문에서 직접 수행한다. global spec 수정은 반드시 `spec-update-done` / `spec-update-todo` 에이전트에 위임한다.
-2. **Phase 2 무중단 + 파일 기반 상태 전달**: Phase 2 진입 후 `AskUserQuestion` 금지. 에이전트에는 파일 경로만 전달하며, 전체 출력을 부모 컨텍스트에 누적하지 않는다.
+2. **Phase 2 무중단 + 파일 기반 상태 전달**: Phase 2 진입 후 `request_user_input` 금지. 에이전트에는 파일 경로만 전달하며, 전체 출력을 부모 컨텍스트에 누적하지 않는다.
 3. **오케스트레이터 저장 + 공유 로그 필수**: 오케스트레이터는 `_sdd/pipeline/orchestrators/orchestrator_<topic>.md`에 저장한다. 실행 시 `_sdd/pipeline/log_<topic>_<timestamp>.md`를 생성하고 각 단계 완료 후 핵심 결정사항을 기록한다.
 4. **에이전트 호출 시 원문 전달**: 사용자의 원래 요청과 관련 컨텍스트 파일 경로를 포함한다. 의미를 잃을 정도로 축약하지 않는다.
 5. **Review-Fix 사이클 필수**: review 포함 파이프라인에서는 review → fix → re-review 사이클을 실행해야 한다. 리뷰만 하고 끝나는 것은 불허한다.
 6. **Execute → Verify 필수**: 모든 단계는 실행(Execute) + 검증(Verify) 두 페이즈를 거친다. 에이전트 호출만으로 완료 간주 금지. Exit Criteria 미충족 시 다음 단계 진행 불가.
-7. **Pre-flight + approval 필수**: Phase 2 진입 전 `_sdd/env.md`와 `.claude/settings.local.json`을 읽고 실행 가능성과 권한/도구 제약을 점검한 뒤 explicit approval을 받아야 한다.
-8. **Agent lifecycle 수집 필수**: `Agent(subagent_type=...)`로 시작한 실행 단위의 결과를 반드시 수집하고, 필요 시 후속 `Agent(subagent_type=...)` 호출로 보완한다.
+7. **Pre-flight + approval 필수**: Phase 2 진입 전 `_sdd/env.md`와 `.claude/settings.local.json`을 읽고 실행 가능성을 점검한 뒤 explicit approval을 받아야 한다.
+8. **Agent lifecycle 수집 필수**: `spawn_agent(...)`로 시작한 실행 단위는 `wait_agent(...)`로 반드시 수집하고, 필요 시 `send_input(...)` 또는 재-spawn으로 보완한다.
 9. **로그 기반 상태 관리**: 오케스트레이터는 `_sdd/pipeline/orchestrators/`에 유지. 활성/완료 구분은 로그 파일 status로 판단한다.
 10. 한국어를 기본으로 하되 사용자 언어를 따른다.
+11. `_sdd/` artifact 경로는 lowercase canonical을 기본으로 하되, 입력을 읽을 때는 legacy uppercase fallback도 허용한다.
+12. spec-less repo에서도 중단하지 않는다. `_sdd/spec/`가 없으면 `_sdd/` workspace bootstrap + code-first fallback reasoning으로 계속 진행하고, 적절한 시점에 `spec-create` 또는 spec sync 단계를 파이프라인에 포함한다.
 
 ## Process
 
@@ -71,10 +73,11 @@ autopilot 호출 시 기존 파이프라인 상태를 확인한다.
 | 체크 | 동작 |
 |------|------|
 | `_sdd/pipeline/log_*.md` 스캔 | 미완료 스텝(`pending`/`in_progress`/`failed`) 필터링 |
-| `_sdd/spec/*.md` 존재 확인 | 없으면 `/spec-create` 안내 후 종료 |
+| `_sdd/spec/*.md` 존재 확인 | 없으면 `_sdd/` 부트스트랩 후 코드 기반 code-first fallback으로 진행. 적절한 시점에 `spec-create` 권고 |
 | `_sdd/drafts/`, `_sdd/implementation/` 스캔 | 기존 산출물 활용 여부 판단 |
 
 상태별 분기:
+- 미완료 로그 0건 + `_sdd/spec/` 없음 → spec-less mode로 Step 1. 오케스트레이터에 `spec-create`를 후반부 step으로 포함시킨다.
 - 미완료 로그 0건 + 산출물 없음 → Step 1
 - 미완료 로그 1건 → 재개 후보 제시
 - 미완료 로그 2건 이상 → 목록 제시 + 선택
@@ -99,7 +102,7 @@ Gate 1→2: reference 로딩 성공 시 Step 2 진행.
 
 ### Step 2: Task Analysis + Inline Discussion (요청 분석 + 인라인 토론)
 
-요청에서 다음을 추출하고, 부족한 정보만 `AskUserQuestion`으로 보완한다.
+요청에서 다음을 추출하고, 부족한 정보만 `request_user_input`으로 보완한다.
 
 - 기능 설명
 - 기술 키워드
@@ -138,12 +141,16 @@ Step 1 내재화 + Step 2~3 결과를 바탕으로 추론한다.
 
 | 판단 항목 | 내용 |
 |-----------|------|
-| 스펙 상태 | global spec 존재 여부와 관련 section/CIV 범위 분석 |
+| 스펙 상태 | global spec 존재 여부와 thin-core relevance 분석. 없으면 `_sdd/` bootstrap + later `spec-create/spec-update-*` 경로를 계획 |
 | 변경 범위 | temporary spec 필요 여부 / planned global update 필요 여부 |
 | 계획 깊이 | 직접 구현 / feature-draft / implementation-plan |
 | 검증 수준 | 인라인 테스트 / Ralph / review 포함 여부 |
 | 스킬 순서 | 카탈로그 input/output/pre-condition 기반 |
 | 특수 패턴 | 부분 파이프라인, 팬아웃 병렬, 재개 |
+
+spec-less mode 참고:
+- spec이 없으면 `spec-create`를 파이프라인 후반부(구현/리뷰 이후)에 배치한다. 코드가 먼저 존재해야 spec이 실제 구조를 반영할 수 있기 때문이다.
+- spec-less인 경우에도 feature-draft의 Part 1 temporary spec은 생성할 수 있다. global spec 없이도 delta 기반 reasoning은 가능하다.
 
 오케스트레이터 생성 규칙:
 - 의존성 그래프 기반 동적 조합
@@ -155,8 +162,7 @@ Step 1 내재화 + Step 2~3 결과를 바탕으로 추론한다.
 
 Pre-flight Check:
 - `_sdd/env.md`와 대조하여 테스트/리소스 갭 분석
-- `.claude/settings.local.json`이 있으면 권한/도구 제약 확인
-- nested writing / 병렬 fan-out 가능 여부 점검
+- nested subagent / 병렬 fan-out 가능 여부 점검
 
 Gate 4→5: 오케스트레이터 저장 완료 → Step 5.
 
@@ -198,14 +204,14 @@ Phase 1 마지막 단계다. 아래를 사용자에게 짧게 공유한다.
 - 주된 리스크나 가정
 
 확인 규칙:
-- `AskUserQuestion` 또는 동등한 단일 승인 질문으로 `승인 후 실행`, `파이프라인 수정`, `중단` 중 하나를 받는다
+- `request_user_input` 또는 동등한 단일 승인 질문으로 `승인 후 실행`, `파이프라인 수정`, `중단` 중 하나를 받는다
 - `승인 후 실행`일 때만 Step 7로 진행한다
 - `파이프라인 수정`이면 Step 4 또는 5로 돌아가 오케스트레이터를 조정한 뒤 Step 6을 다시 수행한다
 - `중단`이면 active orchestrator를 유지하고 현재 상태를 로그에 남긴 뒤 종료한다
 
 ### Step 7: Autonomous Execution (자율 실행)
 
-Phase 2 진입 후 `AskUserQuestion`은 호출하지 않는다. 마일스톤 텍스트와 로그만 남긴다.
+Phase 2 진입 후 `request_user_input`은 호출하지 않는다. 마일스톤 텍스트와 로그만 남긴다.
 
 #### 7.1 파이프라인 초기화
 
@@ -249,6 +255,7 @@ Phase 2 진입 후 `AskUserQuestion`은 호출하지 않는다. 마일스톤 텍
 3. 뭘 더 해야 하는가: 미완료 단계, 제한사항/리스크, 후속 작업 제안
 4. Taste Decisions: 파이프라인 중 taste decision으로 분류된 자동 결정 목록
 5. 오케스트레이터 경로 및 상태 확인 (로그 기반)
+6. spec-less로 시작했다면 `spec-create` 또는 spec sync가 완료되었는지, 아니면 후속 작업으로 남는지 명시
 
 ## Reference Files
 

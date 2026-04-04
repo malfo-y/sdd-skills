@@ -1,120 +1,49 @@
-# SDD Quick Start Guide
+# SDD Quick Start
 
-This is the shortest path into the current SDD model.
+## 1. What to remember first
 
-Related documents:
-- [SDD_SPEC_DEFINITION.md](SDD_SPEC_DEFINITION.md)
-- [SDD_CONCEPT.md](SDD_CONCEPT.md)
-- [SDD_WORKFLOW.md](SDD_WORKFLOW.md)
+1. The global spec is the repo-wide judgment layer.
+2. The temporary spec is the execution blueprint for a change.
+3. Do not force code-obvious detail into the global spec.
+4. Put feature-level usage / contract / validation into temporary surfaces or guides.
 
----
+## 2. Starting a new project
 
-## 1. Remember These Four Things
+Start by fixing only these three parts in the global spec.
 
-1. The global spec is a thin durable reference.
-2. A temporary spec is an execution blueprint for change.
-3. `Contract / Invariants / Verifiability` is the shared quality gate.
-4. Canonical changes follow `definition -> skills -> docs -> mirrors/examples`.
-
----
-
-## 2. Pick a Starting Point
-
-| Situation | Start with |
-|-----------|------------|
-| Most feature work | `/sdd-autopilot` |
-| Direction or requirements are unclear | `/discussion` |
-| No spec exists yet | `/spec-create` |
-| A legacy spec must be migrated | `/spec-upgrade` |
-| You need a fast overview of the current spec | `/spec-summary` |
-
----
-
-## 3. Global Spec vs Temporary Spec
-
-### Global Spec
-
-The global spec keeps:
-
-- Background and high-level concept
-- Scope / Non-goals / Guardrails
-- Core design and key decisions
-- Contract / Invariants / Verifiability
-- Usage guide & expected results
-- Decision-bearing structure
-
-Only add support sections when they are actually needed:
-
-- data model / API / environment and configuration
-- Strategic Code Map appendix
-
-### Temporary Spec
-
-The temporary spec uses:
-
-- Change Summary
-- Scope Delta
-- Contract/Invariant Delta
-- Touchpoints
-- Implementation Plan
-- Validation Plan
-- Risks / Open Questions
-
----
-
-## 4. Most Common Paths
-
-### Default Path
-
-```bash
-/sdd-autopilot Implement this feature: [feature description]
+```markdown
+## 1. Background and High-Level Concept
+## 2. Scope / Non-goals / Guardrails
+## 3. Core Design and Key Decisions
 ```
 
-### Manual Paths
+Move additional information into supporting docs only when needed.
 
-Large:
+## 3. Starting feature work
 
-```text
-feature-draft -> spec-update-todo -> implementation-plan -> implementation -> implementation-review -> spec-update-done
-```
+Use one of these:
 
-Medium:
+- small change: implementation + review
+- medium or larger change: feature draft or temporary spec
+- ambiguous scope: discussion first
 
-```text
-feature-draft -> implementation -> spec-update-done
-```
+## 4. What not to put in the global spec
 
-Small:
+- feature-level expected result
+- per-feature contract / validation detail
+- complete usage guides
+- exhaustive inventory
+- explanations that are obvious from code
 
-```text
-direct implementation -> optional implementation-review / spec-update-done
-```
+## 5. Where that information goes instead
 
----
+- execution planning: temporary spec / implementation plan
+- usage examples: guide / README
+- environment detail: README / env docs
+- navigation hints: appendix, review note, code comment
 
-## 5. Good Input
+## 6. When reviewing
 
-At minimum, include:
-
-- What: what is changing
-- Why: why it is needed
-- Constraints: what boundaries apply
-
-Example:
-
-```text
-/feature-draft
-When a user uploads a CSV, auto-parse it and bulk-insert into the users table.
-- Max 10MB
-- Column mapping stays manual in the UI
-- Skip invalid rows and emit a report
-```
-
----
-
-## 6. Where to Read More
-
-- Spec definition: [SDD_SPEC_DEFINITION.md](SDD_SPEC_DEFINITION.md)
-- Two-level model: [SDD_CONCEPT.md](SDD_CONCEPT.md)
-- Full workflow: [SDD_WORKFLOW.md](SDD_WORKFLOW.md)
-- Philosophy and operating model: [sdd.md](sdd.md)
+- for a global spec, check whether concept + boundaries + decisions are clear
+- for a temporary spec, check whether delta and validation linkage are clear
+- do not try to turn both documents into encyclopedias

@@ -2,5 +2,5 @@
   "name": "spec-update-done",
   "description": "This skill should be used when the user asks to \"update spec from code\", \"sync spec with implementation\", \"apply implementation changes to spec\", \"reflect completed work in spec\", \"refresh spec after implementation\", \"implementation done sync\", or mentions spec document maintenance tied to completed code changes.",
   "instruction_file": "SKILL.md",
-  "version": "2.2.0"
+  "version": "2.3.0"
 }

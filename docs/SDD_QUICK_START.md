@@ -1,120 +1,49 @@
-# SDD 빠른 시작 가이드
+# SDD Quick Start
 
-이 문서는 현재 SDD canonical model을 빠르게 시작하기 위한 최소 안내다.
+## 1. 먼저 기억할 것
 
-관련 문서:
-- [SDD_SPEC_DEFINITION.md](SDD_SPEC_DEFINITION.md)
-- [SDD_CONCEPT.md](SDD_CONCEPT.md)
-- [SDD_WORKFLOW.md](SDD_WORKFLOW.md)
-
----
-
-## 1. 먼저 기억할 4가지
-
-1. 글로벌 스펙은 얇은 기준 문서다.
+1. global spec은 repo-wide 판단 기준이다.
 2. temporary spec은 변경 실행 청사진이다.
-3. `Contract / Invariants / Verifiability`는 공통 품질 게이트다.
-4. canonical model 변경 시 순서는 `definition -> skills -> docs -> mirrors/examples`다.
+3. code-obvious detail은 global spec에 억지로 넣지 않는다.
+4. feature-level usage / contract / validation은 temporary surface나 guide로 보낸다.
 
----
+## 2. 새 프로젝트에서 시작할 때
 
-## 2. 시작점 고르기
+global spec에는 아래 세 가지만 먼저 고정하면 된다.
 
-| 상황 | 시작 스킬 |
-|------|-----------|
-| 대부분의 기능 구현 | `/sdd-autopilot` |
-| 요구사항/방향이 모호함 | `/discussion` |
-| 스펙이 없음 | `/spec-create` |
-| legacy spec을 현재 모델로 옮겨야 함 | `/spec-upgrade` |
-| 현재 spec 상태를 빠르게 보고 싶음 | `/spec-summary` |
-
----
-
-## 3. 글로벌 스펙과 temporary spec
-
-### 글로벌 스펙
-
-글로벌 스펙은 다음 축을 가진다.
-
-- 배경 및 high-level concept
-- Scope / Non-goals / Guardrails
-- 핵심 설계와 주요 결정
-- Contract / Invariants / Verifiability
-- 사용 가이드 & 기대 결과
-- Decision-bearing structure
-
-필요할 때만 보조 영역을 추가한다.
-
-- 데이터 모델 / API / 환경 및 설정
-- Strategic Code Map appendix
-
-### Temporary Spec
-
-temporary spec은 아래 7섹션을 사용한다.
-
-- Change Summary
-- Scope Delta
-- Contract/Invariant Delta
-- Touchpoints
-- Implementation Plan
-- Validation Plan
-- Risks / Open Questions
-
----
-
-## 4. 가장 흔한 경로
-
-### 기본 경로
-
-```bash
-/sdd-autopilot 이 기능 구현해줘: [기능 설명]
+```markdown
+## 1. Background and High-Level Concept
+## 2. Scope / Non-goals / Guardrails
+## 3. Core Design and Key Decisions
 ```
 
-### 수동 경로
+추가 정보는 필요할 때만 supporting docs로 뺀다.
 
-대규모:
+## 3. 기능 작업을 시작할 때
 
-```text
-feature-draft -> spec-update-todo -> implementation-plan -> implementation -> implementation-review -> spec-update-done
-```
+아래 중 하나를 쓴다.
 
-중규모:
+- 작은 변경: implementation + review
+- 중간 이상 변경: feature draft 또는 temporary spec
+- 범위가 애매함: discussion 먼저
 
-```text
-feature-draft -> implementation -> spec-update-done
-```
+## 4. Global Spec에 넣지 말 것
 
-소규모:
+- feature-level expected result
+- feature별 contract / validation detail
+- 사용 가이드 전체
+- exhaustive inventory
+- 코드만 보면 알 수 있는 설명
 
-```text
-직접 구현 -> 필요 시 implementation-review / spec-update-done
-```
+## 5. 어디에 둘 것인가
 
----
+- 실행 계획: temporary spec / implementation plan
+- 사용 예시: guide / README
+- 환경 상세: README / env docs
+- 탐색 힌트: appendix, review note, code comment
 
-## 5. 좋은 입력
+## 6. 리뷰할 때
 
-최소한 아래 세 가지는 같이 준다.
-
-- What: 무엇을 바꾸는가
-- Why: 왜 필요한가
-- Constraints: 어떤 제약이 있는가
-
-예시:
-
-```text
-/feature-draft
-사용자가 CSV를 업로드하면 자동 파싱 후 users 테이블에 bulk insert.
-- 최대 10MB
-- 컬럼 매핑은 UI에서 수동 지정
-- 에러 행은 건너뛰고 리포트 생성
-```
-
----
-
-## 6. 어디를 보면 되나
-
-- 스펙의 정의: [SDD_SPEC_DEFINITION.md](SDD_SPEC_DEFINITION.md)
-- 두 단계 구조: [SDD_CONCEPT.md](SDD_CONCEPT.md)
-- 전체 워크플로우: [SDD_WORKFLOW.md](SDD_WORKFLOW.md)
-- 철학과 운영 모델: [sdd.md](sdd.md)
+- global spec이면 개념 + 경계 + 결정이 분명한지 본다.
+- temporary spec이면 delta와 validation linkage가 분명한지 본다.
+- 두 문서를 모두 백과사전처럼 만들려고 하지 않는다.

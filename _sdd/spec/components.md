@@ -1,6 +1,7 @@
-# Component Details
+# Component Reference & Strategic Code Map
 
-> 각 스킬/에이전트의 상세 정보. 카테고리 요약은 [main.md](./main.md#component-details)를 참고한다.
+> 이 문서는 [main.md](./main.md)의 §7 참조 정보와 부록 A를 보조하는 reference-only 문서다.
+> normative decision-bearing truth는 `main.md`에 두고, 여기에는 각 스킬/에이전트의 상세 reference와 선택적 navigation hint만 남긴다.
 > 모든 컴포넌트에 Purpose(What), Why, Source(How) 트라이어드를 포함한다.
 
 ---
@@ -68,12 +69,13 @@
 
 | Aspect | Description |
 |--------|-------------|
-| **Purpose** | 구현 완료 후 코드 변경사항을 스펙에 반영 |
-| **Why** | 구현 과정에서 스펙과 다르게 구현된 부분을 감지하고 스펙을 최신 상태로 동기화한다. |
-| **Input** | 구현 리포트, 코드 diff, 기존 스펙 |
-| **Output** | 스펙 파일 업데이트 + 아카이브 |
+| **Purpose** | 구현 evidence와 temporary spec delta를 비교해, 검증된 지속 정보만 global spec에 반영 |
+| **Why** | 구현 과정에서는 계획, 임시 실행 메모, 미검증 delta가 섞이기 쉽다. `spec-update-done`은 `IMPLEMENTED / PARTIAL / NOT_IMPLEMENTED / UNVERIFIED` 관점으로 drift를 분류해 global spec을 보수적으로 최신화한다. |
+| **Input** | feature draft Part 1, implementation plan/progress/review/report, 실제 코드/설정, 기존 스펙 |
+| **Output** | 스펙 파일 업데이트 + change summary + `prev/` 백업 |
 | **Source** | `.claude/agents/spec-update-done.md` (에이전트 정의, AC-First + self-contained) |
 |            | `.claude/skills/spec-update-done/SKILL.md` (래퍼) |
+| **Process** | Gather Context → delta 상태 분류 → Change Report 작성 → global spec 반영 → path/CIV/usage/code-map 검증 |
 | **Dependencies** | implementation 완료 후 실행 |
 | **실행 형태** | 래퍼 → 에이전트 (Agent Wrapper 패턴) |
 
@@ -117,10 +119,10 @@
 
 | Aspect | Description |
 |--------|-------------|
-| **Purpose** | 구 형식 스펙을 whitepaper §1-§8 구조로 변환 |
-| **Why** | SDD_SPEC_DEFINITION 제정 이전에 만든 레거시 스펙을 표준 형식으로 마이그레이션하는 전용 스킬. 업그레이드와 일반 리라이트는 관심사가 다르다. |
+| **Purpose** | 구 형식 글로벌 스펙을 current canonical SDD global spec model로 마이그레이션 |
+| **Why** | `docs/SDD_SPEC_DEFINITION.md` 제정 이전의 legacy spec은 old section-map과 inventory-heavy 구조를 가질 수 있다. `spec-upgrade`는 기존 유효 내용을 보존하면서 thin global spec + explicit CIV + decision-bearing structure로 재배치하는 전용 스킬이다. |
 | **Input** | 기존 스펙 파일, 코드베이스 |
-| **Output** | whitepaper 형식으로 변환된 스펙 파일 |
+| **Output** | canonical global spec structure로 업그레이드된 스펙 파일 + 필요 시 `prev/` 백업 |
 | **Source** | `.claude/skills/spec-upgrade/SKILL.md` |
 
 ## guide-create
@@ -128,10 +130,12 @@
 | Aspect | Description |
 |--------|-------------|
 | **Purpose** | 스펙에서 특정 기능의 구현/리뷰 가이드 문서 생성 |
-| **Why** | 전체 스펙은 방대하므로, 특정 기능에 집중한 가이드를 생성하여 구현자나 리뷰어가 필요한 정보만 빠르게 참조할 수 있도록 한다. |
+| **Why** | 전체 스펙은 얇은 기준 문서이므로, 특정 기능 deep-dive는 별도 guide surface가 필요하다. guide-create는 global spec 전체 구조를 복제하지 않고, current canonical language의 scope/decision/CIV/verification 표현을 guide 전용 §1~§5 구조에 투영한다. |
 | **Input** | 스펙 파일, 기능명 |
 | **Output** | `_sdd/guides/guide_<feature>.md` |
 | **Source** | `.claude/skills/guide-create/SKILL.md` |
+|            | `.claude/skills/guide-create/references/template-compact.md` |
+|            | `.codex/skills/guide-create/references/template-compact.md` |
 
 ## implementation-plan
 
@@ -261,46 +265,20 @@
 
 ---
 
-## Appendix: Code Reference Index
+## Appendix A. Strategic Code Map
 
-이 프로젝트의 "코드"는 SKILL.md와 에이전트 정의 파일이다.
+전수형 파일 inventory 대신, 변경 시 먼저 봐야 할 navigation-critical path만 남긴다.
 
-### 풀 스킬 (SKILL.md에 전체 로직)
-
-| File | Skill | Referenced In |
-|------|-------|---------------|
-| `.claude/skills/sdd-autopilot/SKILL.md` | sdd-autopilot | Core Design, Component Details, Workflow |
-| `.claude/skills/sdd-autopilot/references/sdd-reasoning-reference.md` | sdd-autopilot (reference) | Component Details (SDD 철학 + 스킬 카탈로그) |
-| `.claude/skills/spec-create/SKILL.md` | spec-create | Core Design, Component Details |
-| `.claude/skills/spec-rewrite/SKILL.md` | spec-rewrite | Component Details |
-| `.claude/skills/spec-summary/SKILL.md` | spec-summary | Component Details |
-| `.claude/skills/spec-upgrade/SKILL.md` | spec-upgrade | Component Details |
-| `.claude/skills/guide-create/SKILL.md` | guide-create | Component Details |
-| `.claude/skills/pr-review/SKILL.md` | pr-review | Component Details |
-| `.claude/skills/second-opinion/SKILL.md` | second-opinion | Component Details |
-| `.claude/skills/discussion/SKILL.md` | discussion | Component Details |
-| `.claude/skills/git/SKILL.md` | git | Component Details |
-| `.claude/skills/spec-snapshot/SKILL.md` | spec-snapshot | Component Details |
-
-### 래퍼 스킬 + 에이전트 정의
-
-> v3.6: 모든 래퍼 스킬의 `references/`, `examples/` 디렉토리가 삭제됨. 에이전트가 self-contained로 핵심 내용을 인라인 포함.
-
-| Wrapper (SKILL.md) | Agent Definition | Skill | Referenced In |
-|--------------------|------------------|-------|---------------|
-| `.claude/skills/feature-draft/SKILL.md` | `.claude/agents/feature-draft.md` | feature-draft | Core Design, Component Details |
-| `.claude/skills/implementation-plan/SKILL.md` | `.claude/agents/implementation-plan.md` | implementation-plan | Component Details |
-| `.claude/skills/implementation/SKILL.md` | `.claude/agents/implementation.md` | implementation | Component Details |
-| `.claude/skills/implementation-review/SKILL.md` | `.claude/agents/implementation-review.md` | implementation-review | Component Details |
-| `.claude/skills/ralph-loop-init/SKILL.md` | `.claude/agents/ralph-loop-init.md` | ralph-loop-init | Component Details |
-| `.claude/skills/spec-review/SKILL.md` | `.claude/agents/spec-review.md` | spec-review | Component Details |
-| `.claude/skills/spec-update-done/SKILL.md` | `.claude/agents/spec-update-done.md` | spec-update-done | Component Details |
-| `.claude/skills/spec-update-todo/SKILL.md` | `.claude/agents/spec-update-todo.md` | spec-update-todo | Component Details |
-| `.claude/skills/investigate/SKILL.md` | `.claude/agents/investigate.md` | investigate | Component Details |
-
-### 유틸리티 Writing Contract
-
-| File | Skill | Referenced In |
-|------|-------|---------------|
-| `.claude/skills/write-phased/SKILL.md` | write-phased | Component Details |
-| `.codex/skills/write-phased/SKILL.md` | write-phased | Component Details |
+| Type | Path | Why Start Here |
+|------|------|----------------|
+| Canonical model | `docs/SDD_SPEC_DEFINITION.md` | global spec과 temporary spec의 shape, CIV canonical form을 고정한다 |
+| Workflow contract | `docs/SDD_WORKFLOW.md` | 스킬 역할, update order, artifact 배치를 가장 빠르게 확인할 수 있다 |
+| Global spec | `_sdd/spec/main.md` | decision-bearing truth와 supporting file 책임이 여기서 정해진다 |
+| Reference expansion | `_sdd/spec/components.md` | 개별 스킬/에이전트의 detailed reference를 모아 둔다 |
+| Usage scenarios | `_sdd/spec/usage-guide.md` | 실제 사용 흐름과 expected result를 빠르게 확인한다 |
+| Claude orchestration hotspot | `.claude/skills/sdd-autopilot/SKILL.md` | reasoning-based pipeline semantics와 hard rules가 모인다 |
+| Codex orchestration hotspot | `.codex/skills/sdd-autopilot/SKILL.md` | Codex runtime에서의 spawn contract와 autopilot semantics가 모인다 |
+| Claude reusable execution | `.claude/agents/` | wrapper-backed execution의 실제 동작 단위를 찾는 위치다 |
+| Codex reusable execution | `.codex/agents/` | custom agent spawn 대상과 parity 확인 지점이다 |
+| Codex runtime prerequisite | `.codex/config.toml` | nested agent depth와 concurrency 전제가 고정된다 |
+| Environment/pre-flight | `_sdd/env.md` | 로컬 작업, PR verification, pre-flight assumption의 기준이다 |

@@ -27,7 +27,7 @@ version: 2.2.0
 ## Hard Rules
 
 1. 이 agent는 스펙을 입력으로 읽을 수 있지만 `_sdd/spec/` 파일은 수정하지 않는다.
-2. 구현에 필요한 정보가 부족해도 멈추지 않고 deterministic defaults로 진행한다.
+2. 결과 방향을 실질적으로 바꿀 수 있는 핵심 ambiguity가 있으면 질문 1회를 추가한다. 그 외 부족한 정보는 deterministic defaults로 진행한다.
 3. 모든 task는 action-oriented title, acceptance criteria, target files, dependencies를 가져야 한다.
 4. `Contract/Invariant Delta`와 `Validation Plan`의 ID linkage를 plan에서 잃으면 안 된다.
 5. 언어는 기존 스펙/문서의 언어를 따른다. 스펙이 없으면 한국어를 기본으로 사용한다.

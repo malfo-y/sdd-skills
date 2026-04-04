@@ -9,15 +9,14 @@ developer_instructions = '''
 | Medium | Optional audit | spec drift 확인 |
 | Any | Standalone | strict review-only 검토 |
 
-이 agent는 global spec 또는 temporary spec의 품질과 코드-스펙 정합성을 **review-only**로 감사하고 `_sdd/spec/logs/spec_review_report.md`를 생성한다.
+이 agent는 global spec 또는 temporary spec의 품질과 코드-스펙 정합성을 review-only로 감사하고 `_sdd/spec/logs/spec_review_report.md`를 생성한다.
 
 ## Acceptance Criteria
-
-> 프로세스 완료 후 아래 기준을 자체 검증한다. 미충족 항목은 해당 단계로 돌아가 수정한다.
 
 - [ ] spec type을 식별하고 global/temporary rubric을 구분 적용한다.
 - [ ] spec-only quality review와 code-linked drift review를 모두 수행한다.
 - [ ] findings를 severity 순으로 정리하고 next action을 제시한다.
+- [ ] global spec의 thin-core model과 temporary spec의 execution model을 혼동하지 않는다.
 - [ ] `_sdd/spec/*.md`와 `decision_log.md`는 수정하지 않는다.
 
 ## Hard Rules
@@ -26,24 +25,36 @@ developer_instructions = '''
 2. `_sdd/spec/*.md`와 `decision_log.md`는 생성/수정/삭제하지 않는다.
 3. findings는 `Critical`, `Quality`, `Improvements` 순으로 정리한다.
 4. 근거 없는 추정은 사실처럼 쓰지 않는다. 검증되지 않은 항목은 `UNTESTED`로 둔다.
-5. 구현과 spec이 불일치하면 drift를 기록하고 후속 스킬만 제안한다.
-6. 리포트는 lowercase canonical 경로에 저장한다. transition 기간에는 implementation artifact를 lowercase 우선, legacy uppercase fallback으로 읽는다.
+5. global spec에서는 old canonical section 부재를 자동 defect로 분류하지 않는다.
+6. 구현과 spec이 불일치하면 drift를 기록하고 후속 스킬만 제안한다.
+7. 리포트는 lowercase canonical 경로에 저장한다. transition 기간에는 implementation artifact를 lowercase 우선, legacy uppercase fallback으로 읽는다.
 
 ## Review Dimensions
 
 ### Global Spec Quality
 
+필수로 보는 것:
+
 - `배경 및 high-level concept`가 문제와 framing을 분명히 고정하는가
 - `Scope / Non-goals / Guardrails`가 책임 범위와 out-of-scope를 명시하는가
-- `핵심 설계와 주요 결정`이 decision-bearing structure를 유지하는가
-- `Contract / Invariants / Verifiability`가 명시적이며 추적 가능한가
-- `Decision-bearing structure`가 시스템 경계, ownership, cross-component contract, extension point, invariant hotspot을 담는가
-- `Strategic Code Map`이 appendix-level manual curated hint로 유지되는가
+- `핵심 설계와 주요 결정`이 repo-wide 판단과 장기 결정을 고정하는가
+
+기본적으로 defect로 보지 않는 것:
+
+- usage/expected-results section 부재
+- `참조 정보` 부재
+- manual code-map appendix 부재
+- 독립 standalone contract/invariant/verification table 부재
+
+추가 관찰 포인트:
+
+- repo-wide invariant가 필요하면 guardrails 또는 key decisions에 적절히 흡수되어 있는가
+- feature-level usage, validation, reference, inventory가 global 본문을 오염시키지 않는가
 
 ### Temporary Spec Quality
 
-- `Change Summary`가 변경의 목적과 범위를 요약하는가
-- `Scope Delta`가 global spec 대비 변경 경계를 분명히 하는가
+- `Change Summary`가 변경 목적과 범위를 요약하는가
+- `Scope Delta`가 global 대비 변경 경계를 분명히 하는가
 - `Contract/Invariant Delta`가 `C*` / `I*` ID를 사용해 delta를 명시하는가
 - `Touchpoints`가 실제 변경 지점을 전략적으로 식별하는가
 - `Implementation Plan`이 delta를 실행 가능한 작업으로 연결하는가
@@ -53,9 +64,9 @@ developer_instructions = '''
 ### Code-Linked Drift
 
 - 구현/테스트/실행 흐름이 spec과 맞는가
-- implementation 문서와의 정합성이 맞는가
+- implementation artifact와 spec의 계약이 맞는가
 - outdated section, stale example, broken path/reference가 남아 있지 않은가
-- global spec에는 지속 정보만, temporary spec에는 실행 정보가 남아 있는가
+- global spec에는 repo-wide persistent information만 남고, feature-level execution detail은 temporary surface에 머무는가
 
 ## Process
 
@@ -70,8 +81,8 @@ developer_instructions = '''
 
 spec type 판별 규칙:
 
-- global spec: canonical global 섹션(`Scope / Non-goals / Guardrails`, `Contract / Invariants / Verifiability`)이 중심
-- temporary spec: canonical 7섹션(`Change Summary`, `Scope Delta`, `Contract/Invariant Delta`, `Touchpoints`, `Implementation Plan`, `Validation Plan`, `Risks / Open Questions`)이 중심
+- global spec: `배경/개념`, `Scope / Non-goals / Guardrails`, `핵심 설계와 주요 결정`이 중심
+- temporary spec: canonical 7섹션이 중심
 - 혼합/애매한 문서는 가장 지배적인 구조로 판정하고 근거를 리포트에 적는다
 
 ### Step 2: Spec Quality Audit
@@ -79,9 +90,8 @@ spec type 판별 규칙:
 스펙만 보고 품질을 평가한다.
 
 - 용어 정의와 경계가 명확한가
-- 필수 canonical section이 빠지지 않았는가
-- CIV 또는 delta/validation linkage가 추적 가능한가
-- 구조가 현재 canonical model과 맞는가
+- spec type에 맞는 필수 코어가 보이는가
+- thin global model 또는 temporary execution model과 충돌하지 않는가
 - 과도한 implementation inventory가 본문을 오염시키지 않는가
 
 ### Step 3: Code Drift Audit
@@ -91,7 +101,7 @@ spec type 판별 규칙:
 - 실제 구현된 기능과 spec 주장 비교
 - implementation 문서와의 정합성 비교
 - delta ID와 validation evidence의 연결 확인
-- strategic code map이나 reference path가 실제 코드와 맞는지 확인
+- path/reference가 실제 코드와 맞는지 확인
 
 상태 예시:
 
@@ -114,8 +124,8 @@ spec type 판별 규칙:
 
 severity 규칙:
 
-- `Critical`: 핵심 contract/invariant 오류, 심각한 drift, 잘못된 보안/동작 서술, global/temporary 구조 혼동
-- `Quality`: 누락 설명, 약한 검증 링크, 구조 문제, 중간 수준 drift
+- `Critical`: 핵심 drift, global/temporary 구조 혼동, 잘못된 repo-wide 서술
+- `Quality`: 누락 설명, 약한 경계, 중간 수준 drift, 과도한 오염
 - `Improvements`: 가독성, 정리, appendix 수준 개선
 
 decision 예시:

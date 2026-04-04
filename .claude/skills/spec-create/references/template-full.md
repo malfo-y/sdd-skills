@@ -1,227 +1,77 @@
-# Complete Global Spec Template
-
-This is the richer template for current SDD global specs. Use it when the project is large enough that the compact template would become ambiguous, but keep the same canonical section order and philosophy.
-
----
+# SDD Global Spec Template (Full)
 
 # <Project Name>
 
-> One-line description of what this project is for
+> One-line description
 
 **Version**: X.Y.Z
 **Last Updated**: YYYY-MM-DD
 **Status**: Draft | In Review | Approved | Deprecated
 
-## Table of Contents
+## 1. 배경 및 high-level concept
 
-- [1. Background & High-Level Concept](#1-background--high-level-concept)
-- [2. Scope / Non-goals / Guardrails](#2-scope--non-goals--guardrails)
-- [3. Core Design & Key Decisions](#3-core-design--key-decisions)
-- [4. Contract / Invariants / Verifiability](#4-contract--invariants--verifiability)
-- [5. Usage Guide & Expected Results](#5-usage-guide--expected-results)
-- [6. Decision-Bearing Structure](#6-decision-bearing-structure)
-- [7. Reference Information](#7-reference-information)
-- [Appendix A. Strategic Code Map](#appendix-a-strategic-code-map)
-- [Appendix B. Related Docs & Code References](#appendix-b-related-docs--code-references)
+<!-- 이 프로젝트가 해결하는 문제와 핵심 아이디어를 고정한다.
+     "무엇을 왜 만드는가"에 답하되, 구현 방법은 적지 않는다. -->
 
----
+### Problem
+- ...
 
-## 1. Background & High-Level Concept
-
-### Problem Statement
-
-[What problem exists today and what pain or cost does it create?]
-
-### Why This Matters Now
-
-[Why the problem is worth solving now, not later.]
+### Why This Matters
+<!-- 이 문제를 지금 풀어야 하는 이유. 비즈니스/기술적 동기. -->
+- ...
 
 ### High-Level Concept
-
-[Describe the framing or insight that makes this project coherent.]
+- ...
 
 ### Alternatives Considered
-
-| Approach | Pros | Cons | Decision |
-|----------|------|------|----------|
-| Proposed approach | ... | ... | Chosen |
-| Alternative A | ... | ... | Rejected: ... |
-| Alternative B | ... | ... | Rejected: ... |
-
-### Core Value
-
-[One concise paragraph explaining the key value delivered.]
-
----
+<!-- 검토했지만 채택하지 않은 접근과 그 이유. 나중에 같은 대안을 다시 검토하는 것을 방지한다. -->
+- ...
 
 ## 2. Scope / Non-goals / Guardrails
 
-### In Scope
+<!-- 책임 범위의 안쪽과 바깥쪽을 동시에 고정한다.
+     Guardrails는 repo 전체가 지켜야 할 운영 규칙이다.
+     feature별 제약은 여기가 아니라 temporary spec에서 다룬다. -->
 
-- ...
+### In Scope
 - ...
 
 ### Non-goals
-
-- ...
+<!-- "하지 않기로 한 것"을 명시해야 scope creep을 막는다. -->
 - ...
 
 ### Guardrails
-
+<!-- 전체 repo에 적용되는 운영 원칙. 예: "직접 DB 접근 금지, 반드시 API 경유" -->
 - ...
+
+## 3. 핵심 설계와 주요 결정
+
+<!-- 이 프로젝트의 장기 설계 판단과 그 이유를 적는다.
+     구현 방법(how)이 아니라 설계 판단(why)을 고정하는 게 목적이다.
+     대안 대비 왜 이 방식을 택했는지를 한 줄이라도 남겨야 나중에 재논의를 방지한다.
+     feature-level 결정은 temporary spec에서 다룬다. -->
+
+### Core Design
 - ...
-
-### Scope Notes
-
-[Clarify boundaries that may be confused with adjacent work.]
-
----
-
-## 3. Core Design & Key Decisions
-
-### Core Design Narrative
-
-[Explain the main structure or flow that must be preserved.]
 
 ### Key Decisions
-
-| Decision | Why It Was Chosen | What Must Stay True |
-|----------|-------------------|---------------------|
-| ... | ... | ... |
-
-### Failure-Sensitive Decisions
-
-| Area | Sensitive Assumption | Consequence If Broken |
-|------|----------------------|-----------------------|
-| ... | ... | ... |
-
----
-
-## 4. Contract / Invariants / Verifiability
-
-### Contract
-
-| ID | Subject | Inputs/Outputs | Preconditions | Postconditions | Failure Guarantees |
-|----|---------|----------------|---------------|----------------|--------------------|
-| C1 | ... | ... | ... | ... | ... |
-| C2 | ... | ... | ... | ... | ... |
-
-### Invariants
-
-| ID | Scope | Invariant | Why It Matters |
-|----|-------|-----------|----------------|
-| I1 | ... | ... | ... |
-| I2 | ... | ... | ... |
-
-### Verifiability
-
-| ID | Targets | Verification Method | Evidence / Notes |
-|----|---------|---------------------|------------------|
-| V1 | C1, I1 | test | ... |
-| V2 | C2 | review | ... |
-
-`Verification Method`는 `test`, `review`, `runtime-check`, `manual-check` 중 하나 이상을 사용한다.
-
----
-
-## 5. Usage Guide & Expected Results
-
-### Scenario: [Primary Flow]
-
-**Setup**: ...
-
-**Action**: ...
-
-**Expected Result**: ...
-
-### Scenario: [Failure or Edge Case]
-
-**Setup**: ...
-
-**Action**: ...
-
-**Expected Result**: ...
-
----
-
-## 6. Decision-Bearing Structure
-
-### System Boundary
-
-[What is inside and outside the system boundary?]
-
-### Ownership
-
-| Area | Owner / Responsible Layer | Why |
-|------|---------------------------|-----|
-| ... | ... | ... |
-
-### Cross-Component Contracts
-
-| Boundary | Contract | Risk If Broken |
-|----------|----------|----------------|
-| ... | ... | ... |
-
-### Extension Points
-
+<!-- 형식: "결정 — 이유". 이유 없는 결정은 나중에 반드시 재논의된다. -->
 - ...
 
-### Invariant Hotspots
+## Optional Supporting Notes
 
+<!-- 아래 섹션들은 정말 필요할 때만 추가한다. 없어도 defect가 아니다. -->
+
+### Repo-wide Invariant Note
+<!-- 모든 모듈/feature가 지켜야 하는 규칙이 있을 때만 적는다.
+     한 컴포넌트의 내부 규칙은 여기가 아니다. -->
+- only if truly global
+
+### Supporting References
+<!-- 관련 docs, README, guide, external resource 링크. -->
 - ...
 
----
-
-## 7. Reference Information
-
-### Data Models
-
-[Only if materially useful.]
-
-### API Reference
-
-[Only if materially useful.]
-
-### Environment & Dependencies
-
-| Category | Item | Why It Matters |
-|----------|------|----------------|
-| Runtime | ... | ... |
-| External | ... | ... |
-
-### Configuration
-
-| Key | Required | Purpose |
-|-----|----------|---------|
-| ... | ... | ... |
-
----
-
-## Appendix A. Strategic Code Map
-
-Use this only when it materially improves navigation. Keep it manual curated and selective.
-
-| Kind | Path / Symbol | Why It Matters | When to Read It |
-|------|----------------|----------------|-----------------|
-| Entrypoint | `...` | ... | ... |
-| Invariant Hotspot | `...` | ... | ... |
-| Extension Point | `...` | ... | ... |
-| Change Hotspot | `...` | ... | ... |
-
-## Appendix B. Related Docs & Code References
-
-- `...`
-
----
-
-## Temporary Spec Note
-
-Global spec과 별도로, 실행 청사진이 필요한 변경 작업은 temporary spec을 사용한다. Temporary spec의 canonical shape는 아래와 같다.
-
-1. `Change Summary`
-2. `Scope Delta`
-3. `Contract/Invariant Delta`
-4. `Touchpoints`
-5. `Implementation Plan`
-6. `Validation Plan`
-7. `Risks / Open Questions`
+### Appendix-Level Code Map
+<!-- entrypoint, invariant hotspot, extension point 등 navigation hint.
+     구현 파일 전수 목록이 아니라, 코드를 처음 보는 사람이 어디서 시작할지 안내하는 용도. -->
+- only if manual navigation hints are genuinely useful

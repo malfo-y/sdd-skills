@@ -1,6 +1,7 @@
 # Usage Guide & Expected Results
 
-> 이 문서는 SDD Skills의 대표 사용 시나리오와 기대 결과를 정리한다.
+> 이 문서는 `main.md`의 §5를 보조하는 scenario-oriented reference다.
+> 각 시나리오는 "어떤 entrypoint로 시작하고, 어떤 artifact와 observable result가 남아야 하는가"를 기준으로 정리한다.
 > 메인 스펙: [main.md](./main.md)
 
 ---
@@ -20,9 +21,10 @@
 ```
 
 **Expected Result:**
-- `_sdd/spec/<project>.md` 생성 — 프로젝트 코드를 분석하여 §1~§8 구조의 스펙 문서 자동 생성
+- `_sdd/spec/<project>.md` 생성 — current canonical global spec core(배경, scope, 핵심 설계, CIV, usage, decision-bearing structure)를 갖춘 문서 생성
 - `_sdd/env.md` 생성 — 환경 설정/실행 방법 가이드
 - `CLAUDE.md` 생성 또는 업데이트 — 워크스페이스 안내에 `_sdd/` 경로 추가
+- `AGENTS.md` 생성 또는 업데이트 — 동일한 워크스페이스 안내 유지
 - 사용자에게 요약 테이블 제시 후 전체 스펙 출력
 
 ### Scenario 2: 대규모 기능 추가 (수동 Full SDD Workflow)
@@ -39,9 +41,9 @@
 
 **Expected Result:**
 - `_sdd/drafts/feature_draft_<name>.md` — 스펙 패치 초안 + 구현 태스크 리스트
-- `_sdd/spec/<project>.md` 업데이트 — 새 기능 반영
+- `_sdd/spec/<project>.md` 업데이트 — planned persistent truth 반영
 - `_sdd/implementation/implementation_plan.md` — Target Files 기반 병렬 실행 계획
-- 구현 완료 후 스펙과 코드 간 드리프트 0 상태
+- 구현 완료 후 구현 리뷰와 spec sync까지 연결돼 스펙과 코드 간 드리프트가 설명 가능한 상태
 
 ### Scenario 2b: 대규모 기능 추가 (sdd-autopilot 자동 실행)
 
@@ -57,6 +59,7 @@
 - `.claude/skills/orchestrator_auth_system/SKILL.md` 또는 `.codex/skills/orchestrator_auth_system/SKILL.md` — 실행 중 활성 오케스트레이터 (스킬로 재사용/재개 가능)
 - `_sdd/pipeline/log_auth_system_<ts>.md` — 파이프라인 실행 로그 (Meta + Status 테이블 + 각 에이전트 시작/완료, 결정사항, 에러)
 - `_sdd/pipeline/orchestrators/auth_system_<ts>/` — 완료된 오케스트레이터 아카이브
+- `_sdd/pipeline/report_auth_system_<ts>.md` — 최종 실행/검증 요약과 잔여 이슈 보고
 - 구현 완료 + 스펙 동기화 완료
 
 ### Scenario 3: PR 기반 스펙 동기화
@@ -67,7 +70,7 @@
 ```
 
 **Expected Result:**
-- `_sdd/pr/pr_review.md` — 코드 품질 + 스펙 준수 여부 판정 + 구체적 피드백
+- `_sdd/pr/pr_review.md` — findings-first 코드 품질 검증 + spec 존재 시 spec 준수 여부 판정 + 구체적 피드백
 
 ### Scenario 3b: 스펙 현황 파악 및 의사결정
 

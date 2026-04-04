@@ -61,6 +61,7 @@ User Request
 8. **Agent lifecycle 수집 필수**: `spawn_agent(...)`로 시작한 실행 단위는 `wait_agent(...)`로 반드시 수집하고, 필요 시 `send_input(...)` 또는 재-spawn으로 보완한다.
 9. **로그 기반 상태 관리**: 오케스트레이터는 `_sdd/pipeline/orchestrators/`에 유지. 활성/완료 구분은 로그 파일 status로 판단한다.
 10. 한국어를 기본으로 하되 사용자 언어를 따른다.
+11. spec-less repo에서도 중단하지 않는다. `_sdd/spec/`가 없으면 `_sdd/` workspace bootstrap + code-first fallback reasoning으로 계속 진행하고, 적절한 시점에 `spec-create` 또는 spec sync 단계를 파이프라인에 포함한다.
 
 ## Process
 
@@ -71,10 +72,11 @@ autopilot 호출 시 기존 파이프라인 상태를 확인한다.
 | 체크 | 동작 |
 |------|------|
 | `_sdd/pipeline/log_*.md` 스캔 | 미완료 스텝(`pending`/`in_progress`/`failed`) 필터링 |
-| `_sdd/spec/*.md` 존재 확인 | 없으면 `/spec-create` 안내 후 종료 |
+| `_sdd/spec/*.md` 존재 확인 | 없으면 spec-less mode로 계속 진행하고, `_sdd/` bootstrap 및 `spec-create`/spec sync 필요성을 오케스트레이터에 기록 |
 | `_sdd/drafts/`, `_sdd/implementation/` 스캔 | 기존 산출물 활용 여부 판단 |
 
 상태별 분기:
+- 미완료 로그 0건 + `_sdd/spec/` 없음 → spec-less mode로 Step 1
 - 미완료 로그 0건 + 산출물 없음 → Step 1
 - 미완료 로그 1건 → 재개 후보 제시
 - 미완료 로그 2건 이상 → 목록 제시 + 선택
@@ -138,7 +140,7 @@ Step 1 내재화 + Step 2~3 결과를 바탕으로 추론한다.
 
 | 판단 항목 | 내용 |
 |-----------|------|
-| 스펙 상태 | global spec 존재 여부와 관련 section/CIV 범위 분석 |
+| 스펙 상태 | global spec 존재 여부와 thin-core relevance 분석. 없으면 `_sdd/` bootstrap + later `spec-create/spec-update-*` 경로를 계획 |
 | 변경 범위 | temporary spec 필요 여부 / planned global update 필요 여부 |
 | 계획 깊이 | 직접 구현 / feature-draft / implementation-plan |
 | 검증 수준 | 인라인 테스트 / Ralph / review 포함 여부 |
@@ -249,6 +251,7 @@ Phase 2 진입 후 `request_user_input`은 호출하지 않는다. 마일스톤 
 3. 뭘 더 해야 하는가: 미완료 단계, 제한사항/리스크, 후속 작업 제안
 4. Taste Decisions: 파이프라인 중 taste decision으로 분류된 자동 결정 목록
 5. 오케스트레이터 경로 및 상태 확인 (로그 기반)
+6. spec-less로 시작했다면 `spec-create` 또는 spec sync가 완료되었는지, 아니면 후속 작업으로 남는지 명시
 
 ## Reference Files
 

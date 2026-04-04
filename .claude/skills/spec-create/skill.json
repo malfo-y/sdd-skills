@@ -2,5 +2,5 @@
   "name": "spec-create",
   "description": "This skill should be used when the user asks to \"create a spec\", \"write a spec document\", \"generate SDD\", \"create software design document\", \"document the project\", \"create spec for project\", or mentions \"_sdd\" directory, specification documents, or project documentation needs.",
   "instruction_file": "SKILL.md",
-  "version": "1.7.1"
+  "version": "1.8.0"
 }

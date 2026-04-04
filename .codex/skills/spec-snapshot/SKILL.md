@@ -25,7 +25,7 @@ version: 1.2.0
 1. `_sdd/spec/` 원본 파일은 수정하지 않는다.
 2. snapshot은 원본 디렉토리 구조를 유지한다.
 3. `prev/` 백업 디렉토리는 snapshot 대상에서 제외한다.
-4. 모든 `.md` 파일을 포함한다. `decision_log.md`도 포함한다.
+4. 모든 `.md` 파일을 포함한다. lowercase canonical `decision_log.md`와 legacy uppercase `DECISION_LOG.md`가 있으면 둘 다 포함한다.
 5. 한 snapshot 안의 번역 언어는 일관되어야 한다.
 6. 코드 블록, 파일 경로, 심볼명, 명령어, 설정 키는 번역하지 않는다.
 7. 파일 수가 많으면 batch 단위 병렬 처리 후 부모가 누락 여부를 검증한다.

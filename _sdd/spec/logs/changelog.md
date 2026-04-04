@@ -2,6 +2,25 @@
 
 > 이 파일은 `_sdd/spec/main.md`의 버전별 변경 기록이다.
 
+#### v4.0.1 (2026-04-04)
+
+- **canonical rollout 후속 spec sync 반영**: `FD-05`~`FD-07` 구현 완료 사실을 active `_sdd/spec/` surface에 동기화
+- **운영 규칙 명시**: canonical rollout/update order를 `definition -> generators/transformers -> consumers/planners -> docs -> english mirrors/examples -> audit`로 global spec에 고정
+- **reference surface 확장**: `docs/en/` semantic mirror layer와 `guide-create` compact template pair를 main spec reference에 추가
+- **component sync**: `spec-update-done`를 delta status 분류 + change report 기반 sync agent로, `guide-create`를 current canonical language를 재사용하는 guide generator로 설명 보정
+- 백업: `_sdd/spec/prev/prev_main_20260404_021113.md`, `_sdd/spec/prev/prev_components_20260404_021113.md`, `_sdd/spec/prev/prev_changelog_20260404_021113.md`
+- 입력: `_sdd/implementation/IMPLEMENTATION_PLAN.md`, `_sdd/implementation/IMPLEMENTATION_REPORT.md`, `_sdd/implementation/implementation_review.md`, `_sdd/spec/logs/spec_review_report_canonical_model_rollout.md`
+
+#### v4.0.0 (2026-04-04)
+
+- **current canonical global spec model로 업그레이드**: `main.md`를 canonical 1~7 + appendix 구조로 재작성
+- **CIV 복구**: `Contract / Invariants / Verifiability`를 독립 표 구조로 추가하고 `_sdd/` artifact contract, wrapper/agent split, verification semantics를 명시
+- **Decision-bearing structure 분리**: 시스템 경계, ownership, cross-component contract, extension point, invariant hotspot을 별도 section으로 승격
+- **supporting file 역할 정리**: `components.md`를 reference-only 보조 문서로 명시하고, 전수형 code reference index를 strategic code map으로 축약
+- **usage guide 정렬**: `usage-guide.md`를 section 5 보조 문서로 재정렬하고 expected result를 current model 기준으로 보정
+- 백업: `_sdd/spec/prev/prev_main_20260404_015836.md`, `_sdd/spec/prev/prev_components_20260404_015836.md`, `_sdd/spec/prev/prev_usage-guide_20260404_015836.md`, `_sdd/spec/prev/prev_DECISION_LOG_20260404_015836.md`, `_sdd/spec/prev/prev_changelog_20260404_015836.md`
+- 입력: `docs/SDD_SPEC_DEFINITION.md`, `docs/SDD_WORKFLOW.md`
+
 #### v3.9.1 (2026-04-03)
 
 - **pr-spec-patch → pr-review 통합 반영**: pr-spec-patch 관련 잔존 참조 12+건 제거 (Category Overview, Artifact Map, PR 워크플로우, Directory Structure, Design Patterns, components.md, usage-guide.md, Code Reference Index)

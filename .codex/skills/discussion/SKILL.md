@@ -43,6 +43,8 @@ version: 1.1.0
 - 불명확하면 카테고리 수준에서 묻고, 최대 2라운드 안에 범위를 정한다.
 - 범위를 정하지 못하면 이유를 설명하고 중단한다.
 
+**Decision Gate 1 -> 2**: `topic_defined AND scope_clear` -> Step 2 진행. ELSE -> 보완 질문 (최대 2라운드).
+
 ### Step 2: Gather Context
 
 토픽 유형에 따라 필요한 맥락을 수집한다.
@@ -53,21 +55,46 @@ version: 1.1.0
 
 이후 짧은 context summary를 제시한다.
 
+**Decision Gate 2 -> 3**: `context_available AND topic_still_valid` -> Step 3 진행. 맥락 없으면 사용자에게 확인. 토픽 무효화 시 Step 1 복귀.
+
 ### Step 3: Run Iterative Discussion
 
-각 라운드에서 다음을 반복한다.
+#### 3.1 토론 루프 구조
 
-1. 핵심 분기 하나를 질문
-2. 답변과 수집 맥락을 연결해 정리
-3. 논점 / 결정 / 미결 질문 / action item을 갱신
+```
+내부 상태 추적:
+  key_points, decisions, open_questions, action_items, conversation_log
+  round = 0, MAX_ROUNDS = 10
 
-중간 요약은 필요할 때만 짧게 제시한다.
+WHILE round < MAX_ROUNDS:
+  round += 1
+  1. 현재 맥락 기반으로 probing question 생성
+  2. ask로 질문 제시 (옵션 3개 + "토론 종료")
+  3. 사용자 응답 분석 → 내부 상태 업데이트
+  4. 필요 시 mid-discussion 리서치 수행
 
-종료 조건:
+  IF 사용자가 "토론 종료" 선택 OR "정리해줘" 입력 → Gate 3→4
+```
 
-- 사용자가 `정리/종료`를 선택
-- 충분한 방향성이 확보됨
-- 최대 라운드 도달
+#### 3.2 질문 생성 전략
+
+초반(1-3) 범위/목표 확인 → 중반(4-6) 트레이드오프/대안 탐색 → 후반(7+) 합의/결정 확인. 옵션은 상호 배타적이고 포괄적으로 구성하며, 이미 답한 내용은 재질문하지 않는다.
+
+#### 3.3 Mid-Discussion Research
+
+토론 중 근거가 필요하면 리서치를 즉시 수행:
+
+| 트리거 | 액션 |
+|--------|------|
+| "추가 리서치 필요" 선택 | 웹/외부 자료 검색 |
+| 코드베이스 확인 필요 | 로컬 파일 탐색 |
+| 사실 확인 필요한 주장 | 공식 문서/1차 자료 확인 |
+
+독립적인 리서치 2건 이상이면 병렬 수행.
+
+#### 3.4 중간 상태 추적
+
+매 3라운드마다 (또는 사용자 요청 시) 핵심 논점/결정 사항/미결 질문/실행 항목 카운트를 중간 요약 테이블로 제시.
 
 **Gate 3→4**: 미결 질문(open_questions)을 확인한다.
 - 0건 → Step 4 진행
@@ -89,19 +116,52 @@ version: 1.1.0
 
 ## Output Contract
 
-기본 산출물:
+기본 산출물: `_sdd/discussion/discussion_<title>.md`
 
-- `_sdd/discussion/discussion_<title>.md`
+파일명은 영문 slug를 사용한다 (예: "인증 시스템 설계" -> `discussion_auth_system_design.md`). 소문자, 특수문자는 `_`로 대체, 최대 50자.
 
-최종 요약에는 최소한 아래가 포함되어야 한다.
+#### 요약 출력 형식
 
-- 날짜
-- 라운드 수
-- 핵심 논점
-- 결정 사항
-- open questions
-- action items
-- sources
+```markdown
+# 토론 요약: [토픽]
+
+**날짜**: YYYY-MM-DD
+**라운드 수**: N
+**참여 방식**: 구조화된 토론 (discussion skill)
+
+## 핵심 논점 (Key Discussion Points)
+1. [논점 1]: [요약]
+2. [논점 2]: [요약]
+
+## 결정 사항 (Decisions Made)
+| # | 결정 | 근거 | 관련 논점 |
+|---|------|------|----------|
+| 1 | ... | ... | ... |
+
+## 미결 질문 (Open Questions)
+- [ ] [질문 1]: [맥락]
+
+## 실행 항목 (Action Items)
+| # | 항목 | 우선순위 | 담당 |
+|---|------|---------|------|
+| 1 | ... | High/Medium/Low | ... |
+
+## 리서치 결과 요약 (Research Findings)
+- [수집 항목 1]: [핵심 발견]
+
+## 토론 흐름 (Discussion Flow)
+Round 1: [주제] → [결론/방향]
+...
+
+## 부록: 대화 로그 (Conversation Log)
+
+### Round 1
+**Q**: [질문 내용]
+**Options**: 1) ... 2) ... 3) ... 4) 토론 종료
+**A**: [사용자 응답 요약]
+**Follow-up**: [AI 분석/코멘트 요약]
+...
+```
 
 ## Error Handling
 

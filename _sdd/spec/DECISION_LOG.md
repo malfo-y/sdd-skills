@@ -1,5 +1,43 @@
 # Decision Log
 
+## 2026-04-04 - Upgrade global spec to current canonical SDD model (v3.9.1 -> v4.0.0 spec revision)
+
+### Context
+
+`_sdd/spec/main.md`는 이미 멀티파일 구조로 분리돼 있었지만, 본문 구조가 여전히 `Background / Core Design / Architecture / Component Details / Usage Guide` 중심의 legacy section map에 가까웠다. 특히 current canonical model이 요구하는 `Scope / Non-goals / Guardrails`, `Contract / Invariants / Verifiability`, `Decision-bearing structure`가 독립 section으로 고정돼 있지 않았고, component inventory와 code reference index가 본문/부록에서 과도하게 큰 비중을 차지했다.
+
+### Decision
+
+1. **`main.md`를 canonical global spec으로 재구성**: section 1~7과 appendix 구조를 current SDD spec definition에 맞춰 재배치
+2. **CIV 명시 복구**: `Contract`, `Invariants`, `Verifiability`를 독립 표 구조로 추가하고, `_sdd/` artifact contract, wrapper/agent split, autopilot verification semantics를 연결
+3. **Decision-bearing structure 분리**: 시스템 경계, ownership, cross-component contract, extension point, invariant hotspot을 별도 section으로 승격
+4. **supporting file 역할 재정의**: `components.md`는 reference-only supporting file로 유지하고, 전수형 code reference index는 strategic code map으로 축약
+5. **usage guide 정렬**: `usage-guide.md`를 section 5 보조 문서로 명시하고 expected result를 current canonical model 기준으로 보정
+6. **legacy path 보존**: `DECISION_LOG.md` uppercase 경로는 기존 링크와 이력 보존을 위해 유지
+
+### Rationale
+
+- current canonical model은 global spec을 thin decision document로 유지하고 inventory-heavy detail을 supporting reference로 내릴 것을 요구한다
+- 이 저장소는 코드보다 skill contract와 docs alignment가 핵심이므로, explicit CIV와 decision-bearing structure가 없으면 `spec-review`, `spec-update-*`, `sdd-autopilot` semantics가 다시 암묵화된다
+- 멀티파일 구조 자체는 이미 충분히 유효하므로, 이번 작업은 `spec-rewrite`가 아니라 in-place `spec-upgrade`가 적절했다
+- exhaustive code/file listing은 appendix-level strategic navigation hint로 축소하는 편이 current SDD definition과 더 잘 맞는다
+
+### Changes
+
+- `_sdd/spec/main.md` -- current canonical global spec structure로 전면 재작성
+- `_sdd/spec/components.md` -- reference-only 역할 명시, `spec-upgrade` 설명 갱신, strategic code map으로 축약
+- `_sdd/spec/usage-guide.md` -- section 5 보조 문서 역할과 expected result 정렬
+- `_sdd/spec/prev/prev_main_20260404_015836.md` -- 백업
+- `_sdd/spec/prev/prev_components_20260404_015836.md` -- 백업
+- `_sdd/spec/prev/prev_usage-guide_20260404_015836.md` -- 백업
+- `_sdd/spec/prev/prev_DECISION_LOG_20260404_015836.md` -- 백업
+
+### References
+
+- 정의 문서: `docs/SDD_SPEC_DEFINITION.md`
+- 워크플로우 문서: `docs/SDD_WORKFLOW.md`
+- 업그레이드 스킬: `.codex/skills/spec-upgrade/SKILL.md`
+
 ## 2026-04-03 - Spec rewrite: single-file to index + sub-file structure (v3.8.2 → v3.9.0)
 
 ### Context

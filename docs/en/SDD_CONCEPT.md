@@ -1,130 +1,71 @@
-# SDD Core Concept: Global Specs and Temporary Specs
+# SDD Concept
 
-This document explains the two-level spec model in SDD. The point is not to create more documents. The point is to separate long-lived truth from change execution.
+This document explains how SDD places information across layers.
 
-Related documents:
-- [SDD_SPEC_DEFINITION.md](SDD_SPEC_DEFINITION.md)
-- [SDD_WORKFLOW.md](SDD_WORKFLOW.md)
-- [sdd.md](sdd.md)
+## 1. Core layers
 
----
+| Layer | Role | Holds |
+|------|------|-------|
+| Global spec | repo-wide judgment layer | concept, boundaries, key decisions |
+| Temporary spec | execution blueprint for a change | delta, touchpoints, validation, plan |
+| Code/Test | actual behavior and detailed truth | implementation, runtime flow, detailed contract |
+| Guide/README/Refs | supporting explanation | usage examples, environment detail, reference information |
 
-## 1. What the Global Spec Is
+## 2. Role of the global spec
 
-The global spec is the project's Single Source of Truth. But it is no longer treated as a full implementation inventory.
+The global spec fixes how the repo should be understood, where scope ends, and which guardrails and key decisions must survive later changes.
 
-What the global spec preserves:
-- the problem and high-level concept
-- scope, non-goals, and guardrails
+It is responsible for:
+
+- background and high-level concept
+- scope / non-goals / guardrails
 - core design and key decisions
-- `Contract / Invariants / Verifiability`
-- decision-bearing structure
-- expected usage and outcomes
 
-In other words, the global spec is not "everything in the codebase written again." It is the durable reference that keeps humans and agents aligned.
+It is not the default home for:
 
-### What to Keep vs What Not to Force
+- feature-level usage guides
+- feature-level contract / validation detail
+- exhaustive inventory
+- explanations that can be recovered directly from code
 
-| Keep | Do not force as default body structure |
-|------|----------------------------------------|
-| high-level concept | full implementation inventory |
-| scope / non-goals / guardrails | exhaustive component narration |
-| key decisions | code copied into prose |
-| CIV | local implementation detail |
-| decision-bearing structure | low-signal file lists |
+## 3. Role of the temporary spec
 
----
+A temporary spec is the document for executing one change.
 
-## 2. What a Temporary Spec Is
+It is responsible for:
 
-A temporary spec is not a summary of the global spec. It is an execution blueprint for a change.
+- what changes now
+- which boundaries move
+- which contract / invariant delta exists
+- what gets touched
+- how the change will be verified
 
-Canonical seven sections:
-- Change Summary
-- Scope Delta
-- Contract/Invariant Delta
-- Touchpoints
-- Implementation Plan
-- Validation Plan
-- Risks / Open Questions
+So if the global spec is the repo-wide judgment layer, the temporary spec is the task-level blueprint.
 
-Its job is to:
-- fix the change boundary
-- make contract and invariant deltas explicit
-- expose the relevant code touchpoints
-- connect validation directly to the delta
+## 4. Role of guides
 
-That is why a temporary spec is closer to an execution artifact than a permanent reference.
+A guide is not a permanent extra spec layer. It is a companion surface created when needed.
 
----
+Good cases:
 
-## 3. Why the Two Spec Types Are Asymmetric
+- a feature flow needs fast explanation
+- a reviewer needs bounded context
+- a guide is faster than reconstructing everything from code alone
 
-Humans and LLMs do not need the same information density.
+A guide does not replace the global spec, and it does not turn the temporary spec into a permanent storage layer.
 
-- Humans need concept, scope, and guardrails first.
-- LLMs can inspect code quickly, so persistent prose does not need to explain every implementation detail.
-- Both still benefit from explicit contracts, invariants, verification, and strategic code-entry hints.
+## 5. Information placement rule
 
-So SDD intentionally adopts this asymmetry:
+When deciding where something belongs, use this order.
 
-- global spec: thin durable reference
-- temporary spec: delta- and execution-heavy blueprint
+1. Is it repo-wide judgment?
+2. Is it feature-level execution context?
+3. Is it supporting reference?
+4. Is it obvious from code?
 
----
+Rule of thumb:
 
-## 4. Lifecycle
-
-### Medium-Scale Path
-
-```text
-feature-draft -> implementation -> spec-update-done
-```
-
-- `feature-draft` creates the temporary spec and implementation plan together.
-- after implementation, `spec-update-done` syncs persistent truth back into the global spec
-
-### Large-Scale Path
-
-```text
-feature-draft -> spec-update-todo -> implementation-plan -> implementation -> implementation-review -> spec-update-done
-```
-
-- `spec-update-todo` can register planned persistent information in advance
-- `implementation-plan` expands delta and validation linkage into phases and tasks
-- `implementation-review` verifies the plan against actual implementation
-
----
-
-## 5. Artifact Types
-
-### Persistent Documents
-
-| Location | Role |
-|----------|------|
-| `_sdd/spec/` | global spec and supporting spec |
-| `_sdd/env.md` | environment and verification hints |
-| `_sdd/spec/decision_log.md` | durable decision records |
-
-### Execution Artifacts
-
-| Location | Role |
-|----------|------|
-| `_sdd/drafts/` | temporary spec drafts |
-| `_sdd/implementation/` | plans, progress, reports, reviews |
-| `_sdd/discussion/` | discussion handoffs |
-| `_sdd/guides/` | feature guides |
-
-Operating rule:
-- the normal path treats global spec sync as a skillchain operation
-- temporary specs and plans exist to drive execution, then get archived or absorbed into later steps
-
----
-
-## 6. Summary
-
-In one sentence:
-
-> The global spec fixes long-lived truth, and the temporary spec fixes the execution blueprint for the current change.
-
-This asymmetry is what lets SDD reduce drift without turning documentation into an implementation dump.
+- if it is close to 1, it belongs in the global spec
+- if it is close to 2, it belongs in a temporary spec or guide
+- if it is close to 3, it belongs in README or separate docs
+- if it is close to 4, code/test/review is the better home

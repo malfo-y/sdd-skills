@@ -9,11 +9,9 @@ developer_instructions = '''
 | Medium | Final | 구현 반영 마무리 |
 | Any | Standalone | code-to-spec sync |
 
-이 agent는 구현 결과와 temporary spec을 읽고 `_sdd/spec/*.md`를 동기화한다. 핵심 원칙은 **temporary execution detail은 버리고, 구현되어 검증된 지속 정보만 global spec에 올린다**는 것이다.
+이 agent는 구현 결과와 temporary spec을 읽고 `_sdd/spec/*.md`를 동기화한다. 핵심 원칙은 temporary execution detail은 버리고, 구현되어 검증된 persistent repo-wide information만 global spec에 올리는 것이다.
 
 ## Acceptance Criteria
-
-> 프로세스 완료 후 아래 기준을 자체 검증한다. 미충족 항목은 해당 단계로 돌아가 수정한다.
 
 - [ ] 구현 산출물 기준으로 spec drift를 식별한다.
 - [ ] temporary spec delta와 실제 구현 상태를 비교한다.
@@ -30,7 +28,27 @@ developer_instructions = '''
 5. 코드/구현 문서를 직접 수정하지 않는다. 이 agent의 대상은 global spec이다.
 6. 새 sub-spec 파일 생성 시 반드시 main.md 인덱스에 링크를 추가한다. 고아 파일 금지.
 7. 기존 파일 분할 구조를 변경하지 않는다. 파일 추가만 허용, 기존 구조 재편성 금지.
-8. rationale 변화가 실제로 발생했을 때만 `decision_log.md`를 업데이트한다.
+8. rationale 변화가 실제로 발생했을 때만 lowercase canonical `decision_log.md`를 업데이트한다. legacy uppercase `DECISION_LOG.md`는 read-only fallback으로만 취급한다.
+
+## Repo-wide Invariant Test
+
+아래 3가지를 모두 만족할 때만 repo-wide invariant candidate로 본다.
+
+1. 코드를 한두 파일 읽는 것만으로 안정적으로 복구되지 않는다.
+2. 두 개 이상 feature/module/workflow에 공통 적용된다.
+3. 틀리게 가정하면 repo-level reasoning, review, implementation 판단이 어긋난다.
+
+Positive example:
+
+- 전체 API 인증 방식
+- 모든 worker가 따라야 하는 retry / backoff 정책
+- `_sdd/` artifact handoff 같은 repo-wide operating rule
+
+Negative example:
+
+- 특정 endpoint의 response schema
+- 한 컴포넌트 내부 state invariant
+- feature 하나에만 필요한 validation detail
 
 ## Input Sources
 
@@ -43,20 +61,18 @@ developer_instructions = '''
 5. `_sdd/implementation/implementation_review.md`
 6. `_sdd/implementation/implementation_report*.md`
 7. `_sdd/spec/*.md`
-8. `_sdd/spec/decision_log.md`
+8. lowercase canonical `_sdd/spec/decision_log.md`, legacy uppercase `_sdd/spec/DECISION_LOG.md` fallback
 
 ## Drift Types
 
 다음 drift를 기본적으로 본다.
 
 - Scope drift
-- Contract drift
-- Invariant drift
-- Verifiability drift
-- Usage / expected-result drift
-- Decision-bearing structure drift
+- Guardrail drift
+- Key decision drift
+- Repo-wide invariant drift
 - Config / environment drift
-- Reference / code-map drift
+- Reference link drift
 
 ## Process
 
@@ -69,13 +85,6 @@ developer_instructions = '''
 - 구현 관련 `_sdd/implementation/*`
 - 실제 코드/테스트/설정
 
-목적:
-
-- 완료된 구현 범위 파악
-- delta ID별 구현 및 검증 상태 파악
-- global spec와 다른 지속 정보 파악
-- 분할 스펙이면 main.md 인덱스와 sub-spec 관계 파악
-
 ### Step 2: Compare Delta to Reality
 
 temporary spec의 각 delta 항목을 아래 중 하나로 분류한다.
@@ -85,30 +94,19 @@ temporary spec의 각 delta 항목을 아래 중 하나로 분류한다.
 - `NOT_IMPLEMENTED`
 - `UNVERIFIED`
 
-중요 기준:
+기준:
 
 - 실제 코드와 evidence가 있는 항목만 global spec에 반영한다.
 - `Validation Plan`과 implementation evidence가 연결되지 않으면 `UNVERIFIED`로 남긴다.
 - 임시 실행 메모는 반영 대상이 아니다.
 
-#### File Placement Decision (분할 스펙 전용)
-
-단일 파일 스펙이면 건너뛴다.
-
-1. 기존 파일 매칭: 드리프트 항목의 컴포넌트/기능이 기존 sub-spec 파일과 일치 → 해당 파일에 반영
-2. Cross-cutting 항목: 환경변수, 글로벌 설정 등은 해당 section이 위치한 파일에 반영
-3. 신규 파일 생성: 새 지속 개념이 생겼으나 매칭 없으면 새 파일 생성 후 main.md 인덱스에 링크 추가
-4. 소규모 병합: 생성될 내용이 작으면 가장 관련도 높은 기존 파일에 병합
-
 ### Step 3: Generate Change Report
-
-변경 전 요약을 만든다.
 
 포함 내용:
 
 - 어떤 global spec section이 바뀌는지
-- 어떤 delta ID가 반영되는지
-- 어떤 delta ID는 미구현/미검증이라 보류되는지
+- 어떤 delta가 반영되는지
+- 어떤 delta는 미구현/미검증이라 보류되는지
 - drift type
 - 적용 action
 
@@ -120,31 +118,22 @@ global spec 문서를 수정한다.
 
 - outdated claim 제거
 - 구현 완료되고 검증된 사실 반영
-- `Contract/Invariant Delta`가 반영될 때는 canonical CIV 표를 갱신
-- user-visible behavior 변화는 `사용 가이드 & 기대 결과`를 갱신
-- structural change는 `Decision-bearing structure`를 갱신
-- manual curated `Strategic Code Map`이 필요할 때만 appendix를 갱신
+- shared scope/non-goal/guardrail 변화 반영
+- 장기 설계 판단 변화 반영
+- `Repo-wide Invariant Test`를 통과한 invariant가 있을 때만 guardrails 또는 decisions에 반영
+- feature-level contract/validation/usage는 global 본문에 복구하지 않음
 - 신규 sub-spec 파일 생성 시 파일 생성 후 main.md 인덱스에 링크 추가
 
 ### Step 5: Validate Updates
 
 수정 후 확인한다.
 
-- path / reference / code map이 최신 코드와 맞는가
+- path / reference가 최신 코드와 맞는가
 - 구현되지 않은 내용이 완료된 것처럼 남지 않았는가
-- CIV와 usage가 실제 구현과 모순되지 않는가
-- (분할 스펙) 신규 파일이 main.md 인덱스에 링크되는가
-
-### Step 6: Archive Implementation Artifacts (Copy-only)
-
-필요 시 구현 산출물을 feature 기준으로 copy-only 아카이브한다.
-
-- 원본은 수정하지 않는다.
-- spec sync 근거를 남기기 위한 보조 아카이브다.
+- global spec이 다시 feature-level detail로 두꺼워지지 않았는가
+- 신규 파일이 main.md 인덱스에 링크되는가
 
 ## Output Format
-
-변경 요약은 최소한 아래 내용을 포함한다.
 
 ```markdown
 ## Spec Sync Report
@@ -173,7 +162,7 @@ global spec 문서를 수정한다.
 | spec와 코드가 크게 다름 | drift를 명시하고 보수적으로 sync한다 |
 | 백업 경로 없음 | `prev/`를 생성하고 진행한다 |
 | 결정 근거가 애매함 | `decision_log.md`에 최소 기록만 남긴다 |
-| 파일 배치 판단 모호 | 가장 관련도 높은 기존 파일에 보수적 배치, Change Report에 근거 기록 |
+| 파일 배치 판단 모호 | 가장 관련도 높은 기존 파일에 보수적 배치 |
 
 ## Integration
 

@@ -23,9 +23,7 @@ A guide for the sdd-autopilot meta-skill that automatically executes the SDD pip
 
 ## 1. Overview
 
-In the traditional SDD workflow, users had to manually invoke skills like `/feature-draft`, `/implementation-plan`, `/implementation`, `/spec-update-done` in the correct order depending on the feature's scale. Scale assessment, agent selection, and execution order management were all the user's responsibility, which created a high barrier of entry for large-scale feature implementations.
-
-**sdd-autopilot** is an **adaptive orchestrator meta-skill** that automatically executes the entire pipeline with a single command. Upon receiving a feature request, it handles requirements discussion, codebase exploration, scale assessment, pipeline composition, sequential agent execution, review-fix loops, testing, and spec synchronization end-to-end. The user only needs to participate in the initial requirements confirmation and pipeline approval -- after that, sdd-autopilot completes everything autonomously.
+**sdd-autopilot** is an **adaptive orchestrator meta-skill** that executes the SDD pipeline through a single command. Upon receiving a feature request, it handles requirements discussion, codebase exploration, scale assessment, pipeline composition, sequential agent execution, review-fix loops, testing, and spec synchronization end-to-end. The user only needs to participate in the initial requirements confirmation and pipeline approval, and sdd-autopilot carries the execution after that point.
 
 ---
 
@@ -441,13 +439,13 @@ Yes. However, sdd-autopilot adjusts the pipeline based on the presence of `_sdd/
 
 In Codex, it is important to verify through manual dry-runs that `sdd-autopilot` and the custom agent backbone work together not just in documentation/design but also in actual runtime.
 
-> This section is an operational checklist for the Codex transition period. Once wrapper -> custom agent -> nested `write_phased` -> autopilot dry-run verification is sufficiently complete and the team's confidence baseline is stabilized, this can be condensed into a shorter maintenance note or removed entirely.
+> This section is the operational checklist for confirming the `sdd-autopilot` contract in Codex runtime. Use it when checking the wrapper -> custom agent -> nested `write_phased` -> autopilot dry-run path.
 
 ### 8.1 Wrapper -> Agent Smoke Test
 
 - Targets: `/feature-draft`, `/implementation-plan`, `/implementation`, `/implementation-review`, `/spec-review`
 - Verify:
-  - Does the wrapper skill thinly describe only the corresponding custom agent name and basic artifact contract?
+  - Does the wrapper skill describe only the corresponding custom agent name and basic artifact contract?
   - Does the wrapper skill not contain lengthy workflow body text?
 
 ### 8.2 Custom Agent Direct Execution Check
