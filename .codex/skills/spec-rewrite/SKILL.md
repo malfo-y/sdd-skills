@@ -129,7 +129,7 @@ multi-file 분할이 필요할 때 축 선택:
 
 | 상황 | 대응 |
 |------|------|
-| spec 없음 | `/spec-create` 먼저 권장 |
+| spec 없음 | `$spec-create` 먼저 권장 |
 | 잘 구조화된 spec | 불필요한 rewrite를 피하고 개선점만 보고 |
 | split 후 링크 깨짐 | 경로 검증 후 수정 |
 | 범위가 너무 큼 | index 중심으로 나누고 점진적으로 rewrite |

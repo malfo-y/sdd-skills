@@ -47,7 +47,7 @@
 - only if it is not code-obvious, applies across multiple features/modules, and wrong assumptions would distort repo-level reasoning
 
 ### Feature-Level Guide
-- 특정 기능의 사용법, 구조, 리뷰 가이드가 필요하면 `/guide-create`로 생성할 수 있다.
+- 특정 기능의 사용법, 구조, 리뷰 가이드가 필요하면 `$guide-create`로 생성할 수 있다.
 
 ### Supporting References
 - docs, README, guide links

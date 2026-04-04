@@ -115,7 +115,7 @@ version: 1.9.0
 
 | 상황 | 대응 |
 |------|------|
-| spec 없음 | `/spec-create` 먼저 권장 |
+| spec 없음 | `$spec-create` 먼저 권장 |
 | 이미 thin model에 가까움 | 부족한 항목만 보강 |
 | canonical 후보 다수 | migration checkpoint에서 확인 |
 | 코드베이스 없음 | 문서 기반 업그레이드로 진행하고 근거 수준을 명시 |

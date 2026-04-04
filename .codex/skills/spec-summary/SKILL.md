@@ -152,7 +152,7 @@ temporary spec summary 기본 순서:
 
 | 상황 | 대응 |
 |------|------|
-| spec 없음 | `/spec-create` 먼저 권장 |
+| spec 없음 | `$spec-create` 먼저 권장 |
 | split spec 범위 불명확 | 후보를 제시하고 사용자 확인 |
 | 구현 문서 없음 | spec만 기준으로 요약하고 상태 신뢰도 낮음을 명시 |
 | global/temporary 판별 모호 | dominant purpose를 기준으로 판단하고 notes에 기록 |

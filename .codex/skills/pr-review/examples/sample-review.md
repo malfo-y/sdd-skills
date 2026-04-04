@@ -5,7 +5,7 @@
 - from-branch에 `_sdd/spec/`가 있으면 spec-based verification 포함
 - from-branch에 spec이 없으면 code-only mode로 진행
 
-> `pr-review`는 `_sdd/spec/`를 수정하지 않는다. 스펙 반영이 필요하면 리포트에 기록하고 후속으로 `/spec-update-todo`를 사용한다.
+> `pr-review`는 `_sdd/spec/`를 수정하지 않는다. 스펙 반영이 필요하면 리포트에 기록하고 후속으로 `$spec-update-todo`를 사용한다.
 
 ## Example A: from-branch spec 기반 리뷰
 
@@ -170,8 +170,8 @@ None
 
 1. [ ] refresh 경로 수정
 2. [ ] 미들웨어 테스트 추가
-3. [ ] 수정 후 `/pr-review` 재실행
-4. [ ] 머지 후 `/spec-update-todo`로 스펙 반영 검토
+3. [ ] 수정 후 `$pr-review` 재실행
+4. [ ] 머지 후 `$spec-update-todo`로 스펙 반영 검토
 
 ---
 
@@ -278,7 +278,7 @@ Codex:
 ## Next Steps
 
 1. [ ] 머지 진행
-2. [ ] 필요 시 `/spec-create` 또는 `/spec-update-todo` 검토
+2. [ ] 필요 시 `$spec-create` 또는 `$spec-update-todo` 검토
 
 ---
 

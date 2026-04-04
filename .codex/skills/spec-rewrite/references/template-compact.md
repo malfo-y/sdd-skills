@@ -14,7 +14,7 @@ Optional:
 - appendix code map
 - guide links
 - repo-wide invariant note inside guardrails or key decisions
-- feature-level guide 안내 (`/guide-create`로 생성 가능)
+- feature-level guide 안내 (`$guide-create`로 생성 가능)
 
 ## Temporary Spec Target Shape
 

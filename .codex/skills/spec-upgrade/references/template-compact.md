@@ -12,4 +12,4 @@ Optional:
 - guide links
 - appendix code map
 - repo-wide invariant note
-- feature-level guide 안내 (`/guide-create`로 생성 가능)
+- feature-level guide 안내 (`$guide-create`로 생성 가능)
