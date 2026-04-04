@@ -1,5 +1,85 @@
 # Decision Log
 
+## 2026-04-04 - Compact components reference surface (v4.1.0 -> v4.1.1 spec revision)
+
+### Context
+
+`_sdd/spec/components.md`는 이미 `main.md`에서 분리된 supporting surface였지만, 각 컴포넌트마다 Input/Output/Process/Dependencies/완료 이력을 길게 재서술하면서 reference 문서라기보다 mini-spec catalog에 가까워져 있었다. global main body를 얇게 줄인 뒤에도 `components.md`가 너무 두꺼우면, 결국 active spec surface 전체의 탐색 비용이 다시 커진다.
+
+### Decision
+
+1. **`components.md`를 compact reference catalog로 재작성**: 카테고리별 table에서 각 컴포넌트의 `Purpose / Why / Primary Source / Notes`만 유지
+2. **runtime 차이는 최소 note로만 보존**: wrapper -> agent, full skill, Claude-only 같은 탐색용 차이만 남김
+3. **상세 재복제 제거**: Input/Output/Process/Dependencies/완료 이력은 각 `SKILL.md`, agent 정의, 관련 artifact에서 찾도록 정리
+4. **strategic code map 유지**: 전수형 inventory 대신 navigation-critical path appendix는 계속 유지
+
+### Rationale
+
+- supporting surface는 main의 decision-bearing truth를 보조해야지, 또 다른 두꺼운 본문이 되면 안 된다
+- 컴포넌트별로 truly reference value가 높은 것은 `무엇을 하는가`, `왜 필요한가`, `어디를 먼저 봐야 하는가`다
+- 세부 step과 artifact shape는 원문 skill 문서가 authoritative source이므로, `components.md`에서 다시 길게 복제할 이유가 약하다
+- compact catalog는 신규 사용자와 유지보수자 모두에게 탐색 속도를 높여 준다
+
+### Changes
+
+- `_sdd/spec/main.md` -- v4.1.1로 version bump
+- `_sdd/spec/components.md` -- 284줄 -> 71줄 compact catalog로 재작성
+- `_sdd/spec/logs/spec-rewrite-plan.md` -- components compact rewrite addendum 추가
+- `_sdd/spec/logs/rewrite_report.md` -- 2차 리라이트 결과 반영
+- `_sdd/spec/logs/changelog.md` -- v4.1.1 이력 추가
+- `_sdd/spec/prev/prev_components_20260404_130827.md` -- 백업
+- `_sdd/spec/prev/prev_spec-rewrite-plan_20260404_130827.md` -- 백업
+- `_sdd/spec/prev/prev_rewrite_report_20260404_130827.md` -- 백업
+- `_sdd/spec/prev/prev_DECISION_LOG_20260404_130827.md` -- 백업
+- `_sdd/spec/prev/prev_changelog_20260404_130827.md` -- 백업
+
+### References
+
+- 리라이트 계획: `_sdd/spec/logs/spec-rewrite-plan.md`
+- 리라이트 결과: `_sdd/spec/logs/rewrite_report.md`
+- component source surface: `.claude/skills/`, `.claude/agents/`, `.codex/skills/`, `.codex/agents/`
+
+## 2026-04-04 - Rewrite global spec to thin mandatory core (v4.0.1 -> v4.1.0 spec revision)
+
+### Context
+
+`_sdd/spec/main.md`는 이미 current canonical model을 반영한 상태였지만, global main body가 다시 두꺼워진 상태였다. standalone `Contract / Invariants / Verifiability` 표, usage summary, decision-bearing structure 대형 표, reference/code-map appendix가 한 문서 안에 함께 들어오면서, definition 문서가 말하는 `개념 + 경계 + 결정` 중심의 thin global core보다 넓은 책임을 다시 떠안고 있었다.
+
+### Decision
+
+1. **`main.md`를 3개 mandatory core 중심으로 재압축**: `Background`, `Scope / Non-goals / Guardrails`, `Core Design and Key Decisions`만 numbered main body로 유지
+2. **repo-wide invariant는 별도 CIV 표 대신 guardrails/key decisions에 흡수**: global spec에 남아야 할 운영 규칙만 문장형으로 유지
+3. **usage/reference/detail surface는 supporting file로 명시적 하향**: `components.md`, `usage-guide.md`, `DECISION_LOG.md`, `logs/changelog.md`를 thin main 바깥의 supporting surface로 재정의
+4. **supporting file 도입부 정합성 보정**: 더 이상 존재하지 않는 `§5`, `§7`, appendix 참조를 제거
+5. **backup rule 유지**: rewrite 전 `prev_main_20260404_130259.md`, `prev_components_20260404_130259.md`, `prev_usage-guide_20260404_130259.md`, `prev_DECISION_LOG_20260404_130259.md`를 생성
+
+### Rationale
+
+- `docs/SDD_SPEC_DEFINITION.md`는 global spec의 mandatory core를 3개 섹션으로 제한하고, usage/reference/CIV/code-map을 기본 코어 밖 surface로 내리라고 정의한다
+- `docs/SDD_WORKFLOW.md` 역시 global spec은 모든 detail의 저장소가 아니라고 못 박고, feature/task/validation detail은 temporary 또는 supporting surface에서 다루도록 정리한다
+- 현재 저장소에서 truly repo-wide한 판단은 이미 충분히 정리돼 있으므로, 새 내용을 추가하는 것보다 main responsibility를 줄이는 편이 canonical fit에 더 가깝다
+- 구조 판단을 잃지 않으면서도 main token cost를 줄이면 사람과 AI 모두 기준 문서를 더 빠르게 읽을 수 있다
+
+### Changes
+
+- `_sdd/spec/main.md` -- v4.1.0 thin global spec으로 재작성 (257줄 -> 111줄)
+- `_sdd/spec/components.md` -- supporting surface 역할 문구 보정
+- `_sdd/spec/usage-guide.md` -- supporting surface 역할 문구 보정
+- `_sdd/spec/logs/spec-rewrite-plan.md` -- thin rewrite 계획 갱신
+- `_sdd/spec/logs/rewrite_report.md` -- 실행 결과 기록
+- `_sdd/spec/logs/changelog.md` -- v4.1.0 이력 추가
+- `_sdd/spec/prev/prev_main_20260404_130259.md` -- 백업
+- `_sdd/spec/prev/prev_components_20260404_130259.md` -- 백업
+- `_sdd/spec/prev/prev_usage-guide_20260404_130259.md` -- 백업
+- `_sdd/spec/prev/prev_DECISION_LOG_20260404_130259.md` -- 백업
+
+### References
+
+- 정의 문서: `docs/SDD_SPEC_DEFINITION.md`
+- 워크플로우 문서: `docs/SDD_WORKFLOW.md`
+- 리라이트 계획: `_sdd/spec/logs/spec-rewrite-plan.md`
+- 리라이트 결과: `_sdd/spec/logs/rewrite_report.md`
+
 ## 2026-04-04 - Upgrade global spec to current canonical SDD model (v3.9.1 -> v4.0.0 spec revision)
 
 ### Context

@@ -1,8 +1,8 @@
 # Usage Guide & Expected Results
 
-> 이 문서는 `main.md`의 §5를 보조하는 scenario-oriented reference다.
+> 이 문서는 [main.md](./main.md)에서 분리된 scenario-oriented supporting surface다.
 > 각 시나리오는 "어떤 entrypoint로 시작하고, 어떤 artifact와 observable result가 남아야 하는가"를 기준으로 정리한다.
-> 메인 스펙: [main.md](./main.md)
+> 메인 스펙의 thin core를 보조하며, usage/expected result detail은 여기서 다룬다.
 
 ---
 

@@ -2,6 +2,24 @@
 
 > 이 파일은 `_sdd/spec/main.md`의 버전별 변경 기록이다.
 
+#### v4.1.1 (2026-04-04)
+
+- **components compact rewrite**: `components.md`를 category-based compact catalog로 재작성 (`284줄 -> 71줄`)
+- **reference density 축소**: component별 Input/Output/Process/완료 이력 재복제를 제거하고 `Purpose / Why / Primary Source / Notes`만 유지
+- **platform note 분리**: wrapper/agent split, full-skill 예외, Claude-only feature를 별도 `Platform Notes` table로 정리
+- **strategic code map 유지**: 전수형 inventory는 늘리지 않고 navigation-critical appendix만 유지
+- 백업: `_sdd/spec/prev/prev_components_20260404_130827.md`, `_sdd/spec/prev/prev_spec-rewrite-plan_20260404_130827.md`, `_sdd/spec/prev/prev_rewrite_report_20260404_130827.md`, `_sdd/spec/prev/prev_DECISION_LOG_20260404_130827.md`, `_sdd/spec/prev/prev_changelog_20260404_130827.md`
+- 입력: `_sdd/spec/main.md`, `_sdd/spec/logs/spec-rewrite-plan.md`
+
+#### v4.1.0 (2026-04-04)
+
+- **global thin rewrite**: `main.md`를 3개 mandatory core 중심으로 재압축 (`257줄 -> 111줄`)
+- **standalone 상세 제거**: `Contract / Invariants / Verifiability`, usage summary, decision-bearing structure 대형 표, reference/code-map appendix를 main body에서 제거
+- **판단 기준 흡수 유지**: repo-wide invariant와 구조 판단은 `Guardrails`, `핵심 설계`, `주요 결정`에 압축 보존
+- **supporting surface 정합성 보정**: `components.md`, `usage-guide.md` 도입부에서 legacy `§5`, `§7`, appendix 참조 제거
+- 백업: `_sdd/spec/prev/prev_main_20260404_130259.md`, `_sdd/spec/prev/prev_components_20260404_130259.md`, `_sdd/spec/prev/prev_usage-guide_20260404_130259.md`, `_sdd/spec/prev/prev_DECISION_LOG_20260404_130259.md`
+- 입력: `docs/SDD_SPEC_DEFINITION.md`, `docs/SDD_WORKFLOW.md`, `_sdd/spec/logs/spec-rewrite-plan.md`
+
 #### v4.0.1 (2026-04-04)
 
 - **canonical rollout 후속 spec sync 반영**: `FD-05`~`FD-07` 구현 완료 사실을 active `_sdd/spec/` surface에 동기화
