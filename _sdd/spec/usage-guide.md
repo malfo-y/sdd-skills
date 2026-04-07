@@ -83,3 +83,21 @@
 **Expected Result:**
 - `_sdd/spec/summary.md` — Executive Summary + 기능 대시보드 + 권장 다음 단계
 - 토론 결과 — 결정사항/미결/실행항목 정리 (최대 10라운드)
+
+### Scenario 4: 회의 자료 통합 분석
+
+**Setup:**
+```bash
+# Codex 환경에서 실행
+```
+
+**Action:**
+```bash
+/meeting-analysis "<wiki|meet|calendar|doc 링크 또는 식별자>"
+```
+
+**Expected Result:**
+- 관련 VCGA wiki, Google Meet/Calendar, Google Docs 회의 자료를 연결한 분석 결과 생성
+- 기본 산출물 `_sdd/meeting-analysis/meeting_<slug>_<yyyy_mm_dd>.md` 저장
+- 결과물에 회의 식별 정보, source mapping, 통합 요약, 액션 아이템, 결정/열린 질문, 비평, 다음 액션 제안, sources 포함
+- 사용자가 존재 확인이나 자료 수집만 요청한 narrow mode에서는 저장 대신 실패/수집 결과와 후속 단서만 보고 가능

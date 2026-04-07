@@ -36,6 +36,7 @@
 | Component | Purpose | Why | Primary Source | Notes |
 |-----------|---------|-----|----------------|-------|
 | `discussion` | 구조화된 의사결정 토론을 진행한다 | 설계 선택과 open question을 추적 가능하게 만든다 | `.claude/skills/discussion/SKILL.md`<br>`.codex/skills/discussion/SKILL.md` | 풀 스킬. 양 플랫폼 모두 대화형 입력 사용 |
+| `meeting-analysis` | 회의 관련 자료를 연결해 통합 요약, 액션, 비평, 다음 액션 제안을 만든다 | 위키/캘린더/문서에 흩어진 회의 근거를 하나의 분석 artifact로 정리한다 | `.codex/skills/meeting-analysis/SKILL.md` | Codex 전용. 기본 출력은 `_sdd/meeting-analysis/meeting_<slug>_<yyyy_mm_dd>.md` |
 | `ralph-loop-init` | 장기 실행 프로세스용 자동화 디버그 루프를 만든다 | 반복 실험/테스트 환경을 표준화한다 | `.claude/agents/ralph-loop-init.md`<br>`.claude/skills/ralph-loop-init/SKILL.md` | wrapper -> agent 패턴 |
 | `git` | 변경을 의미 단위로 정리해 커밋/브랜치 작업을 돕는다 | AI가 만든 변경을 의도 단위로 정리해야 한다 | `.claude/skills/git/SKILL.md` | Claude Code 전용 |
 | `spec-snapshot` | 스펙 상태를 타임스탬프 스냅샷으로 보존한다 | 원본을 건드리지 않고 특정 시점 상태나 번역본을 관리한다 | `.claude/skills/spec-snapshot/SKILL.md`<br>`.codex/skills/spec-snapshot/SKILL.md` | snapshot/export 성격 |
@@ -49,6 +50,7 @@
 | Codex custom agent runtime | Codex는 `.codex/agents/`와 `.codex/config.toml`의 nested-agent 설정이 중요하다 | `.codex/agents/`, `.codex/config.toml` |
 | Full-skill exceptions | `sdd-autopilot`, `discussion`처럼 사용자 상호작용이 핵심인 surface는 풀 스킬로 유지된다 | 관련 `SKILL.md` |
 | Platform-only features | `git`, `second-opinion`은 Claude Code 전용이며, Codex parity 대상이 아니다 | 관련 `SKILL.md` |
+| Codex-only connector workflow | `meeting-analysis`는 현재 Codex 전용이며 `vcga-wiki`, Google Calendar, Google Drive capability를 전제로 한다 | `.codex/skills/meeting-analysis/` |
 
 ---
 

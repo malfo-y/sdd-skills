@@ -2,6 +2,14 @@
 
 > 이 파일은 `_sdd/spec/main.md`의 버전별 변경 기록이다.
 
+#### v4.1.2 (2026-04-07)
+
+- **meeting-analysis spec sync**: 새 Codex 스킬 `meeting-analysis`를 spec surface에 반영
+- **artifact path 반영**: `main.md`의 persistent handoff canonical path 목록에 `_sdd/meeting-analysis/` 추가
+- **component/usage reference 확장**: `components.md`에 `meeting-analysis` catalog entry와 Codex-only connector note 추가, `usage-guide.md`에 회의 자료 통합 분석 시나리오 추가
+- 백업: `_sdd/spec/prev/prev_main_20260407_180017.md`, `_sdd/spec/prev/prev_components_20260407_180017.md`, `_sdd/spec/prev/prev_usage-guide_20260407_180017.md`, `_sdd/spec/prev/prev_changelog_20260407_180017.md`
+- 입력: `.codex/skills/meeting-analysis/SKILL.md`
+
 #### v4.1.1 (2026-04-04)
 
 - **components compact rewrite**: `components.md`를 category-based compact catalog로 재작성 (`284줄 -> 71줄`)
