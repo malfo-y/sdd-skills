@@ -83,3 +83,19 @@ https://drive.google.com/file/d/1AbCdEfGhIjKlMnOp/view
 2. 메타데이터와 가능한 본문 텍스트를 읽는다.
 3. 제목/수정 시각/본문 단서로 Calendar와 위키를 역추적한다.
 4. 연결 confidence를 표시하면서 통합 요약을 만든다.
+
+## Example F: Wiki Input + Publish Child Page
+
+### User Input
+
+```text
+https://wiki.daumkakao.com/pages/viewpage.action?pageId=123456789
+이 회의 페이지 기준으로 관련 자료 모아서 정리하고, 결과를 이 페이지 하위 문서로도 붙여줘.
+```
+
+### Expected Flow
+
+1. wiki 페이지를 먼저 읽고 회의 식별 단서를 추출한다.
+2. Calendar/Docs/Drive 자료를 연결해 로컬 분석 문서를 완성한다.
+3. `vcga-wiki`의 Create workflow로 같은 부모 아래 child page를 생성한다.
+4. 결과 응답과 로컬 문서에 child page URL을 함께 남긴다.

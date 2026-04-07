@@ -1,7 +1,7 @@
 ---
 name: meeting-analysis
 description: This skill should be used when the user wants to gather and analyze meeting materials from VCGA wiki notes, Google Meet links, Google Calendar events, Google Docs meeting records, or Google Drive file URLs, then produce a merged summary, critique, and next actions.
-version: 0.1.1
+version: 0.1.3
 ---
 
 # meeting-analysis
@@ -40,6 +40,8 @@ VCGA 위키 회의록, Google Meet 링크, Google Calendar 이벤트, Google Doc
 8. 기본 출력은 항상 저장한다. 단, 사용자가 존재 확인 또는 자료 찾기만 명시적으로 요청하면 narrow mode로 처리하고 저장을 생략할 수 있다. 저장 위치는 사용자 지정 디렉토리를 우선하고, 없으면 `_sdd/meeting-analysis/meeting_<slug>_<date>.md`를 기본 경로로 사용한다.
 9. 기본 출력에는 비평과 다음 액션 제안까지 포함한다. 추가 리서치는 사용자가 요청할 때만 확장한다.
 10. 상충하는 정보가 있으면 판단을 서두르지 않고, 출처별 병렬 표기와 근거를 함께 제시한다.
+11. 전체 분석 문서를 저장할 때는 문서 제목 바로 아래에 `Original Source Links` 섹션을 두고, 확인된 Wiki/Calendar/Docs/Drive 원본 링크를 먼저 노출한다.
+12. wiki 페이지 입력이 있더라도 원격 wiki 하위 문서 생성은 기본값이 아니다. 사용자가 명시적으로 원할 때만 [`vcga-wiki`](/Users/hyunjoonlee/.agents/skills/vcga-wiki/SKILL.md)를 이용해 child page를 생성한다.
 
 ## Input Sources
 
@@ -60,8 +62,9 @@ VCGA 위키 회의록, Google Meet 링크, Google Calendar 이벤트, Google Doc
 - `summary`: 연결된 자료를 요약
 - `compare`: 위키와 미팅 기록의 공통점/차이점 정리
 - `critique`: 요약 + 비평 + 다음 액션 제안
+- `publish-child`: wiki 입력이 있을 때 분석 결과를 해당 wiki 페이지 하위 문서로 발행
 
-명시적 지시가 없으면 `summary` 이상으로 진행하고, 기본값은 `critique`다.
+명시적 지시가 없으면 `summary` 이상으로 진행하고, 기본값은 `critique`다. `publish-child`는 사용자가 명시적으로 요청했을 때만 수행한다.
 
 ## Routing
 
@@ -167,6 +170,17 @@ VCGA 위키 회의록, Google Meet 링크, Google Calendar 이벤트, Google Doc
 - 파일명은 `meeting_<slug>_<yyyy_mm_dd>.md`를 기본으로 사용한다.
 - 같은 회의의 기존 파일이 있으면 덮어쓰기보다 갱신/append 여부를 먼저 판단하고, 확신이 낮으면 사용자 확인을 받는다.
 
+### Step 7: Optional Wiki Child Publish
+
+`publish-child` 모드이거나 사용자가 "wiki 하위 문서로 붙여 달라"고 명시한 경우에만 수행한다.
+
+- wiki 입력에서 부모 page URL/page_id를 확정한다.
+- 로컬 분석 문서를 먼저 완성한 뒤, 그 내용을 child page 본문으로 사용한다.
+- child page 생성은 [`vcga-wiki`](/Users/hyunjoonlee/.agents/skills/vcga-wiki/SKILL.md)의 Create workflow로 수행한다.
+- child page 제목은 기본적으로 `회의 분석 - <meeting title> - <yyyy-mm-dd>` 형식을 사용하고, 같은 부모 아래 유사 제목이 이미 있으면 중복 여부를 먼저 확인한다.
+- 생성 성공 시 로컬 결과물에 child page URL을 함께 기록한다.
+- wiki 입력은 있었지만 사용자가 publish를 원하지 않으면 로컬 저장까지만 수행한다.
+
 ## Output Contract
 
 상세 형식은 `references/output-contract.md`를 따른다.
@@ -174,18 +188,21 @@ VCGA 위키 회의록, Google Meet 링크, Google Calendar 이벤트, Google Doc
 기본 산출물:
 
 - `_sdd/meeting-analysis/meeting_<slug>_<yyyy_mm_dd>.md`
+- 선택적으로 wiki child page URL / page id
 
 필수 섹션:
 
-1. 회의 식별 정보
-2. Source Mapping
-3. 통합 요약
-4. 액션 아이템
-5. 결정 사항 / 열린 질문
-6. 비평
-7. 다음 액션 제안
-8. 충돌/불일치 메모
-9. Sources
+1. Original Source Links
+2. 회의 식별 정보
+3. Source Mapping
+4. 통합 요약
+5. 액션 아이템
+6. 결정 사항 / 열린 질문
+7. 비평
+8. 다음 액션 제안
+9. 충돌/불일치 메모
+10. Sources
+11. Published To Wiki Child (optional)
 
 ## Error Handling
 
@@ -195,6 +212,7 @@ VCGA 위키 회의록, Google Meet 링크, Google Calendar 이벤트, Google Doc
 | Meet 링크만 있고 Calendar 매칭 실패 | Meet 코드, 제목 유사도 순으로 후보를 찾고, Docs 생성/수정 시각은 보조 힌트로만 사용한다 |
 | Docs/Drive 문서는 찾았지만 이벤트를 못 찾음 | 문서 단독 근거로 분석을 진행하고 confidence를 낮춤 |
 | Drive URL은 열렸지만 본문 추출이 약함 | 메타데이터와 파일명 중심으로 후보를 연결하고, 본문 신뢰도 저하를 명시 |
+| wiki child page 생성이 실패함 | 로컬 분석 문서는 유지하고, 실패 원인과 재시도에 필요한 부모 page 정보만 보고 |
 | 위키와 미팅 기록이 상충 | 출처별 병렬 표기, 판단 보류, 추가 확인 포인트 제시 |
 | 관련 자료가 하나도 없음 | 실패 원인과 시도한 fallback, 사용자가 추가로 줄 수 있는 단서 보고 |
 | 저장 위치 생성 실패 | 응답 본문에 동일 내용을 제공하고, 저장 실패 사유를 명시 |
