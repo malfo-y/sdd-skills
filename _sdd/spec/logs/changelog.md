@@ -2,13 +2,27 @@
 
 > 이 파일은 `_sdd/spec/main.md`의 버전별 변경 기록이다.
 
+#### v4.1.4 (2026-04-07)
+
+- **externalized skill cleanup**: 현재 저장소에서 제거된 독립 관리 스킬 참조를 active spec surface에서 제거
+- **current surface 정리**: `main.md`, `components.md`, `usage-guide.md`가 이 저장소가 직접 관리하는 skill/workflow만 설명하도록 정리
+- 백업: `_sdd/spec/prev/prev_main_20260407_184001.md`, `_sdd/spec/prev/prev_components_20260407_184001.md`, `_sdd/spec/prev/prev_usage-guide_20260407_184001.md`, `_sdd/spec/prev/prev_changelog_20260407_184001.md`
+- 입력: workspace 현재 상태
+
+#### v4.1.3 (2026-04-07)
+
+- **Codex connector workflow output path 변경**: 외부 connector 기반 분석 workflow의 기본 저장 경로를 작업 디렉토리 기준으로 정렬
+- **artifact path sync**: 관련 persistent handoff canonical path와 supporting surface의 기본 산출물 경로를 새 위치로 정렬
+- 백업: `_sdd/spec/prev/prev_main_20260407_182819.md`, `_sdd/spec/prev/prev_components_20260407_182819.md`, `_sdd/spec/prev/prev_usage-guide_20260407_182819.md`, `_sdd/spec/prev/prev_changelog_20260407_182819.md`
+- 입력: Codex connector workflow source
+
 #### v4.1.2 (2026-04-07)
 
-- **meeting-analysis spec sync**: 새 Codex 스킬 `meeting-analysis`를 spec surface에 반영
-- **artifact path 반영**: `main.md`의 persistent handoff canonical path 목록에 `_sdd/meeting-analysis/` 추가
-- **component/usage reference 확장**: `components.md`에 `meeting-analysis` catalog entry와 Codex-only connector note 추가, `usage-guide.md`에 회의 자료 통합 분석 시나리오 추가
+- **Codex connector workflow spec sync**: 새 외부 connector 기반 분석 workflow를 spec surface에 반영
+- **artifact path 반영**: 관련 persistent handoff canonical path와 supporting surface reference를 확장
+- **component/usage reference 확장**: component catalog와 usage scenario에 connector-backed 분석 흐름을 추가
 - 백업: `_sdd/spec/prev/prev_main_20260407_180017.md`, `_sdd/spec/prev/prev_components_20260407_180017.md`, `_sdd/spec/prev/prev_usage-guide_20260407_180017.md`, `_sdd/spec/prev/prev_changelog_20260407_180017.md`
-- 입력: `.codex/skills/meeting-analysis/SKILL.md`
+- 입력: Codex connector workflow source
 
 #### v4.1.1 (2026-04-04)
 
