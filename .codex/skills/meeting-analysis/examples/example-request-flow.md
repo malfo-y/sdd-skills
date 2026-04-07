@@ -67,3 +67,19 @@ https://meet.google.com/xyq-kzop-gta
 1. Meet 링크에서 이벤트와 관련 문서를 찾는다.
 2. 존재 여부와 후보 링크만 짧게 보고한다.
 3. 사용자가 요약을 추가로 요청하지 않으면 전체 분석 파일은 만들지 않는다.
+
+## Example E: Drive File URL Only
+
+### User Input
+
+```text
+https://drive.google.com/file/d/1AbCdEfGhIjKlMnOp/view
+이 회의 기록 기준으로 관련 자료 연결해서 정리해줘.
+```
+
+### Expected Flow
+
+1. Drive 파일 ID와 파일 유형을 식별한다.
+2. 메타데이터와 가능한 본문 텍스트를 읽는다.
+3. 제목/수정 시각/본문 단서로 Calendar와 위키를 역추적한다.
+4. 연결 confidence를 표시하면서 통합 요약을 만든다.

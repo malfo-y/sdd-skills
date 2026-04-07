@@ -1,20 +1,20 @@
 ---
 name: meeting-analysis
-description: This skill should be used when the user wants to gather and analyze meeting materials from VCGA wiki notes, Google Meet links, Google Calendar events, or Google Docs meeting records, then produce a merged summary, critique, and next actions.
-version: 0.1.0
+description: This skill should be used when the user wants to gather and analyze meeting materials from VCGA wiki notes, Google Meet links, Google Calendar events, Google Docs meeting records, or Google Drive file URLs, then produce a merged summary, critique, and next actions.
+version: 0.1.1
 ---
 
 # meeting-analysis
 
 ## Goal
 
-VCGA 위키 회의록, Google Meet 링크, Google Calendar 이벤트, Google Docs 회의록 문서 중 하나 이상을 입력으로 받아 관련 자료를 연결하고, 필요하면 추가 근거를 수집한 뒤 하나의 분석 결과로 정리한다. 기본 결과물은 회의별 요약 파일이며, 핵심 요약, 액션 아이템, 쟁점, 비평, 다음 액션 제안을 포함한다. 다만 사용자가 존재 확인이나 자료 수집만 명시적으로 요청하면 그 범위에서 멈출 수 있다.
+VCGA 위키 회의록, Google Meet 링크, Google Calendar 이벤트, Google Docs 회의록 문서, Google Drive 파일 URL 중 하나 이상을 입력으로 받아 관련 자료를 연결하고, 필요하면 추가 근거를 수집한 뒤 하나의 분석 결과로 정리한다. 기본 결과물은 회의별 요약 파일이며, 핵심 요약, 액션 아이템, 쟁점, 비평, 다음 액션 제안을 포함한다. 다만 사용자가 존재 확인이나 자료 수집만 명시적으로 요청하면 그 범위에서 멈출 수 있다.
 
 ## Acceptance Criteria
 
 > 완료 전 아래 기준을 자체 검증한다. 미충족 항목이 있으면 해당 단계로 돌아가 수정한다.
 
-- [ ] AC1: 입력 링크 유형(`wiki`, `meet`, `calendar`, `doc`, 복합 입력)을 판별했다.
+- [ ] AC1: 입력 링크 유형(`wiki`, `meet`, `calendar`, `doc`, `drive`, 복합 입력)을 판별했다.
 - [ ] AC2: 관련 회의 자료를 최소 1개 이상 수집했고, 수집 실패 시 실패 사유와 fallback 결과를 기록했다.
 - [ ] AC3: 수집 결과를 정규화된 evidence pack으로 정리했다.
 - [ ] AC4: 최종 산출물에 통합 요약, 액션 아이템, 비평, 다음 액션 제안, 출처가 포함되었다.
@@ -48,7 +48,8 @@ VCGA 위키 회의록, Google Meet 링크, Google Calendar 이벤트, Google Doc
 3. Google Meet URL
 4. Google Calendar event URL or event metadata
 5. Google Docs meeting notes URL
-6. 이미 저장된 회의 요약 파일이 있으면 그 파일
+6. Google Drive file URL
+7. 이미 저장된 회의 요약 파일이 있으면 그 파일
 
 ## Task Mode Detection
 
@@ -72,10 +73,11 @@ VCGA 위키 회의록, Google Meet 링크, Google Calendar 이벤트, Google Doc
 - `meet` 링크만 들어오면: Calendar 이벤트를 먼저 찾고, 그 이벤트 기준으로 Drive 문서와 위키를 연결한다.
 - `calendar` 링크만 들어오면: 해당 이벤트를 기준점으로 사용하고, 관련 Drive 문서와 위키를 찾는다.
 - `doc` 링크만 들어오면: 문서를 먼저 읽고, 제목/작성 시각으로 Calendar/위키를 역추적한다.
+- `drive` 링크만 들어오면: Drive 파일 메타데이터와 본문을 먼저 읽고, 제목/작성 시각/본문 단서로 Calendar/위키를 역추적한다.
 
 ### Multiple Inputs
 
-- `wiki + meet/calendar/doc`가 함께 들어오면: 먼저 같은 회의 이벤트를 고정하고, 그에 대응하는 위키와 문서를 붙인다.
+- `wiki + meet/calendar/doc/drive`가 함께 들어오면: 먼저 같은 회의 이벤트를 고정하고, 그에 대응하는 위키와 문서를 붙인다.
 - 서로 다른 회의로 보이는 후보가 섞이면: 상위 후보 2-3개와 근거를 제시하고 사용자 확인을 받는다.
 
 ## Process
@@ -83,6 +85,7 @@ VCGA 위키 회의록, Google Meet 링크, Google Calendar 이벤트, Google Doc
 ### Step 1: Normalize the Input
 
 - 링크/문자열 입력에서 URL 종류를 판별한다.
+- `docs.google.com/...`와 `drive.google.com/...`는 둘 다 Drive-backed document/file 입력으로 처리하되, Docs native 문서인지 일반 Drive 파일인지 구분한다.
 - 제목, 날짜, 시간, 시간대, Meet 코드 같은 직접 단서를 분리한다.
 - 이미 충분한 식별자가 있으면 후속 탐색 범위를 줄인다.
 
@@ -93,6 +96,13 @@ VCGA 위키 회의록, Google Meet 링크, Google Calendar 이벤트, Google Doc
 - `wiki`: `vcga-wiki`로 페이지 가져오기
 - `meet`/`calendar`: Calendar capability로 이벤트 식별
 - `doc`/`drive`: Google Drive capability로 문서 식별 및 내용 확보
+
+`drive` 입력 처리 원칙:
+
+- 가능한 한 URL에서 파일 ID를 추출해 메타데이터와 본문을 바로 확보한다.
+- Google Docs native 문서면 문서 본문을 읽는다.
+- 일반 Drive 파일이면 가능한 텍스트 표현을 우선 확보하고, 텍스트 추출이 약하면 그 사실을 confidence에 반영한다.
+- Drive 폴더 URL은 직접 입력으로 받더라도 단일 회의록 시작점으로는 취급하지 않고, 필요한 경우 후보 문서 목록 탐색으로만 사용한다.
 
 독립적인 소스 수집이 2건 이상이면 필요 시 서브에이전트를 사용한다.
 
@@ -124,7 +134,7 @@ VCGA 위키 회의록, Google Meet 링크, Google Calendar 이벤트, Google Doc
 
 - 시간 기준으로 1차 매칭한다.
 - 실패 시 `Meet 코드 -> 제목 유사도 -> 사용자 확인`을 적용한다.
-- Docs 생성/수정 시각은 독립 fallback 단계가 아니라 제목/시간 판단을 보강하는 힌트로만 사용한다.
+- Docs/Drive 파일의 생성/수정 시각은 독립 fallback 단계가 아니라 제목/시간 판단을 보강하는 힌트로만 사용한다.
 - 위키와 미팅 기록이 모두 있으면 공통 사실과 상충 사실을 분리한다.
 - 상충 사실은 출처별 병렬 표기로 유지한다.
 
@@ -183,7 +193,8 @@ VCGA 위키 회의록, Google Meet 링크, Google Calendar 이벤트, Google Doc
 |------|------|
 | 위키만 있고 시간 정보 부족 | 제목/본문 단서 기반으로 후보를 좁히고, 불확실하면 후보 제시 후 확인 |
 | Meet 링크만 있고 Calendar 매칭 실패 | Meet 코드, 제목 유사도 순으로 후보를 찾고, Docs 생성/수정 시각은 보조 힌트로만 사용한다 |
-| Docs 문서는 찾았지만 이벤트를 못 찾음 | 문서 단독 근거로 분석을 진행하고 confidence를 낮춤 |
+| Docs/Drive 문서는 찾았지만 이벤트를 못 찾음 | 문서 단독 근거로 분석을 진행하고 confidence를 낮춤 |
+| Drive URL은 열렸지만 본문 추출이 약함 | 메타데이터와 파일명 중심으로 후보를 연결하고, 본문 신뢰도 저하를 명시 |
 | 위키와 미팅 기록이 상충 | 출처별 병렬 표기, 판단 보류, 추가 확인 포인트 제시 |
 | 관련 자료가 하나도 없음 | 실패 원인과 시도한 fallback, 사용자가 추가로 줄 수 있는 단서 보고 |
 | 저장 위치 생성 실패 | 응답 본문에 동일 내용을 제공하고, 저장 실패 사유를 명시 |

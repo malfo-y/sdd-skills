@@ -5,7 +5,7 @@
 ## Required Fields
 
 ```yaml
-source_type: wiki | calendar | doc | meet
+source_type: wiki | calendar | doc | drive | meet
 source_url: string
 title: string
 event_time:
@@ -23,6 +23,7 @@ matching_hints:
   participants:
     - string
   created_or_updated_at: string | null
+  drive_file_type: string | null
 ```
 
 ## Guidance
