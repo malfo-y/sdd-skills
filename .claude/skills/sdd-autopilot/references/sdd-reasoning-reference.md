@@ -82,8 +82,8 @@ canonical 7섹션:
 
 ### 1.7 파이프라인 구성 원칙
 
-1. **Spec-first**: global spec이 없으면 구현 전에 `spec-create` 선행.
-2. **Delta-first for non-trivial changes**: 중규모 이상 변경은 temporary spec 또는 `feature-draft`를 선행.
+1. **Spec-optional**: global spec이 있으면 활용하고, 없으면 spec-less 모드로 진행한다. `spec-create`는 파이프라인 필수 선행이 아니라 사용자에게 추천하는 가이드 수준이다.
+2. **Delta-first for non-trivial changes**: 추가적인 계획이 필요한 모든 변경은 temporary spec 또는 `feature-draft`를 선행.
 3. **Review-fix 필수**: review만 하고 끝나지 않는다.
 4. **Execute -> Verify**: 에이전트 호출 != 완료. evidence까지 확인해야 한다.
 5. **파일 기반 handoff**: 상태 전달은 artifact 파일 경로 중심.
@@ -96,12 +96,13 @@ canonical 7섹션:
 ### 2.1 스킬 의존성 그래프
 
 ```text
-spec-create -> feature-draft -> spec-update-todo -> implementation-plan -> implementation -> implementation-review -> spec-update-done
+(spec-create) -> feature-draft -> spec-update-todo -> implementation-plan -> implementation -> implementation-review -> spec-update-done
                                                                                              |  (review-fix loop)
                                                                                    ralph-loop-init (장시간 테스트)
 ```
 
 `spec-review`는 파이프라인 끝이나 중간의 감사 단계로 선택적으로 추가한다.
+`spec-update-done`은 global spec이 없으면 수행하지 않는다.
 `spec-summary`와 `spec-rewrite`는 비오케스트레이션 보조 스킬이다.
 
 ### 2.2 오케스트레이션 대상 스킬

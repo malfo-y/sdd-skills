@@ -141,7 +141,7 @@ Step 1 내재화 + Step 2~3 결과를 바탕으로 추론한다.
 
 | 판단 항목 | 내용 |
 |-----------|------|
-| 스펙 상태 | global spec 존재 여부와 thin-core relevance 분석. 없으면 `_sdd/` bootstrap + later `spec-create/spec-update-*` 경로를 계획 |
+| 스펙 상태 | global spec 존재 여부와 thin-core relevance 분석. 없으면 spec-less 모드로 진행하되, 사용자에게 `spec-create`로 global spec을 만드는 것을 추천 |
 | 변경 범위 | temporary spec 필요 여부 / planned global update 필요 여부 |
 | 계획 깊이 | 직접 구현 / feature-draft / implementation-plan |
 | 검증 수준 | 인라인 테스트 / Ralph / review 포함 여부 |
@@ -149,7 +149,7 @@ Step 1 내재화 + Step 2~3 결과를 바탕으로 추론한다.
 | 특수 패턴 | 부분 파이프라인, 팬아웃 병렬, 재개 |
 
 spec-less mode 참고:
-- spec이 없으면 `spec-create`를 파이프라인 후반부(구현/리뷰 이후)에 배치한다. 코드가 먼저 존재해야 spec이 실제 구조를 반영할 수 있기 때문이다.
+- spec이 없으면 spec-less 모드로 진행한다. `spec-create`를 파이프라인에 자동 배치하지 않고, 사용자에게 구현 완료 후 global spec을 만드는 것을 추천한다. 코드가 먼저 존재해야 spec이 실제 구조를 반영할 수 있기 때문이다.
 - spec-less인 경우에도 feature-draft의 Part 1 temporary spec은 생성할 수 있다. global spec 없이도 delta 기반 reasoning은 가능하다.
 
 오케스트레이터 생성 규칙:
