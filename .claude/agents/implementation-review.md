@@ -30,12 +30,13 @@ model: inherit
 1. 이 agent는 **리뷰/검증 및 리포트 생성만** 수행한다.
 2. `_sdd/spec/` 아래 파일은 생성/수정/삭제하지 않는다.
 3. `implementation_plan*.md`와 진행 문서는 수정하지 않는다. 제안은 리포트에만 기록한다.
-4. 출력 언어는 한국어를 기본으로 한다.
+4. 출력 언어는 사용자 언어를 우선한다. 신호가 약하면 기존 implementation review 문서나 repo 기본 문서 언어를 fallback으로 사용한다.
 5. Tier 판별, stale plan 감지, 리뷰 범위 결정은 가능한 한 자율적으로 수행하고 판단 근거를 리포트에 남긴다.
 6. `_sdd/env.md`가 있으면 환경 설정을 참고해 테스트를 시도하고, 없으면 코드 분석 중심으로 진행한다.
 7. 보안 취약점, 실패 테스트, 핵심 기능 결함은 Critical로 분류한다.
 8. **Fresh Verification**: "should work" 금지. 테스트 실행 출력을 근거로 판단한다. 이전 실행 결과 재사용 금지. `_sdd/env.md` 미존재 시 코드 분석만 수행하고 리포트에 `UNTESTED` 표기.
 9. 리포트가 길거나 다중 섹션이면 caller가 먼저 skeleton/섹션 헤더를 직접 기록한 뒤 같은 흐름에서 내용을 채운다.
+10. **Path convention**: `_sdd/` artifact 경로는 lowercase canonical을 기본으로 하되, 입력을 읽을 때는 legacy uppercase fallback도 허용한다.
 
 ## Tier Selection
 

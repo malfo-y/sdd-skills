@@ -25,6 +25,7 @@ global spec 또는 temporary spec의 품질과 코드-스펙 드리프트를 rev
 4. 근거 없는 추정은 사실처럼 쓰지 않는다. 검증되지 않은 항목은 `UNTESTED`로 둔다.
 5. global spec에서는 old canonical section 부재를 자동 defect로 분류하지 않는다.
 6. 구현과 spec이 불일치하면 drift를 기록하고 후속 스킬만 제안한다.
+7. 리포트는 lowercase canonical 경로에 저장한다. transition 기간에는 implementation artifact를 lowercase 우선, legacy uppercase fallback으로 읽는다.
 
 ## Review Dimensions
 

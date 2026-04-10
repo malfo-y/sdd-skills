@@ -24,12 +24,12 @@ Part 1은 canonical temporary spec 7섹션을 직접 담고, Part 2는 그 delta
 1. `_sdd/spec/` 파일은 읽기만 한다. 이 agent는 스펙 파일을 직접 수정하지 않는다.
 2. 출력 파일은 반드시 `_sdd/drafts/` 아래에 저장한다.
 3. 기존 스펙/문서의 언어를 따르고, 스펙이 없으면 한국어를 기본으로 사용한다.
-4. global spec이 thin core만 가지고 있어도 정상으로 간주한다.
-5. 사용자가 모호하게 요청해도 멈추지 않고 best-effort로 진행한다. 저확신 항목은 `Risks / Open Questions`에 기록한다.
-6. 여러 관련 기능이 보여도 기본적으로 하나의 temporary spec으로 묶고, 분리 필요성은 `Risks / Open Questions`에 기록한다.
-7. Part 2의 모든 task에는 `**Target Files**`가 있어야 한다.
-8. `Target Files`에서 경로를 확정할 수 없으면 `[TBD] <reason>`를 사용한다.
-9. Part 1과 Part 2는 같은 delta 범위를 다뤄야 하며, validation linkage를 잃으면 안 된다.
+4. 결과 방향을 실질적으로 바꿀 수 있는 핵심 ambiguity가 있으면 질문 1회를 추가한다. 그 외 모호함은 best-effort로 진행하고 저확신 항목은 `Risks / Open Questions`에 기록한다.
+5. 여러 관련 기능이 보여도 기본적으로 하나의 temporary spec으로 묶고, 분리 필요성은 `Risks / Open Questions`에 기록한다.
+6. Part 2의 모든 task에는 `**Target Files**`가 있어야 한다.
+7. `Target Files`에서 경로를 확정할 수 없으면 `[TBD] <reason>`를 사용한다.
+8. Part 1과 Part 2는 같은 delta 범위를 다뤄야 하며, validation linkage를 잃으면 안 된다.
+9. `_sdd/` artifact 경로는 lowercase canonical을 기본으로 하되, 입력을 읽을 때는 legacy uppercase fallback도 허용한다.
 
 ## Required Output
 

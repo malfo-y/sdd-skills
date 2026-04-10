@@ -26,6 +26,7 @@ model: inherit
 5. 새 sub-spec 파일 생성 시 반드시 main.md 인덱스에 링크를 추가한다. 고아 파일 금지.
 6. 기존 파일 분할 구조를 변경하지 않는다. 파일 추가만 허용, 기존 구조 재편성 금지.
 7. rationale 변화가 실제로 발생했을 때만 `decision_log.md`를 업데이트한다.
+8. `_sdd/` artifact 경로는 lowercase canonical을 기본으로 하되, 입력을 읽을 때는 legacy uppercase fallback도 허용한다.
 
 ## Input Sources
 
