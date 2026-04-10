@@ -66,7 +66,7 @@ User Request
 ## Execution Profile Reference
 
 - step별 `model` / `reasoning_effort` 기본값과 조정 규칙은 `references/execution-profile-policy.md`를 따른다.
-- 기본 원칙은 품질 우선이며, small/simple 작업에서만 조건부 감등한다.
+- 기본 원칙은 고정 프로파일이며, 명시적 override가 없는 한 동일하게 적용한다.
 - 설계 단계, phase/task planning, final integration review는 실패 비용이 크므로 보수적으로 유지한다.
 - 실행 중 프로파일 변경이 필요하면 기존 agent를 재사용하지 말고 새로 `spawn_agent(...)` 한다.
 
@@ -102,7 +102,7 @@ autopilot 호출 시 기존 파이프라인 상태를 확인한다.
 - SDD 원칙 3개
 - 스킬 의존성 그래프
 - 파이프라인 구성 가이드라인
-- step별 execution profile 기본값과 예외 규칙
+- step별 execution profile 고정 기본값과 override 규칙
 - 테스트 전략 판단 기준
 - review-fix 및 final report 규칙
 
@@ -291,7 +291,7 @@ Phase 2 진입 후 `request_user_input`은 호출하지 않는다. 마일스톤 
 
 - `references/sdd-reasoning-reference.md`: SDD 철학, skill catalog, reasoning 기준
 - `references/orchestrator-contract.md`: 오케스트레이터/로그 최소 계약
-- `references/execution-profile-policy.md`: step별 모델/effort 기본값과 감등/승격 규칙
+- `references/execution-profile-policy.md`: step별 모델/effort 고정 기본값과 override 규칙
 - `examples/sample-orchestrator.md`: 중규모 기본형 + 대규모 차이점 예시
 
 ## Final Check

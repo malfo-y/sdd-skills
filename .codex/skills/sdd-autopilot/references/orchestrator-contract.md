@@ -20,6 +20,7 @@
   - 이 섹션을 사용할 때는 `references/execution-profile-policy.md`와 정합해야 한다.
   - 모든 step과 review-fix loop가 policy 기본값을 그대로 따를 때는 생략할 수 있다.
   - 이 섹션은 기본값 레이어다. step-level 또는 loop-level 프로파일이 있으면 더 좁은 범위의 선언이 우선한다.
+  - 기본 policy에서 벗어나는 선언은 사용자 요청이 있을 때만 허용한다.
   - 아래 중 하나라도 해당하면 명시를 권장하는 것이 아니라 사실상 필수로 본다.
     - policy 기본값에서 감등 또는 승격이 발생한다.
     - 같은 `agent_type`이라도 step별로 서로 다른 프로파일을 사용한다.
