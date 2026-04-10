@@ -56,7 +56,7 @@ Negative example:
 1. 실제 코드 변경
 2. `_sdd/drafts/*_feature_draft_*.md` (slug 기반 glob), `_sdd/drafts/feature_draft_<name>.md` (legacy fallback)
 3. `_sdd/implementation/*_implementation_plan_*.md` (slug 기반 glob), `_sdd/implementation/implementation_plan.md` (legacy fallback)
-4. `_sdd/implementation/implementation_progress.md`
+4. `_sdd/implementation/*_implementation_progress_*.md` (slug 기반 glob), `_sdd/implementation/implementation_progress.md` (legacy fallback)
 5. `_sdd/implementation/*_implementation_review_*.md` (slug 기반 glob), `_sdd/implementation/implementation_review.md` (legacy fallback)
 6. `_sdd/implementation/*_implementation_report_*.md` (slug 기반 glob), `_sdd/implementation/implementation_report*.md` (legacy fallback)
 7. `_sdd/spec/*.md`

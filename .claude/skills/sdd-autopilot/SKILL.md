@@ -143,7 +143,7 @@ Step 1 내재화 + Step 2~3 결과를 바탕으로 추론한다.
 |-----------|------|
 | 스펙 상태 | global spec 존재 여부와 thin-core relevance 분석. 없으면 spec-less 모드로 진행하되, 사용자에게 `spec-create`로 global spec을 만드는 것을 추천 |
 | 변경 범위 | temporary spec 필요 여부 / planned global update 필요 여부 |
-| 계획 깊이 | 직접 구현 / feature-draft / implementation-plan |
+| 계획 깊이 | small이면 직접 구현, non-trivial이면 기본적으로 `feature-draft`, large/complex 또는 phase 세분화가 필요하면 `feature-draft` 이후 `implementation-plan` 확장 |
 | 검증 수준 | 인라인 테스트 / Ralph / review 포함 여부 |
 | 스킬 순서 | 카탈로그 input/output/pre-condition 기반 |
 | 특수 패턴 | 부분 파이프라인, 팬아웃 병렬, 재개 |
@@ -151,6 +151,13 @@ Step 1 내재화 + Step 2~3 결과를 바탕으로 추론한다.
 spec-less mode 참고:
 - spec이 없으면 spec-less 모드로 진행한다. `spec-create`를 파이프라인에 자동 배치하지 않고, 사용자에게 구현 완료 후 global spec을 만드는 것을 추천한다. 코드가 먼저 존재해야 spec이 실제 구조를 반영할 수 있기 때문이다.
 - spec-less인 경우에도 feature-draft의 Part 1 temporary spec은 생성할 수 있다. global spec 없이도 delta 기반 reasoning은 가능하다.
+
+planning precedence 메모:
+- small direct path면 `implementation`으로 바로 간다.
+- non-trivial change의 기본 planning entry는 `feature-draft`다. single-phase medium path에서 Part 2가 충분히 명확하면 그대로 `implementation` 입력으로 사용한다.
+- `implementation-plan`은 `feature-draft` 이후 deeper breakdown이 필요하거나, large/complex 변경이거나, medium이라도 multi-phase execution gate가 필요한 경우에만 추가한다.
+- `spec-update-todo`는 planned persistent global alignment가 실제로 필요한 경우에만 `feature-draft`와 `implementation-plan` 사이에 조건부로 넣는다.
+- standalone `implementation-plan`은 기존 feature draft/temporary spec/기존 plan artifact가 이미 있고, 이를 phase/task 수준으로 보강하거나 재개해야 하는 예외 상황에서만 사용한다.
 
 오케스트레이터 생성 규칙:
 - 의존성 그래프 기반 동적 조합
@@ -228,11 +235,16 @@ Phase 2 진입 후 `request_user_input`은 호출하지 않는다. 마일스톤 
 - custom-agent step이면 오케스트레이터에 적힌 Claude `subagent_type`으로 호출한다.
 - 로컬 step이면 오케스트레이터에 적힌 skill 또는 명령을 실행한다.
 - step별 필드, 허용 `subagent_type`, Exit Criteria, Acceptance Criteria는 오케스트레이터 본문과 `references/orchestrator-contract.md`를 그대로 따른다.
+- `implementation-plan`이 multi-phase metadata를 제공하고 `Review-Fix Loop.scope = per-phase`면, autopilot은 phase를 실제 execution gate로 취급한다.
+- per-phase gate에서는 각 phase의 `goal`, `task set / dependency closure`, `validation focus`, `exit criteria`, `carry-over policy`를 읽고 해당 phase 범위의 `implementation -> review -> fix -> phase validation`을 먼저 닫은 뒤 다음 phase로 간다.
+- 현재 phase exit criteria가 충족되지 않으면 다음 phase로 넘어가지 않는다. `medium` 이슈도 기본적으로 exit blocker이며, carry-over는 현재 phase policy가 명시적으로 허용할 때만 로그와 근거를 남기고 진행한다.
 
 #### 7.3 Review-Fix Loop + 테스트 실행
 
 오케스트레이터에 `Review-Fix Loop`와 `Test Strategy` section이 있으면, autopilot은 그 선언을 그대로 집행한다.
-이 섹션에서 별도 loop 규칙이나 테스트 규칙을 다시 정의하지 않는다.
+- multi-phase path에서 `scope = per-phase`면 phase마다 review-fix와 validation을 수행하고, 마지막 phase 이후에는 `final integration review`를 반드시 1회 더 수행한다.
+- single-phase path이거나 `scope = global`이면 기존 global review-fix loop를 유지한다.
+- 이 섹션에서 별도 loop 규칙이나 테스트 규칙을 다시 정의하지 않는다.
 
 #### 7.4 에러 핸들링
 

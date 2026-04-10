@@ -21,6 +21,7 @@ version: 2.2.0
 - [ ] `_sdd/implementation/<YYYY-MM-DD>_implementation_plan_<slug>.md`가 생성된다.
 - [ ] 모든 task에 `**Target Files**`가 포함된다.
 - [ ] `Contract/Invariant Delta`와 `Validation Plan` linkage가 plan에 보존된다.
+- [ ] 각 phase에 `goal`, `task set / dependency closure`, `validation focus`, `exit criteria`, `carry-over policy`가 포함된다. single-phase plan도 동일 metadata를 가진 1개 phase로 표현한다.
 - [ ] phase, dependency, risk, open question이 빠지지 않는다.
 - [ ] `_sdd/spec/`는 읽기만 하고 직접 수정하지 않는다.
 
@@ -34,6 +35,8 @@ version: 2.2.0
 6. spec 변경이 필요해 보이면 plan의 `Open Questions`에 기록하고 `spec-update-todo` 후속 사용을 제안한다.
 7. 결과 파일은 lowercase canonical 경로에 저장한다. transition 기간에는 legacy uppercase artifact를 입력 fallback으로 허용한다.
 8. `feature-draft` Part 2가 이미 충분히 명확하면 plan 전체를 다시 쓰지 말고 unresolved dependency나 phase detail만 보강한다.
+9. non-trivial planning의 기본 진입은 `feature-draft`다. `implementation-plan`은 `feature-draft` 이후 deeper breakdown 단계로 사용하고, standalone usage는 동등한 temporary spec/기존 plan artifact가 이미 있을 때만 허용한다.
+10. multi-phase plan이면 phase metadata를 반드시 명시한다. `medium` 이슈도 기본적으로 phase exit blocker이며, carry-over는 explicit policy가 있을 때만 허용한다.
 
 ## Input Sources
 
@@ -164,6 +167,18 @@ Phase 전략 선택:
 2. 테이블 기준으로 최적 전략 자동 선택
 3. 선택 근거를 Plan에 기록
 
+Phase gate metadata 규칙:
+
+- single-phase plan도 최소 1개의 phase block으로 표현한다.
+- 각 phase는 아래 5개 필드를 반드시 가진다.
+  - `Goal`
+  - `Task Set / Dependency Closure`
+  - `Validation Focus`
+  - `Exit Criteria`
+  - `Carry-over Policy`
+- `Exit Criteria`는 가능하면 관련 `C*`, `I*`, `V*` linkage를 참조하는 검증 가능한 문장으로 작성한다.
+- 기본 `Carry-over Policy`는 `None`이다. 별도 예외를 열지 않으면 `critical/high/medium` 이슈는 phase exit를 막는다.
+
 ### Step 6: Map Dependencies and Parallelism
 
 dependency를 정리한다.
@@ -174,6 +189,11 @@ dependency를 정리한다.
 - delta/validation sequencing
 
 병렬 가능성은 `Target Files` 겹침과 의미적 충돌 기준으로 판단한다.
+
+추가 규칙:
+
+- phase 순서는 autopilot이 소비할 execution gate source가 된다.
+- phase를 나눴다면 각 phase가 어떤 task set과 dependency closure를 닫는지 분명히 적는다.
 
 ### Step 7: Write the Plan
 
@@ -193,6 +213,21 @@ dependency를 정리한다.
 ## Parallel Execution Summary
 ## Risks and Mitigations
 ## Open Questions
+```
+
+Phase 템플릿:
+
+```markdown
+### Phase N: [name]
+**Goal**: ...
+**Tasks**: T1, T2
+**Task Set / Dependency Closure**: 현재 phase에서 닫히는 선행조건과 산출물
+**Validation Focus**: V1, V2
+**Exit Criteria**:
+- [ ] ...
+**Carry-over Policy**:
+- Default: `None` (`critical/high/medium` block)
+- Allowed Exception: ...
 ```
 
 Task 템플릿:
@@ -227,8 +262,10 @@ Task 템플릿:
 
 ## Integration
 
-- `feature-draft`: Part 2가 task 25개 이하, delta coverage complete, phase/dependency가 명확하면 별도 implementation-plan 없이 `implementation` 입력으로 충분할 수 있다.
+- `feature-draft`: non-trivial planning의 기본 진입점이다. Part 2가 task 25개 이하, delta coverage complete, phase/dependency가 명확하면 별도 implementation-plan 없이 `implementation` 입력으로 충분할 수 있다.
+- standalone `implementation-plan`: 기존 feature draft, temporary spec, 재개용 implementation artifact가 이미 있을 때만 예외적으로 사용한다.
 - `implementation`: 이 plan을 직접 실행
+- `implementation`: phase metadata를 execution gate로 소비한다.
 - `implementation-review`: task/AC 검증 기준
 - `spec-update-todo`: spec gap 후속 반영
 

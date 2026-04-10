@@ -19,7 +19,7 @@ version: 2.0.0
 > 프로세스 완료 후 아래 기준을 자체 검증한다. 미충족 항목은 해당 단계로 돌아가 수정한다.
 
 - [ ] plan을 읽고 실행 가능한 task 단위로 파싱한다.
-- [ ] `_sdd/implementation/implementation_progress.md`를 갱신한다.
+- [ ] `_sdd/implementation/<YYYY-MM-DD>_implementation_progress_<slug>.md`를 갱신한다.
 - [ ] Target Files 기반 병렬/순차 실행 판단이 가능하다.
 - [ ] 테스트/검증/리포트까지 포함한 구현 사이클이 완료된다.
 
@@ -89,7 +89,7 @@ plan이 없으면 `implementation-plan` 또는 `feature-draft` 후속 사용을 
 
 ### Step 2: Initialize Task Tracking
 
-`_sdd/implementation/implementation_progress.md`에 tracking row를 만든다.
+`_sdd/implementation/<YYYY-MM-DD>_implementation_progress_<slug>.md`에 tracking row를 만든다.
 
 기본 필드:
 - task_id

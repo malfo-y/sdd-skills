@@ -49,7 +49,7 @@ global summary는 현재 thinner global model을 반영해야 한다. 즉 글로
 1. 사용자 지정 spec 경로
 2. `_sdd/spec/main.md` 또는 프로젝트 index spec
 3. index spec이 가리키는 sub-spec 파일
-4. `_sdd/implementation/implementation_progress*.md`
+4. `_sdd/implementation/*_implementation_progress_*.md` (slug 기반 glob), `_sdd/implementation/implementation_progress.md` (legacy fallback)
 5. `_sdd/implementation/*_implementation_review_*.md` (slug 기반 glob), `_sdd/implementation/implementation_review.md` (legacy fallback)
 6. `README.md` (README sync 요청 시만)
 7. `_sdd/env.md` (로컬 검증이 필요할 때만)

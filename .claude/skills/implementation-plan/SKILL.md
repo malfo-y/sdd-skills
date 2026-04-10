@@ -21,18 +21,22 @@ version: 2.2.0
 - [ ] `_sdd/implementation/<YYYY-MM-DD>_implementation_plan_<slug>.md`가 생성된다.
 - [ ] 모든 task에 `**Target Files**`가 포함된다.
 - [ ] `Contract/Invariant Delta`와 `Validation Plan` linkage가 plan에 보존된다.
+- [ ] 각 phase에 `goal`, `task set / dependency closure`, `validation focus`, `exit criteria`, `carry-over policy`가 포함된다. single-phase plan도 동일 metadata를 가진 1개 phase로 표현한다.
 - [ ] phase, dependency, risk, open question이 빠지지 않는다.
 - [ ] `_sdd/spec/`는 읽기만 하고 직접 수정하지 않는다.
 
 ## Hard Rules
 
 1. 이 agent는 스펙을 입력으로 읽을 수 있지만 `_sdd/spec/` 파일은 수정하지 않는다.
-2. 결과 방향을 실질적으로 바꿀 수 있는 핵심 ambiguity가 있으면 질문 1회를 추가한다. 그 외 부족한 정보는 deterministic defaults로 진행한다.
+2. 구조, task boundary, target files, verification 전략을 실질적으로 바꾸는 핵심 ambiguity면 질문 1회를 추가한다. 그 외 부족 정보는 deterministic defaults로 진행한다.
 3. 모든 task는 action-oriented title, acceptance criteria, target files, dependencies를 가져야 한다.
 4. `Contract/Invariant Delta`와 `Validation Plan`의 ID linkage를 plan에서 잃으면 안 된다.
 5. 언어는 기존 스펙/문서의 언어를 따른다. 스펙이 없으면 한국어를 기본으로 사용한다.
 6. spec 변경이 필요해 보이면 plan의 `Open Questions`에 기록하고 `spec-update-todo` 후속 사용을 제안한다.
 7. 결과 파일은 lowercase canonical 경로에 저장한다. transition 기간에는 legacy uppercase artifact를 입력 fallback으로 허용한다.
+8. `feature-draft` Part 2가 이미 충분히 명확하면 plan 전체를 다시 쓰지 말고 unresolved dependency나 phase detail만 보강한다.
+9. non-trivial planning의 기본 진입은 `feature-draft`다. `implementation-plan`은 `feature-draft` 이후 deeper breakdown 단계로 사용하고, standalone usage는 동등한 temporary spec/기존 plan artifact가 이미 있을 때만 허용한다.
+10. multi-phase plan이면 phase metadata를 반드시 명시한다. `medium` 이슈도 기본적으로 phase exit blocker이며, carry-over는 explicit policy가 있을 때만 허용한다.
 
 ## Input Sources
 
@@ -60,6 +64,14 @@ version: 2.2.0
 - `[C]` Create, `[M]` Modify, `[D]` Delete
 - 읽기 전용 참조 파일은 포함하지 않는다.
 - 동일 파일이 여러 task에 반복되면 병렬 충돌 가능성을 고려해 phase/dependency를 조정한다.
+- 파일이 달라도 아래 패턴이면 의미적 충돌로 본다.
+  1. 한 task가 만드는 모델/타입을 다른 task가 import한다.
+  2. 두 task가 모두 DB migration을 만든다.
+  3. 두 task가 같은 config/env 값을 가정한다.
+  4. 한 task가 정의한 API contract를 다른 task가 소비한다.
+  5. 두 task가 같은 상수/타입을 다른 값으로 가정한다.
+- 의미적 충돌 가능성이 있으면 같은 phase에 두거나 명시적 dependency를 추가한다.
+- 판단 확신이 낮으면 병렬보다 순차/의존성 보강이 우선이다.
 
 ## Process
 
@@ -78,7 +90,7 @@ version: 2.2.0
 필요 시 아래를 읽는다.
 
 - `_sdd/spec/*.md`
-- `_sdd/spec/decision_log.md`
+- lowercase canonical `_sdd/spec/decision_log.md`, legacy uppercase `_sdd/spec/DECISION_LOG.md` fallback
 - `_sdd/drafts/*_feature_draft_*.md` (slug 기반 glob), `_sdd/drafts/feature_draft_<name>.md` (legacy fallback)
 - 관련 코드/테스트/설정 파일
 
@@ -131,6 +143,7 @@ task를 나눌 때 원칙:
 - file overlap이 적도록 자른다.
 - setup/common groundwork는 별도 task로 분리한다.
 - `Technical Notes`에 관련 `C*`, `I*`, `V*` 링크를 남긴다.
+- 작은 delta는 compact linkage만 유지하고, 형식적 세분화를 위해 task나 CIV 표를 불필요하게 늘리지 않는다.
 
 ### Test Coverage Mapping (조건부)
 
@@ -154,6 +167,18 @@ Phase 전략 선택:
 2. 테이블 기준으로 최적 전략 자동 선택
 3. 선택 근거를 Plan에 기록
 
+Phase gate metadata 규칙:
+
+- single-phase plan도 최소 1개의 phase block으로 표현한다.
+- 각 phase는 아래 5개 필드를 반드시 가진다.
+  - `Goal`
+  - `Task Set / Dependency Closure`
+  - `Validation Focus`
+  - `Exit Criteria`
+  - `Carry-over Policy`
+- `Exit Criteria`는 가능하면 관련 `C*`, `I*`, `V*` linkage를 참조하는 검증 가능한 문장으로 작성한다.
+- 기본 `Carry-over Policy`는 `None`이다. 별도 예외를 열지 않으면 `critical/high/medium` 이슈는 phase exit를 막는다.
+
 ### Step 6: Map Dependencies and Parallelism
 
 dependency를 정리한다.
@@ -164,6 +189,11 @@ dependency를 정리한다.
 - delta/validation sequencing
 
 병렬 가능성은 `Target Files` 겹침과 의미적 충돌 기준으로 판단한다.
+
+추가 규칙:
+
+- phase 순서는 autopilot이 소비할 execution gate source가 된다.
+- phase를 나눴다면 각 phase가 어떤 task set과 dependency closure를 닫는지 분명히 적는다.
 
 ### Step 7: Write the Plan
 
@@ -183,6 +213,21 @@ dependency를 정리한다.
 ## Parallel Execution Summary
 ## Risks and Mitigations
 ## Open Questions
+```
+
+Phase 템플릿:
+
+```markdown
+### Phase N: [name]
+**Goal**: ...
+**Tasks**: T1, T2
+**Task Set / Dependency Closure**: 현재 phase에서 닫히는 선행조건과 산출물
+**Validation Focus**: V1, V2
+**Exit Criteria**:
+- [ ] ...
+**Carry-over Policy**:
+- Default: `None` (`critical/high/medium` block)
+- Allowed Exception: ...
 ```
 
 Task 템플릿:
@@ -210,15 +255,17 @@ Task 템플릿:
 | 상황 | 대응 |
 |------|------|
 | spec 없음 | codebase 기반 plan 생성, 한계를 `Open Questions`에 적는다 |
-| user input 모호 | best-effort defaults를 적용하고 가정을 남긴다 |
+| user input 모호 | 방향을 바꿀 핵심 ambiguity면 질문 1회 후 defaults를 적용하고 가정을 남긴다 |
 | 파일 경로 불명확 | `[TBD]`를 사용하고 사유를 남긴다 |
 | task가 너무 많음 | phase로 나누고 overview/index를 유지한다 |
 | spec 갭 발견 | plan 수정으로 덮지 말고 `Open Questions`에 기록한다 |
 
 ## Integration
 
-- `feature-draft`: temporary spec + 구현 계획 입력 원천
+- `feature-draft`: non-trivial planning의 기본 진입점이다. Part 2가 task 25개 이하, delta coverage complete, phase/dependency가 명확하면 별도 implementation-plan 없이 `implementation` 입력으로 충분할 수 있다.
+- standalone `implementation-plan`: 기존 feature draft, temporary spec, 재개용 implementation artifact가 이미 있을 때만 예외적으로 사용한다.
 - `implementation`: 이 plan을 직접 실행
+- `implementation`: phase metadata를 execution gate로 소비한다.
 - `implementation-review`: task/AC 검증 기준
 - `spec-update-todo`: spec gap 후속 반영
 
@@ -230,6 +277,5 @@ Task 템플릿:
 
 Acceptance Criteria가 모두 만족되었나 검증한다. 미충족 항목이 있으면 해당 단계로 돌아가 수정한다.
 
-> **Mirror Notice**: 이 스킬의 본문은 `.claude/agents/implementation-plan.md`의 복사본이다.
-> 사용자가 직접 호출할 때 중간 과정의 가시성을 확보하기 위해 복붙되었다.
-> 내용을 수정할 때는 agent 파일과 이 스킬 파일을 **반드시 함께** 수정해야 한다.
+> **Sync Notice**: `.claude/skills/implementation-plan/SKILL.md`와 `.claude/agents/implementation-plan.md`는 같은 계약을 유지한다.
+> 사용자가 직접 호출할 때와 autopilot이 내부 agent를 호출할 때 의미 drift가 생기지 않도록 한쪽 수정 시 다른 쪽도 함께 동기화한다.

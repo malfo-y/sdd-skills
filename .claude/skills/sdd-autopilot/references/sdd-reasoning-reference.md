@@ -105,22 +105,31 @@ canonical 7섹션:
 `spec-update-done`은 global spec이 없으면 수행하지 않는다.
 `spec-summary`와 `spec-rewrite`는 비오케스트레이션 보조 스킬이다.
 
+### 2.1.1 Planning precedence by scale
+
+- **Small direct path**: 바로 `implementation`으로 간다. feature-level delta가 작고 single-pass 검증이면 `feature-draft`와 `implementation-plan`을 생략할 수 있다.
+- **Single-phase medium path**: 기본 진입은 `feature-draft`다. Part 2가 task/dependency/validation 측면에서 충분히 명확하면 `implementation-plan` 없이 `implementation`으로 바로 연결한다.
+- **Multi-phase medium / large expanded path**: `feature-draft`로 temporary spec을 고정한 뒤, planned persistent global alignment가 필요할 때만 `spec-update-todo`를 조건부로 추가하고, 실제 phase/task 세분화가 필요하면 `implementation-plan`으로 확장한다.
+- **Phase-gated execution rule**: medium 이상에서 multi-phase plan이 생성되면 `Review-Fix Loop.scope = per-phase`를 기본값으로 본다. 각 phase는 `implementation -> review -> fix -> phase validation`을 닫아야 하며 마지막에 `final integration review`를 1회 더 수행한다.
+- **Carry-over default**: `medium` 이슈도 기본적으로 phase exit blocker다. carry-over는 plan과 orchestrator에 정책과 근거가 명시된 경우에만 허용한다.
+- **Standalone implementation-plan exception**: 기존 feature draft, temporary spec, 구현 재개용 plan artifact가 이미 있고 phase/task detail만 더 필요할 때만 허용한다.
+
 ### 2.2 오케스트레이션 대상 스킬
 
 #### feature-draft
 - **Agent(subagent_type="feature-draft")**
 - Role: temporary spec draft + implementation plan 통합 생성
-- Reasoning note: feature-level execution surface를 먼저 고정한다.
+- Reasoning note: non-trivial change의 기본 planning entry다. feature-level execution surface를 먼저 고정한다. single-phase medium path에서 Part 2가 충분히 명확하면 별도 implementation-plan 없이도 implementation 입력으로 쓸 수 있다.
 
 #### spec-update-todo
 - **Agent(subagent_type="spec-update-todo")**
 - Role: planned persistent global change 반영
-- Reasoning note: temporary execution detail은 global에 올리지 않는다.
+- Reasoning note: temporary execution detail은 global에 올리지 않는다. complex planned global alignment가 실제로 필요할 때만 조건부로 사용한다.
 
 #### implementation-plan
 - **Agent(subagent_type="implementation-plan")**
 - Role: temporary spec delta를 phase/task 중심 계획으로 세분화
-- Reasoning note: task와 validation linkage를 정리한다.
+- Reasoning note: `feature-draft` 이후 phase/task/validation linkage를 강화하는 확장 단계다. `feature-draft` Part 2가 충분하지 않거나 multi-phase gate가 필요한 경우에만 deeper breakdown을 추가한다. multi-phase plan이면 각 phase에 `goal`, `task set / dependency closure`, `validation focus`, `exit criteria`, `carry-over policy`를 제공해야 한다.
 
 #### implementation
 - **Agent(subagent_type="implementation")**

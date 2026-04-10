@@ -1,7 +1,7 @@
 # SDD-Autopilot User Guide
 
-**Version**: 1.1.0
-**Date**: 2026-03-17
+**Version**: 1.2.0
+**Date**: 2026-04-10
 
 A guide for the sdd-autopilot meta-skill that automatically executes the SDD pipeline.
 
@@ -44,9 +44,11 @@ sdd-autopilot divides execution into two phases.
 After sufficiently confirming requirements with the user in Phase 1, Phase 2 executes the pipeline to completion **without user interruption**. Progress is reported in real-time via milestone messages.
 
 ```
-[sdd-autopilot] Step 1/6: Starting feature-draft...
-[sdd-autopilot] Step 1/6: feature-draft complete -- _sdd/drafts/feature_draft_auth_system.md
-[sdd-autopilot] Step 2/6: Starting implementation-plan...
+[sdd-autopilot] Step 1/N: Starting feature-draft...
+[sdd-autopilot] Step 1/N: feature-draft complete -- _sdd/drafts/2026-04-10_feature_draft_auth_system.md
+[sdd-autopilot] Step 2/N: Starting implementation... (direct path)
+[sdd-autopilot] Step 2/N: Starting implementation-plan... (expanded path only)
+[sdd-autopilot] Phase Gate 1/3: implementation -> review -> fix -> validation
 ...
 ```
 
@@ -54,13 +56,20 @@ After sufficiently confirming requirements with the user in Phase 1, Phase 2 exe
 
 sdd-autopilot automatically determines the scale based on request analysis and codebase exploration results, then selects the appropriate pipeline. The user does not need to specify the scale manually.
 
-| Scale | Affected Files | New Components | Spec Changes | Pipeline |
-|-------|---------------|----------------|-------------|----------|
+| Scale | Affected Files | New Components | Spec Changes | Default Pipeline |
+|-------|---------------|----------------|-------------|------------------|
 | Small | 1-3 | 0-1 | None | implementation -> inline test |
-| Medium | 4-10 | 1-3 | Existing section patch | feature-draft -> impl-plan -> impl -> review -> test -> spec-sync |
-| Large | 10+ | 3+ | New section addition | full pipeline (all agents) |
+| Medium | 4-10 | 1-3 | Existing section patch | feature-draft -> implementation, or on the expanded path feature-draft -> implementation-plan -> phase-gated execution |
+| Large | 10+ | 3+ | New section addition possible | feature-draft -> (conditional spec-update-todo) -> implementation-plan -> per-phase impl/review/fix -> final integration review |
 
 When quantitative criteria and qualitative criteria (complexity, dependencies, test scope) point to different scales, sdd-autopilot **selects the larger scale**.
+
+Additional rules:
+
+- The default planning entry for non-trivial changes is `feature-draft`.
+- `implementation-plan` is not a peer alternative to `feature-draft`; it is a follow-up expansion stage used when Part 2 is not sufficient or a multi-phase gate is needed.
+- `spec-update-todo` is added only when planned persistent global alignment is actually needed.
+- Even on medium-scale work, if a multi-phase plan is produced, the default review-fix scope becomes `per-phase`, followed by one mandatory `final integration review`.
 
 ### 2.3 Agent Wrapper Pattern (Skill -> Agent Delegation)
 
@@ -68,22 +77,29 @@ In Codex, `sdd-autopilot` does not use each SDD **wrapper skill** as a direct ex
 
 ```
 feature-draft agent
-    | Output: _sdd/drafts/feature_draft_<topic>.md
-    v
-implementation-plan agent
-    | Output: _sdd/implementation/IMPLEMENTATION_PLAN.md
-    v
-implementation agent
-    | Output: Code files
-    v
-implementation-review agent  <-- review-fix loop (max 3 rounds)
+    | Output: _sdd/drafts/<YYYY-MM-DD>_feature_draft_<topic>.md
+    +-- direct path --> implementation agent
+    |                    | Output: Code files
+    |                    v
+    |                implementation-review agent  <-- global review-fix loop
     |
-    v
-Testing (inline or ralph-loop-init)
-    |
-    v
-spec-update-done agent
-    | Output: _sdd/spec/ updated
+    \-- expanded path --> implementation-plan agent
+                         | Output: _sdd/implementation/<YYYY-MM-DD>_implementation_plan_<topic>.md
+                         v
+                     implementation agent
+                         | Output: Code files
+                         v
+                     implementation-review agent  <-- per-phase review-fix loop
+                         |
+                         v
+                     final integration review
+                         |
+                         v
+                     Testing (inline or ralph-loop-init)
+                         |
+                         v
+                     spec-update-done agent
+                         | Output: _sdd/spec/ updated
 ```
 
 Each agent receives the **output file path** from the previous agent along with the **user's original request**. sdd-autopilot extracts only key information (output file paths, major decisions) from agent results and records them in the pipeline log.
@@ -147,9 +163,9 @@ flowchart TB
 | 2 | **Inline Discussion** | 1-5 rounds of conversation to refine requirements. Each question includes a "That's enough -- please proceed" option |
 | 3 | **Codebase Exploration** | Analyze project structure, related files, existing patterns, and test structure using the Explore agent |
 | 4 | **Scale Assessment** | Determine Small/Medium/Large scale based on affected file count, new component count, spec change scope, etc. |
-| 5 | **Orchestrator Generation** | Save a customized pipeline plan to the active skill directory (`.claude/skills/orchestrator_<topic>/` or `.codex/skills/orchestrator_<topic>/`) |
+| 5 | **Orchestrator Generation** | Save a customized pipeline plan to `_sdd/pipeline/orchestrators/orchestrator_<topic>.md` |
 | 6 | **User Confirmation** | Present pipeline summary; user chooses to modify/approve/cancel |
-| 7 | **Autonomous Execution** | Execute the approved pipeline via sequential agent invocation. Includes review-fix loop and testing |
+| 7 | **Autonomous Execution** | Execute the approved pipeline via sequential agent invocation. If the plan is multi-phase, enforce per-phase `implementation -> review -> fix -> validation` gates plus a final integration review |
 | 8 | **Final Summary** | Finalize log, report generated/modified file list, remaining issues, and suggested follow-up actions |
 
 ### 3.3 User Role vs sdd-autopilot Role
@@ -191,14 +207,31 @@ Skips feature-draft, implementation-plan, and spec-update-done. Applies to singl
 
 **Assessment criteria**: 4-10 affected files, 1-3 new components, existing spec section patch needed, estimated code 200-1000 lines
 
-**Pipeline**:
+Medium-scale work splits into two paths.
 
-```
-feature-draft agent -> implementation-plan agent -> implementation agent
--> review-fix loop (max 3 rounds) -> inline test -> spec-update-done agent
+**A. Single-phase medium direct path**
+
+```text
+feature-draft agent -> implementation agent
+-> global review-fix loop (max 3 rounds) -> inline test -> spec-update-done agent
 ```
 
-Applies to feature additions involving multiple module integrations, new dependency introductions, and tasks requiring integration testing.
+- The default planning entry is `feature-draft`
+- Skip `implementation-plan` when feature-draft Part 2 already provides enough task/dependency/validation detail
+- Fits bounded feature work that spans several files but does not need phase gates
+
+**B. Multi-phase medium expanded path**
+
+```text
+feature-draft agent -> implementation-plan agent
+-> Phase 1: implementation -> review-fix -> validation
+-> Phase 2..N: implementation -> review-fix -> validation
+-> final integration review -> inline test -> spec-update-done agent
+```
+
+- Use `implementation-plan` only when Part 2 is not sufficient or explicit phase boundaries are needed
+- Even on medium-scale work, once a multi-phase plan exists, the default review-fix scope becomes `per-phase`
+- `medium` issues block phase exit unless an explicit carry-over policy allows them
 
 **Example request**: "Implement a JWT-based authentication system. Include login, logout, and token refresh."
 
@@ -208,14 +241,16 @@ Applies to feature additions involving multiple module integrations, new depende
 
 **Pipeline**:
 
-```
-feature-draft agent -> spec-update-todo agent -> implementation-plan agent
--> implementation agent -> review-fix loop (max 3 rounds)
+```text
+feature-draft agent -> (conditional) spec-update-todo agent -> implementation-plan agent
+-> Phase 1: implementation -> review-fix -> validation
+-> Phase 2..N: implementation -> review-fix -> validation
+-> final integration review
 -> testing (inline or ralph-loop-init) -> spec-update-done agent
 -> spec-review agent (optional)
 ```
 
-Applies to architecture-level changes, large-scale features affecting the entire system, and tasks requiring E2E testing. `spec-update-todo` pre-reflects planned features in the spec before implementation to prevent drift.
+Applies to architecture-level changes, large-scale features affecting the entire system, and tasks requiring E2E testing. `spec-update-todo` is added only when planned persistent global spec alignment is actually needed.
 
 **Example request**: "Implement the entire payment system. Include Stripe API integration, webhook handling, and refund logic."
 
@@ -275,17 +310,16 @@ User: 1
 [sdd-autopilot] Scale assessment: Medium (7 files, 3 new components, spec patch needed)
 
 [sdd-autopilot] Pipeline summary:
-  Scale: Medium | Agents: 5 | Max review rounds: 3 | Test: inline
+  Scale: Medium | Path: single-phase direct | Agents: 4 | Max review rounds: 3 | Test: inline
 
 User: "Looks good -- go ahead"
 
-[sdd-autopilot] Step 1/5: feature-draft complete -- _sdd/drafts/feature_draft_jwt_auth.md
-[sdd-autopilot] Step 2/5: implementation-plan complete -- _sdd/implementation/IMPLEMENTATION_PLAN.md
-[sdd-autopilot] Step 3/5: implementation complete -- 7 files created/modified
+[sdd-autopilot] Step 1/4: feature-draft complete -- _sdd/drafts/2026-04-10_feature_draft_jwt_auth.md
+[sdd-autopilot] Step 2/4: implementation complete -- 7 files created/modified
 [sdd-autopilot] Review-Fix Round 1/3: 1 critical, 1 high -- fixing...
-[sdd-autopilot] Review-Fix Round 2/3: 0 critical, 0 high -- review passed
+[sdd-autopilot] Review-Fix Round 2/3: 0 critical, 0 high, 0 medium -- review passed
 [sdd-autopilot] Tests passed (18/18)
-[sdd-autopilot] Step 5/5: spec-update-done complete -- _sdd/spec/main.md updated
+[sdd-autopilot] Step 4/4: spec-update-done complete -- _sdd/spec/main.md updated
 [sdd-autopilot] Done -- Total elapsed time: 20 min
 ```
 
@@ -305,18 +339,21 @@ User: /sdd-autopilot Implement the entire payment system. Include Stripe API int
 [sdd-autopilot] Scale assessment: Large (15+ files, 5 new components, new spec section)
 
 [sdd-autopilot] Pipeline summary:
-  Scale: Large | Agents: 7 | Max review rounds: 3 | Test: inline
+  Scale: Large | Path: multi-phase expanded | Agents: 5 + phase gates | Max review rounds: 3 per phase | Test: inline
 
 User: "Looks good -- go ahead"
 
-[sdd-autopilot] Step 1/7: feature-draft complete
-[sdd-autopilot] Step 2/7: spec-update-todo complete -- payment system section added to spec
-[sdd-autopilot] Step 3/7: implementation-plan complete -- split into 3 phases
-[sdd-autopilot] Step 4/7: implementation complete -- 18 files created/modified
-[sdd-autopilot] Review-Fix Round 1/3: 2 critical -- fixing...
-[sdd-autopilot] Review-Fix Round 2/3: 0 critical, 0 high -- review passed
-[sdd-autopilot] Step 6/7: Tests passed (32/32)
-[sdd-autopilot] Step 7/7: spec-update-done complete
+[sdd-autopilot] Step 1/5: feature-draft complete
+[sdd-autopilot] Step 2/5: spec-update-todo complete -- payment system section added to spec
+[sdd-autopilot] Step 3/5: implementation-plan complete -- split into 3 phases
+[sdd-autopilot] Phase Gate 1/3: implementation complete -- payment domain + Stripe client
+[sdd-autopilot] Phase Gate 1/3 Review-Fix 1/3: 2 medium issues -- phase exit blocked
+[sdd-autopilot] Phase Gate 1/3 Review-Fix 2/3: 0 critical, 0 high, 0 medium -- phase passed
+[sdd-autopilot] Phase Gate 2/3: implementation + review-fix complete -- payment/webhook flow passed
+[sdd-autopilot] Phase Gate 3/3: implementation + review-fix complete -- refund/reconciliation flow passed
+[sdd-autopilot] Final Integration Review: 0 cross-phase regressions
+[sdd-autopilot] Step 4/5: Tests passed (32/32)
+[sdd-autopilot] Step 5/5: spec-update-done complete
 [sdd-autopilot] Done -- Total elapsed time: 45 min
 ```
 
@@ -330,22 +367,22 @@ sdd-autopilot generates the following files during pipeline execution.
 
 | File | Path | Description |
 |------|------|-------------|
-| Active orchestrator | `.claude/skills/orchestrator_<topic>/SKILL.md` or `.codex/skills/orchestrator_<topic>/SKILL.md` | Currently executing pipeline plan. Includes step order, handoff rules, review-fix policy |
+| Orchestrator | `_sdd/pipeline/orchestrators/orchestrator_<topic>.md` | The currently authoritative pipeline plan. Includes step order, handoff rules, review-fix policy, and phase-gate rules |
 | Execution log | `_sdd/pipeline/log_<topic>_<timestamp>.md` | Start/completion times, output paths, key decisions, and error records for each step |
-| Completion archive | `_sdd/pipeline/orchestrators/<topic>_<timestamp>/` | Archived completed orchestrator and related metadata |
+| Final report | `_sdd/pipeline/report_<topic>_<timestamp>.md` | Completed tasks, test results, review-fix results, and suggested follow-up work |
 
 - `<topic>`: Feature name converted to English snake_case (e.g., "auth system" -> `auth_system`)
 - `<timestamp>`: `YYYYMMDD_HHmmss` format
 
-In Codex, the active orchestrator directly spawns custom agents from `.codex/agents/`. Before approval, it reads both `_sdd/env.md` and `.codex/config.toml` to check `agents.max_depth`, `agents.max_threads`, and test/execution resource gaps.
+In Codex, this orchestrator directly spawns custom agents from `.codex/agents/`. Before approval, it reads both `_sdd/env.md` and `.codex/config.toml` to check `agents.max_depth`, `agents.max_threads`, and test/execution resource gaps.
 
 ### 6.2 Per-Agent Output
 
 | Agent | Output Path | Content |
 |-------|-------------|---------|
-| feature-draft | `_sdd/drafts/feature_draft_<topic>.md` | Spec patch draft + implementation plan draft |
+| feature-draft | `_sdd/drafts/<YYYY-MM-DD>_feature_draft_<topic>.md` | Temporary spec + implementation input draft |
 | spec-update-todo | `_sdd/spec/main.md` (updated) | Pre-reflect planned features in spec |
-| implementation-plan | `_sdd/implementation/IMPLEMENTATION_PLAN.md` | Detailed implementation plan (may be split into phases) |
+| implementation-plan | `_sdd/implementation/<YYYY-MM-DD>_implementation_plan_<topic>.md` | Detailed implementation plan + phase metadata |
 | implementation | Code files | Implemented source code + test files |
 | implementation-review | Text output | Review report (critical/high/medium/low issues) |
 | spec-update-done | `_sdd/spec/main.md` (updated) | Synchronize implementation results to spec |
@@ -357,31 +394,27 @@ In Codex, the active orchestrator directly spawns custom agents from `.codex/age
 project_root/
 ├── .codex/
 │   ├── config.toml
-│   ├── agents/
-│   │   ├── feature-draft.toml
-│   │   ├── implementation-plan.toml
-│   │   ├── implementation.toml
-│   │   ├── implementation-review.toml
-│   │   ├── spec-update-todo.toml
-│   │   ├── spec-update-done.toml
-│   │   ├── spec-review.toml
-│   │   ├── ralph-loop-init.toml
-│   │   └── write-phased.toml
-│   └── skills/
-│       └── orchestrator_jwt_auth/
-│           ├── SKILL.md                           # Active orchestrator (during execution)
-│           └── skill.json
+│   └── agents/
+│       ├── feature-draft.toml
+│       ├── implementation-plan.toml
+│       ├── implementation.toml
+│       ├── implementation-review.toml
+│       ├── spec-update-todo.toml
+│       ├── spec-update-done.toml
+│       ├── spec-review.toml
+│       └── ralph-loop-init.toml
 └── _sdd/
     ├── pipeline/
-    │   ├── log_jwt_auth_20260316_143000.md        # Execution log
+    │   ├── log_jwt_auth_20260410_143000.md              # Execution log
+    │   ├── report_jwt_auth_20260410_143000.md           # Final report
     │   └── orchestrators/
-    │       └── jwt_auth_20260316_143000/          # Completed orchestrator archive
+    │       └── orchestrator_jwt_auth.md                 # Active orchestrator
     ├── drafts/
-    │   └── feature_draft_jwt_auth.md              # feature-draft output
+    │   └── 2026-04-10_feature_draft_jwt_auth.md        # feature-draft output
     ├── implementation/
-    │   └── IMPLEMENTATION_PLAN.md                 # Implementation plan
+    │   └── 2026-04-10_implementation_plan_jwt_auth.md  # Implementation plan
     └── spec/
-        └── main.md                                # Synchronized spec
+        └── main.md                                      # Synchronized spec
 ```
 
 ---
@@ -421,7 +454,7 @@ Yes. At Step 6 (User Confirmation), you can choose the following options:
 - **"I'd like to modify the pipeline"**: Describe your modifications in text and sdd-autopilot will update the orchestrator.
 - **"I'd like to see the full orchestrator"**: The full content is displayed, then re-confirmed.
 
-The active orchestrator being modified is maintained in `.claude/skills/orchestrator_<topic>/` or `.codex/skills/orchestrator_<topic>/`. After the pipeline completes, it is archived to `_sdd/pipeline/orchestrators/<topic>_<timestamp>/` for future reference.
+The active orchestrator being modified is maintained at `_sdd/pipeline/orchestrators/orchestrator_<topic>.md`. During execution, the pipeline keeps reading this file as the authoritative contract and handoff source.
 
 In Codex, this orchestrator directly uses custom agents from `.codex/agents/`. It does not treat skill names themselves as sub-execution units.
 
@@ -467,16 +500,18 @@ In Codex, it is important to verify through manual dry-runs that `sdd-autopilot`
 
 - Small scenario:
   - Simple change requiring only `implementation`
-- Medium scenario:
-  - `feature_draft -> implementation_plan -> implementation -> implementation_review -> spec_update_done`
+- Medium single-phase scenario:
+  - `feature_draft -> implementation -> implementation_review -> spec_update_done`
+- Medium/large expanded scenario:
+  - `feature_draft -> implementation_plan -> phase gate execution -> final integration review -> spec_update_done`
 
 Verify:
 
 - The generated orchestrator uses custom agent names, not skill names
+- The generated orchestrator is saved to `_sdd/pipeline/orchestrators/orchestrator_<topic>.md`
 - `_sdd/pipeline/log_*.md` is created/updated
 - `_sdd/pipeline/report_*.md` is created
-- The active orchestrator is maintained in `.codex/skills/orchestrator_<topic>/`
-- After completion, it is archived to `_sdd/pipeline/orchestrators/<topic>_<timestamp>/`
+- If a multi-phase plan exists, the orchestrator records the phase boundary source, carry-over policy, and final integration review
 
 ### 8.5 Pre-flight Check
 
@@ -502,6 +537,8 @@ If you want to quickly perform a minimum execution check in the actual Codex app
 
 - Execution example:
   - `$implementation-plan Create an implementation plan for a medium-scale feature that requires a lengthy plan`
+- Note:
+  - Use this check for the follow-up expansion path after `feature-draft`, or for the standalone exception path when a feature draft, temporary spec, or prior plan artifact already exists.
 - Verify:
   - Is the long output organized using skeleton -> fill or an equivalent 2-phase writing strategy?
   - Does the result remain a complete document without being excessively truncated?
@@ -514,10 +551,10 @@ If you want to quickly perform a minimum execution check in the actual Codex app
 - Verify:
   - Does the pre-flight before approval read both `_sdd/env.md` and `.codex/config.toml` and summarize risks?
   - Does the generated orchestrator describe using custom agent names rather than skill names?
-  - Is `.codex/skills/orchestrator_<topic>/` maintained in active state?
+  - Is `_sdd/pipeline/orchestrators/orchestrator_<topic>.md` maintained in active state?
   - Is `_sdd/pipeline/log_<topic>_<timestamp>.md` created/updated?
   - Is `_sdd/pipeline/report_<topic>_<timestamp>.md` created?
-  - After completion, is it archived to `_sdd/pipeline/orchestrators/<topic>_<timestamp>/`?
+  - If a multi-phase plan exists, do the logs show phase gates and a final integration review?
 
 ---
 
@@ -528,7 +565,7 @@ The agents that sdd-autopilot invokes internally can also be used directly as in
 | Skill | Invocation | Purpose |
 |-------|-----------|---------|
 | `/feature-draft` | `/feature-draft "feature description"` | Generate spec patch draft + implementation plan |
-| `/implementation-plan` | `/implementation-plan` | Create phase-by-phase detailed implementation plan |
+| `/implementation-plan` | `/implementation-plan` | Create the phase-by-phase follow-up plan after `feature-draft`, or refine an existing draft/plan in the standalone exception path |
 | `/implementation` | `/implementation` | TDD-based code implementation |
 | `/implementation-review` | `/implementation-review` | Verify implementation against plan |
 | `/spec-update-todo` | `/spec-update-todo` | Pre-reflect planned features in spec |

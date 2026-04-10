@@ -60,10 +60,22 @@
 
 ## 6. Review-Fix Contract
 
+- scope (`global` 또는 `per-phase`)
 - 최대 반복 횟수
 - 종료 조건 (`critical = 0 AND high = 0 AND medium = 0`)
 - 수정 대상 (`critical/high/medium/low`)
 - MAX 도달 시 분기: critical/high 잔존 -> 중단, medium만 잔존 -> 로그 기록 후 계속 진행
+
+추가 규칙:
+
+- multi-phase `implementation-plan`을 소비하면 기본값은 `scope = per-phase`다. single-phase path나 direct path만 `scope = global`을 기본으로 둘 수 있다.
+- `scope = per-phase`면 아래 필드를 함께 명시해야 한다.
+  - `phase boundary source`
+  - `phase exit criteria`
+  - `carry-over policy`
+  - `final integration review`
+- `medium` 이슈도 기본적으로 phase exit blocker다. carry-over는 정책이 명시적으로 허용하는 severity/조건/로그 근거가 있을 때만 가능하다.
+- `final integration review`는 마지막 phase 이후에 반드시 1회 실행한다.
 
 ## 7. Test Strategy Contract
 
@@ -91,6 +103,8 @@
 - implementation plan 존재
 - `Contract/Invariant Delta Coverage` 존재
 - task와 `Target Files`가 정의됨
+- `feature-draft` 이후 확장 단계인지, 또는 standalone 예외인지가 드러남
+- 각 phase에 `goal`, `task set / dependency closure`, `validation focus`, `exit criteria`, `carry-over policy`가 포함됨
 
 ### spec-update-todo
 - global spec 업데이트 완료
