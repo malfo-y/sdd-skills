@@ -2,6 +2,14 @@
 
 > 이 파일은 `_sdd/spec/main.md`의 버전별 변경 기록이다.
 
+#### v4.1.5 (2026-04-10)
+
+- **autopilot planning semantics sync**: non-trivial planning entry를 `feature-draft` 기본값으로, `implementation-plan`을 후속 확장 단계로 global spec에 반영
+- **phase-gated execution rule 반영**: multi-phase plan을 `per-phase` review-fix + `final integration review` 실행 게이트로 정리
+- **artifact naming/history invariant 반영**: lowercase canonical artifact, skill-defined dated slug output, legacy fallback read, git-history-first 추적 규칙을 global surface에 추가
+- **usage guide 정렬**: autopilot active orchestrator 경로를 `_sdd/pipeline/orchestrators/orchestrator_<topic>.md`로 갱신하고 manual/auto scenario의 optional expansion path를 보정
+- 입력: `ee4e1cd`, `d32686a`, `aa92c83`, `0725c25`, `_sdd/implementation/2026-04-10_implementation_review_autopilot_planning_phase_gates.md`
+
 #### v4.1.4 (2026-04-07)
 
 - **externalized skill cleanup**: 현재 저장소에서 제거된 독립 관리 스킬 참조를 active spec surface에서 제거

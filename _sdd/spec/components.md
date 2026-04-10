@@ -10,11 +10,11 @@
 
 | Component | Purpose | Why | Primary Source | Notes |
 |-----------|---------|-----|----------------|-------|
-| `sdd-autopilot` | reasoning 기반으로 SDD 파이프라인을 조합하고 end-to-end 실행한다 | 대규모 작업에서 수동 handoff와 단계 누락을 줄인다 | `.claude/skills/sdd-autopilot/SKILL.md`<br>`.codex/skills/sdd-autopilot/SKILL.md` | 풀 스킬. `docs/AUTOPILOT_GUIDE.md`와 reasoning reference를 함께 본다 |
+| `sdd-autopilot` | reasoning 기반으로 SDD 파이프라인을 조합하고 end-to-end 실행한다 | 대규모 작업에서 수동 handoff와 단계 누락을 줄인다 | `.claude/skills/sdd-autopilot/SKILL.md`<br>`.codex/skills/sdd-autopilot/SKILL.md` | 풀 스킬. non-trivial planning은 `feature-draft`를 기본 entry로 사용하고, multi-phase plan이면 `per-phase` gate와 `final integration review`를 집행한다 |
 | `spec-create` | 초기 global spec과 workspace guidance를 부트스트랩한다 | 스펙 부재 상태에서 workflow 시작점을 만든다 | `.claude/skills/spec-create/SKILL.md` | 워크플로우 시작점. spec이 없을 때 먼저 본다 |
 | `feature-draft` | spec patch 초안과 구현 계획 초안을 한 번에 만든다 | spec 수정과 구현 계획의 반복 작업을 줄인다 | `.claude/agents/feature-draft.md`<br>`.claude/skills/feature-draft/SKILL.md` | wrapper -> agent 패턴 |
 | `spec-update-todo` | 구현 전 planned persistent truth를 global spec에 반영한다 | spec-code drift를 사전에 줄인다 | `.claude/agents/spec-update-todo.md`<br>`.claude/skills/spec-update-todo/SKILL.md` | wrapper -> agent 패턴 |
-| `spec-update-done` | 구현 evidence를 검토해 검증된 지속 정보만 global spec에 올린다 | 임시 실행 메모와 검증된 truth를 분리한다 | `.claude/agents/spec-update-done.md`<br>`.claude/skills/spec-update-done/SKILL.md` | delta status 분류 기반 sync |
+| `spec-update-done` | 구현 evidence를 검토해 검증된 지속 정보만 global spec에 올린다 | 임시 실행 메모와 검증된 truth를 분리한다 | `.claude/agents/spec-update-done.md`<br>`.claude/skills/spec-update-done/SKILL.md` | delta status 분류 기반 sync. lowercase canonical artifact를 우선 읽고 legacy path를 fallback으로 허용한다 |
 | `spec-review` | 스펙 품질과 코드-스펙 drift를 read-only로 진단한다 | 수정 없이 현재 상태를 객관적으로 점검한다 | `.claude/agents/spec-review.md`<br>`.claude/skills/spec-review/SKILL.md` | wrapper -> agent 패턴 |
 | `spec-rewrite` | 비대한 스펙을 canonical-fit 기준으로 재구성한다 | global/spec surface의 구조적 오염을 줄인다 | `.claude/skills/spec-rewrite/SKILL.md`<br>`.codex/skills/spec-rewrite/SKILL.md` | 계획 파일과 rewrite report를 먼저/함께 남긴다 |
 | `spec-summary` | 현재 스펙 상태를 human-friendly하게 압축한다 | 전체 문서를 읽지 않고도 상태를 빠르게 파악하게 한다 | `.claude/skills/spec-summary/SKILL.md` | summary surface 생성용 |
@@ -25,7 +25,7 @@
 
 | Component | Purpose | Why | Primary Source | Notes |
 |-----------|---------|-----|----------------|-------|
-| `implementation-plan` | 대규모 구현을 phase/task 단위로 나눈다 | 한 세션에 모든 구현을 몰아넣을 때 생기는 품질 저하를 줄인다 | `.claude/agents/implementation-plan.md`<br>`.claude/skills/implementation-plan/SKILL.md` | Target Files 기반 병렬 계획 |
+| `implementation-plan` | 대규모 구현을 phase/task 단위로 나눈다 | 한 세션에 모든 구현을 몰아넣을 때 생기는 품질 저하를 줄인다 | `.claude/agents/implementation-plan.md`<br>`.claude/skills/implementation-plan/SKILL.md` | `feature-draft` 후속 확장 단계. phase metadata가 autopilot의 execution gate source가 된다 |
 | `implementation` | 구현 계획을 따라 코드를 작성하고 검증한다 | execute와 verify를 분리하지 않는 delivery step이 필요하다 | `.claude/agents/implementation.md`<br>`.claude/skills/implementation/SKILL.md` | wrapper -> agent. AC-first와 재검증 loop가 핵심 |
 | `implementation-review` | 구현 결과를 계획/AC 기준으로 다시 검증한다 | 누락과 품질 이탈을 조기에 드러낸다 | `.claude/agents/implementation-review.md`<br>`.claude/skills/implementation-review/SKILL.md` | wrapper -> agent. fresh verification 중시 |
 | `pr-review` | PR 코드 품질과 spec 준수 여부를 함께 판정한다 | 코드 리뷰와 spec 기반 검증을 한 surface로 묶는다 | `.claude/skills/pr-review/SKILL.md`<br>`.codex/skills/pr-review/SKILL.md` | findings-first. spec 존재 시 추가 검증 |
@@ -35,7 +35,7 @@
 
 | Component | Purpose | Why | Primary Source | Notes |
 |-----------|---------|-----|----------------|-------|
-| `discussion` | 구조화된 의사결정 토론을 진행한다 | 설계 선택과 open question을 추적 가능하게 만든다 | `.claude/skills/discussion/SKILL.md`<br>`.codex/skills/discussion/SKILL.md` | 풀 스킬. 양 플랫폼 모두 대화형 입력 사용 |
+| `discussion` | 구조화된 의사결정 토론을 진행한다 | 설계 선택과 open question을 추적 가능하게 만든다 | `.claude/skills/discussion/SKILL.md`<br>`.codex/skills/discussion/SKILL.md` | 풀 스킬. 양 플랫폼 모두 대화형 입력 사용. 결과는 `_sdd/discussion/<YYYY-MM-DD>_discussion_<slug>.md`에 저장한다 |
 | `ralph-loop-init` | 장기 실행 프로세스용 자동화 디버그 루프를 만든다 | 반복 실험/테스트 환경을 표준화한다 | `.claude/agents/ralph-loop-init.md`<br>`.claude/skills/ralph-loop-init/SKILL.md` | wrapper -> agent 패턴 |
 | `git` | 변경을 의미 단위로 정리해 커밋/브랜치 작업을 돕는다 | AI가 만든 변경을 의도 단위로 정리해야 한다 | `.claude/skills/git/SKILL.md` | Claude Code 전용 |
 | `spec-snapshot` | 스펙 상태를 타임스탬프 스냅샷으로 보존한다 | 원본을 건드리지 않고 특정 시점 상태나 번역본을 관리한다 | `.claude/skills/spec-snapshot/SKILL.md`<br>`.codex/skills/spec-snapshot/SKILL.md` | snapshot/export 성격 |
@@ -47,6 +47,7 @@
 |---------|------------------|--------|
 | Claude wrapper/agent split | 다수의 execution-heavy skill은 wrapper가 사용자 entrypoint를 지키고 agent가 실제 실행 단위를 담당한다 | `.claude/skills/`, `.claude/agents/` |
 | Codex custom agent runtime | Codex는 `.codex/agents/`와 `.codex/config.toml`의 nested-agent 설정이 중요하다 | `.codex/agents/`, `.codex/config.toml` |
+| Artifact path convention | 신규 temporary artifact는 lowercase canonical 경로를 기본으로 하고, skill-defined output surface는 dated slug naming을 사용한다. reader는 legacy uppercase/fixed-name path를 fallback으로 읽는다 | 관련 `SKILL.md`, `_sdd/implementation/implementation_progress.md` |
 | Full-skill exceptions | `sdd-autopilot`, `discussion`처럼 사용자 상호작용이 핵심인 surface는 풀 스킬로 유지된다 | 관련 `SKILL.md` |
 | Platform-only features | `git`, `second-opinion`은 Claude Code 전용이며, Codex parity 대상이 아니다 | 관련 `SKILL.md` |
 

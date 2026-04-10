@@ -31,9 +31,9 @@
 
 **Action:**
 ```bash
-/feature-draft           # Part 1: 스펙 패치 초안 + Part 2: 구현 계획
-/spec-update-todo        # 스펙에 새 기능 반영
-/implementation-plan     # Phase별 구현 계획 수립
+/feature-draft           # non-trivial change의 기본 planning entry
+/spec-update-todo        # planned persistent truth가 실제로 필요할 때만
+/implementation-plan     # Part 2만으로 부족하거나 phase/task breakdown이 필요할 때만
 /implementation          # TDD 기반 코드 작성
 /implementation-review   # 계획 대비 검증
 /spec-update-done        # 코드 변경사항을 스펙에 동기화
@@ -42,7 +42,7 @@
 **Expected Result:**
 - `_sdd/drafts/<YYYY-MM-DD>_feature_draft_<slug>.md` — 스펙 패치 초안 + 구현 태스크 리스트
 - `_sdd/spec/<project>.md` 업데이트 — planned persistent truth 반영
-- `_sdd/implementation/<YYYY-MM-DD>_implementation_plan_<slug>.md` — Target Files 기반 병렬 실행 계획
+- `_sdd/implementation/<YYYY-MM-DD>_implementation_plan_<slug>.md` — 필요한 경우 생성되는 Target Files 기반 phase/task 실행 계획
 - 구현 완료 후 구현 리뷰와 spec sync까지 연결돼 스펙과 코드 간 드리프트가 설명 가능한 상태
 
 ### Scenario 2b: 대규모 기능 추가 (sdd-autopilot 자동 실행)
@@ -55,11 +55,10 @@
 **Expected Result:**
 - Phase 1: sdd-autopilot이 SDD reference를 로딩하고, 인라인 discussion으로 요구사항을 구체화하고, 코드베이스를 탐색한 뒤, reasoning 기반으로 오케스트레이터를 생성하고 구조/철학 12항목을 자동 검증
 - Phase 1.5: 검증된 오케스트레이터 + Pre-flight Check 결과를 사용자에게 제시 → 확인 후 실행
-- Phase 2: feature-draft → implementation-plan → implementation → implementation-review (review-fix loop, **필수 사이클** -- Hard Rule #9에 따라 이슈 발견 시 fix → re-review 반드시 실행) → 인라인 테스트 → spec-update-done을 자율 실행
-- `.claude/skills/orchestrator_auth_system/SKILL.md` 또는 `.codex/skills/orchestrator_auth_system/SKILL.md` — 실행 중 활성 오케스트레이터 (스킬로 재사용/재개 가능)
-- `_sdd/pipeline/log_auth_system_<ts>.md` — 파이프라인 실행 로그 (Meta + Status 테이블 + 각 에이전트 시작/완료, 결정사항, 에러)
-- `_sdd/pipeline/orchestrators/auth_system_<ts>/` — 완료된 오케스트레이터 아카이브
-- `_sdd/pipeline/report_auth_system_<ts>.md` — 최종 실행/검증 요약과 잔여 이슈 보고
+- Phase 2: `feature-draft`를 기본 planning entry로 사용하고, 필요 시 `(optional) spec-update-todo -> (optional) implementation-plan`으로 확장한다. multi-phase plan이면 phase별 `implementation -> review -> fix -> validation` gate를 닫고 마지막에 `final integration review`를 1회 더 수행한 뒤 인라인 테스트와 `spec-update-done`까지 자율 실행한다
+- `_sdd/pipeline/orchestrators/orchestrator_<topic>.md` — 실행 중 authoritative orchestrator contract
+- `_sdd/pipeline/log_<topic>_<ts>.md` — 파이프라인 실행 로그 (Meta + Status 테이블 + 각 에이전트 시작/완료, 결정사항, 에러)
+- `_sdd/pipeline/report_<topic>_<ts>.md` — 최종 실행/검증 요약과 잔여 이슈 보고
 - 구현 완료 + 스펙 동기화 완료
 
 ### Scenario 3: PR 기반 스펙 동기화
@@ -82,4 +81,4 @@
 
 **Expected Result:**
 - `_sdd/spec/summary.md` — Executive Summary + 기능 대시보드 + 권장 다음 단계
-- 토론 결과 — 결정사항/미결/실행항목 정리 (최대 10라운드)
+- `_sdd/discussion/<YYYY-MM-DD>_discussion_<slug>.md` — 토론 결과와 결정사항/미결/실행항목 정리 (최대 10라운드)

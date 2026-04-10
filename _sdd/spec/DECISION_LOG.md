@@ -1,5 +1,44 @@
 # Decision Log
 
+## 2026-04-10 - Sync autopilot planning semantics and artifact naming invariants into global spec (v4.1.4 -> v4.1.5 spec revision)
+
+### Context
+
+2026-04-10 커밋들에서 `sdd-autopilot`, `implementation-plan`, `discussion`, `spec-update-done` 주변 계약이 크게 정리됐다. non-trivial change의 기본 planning entry를 `feature-draft`로 고정하고, `implementation-plan`을 후속 확장 단계로 재정의했으며, multi-phase plan은 실제 execution gate로 소비되어 `per-phase` review-fix와 `final integration review`를 강제하게 됐다. 동시에 skill-defined output artifact naming은 date-prefixed slug 규칙으로 정렬되고, `prev/` 백업 체인 대신 append-only artifact + git history를 기본 추적 방식으로 사용하는 방향이 굳어졌다.
+
+하지만 active `_sdd/spec/` surface에는 이 운영 규칙들이 아직 직접 반영되지 않아, `_sdd/spec/usage-guide.md`에는 여전히 오래된 autopilot 실행 경로와 단순화된 planning path가 남아 있었고, global main body에도 새 artifact naming / phase gate semantics가 빠져 있었다.
+
+### Decision
+
+1. **planning precedence를 global rule로 승격**: non-trivial change의 기본 planning entry는 `feature-draft`이며, `implementation-plan`은 Part 2만으로 부족하거나 phase/task 세분화가 필요할 때만 붙는 후속 확장 단계로 정리한다.
+2. **multi-phase plan을 execution gate로 고정**: multi-phase plan이 생성되면 `per-phase` review-fix와 phase exit 검증, 마지막 `final integration review`를 repo-wide 운영 규칙으로 본다.
+3. **artifact naming/history invariant 명시**: 신규 temporary artifact는 lowercase canonical 경로를 기본으로 사용하고, skill-defined output surface는 dated slug 경로를 따른다. `prev/` 백업 체인 대신 append-only artifact + git history를 기본 추적 방식으로 삼는다.
+4. **reader fallback 원칙 유지**: skill/agent reader는 legacy uppercase/fixed-name artifact를 fallback으로 읽을 수 있어야 한다.
+5. **autopilot authoritative path 정렬**: 실행 중 활성 오케스트레이터의 기준 경로는 `_sdd/pipeline/orchestrators/orchestrator_<topic>.md`로 본다.
+
+### Rationale
+
+- planning precedence가 global spec에 없으면 `feature-draft`와 `implementation-plan`이 다시 peer choice처럼 해석돼 pipeline selection이 흔들린다.
+- multi-phase plan을 단순 문서로 두면 phase boundary에서 defect containment가 무너지고 review-fix loop가 늦게 작동한다.
+- skill-defined output surface의 dated slug naming은 여러 skill이 공통으로 사용하는 경로 추론 규칙이라, global spec 차원에서 묶어야 repo-level reasoning과 review 판단이 일관된다.
+- `prev/` 백업 체인을 canonical rule로 남겨 두면 실제 skill contract와 global spec이 다시 drift한다.
+- active orchestrator 경로가 global usage surface와 실제 guide 문서에서 다르면 autopilot 재개/검증 흐름을 잘못 이해하게 된다.
+
+### Changes
+
+- `_sdd/spec/main.md` -- planning precedence, phase-gated execution, artifact naming/history invariant, mirror sync 운영 제약 반영
+- `_sdd/spec/components.md` -- `sdd-autopilot`, `implementation-plan`, `spec-update-done`, `discussion`, platform artifact-path note 보강
+- `_sdd/spec/usage-guide.md` -- manual/autopilot scenario를 optional expansion + per-phase gate semantics로 정렬, active orchestrator 경로 수정
+- `_sdd/spec/logs/changelog.md` -- v4.1.5 이력 추가
+
+### References
+
+- 구현 draft: `_sdd/drafts/2026-04-10_feature_draft_autopilot_planning_phase_gates.md`
+- implementation review: `_sdd/implementation/2026-04-10_implementation_review_autopilot_planning_phase_gates.md`
+- implementation report: `_sdd/implementation/2026-04-10_implementation_report_autopilot_planning_phase_gates.md`
+- review fix report: `_sdd/implementation/2026-04-10_implementation_report_autopilot_planning_phase_gates_review_fixes.md`
+- commits: `ee4e1cd`, `d32686a`, `aa92c83`, `0725c25`
+
 ## 2026-04-04 - Compact components reference surface (v4.1.0 -> v4.1.1 spec revision)
 
 ### Context
