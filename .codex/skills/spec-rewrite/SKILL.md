@@ -16,7 +16,6 @@ version: 1.9.0
 
 - [ ] 리라이트 대상과 범위를 핵심 metric으로 진단하고 근거를 남겼다.
 - [ ] `_sdd/spec/logs/spec-rewrite-plan.md`가 canonical-fit rationale, split map, ambiguity/risk를 포함한 상태로 먼저 저장되었다.
-- [ ] `_sdd/spec/prev/`에 안전 백업을 남겼다.
 - [ ] rewritten spec가 현재 canonical model에 더 잘 맞는 구조를 가진다.
 - [ ] 중요한 rationale, `Why`, inline citation, code excerpt header는 보존되었다.
 - [ ] `rewrite_report.md`가 metric scorecard, canonical-fit 평가, unresolved warning, plan 대비 주요 deviation을 포함한다.
@@ -40,13 +39,12 @@ version: 1.9.0
 
 ## Hard Rules
 
-1. 수정 전 반드시 `_sdd/spec/prev/prev_<filename>_<timestamp>.md`로 백업한다.
-2. 삭제하는 내용에 중요한 rationale이 있으면 `decision_log.md` 또는 rewrite report에 보존한다.
-3. `Source`, component-level `Why`, inline citation, code excerpt header가 있으면 재구성 후에도 유지한다.
-4. `_sdd/spec/logs/spec-rewrite-plan.md`를 rewrite 시작 전에 반드시 저장하고, 이후 실행은 이 파일을 기준으로 진행한다.
-5. 대규모 구조 변경이나 파일 분할은 계획 파일을 먼저 저장한 뒤 필요한 경우 사용자 확인을 받는다.
-6. rewrite는 global spec을 다시 두껍게 만들지 않는다.
-7. missing global core나 temporary core는 warning으로 남길 수 있지만 자동 생성하지 않는다.
+1. 삭제하는 내용에 중요한 rationale이 있으면 `decision_log.md` 또는 rewrite report에 보존한다.
+2. `Source`, component-level `Why`, inline citation, code excerpt header가 있으면 재구성 후에도 유지한다.
+3. `_sdd/spec/logs/spec-rewrite-plan.md`를 rewrite 시작 전에 반드시 저장하고, 이후 실행은 이 파일을 기준으로 진행한다.
+4. 대규모 구조 변경이나 파일 분할은 계획 파일을 먼저 저장한 뒤 필요한 경우 사용자 확인을 받는다.
+5. rewrite는 global spec을 다시 두껍게 만들지 않는다.
+6. missing global core나 temporary core는 warning으로 남길 수 있지만 자동 생성하지 않는다.
 
 ## Process
 
@@ -93,12 +91,7 @@ multi-file 분할이 필요할 때 축 선택:
 - rewrite 대상 파일 목록
 - 실행 순서와 deviation 기록 규칙
 
-### Step 3: Create Safety Backups
-
-- `_sdd/spec/prev/` 생성
-- 대상 파일 백업
-
-### Step 4: Rewrite the Spec
+### Step 3: Rewrite the Spec
 
 원칙:
 
@@ -108,7 +101,7 @@ multi-file 분할이 필요할 때 축 선택:
 - decision-bearing value가 없는 feature inventory는 reference, guide, appendix, code 쪽으로 내린다.
 - 없는 canonical content를 새로 만들어 넣지 말고, 누락은 report에 warning으로 남긴다.
 
-### Step 5: Validate and Report
+### Step 4: Validate and Report
 
 아래를 검증하고 `_sdd/spec/logs/rewrite_report.md`를 작성한다.
 

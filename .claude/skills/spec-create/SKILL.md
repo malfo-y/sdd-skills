@@ -54,11 +54,10 @@ version: 1.8.0
 1. `src/`, `tests/` 등 구현 코드 파일은 수정하지 않는다.
 2. 문서 언어는 기존 스펙/문서를 따른다. 기존 스펙이 없으면 한국어를 기본으로 한다.
 3. 스펙 출력은 `_sdd/spec/`에만 저장한다.
-4. 기존 스펙 파일을 덮어쓰기 전에는 `prev/prev_<filename>_<timestamp>.md`로 백업한다.
-5. `AGENTS.md`, `CLAUDE.md`, `_sdd/env.md`는 없을 때 생성하고, 이미 있으면 필수 안내 문구가 빠진 경우에만 최소 수정한다.
-6. 거버넌스 문서는 기본적으로 `decision_log.md`까지만 사용한다.
-7. global spec을 feature-level usage/validation/reference 문서로 부풀리지 않는다.
-8. `_sdd/` artifact 경로는 lowercase canonical을 기본으로 하되, 입력을 읽을 때는 legacy uppercase fallback도 허용한다.
+4. `AGENTS.md`, `CLAUDE.md`, `_sdd/env.md`는 없을 때 생성하고, 이미 있으면 필수 안내 문구가 빠진 경우에만 최소 수정한다.
+5. 거버넌스 문서는 기본적으로 `decision_log.md`까지만 사용한다.
+6. global spec을 feature-level usage/validation/reference 문서로 부풀리지 않는다.
+7. `_sdd/` artifact 경로는 lowercase canonical을 기본으로 하되, 입력을 읽을 때는 legacy uppercase fallback도 허용한다.
 
 ## Structure Decision
 
@@ -185,7 +184,7 @@ SDD(Spec-Driven Development)는 스펙을 판단 기준으로 고정하고,
 |------|------|
 | 입력 정보 부족 | `request_user_input`으로 최소 보완 |
 | 코드베이스 없음 | greenfield/spec-only 문서로 계속 진행하고 low confidence 영역을 표시 |
-| 기존 스펙 존재 | 백업 후 갱신 |
+| 기존 스펙 존재 | 기존 파일 갱신 |
 | canonical 구조 불명확 | 후보를 비교하고 사용자 확인 |
 | 환경 정보 부족 | `_sdd/env.md`에 TODO 기반 최소 가이드 생성 |
 

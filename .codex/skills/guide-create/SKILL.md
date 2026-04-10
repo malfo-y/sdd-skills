@@ -8,7 +8,7 @@ version: 2.4.0
 
 ## Goal
 
-특정 기능에 대한 deep-dive 기술 가이드를 `_sdd/guides/guide_<slug>.md`에 만든다. 글로벌 스펙이 프로젝트 전체 SSOT라면, guide는 기능 단위의 usage scenario, API reference, implementation guidance를 더 구체적으로 풀어내는 companion document다.
+특정 기능에 대한 deep-dive 기술 가이드를 `_sdd/guides/<YYYY-MM-DD>_guide_<slug>.md`에 만든다. 글로벌 스펙이 프로젝트 전체 SSOT라면, guide는 기능 단위의 usage scenario, API reference, implementation guidance를 더 구체적으로 풀어내는 companion document다.
 
 ## Acceptance Criteria
 
@@ -17,7 +17,7 @@ version: 2.4.0
 - [ ] AC1: 대상 feature를 확정하고 output slug를 결정했다.
 - [ ] AC2: `_sdd/spec/`에서 feature 관련 근거를 수집했다.
 - [ ] AC3: 코드 evidence와 citation index를 모아 guide의 근거를 만들었다.
-- [ ] AC4: `_sdd/guides/guide_<slug>.md`를 생성하거나 갱신했다.
+- [ ] AC4: `_sdd/guides/<YYYY-MM-DD>_guide_<slug>.md`를 생성했다.
 - [ ] AC5: guide에 §1~§5 required sections가 포함되고, spec/code가 read-only로 유지되었다.
 - [ ] AC6: example/template 자산은 유지되고, 본문은 guide 생성 계약을 concise하게 설명한다.
 
@@ -39,13 +39,12 @@ version: 2.4.0
 ## Hard Rules
 
 1. `_sdd/spec/`, 코드, 설정, 테스트는 읽기 전용이다.
-2. 생성 가능한 파일은 `_sdd/guides/guide_<slug>.md`와 그 backup뿐이다.
+2. 생성 가능한 파일은 `_sdd/guides/<YYYY-MM-DD>_guide_<slug>.md`뿐이다.
 3. feature-only 스킬이다. 여러 feature가 감지되면 feature별로 guide를 나눈다.
 4. 기본은 non-interactive다. guide 방향, 대상 feature, 핵심 사용 시나리오를 바꾸는 ambiguity면 질문 1회를 추가하고, 그 외는 deterministic default로 계속 진행한다.
 5. spec를 primary source로 사용하되, concrete usage/API/implementation claim은 코드 evidence로 보강한다.
 6. 확정할 수 없는 정보는 assumption/unknown으로 표시한다.
-7. 기존 guide를 덮어쓸 때는 `_sdd/guides/prev/prev_guide_<slug>_<timestamp>.md`로 백업한다.
-8. 장문 guide는 caller가 먼저 skeleton/섹션 헤더를 직접 기록한 뒤, 같은 흐름에서 내용을 채운다.
+7. 장문 guide는 caller가 먼저 skeleton/섹션 헤더를 직접 기록한 뒤, 같은 흐름에서 내용을 채운다.
 
 ## Input Sources
 
@@ -122,18 +121,17 @@ guide가 길면 다음 순서를 따른다.
 3. TODO/placeholder를 제거하고 finalize
 4. 의존 섹션은 `default`, 독립 시나리오/API 섹션은 `worker`로 채운다
 
-### Step 6: Save with Backup Semantics
+### Step 6: Save
 
-- `_sdd/guides/` 준비
-- 기존 guide가 있으면 backup 생성
-- 새 guide 저장
+- `_sdd/guides/` 준비 (`mkdir -p`)
+- `<YYYY-MM-DD>_guide_<slug>.md` 저장. `slug`는 소문자 snake_case (영문 소문자, 숫자, `_`만 사용).
 - 생성 경로를 사용자에게 보고
 
 ## Output Contract
 
 기본 산출물:
 
-- `_sdd/guides/guide_<slug>.md`
+- `_sdd/guides/<YYYY-MM-DD>_guide_<slug>.md`
 
 required sections:
 

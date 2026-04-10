@@ -17,7 +17,6 @@ version: 1.9.0
 - [ ] canonical spec과 업그레이드 대상 파일 집합을 확정했다.
 - [ ] 현재 문서를 새 model 기준으로 gap 분석하고 결과를 먼저 보고했다.
 - [ ] 기존 내용을 보존 가능한 범위에서 새 global structure로 재배치했다.
-- [ ] 업그레이드 전 백업을 만들었다.
 - [ ] old feature-level usage/validation/reference/CIV 의존성을 적절한 surface로 내렸다.
 - [ ] 단순 implementation inventory는 줄이고, 필요한 supporting note만 남겼다.
 - [ ] 멀티파일 spec이면 index와 supporting file의 역할이 더 명확해졌다.
@@ -46,10 +45,9 @@ version: 1.9.0
 1. 구현 코드 파일은 수정하지 않는다.
 2. 기존 스펙 언어를 따른다.
 3. 기존 내용을 최대한 보존하고, 삭제 또는 축약이 필요하면 이유를 명시한다.
-4. 업그레이드 전 `_sdd/spec/prev/prev_<filename>_<timestamp>.md`로 백업한다.
-5. 결과는 기존 파일 경로에 in-place로 반영한다. 구조 재편이 너무 크면 `spec-rewrite` 후보로 보고한다.
-6. global spec을 old canonical 섹션으로 다시 두껍게 복구하지 않는다.
-7. `decision_log.md`가 있으면 보존하고, 주요 업그레이드 판단을 추가 기록할 수 있다.
+4. 결과는 기존 파일 경로에 in-place로 반영한다. 구조 재편이 너무 크면 `spec-rewrite` 후보로 보고한다.
+5. global spec을 old canonical 섹션으로 다시 두껍게 복구하지 않는다.
+6. `decision_log.md`가 있으면 보존하고, 주요 업그레이드 판단을 추가 기록할 수 있다.
 
 ## Process
 
@@ -83,9 +81,8 @@ version: 1.9.0
 - 어떤 정보를 global에 남기고 무엇을 내릴지
 - 구조 재편 필요 여부
 
-### Step 4: Backup and Migrate
+### Step 4: Migrate
 
-- 대상 파일 백업
 - 기존 내용을 새 global structure로 재배치
 - repo-wide invariant가 진짜 필요한 경우만 guardrails 또는 decisions로 반영
 - feature-level usage / validation / detail inventory는 supporting surface 또는 temp artifact로 재배치

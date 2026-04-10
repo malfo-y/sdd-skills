@@ -66,10 +66,12 @@ version: 2.0.0
 
 우선순위:
 1. 사용자 지정 경로
-2. `_sdd/implementation/implementation_plan.md`
-3. `_sdd/implementation/implementation_plan_phase_<n>.md`
-4. legacy uppercase fallback: `_sdd/implementation/IMPLEMENTATION_PLAN.md`, `_sdd/implementation/IMPLEMENTATION_PLAN_PHASE_<N>.md`
-5. `_sdd/drafts/feature_draft_<name>.md`의 Part 2
+2. `_sdd/implementation/*_implementation_plan_*.md` (slug 기반 glob)
+3. `_sdd/implementation/implementation_plan.md` (legacy 고정 경로)
+4. `_sdd/implementation/implementation_plan_phase_<n>.md`
+5. legacy uppercase fallback: `_sdd/implementation/IMPLEMENTATION_PLAN.md`, `_sdd/implementation/IMPLEMENTATION_PLAN_PHASE_<N>.md`
+6. `_sdd/drafts/*_feature_draft_*.md` (slug 기반 glob, Part 2)
+7. `_sdd/drafts/feature_draft_<name>.md` (legacy 고정 경로)
 
 ## Process
 
@@ -182,7 +184,8 @@ phase 리포트는 필요 시 `_sdd/implementation/implementation_report_phase_<
 
 ### Step 7: Final Report
 
-최종 결과를 `_sdd/implementation/implementation_report.md`에 저장한다.
+최종 결과를 `_sdd/implementation/<YYYY-MM-DD>_implementation_report_<slug>.md`에 저장한다.
+- `slug`는 소문자 snake_case (영문 소문자, 숫자, `_`만 사용)
 
 포함 내용:
 - 완료 task
@@ -190,8 +193,6 @@ phase 리포트는 필요 시 `_sdd/implementation/implementation_report_phase_<
 - 테스트 결과
 - unplanned dependency
 - critical/quality follow-up
-
-기존 리포트가 있으면 `prev/prev_implementation_report_<timestamp>.md`로 아카이브한다.
 
 ## Worker Prompt Contract
 

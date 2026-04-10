@@ -36,7 +36,7 @@ JWT 기반 인증 시스템을 구현한다. 로그인, 로그아웃, 토큰 갱
 ### Step 1: feature-draft
 **Claude subagent_type**: `feature-draft`
 **입력 파일**: `_sdd/spec/main.md`
-**출력 파일**: `_sdd/drafts/feature_draft_jwt_auth.md`
+**출력 파일**: `_sdd/drafts/2026-04-04_feature_draft_jwt_auth.md`
 
 **프롬프트**:
 JWT 기반 인증 시스템에 대한 feature draft를 작성하세요.
@@ -45,7 +45,7 @@ Part 2에는 Target Files 기반 implementation plan을 작성하세요.
 
 ### Step 2: implementation
 **Claude subagent_type**: `implementation`
-**입력 파일**: `_sdd/drafts/feature_draft_jwt_auth.md`, `_sdd/spec/main.md`
+**입력 파일**: `_sdd/drafts/2026-04-04_feature_draft_jwt_auth.md`, `_sdd/spec/main.md`
 **출력 파일**:
 - `src/middleware/auth.js`
 - `src/routes/auth.js`
@@ -63,7 +63,7 @@ feature draft를 기반으로 구현을 진행하세요.
 
 ### Step 4: spec-update-done
 **Claude subagent_type**: `spec-update-done`
-**입력 파일**: `_sdd/spec/main.md`, `_sdd/drafts/feature_draft_jwt_auth.md`, 구현된 코드 파일
+**입력 파일**: `_sdd/spec/main.md`, `_sdd/drafts/2026-04-04_feature_draft_jwt_auth.md`, 구현된 코드 파일
 **출력 파일**: `_sdd/spec/main.md`
 
 **프롬프트**:

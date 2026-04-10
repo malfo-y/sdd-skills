@@ -12,7 +12,7 @@ version: 3.0.0
 | Medium | Step 3 of 3 | 구현 완료 후 검증 |
 | Small | Optional | 독립 코드 감사 |
 
-이 agent는 구현 상태를 리뷰하고 `_sdd/implementation/implementation_review.md`에 findings-first 리포트를 저장한다.
+이 agent는 구현 상태를 리뷰하고 `_sdd/implementation/<YYYY-MM-DD>_implementation_review_<slug>.md`에 findings-first 리포트를 저장한다.
 
 ## Acceptance Criteria
 
@@ -51,10 +51,8 @@ stale 판단 예시:
 ## Review Output
 
 기본 저장 경로:
-- `<project-root>/_sdd/implementation/implementation_review.md`
-
-기존 파일이 있으면:
-- `<project-root>/_sdd/implementation/prev/prev_implementation_review_<timestamp>.md`로 아카이브 후 새 파일 생성
+- `<project-root>/_sdd/implementation/<YYYY-MM-DD>_implementation_review_<slug>.md`
+- `slug`는 소문자 snake_case (영문 소문자, 숫자, `_`만 사용)
 
 리포트는 findings-first로 작성하며, severity는 `Critical / High / Medium / Low` 네 단계로 정리한다.
 
@@ -100,10 +98,11 @@ stale 판단 예시:
 
 다음 순서로 입력을 찾는다.
 1. 사용자 지정 경로
-2. `_sdd/implementation/implementation_plan.md`
-3. `_sdd/implementation/implementation_plan_phase_<n>.md`
-4. legacy uppercase fallback: `_sdd/implementation/IMPLEMENTATION_PLAN.md`, `_sdd/implementation/IMPLEMENTATION_PLAN_PHASE_<N>.md`
-5. `_sdd/spec/*.md`
+2. `_sdd/implementation/*_implementation_plan_*.md` (slug 기반 glob)
+3. `_sdd/implementation/implementation_plan.md` (legacy 고정 경로)
+4. `_sdd/implementation/implementation_plan_phase_<n>.md`
+5. legacy uppercase fallback: `_sdd/implementation/IMPLEMENTATION_PLAN.md`, `_sdd/implementation/IMPLEMENTATION_PLAN_PHASE_<N>.md`
+6. `_sdd/spec/*.md`
 
 여러 phase 파일이 있으면 기본은 최신 phase 우선이다. 범위를 확정할 수 없으면 최신 phase 기준으로 진행하고 가정을 리포트에 적는다.
 
@@ -187,9 +186,8 @@ Tier 3:
 
 1. 리포트가 장문이거나 섹션이 많으면 caller가 먼저 skeleton/섹션 헤더를 직접 기록한다.
 2. skeleton 작성 후 의존성 없는 섹션부터 내용을 채운다.
-3. 기존 리뷰 파일이 있으면 `prev/`로 아카이브한다.
-4. Tier 3 리뷰는 `Assumptions` 섹션을 포함한다.
-5. 사용자가 빠른 상태 확인만 원했다면 최종 리포트와 별도로 Quick Review 요약을 함께 제공한다.
+3. Tier 3 리뷰는 `Assumptions` 섹션을 포함한다.
+4. 사용자가 빠른 상태 확인만 원했다면 최종 리포트와 별도로 Quick Review 요약을 함께 제공한다.
 
 리포트에는 다음을 포함한다.
 - findings

@@ -24,24 +24,23 @@ version: 2.3.0
 
 ## Hard Rules
 
-1. spec 수정 전 `prev/` 백업을 만든다.
-2. 코드와 구현 문서는 수정하지 않는다.
-3. 충돌하거나 불명확한 요구사항은 비파괴적으로 처리하고 `Open Questions`에 남긴다.
-4. decision 기록이 필요하면 `decision_log.md`에 최소한으로 남긴다.
-5. 이미 완료된 구현 sync는 이 agent가 아니라 `spec-update-done`의 책임이다.
-6. temporary spec의 `Touchpoints`, `Implementation Plan`, `Validation Plan` 전체를 global spec 본문에 복사하지 않는다.
-7. global spec에는 배경/개념, scope/non-goals/guardrails, key decisions 같은 지속 정보만 남긴다.
-8. repo-wide invariant가 정말 필요한 경우만 guardrails 또는 key decisions에 반영한다.
-9. 새 sub-spec 파일 생성 시 반드시 main.md 인덱스에 링크를 추가한다. 고아 파일 금지.
-10. 기존 파일 분할 구조를 변경하지 않는다. 파일 추가만 허용, 기존 구조 재편성 금지.
-11. `_sdd/` artifact 경로는 lowercase canonical을 기본으로 하되, 입력을 읽을 때는 legacy uppercase fallback도 허용한다.
+1. 코드와 구현 문서는 수정하지 않는다.
+2. 충돌하거나 불명확한 요구사항은 비파괴적으로 처리하고 `Open Questions`에 남긴다.
+3. decision 기록이 필요하면 `decision_log.md`에 최소한으로 남긴다.
+4. 이미 완료된 구현 sync는 이 agent가 아니라 `spec-update-done`의 책임이다.
+5. temporary spec의 `Touchpoints`, `Implementation Plan`, `Validation Plan` 전체를 global spec 본문에 복사하지 않는다.
+6. global spec에는 배경/개념, scope/non-goals/guardrails, key decisions 같은 지속 정보만 남긴다.
+7. repo-wide invariant가 정말 필요한 경우만 guardrails 또는 key decisions에 반영한다.
+8. 새 sub-spec 파일 생성 시 반드시 main.md 인덱스에 링크를 추가한다. 고아 파일 금지.
+9. 기존 파일 분할 구조를 변경하지 않는다. 파일 추가만 허용, 기존 구조 재편성 금지.
+10. `_sdd/` artifact 경로는 lowercase canonical을 기본으로 하되, 입력을 읽을 때는 legacy uppercase fallback도 허용한다.
 
 ## Input Sources
 
 1. 사용자 대화
 2. `_sdd/spec/user_spec.md`
 3. `_sdd/spec/user_draft.md`
-4. `_sdd/drafts/feature_draft_<name>.md`
+4. `_sdd/drafts/*_feature_draft_*.md` (slug 기반 glob), `_sdd/drafts/feature_draft_<name>.md` (legacy fallback)
 5. `_sdd/spec/decision_log.md`
 
 처리 후 rename:

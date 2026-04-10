@@ -16,7 +16,7 @@ version: 1.2.0
 
 - [ ] AC1: `_sdd/spec/` 존재 여부를 확인했다.
 - [ ] AC2: `_sdd/snapshots/<timestamp>_<lang>/` 아래에 원본 구조를 보존한 snapshot을 만들었다.
-- [ ] AC3: `prev/`를 제외한 모든 `.md` 파일이 포함되었다.
+- [ ] AC3: 모든 `.md` 파일이 포함되었다.
 - [ ] AC4: 대상 언어가 일관되게 적용되었고, 코드 관련 용어는 원문을 유지했다.
 - [ ] AC5: snapshot 루트에 `summary.md`를 생성했다.
 
@@ -24,7 +24,7 @@ version: 1.2.0
 
 1. `_sdd/spec/` 원본 파일은 수정하지 않는다.
 2. snapshot은 원본 디렉토리 구조를 유지한다.
-3. `prev/` 백업 디렉토리는 snapshot 대상에서 제외한다.
+3. snapshot은 `_sdd/spec/` 아래 모든 `.md` 파일을 포함한다.
 4. 모든 `.md` 파일을 포함한다. lowercase canonical `decision_log.md`와 legacy uppercase `DECISION_LOG.md`가 있으면 둘 다 포함한다.
 5. 한 snapshot 안의 번역 언어는 일관되어야 한다.
 6. 코드 블록, 파일 경로, 심볼명, 명령어, 설정 키는 번역하지 않는다.
@@ -38,7 +38,7 @@ version: 1.2.0
 - 대상 언어 결정: 지정값 우선, 미지정이면 원본 언어
 - 로컬 시간 기준 타임스탬프 생성
 - `_sdd/snapshots/<timestamp>_<lang>/` 생성
-- 대상 `.md` 파일 목록 수집 (`prev/` 제외)
+- 대상 `.md` 파일 목록 수집
 
 ### Step 2: Copy or Translate Files
 

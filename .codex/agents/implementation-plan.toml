@@ -9,13 +9,13 @@ developer_instructions = '''
 | Medium | Step 2 of 3 | 구현 로드맵 필요 |
 | Small | Optional | 구현 전 리스크/순서 정리 |
 
-이 agent는 `_sdd/implementation/implementation_plan.md`를 생성한다. 목표는 temporary spec의 delta를 실행 가능한 plan으로 세분화하되, `implementation`이 바로 읽을 수 있도록 task / dependency / target files를 명시하는 것이다.
+이 agent는 `_sdd/implementation/<YYYY-MM-DD>_implementation_plan_<slug>.md`를 생성한다. 목표는 temporary spec의 delta를 실행 가능한 plan으로 세분화하되, `implementation`이 바로 읽을 수 있도록 task / dependency / target files를 명시하는 것이다.
 
 ## Acceptance Criteria
 
 > 프로세스 완료 후 아래 기준을 자체 검증한다. 미충족 항목은 해당 단계로 돌아가 수정한다.
 
-- [ ] `_sdd/implementation/implementation_plan.md`가 생성된다.
+- [ ] `_sdd/implementation/<YYYY-MM-DD>_implementation_plan_<slug>.md`가 생성된다.
 - [ ] 모든 task에 `**Target Files**`가 포함된다.
 - [ ] `Contract/Invariant Delta`와 `Validation Plan` linkage가 plan에 보존된다.
 - [ ] phase, dependency, risk, open question이 빠지지 않는다.
@@ -38,9 +38,10 @@ developer_instructions = '''
 
 1. 사용자 요청
 2. `_sdd/implementation/user_input.md` (있다면)
-3. `_sdd/drafts/feature_draft_<name>.md`
-4. `_sdd/spec/*.md`
-5. 코드베이스 구조 및 현재 파일 패턴
+3. `_sdd/drafts/*_feature_draft_*.md` (slug 기반 glob)
+4. `_sdd/drafts/feature_draft_<name>.md` (legacy 고정 경로)
+5. `_sdd/spec/*.md`
+6. 코드베이스 구조 및 현재 파일 패턴
 
 `user_input.md`를 사용했다면 처리 후 `_processed_user_input.md`로 이름을 바꾼다.
 
@@ -84,7 +85,7 @@ developer_instructions = '''
 
 - `_sdd/spec/*.md`
 - lowercase canonical `_sdd/spec/decision_log.md`, legacy uppercase `_sdd/spec/DECISION_LOG.md` fallback
-- `_sdd/drafts/feature_draft_<name>.md`
+- `_sdd/drafts/*_feature_draft_*.md` (slug 기반 glob), `_sdd/drafts/feature_draft_<name>.md` (legacy fallback)
 - 관련 코드/테스트/설정 파일
 
 목적:

@@ -7,13 +7,13 @@ model: inherit
 
 # Feature Draft
 
-사용자 요구사항으로부터 temporary spec draft (Part 1) + implementation plan (Part 2)을 `_sdd/drafts/feature_draft_<feature_name>.md` 한 파일에 생성한다.
+사용자 요구사항으로부터 temporary spec draft (Part 1) + implementation plan (Part 2)을 `_sdd/drafts/<YYYY-MM-DD>_feature_draft_<slug>.md` 한 파일에 생성한다.
 
 Part 1은 canonical temporary spec 7섹션을 직접 담고, Part 2는 그 delta를 task와 phase로 전개한다.
 
 ## Acceptance Criteria
 
-- [ ] `_sdd/drafts/feature_draft_<feature_name>.md`가 생성된다.
+- [ ] `_sdd/drafts/<YYYY-MM-DD>_feature_draft_<slug>.md`가 생성된다.
 - [ ] Part 1이 `<!-- spec-update-todo-input-start -->` / `<!-- spec-update-todo-input-end -->` 마커를 포함한다.
 - [ ] Part 1이 temporary spec 7섹션을 모두 포함한다.
 - [ ] Part 1의 `Contract/Invariant Delta`와 `Validation Plan`이 ID 기반으로 연결된다.

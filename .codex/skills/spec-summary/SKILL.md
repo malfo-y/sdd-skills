@@ -37,11 +37,10 @@ global summary는 현재 thinner global model을 반영해야 한다. 즉 글로
 
 1. `_sdd/spec/*.md`는 읽기 전용이다. 단, `summary.md`는 생성/갱신할 수 있다.
 2. README 갱신은 사용자가 명시적으로 요청한 경우에만 수행한다.
-3. 기존 `summary.md`가 있으면 `prev/prev_summary_<timestamp>.md`로 백업 후 갱신한다.
-4. README는 전체를 덮어쓰지 않는다. `spec-summary` marker block만 갱신하거나 없으면 안전하게 추가한다.
-5. 문서 언어는 기존 스펙/문서를 따른다. 기존 스펙이 없으면 한국어를 기본으로 한다.
-6. summary가 길거나 구조적으로 복잡하면 caller가 먼저 skeleton/섹션 헤더를 직접 기록한 뒤, 같은 흐름에서 내용을 채운다.
-7. split spec 또는 컴포넌트 수가 많으면 병렬 추출 후 부모가 최종 summary를 통합한다.
+3. README는 전체를 덮어쓰지 않는다. `spec-summary` marker block만 갱신하거나 없으면 안전하게 추가한다.
+4. 문서 언어는 기존 스펙/문서를 따른다. 기존 스펙이 없으면 한국어를 기본으로 한다.
+5. summary가 길거나 구조적으로 복잡하면 caller가 먼저 skeleton/섹션 헤더를 직접 기록한 뒤, 같은 흐름에서 내용을 채운다.
+6. split spec 또는 컴포넌트 수가 많으면 병렬 추출 후 부모가 최종 summary를 통합한다.
 
 ## Input Sources
 
@@ -51,7 +50,7 @@ global summary는 현재 thinner global model을 반영해야 한다. 즉 글로
 2. `_sdd/spec/main.md` 또는 프로젝트 index spec
 3. index spec이 가리키는 sub-spec 파일
 4. `_sdd/implementation/implementation_progress*.md`
-5. `_sdd/implementation/implementation_review.md`
+5. `_sdd/implementation/*_implementation_review_*.md` (slug 기반 glob), `_sdd/implementation/implementation_review.md` (legacy fallback)
 6. `README.md` (README sync 요청 시만)
 7. `_sdd/env.md` (로컬 검증이 필요할 때만)
 

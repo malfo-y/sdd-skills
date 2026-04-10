@@ -40,9 +40,9 @@
 ```
 
 **Expected Result:**
-- `_sdd/drafts/feature_draft_<name>.md` — 스펙 패치 초안 + 구현 태스크 리스트
+- `_sdd/drafts/<YYYY-MM-DD>_feature_draft_<slug>.md` — 스펙 패치 초안 + 구현 태스크 리스트
 - `_sdd/spec/<project>.md` 업데이트 — planned persistent truth 반영
-- `_sdd/implementation/implementation_plan.md` — Target Files 기반 병렬 실행 계획
+- `_sdd/implementation/<YYYY-MM-DD>_implementation_plan_<slug>.md` — Target Files 기반 병렬 실행 계획
 - 구현 완료 후 구현 리뷰와 spec sync까지 연결돼 스펙과 코드 간 드리프트가 설명 가능한 상태
 
 ### Scenario 2b: 대규모 기능 추가 (sdd-autopilot 자동 실행)
@@ -70,7 +70,7 @@
 ```
 
 **Expected Result:**
-- `_sdd/pr/pr_review.md` — findings-first 코드 품질 검증 + spec 존재 시 spec 준수 여부 판정 + 구체적 피드백
+- `_sdd/pr/<YYYY-MM-DD>_pr_review_<slug>.md` — findings-first 코드 품질 검증 + spec 존재 시 spec 준수 여부 판정 + 구체적 피드백
 
 ### Scenario 3b: 스펙 현황 파악 및 의사결정
 

@@ -18,21 +18,19 @@ version: 2.2.0
 ## Acceptance Criteria
 > 프로세스 완료 후 아래 기준을 자체 검증한다. 미충족 항목은 해당 단계로 돌아가 수정한다.
 
-- [ ] AC1: `_sdd/guides/guide_<slug>.md` 파일이 생성되었다
+- [ ] AC1: `_sdd/guides/<YYYY-MM-DD>_guide_<slug>.md` 파일이 생성되었다
 - [ ] AC2: §1-§5 required sections가 모두 포함되어 있다
 - [ ] AC3: 메타데이터에 신뢰도(High/Medium/Low)가 표시되어 있다
-- [ ] AC4: 기존 가이드 파일이 있었다면 `_sdd/guides/prev/`에 백업이 생성되었다
-- [ ] AC5: `_sdd/spec/`, 애플리케이션 코드, 설정 파일, 테스트를 수정하지 않았다
+- [ ] AC4: `_sdd/spec/`, 애플리케이션 코드, 설정 파일, 테스트를 수정하지 않았다
 
 ## Hard Rules
 
 1. **Spec/code read-only**: `_sdd/spec/`, 애플리케이션 코드, 설정, 테스트 수정 금지.
-2. **Allowed outputs**: `_sdd/guides/guide_<slug>.md`와 `_sdd/guides/prev/prev_guide_<slug>_<timestamp>.md`만 생성/교체.
+2. **Allowed outputs**: `_sdd/guides/<YYYY-MM-DD>_guide_<slug>.md`만 생성.
 3. **Non-interactive**: 추론 가능하면 묻지 않는다. 확인 불가 시 가정을 명시한다.
 4. **Spec-first**: `_sdd/spec/`이 primary source. 코드는 구현 디테일 보완용.
 5. **Per-feature output**: 복수 기능 → 기능당 1 파일.
-6. **Backup before overwrite**: 기존 파일 → `_sdd/guides/prev/`에 타임스탬프 백업 후 덮어쓰기.
-7. **Language rule**: 기존 스펙/문서의 언어를 따른다. 사용자 명시 지정 시 해당 언어. 새 프로젝트는 한국어 기본.
+6. **Language rule**: 기존 스펙/문서의 언어를 따른다. 사용자 명시 지정 시 해당 언어. 새 프로젝트는 한국어 기본.
 
 ## Process
 
@@ -42,7 +40,7 @@ version: 2.2.0
 
 1. 사용자 요청에서 대상 기능 후보 파악.
 2. 복수 기능 → 기능당 1 출력 파일 계획.
-3. 출력 파일명을 English slug로 정규화: `guide_<slug>.md`.
+3. 출력 파일명을 English slug로 정규화: `<YYYY-MM-DD>_guide_<slug>.md`.
 4. 출력 언어 결정.
 
 ### Step 2: Locate and Validate Spec Context
@@ -103,7 +101,7 @@ version: 2.2.0
 
 호출 시 Required sections 전체와 맥락(스펙, 코드 증거, Step 2-3 분석)을 포함. `references/template-compact.md`의 Writing Rules와 §1-§5 구조 준수.
 
-- **단일 기능**: Agent 1회 호출로 `guide_<slug>.md` 작성.
+- **단일 기능**: Agent 1회 호출로 `<YYYY-MM-DD>_guide_<slug>.md` 작성.
 - **복수 기능** (Hard Rule #5): 기능별 Agent 병렬 디스패치.
 
 #### Required Sections
@@ -124,18 +122,17 @@ Optional appendix: spec references, code references, assumptions/open points
 - **Inline Citations**: 본문에서 `[filepath:functionName]` 형식. §2-§5 전체에서 코드 근거가 있으면 반드시 사용.
 - **Low 신뢰도**: citation 대신 "코드 미확인" 표기.
 
-### Step 6: Save with Backup Semantics
+### Step 6: Save
 
-**Tools**: `Bash (mkdir -p, cp/mv)`, `Write`
+**Tools**: `Bash (mkdir -p)`, `Write`
 
 1. `_sdd/guides/` 존재 확인 (mkdir -p).
-2. 기존 파일 → `_sdd/guides/prev/prev_guide_<slug>_<timestamp>.md` 백업.
-3. `guide_<slug>.md` 작성.
-4. 생성 경로를 사용자에게 보고.
+2. `<YYYY-MM-DD>_guide_<slug>.md` 작성. `slug`는 소문자 snake_case (영문 소문자, 숫자, `_`만 사용).
+3. 생성 경로를 사용자에게 보고.
 
 ## Output Format
 
-- **File**: `_sdd/guides/guide_<slug>.md`
+- **File**: `_sdd/guides/<YYYY-MM-DD>_guide_<slug>.md`
 - **Schema**: `references/output-format.md` 참조
 
 ```markdown
@@ -164,7 +161,7 @@ Optional appendix: spec references, code references, assumptions/open points
 | Feature 모호 | 스펙에서 가장 명확한 표현 사용 + 가정 기록 |
 | 코드 증거 없음 | 스펙 기반 보고서 생성, 코드 참조 unavailable 표기 |
 | 복수 기능 요청 | 기능별 별도 가이드 파일 생성 |
-| 기존 가이드 파일 존재 | `_sdd/guides/prev/`에 백업 후 덮어쓰기 |
+| 기존 가이드 파일 존재 | 날짜+slug로 구분되므로 별도 처리 불필요 |
 | 언어 혼재 | 기존 스펙/문서 언어 따름. 사용자 지정 시 해당 언어. 새 프로젝트는 한국어. |
 
 ## References

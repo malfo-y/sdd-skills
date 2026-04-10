@@ -11,7 +11,7 @@ temporary spec의 delta를 실행 가능한 plan으로 세분화한다. `impleme
 
 ## Acceptance Criteria
 
-- [ ] `_sdd/implementation/implementation_plan.md`가 생성된다.
+- [ ] `_sdd/implementation/<YYYY-MM-DD>_implementation_plan_<slug>.md`가 생성된다.
 - [ ] 모든 task에 `**Target Files**`가 포함된다.
 - [ ] `Contract/Invariant Delta`와 `Validation Plan` linkage가 plan에 보존된다.
 - [ ] phase, dependency, risk, open question이 빠지지 않는다.
@@ -33,9 +33,10 @@ temporary spec의 delta를 실행 가능한 plan으로 세분화한다. `impleme
 
 1. 사용자 요청
 2. `_sdd/implementation/user_input.md` (있다면)
-3. `_sdd/drafts/feature_draft_<name>.md`
-4. `_sdd/spec/*.md`
-5. 코드베이스 구조 및 현재 파일 패턴
+3. `_sdd/drafts/*_feature_draft_*.md` (slug 기반 glob)
+4. `_sdd/drafts/feature_draft_<name>.md` (legacy 고정 경로)
+5. `_sdd/spec/*.md`
+6. 코드베이스 구조 및 현재 파일 패턴
 
 ## Target Files Rules
 
@@ -51,7 +52,7 @@ temporary spec의 delta를 실행 가능한 plan으로 세분화한다. `impleme
 
 ### Step 2: Read Spec and Code Context
 
-- `_sdd/spec/*.md`, `_sdd/drafts/feature_draft_<name>.md`
+- `_sdd/spec/*.md`, `_sdd/drafts/*_feature_draft_*.md` (slug 기반 glob), `_sdd/drafts/feature_draft_<name>.md` (legacy fallback)
 - 관련 코드/테스트/설정 파일
 - `Contract/Invariant Delta`, `Touchpoints`, `Validation Plan` 추출
 
