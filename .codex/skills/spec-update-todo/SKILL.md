@@ -1,7 +1,7 @@
 ---
 name: spec-update-todo
 description: This skill should be used when the user asks to "update spec with features", "add features to spec", "update spec from input", "add requirements to spec", "spec update", "expand spec", "add to-do to spec", "add to-implement to spec", or mentions adding new features, requirements, or planned improvements to an existing specification document.
-version: 2.3.0
+version: 2.3.1
 ---
 
 # Spec Update from Planned Change
@@ -19,6 +19,7 @@ version: 2.3.0
 - [ ] 입력 소스를 식별하고 파싱한다.
 - [ ] temporary spec 또는 user input을 global spec의 thin core에 매핑한다.
 - [ ] global spec에 planned persistent information만 반영하고, execution-only detail은 남기지 않는다.
+- [ ] 아직 구현되지 않은 planned 내용은 스펙에서 `🚧 Planned`로 명시된다.
 - [ ] 업데이트 적용 후 요약을 남긴다.
 - [ ] 처리한 input file은 `_processed_*`로 마킹한다.
 
@@ -33,6 +34,8 @@ version: 2.3.0
 7. repo-wide invariant는 아래 `Repo-wide Invariant Test`를 통과할 때만 guardrails 또는 key decisions에 반영한다.
 8. 새 sub-spec 파일 생성 시 반드시 main.md 인덱스에 링크를 추가한다. 고아 파일 금지.
 9. 기존 파일 분할 구조를 변경하지 않는다. 파일 추가만 허용, 기존 구조 재편성 금지.
+10. 아직 구현되지 않은 planned 정보는 스펙에서 반드시 `🚧 Planned`를 붙여 현재 truth와 구분한다.
+11. planned 내용을 기존 implemented truth와 같은 문단이나 bullet에 무표식으로 섞어 쓰지 않는다.
 
 ## Repo-wide Invariant Test
 
@@ -138,6 +141,8 @@ spec를 갱신한다.
 - 기존 문체와 언어를 맞춘다.
 - 중복 서술을 만들지 않는다.
 - 구현 완료처럼 쓰지 않고 planned requirement로 쓴다.
+- 아직 구현되지 않은 새 heading, bullet, 문장에는 `🚧 Planned`를 직접 붙인다.
+- planned block을 추가할 때는 `## 🚧 Planned ...`, `- 🚧 Planned: ...`, 또는 이에 준하는 명시적 표식을 사용한다.
 - repo-wide가 아닌 contract/validation detail은 global spec 밖에 둔다.
 - 신규 sub-spec 파일 생성 시 파일 생성 후 main.md 인덱스에 링크를 추가한다.
 
