@@ -8,7 +8,7 @@ version: 1.2.0
 
 ## Goal
 
-구조화된 반복 토론으로 주제를 좁히고, 필요한 맥락을 수집하며, 최종적으로 `_sdd/discussion/discussion_<title>.md`에 토론 요약을 저장한다. 구현이나 스펙 수정은 하지 않고, 후속 스킬이 사용할 수 있는 결정과 open question을 정리하는 데 집중한다.
+구조화된 반복 토론으로 주제를 좁히고, 필요한 맥락을 수집하며, 최종적으로 `_sdd/discussion/<YYYY-MM-DD>_discussion_<slug>.md`에 토론 요약을 저장한다. 구현이나 스펙 수정은 하지 않고, 후속 스킬이 사용할 수 있는 결정과 open question을 정리하는 데 집중한다.
 
 ## Acceptance Criteria
 
@@ -17,7 +17,7 @@ version: 1.2.0
 - [ ] AC1: 토론 주제와 범위를 명확히 했다.
 - [ ] AC2: 필요한 로컬 맥락 또는 최신 외부 사실을 수집했다.
 - [ ] AC3: 반복 토론 중간에 핵심 논점, 결정, 미결 질문을 추적했다.
-- [ ] AC4: `_sdd/discussion/discussion_<title>.md`를 생성했다.
+- [ ] AC4: `_sdd/discussion/<YYYY-MM-DD>_discussion_<slug>.md`를 생성했다.
 - [ ] AC5: 최종 요약에 논점, 결정, open question, action item이 포함되었다.
 
 ## Companion Assets
@@ -28,7 +28,7 @@ version: 1.2.0
 ## Hard Rules
 
 1. 이 스킬은 interactive-only다. `request_user_input`을 사용할 수 없으면 즉시 중단한다.
-2. 코드, 스펙, 설정 파일은 수정하지 않는다. 생성 가능한 파일은 `_sdd/discussion/discussion_<title>.md` 하나뿐이다.
+2. 코드, 스펙, 설정 파일은 수정하지 않는다. 생성 가능한 파일은 `_sdd/discussion/<YYYY-MM-DD>_discussion_<slug>.md` 하나뿐이다.
 3. Step 1-3은 읽기 전용 탐색만 사용한다.
 4. 모든 질문에는 `정리/종료` 성격의 선택지를 넣는다.
 5. 라운드당 질문은 정확히 1개만 한다.
@@ -206,7 +206,7 @@ LOOP:
 
 ### Step 4: Write the Discussion Summary
 
-`_sdd/discussion/discussion_<title>.md`에 아래를 저장한다.
+`_sdd/discussion/<YYYY-MM-DD>_discussion_<slug>.md`에 아래를 저장한다.
 
 - 핵심 논점
 - 결정 사항
@@ -220,9 +220,9 @@ LOOP:
 
 ## Output Contract
 
-기본 산출물: `_sdd/discussion/discussion_<title>.md`
+기본 산출물: `_sdd/discussion/<YYYY-MM-DD>_discussion_<slug>.md`
 
-파일명은 영문 slug를 사용한다 (예: "인증 시스템 설계" -> `discussion_auth_system_design.md`). 소문자, 특수문자는 `_`로 대체, 최대 50자.
+파일명은 `<YYYY-MM-DD>_discussion_<slug>.md` 패턴을 사용한다. slug는 영문 소문자, 특수문자는 `_`로 대체, 최대 50자 (예: "인증 시스템 설계" → `2026-04-10_discussion_auth_system_design.md`).
 
 #### 요약 출력 형식
 

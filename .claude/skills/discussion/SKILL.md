@@ -17,7 +17,7 @@ version: 1.2.0
 > 프로세스 완료 후 아래 기준을 자체 검증한다. 미충족 항목은 해당 단계로 돌아가 수정한다.
 - [ ] AC1: 구조화된 토론이 최소 1라운드 이상 진행되었다
 - [ ] AC2: key decisions / action items가 내부 상태에 추적·정리되었다
-- [ ] AC3: 토론 요약 파일이 `_sdd/discussion/discussion_<title>.md`에 저장되었다
+- [ ] AC3: 토론 요약 파일이 `_sdd/discussion/<YYYY-MM-DD>_discussion_<slug>.md`에 저장되었다
 - [ ] AC4: 요약에 핵심 논점, 결정 사항, 미결 질문, 실행 항목 섹션이 모두 포함되었다
 
 ## Hard Rules
@@ -240,9 +240,9 @@ LOOP:
 
 **Tools**: `Write`
 
-토론 종료 시 구조화된 요약을 생성하고, `_sdd/discussion/discussion_<title>.md`로 자동 저장한다.
+토론 종료 시 구조화된 요약을 생성하고, `_sdd/discussion/<YYYY-MM-DD>_discussion_<slug>.md`로 자동 저장한다.
 
-- **파일명**: 소문자, 특수문자는 `_`로 대체, 최대 50자, 항상 영문 (예: "인증 시스템 설계" → `discussion_auth_system_design.md`)
+- **파일명**: `<YYYY-MM-DD>_discussion_<slug>.md` 패턴. slug는 소문자 영문, 특수문자는 `_`로 대체, 최대 50자 (예: "인증 시스템 설계" → `2026-04-10_discussion_auth_system_design.md`)
 - **언어**: 토론에서 사용된 언어로 작성
 
 #### 요약 출력 형식
