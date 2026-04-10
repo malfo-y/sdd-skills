@@ -21,7 +21,7 @@ version: 2.3.0
 - [ ] AC5: E2E 테스트/검증이 실제로 실행되었다 (인라인 또는 ralph-loop). Execute → Verify 패턴 준수. 결과가 사용자가 볼 수 있는 형태로 저장되었다 (`_sdd/implementation/test_results/` 또는 `ralph/state.md`). 테스트 건너뛰기 금지 — 실행 불가 시 사유와 수동 검증 방법을 보고서에 명시해야 한다.
 - [ ] AC6: 테스트/검증 결과가 사용자에게 명시적으로 보고되었다 (통과/실패 건수, 실패 시 원인 요약, 수동 확인 필요 항목)
 - [ ] AC7: 최종 결과와 후속 조치를 `_sdd/pipeline/report_<topic>_<timestamp>.md`에 정리했다
-- [ ] AC8: `_sdd/spec/` 직접 수정은 `spec-update-done` 또는 `spec-update-todo` 에이전트에만 위임했다
+- [ ] AC8: `_sdd/spec/` 직접 수정은 `sdd-skills:spec-update-done` 또는 `sdd-skills:spec-update-todo` 에이전트에만 위임했다
 - [ ] AC9: Phase 2 진입 전에 Step 6 checkpoint에서 pre-flight 결과를 공유하고 explicit approval을 받았다
 
 ## Workflow Position
@@ -51,18 +51,19 @@ User Request
 
 ## Hard Rules
 
-1. **Discussion 인라인 실행 + `_sdd/spec/` 직접 수정 금지**: Step 2 대화는 autopilot 본문에서 직접 수행한다. global spec 수정은 반드시 `spec-update-done` / `spec-update-todo` 에이전트에 위임한다.
+1. **Discussion 인라인 실행 + `_sdd/spec/` 직접 수정 금지**: Step 2 대화는 autopilot 본문에서 직접 수행한다. global spec 수정은 반드시 `sdd-skills:spec-update-done` / `sdd-skills:spec-update-todo` 에이전트에 위임한다.
 2. **Phase 2 무중단 + 파일 기반 상태 전달**: Phase 2 진입 후 `request_user_input` 금지. 에이전트에는 파일 경로만 전달하며, 전체 출력을 부모 컨텍스트에 누적하지 않는다.
 3. **오케스트레이터 저장 + 공유 로그 필수**: 오케스트레이터는 `_sdd/pipeline/orchestrators/orchestrator_<topic>.md`에 저장한다. 실행 시 `_sdd/pipeline/log_<topic>_<timestamp>.md`를 생성하고 각 단계 완료 후 핵심 결정사항을 기록한다.
 4. **에이전트 호출 시 원문 전달**: 사용자의 원래 요청과 관련 컨텍스트 파일 경로를 포함한다. 의미를 잃을 정도로 축약하지 않는다.
-5. **Review-Fix 사이클 필수**: review 포함 파이프라인에서는 `implementation-review` subagent로 review를 수행하고, 이슈 수정이 필요하면 `implementation` subagent를 다시 호출해 fix를 적용한 뒤, 다시 `implementation-review` subagent로 re-review를 수행해야 한다. 리뷰만 하고 끝나는 것은 불허한다.
+5. **Review-Fix 사이클 필수**: review 포함 파이프라인에서는 `sdd-skills:implementation-review` subagent로 review를 수행하고, 이슈 수정이 필요하면 `sdd-skills:implementation` subagent를 다시 호출해 fix를 적용한 뒤, 다시 `sdd-skills:implementation-review` subagent로 re-review를 수행해야 한다. 리뷰만 하고 끝나는 것은 불허한다.
 6. **Execute → Verify 필수**: 모든 단계는 실행(Execute) + 검증(Verify) 두 페이즈를 거친다. 에이전트 호출만으로 완료 간주 금지. Exit Criteria 미충족 시 다음 단계 진행 불가.
 7. **Pre-flight + approval 필수**: Phase 2 진입 전 `_sdd/env.md`와 `.claude/settings.local.json`을 읽고 실행 가능성을 점검한 뒤 explicit approval을 받아야 한다.
 8. **Agent lifecycle 수집 필수**: `spawn_agent(...)`로 시작한 실행 단위는 `wait_agent(...)`로 반드시 수집하고, 필요 시 `send_input(...)` 또는 재-spawn으로 보완한다.
 9. **로그 기반 상태 관리**: 오케스트레이터는 `_sdd/pipeline/orchestrators/`에 유지. 활성/완료 구분은 로그 파일 status로 판단한다.
 10. 한국어를 기본으로 하되 사용자 언어를 따른다.
 11. `_sdd/` artifact 경로는 lowercase canonical을 기본으로 하되, 입력을 읽을 때는 legacy uppercase fallback도 허용한다.
-12. spec-less repo에서도 중단하지 않는다. `_sdd/spec/`가 없으면 `_sdd/` workspace bootstrap + code-first fallback reasoning으로 계속 진행하고, 적절한 시점에 `spec-create` 또는 spec sync 단계를 파이프라인에 포함한다.
+12. spec-less repo에서도 중단하지 않는다. `_sdd/spec/`가 없으면 `_sdd/` workspace bootstrap + code-first fallback reasoning으로 계속 진행하고, 적절한 시점에 `sdd-skills:spec-create` 또는 spec sync 단계를 파이프라인에 포함한다.
+13. **에이전트/스킬 호출 시 `sdd-skills:` prefix 필수**: plugin으로 설치된 스킬이므로, 모든 SDD 에이전트 호출은 `sdd-skills:<agent_name>` 형식을 사용한다 (예: `sdd-skills:feature-draft`, `sdd-skills:implementation`, `sdd-skills:spec-update-done` 등). prefix 없이 bare name으로 호출하면 안 된다.
 
 ## Process
 
@@ -73,11 +74,11 @@ autopilot 호출 시 기존 파이프라인 상태를 확인한다.
 | 체크 | 동작 |
 |------|------|
 | `_sdd/pipeline/log_*.md` 스캔 | 미완료 스텝(`pending`/`in_progress`/`failed`) 필터링 |
-| `_sdd/spec/*.md` 존재 확인 | 없으면 `_sdd/` 부트스트랩 후 코드 기반 code-first fallback으로 진행. 적절한 시점에 `spec-create` 권고 |
+| `_sdd/spec/*.md` 존재 확인 | 없으면 `_sdd/` 부트스트랩 후 코드 기반 code-first fallback으로 진행. 적절한 시점에 `sdd-skills:spec-create` 권고 |
 | `_sdd/drafts/`, `_sdd/implementation/` 스캔 | 기존 산출물 활용 여부 판단 |
 
 상태별 분기:
-- 미완료 로그 0건 + `_sdd/spec/` 없음 → spec-less mode로 Step 1. 오케스트레이터에 `spec-create`를 후반부 step으로 포함시킨다.
+- 미완료 로그 0건 + `_sdd/spec/` 없음 → spec-less mode로 Step 1. 오케스트레이터에 `sdd-skills:spec-create`를 후반부 step으로 포함시킨다.
 - 미완료 로그 0건 + 산출물 없음 → Step 1
 - 미완료 로그 1건 → 재개 후보 제시
 - 미완료 로그 2건 이상 → 목록 제시 + 선택
@@ -141,23 +142,23 @@ Step 1 내재화 + Step 2~3 결과를 바탕으로 추론한다.
 
 | 판단 항목 | 내용 |
 |-----------|------|
-| 스펙 상태 | global spec 존재 여부와 thin-core relevance 분석. 없으면 spec-less 모드로 진행하되, 사용자에게 `spec-create`로 global spec을 만드는 것을 추천 |
+| 스펙 상태 | global spec 존재 여부와 thin-core relevance 분석. 없으면 spec-less 모드로 진행하되, 사용자에게 `sdd-skills:spec-create`로 global spec을 만드는 것을 추천 |
 | 변경 범위 | temporary spec 필요 여부 / planned global update 필요 여부 |
-| 계획 깊이 | small이면 직접 구현, non-trivial이면 기본적으로 `feature-draft`, large/complex 또는 phase 세분화가 필요하면 `feature-draft` 이후 `implementation-plan` 확장 |
+| 계획 깊이 | 아래 planning precedence 참조. feature-draft는 기본 포함이며, 스킵 조건이 엄격하다 |
 | 검증 수준 | 인라인 테스트 / Ralph / review 포함 여부 |
 | 스킬 순서 | 카탈로그 input/output/pre-condition 기반 |
 | 특수 패턴 | 부분 파이프라인, 팬아웃 병렬, 재개 |
 
 spec-less mode 참고:
-- spec이 없으면 spec-less 모드로 진행한다. `spec-create`를 파이프라인에 자동 배치하지 않고, 사용자에게 구현 완료 후 global spec을 만드는 것을 추천한다. 코드가 먼저 존재해야 spec이 실제 구조를 반영할 수 있기 때문이다.
+- spec이 없으면 spec-less 모드로 진행한다. `sdd-skills:spec-create`를 파이프라인에 자동 배치하지 않고, 사용자에게 구현 완료 후 global spec을 만드는 것을 추천한다. 코드가 먼저 존재해야 spec이 실제 구조를 반영할 수 있기 때문이다.
 - spec-less인 경우에도 feature-draft의 Part 1 temporary spec은 생성할 수 있다. global spec 없이도 delta 기반 reasoning은 가능하다.
 
 planning precedence 메모:
-- small direct path면 `implementation`으로 바로 간다.
-- non-trivial change의 기본 planning entry는 `feature-draft`다. single-phase medium path에서 Part 2가 충분히 명확하면 그대로 `implementation` 입력으로 사용한다.
-- `implementation-plan`은 `feature-draft` 이후 deeper breakdown이 필요하거나, large/complex 변경이거나, medium이라도 multi-phase execution gate가 필요한 경우에만 추가한다.
-- `spec-update-todo`는 planned persistent global alignment가 실제로 필요한 경우에만 `feature-draft`와 `implementation-plan` 사이에 조건부로 넣는다.
-- standalone `implementation-plan`은 기존 feature draft/temporary spec/기존 plan artifact가 이미 있고, 이를 phase/task 수준으로 보강하거나 재개해야 하는 예외 상황에서만 사용한다.
+- **`sdd-skills:feature-draft`는 기본 포함이다.** 다음 두 조건 중 하나를 만족할 때만 스킵할 수 있다: (1) 정말 간단한 디버깅 수준의 수정(typo fix, config 값 변경, 로그 한 줄 추가 등)이거나, (2) 해당 주제의 feature-draft artifact가 `_sdd/drafts/`에 이미 존재하는 경우. 그 외에는 small/medium/large 무관하게 `sdd-skills:feature-draft`를 반드시 거친다.
+- non-trivial change의 기본 planning entry는 `sdd-skills:feature-draft`다. single-phase medium path에서 Part 2가 충분히 명확하면 그대로 `sdd-skills:implementation` 입력으로 사용한다.
+- `sdd-skills:implementation-plan`은 `sdd-skills:feature-draft` 이후 deeper breakdown이 필요하거나, large/complex 변경이거나, medium이라도 multi-phase execution gate가 필요한 경우에만 추가한다.
+- `sdd-skills:spec-update-todo`는 planned persistent global alignment가 실제로 필요한 경우에만 `sdd-skills:feature-draft`와 `sdd-skills:implementation-plan` 사이에 조건부로 넣는다.
+- standalone `sdd-skills:implementation-plan`은 기존 feature draft/temporary spec/기존 plan artifact가 이미 있고, 이를 phase/task 수준으로 보강하거나 재개해야 하는 예외 상황에서만 사용한다.
 
 오케스트레이터 생성 규칙:
 - 의존성 그래프 기반 동적 조합
@@ -235,8 +236,8 @@ Phase 2 진입 후 `request_user_input`은 호출하지 않는다. 마일스톤 
 - custom-agent step이면 오케스트레이터에 적힌 Claude `subagent_type`으로 호출한다.
 - 로컬 step이면 오케스트레이터에 적힌 skill 또는 명령을 실행한다.
 - step별 필드, 허용 `subagent_type`, Exit Criteria, Acceptance Criteria는 오케스트레이터 본문과 `references/orchestrator-contract.md`를 그대로 따른다.
-- `implementation-plan`이 multi-phase metadata를 제공하고 `Review-Fix Loop.scope = per-phase`면, autopilot은 phase를 실제 execution gate로 취급한다.
-- per-phase gate에서는 각 phase의 `goal`, `task set / dependency closure`, `validation focus`, `exit criteria`, `carry-over policy`를 읽고 해당 phase 범위의 `implementation` subagent 실행 -> `implementation-review` subagent review -> 필요 시 `implementation` subagent 재호출로 fix -> `implementation-review` subagent 재실행으로 re-review -> phase validation 순서를 먼저 닫은 뒤 다음 phase로 간다.
+- `sdd-skills:implementation-plan`이 multi-phase metadata를 제공하고 `Review-Fix Loop.scope = per-phase`면, autopilot은 phase를 실제 execution gate로 취급한다.
+- per-phase gate에서는 각 phase의 `goal`, `task set / dependency closure`, `validation focus`, `exit criteria`, `carry-over policy`를 읽고 해당 phase 범위의 `sdd-skills:implementation` subagent 실행 -> `sdd-skills:implementation-review` subagent review -> 필요 시 `sdd-skills:implementation` subagent 재호출로 fix -> `sdd-skills:implementation-review` subagent 재실행으로 re-review -> phase validation 순서를 먼저 닫은 뒤 다음 phase로 간다.
 - 현재 phase exit criteria가 충족되지 않으면 다음 phase로 넘어가지 않는다. `medium` 이슈도 기본적으로 exit blocker이며, carry-over는 현재 phase policy가 명시적으로 허용할 때만 로그와 근거를 남기고 진행한다.
 
 #### 7.3 Review-Fix Loop + 테스트 실행
@@ -244,7 +245,7 @@ Phase 2 진입 후 `request_user_input`은 호출하지 않는다. 마일스톤 
 오케스트레이터에 `Review-Fix Loop`와 `Test Strategy` section이 있으면, autopilot은 그 선언을 그대로 집행한다.
 - multi-phase path에서 `scope = per-phase`면 phase마다 review-fix와 validation을 수행하고, 마지막 phase 이후에는 `final integration review`를 반드시 1회 더 수행한다.
 - single-phase path이거나 `scope = global`이면 기존 global review-fix loop를 유지한다.
-- review-fix loop의 agent 매핑은 고정이다: `review = implementation-review`, `fix = implementation`, `re-review = implementation-review`.
+- review-fix loop의 agent 매핑은 고정이다: `review = sdd-skills:implementation-review`, `fix = sdd-skills:implementation`, `re-review = sdd-skills:implementation-review`.
 - 이 섹션에서 별도 loop 규칙이나 테스트 규칙을 다시 정의하지 않는다.
 
 #### 7.4 에러 핸들링
@@ -268,7 +269,7 @@ Phase 2 진입 후 `request_user_input`은 호출하지 않는다. 마일스톤 
 3. 뭘 더 해야 하는가: 미완료 단계, 제한사항/리스크, 후속 작업 제안
 4. Taste Decisions: 파이프라인 중 taste decision으로 분류된 자동 결정 목록
 5. 오케스트레이터 경로 및 상태 확인 (로그 기반)
-6. spec-less로 시작했다면 `spec-create` 또는 spec sync가 완료되었는지, 아니면 후속 작업으로 남는지 명시
+6. spec-less로 시작했다면 `sdd-skills:spec-create` 또는 spec sync가 완료되었는지, 아니면 후속 작업으로 남는지 명시
 
 ## Reference Files
 

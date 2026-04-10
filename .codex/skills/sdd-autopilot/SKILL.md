@@ -151,7 +151,7 @@ Step 1 내재화 + Step 2~3 결과를 바탕으로 추론한다.
 |-----------|------|
 | 스펙 상태 | global spec 존재 여부와 thin-core relevance 분석. 없으면 spec-less 모드로 진행하되, 사용자에게 `spec-create`로 global spec을 만드는 것을 추천 |
 | 변경 범위 | temporary spec 필요 여부 / planned global update 필요 여부 |
-| 계획 깊이 | small이면 직접 구현, non-trivial이면 기본적으로 `feature-draft`, large/complex 또는 phase 세분화가 필요하면 `feature-draft` 이후 `implementation-plan` 확장 |
+| 계획 깊이 | 아래 planning precedence 참조. feature-draft는 기본 포함이며, 스킵 조건이 엄격하다 |
 | 검증 수준 | 인라인 테스트 / Ralph / review 포함 여부 |
 | 스킬 순서 | 카탈로그 input/output/pre-condition 기반 |
 | 특수 패턴 | 부분 파이프라인, 팬아웃 병렬, 재개 |
@@ -161,7 +161,7 @@ spec-less mode 참고:
 - spec-less인 경우에도 feature-draft의 Part 1 temporary spec은 생성할 수 있다. global spec 없이도 delta 기반 reasoning은 가능하다.
 
 planning precedence 메모:
-- small direct path면 `implementation`으로 바로 간다.
+- **`feature-draft`는 기본 포함이다.** 다음 두 조건 중 하나를 만족할 때만 스킵할 수 있다: (1) 정말 간단한 디버깅 수준의 수정(typo fix, config 값 변경, 로그 한 줄 추가 등)이거나, (2) 해당 주제의 feature-draft artifact가 `_sdd/drafts/`에 이미 존재하는 경우. 그 외에는 small/medium/large 무관하게 `feature-draft`를 반드시 거친다.
 - non-trivial change의 기본 planning entry는 `feature-draft`다. single-phase medium path에서 Part 2가 충분히 명확하면 그대로 `implementation` 입력으로 사용한다.
 - `implementation-plan`은 `feature-draft` 이후 deeper breakdown이 필요하거나, large/complex 변경이거나, medium이라도 multi-phase execution gate가 필요한 경우에만 추가한다.
 - `spec-update-todo`는 planned persistent global alignment가 실제로 필요한 경우에만 `feature-draft`와 `implementation-plan` 사이에 조건부로 넣는다.
