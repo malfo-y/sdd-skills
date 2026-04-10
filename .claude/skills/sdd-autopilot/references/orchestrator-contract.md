@@ -33,6 +33,21 @@
 - `spec-review`
 - `ralph-loop-init`
 
+### Model Routing
+
+각 subagent 호출 시 아래 모델을 `model` 파라미터로 지정한다. 에이전트 정의 파일의 프론트매터에도 동일하게 설정되어 있으므로, 오케스트레이터가 명시하지 않아도 기본값으로 적용된다. 오케스트레이터가 `model`을 명시하면 프론트매터보다 우선한다.
+
+| subagent_type          | model    | 근거                              |
+|------------------------|----------|-----------------------------------|
+| `feature-draft`        | `opus`   | 설계 판단, 스펙 구조화             |
+| `implementation-plan`  | `opus`   | 의존성 분석, 실행 순서 설계         |
+| `implementation`       | `opus`   | 코드 품질, 정확성                  |
+| `implementation-review`| `opus`   | 구현 깊이 분석, 결함 발견           |
+| `ralph-loop-init`      | `opus`   | 테스트 전략 설계, 고수준 판단       |
+| `spec-update-todo`     | `sonnet` | diff 기반 스펙 반영                |
+| `spec-update-done`     | `sonnet` | diff 기반 스펙 반영                |
+| `spec-review`          | `sonnet` | 스펙 간 비교 분석                  |
+
 ## 3. Global vs Temporary Spec Contract
 
 - global spec은 장기적 SoT다.

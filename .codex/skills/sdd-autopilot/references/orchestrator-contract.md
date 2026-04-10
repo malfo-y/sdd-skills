@@ -13,6 +13,20 @@
 7. Test Strategy
 8. Error Handling
 
+선택 섹션:
+
+- `Execution Profiles`
+  - step별 `model` / `reasoning_effort` 기본값 또는 `profile_key`를 선언할 수 있다.
+  - 이 섹션을 사용할 때는 `references/execution-profile-policy.md`와 정합해야 한다.
+  - 모든 step과 review-fix loop가 policy 기본값을 그대로 따를 때는 생략할 수 있다.
+  - 이 섹션은 기본값 레이어다. step-level 또는 loop-level 프로파일이 있으면 더 좁은 범위의 선언이 우선한다.
+  - 아래 중 하나라도 해당하면 명시를 권장하는 것이 아니라 사실상 필수로 본다.
+    - policy 기본값에서 감등 또는 승격이 발생한다.
+    - 같은 `agent_type`이라도 step별로 서로 다른 프로파일을 사용한다.
+    - review-fix loop 또는 `final integration review`에 별도 프로파일을 선언한다.
+    - multi-phase path라 phase gate 해석을 문서에 남겨야 한다.
+    - 재실행 재현성이나 품질 게이트 근거를 오케스트레이터 자체에 남겨야 한다.
+
 ## 2. Step Contract
 
 각 custom-agent step은 아래 4개 필드를 반드시 가진다.
@@ -21,6 +35,15 @@
 - `입력 파일`
 - `출력 파일`
 - `프롬프트`
+
+선택 필드:
+
+- `Execution profile`
+  - `profile_key` 또는 `model / reasoning_effort` 표시를 허용한다.
+  - 예: `draft_strict` (`gpt-5.4 / xhigh`)
+  - step-level 프로파일은 전체 `Execution Profiles` section을 생략한 경우에도 사용할 수 있다.
+  - 기본 policy와 완전히 동일하고 해석 여지가 없으면 step-level 표기도 생략할 수 있다.
+  - step-level 프로파일은 같은 agent_type에 대한 section-level 기본값보다 우선한다.
 
 허용 `agent_type`:
 
@@ -76,6 +99,15 @@
   - `phase exit criteria`
   - `carry-over policy`
   - `final integration review`
+- 필요하면 아래 선택 필드를 함께 명시할 수 있다.
+  - `review_profile`
+  - `fix_profile`
+  - `final_integration_review_profile`
+- loop-level 프로파일은 같은 agent_type에 대한 section-level 기본값보다 우선한다.
+- `final_integration_review_profile`은 실제 final integration review가 존재할 때만 유효하다.
+- `scope = global`에서 이 필드를 쓰려면 아래 둘 중 하나가 오케스트레이터에 명시되어야 한다.
+  - 별도 global `final integration review` 실행 선언
+  - final integration review를 수행하는 독립 `implementation_review` step
 - `medium` 이슈도 기본적으로 phase exit blocker다. carry-over는 정책이 명시적으로 허용하는 severity/조건/로그 근거가 있을 때만 가능하다.
 - `final integration review`는 마지막 phase 이후에 반드시 1회 실행한다.
 

@@ -1,7 +1,7 @@
 ---
 name: sdd-autopilot
 description: "적응형 오케스트레이터 메타스킬. /sdd-autopilot으로 호출하여 요구사항 분석부터 스펙 동기화까지 end-to-end SDD 파이프라인을 자율 실행한다."
-version: 2.3.0
+version: 2.3.3
 ---
 
 # SDD Autopilot
@@ -63,6 +63,13 @@ User Request
 10. 한국어를 기본으로 하되 사용자 언어를 따른다.
 11. spec-less repo에서도 중단하지 않는다. `_sdd/spec/`가 없으면 `_sdd/` workspace bootstrap + code-first fallback reasoning으로 계속 진행하고, 적절한 시점에 `spec-create` 또는 spec sync 단계를 파이프라인에 포함한다.
 
+## Execution Profile Reference
+
+- step별 `model` / `reasoning_effort` 기본값과 조정 규칙은 `references/execution-profile-policy.md`를 따른다.
+- 기본 원칙은 품질 우선이며, small/simple 작업에서만 조건부 감등한다.
+- 설계 단계, phase/task planning, final integration review는 실패 비용이 크므로 보수적으로 유지한다.
+- 실행 중 프로파일 변경이 필요하면 기존 agent를 재사용하지 말고 새로 `spawn_agent(...)` 한다.
+
 ## Process
 
 ### Step 0: Pipeline State Detection (파이프라인 상태 감지)
@@ -88,12 +95,14 @@ autopilot 호출 시 기존 파이프라인 상태를 확인한다.
 
 - `references/sdd-reasoning-reference.md`
 - `references/orchestrator-contract.md`
+- `references/execution-profile-policy.md`
 - `examples/sample-orchestrator.md`
 
 내재화 대상:
 - SDD 원칙 3개
 - 스킬 의존성 그래프
 - 파이프라인 구성 가이드라인
+- step별 execution profile 기본값과 예외 규칙
 - 테스트 전략 판단 기준
 - review-fix 및 final report 규칙
 
@@ -185,6 +194,11 @@ Producer-Reviewer 패턴으로 검증한다.
 - test strategy 존재
 - error handling 존재
 
+추가 검증:
+- `Execution Profiles` section 또는 step-level `Execution profile`이 있으면 `references/execution-profile-policy.md`와 정합해야 한다.
+- `profile_key`를 쓴 경우 step 참조와 loop 참조가 해석 가능해야 한다.
+- section-level 기본값과 step-level / loop-level override가 동시에 있으면 우선순위가 모호하지 않아야 한다.
+
 철학 검증 (6항목):
 - Spec-first
 - 드리프트 방지
@@ -233,6 +247,7 @@ Phase 2 진입 후 `request_user_input`은 호출하지 않는다. 마일스톤 
 각 step은 `Execute -> Collect -> Verify -> Record` 순서를 따른다.
 
 - custom-agent step이면 오케스트레이터에 적힌 Codex `agent_type`으로 호출한다.
+- 프로파일 우선순위는 `step-level Execution profile` -> `Execution Profiles` section 기본값 -> `references/execution-profile-policy.md` 기본값 순서다.
 - 로컬 step이면 오케스트레이터에 적힌 skill 또는 명령을 실행한다.
 - step별 필드, 허용 `agent_type`, Exit Criteria, Acceptance Criteria는 오케스트레이터 본문과 `references/orchestrator-contract.md`를 그대로 따른다.
 - `implementation-plan`이 multi-phase metadata를 제공하고 `Review-Fix Loop.scope = per-phase`면, autopilot은 phase를 실제 execution gate로 취급한다.
@@ -245,6 +260,8 @@ Phase 2 진입 후 `request_user_input`은 호출하지 않는다. 마일스톤 
 - multi-phase path에서 `scope = per-phase`면 phase마다 review-fix와 validation을 수행하고, 마지막 phase 이후에는 `final integration review`를 반드시 1회 더 수행한다.
 - single-phase path이거나 `scope = global`이면 기존 global review-fix loop를 유지한다.
 - review-fix loop의 agent 매핑은 고정이다: `review = implementation_review`, `fix = implementation`, `re-review = implementation_review`.
+- review-fix loop 프로파일 우선순위는 `review_profile` / `fix_profile` / `final_integration_review_profile` -> `Execution Profiles` section의 해당 agent_type 기본값 -> `references/execution-profile-policy.md` 기본값 순서다.
+- `final_integration_review_profile`은 실제로 final integration review를 수행하는 경우에만 의미가 있다. 기본적으로는 `scope = per-phase`일 때 사용하며, `scope = global`에서는 별도 final integration review step 또는 명시적 global final integration review 선언이 없으면 사용하지 않는다.
 - 이 섹션에서 별도 loop 규칙이나 테스트 규칙을 다시 정의하지 않는다.
 
 #### 7.4 에러 핸들링
@@ -274,6 +291,7 @@ Phase 2 진입 후 `request_user_input`은 호출하지 않는다. 마일스톤 
 
 - `references/sdd-reasoning-reference.md`: SDD 철학, skill catalog, reasoning 기준
 - `references/orchestrator-contract.md`: 오케스트레이터/로그 최소 계약
+- `references/execution-profile-policy.md`: step별 모델/effort 기본값과 감등/승격 규칙
 - `examples/sample-orchestrator.md`: 중규모 기본형 + 대규모 차이점 예시
 
 ## Final Check
