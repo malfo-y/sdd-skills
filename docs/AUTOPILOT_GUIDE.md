@@ -102,6 +102,8 @@ feature-draft agent
                       │ 출력: _sdd/spec/ 업데이트
 ```
 
+review-fix loop의 agent 매핑은 고정입니다. review는 `implementation-review agent`, fix는 `implementation agent` 재호출, re-review는 다시 `implementation-review agent`가 담당합니다.
+
 각 에이전트에는 이전 에이전트의 **출력 파일 경로**와 **사용자의 원래 요청**이 함께 전달됩니다. sdd-autopilot은 에이전트 결과에서 핵심 정보(출력 파일 경로, 주요 결정사항)만 추출하여 파이프라인 로그에 기록합니다.
 
 ---
@@ -216,6 +218,7 @@ feature-draft agent → implementation agent
 → global review-fix loop (max 3회) → 인라인 테스트 → spec-update-done agent
 ```
 
+- global review-fix loop는 `implementation-review agent -> implementation agent 재호출 -> implementation-review agent` 순서로 돈다
 - 기본 planning entry는 `feature-draft`
 - `feature-draft` Part 2가 충분히 명확하면 `implementation-plan`을 생략
 - bounded feature 추가, 여러 파일 수정이지만 phase gate까지는 필요 없는 작업에 적합
@@ -229,6 +232,7 @@ feature-draft agent → implementation-plan agent
 → final integration review → 인라인 테스트 → spec-update-done agent
 ```
 
+- 각 phase의 review-fix는 `implementation-review agent -> implementation agent 재호출 -> implementation-review agent` 순서로 닫는다
 - `implementation-plan`은 Part 2만으로 부족하거나 phase boundary가 필요한 경우에만 사용
 - medium이라도 multi-phase plan이 생성되면 review-fix scope는 기본적으로 `per-phase`
 - `medium` 이슈도 phase exit를 막고, carry-over는 명시 정책이 있을 때만 허용

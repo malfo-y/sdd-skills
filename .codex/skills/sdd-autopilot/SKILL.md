@@ -55,7 +55,7 @@ User Request
 2. **Phase 2 무중단 + 파일 기반 상태 전달**: Phase 2 진입 후 `request_user_input` 금지. 에이전트에는 파일 경로만 전달하며, 전체 출력을 부모 컨텍스트에 누적하지 않는다.
 3. **오케스트레이터 저장 + 공유 로그 필수**: 오케스트레이터는 `_sdd/pipeline/orchestrators/orchestrator_<topic>.md`에 저장한다. 실행 시 `_sdd/pipeline/log_<topic>_<timestamp>.md`를 생성하고 각 단계 완료 후 핵심 결정사항을 기록한다.
 4. **에이전트 호출 시 원문 전달**: 사용자의 원래 요청과 관련 컨텍스트 파일 경로를 포함한다. 의미를 잃을 정도로 축약하지 않는다.
-5. **Review-Fix 사이클 필수**: review 포함 파이프라인에서는 review → fix → re-review 사이클을 실행해야 한다. 리뷰만 하고 끝나는 것은 불허한다.
+5. **Review-Fix 사이클 필수**: review 포함 파이프라인에서는 `implementation_review` agent로 review를 수행하고, 이슈 수정이 필요하면 `implementation` agent를 다시 호출해 fix를 적용한 뒤, 다시 `implementation_review` agent로 re-review를 수행해야 한다. 리뷰만 하고 끝나는 것은 불허한다.
 6. **Execute → Verify 필수**: 모든 단계는 실행(Execute) + 검증(Verify) 두 페이즈를 거친다. 에이전트 호출만으로 완료 간주 금지. Exit Criteria 미충족 시 다음 단계 진행 불가.
 7. **Pre-flight + approval 필수**: Phase 2 진입 전 `_sdd/env.md`와 `.codex/config.toml`을 읽고 실행 가능성을 점검한 뒤 explicit approval을 받아야 한다.
 8. **Agent lifecycle 수집 필수**: `spawn_agent(...)`로 시작한 실행 단위는 `wait_agent(...)`로 반드시 수집하고, 필요 시 `send_input(...)` 또는 재-spawn으로 보완한다.
@@ -236,7 +236,7 @@ Phase 2 진입 후 `request_user_input`은 호출하지 않는다. 마일스톤 
 - 로컬 step이면 오케스트레이터에 적힌 skill 또는 명령을 실행한다.
 - step별 필드, 허용 `agent_type`, Exit Criteria, Acceptance Criteria는 오케스트레이터 본문과 `references/orchestrator-contract.md`를 그대로 따른다.
 - `implementation-plan`이 multi-phase metadata를 제공하고 `Review-Fix Loop.scope = per-phase`면, autopilot은 phase를 실제 execution gate로 취급한다.
-- per-phase gate에서는 각 phase의 `goal`, `task set / dependency closure`, `validation focus`, `exit criteria`, `carry-over policy`를 읽고 해당 phase 범위의 `implementation -> review -> fix -> phase validation`을 먼저 닫은 뒤 다음 phase로 간다.
+- per-phase gate에서는 각 phase의 `goal`, `task set / dependency closure`, `validation focus`, `exit criteria`, `carry-over policy`를 읽고 해당 phase 범위의 `implementation` agent 실행 -> `implementation_review` agent review -> 필요 시 `implementation` agent 재호출로 fix -> `implementation_review` agent 재실행으로 re-review -> phase validation 순서를 먼저 닫은 뒤 다음 phase로 간다.
 - 현재 phase exit criteria가 충족되지 않으면 다음 phase로 넘어가지 않는다. `medium` 이슈도 기본적으로 exit blocker이며, carry-over는 현재 phase policy가 명시적으로 허용할 때만 로그와 근거를 남기고 진행한다.
 
 #### 7.3 Review-Fix Loop + 테스트 실행
@@ -244,6 +244,7 @@ Phase 2 진입 후 `request_user_input`은 호출하지 않는다. 마일스톤 
 오케스트레이터에 `Review-Fix Loop`와 `Test Strategy` section이 있으면, autopilot은 그 선언을 그대로 집행한다.
 - multi-phase path에서 `scope = per-phase`면 phase마다 review-fix와 validation을 수행하고, 마지막 phase 이후에는 `final integration review`를 반드시 1회 더 수행한다.
 - single-phase path이거나 `scope = global`이면 기존 global review-fix loop를 유지한다.
+- review-fix loop의 agent 매핑은 고정이다: `review = implementation_review`, `fix = implementation`, `re-review = implementation_review`.
 - 이 섹션에서 별도 loop 규칙이나 테스트 규칙을 다시 정의하지 않는다.
 
 #### 7.4 에러 핸들링

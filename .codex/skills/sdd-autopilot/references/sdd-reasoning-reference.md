@@ -102,6 +102,7 @@ canonical 7섹션:
                                                                                    ralph-loop-init (장시간 테스트)
 ```
 
+review-fix loop에서 agent 역할은 고정이다: review는 `implementation_review`, fix는 `implementation` 재호출, re-review는 다시 `implementation_review`다.
 `spec-review`는 파이프라인 끝이나 중간의 감사 단계로 선택적으로 추가한다.
 `spec-update-done`은 global spec이 없으면 수행하지 않는다.
 `spec-summary`와 `spec-rewrite`는 비오케스트레이션 보조 스킬이다.
@@ -111,7 +112,7 @@ canonical 7섹션:
 - **Small direct path**: 바로 `implementation`으로 간다. feature-level delta가 작고 single-pass 검증이면 `feature-draft`와 `implementation-plan`을 생략할 수 있다.
 - **Single-phase medium path**: 기본 진입은 `feature-draft`다. Part 2가 task/dependency/validation 측면에서 충분히 명확하면 `implementation-plan` 없이 `implementation`으로 바로 연결한다.
 - **Multi-phase medium / large expanded path**: `feature-draft`로 temporary spec을 고정한 뒤, planned persistent global alignment가 필요할 때만 `spec-update-todo`를 조건부로 추가하고, 실제 phase/task 세분화가 필요하면 `implementation-plan`으로 확장한다.
-- **Phase-gated execution rule**: medium 이상에서 multi-phase plan이 생성되면 `Review-Fix Loop.scope = per-phase`를 기본값으로 본다. 각 phase는 `implementation -> review -> fix -> phase validation`을 닫아야 하며 마지막에 `final integration review`를 1회 더 수행한다.
+- **Phase-gated execution rule**: medium 이상에서 multi-phase plan이 생성되면 `Review-Fix Loop.scope = per-phase`를 기본값으로 본다. 각 phase는 `implementation` agent 실행 -> `implementation_review` agent review -> 필요 시 `implementation` agent 재호출로 fix -> `implementation_review` agent re-review -> phase validation을 닫아야 하며 마지막에 `final integration review`를 1회 더 수행한다.
 - **Carry-over default**: `medium` 이슈도 기본적으로 phase exit blocker다. carry-over는 plan과 orchestrator에 정책과 근거가 명시된 경우에만 허용한다.
 - **Standalone implementation-plan exception**: 기존 feature draft, temporary spec, 구현 재개용 plan artifact가 이미 있고 phase/task detail만 더 필요할 때만 허용한다.
 

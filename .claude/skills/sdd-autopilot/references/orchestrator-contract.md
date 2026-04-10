@@ -65,10 +65,12 @@
 - 종료 조건 (`critical = 0 AND high = 0 AND medium = 0`)
 - 수정 대상 (`critical/high/medium/low`)
 - MAX 도달 시 분기: critical/high 잔존 -> 중단, medium만 잔존 -> 로그 기록 후 계속 진행
+- agent mapping: `review = implementation-review`, `fix = implementation`, `re-review = implementation-review`
 
 추가 규칙:
 
 - multi-phase `implementation-plan`을 소비하면 기본값은 `scope = per-phase`다. single-phase path나 direct path만 `scope = global`을 기본으로 둘 수 있다.
+- autopilot은 review-fix loop를 추상 단계로 두지 않는다. review step은 반드시 `implementation-review` subagent 호출이고, fix step은 반드시 `implementation` subagent 재호출이다.
 - `scope = per-phase`면 아래 필드를 함께 명시해야 한다.
   - `phase boundary source`
   - `phase exit criteria`

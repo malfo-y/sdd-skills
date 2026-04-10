@@ -102,6 +102,8 @@ feature-draft agent
                          | Output: _sdd/spec/ updated
 ```
 
+The review-fix loop uses a fixed agent mapping: review is handled by the `implementation-review agent`, fix is a re-invocation of the `implementation agent`, and re-review goes back to the `implementation-review agent`.
+
 Each agent receives the **output file path** from the previous agent along with the **user's original request**. sdd-autopilot extracts only key information (output file paths, major decisions) from agent results and records them in the pipeline log.
 
 ---
@@ -216,6 +218,7 @@ feature-draft agent -> implementation agent
 -> global review-fix loop (max 3 rounds) -> inline test -> spec-update-done agent
 ```
 
+- The global review-fix loop runs as `implementation-review agent -> implementation agent re-invocation -> implementation-review agent`
 - The default planning entry is `feature-draft`
 - Skip `implementation-plan` when feature-draft Part 2 already provides enough task/dependency/validation detail
 - Fits bounded feature work that spans several files but does not need phase gates
@@ -229,6 +232,7 @@ feature-draft agent -> implementation-plan agent
 -> final integration review -> inline test -> spec-update-done agent
 ```
 
+- Each phase closes its review-fix loop as `implementation-review agent -> implementation agent re-invocation -> implementation-review agent`
 - Use `implementation-plan` only when Part 2 is not sufficient or explicit phase boundaries are needed
 - Even on medium-scale work, once a multi-phase plan exists, the default review-fix scope becomes `per-phase`
 - `medium` issues block phase exit unless an explicit carry-over policy allows them
