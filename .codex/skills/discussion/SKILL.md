@@ -1,7 +1,7 @@
 ---
 name: discussion
 description: This skill should be used when the user asks to "discuss", "discussion", "토론", "토론하자", "let's discuss", "brainstorm", "논의", "의견 나누기", or wants a structured iterative discussion with research support.
-version: 1.2.0
+version: 1.3.0
 ---
 
 # discussion
@@ -35,6 +35,18 @@ version: 1.2.0
 6. 최신성이나 사실 검증이 필요한 내용은 웹 또는 로컬 근거로 먼저 확인한다.
 7. 출력 언어와 저장 파일 언어는 사용자의 활성 입력 언어를 따른다.
 
+## Key Principles
+
+Process의 모든 단계에서 횡단 적용되는 원칙. Hard Rules가 강제 금지라면, Key Principles는 판단 지침이다.
+
+- **One question at a time**: 한 라운드에 여러 질문을 묶지 않는다. 한 주제가 깊이를 요구하면 여러 라운드로 쪼갠다.
+- **Multiple choice preferred**: 가능하면 MC 형식이 우선. 자유 서술은 사용자가 카테고리로 압축 불가능할 때만 사용.
+- **YAGNI ruthlessly**: 요구사항/범위가 부풀 때 적극적으로 쳐낸다. "지금 필요한가?"를 비판적 개입(3.2.2)의 기본 질문으로 삼는다.
+- **Explore alternatives (2-3안 + 권장안)**: Analysis 페이즈에서 AI가 능동적으로 2-3개 구별되는 접근을 제시하고 권장안을 먼저 말한다. 상세는 Step 3.2.1 참조.
+- **Incremental validation**: 수렴은 한 번에 이뤄지지 않는다. 3라운드마다(3.4) 중간 요약으로 이해도를 확인하고, 수렴 신호(3.5)가 감지되면 종료를 권유.
+- **Be flexible**: 새 정보가 기존 결론을 흔들면 페이즈를 되돌린다. 깊이 신호(3.2) 감지 시 phase 무시.
+- **Respect existing patterns, contain scope**: 토론에서 제안되는 변경안은 기존 코드베이스/문서 패턴을 먼저 이해하고 따라야 한다. 작업과 관련된 개선은 토론에 포함하되, 관련 없는 리팩터링/확장 제안은 배제. 범위 드리프트를 감지하면 원래 토픽으로 리마인드.
+
 ## Process
 
 ### Step 1: Define the Topic
@@ -42,8 +54,9 @@ version: 1.2.0
 - 사용자 요청에서 토픽이 이미 있으면 재진술 후 범위를 좁히는 질문 1개를 한다.
 - 불명확하면 카테고리 수준에서 묻고, 최대 2라운드 안에 범위를 정한다.
 - 범위를 정하지 못하면 이유를 설명하고 중단한다.
+- **Scope atomicity 점검**: 토픽이 다중 독립 서브시스템 묶음(예: "플랫폼 전체", 3개 이상의 독립 영역 나열)이면 서브프로젝트 분해를 제안하고, 사용자와 함께 첫 번째 서브프로젝트만 토론 대상으로 좁힌다. 단일 단위면 이 단계를 건너뛴다.
 
-**Decision Gate 1 -> 2**: `topic_defined AND scope_clear` -> Step 2 진행. ELSE -> 보완 질문 (최대 2라운드).
+**Decision Gate 1 -> 2**: `topic_defined AND scope_clear AND scope_is_atomic` -> Step 2 진행. ELSE -> 보완 질문 (최대 2라운드). 다중 서브시스템이면 분해 후 단일 서브프로젝트로 좁힌 뒤 게이트 재평가.
 
 ### Step 2: Gather Context
 
@@ -113,7 +126,20 @@ LOOP:
 
 **수렴 전 안전장치:** 수렴 페이즈 진입 전 exploration/analysis에 미확인 항목이 있으면 사용자에게 "아직 [항목]을 다루지 않았는데, 넘어가도 괜찮을까요?" 확인.
 
-#### 3.2.1 비판적 개입 (Critical Review)
+#### 3.2.1 Alternatives Initiation (필수)
+
+Analysis 페이즈 진입 직후 첫 라운드에, AI는 다음을 반드시 수행한다:
+
+1. **2-3개의 구별되는 접근을 능동적으로 제시.** 사용자가 먼저 대안을 꺼낼 때까지 기다리지 않는다.
+2. 각 접근에 대해 1-2줄 트레이드오프를 명시.
+3. **권장안을 먼저 제시하고 이유를 붙인다.** 중립 나열만 하지 않는다.
+4. `request_user_input`의 옵션으로 각 접근을 제시하거나, 텍스트로 제시한 뒤 후속 `request_user_input`으로 선택을 유도.
+
+단, 사용자가 이미 명시적으로 특정 방향을 고정했다면 이 단계를 건너뛰고 바로 비판적 개입(3.2.2)으로 진행한다.
+
+**커버리지 체크:** `alternatives` 항목은 이 능동 제시가 수행되고 사용자 응답이 있은 뒤에만 완료로 표시한다.
+
+#### 3.2.2 비판적 개입 (Critical Review)
 
 분석 페이즈에서는 최소 1회 **비판적 질문**으로 약점이나 숨은 가정을 검증한다.
 
@@ -130,6 +156,7 @@ LOOP:
 | 숨은 가정 질문 | 전제가 검증 안 됐을 때 | "이건 A라는 가정 위에 서 있는데, 그게 깨지면요?" |
 | 대안 제안 | 탐색 범위가 좁을 때 | "다른 관점에서 보면 이런 접근도 가능한데, 고려해 보셨나요?" |
 | 스케일 도전 | 현재 규모만 고려할 때 | "지금은 괜찮지만 10배 커지면 이 구조가 버틸까요?" |
+| YAGNI / 범위 축소 | 요구사항이 부풀 때 | "이 기능이 지금 꼭 필요한가요? 없으면 무엇이 깨지나요?" |
 
 **강도 조절 규칙:**
 
