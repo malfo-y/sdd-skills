@@ -1,7 +1,7 @@
 ---
 name: spec-create
 description: This skill should be used when the user asks to "create a spec", "write a spec document", "generate SDD", "create software design document", "document the project", "create spec for project", or mentions "_sdd" directory, specification documents, or project documentation needs.
-version: 1.9.0
+version: 1.9.1
 ---
 
 # spec-create
@@ -16,8 +16,7 @@ version: 1.9.0
 
 - [ ] `_sdd/spec/` 아래에 canonical global spec 파일을 생성했다.
 - [ ] 공통 코어 4축(`Thinness`, `Decision-bearing truth`, `Anti-duplication`, `Navigation + surface fit`)을 만족하는 구조를 선택했다.
-- [ ] 구조 선택 근거를 명시했다. multi-file이면 왜 single-file default가 충분하지 않은지 설명했다.
-- [ ] 기본값은 `_sdd/spec/main.md` 단일 파일로 두고, 분할은 실제 navigation + surface fit 필요가 증명될 때만 적용했다.
+- [ ] 구조 선택 근거를 명시했다. 기본값은 `_sdd/spec/main.md` 단일 파일로 두고, multi-file이면 왜 single-file default가 충분하지 않은지 설명했다.
 - [ ] 글로벌 스펙 본문이 `배경/개념`, `Scope / Non-goals / Guardrails`, `핵심 설계와 주요 결정`을 포함한다.
 - [ ] repo-wide invariant가 정말 필요할 때만 guardrails 또는 key decisions에 흡수했다.
 - [ ] supporting information은 필요할 때만 appendix 또는 별도 supporting file로 분리했다.
@@ -28,10 +27,8 @@ version: 1.9.0
 
 - 글로벌 스펙은 얇은 기준 문서다.
 - temporary spec은 delta와 execution을 담는 별도 문서다.
-- feature-level usage, validation, contract detail은 global 본문 기본 구조가 아니다.
-- repo-wide invariant가 정말 필요할 때만 global에 남긴다.
-- architecture/component inventory는 기본 본문이 아니라 supporting surface다.
-- create 단계의 기본 경로는 `main.md` 단일 파일이다.
+- global 본문 기본 구조는 feature-level usage, validation, contract detail을 담기 위한 것이 아니다.
+- architecture/component inventory나 reference detail은 supporting surface가 더 기본값에 가깝다.
 
 ## Repo-wide Invariant Test
 
@@ -69,7 +66,6 @@ Negative example:
 4. `AGENTS.md`, `CLAUDE.md`, `_sdd/env.md`는 없을 때 생성하고, 이미 있으면 필수 안내 문구가 빠진 경우에만 최소 수정한다.
 5. 거버넌스 문서는 기본적으로 lowercase canonical `decision_log.md`까지만 사용한다. legacy uppercase `DECISION_LOG.md`는 read-only fallback으로만 취급한다.
 6. global spec을 feature-level usage/validation/reference 문서로 부풀리지 않는다.
-7. multi-file split을 선택하면 structure rationale을 명시하고, 왜 single-file default가 충분하지 않은지 남긴다.
 
 ## Structure Decision
 
@@ -129,9 +125,8 @@ global spec core는 항상 유지한다.
 - 주요 경계와 scope / non-goals
 - 유지해야 할 설계 결정
 - `Repo-wide Invariant Test`를 통과할 수 있는 repo-wide invariant 후보
-- supporting reference 필요 여부
-- appendix나 guide가 더 적절한 정보
-- single-file default가 충분한지, 아니라면 왜 아닌지
+- supporting surface나 guide로 내려야 할 정보
+- single-file default가 충분한지, 아니라면 split rationale이 실제로 필요한지
 
 ### Step 3: Bootstrap Workspace Guidance
 
@@ -178,7 +173,7 @@ SDD(Spec-Driven Development)는 스펙을 판단 기준으로 고정하고,
 마지막으로 아래를 점검한다.
 
 - spec 구조가 프로젝트 규모와 navigation need에 맞는가
-- single-file default를 벗어난 이유가 실제로 설명되었는가
+- multi-file이면 single-file default를 벗어난 이유가 실제로 설명되었는가
 - 글로벌 스펙 core가 빠지지 않았는가
 - global 본문이 code-obvious detail이나 feature inventory로 오염되지 않았는가
 - 코드베이스와 naming/경로가 크게 어긋나지 않는가

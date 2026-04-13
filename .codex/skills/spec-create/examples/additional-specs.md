@@ -2,14 +2,7 @@
 
 ## Default Shape First
 
-기본값은 `_sdd/spec/main.md` 단일 파일이다.
-
-먼저 묻는다.
-
-- single-file로도 concept, boundaries, decisions를 충분히 찾을 수 있는가
-- supporting info를 본문 밖으로 내리면 main body가 얇고 읽기 쉬워지는가
-
-둘 다 yes면 multi-file split을 만들지 않는다.
+기본값은 `_sdd/spec/main.md` 단일 파일이며, supporting file은 이 기본형이 실제로 부족할 때만 고려한다.
 
 ## When to Add Supporting Files
 

@@ -1,7 +1,7 @@
 ---
 name: spec-update-todo
 description: This skill should be used when the user asks to "update spec with features", "add features to spec", "update spec from input", "add requirements to spec", "spec update", "expand spec", "add to-do to spec", "add to-implement to spec", or mentions adding new features, requirements, or planned improvements to an existing specification document.
-version: 2.3.1
+version: 2.4.0
 ---
 
 # Spec Update from Planned Change
@@ -17,8 +17,9 @@ version: 2.3.1
 ## Acceptance Criteria
 
 - [ ] 입력 소스를 식별하고 파싱한다.
-- [ ] temporary spec 또는 user input을 global spec의 thin core에 매핑한다.
-- [ ] global spec에 planned persistent information만 반영하고, execution-only detail은 남기지 않는다.
+- [ ] temporary spec 또는 user input을 global spec의 thin core와 가장 맞는 global surface에 매핑한다.
+- [ ] planned persistent information만 반영하고, execution-only detail이나 wrong-surface inflation은 남기지 않는다.
+- [ ] planned truth는 current implemented truth와 명시적으로 분리된다.
 - [ ] 아직 구현되지 않은 planned 내용은 스펙에서 `🚧 Planned`로 명시된다.
 - [ ] 업데이트 적용 후 요약을 남긴다.
 - [ ] 처리한 input file은 `_processed_*`로 마킹한다.
@@ -32,11 +33,12 @@ version: 2.3.1
 5. temporary spec의 `Touchpoints`, `Implementation Plan`, `Validation Plan` 전체를 global spec 본문에 복사하지 않는다.
 6. global spec에는 배경/개념, scope/non-goals/guardrails, key decisions 같은 지속 정보만 남긴다.
 7. repo-wide invariant가 정말 필요한 경우만 guardrails 또는 key decisions에 반영한다.
-8. 새 sub-spec 파일 생성 시 반드시 main.md 인덱스에 링크를 추가한다. 고아 파일 금지.
-9. 기존 파일 분할 구조를 변경하지 않는다. 파일 추가만 허용, 기존 구조 재편성 금지.
-10. `_sdd/` artifact 경로는 lowercase canonical을 기본으로 하되, 입력을 읽을 때는 legacy uppercase fallback도 허용한다.
-11. 아직 구현되지 않은 planned 정보는 스펙에서 반드시 `🚧 Planned`를 붙여 현재 truth와 구분한다.
-12. planned 내용을 기존 implemented truth와 같은 문단이나 bullet에 무표식으로 섞어 쓰지 않는다.
+8. main / supporting / history surface 중 어디에 둘지 먼저 판단하고, 가장 맞는 global surface에만 보수적으로 반영한다.
+9. 새 sub-spec 파일 생성 시 반드시 main.md 인덱스에 링크를 추가한다. 고아 파일 금지.
+10. 기존 파일 분할 구조를 변경하지 않는다. 파일 추가만 허용, 기존 구조 재편성 금지.
+11. `_sdd/` artifact 경로는 lowercase canonical을 기본으로 하되, 입력을 읽을 때는 legacy uppercase fallback도 허용한다.
+12. 아직 구현되지 않은 planned 정보는 스펙에서 반드시 `🚧 Planned`를 붙여 현재 truth와 구분한다.
+13. planned 내용을 기존 implemented truth와 같은 문단이나 bullet에 무표식으로 섞어 쓰지 않는다.
 
 ## Input Sources
 
@@ -85,6 +87,8 @@ version: 2.3.1
 ### Step 4: Map to Global Spec Sections
 
 planned delta를 thin global core에 보수적으로 매핑한다.
+
+먼저 이 정보가 `main.md`, supporting surface, history / decision surface, 또는 temporary spec 중 어디에 남아야 하는지 판단한다.
 
 #### Repo-wide Invariant Test
 
@@ -137,6 +141,8 @@ spec를 갱신한다.
 - 구현 완료처럼 쓰지 않고 planned requirement로 쓴다.
 - 아직 구현되지 않은 새 heading, bullet, 문장에는 `🚧 Planned`를 직접 붙인다.
 - planned block을 추가할 때는 `## 🚧 Planned ...`, `- 🚧 Planned: ...`, 또는 이에 준하는 명시적 표식을 사용한다.
+- current implemented truth와 planned truth를 같은 문단/불릿에 무표식으로 섞지 않는다.
+- surface fit상 supporting/history가 더 맞으면 main body를 두껍게 만들지 말고 해당 surface에 배치한다.
 - repo-wide가 아닌 contract/validation detail은 global spec 밖에 둔다.
 - 신규 sub-spec 파일 생성 시 파일 생성 후 main.md 인덱스에 링크를 추가한다.
 
@@ -173,6 +179,9 @@ input file을 사용했다면 `_processed_*` 이름으로 변경한다.
 ## Final Check
 
 Acceptance Criteria가 모두 만족되었나 검증한다. 미충족 항목이 있으면 해당 단계로 돌아가 수정한다.
+
+- planned truth와 current implemented truth를 섞지 않았고 execution-only detail은 global spec 밖에 남겼는가
+- 가장 맞는 global surface를 골랐고, 문서를 두껍게 만든 경우 decision-bearing value를 설명할 수 있는가
 
 > **Mirror Notice**: 이 스킬은 `.claude/agents/spec-update-todo.md`와 동일한 계약을 공유한다.
 > 내용을 수정할 때는 agent 파일과 이 스킬 파일을 **반드시 함께** 수정해야 한다.

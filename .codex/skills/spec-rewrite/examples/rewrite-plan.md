@@ -5,10 +5,10 @@
 
 ## Diagnosis
 
-- `Repo Purpose Clarity`: weak
+- `Thinness`: weak
 - `Boundary Clarity`: weak
 - `Canonical Fit`: weak -- feature-level usage/reference/inventory is burying concept, boundaries, and decisions
-- `Contamination Control`: weak
+- `Findability`: weak
 
 ## Keep in Main
 

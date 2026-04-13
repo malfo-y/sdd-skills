@@ -1,7 +1,7 @@
 ---
 name: spec-summary
 description: This skill should be used when the user asks to "summarize spec", "spec summary", "show spec overview", "스펙 요약", "스펙 개요", "show spec status", "스펙 현황", "project overview", "프로젝트 개요", "what's the current state", "현재 상태는", or wants a reader-facing whitepaper of the current repo/spec with an optional appendix for planned/progress signals.
-version: 3.0.0
+version: 3.0.1
 ---
 
 # spec-summary
@@ -14,7 +14,7 @@ version: 3.0.0
 
 - [ ] `_sdd/spec/summary.md`를 생성하거나 안전하게 갱신했다.
 - [ ] global spec, supporting docs, 필요한 코드 surface를 먼저 식별했다.
-- [ ] summary 본문이 `Executive Summary`, `Background / Motivation`, `Core Design`, `Code Grounding`, `Usage / Expected Results`, `Further Reading / References`를 포함한다.
+- [ ] summary 본문이 canonical whitepaper shape를 갖추고, 핵심 섹션(`Executive Summary`, `Background / Motivation`, `Core Design`, `Code Grounding`, `Usage / Expected Results`, `Further Reading / References`)을 포함한다.
 - [ ] `Code Grounding`이 concrete path, module/function anchor, 또는 source table로 핵심 설명을 실제 구현과 연결한다.
 - [ ] 본문이 단순 status summary가 아니라, 왜 이 구조를 택했는지와 어떤 결과를 기대해야 하는지를 독자가 설명할 수 있을 정도의 whitepaper 밀도를 가진다.
 - [ ] `Usage / Expected Results`가 독자가 어떻게 읽고 쓰며 무엇을 기대해야 하는지 분명히 전달한다.
@@ -27,7 +27,6 @@ version: 3.0.0
 - summary는 thin global spec을 대체하지 않는다. thin core를 사람에게 설명 가능한 whitepaper surface로 풀어주는 companion 문서다.
 - summary는 status digest나 changelog가 아니라, 문제의식과 설계 이유를 함께 설명하는 기술 화이트페이퍼형 surface다.
 - 좋은 summary는 문제와 동기, 핵심 설계, 코드 근거, 사용과 기대 결과를 함께 보여주되, exhaustive reference detail을 복제하지 않는다.
-- `Code Grounding`은 필수다. 설명이 실제 코드와 이어지지 않으면 whitepaper는 다시 일반 소개문으로 무너진다.
 - guide, README, reference docs, temporary artifact는 summary의 하위 대체물이 아니라 supporting surface다. summary는 이들을 대신하지 않고 연결한다.
 
 ## Companion Assets
@@ -75,16 +74,14 @@ version: 3.0.0
 
 ### Step 4: Extract the Facts
 
-whitepaper 본문에는 아래를 추출한다.
+whitepaper 본문에는 아래만 추출한다.
 
-- 프로젝트가 해결하는 문제
-- 배경과 동기, 접근 이유
+- 프로젝트가 해결하는 문제와 배경/동기
 - 대안 대비 왜 이 접근을 택했는가
 - 핵심 설계와 주요 결정
 - 이를 뒷받침하는 concrete code grounding
 - 사용 흐름, 기대 결과, 실패/예외 경계
-- 더 깊이 읽을 supporting surface
-- 관련 artifact가 있으면 planned / in-progress / blocked / next 신호
+- 더 깊이 읽을 supporting surface와 필요한 경우 appendix 신호
 
 ### Step 5: Build the Whitepaper Shape
 
@@ -108,13 +105,9 @@ summary 기본 순서:
 
 ### Step 8: Final Check
 
-- summary가 reader-facing whitepaper shape를 가졌는가
-- summary가 status memo보다 기술 whitepaper처럼 읽히는가
-- 문제, 동기, 설계, 코드 근거, 사용과 기대 결과가 빠지지 않았는가
-- `Code Grounding`이 실제 source anchor를 제공하는가
-- planned/progress 정보가 appendix나 마지막 보조 섹션에만 머무르는가
-- README를 요청하지 않았는데 수정하지 않았는가
-- change-history narration 없이 현재 내용만 직접 설명하는가
+- Acceptance Criteria가 실제로 충족되었는가
+- summary가 status memo나 change-history narration이 아니라 현재 기준의 whitepaper로 읽히는가
+- appendix와 README sync가 요청 범위 안에만 머무르는가
 
 ## Output Contract
 

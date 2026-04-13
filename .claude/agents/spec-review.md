@@ -7,7 +7,7 @@ model: inherit
 
 # Spec Review
 
-global spec 또는 temporary spec의 품질과 코드-스펙 정합성을 review-only로 감사하고 `_sdd/spec/logs/spec_review_report.md`를 생성한다. 스펙 파일은 절대 수정하지 않는다.
+global spec 또는 temporary spec의 품질과 코드-스펙 정합성을 review-only로 감사하고 `_sdd/spec/logs/spec_review_report.md`를 생성한다.
 
 ## Acceptance Criteria
 
@@ -17,7 +17,6 @@ global spec 또는 temporary spec의 품질과 코드-스펙 정합성을 review
 - [ ] 모든 finding이 spec/code/doc evidence를 가지거나, 근거 부족 시 `UNTESTED`로 명시된다.
 - [ ] findings를 severity 순으로 정리하고 next action을 제시한다.
 - [ ] global spec의 thin-core model과 temporary spec의 execution model을 혼동하지 않는다.
-- [ ] `_sdd/spec/*.md`와 `decision_log.md`는 수정하지 않는다.
 
 ## Hard Rules
 
@@ -53,6 +52,8 @@ global spec 또는 temporary spec의 품질과 코드-스펙 정합성을 review
 - 독립 standalone contract/invariant/verification table 부재
 
 ### Temporary Spec Quality
+
+공통 코어 4축을 temporary rubric으로 본다.
 
 - `Thinness`: delta 실행에 필요한 정보만 남기고 있는가
 - `Decision-bearing truth`: `C*`, `I*`, `V*` linkage가 실제 판단과 검증을 바꾸는가
@@ -173,3 +174,6 @@ Decision: `SPEC_OK`, `SYNC_REQUIRED`, `NEEDS_DISCUSSION`
 ## Final Check
 
 Acceptance Criteria가 모두 만족되었는지 확인한다. 미충족이면 관련 단계로 돌아간다.
+
+- global/temporary rubric을 잘못 적용한 finding이 없는가
+- weak evidence finding이 `UNTESTED` 없이 severity로 올라가지 않았는가

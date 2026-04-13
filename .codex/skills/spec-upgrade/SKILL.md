@@ -1,7 +1,7 @@
 ---
 name: spec-upgrade
 description: This skill should be used when the user asks to "upgrade spec", "migrate spec format", "modernize spec structure", "spec upgrade", "스펙 업그레이드", "스펙 변환", "스펙 마이그레이션", or wants to convert old-format spec documents to the current canonical SDD spec model defined in SDD_SPEC_DEFINITION.md.
-version: 1.10.0
+version: 1.10.1
 ---
 
 # spec-upgrade
@@ -30,7 +30,7 @@ version: 1.10.0
 - temporary spec은 별도의 실행 청사진이다.
 - repo-wide invariant가 진짜 필요하면 guardrails 또는 key decisions로 남긴다.
 - feature-level usage, validation, current-form CIV는 기본 global core가 아니다.
-- 구조 재편이 더 큰 문제라면 무리하게 여기서 해결하지 말고 `spec-rewrite` 후보로 돌린다.
+- 구조 재편이 더 큰 문제라면 Step 1 경계 판정에 따라 `spec-rewrite`로 분기한다.
 
 ## Companion Assets
 
@@ -47,10 +47,10 @@ version: 1.10.0
 1. 구현 코드 파일은 수정하지 않는다.
 2. 기존 스펙 언어를 따른다.
 3. 기존 내용을 최대한 보존하고, 삭제 또는 축약이 필요하면 이유를 명시한다.
-4. 결과는 기존 파일 경로에 in-place로 반영한다. 구조 재편이 너무 크면 `spec-rewrite` 후보로 보고한다.
+4. 결과는 기존 파일 경로에 in-place로 반영한다. 구조 재편이 핵심이면 Step 1 판정에 따라 `spec-rewrite`로 분기한다.
 5. global spec을 old canonical 섹션으로 다시 두껍게 복구하지 않는다.
 6. `decision_log.md`가 있으면 보존하고, 주요 업그레이드 판단을 추가 기록할 수 있다.
-7. 아래 중 하나라도 핵심이면 upgrade로 밀어붙이지 말고 `spec-rewrite`로 분기한다: 대규모 분할/재배치, 역할 재설계, rationale rescue가 필요한 pruning, body/log 재배치가 중심인 경우.
+7. Step 1 경계 판정에서 rewrite 성격이 우세하면 upgrade로 밀어붙이지 말고 `spec-rewrite`로 분기한다.
 
 ## Process
 
@@ -112,7 +112,7 @@ version: 1.10.0
 - 기존 정보가 불필요하게 소실되지 않았는가
 - feature-level detail을 global 본문에서 걷어냈는가
 - implementation inventory를 그대로 옮겨 적지 않았는가
-- rewrite가 필요한 구조적 문제를 잘못 upgrade로 덮지 않았는가
+- Step 1 경계 판정을 어기고 rewrite 문제를 upgrade로 덮지 않았는가
 
 ## Output Contract
 

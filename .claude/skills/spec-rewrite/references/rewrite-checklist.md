@@ -13,9 +13,8 @@
 - Is feature-level usage/reference/validation moved out of the default body?
 - Are repo-wide invariants embedded only when they truly matter?
 - Are appendix and reference sections supporting rather than replacing the core?
-- Did we preserve important rationale while removing low-value inventory?
-- Did we keep rationale, citation, and code excerpt headers in the body when they remain decision-bearing?
-- Did we move migration history, pruning justification, and execution-log style explanation to `decision_log` or `rewrite_report` when they would thicken the body?
+- Did we preserve important rationale, citation, and code excerpt headers while removing low-value inventory?
+- Did we move migration history, pruning justification, and other body-thickening explanation to `decision_log` or `rewrite_report`?
 
 ## Temporary Spec
 

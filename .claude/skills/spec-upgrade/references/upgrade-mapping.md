@@ -16,6 +16,8 @@
 
 ## Upgrade vs Rewrite Boundary
 
+Step 1 경계 판정을 빠르게 대조할 때만 사용한다. 별도 source-of-truth가 아니라 본문 Step 1의 보조 표다.
+
 | Signal | Recommended Tool | Why |
 |--------|------------------|-----|
 | old sections need thinning into current model | `spec-upgrade` | canonical migration is the main task |

@@ -1,7 +1,7 @@
 ---
 name: spec-update-done
 description: This skill should be used when the user asks to "update spec from code", "sync spec with implementation", "apply implementation changes to spec", "reflect completed work in spec", "refresh spec after implementation", "implementation done sync", or mentions spec document maintenance tied to completed code changes.
-version: 2.3.0
+version: 2.4.0
 ---
 
 # Spec Sync and Update
@@ -20,6 +20,8 @@ version: 2.3.0
 - [ ] temporary spec delta와 실제 구현 상태를 비교한다.
 - [ ] Change Report를 작성하고 반영 내용을 요약한다.
 - [ ] 필요한 global spec 업데이트를 적용한다.
+- [ ] 검증된 decision-bearing truth만 global spec에 승격한다.
+- [ ] feature-level detail 과복원이나 wrong-surface restoration 없이 필요한 정보만 반영한다.
 - [ ] 검증되지 않았거나 미구현인 planned change를 완료된 사실처럼 쓰지 않는다.
 
 ## Hard Rules
@@ -31,7 +33,8 @@ version: 2.3.0
 5. 새 sub-spec 파일 생성 시 반드시 main.md 인덱스에 링크를 추가한다. 고아 파일 금지.
 6. 기존 파일 분할 구조를 변경하지 않는다. 파일 추가만 허용, 기존 구조 재편성 금지.
 7. rationale 변화가 실제로 발생했을 때만 `decision_log.md`를 업데이트한다.
-8. `_sdd/` artifact 경로는 lowercase canonical을 기본으로 하되, 입력을 읽을 때는 legacy uppercase fallback도 허용한다.
+8. main / supporting / history surface 중 어디에 둘지 먼저 판단하고, 가장 맞는 global surface에만 검증된 사실을 반영한다.
+9. `_sdd/` artifact 경로는 lowercase canonical을 기본으로 하되, 입력을 읽을 때는 legacy uppercase fallback도 허용한다.
 
 ## Input Sources
 
@@ -81,6 +84,7 @@ temporary spec의 각 delta 항목을 아래 중 하나로 분류한다.
 
 - 실제 코드와 evidence가 있는 항목만 global spec에 반영한다.
 - `Validation Plan`과 implementation evidence가 연결되지 않으면 `UNVERIFIED`로 남긴다.
+- 분류 후 global spec에 올리지 않을 항목도 명시적으로 제외 / 보류 판단한다.
 - 임시 실행 메모는 반영 대상이 아니다.
 
 ### Step 3: Generate Change Report
@@ -114,8 +118,10 @@ global spec 문서를 수정한다.
 - 구현 완료되고 검증된 사실 반영
 - shared scope/non-goal/guardrail 변화 반영
 - 장기 설계 판단 변화 반영
+- 먼저 main / supporting / history surface 중 어디가 맞는지 판단
 - `Repo-wide Invariant Test`를 통과한 항목만 guardrails 또는 decisions에 반영
-- feature-level contract/validation/usage는 global 본문에 복구하지 않음
+- feature-level contract/validation/touchpoint/usage detail은 global 본문으로 복구하지 않음
+- supporting/history가 더 맞는 정보는 main body를 두껍게 만들지 말고 해당 surface에 반영
 - 신규 sub-spec 파일 생성 시 파일 생성 후 main.md 인덱스에 링크 추가
 
 ### Step 5: Validate Updates
@@ -125,6 +131,7 @@ global spec 문서를 수정한다.
 - path / reference가 최신 코드와 맞는가
 - 구현되지 않은 내용이 완료된 것처럼 남지 않았는가
 - global spec이 다시 feature-level detail로 두꺼워지지 않았는가
+- wrong-surface restoration이나 불필요한 truth duplication이 없는가
 - 신규 파일이 main.md 인덱스에 링크되는가
 
 ## Output Format
@@ -166,6 +173,10 @@ global spec 문서를 수정한다.
 ## Final Check
 
 Acceptance Criteria가 모두 만족되었나 검증한다. 미충족 항목이 있으면 해당 단계로 돌아가 수정한다.
+
+- 검증된 decision-bearing truth만 승격했고 evidence가 약한 항목은 제외 / 보류했는가
+- feature-level detail을 과복원하지 않았고, 가장 맞는 global surface를 골랐는가
+- global spec을 두껍게 만들었다면 repo-level 판단 가치가 실제로 설명 가능한가
 
 > **Mirror Notice**: 이 스킬은 `.claude/agents/spec-update-done.md`와 동일한 계약을 공유한다.
 > 내용을 수정할 때는 agent 파일과 이 스킬 파일을 **반드시 함께** 수정해야 한다.

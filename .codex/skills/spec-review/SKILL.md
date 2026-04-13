@@ -1,7 +1,7 @@
 ---
 name: spec-review
 description: This skill should be used when the user asks to "review spec", "spec drift check", "verify spec accuracy", "audit spec quality", "review spec against code", "refresh spec review", "스펙 리뷰", "스펙 검토", "스펙 드리프트 점검", or wants a review-only analysis of spec quality and code-to-spec alignment without directly editing spec files.
-version: 2.3.0
+version: 2.3.1
 ---
 
 # Spec Review
@@ -22,7 +22,6 @@ version: 2.3.0
 - [ ] 모든 finding이 spec/code/doc evidence를 가지거나, 근거 부족 시 `UNTESTED`로 명시된다.
 - [ ] findings를 severity 순으로 정리하고 next action을 제시한다.
 - [ ] global spec의 thin-core model과 temporary spec의 execution model을 혼동하지 않는다.
-- [ ] `_sdd/spec/*.md`와 `decision_log.md`는 수정하지 않는다.
 
 ## Hard Rules
 
@@ -233,5 +232,8 @@ decision 예시:
 ## Final Check
 
 Acceptance Criteria가 모두 만족되었나 검증한다. 미충족 항목이 있으면 해당 단계로 돌아가 수정한다.
+
+- global/temporary rubric을 잘못 적용한 finding이 없는가
+- weak evidence finding이 `UNTESTED` 없이 severity로 올라가지 않았는가
 
 > **Mirror Notice**: 이 스킬의 본문은 `.codex/agents/spec-review.toml`와 `.claude/agents/spec-review.md`의 계약과 동기화되어야 한다.

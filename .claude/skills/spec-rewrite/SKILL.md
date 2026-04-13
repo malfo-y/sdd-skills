@@ -1,7 +1,7 @@
 ---
 name: spec-rewrite
 description: This skill should be used when the user asks to "rewrite spec", "refactor spec", "simplify spec", "split spec into files", "clean up spec", "review spec quality", or equivalent phrases indicating they want to reorganize an overly long/complex spec by pruning noise, splitting into hierarchical files, and explicitly listing ambiguities/problems.
-version: 1.10.0
+version: 1.10.1
 ---
 
 # spec-rewrite
@@ -18,8 +18,7 @@ version: 1.10.0
 - [ ] 공통 코어 4축(`Thinness`, `Decision-bearing truth`, `Anti-duplication`, `Navigation + surface fit`)에서 무엇을 줄이고 무엇을 보존할지 먼저 판단했다.
 - [ ] `_sdd/spec/logs/spec-rewrite-plan.md`가 canonical-fit rationale, split map, ambiguity/risk, body/log placement rule을 포함한 상태로 먼저 저장되었다.
 - [ ] rewritten spec가 현재 canonical model에 더 잘 맞는 구조를 가진다.
-- [ ] 중요한 rationale, `Why`, inline citation, code excerpt header는 보존되었다.
-- [ ] 본문에 둘 판단과 `decision_log` 또는 `rewrite_report`로 내릴 설명이 분리되었다.
+- [ ] 중요한 rationale, `Why`, inline citation, code excerpt header는 보존되었고, body를 두껍게 만드는 설명은 `decision_log` 또는 `rewrite_report`로 분리되었다.
 - [ ] `rewrite_report.md`가 metric scorecard, canonical-fit 평가, unresolved warning, plan 대비 주요 deviation을 포함한다.
 - [ ] 누락된 내용을 임의로 창작하지 않고, 필요한 경우 warning으로 남겼다.
 
@@ -42,30 +41,29 @@ version: 1.10.0
 
 ## Hard Rules
 
-1. 삭제하거나 축약하는 내용에 중요한 rationale이 있으면 body에 남기거나 `decision_log.md` 또는 rewrite report에 보존한다.
+1. 삭제하거나 축약하는 내용에 중요한 rationale이 있으면 decision-bearing 본문에는 남기고, body를 두껍게 만드는 migration/pruning/deviation 메모는 `decision_log.md` 또는 `rewrite_report.md`로 내린다.
 2. `Source`, component-level `Why`, inline citation, code excerpt header가 있으면 재구성 후에도 유지한다.
 3. `_sdd/spec/logs/spec-rewrite-plan.md`를 rewrite 시작 전에 반드시 저장하고, 이후 실행은 이 파일을 기준으로 진행한다.
 4. 대규모 구조 변경이나 파일 분할은 계획 파일을 먼저 저장한 뒤 필요한 경우 사용자 확인을 받는다.
 5. rewrite는 global spec을 다시 두껍게 만들지 않는다.
-6. migration history, pruning 근거, deviation 설명처럼 body를 두껍게 만드는 메모는 `decision_log.md` 또는 `rewrite_report.md`로 내린다.
-7. missing global core나 temporary core는 warning으로 남길 수 있지만 자동 생성하지 않는다.
+6. missing global core나 temporary core는 warning으로 남길 수 있지만 자동 생성하지 않는다.
 
 ## Process
 
 ### Step 1: Diagnose the Current Spec
 
-진단 축:
+공통 코어 4축:
 
 - `Thinness`
 - `Decision-bearing truth`
 - `Anti-duplication`
 - `Navigation + surface fit`
+
+rewrite 고유 진단 축:
+
 - `Component Separation`
 - `Findability`
-- `Repo Purpose Clarity`
 - `Boundary Clarity`
-- `Decision Preservation`
-- `Why/Decision Preservation`
 - `Canonical Fit`
 
 `Canonical Fit`에서 특히 본다.
