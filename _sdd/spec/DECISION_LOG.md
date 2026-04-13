@@ -1,5 +1,87 @@
 # Decision Log
 
+## 2026-04-13 - Position spec-summary as reader-facing whitepaper surface (v4.1.6 -> v4.1.7 spec revision)
+
+### Context
+
+`spec-summary`는 `_sdd/spec/summary.md`를 만드는 surface이지만, active `_sdd/spec/` supporting docs에는 여전히 canonical overview 중심 설명이 남아 있었다. 이 표현은 현재 skill/docs 쪽에서 이미 정렬된 whitepaper contract와 어긋난다. 이 저장소에서 `summary.md`는 thin global spec을 다시 두껍게 복제하는 문서가 아니라, 문제의식과 배경/동기, 핵심 설계, 코드 근거, 사용 흐름과 기대 결과를 사람이 한 문서로 읽게 하는 reader-facing whitepaper여야 한다.
+
+### Decision
+
+1. **`spec-summary`를 whitepaper surface로 고정**: `_sdd/spec/summary.md`는 repo/spec를 설명하는 reader-facing whitepaper로 본다.
+2. **필수 section spine 고정**: `Executive Summary`, `Background / Motivation`, `Core Design`, `Code Grounding`, `Usage / Expected Results`, `Further Reading / References`를 기본 본문 구조로 사용한다.
+3. **`Code Grounding` 필수화**: summary는 concrete path, symbol, source table 같은 anchor로 설명을 실제 구현과 연결해야 한다.
+4. **planned/progress는 appendix로만 허용**: 관련 draft/implementation artifact가 있을 때만 마지막 보조 섹션으로 짧게 붙인다.
+5. **history narration 분리 유지**: summary surface 자체는 현재 기준 내용만 직접 설명하고, 과거 판단과 변경 이력은 `DECISION_LOG.md`와 `logs/changelog.md`에서 추적한다.
+
+### Rationale
+
+- `summary.md`의 핵심 가치는 "빠른 상태표"보다 "왜 이런 구조인지와 실제 근거가 무엇인지"를 이해시키는 데 있다.
+- global spec이 thin core를 유지하더라도, 사람은 배경/동기/설계/사용 서사를 한 문서에서 읽을 whitepaper surface가 필요하다.
+- `Code Grounding`이 없는 whitepaper는 일반 소개문으로 무너지기 쉽고, 반대로 appendix-only planned/progress rule이 없으면 본문이 다시 status memo로 오염된다.
+- history narration을 summary 본문에서 분리하면 summary surface는 설명 문서로 남고, history surface는 change-tracking 역할에 집중할 수 있다.
+
+### Changes
+
+- `_sdd/spec/components.md` -- `spec-summary`를 reader-facing whitepaper surface로 설명
+- `_sdd/spec/usage-guide.md` -- `/spec-summary` expected result를 whitepaper section spine으로 정렬
+- `_sdd/spec/logs/changelog.md` -- v4.1.7 이력 추가
+
+### References
+
+- feature draft: `_sdd/drafts/2026-04-13_feature_draft_spec_summary_whitepaper_surface.md`
+- implementation progress: `_sdd/implementation/2026-04-13_implementation_progress_spec_summary_whitepaper_surface.md`
+- implementation report: `_sdd/implementation/2026-04-13_implementation_report_spec_summary_whitepaper_surface.md`
+- implementation review: `_sdd/implementation/2026-04-13_implementation_review_spec_summary_whitepaper_surface.md`
+- orchestrator: `_sdd/pipeline/orchestrators/orchestrator_spec_summary_whitepaper_surface.md`
+
+## 2026-04-13 - Reframe spec-summary as canonical overview with optional planned/progress snapshot (v4.1.5 -> v4.1.6 spec revision)
+
+### Context
+
+`spec-summary`는 이미 `_sdd/spec/summary.md`를 만드는 human-readable summary surface였지만, active skill contract와 supporting docs에는 여전히 "현재 스펙 상태"와 `global/temporary spec 요약` 관점이 남아 있었다. 이 표현은 `summary.md`를 사람용 canonical overview로 보려는 현재 thin global 철학과 맞물릴 때 역할이 흐려졌다. global spec은 장기적 판단 기준을 고정하고, 세부 설명은 supporting surface로 내리는 방향인데, `summary.md`가 다시 status sheet나 temporary summary처럼 읽히면 목적/경계/핵심 결정/다음 surface를 빠르게 잡아주는 역할이 약해진다.
+
+### Decision
+
+1. **`spec-summary`의 1차 역할을 canonical overview로 고정**: `_sdd/spec/summary.md`는 global spec과 supporting surface를 읽는 사람에게 목적, 경계, 핵심 결정, 다음에 읽을 surface를 빠르게 전달하는 문서로 본다.
+2. **temporary summary 독립 모드는 제거**: `spec-summary`는 temporary spec 자체를 별도 summary mode로 다루지 않는다.
+3. **planned/progress snapshot은 보조 정보로만 허용**: 관련 `_sdd/drafts/` 또는 `_sdd/implementation/` artifact가 있을 때만 `Planned / In Progress / Blocked / Next` 수준의 짧은 snapshot을 뒤쪽에 덧붙인다.
+4. **navigation naming 고정**: summary의 navigation 섹션 명칭은 `Where Details Live`를 사용한다.
+5. **history narration 금지**: `spec-summary` 본문과 template/example은 migration memo처럼 과거와 현재를 비교하지 않고, 현재 기준의 계약과 output shape만 직접 서술한다.
+6. **history docs는 역할 분리 유지**: semantic shift의 판단 근거는 `DECISION_LOG.md`, 변경 파일/버전 이력은 `logs/changelog.md`에 남긴다.
+
+### Rationale
+
+- 사람이 `summary.md`에서 얻어야 할 가치는 "상태 표"보다 "이 repo를 어떤 기준으로 읽고 어디를 더 보면 되는가"에 가깝다.
+- temporary spec은 실행 청사진이라 draft/implementation artifact 자체가 주 문맥이므로, `spec-summary`가 이를 다시 독립 summary surface로 복제할 이유가 약하다.
+- optional planned/progress snapshot만 남기면 overview의 선명함을 유지하면서도 현재 진행 상태를 빠르게 붙일 수 있다.
+- `Where Details Live`는 `How to Read This Spec`보다 덜 메타적이고, `Reading Map`보다 직관적으로 다음 탐색 경로를 설명한다.
+- `spec-summary` 본문에 변경 이력 서술을 넣지 않고 final form만 남기면 summary surface 자체가 다시 history-heavy 문서로 오염되는 것을 막을 수 있다.
+
+### Changes
+
+- `.codex/skills/spec-summary/SKILL.md` -- canonical overview + optional planned/progress snapshot 계약으로 재작성
+- `.claude/skills/spec-summary/SKILL.md` -- mirror contract 동기화
+- `.codex/skills/spec-summary/skill.json` -- version/description를 `2.0.0` semantics로 정렬
+- `.claude/skills/spec-summary/skill.json` -- version/description를 `2.0.0` semantics로 정렬
+- `.codex/skills/spec-summary/references/summary-template.md` -- `Where Details Live` + optional snapshot 구조로 재배치
+- `.claude/skills/spec-summary/references/summary-template.md` -- mirror template sync
+- `.codex/skills/spec-summary/examples/summary-output.md` -- overview-first example로 갱신
+- `.claude/skills/spec-summary/examples/summary-output.md` -- mirror example sync
+- `_sdd/spec/components.md` -- `spec-summary` 목적/이유/notes를 canonical overview 기준으로 보정
+- `_sdd/spec/usage-guide.md` -- `/spec-summary` expected result를 overview-first wording으로 보정
+- `docs/SDD_SPEC_DEFINITION.md`, `docs/SDD_WORKFLOW.md` -- `spec-summary` semantics 보정
+- `docs/en/SDD_SPEC_DEFINITION.md`, `docs/en/SDD_WORKFLOW.md` -- 영문 mirror sync
+- `.codex/skills/sdd-autopilot/references/sdd-reasoning-reference.md` -- downstream taxonomy 보정
+- `.claude/skills/sdd-autopilot/references/sdd-reasoning-reference.md` -- downstream taxonomy 보정
+- `_sdd/spec/logs/changelog.md` -- v4.1.6 이력 추가
+
+### References
+
+- 구현 draft: `_sdd/drafts/2026-04-13_feature_draft_spec_summary_canonical_overview_alignment.md`
+- implementation review: `_sdd/implementation/2026-04-13_implementation_review_spec_summary_canonical_overview_alignment.md`
+- orchestrator: `_sdd/pipeline/orchestrators/orchestrator_spec_summary_canonical_overview_alignment.md`
+
 ## 2026-04-10 - Sync autopilot planning semantics and artifact naming invariants into global spec (v4.1.4 -> v4.1.5 spec revision)
 
 ### Context

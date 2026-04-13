@@ -46,14 +46,34 @@ It handles:
 
 Questions close to implementation are answered there.
 
-## 4. Role of review and update skills
+## 4. When `spec-summary` is used
+
+`spec-summary` is used when a human needs the repo to make sense as one document.
+
+What it should cover:
+
+- what the repo solves
+- why this approach was chosen
+- what the core design is
+- where the concrete code grounding lives
+- how to read or use it and what to expect
+
+What should not dominate the body:
+
+- migration memo narration
+- changelog prose
+- long plan or progress logs
+
+Relevant draft or implementation signals may be attached only as a short appendix.
+
+## 5. Role of review and update skills
 
 - `spec-review`: for global specs, it checks concept + boundaries + decisions.
-- `spec-summary`: it compresses global specs around concept + boundaries + decisions.
+- `spec-summary`: it writes `summary.md` as a reader-facing whitepaper that explains the problem, motivation, choice rationale, core design, code grounding, and usage or expected results in one place, with an optional appendix for short plan or progress signals.
 - `spec-rewrite`: it first checks whether the global body is polluted by feature-level detail.
 - `spec-update-todo`, `spec-update-done`: they lift only persistent repo-wide information into the global spec.
 
-## 5. Verification rule
+## 6. Verification rule
 
 In SDD, execution and verification are not separate concerns.
 
@@ -63,7 +83,7 @@ Rules:
 - choose the verification method that fits the task
 - for document and skill refactors, diff, grep, and review evidence can be valid verification
 
-## 6. Drift control
+## 7. Drift control
 
 - do not copy temporary execution detail into the global spec
 - move supporting information to README or separate docs

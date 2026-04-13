@@ -17,7 +17,7 @@
 | `spec-update-done` | 구현 evidence를 검토해 검증된 지속 정보만 global spec에 올린다 | 임시 실행 메모와 검증된 truth를 분리한다 | `.claude/agents/spec-update-done.md`<br>`.claude/skills/spec-update-done/SKILL.md` | delta status 분류 기반 sync. lowercase canonical artifact를 우선 읽고 legacy path를 fallback으로 허용한다 |
 | `spec-review` | 스펙 품질과 코드-스펙 drift를 read-only로 진단한다 | 수정 없이 현재 상태를 객관적으로 점검한다 | `.claude/agents/spec-review.md`<br>`.claude/skills/spec-review/SKILL.md` | wrapper -> agent 패턴 |
 | `spec-rewrite` | 비대한 스펙을 canonical-fit 기준으로 재구성한다 | global/spec surface의 구조적 오염을 줄인다 | `.claude/skills/spec-rewrite/SKILL.md`<br>`.codex/skills/spec-rewrite/SKILL.md` | 계획 파일과 rewrite report를 먼저/함께 남긴다 |
-| `spec-summary` | 현재 스펙 상태를 human-friendly하게 압축한다 | 전체 문서를 읽지 않고도 상태를 빠르게 파악하게 한다 | `.claude/skills/spec-summary/SKILL.md` | summary surface 생성용 |
+| `spec-summary` | global spec, supporting surface, 필요한 code grounding을 엮어 reader-facing whitepaper를 작성한다 | 문제, 동기, 핵심 설계, 코드 근거, 사용/기대 결과를 한 문서에서 이해하게 한다 | `.claude/skills/spec-summary/SKILL.md` | `_sdd/spec/summary.md` 생성용. 관련 draft/implementation artifact가 있으면 planned/progress 신호를 appendix에만 짧게 덧붙일 수 있다 |
 | `spec-upgrade` | legacy global spec을 current canonical model로 마이그레이션한다 | 오래된 section-map과 inventory-heavy 구조를 정리한다 | `.claude/skills/spec-upgrade/SKILL.md`<br>`.codex/skills/spec-upgrade/SKILL.md` | 구조 업그레이드 전용 |
 | `guide-create` | 특정 기능의 구현/리뷰용 deep-dive guide를 생성한다 | thin global spec 밖의 세부 설명 surface가 필요하다 | `.claude/skills/guide-create/SKILL.md`<br>`.codex/skills/guide-create/SKILL.md` | compact template pair를 같이 확인한다 |
 

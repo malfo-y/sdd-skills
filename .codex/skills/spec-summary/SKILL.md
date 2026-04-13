@@ -1,36 +1,38 @@
 ---
 name: spec-summary
-description: This skill should be used when the user asks to "summarize spec", "spec summary", "show spec overview", "스펙 요약", "스펙 개요", "show spec status", "스펙 현황", "project overview", "프로젝트 개요", "what's the current state", "현재 상태는", or wants a human-readable summary of the current specification for quick understanding.
-version: 1.9.0
+description: This skill should be used when the user asks to "summarize spec", "spec summary", "show spec overview", "스펙 요약", "스펙 개요", "show spec status", "스펙 현황", "project overview", "프로젝트 개요", "what's the current state", "현재 상태는", or wants a reader-facing whitepaper of the current repo/spec with an optional appendix for planned/progress signals.
+version: 3.0.0
 ---
 
 # spec-summary
 
 ## Goal
 
-현재 스펙과 구현 상태를 읽어 `_sdd/spec/summary.md`에 사람이 빠르게 훑을 수 있는 layered summary를 만든다. 필요할 때만 `README.md`의 managed block을 갱신해, 짧은 스냅샷과 전체 요약 문서를 연결한다.
-
-global summary는 현재 thinner global model을 반영해야 한다. 즉 글로벌 스펙은 `개념 + 경계 + 결정` 중심으로, temporary spec은 `change delta + touchpoints + implementation/validation + risks` 중심으로 요약한다.
+현재 global spec, supporting docs, 그리고 필요한 코드 근거를 읽어 `_sdd/spec/summary.md`에 이 저장소를 설명하는 reader-facing whitepaper를 만든다. 이 문서는 기술 화이트페이퍼처럼 읽혀야 하며, 문제와 배경/동기, 핵심 설계, 코드 근거, 사용 흐름과 기대 결과를 한 번에 설명해야 한다. 더 깊은 supporting surface로 자연스럽게 이어져야 하며, 관련 `_sdd/drafts/` 또는 `_sdd/implementation/` artifact가 있으면 appendix로 계획/진행 상태를 짧게 덧붙일 수 있다. 필요할 때만 `README.md`의 managed block을 갱신해, 짧은 요약과 전체 whitepaper 문서를 연결한다.
 
 ## Acceptance Criteria
 
 - [ ] `_sdd/spec/summary.md`를 생성하거나 안전하게 갱신했다.
-- [ ] 대상 문서가 global spec인지 temporary spec인지 먼저 판별했다.
-- [ ] global spec이면 concept, scope/non-goals/guardrails, key decisions를 왜곡 없이 요약했다.
-- [ ] temporary spec이면 change summary, scope delta, contract/invariant delta, touchpoints, implementation/validation, risks를 왜곡 없이 요약했다.
-- [ ] split spec과 구현 진행 문서가 있으면 이를 반영해 현재 상태를 요약했다.
+- [ ] global spec, supporting docs, 필요한 코드 surface를 먼저 식별했다.
+- [ ] summary 본문이 `Executive Summary`, `Background / Motivation`, `Core Design`, `Code Grounding`, `Usage / Expected Results`, `Further Reading / References`를 포함한다.
+- [ ] `Code Grounding`이 concrete path, module/function anchor, 또는 source table로 핵심 설명을 실제 구현과 연결한다.
+- [ ] 본문이 단순 status summary가 아니라, 왜 이 구조를 택했는지와 어떤 결과를 기대해야 하는지를 독자가 설명할 수 있을 정도의 whitepaper 밀도를 가진다.
+- [ ] `Usage / Expected Results`가 독자가 어떻게 읽고 쓰며 무엇을 기대해야 하는지 분명히 전달한다.
+- [ ] 관련 `_sdd/drafts/` 또는 `_sdd/implementation/` artifact가 있으면 appendix 또는 마지막 보조 섹션으로 planned/progress snapshot을 반영했다.
+- [ ] summary가 과거 상태 비교, migration memo, changelog처럼 읽히지 않고 현재 기준 내용만 직접 설명한다.
 - [ ] README 갱신은 사용자가 명시적으로 요청한 경우에만 수행했다.
 
 ## SDD Lens
 
-- summary는 spec의 대체물이 아니라, `_sdd/spec/`를 빠르게 이해하기 위한 안내 문서다.
-- global spec summary는 "이 프로젝트를 어떤 개념과 경계와 결정으로 읽어야 하는가"를 빠르게 잡아줘야 한다.
-- temporary spec summary는 "이번 변경이 무엇을 바꾸고 어떻게 검증되는가"를 빠르게 잡아줘야 한다.
-- global summary는 delegated-out information이 무엇인지도 짧게 알려줄 수 있지만, usage/CIV snapshot을 기본 shape로 강제하지 않는다.
+- summary는 thin global spec을 대체하지 않는다. thin core를 사람에게 설명 가능한 whitepaper surface로 풀어주는 companion 문서다.
+- summary는 status digest나 changelog가 아니라, 문제의식과 설계 이유를 함께 설명하는 기술 화이트페이퍼형 surface다.
+- 좋은 summary는 문제와 동기, 핵심 설계, 코드 근거, 사용과 기대 결과를 함께 보여주되, exhaustive reference detail을 복제하지 않는다.
+- `Code Grounding`은 필수다. 설명이 실제 코드와 이어지지 않으면 whitepaper는 다시 일반 소개문으로 무너진다.
+- guide, README, reference docs, temporary artifact는 summary의 하위 대체물이 아니라 supporting surface다. summary는 이들을 대신하지 않고 연결한다.
 
 ## Companion Assets
 
-- `references/summary-template.md`: summary 구조 템플릿
+- `references/summary-template.md`: whitepaper 구조 템플릿
 - `examples/summary-output.md`: 완성 예시
 
 ## Hard Rules
@@ -40,7 +42,9 @@ global summary는 현재 thinner global model을 반영해야 한다. 즉 글로
 3. README는 전체를 덮어쓰지 않는다. `spec-summary` marker block만 갱신하거나 없으면 안전하게 추가한다.
 4. 문서 언어는 기존 스펙/문서를 따른다. 기존 스펙이 없으면 한국어를 기본으로 한다.
 5. summary가 길거나 구조적으로 복잡하면 caller가 먼저 skeleton/섹션 헤더를 직접 기록한 뒤, 같은 흐름에서 내용을 채운다.
-6. split spec 또는 컴포넌트 수가 많으면 병렬 추출 후 부모가 최종 summary를 통합한다.
+6. split spec 또는 컴포넌트 수가 많으면 병렬 추출 후 부모가 최종 whitepaper를 통합한다.
+7. summary는 과거 상태나 변경 이력을 설명하지 않고, 현재 기준의 계약과 구조를 바로 드러내야 한다.
+8. `_sdd/` artifact 경로는 lowercase canonical을 기본으로 하되, 입력을 읽을 때는 legacy uppercase fallback도 허용한다.
 
 ## Input Sources
 
@@ -48,79 +52,51 @@ global summary는 현재 thinner global model을 반영해야 한다. 즉 글로
 
 1. 사용자 지정 spec 경로
 2. `_sdd/spec/main.md` 또는 프로젝트 index spec
-3. index spec이 가리키는 sub-spec 파일
-4. `_sdd/implementation/*_implementation_progress_*.md` (slug 기반 glob), `_sdd/implementation/implementation_progress.md` (legacy fallback)
-5. `_sdd/implementation/*_implementation_review_*.md` (slug 기반 glob), `_sdd/implementation/implementation_review.md` (legacy fallback)
-6. `README.md` (README sync 요청 시만)
-7. `_sdd/env.md` (로컬 검증이 필요할 때만)
+3. `components.md`, `usage-guide.md`, `DECISION_LOG.md`, 관련 supporting surface
+4. summary의 `Code Grounding`에 필요한 실제 코드 경로, 모듈, 함수, 명령 surface
+5. `_sdd/drafts/*_feature_draft_*.md` (관련 appendix signal이 있을 때만)
+6. `_sdd/implementation/*_implementation_progress_*.md`, `_sdd/implementation/*_implementation_review_*.md` (관련 appendix signal이 있을 때만)
+7. `README.md` (README sync 요청 시만)
+8. `_sdd/env.md` (로컬 검증이 필요할 때만)
 
 ## Process
 
 ### Step 1: Locate the Spec Set
 
-먼저 index/main spec을 찾고, 필요하면 sub-spec 집합을 결정한다.
+먼저 index/main spec과 supporting surface를 찾고, summary가 설명해야 할 repo-level 핵심 판단을 식별한다.
 
-### Step 2: Determine Spec Kind
+### Step 2: Locate Concrete Source Anchors
 
-판별 기준:
+핵심 설계를 실제 구현과 연결할 수 있도록 concrete path, module/function anchor, command surface, 또는 source table 후보를 고른다.
 
-- global spec 신호: `배경`, `Scope / Non-goals / Guardrails`, `핵심 설계와 주요 결정`
-- temporary spec 신호: canonical temporary 7섹션
+### Step 3: Locate Optional Appendix Inputs
 
-혼합 문서라면 dominant purpose를 기준으로 정하고, 나머지는 notes로 정리한다.
+관련 `_sdd/drafts/` 또는 `_sdd/implementation/` artifact가 있으면, summary 맨 뒤 appendix에 넣을 planned/progress 신호만 고른다.
 
-### Step 3: Extract the Facts
+### Step 4: Extract the Facts
 
-global spec이면 아래를 추출한다.
+whitepaper 본문에는 아래를 추출한다.
 
-- 프로젝트 이름, 버전, 최근 변경 시점
-- 문제와 high-level concept
-- scope / non-goals / guardrails
+- 프로젝트가 해결하는 문제
+- 배경과 동기, 접근 이유
+- 대안 대비 왜 이 접근을 택했는가
 - 핵심 설계와 주요 결정
-- 필요 시 repo-wide invariant note
-- delegated-out information note
+- 이를 뒷받침하는 concrete code grounding
+- 사용 흐름, 기대 결과, 실패/예외 경계
+- 더 깊이 읽을 supporting surface
+- 관련 artifact가 있으면 planned / in-progress / blocked / next 신호
 
-temporary spec이면 아래를 추출한다.
+### Step 5: Build the Whitepaper Shape
 
-- change summary
-- scope delta
-- contract/invariant delta
-- touchpoints
-- implementation plan highlights
-- validation linkage
-- risks / open questions
-
-구현 문서가 있으면 현재 상태, blocker, next step을 함께 추출한다.
-
-### Step 4: Compute Status
-
-상태 마커와 구현 문서를 바탕으로 현재 상태를 계산한다.
-
-- `완료`
-- `진행중`
-- `계획됨`
-- `보류`
-
-### Step 5: Build the Summary Shape
-
-global spec summary 기본 순서:
+summary 기본 순서:
 
 1. Executive Summary
-2. Problem / High-Level Concept
-3. Scope / Non-goals Snapshot
-4. Key Decisions / Guardrails
-5. Delegated-Out Information Note
-6. Status / Issues / Next Steps
-
-temporary spec summary 기본 순서:
-
-1. Executive Summary
-2. Change Summary
-3. Scope Delta
-4. Contract / Invariant Delta Snapshot
-5. Touchpoints
-6. Implementation / Validation Snapshot
-7. Risks / Open Questions
+2. Background / Motivation
+3. Core Design
+4. Code Grounding
+5. Usage / Expected Results
+6. Further Reading / References
+7. Appendix: Planned / Progress Snapshot (Optional)
 
 ### Step 6: Write `summary.md`
 
@@ -132,10 +108,13 @@ temporary spec summary 기본 순서:
 
 ### Step 8: Final Check
 
-- summary가 스펙 kind에 맞는 shape를 가졌는가
-- 핵심 신호를 놓치지 않았는가
-- 진행 상태와 이슈가 최신 문서와 충돌하지 않는가
+- summary가 reader-facing whitepaper shape를 가졌는가
+- summary가 status memo보다 기술 whitepaper처럼 읽히는가
+- 문제, 동기, 설계, 코드 근거, 사용과 기대 결과가 빠지지 않았는가
+- `Code Grounding`이 실제 source anchor를 제공하는가
+- planned/progress 정보가 appendix나 마지막 보조 섹션에만 머무르는가
 - README를 요청하지 않았는데 수정하지 않았는가
+- change-history narration 없이 현재 내용만 직접 설명하는가
 
 ## Output Contract
 
@@ -151,10 +130,10 @@ temporary spec summary 기본 순서:
 
 | 상황 | 대응 |
 |------|------|
-| spec 없음 | `$spec-create` 먼저 권장 |
-| split spec 범위 불명확 | 후보를 제시하고 사용자 확인 |
-| 구현 문서 없음 | spec만 기준으로 요약하고 상태 신뢰도 낮음을 명시 |
-| global/temporary 판별 모호 | dominant purpose를 기준으로 판단하고 notes에 기록 |
+| spec 없음 | `/spec-create` 먼저 권장 |
+| split spec 범위 불명확 | supporting surface를 최소 세트로 좁히고 필요 시 notes에 남긴다 |
+| code grounding 근거가 약함 | summary 본문을 확장하기 전에 concrete path 또는 source table anchor를 먼저 확보한다 |
+| 구현 문서 없음 | whitepaper 본문만 작성하고 appendix는 생략한다 |
 | README 요청이 없는데 README 관련 문서만 있음 | README는 수정하지 않음 |
 | 문서가 너무 큼 | caller가 skeleton을 먼저 저장한 뒤 같은 흐름에서 fill 또는 bounded fan-out |
 

@@ -2,6 +2,22 @@
 
 > 이 파일은 `_sdd/spec/main.md`의 버전별 변경 기록이다.
 
+#### v4.1.7 (2026-04-13)
+
+- **spec-summary whitepaper 정렬**: `spec-summary`를 `summary.md`용 reader-facing whitepaper surface로 정리
+- **section spine 반영**: `Executive Summary`, `Background / Motivation`, `Core Design`, `Code Grounding`, `Usage / Expected Results`, `Further Reading / References`를 expected result 기준으로 반영
+- **appendix rule 고정**: planned/progress 정보는 관련 artifact가 있을 때만 appendix로 짧게 유지
+- **supporting docs sync**: `components.md`, `usage-guide.md`, `DECISION_LOG.md`를 whitepaper semantics에 맞게 동기화
+- 입력: `_sdd/drafts/2026-04-13_feature_draft_spec_summary_whitepaper_surface.md`, `_sdd/implementation/2026-04-13_implementation_review_spec_summary_whitepaper_surface.md`
+
+#### v4.1.6 (2026-04-13)
+
+- **spec-summary canonical overview 정렬**: `spec-summary`를 global/temporary 요약기보다 `global overview + optional planned/progress snapshot` surface로 재정의
+- **summary output shape 갱신**: template/example에 `Where Details Live`를 도입하고 planned/progress snapshot을 보조 섹션으로 정리
+- **supporting docs sync**: `components.md`, `usage-guide.md`, definition/workflow 문서, autopilot reasoning reference에 새 semantics 반영
+- **metadata sync**: `.claude` / `.codex` `spec-summary` `skill.json` 버전을 `2.0.0`으로 정렬
+- 입력: `_sdd/drafts/2026-04-13_feature_draft_spec_summary_canonical_overview_alignment.md`, `_sdd/implementation/2026-04-13_implementation_review_spec_summary_canonical_overview_alignment.md`
+
 #### v4.1.5 (2026-04-10)
 
 - **autopilot planning semantics sync**: non-trivial planning entry를 `feature-draft` 기본값으로, `implementation-plan`을 후속 확장 단계로 global spec에 반영

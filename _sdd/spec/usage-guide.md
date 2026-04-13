@@ -75,10 +75,10 @@
 
 **Action:**
 ```bash
-/spec-summary            # 현재 프로젝트 상태 요약
+/spec-summary            # 현재 repo/spec를 설명하는 reader-facing whitepaper
 /discussion              # 기술 선택, 아키텍처 결정 등 구조화된 토론
 ```
 
 **Expected Result:**
-- `_sdd/spec/summary.md` — Executive Summary + 기능 대시보드 + 권장 다음 단계
+- `_sdd/spec/summary.md` — Executive Summary, Background / Motivation, Core Design, Code Grounding, Usage / Expected Results, Further Reading / References, 그리고 필요한 경우 appendix 형태의 Planned / Progress Snapshot
 - `_sdd/discussion/<YYYY-MM-DD>_discussion_<slug>.md` — 토론 결과와 결정사항/미결/실행항목 정리 (최대 10라운드)

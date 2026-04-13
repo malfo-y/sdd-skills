@@ -15,6 +15,7 @@
 - 사람은 high-level concept, scope, non-goals, guardrails, key decisions가 먼저 필요하다.
 - LLM은 코드를 빠르게 탐색할 수 있으므로 code-obvious inventory보다 경계와 결정이 더 중요하다.
 - 따라서 global spec은 두꺼운 구현 해설서가 아니라 얇은 decision memo여야 한다.
+- 사람이 repo 전체를 빠르게 설명 가능하게 이해해야 할 때는 `spec-summary`가 `_sdd/spec/summary.md`에 문제, 동기, 설계, 코드 근거, 사용/기대 결과를 묶는 reader-facing whitepaper surface를 담당한다.
 - 상세 implementation inventory와 feature-level execution detail은 코드, temporary spec, guide, supporting docs에 맡긴다.
 
 ### 1.3 핵심 용어
@@ -155,6 +156,6 @@ review-fix loop에서 agent 역할은 고정이다: review는 `implementation_re
 | discussion | 방향성과 개념 토론 |
 | guide-create | 구현/리뷰 가이드 생성 |
 | write-phased | inline phased writing helper |
-| spec-summary | global/temporary spec 요약 |
+| spec-summary | reader-facing whitepaper for `summary.md`; covers problem, motivation, core design, code grounding, usage/expected results, with appendix only for short planned/progress signals |
 | spec-rewrite | canonical model에 맞춰 spec 구조 재정리 |
 | spec-upgrade | 구형 spec을 current model로 변환 |
