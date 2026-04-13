@@ -46,7 +46,18 @@ It handles:
 
 Questions close to implementation are answered there.
 
-## 4. When `spec-summary` is used
+## 4. When the four shared core axes are used
+
+`Thinness`, `Decision-bearing truth`, `Anti-duplication`, and `Navigation + surface fit` are the shared baseline across spec lifecycle skills.
+
+In practice:
+
+- create: keep the global spec thin and retain only truth that changes judgment
+- review: judge violations of the four axes with the rubric that matches the spec type
+- rewrite: rearrange structure so the four axes become clearer
+- upgrade: reduce a legacy spec toward the four axes, but hand off to rewrite when the scope exceeds migration
+
+## 5. When `spec-summary` is used
 
 `spec-summary` is used when a human needs the repo to make sense as one document.
 
@@ -66,14 +77,20 @@ What should not dominate the body:
 
 Relevant draft or implementation signals may be attached only as a short appendix.
 
-## 5. Role of review and update skills
+## 6. Role differences across the four lifecycle skills
 
-- `spec-review`: for global specs, it checks concept + boundaries + decisions.
-- `spec-summary`: it writes `summary.md` as a reader-facing whitepaper that explains the problem, motivation, choice rationale, core design, code grounding, and usage or expected results in one place, with an optional appendix for short plan or progress signals.
-- `spec-rewrite`: it first checks whether the global body is polluted by feature-level detail.
+- `spec-create`: creates the first thin global spec. The default shape is a single `main.md`, and splitting is allowed only when a structure rationale justifies it.
+- `spec-review`: audits with separate global and temporary rubrics. Feature-level contamination in a global spec is `Quality` by default, and becomes `Critical` only when it creates document-type confusion or wrong repo-wide truth. Every finding must carry evidence.
+- `spec-rewrite`: reorganizes an existing spec into a better structure. It preserves rationale, citations, and code excerpt headers while moving migration history or execution-log style explanation out of the body and into `decision_log` or the rewrite report.
+- `spec-upgrade`: migrates an old format into the current model. If the real issue is large-scale structural redesign, it should branch to `spec-rewrite` instead of stretching upgrade.
+
+## 7. Role of review and update skills
+
+- `spec-review`: audits quality and drift. It does not edit.
 - `spec-update-todo`, `spec-update-done`: they lift only persistent repo-wide information into the global spec.
+- update skills do not copy temporary execution detail into the global body.
 
-## 6. Verification rule
+## 8. Verification rule
 
 In SDD, execution and verification are not separate concerns.
 
@@ -83,7 +100,7 @@ Rules:
 - choose the verification method that fits the task
 - for document and skill refactors, diff, grep, and review evidence can be valid verification
 
-## 7. Drift control
+## 9. Drift control
 
 - do not copy temporary execution detail into the global spec
 - move supporting information to README or separate docs

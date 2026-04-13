@@ -2,6 +2,13 @@
 
 > 이 파일은 `_sdd/spec/main.md`의 버전별 변경 기록이다.
 
+#### v4.1.8 (2026-04-13)
+
+- **spec lifecycle shared-core sync**: `spec-create`, `spec-review`, `spec-rewrite`, `spec-upgrade`의 공통 코어 4축과 스킬별 1차 추가 축을 supporting surface 설명에 반영
+- **`spec-create` expected result 보정**: `/spec-create` expected result를 thin global core + single-file default 기준으로 정리하고 old canonical(`CIV`, `usage`, `decision-bearing structure`) wording 제거
+- **component notes 보정**: `spec-review`에 rubric separation + evidence strictness, `spec-rewrite`에 rationale preservation + body/log placement, `spec-upgrade`에 rewrite boundary judgment를 반영
+- 입력: `_sdd/drafts/2026-04-13_feature_draft_spec_lifecycle_core_checklist_alignment.md`, `_sdd/implementation/2026-04-13_implementation_review_spec_lifecycle_core_checklist_alignment.md`
+
 #### v4.1.7 (2026-04-13)
 
 - **spec-summary whitepaper 정렬**: `spec-summary`를 `summary.md`용 reader-facing whitepaper surface로 정리

@@ -1,5 +1,43 @@
 # Decision Log
 
+## 2026-04-13 - Align spec lifecycle skills around shared core checklist (v4.1.7 -> v4.1.8 spec revision)
+
+### Context
+
+`spec-summary`를 whitepaper surface로 정리한 뒤에도, 나머지 spec lifecycle 스킬(`spec-create`, `spec-review`, `spec-rewrite`, `spec-upgrade`)은 공통 철학과 스킬별 추가 축이 문서 surface에 일관되게 드러나지 않는 상태였다. 특히 `_sdd/spec/components.md`와 `_sdd/spec/usage-guide.md`에는 각 스킬의 현재 contract보다 오래된 설명이 남아 있었고, `/spec-create` expected result에는 여전히 old canonical(`CIV`, `usage`, `decision-bearing structure`) wording이 남아 있었다.
+
+이번 구현에서는 definition/workflow 문서와 실제 skill contract를 먼저 정렬했고, 그 결과를 global supporting surface와 history surface에 반영할 필요가 생겼다.
+
+### Decision
+
+1. **공통 코어 4축을 spec lifecycle 공통 기준선으로 고정**: `Thinness`, `Decision-bearing truth`, `Anti-duplication`, `Navigation + surface fit`을 definition 문서 기준선으로 본다.
+2. **각 스킬의 1차 추가 축을 supporting surface에도 반영**:
+   - `spec-create`: structure rationale + `single-file default`
+   - `spec-review`: rubric separation + evidence strictness
+   - `spec-rewrite`: rationale preservation + body/log placement
+   - `spec-upgrade`: rewrite boundary judgment
+3. **`usage-guide`의 stale wording 제거**: `/spec-create` expected result에서 old canonical(`CIV`, `usage`, `decision-bearing structure`) 표현을 제거하고 thin global 기준으로 정리한다.
+4. **history 역할 분리 유지**: 판단 근거는 `DECISION_LOG.md`, 파일/버전 이력은 `logs/changelog.md`에 남긴다.
+
+### Rationale
+
+- 공통 코어가 definition 문서에만 있고 supporting surface가 예전 의미를 반복하면, 사용자와 에이전트가 읽는 operational surface가 다시 drift한다.
+- `spec-review`의 핵심 가치는 더 많이 지적하는 것이 아니라, 맞는 rubric과 evidence 기준으로 오탐을 줄이는 것이다.
+- `spec-create`의 기본값을 single-file로 명시하지 않으면 premature multi-file split이 다시 기본 경로처럼 읽힐 수 있다.
+- `spec-rewrite`와 `spec-upgrade`는 둘 다 global spec을 얇게 만들지만, 하나는 구조 개선이고 다른 하나는 migration이므로 boundary를 supporting docs에서도 드러내는 편이 안전하다.
+
+### Changes
+
+- `_sdd/spec/components.md` -- `spec-create`, `spec-review`, `spec-rewrite`, `spec-upgrade` 설명을 현재 contract에 맞게 보정
+- `_sdd/spec/usage-guide.md` -- `/spec-create` expected result를 thin global + single-file default 기준으로 정리
+- `_sdd/spec/logs/changelog.md` -- v4.1.8 이력 추가
+
+### References
+
+- feature draft: `_sdd/drafts/2026-04-13_feature_draft_spec_lifecycle_core_checklist_alignment.md`
+- implementation report: `_sdd/implementation/2026-04-13_implementation_report_spec_lifecycle_core_checklist_alignment.md`
+- implementation review: `_sdd/implementation/2026-04-13_implementation_review_spec_lifecycle_core_checklist_alignment.md`
+
 ## 2026-04-13 - Position spec-summary as reader-facing whitepaper surface (v4.1.6 -> v4.1.7 spec revision)
 
 ### Context

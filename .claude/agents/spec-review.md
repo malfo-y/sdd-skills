@@ -7,12 +7,14 @@ model: inherit
 
 # Spec Review
 
-global spec 또는 temporary spec의 품질과 코드-스펙 드리프트를 review-only로 감사하고 `_sdd/spec/logs/spec_review_report.md`를 생성한다. 스펙 파일은 절대 수정하지 않는다.
+global spec 또는 temporary spec의 품질과 코드-스펙 정합성을 review-only로 감사하고 `_sdd/spec/logs/spec_review_report.md`를 생성한다. 스펙 파일은 절대 수정하지 않는다.
 
 ## Acceptance Criteria
 
 - [ ] spec type을 식별하고 global/temporary rubric을 구분 적용한다.
+- [ ] 공통 코어 4축(`Thinness`, `Decision-bearing truth`, `Anti-duplication`, `Navigation + surface fit`)을 spec type에 맞는 rubric으로 점검한다.
 - [ ] spec-only quality review와 code-linked drift review를 모두 수행한다.
+- [ ] 모든 finding이 spec/code/doc evidence를 가지거나, 근거 부족 시 `UNTESTED`로 명시된다.
 - [ ] findings를 severity 순으로 정리하고 next action을 제시한다.
 - [ ] global spec의 thin-core model과 temporary spec의 execution model을 혼동하지 않는다.
 - [ ] `_sdd/spec/*.md`와 `decision_log.md`는 수정하지 않는다.
@@ -22,14 +24,20 @@ global spec 또는 temporary spec의 품질과 코드-스펙 드리프트를 rev
 1. 이 agent는 리뷰와 리포트 생성만 수행한다.
 2. `_sdd/spec/*.md`와 `decision_log.md`는 생성/수정/삭제하지 않는다.
 3. findings는 `Critical`, `Quality`, `Improvements` 순으로 정리한다.
-4. 근거 없는 추정은 사실처럼 쓰지 않는다. 검증되지 않은 항목은 `UNTESTED`로 둔다.
+4. 모든 finding은 최소 하나의 concrete evidence를 가져야 한다. evidence가 약하거나 추정만 가능하면 `UNTESTED`로 남기고 severity를 올리지 않는다.
 5. global spec에서는 old canonical section 부재를 자동 defect로 분류하지 않는다.
-6. 구현과 spec이 불일치하면 drift를 기록하고 후속 스킬만 제안한다.
-7. 리포트는 lowercase canonical 경로에 저장한다. transition 기간에는 implementation artifact를 lowercase 우선, legacy uppercase fallback으로 읽는다.
+6. global spec의 feature-level usage, validation, reference, inventory 오염은 기본적으로 `Quality`다. 문서 타입 혼동을 일으키거나 잘못된 repo-wide truth를 서술할 때만 `Critical`로 승격한다.
+7. 구현과 spec이 불일치하면 drift를 기록하고 후속 스킬만 제안한다.
+8. 리포트는 lowercase canonical 경로에 저장한다. transition 기간에는 implementation artifact를 lowercase 우선, legacy uppercase fallback으로 읽는다.
 
 ## Review Dimensions
 
 ### Global Spec Quality
+
+- `Thinness`: global 본문이 `배경/개념`, `경계`, `결정` 중심을 유지하는가
+- `Decision-bearing truth`: repo-wide 판단을 바꾸는 진술만 남아 있는가
+- `Anti-duplication`: guide, README, temporary spec, code-obvious inventory를 무의미하게 복제하지 않는가
+- `Navigation + surface fit`: supporting info가 더 맞는 surface로 내려가 있고, reader가 다음 surface를 찾을 수 있는가
 
 필수로 보는 것:
 
@@ -40,15 +48,18 @@ global spec 또는 temporary spec의 품질과 코드-스펙 드리프트를 rev
 기본적으로 defect로 보지 않는 것:
 
 - usage/expected-results section 부재
-- `참조 정보` 부재, manual code-map appendix 부재
+- `참조 정보` 부재
+- manual code-map appendix 부재
 - 독립 standalone contract/invariant/verification table 부재
 
-추가 관찰:
-
-- repo-wide invariant가 필요하면 guardrails 또는 key decisions에 적절히 흡수되어 있는가
-- feature-level usage, validation, reference, inventory가 global 본문을 오염시키지 않는가
-
 ### Temporary Spec Quality
+
+- `Thinness`: delta 실행에 필요한 정보만 남기고 있는가
+- `Decision-bearing truth`: `C*`, `I*`, `V*` linkage가 실제 판단과 검증을 바꾸는가
+- `Anti-duplication`: global spec이나 code를 형식적으로 중복하지 않는가
+- `Navigation + surface fit`: touchpoints, implementation, validation이 실행 surface에 잘 배치되었는가
+
+추가 체크:
 
 - `Change Summary`가 변경 목적과 범위를 요약하는가
 - `Scope Delta`가 global 대비 변경 경계를 분명히 하는가
@@ -77,10 +88,10 @@ global spec 또는 temporary spec의 품질과 코드-스펙 드리프트를 rev
 
 ### Step 2: Spec Quality Audit
 
-- 용어 정의와 경계가 명확한가
-- spec type에 맞는 필수 코어가 보이는가
-- thin global model 또는 temporary execution model과 충돌하지 않는가
-- 과도한 implementation inventory가 본문을 오염시키지 않는가
+- spec type에 맞는 rubric을 먼저 선언한다
+- 공통 코어 4축 위반이 무엇인지 문서 타입 기준으로 판정한다
+- thin global model 또는 temporary execution model과 충돌하지 않는가를 본다
+- 과도한 implementation inventory나 잘못된 surface placement가 있는지 본다
 
 ### Step 3: Code Drift Audit
 
@@ -100,8 +111,8 @@ global spec 또는 temporary spec의 품질과 코드-스펙 드리프트를 rev
 
 ### Step 4: Severity and Decision
 
-- `Critical`: 핵심 drift, global/temporary 구조 혼동, 잘못된 repo-wide 서술
-- `Quality`: 누락 설명, 약한 경계, 중간 수준 drift, 과도한 오염
+- `Critical`: 문서 타입 혼동, 잘못된 repo-wide truth, 핵심 drift처럼 repo-level 판단을 직접 오도하는 문제
+- `Quality`: global 오염, 약한 경계, evidence가 충분한 중간 수준 drift, 공통 코어 4축 위반
 - `Improvements`: 가독성, 정리, appendix 수준 개선
 
 Decision: `SPEC_OK`, `SYNC_REQUIRED`, `NEEDS_DISCUSSION`
@@ -120,13 +131,28 @@ Decision: `SPEC_OK`, `SYNC_REQUIRED`, `NEEDS_DISCUSSION`
 
 ## 1. Findings
 ### Critical
-### Quality
-### Improvements
+- ...
 
-## 2. Spec Quality Summary
-## 3. Drift Summary
-## 4. Code Analysis Metrics
-## 5. Recommended Next Actions
+### Quality
+- ...
+
+### Improvements
+- ...
+
+## 2. Applied Rubric
+...
+
+## 3. Evidence Summary
+...
+
+## 4. Spec Quality Summary
+...
+
+## 5. Drift Summary
+...
+
+## 6. Code Analysis Metrics
+## 7. Recommended Next Actions
 ```
 
 ## Error Handling

@@ -1,7 +1,7 @@
 ---
 name: spec-upgrade
 description: This skill should be used when the user asks to "upgrade spec", "migrate spec format", "modernize spec structure", "spec upgrade", "스펙 업그레이드", "스펙 변환", "스펙 마이그레이션", or wants to convert old-format spec documents to the current canonical SDD spec model defined in SDD_SPEC_DEFINITION.md.
-version: 1.9.0
+version: 1.10.0
 ---
 
 # spec-upgrade
@@ -15,6 +15,8 @@ version: 1.9.0
 ## Acceptance Criteria
 
 - [ ] canonical spec과 업그레이드 대상 파일 집합을 확정했다.
+- [ ] 공통 코어 4축(`Thinness`, `Decision-bearing truth`, `Anti-duplication`, `Navigation + surface fit`) 기준으로 현재 문서를 읽었다.
+- [ ] migration 시작 전에 이 작업이 upgrade인지 rewrite인지 경계를 판정하고 결과를 먼저 보고했다.
 - [ ] 현재 문서를 새 model 기준으로 gap 분석하고 결과를 먼저 보고했다.
 - [ ] 기존 내용을 보존 가능한 범위에서 새 global structure로 재배치했다.
 - [ ] old feature-level usage/validation/reference/CIV 의존성을 적절한 surface로 내렸다.
@@ -48,10 +50,23 @@ version: 1.9.0
 4. 결과는 기존 파일 경로에 in-place로 반영한다. 구조 재편이 너무 크면 `spec-rewrite` 후보로 보고한다.
 5. global spec을 old canonical 섹션으로 다시 두껍게 복구하지 않는다.
 6. `decision_log.md`가 있으면 보존하고, 주요 업그레이드 판단을 추가 기록할 수 있다.
+7. 아래 중 하나라도 핵심이면 upgrade로 밀어붙이지 말고 `spec-rewrite`로 분기한다: 대규모 분할/재배치, 역할 재설계, rationale rescue가 필요한 pruning, body/log 재배치가 중심인 경우.
 
 ## Process
 
-### Step 1: Legacy-to-Canonical Gap Analysis
+### Step 1: Rewrite Boundary Judgment
+
+먼저 아래를 본다.
+
+- 현재 작업의 핵심이 legacy-to-canonical migration인가
+- 아니면 구조 재설계, 대규모 분할, 역할 재정의, log/history 분리 같은 rewrite 성격이 더 강한가
+
+판정 규칙:
+
+- section-heavy 또는 inventory-heavy 문서를 current model로 줄이는 것이 주된 작업이면 `spec-upgrade`
+- domain/topic 재분할, 문서군 재배치, rationale rescue 중심 pruning이면 `spec-rewrite`
+
+### Step 2: Legacy-to-Canonical Gap Analysis
 
 진단 대상:
 
@@ -63,7 +78,7 @@ version: 1.9.0
 - supporting surface로 내릴 수 있는 정보
 - temporary spec 성격의 내용이 글로벌 스펙에 섞였는지 여부
 
-### Step 2: Evidence Collection
+### Step 3: Evidence Collection
 
 코드베이스가 있으면 아래 근거를 수집한다.
 
@@ -72,23 +87,24 @@ version: 1.9.0
 - usage docs / examples -> guide 또는 support doc 후보
 - validation notes / temp artifacts -> temporary spec 후보
 
-### Step 3: Migration Checkpoint
+### Step 4: Migration Checkpoint
 
 정리 항목:
 
 - 기존 스펙 현황
+- rewrite boundary judgment 결과
 - 새 thin global model gap 분석
 - 어떤 정보를 global에 남기고 무엇을 내릴지
 - 구조 재편 필요 여부
 
-### Step 4: Migrate
+### Step 5: Migrate
 
 - 기존 내용을 새 global structure로 재배치
 - repo-wide invariant가 진짜 필요한 경우만 guardrails 또는 decisions로 반영
 - feature-level usage / validation / detail inventory는 supporting surface 또는 temp artifact로 재배치
 - truly useful guide/reference/code map만 조건부로 남김
 
-### Step 5: Validate
+### Step 6: Validate
 
 아래를 확인한다.
 
@@ -96,13 +112,14 @@ version: 1.9.0
 - 기존 정보가 불필요하게 소실되지 않았는가
 - feature-level detail을 global 본문에서 걷어냈는가
 - implementation inventory를 그대로 옮겨 적지 않았는가
-- rewrite가 필요한 구조적 문제를 잘못 업그레이드로 덮지 않았는가
+- rewrite가 필요한 구조적 문제를 잘못 upgrade로 덮지 않았는가
 
 ## Output Contract
 
 최종 보고에는 아래가 포함되어야 한다.
 
 - 업그레이드 대상 파일
+- rewrite boundary judgment와 근거
 - thin global model gap과 조치
 - global에 남긴 판단과 밖으로 내린 정보
 - 축약 또는 supporting surface 이동된 old inventory 항목
@@ -112,7 +129,7 @@ version: 1.9.0
 
 | 상황 | 대응 |
 |------|------|
-| spec 없음 | `$spec-create` 먼저 권장 |
+| spec 없음 | `/spec-create` 먼저 권장 |
 | 이미 thin model에 가까움 | 부족한 항목만 보강 |
 | canonical 후보 다수 | migration checkpoint에서 확인 |
 | 코드베이스 없음 | 문서 기반 업그레이드로 진행하고 근거 수준을 명시 |

@@ -1,6 +1,6 @@
 # What an SDD Spec Is
 
-This document is the declaration of what a spec is in SDD, and what the global spec and temporary spec are each responsible for.
+This document defines what a spec is in SDD, what the global and temporary specs are each responsible for, and which shared baseline the spec lifecycle skills must follow.
 
 Related documents:
 - [SDD_CONCEPT.md](SDD_CONCEPT.md)
@@ -52,14 +52,49 @@ Its mandatory core is only these three things.
 - Decisions whose loss would create repo-level drift
 - Choices that constrain extension direction
 
-## 3. What does not belong in the default global core
+## 3. The shared core checklist axes
 
-The following may still exist, but they are not global mandatory core.
+All spec lifecycle skills share these four checklist axes. The source of truth for those axes is this document.
 
-- usage/expected-results section
+1. `Thinness`
+2. `Decision-bearing truth`
+3. `Anti-duplication`
+4. `Navigation + surface fit`
+
+Each axis means the following.
+
+### A. Thinness
+
+- The global spec keeps only the minimal repo-wide core.
+- The temporary spec keeps only the delta needed to execute this change.
+- The body must not be thickened by details that belong on another surface.
+
+### B. Decision-bearing truth
+
+- Keep only statements whose falsity would change repo-level or change-level judgment.
+- Code-obvious inventory and simple reference material are not mandatory body truth unless they change decisions.
+- Every spec sentence should be able to answer why it must live there.
+
+### C. Anti-duplication
+
+- Do not restate code, README, guides, supporting docs, or temporary specs without a strong reason.
+- If duplication is necessary, keep only the minimum summary that fixes judgment.
+- Avoid scattering the same truth across multiple surfaces and creating drift.
+
+### D. Navigation + surface fit
+
+- Put information on the surface that fits it best.
+- Decide first whether something belongs in the global spec, temporary spec, guide, summary, supporting docs, or code/tests.
+- Readers and agents should be able to find the next surface naturally.
+
+## 4. What does not belong in the default global core
+
+The following may still exist, but they are not the mandatory global core.
+
+- usage or expected-results sections
 - reference information
 - manual code-map appendix
-- standalone contract/invariant/verification table
+- standalone contract/invariant/verification tables
 - feature-level contract, validation, and expected result
 - detailed inventory that can be recovered directly from code
 
@@ -70,7 +105,7 @@ That information should move to the surface that matches its role.
 - installation or reference detail: README or separate docs
 - actual behavior and detailed structure: code + tests + targeted review
 
-## 4. How repo-wide invariants are handled
+## 5. How repo-wide invariants are handled
 
 If a real repo-wide invariant is needed, keep it in the global spec. But do not force a standalone table as the default global shape.
 
@@ -84,7 +119,7 @@ Use this rule.
 
 > Keep it in the global spec only if it is not easily recoverable from code, applies across multiple features, and would distort repo-level judgment if wrong.
 
-## 5. Definition of the temporary spec
+## 6. Definition of the temporary spec
 
 A temporary spec is not a compressed copy of the global spec. It is the execution blueprint for a change.
 
@@ -102,7 +137,7 @@ Canonical 7 sections:
 
 Its purpose is to handle what changes now, what gets touched, and how the change will be verified.
 
-## 6. Information placement rules
+## 7. Information placement rules
 
 | Information | Default home | Why |
 |-------------|--------------|-----|
@@ -115,7 +150,31 @@ Its purpose is to handle what changes now, what gets touched, and how the change
 | data model / API / environment detail | README or reference docs | support information |
 | code map / inventory | appendix or code | on-demand navigation |
 
-## 7. Recommended structure
+## 8. AC / Final Check mapping rules
+
+The four shared checklist axes must be absorbed into the Acceptance Criteria and Final Check of spec lifecycle skills. Do not require a reusable `Shared Core Checklist` block.
+
+Mapping rules:
+
+- `Thinness`: encode it as checks that prevent the wrong surface from being inflated.
+- `Decision-bearing truth`: encode it as checks that keep only statements that change judgment and reject weak or code-obvious claims.
+- `Anti-duplication`: encode it as checks that reduce duplication across code, guides, README, supporting docs, and temporary specs.
+- `Navigation + surface fit`: encode it as checks that move information to the right surface and verify placement, links, and path clarity.
+
+Operating rules:
+
+- Each skill should make those four axes self-contained through its own AC and Final Check wording.
+- Skills may add one primary extra axis on top of the shared core.
+- That primary extra axis sharpens the skill role. It does not replace the shared core.
+
+Current primary extra axes:
+
+- `spec-create`: structure rationale + `single-file default`
+- `spec-review`: rubric separation + evidence strictness
+- `spec-rewrite`: rationale preservation + body/log placement
+- `spec-upgrade`: rewrite boundary judgment
+
+## 9. Recommended structure
 
 ### Global Spec
 
@@ -146,15 +205,17 @@ Its purpose is to handle what changes now, what gets touched, and how the change
 ## 7. Risks / Open Questions
 ```
 
-## 8. What this means for skills
+## 10. What this means for skills
 
-- `spec-review`: require only the minimal global core.
-- `spec-summary`: write `_sdd/spec/summary.md` as a reader-facing whitepaper. It should explain the problem, background or motivation, why this approach was chosen over alternatives, core design, code grounding, usage or expected results, and deeper reading surfaces. It should read like a technical whitepaper rather than a status memo, with a short plan or progress appendix only when relevant draft or implementation signals exist.
-- `spec-rewrite`: judge heaviness by feature-level contamination before line count.
+- `spec-create`: create a thin global spec that satisfies the four shared core axes. The default shape is a single `_sdd/spec/main.md` file, and splitting is allowed only when navigation + surface fit provides a written rationale.
+- `spec-review`: apply the rubric that matches the spec type. Feature-level contamination in a global spec is `Quality` by default, and becomes `Critical` only when it creates document-type confusion or wrong repo-wide truth. Every finding must carry spec, code, or doc evidence, and weakly supported claims should stay `UNTESTED`.
+- `spec-summary`: write `_sdd/spec/summary.md` as a reader-facing whitepaper. It should explain the problem, background or motivation, why this approach was chosen over alternatives, core design, code grounding, usage or expected results, and deeper reading surfaces. It should read like a technical whitepaper rather than a status memo, with a short appendix only when relevant draft or implementation signals exist.
+- `spec-rewrite`: restructure the spec so the four shared core axes are more visible. Preserve rationale, citations, and code excerpt headers while moving migration history and execution-log style explanations out of the body and into `decision_log` or the rewrite report.
+- `spec-upgrade`: migrate a legacy spec to the current model. If the real need is structural redesign, large repartitioning, or role rebundling, branch to `spec-rewrite` instead of stretching upgrade.
 - generator, planner, and update skills must not reconstruct a thicker global spec by default.
 - guides are companion surfaces, not authoritative spec layers.
 
-## 9. Declaration
+## 11. Declaration
 
 In SDD, the global spec is the declaration that fixes repo-wide judgment.
 

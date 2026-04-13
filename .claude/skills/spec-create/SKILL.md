@@ -1,7 +1,7 @@
 ---
 name: spec-create
 description: This skill should be used when the user asks to "create a spec", "write a spec document", "generate SDD", "create software design document", "document the project", "create spec for project", or mentions "_sdd" directory, specification documents, or project documentation needs.
-version: 1.8.0
+version: 1.9.0
 ---
 
 # spec-create
@@ -15,7 +15,9 @@ version: 1.8.0
 ## Acceptance Criteria
 
 - [ ] `_sdd/spec/` 아래에 canonical global spec 파일을 생성했다.
-- [ ] 프로젝트 규모에 맞는 spec 구조를 선택했다.
+- [ ] 공통 코어 4축(`Thinness`, `Decision-bearing truth`, `Anti-duplication`, `Navigation + surface fit`)을 만족하는 구조를 선택했다.
+- [ ] 구조 선택 근거를 명시했다. multi-file이면 왜 single-file default가 충분하지 않은지 설명했다.
+- [ ] 기본값은 `_sdd/spec/main.md` 단일 파일로 두고, 분할은 실제 navigation + surface fit 필요가 증명될 때만 적용했다.
 - [ ] 글로벌 스펙 본문이 `배경/개념`, `Scope / Non-goals / Guardrails`, `핵심 설계와 주요 결정`을 포함한다.
 - [ ] repo-wide invariant가 정말 필요할 때만 guardrails 또는 key decisions에 흡수했다.
 - [ ] supporting information은 필요할 때만 appendix 또는 별도 supporting file로 분리했다.
@@ -29,17 +31,27 @@ version: 1.8.0
 - feature-level usage, validation, contract detail은 global 본문 기본 구조가 아니다.
 - repo-wide invariant가 정말 필요할 때만 global에 남긴다.
 - architecture/component inventory는 기본 본문이 아니라 supporting surface다.
+- create 단계의 기본 경로는 `main.md` 단일 파일이다.
 
 ## Repo-wide Invariant Test
 
-아래 3가지를 모두 만족할 때만 repo-wide invariant로 global spec에 올린다.
+아래 3가지를 모두 만족할 때만 repo-wide invariant note 또는 guardrail candidate로 본다.
 
 1. 코드를 한두 파일 읽는 것만으로 안정적으로 복구되지 않는다.
 2. 두 개 이상 feature/module/workflow에 공통 적용된다.
 3. 틀리게 가정하면 repo-level reasoning, review, implementation 판단이 어긋난다.
 
-예: "모든 API는 Bearer token 인증 필수" → repo-wide ✓
-예: "User 엔드포인트의 response schema" → feature-level ✗
+Positive example:
+
+- 전체 API 인증 방식
+- 모든 worker가 따라야 하는 retry / backoff 정책
+- `_sdd/` artifact handoff 같은 repo-wide operating rule
+
+Negative example:
+
+- 특정 endpoint의 response schema
+- 한 컴포넌트 내부 state invariant
+- feature 하나에만 필요한 validation detail
 
 ## Companion Assets
 
@@ -55,11 +67,19 @@ version: 1.8.0
 2. 문서 언어는 기존 스펙/문서를 따른다. 기존 스펙이 없으면 한국어를 기본으로 한다.
 3. 스펙 출력은 `_sdd/spec/`에만 저장한다.
 4. `AGENTS.md`, `CLAUDE.md`, `_sdd/env.md`는 없을 때 생성하고, 이미 있으면 필수 안내 문구가 빠진 경우에만 최소 수정한다.
-5. 거버넌스 문서는 기본적으로 `decision_log.md`까지만 사용한다.
+5. 거버넌스 문서는 기본적으로 lowercase canonical `decision_log.md`까지만 사용한다. legacy uppercase `DECISION_LOG.md`는 read-only fallback으로만 취급한다.
 6. global spec을 feature-level usage/validation/reference 문서로 부풀리지 않는다.
-7. `_sdd/` artifact 경로는 lowercase canonical을 기본으로 하되, 입력을 읽을 때는 legacy uppercase fallback도 허용한다.
+7. multi-file split을 선택하면 structure rationale을 명시하고, 왜 single-file default가 충분하지 않은지 남긴다.
 
 ## Structure Decision
+
+기본값은 `_sdd/spec/main.md` 단일 파일이다.
+
+먼저 아래를 판단한다.
+
+- 현재 프로젝트가 single-file로도 concept, boundaries, decisions를 충분히 찾을 수 있는가
+- supporting info를 본문 밖으로 내리면 main body가 충분히 읽기 쉬운가
+- multi-file이 실제로 navigation + surface fit을 개선하는가
 
 규모에 따라 아래 중 하나를 선택한다.
 
@@ -74,8 +94,6 @@ version: 1.8.0
 | 기능은 단일에 가까우나 repo가 큼 | topic | `architecture.md`, `data-conventions.md` |
 
 어떤 축이든 각 파일에 담는 건 global-level 결정만이다. domain 축의 `payments.md`여도 그 안에 들어가는 건 payments 도메인의 장기 설계 판단이지, feature-level validation이나 API response schema가 아니다.
-
-초기에는 대부분 `main.md` 단일 파일로 충분하다. 분할이 필요해지는 시점에 `spec-rewrite`로 축을 잡는다.
 
 global spec core는 항상 유지한다.
 
@@ -99,7 +117,7 @@ global spec core는 항상 유지한다.
 1. 현재 사용자 요청
 2. `_sdd/spec/user_draft.md` 또는 사용자 지정 요구사항 파일
 3. 기존 README / docs / config / comments
-4. 기존 `_sdd/spec/decision_log.md`
+4. 기존 lowercase canonical `_sdd/spec/decision_log.md`, legacy uppercase `_sdd/spec/DECISION_LOG.md` fallback
 5. 코드베이스 구조와 핵심 엔트리포인트
 
 ### Step 2: Analyze the Project
@@ -110,9 +128,10 @@ global spec core는 항상 유지한다.
 - high-level concept와 핵심 가치
 - 주요 경계와 scope / non-goals
 - 유지해야 할 설계 결정
-- repo-wide invariant 후보
+- `Repo-wide Invariant Test`를 통과할 수 있는 repo-wide invariant 후보
 - supporting reference 필요 여부
 - appendix나 guide가 더 적절한 정보
+- single-file default가 충분한지, 아니라면 왜 아닌지
 
 ### Step 3: Bootstrap Workspace Guidance
 
@@ -151,13 +170,15 @@ SDD(Spec-Driven Development)는 스펙을 판단 기준으로 고정하고,
 - scope는 책임 범위와 out-of-scope 경계를 같이 고정한다.
 - feature-level usage / expected result / validation detail은 global 기본 본문에 강제하지 않는다.
 - implementation inventory는 코드나 supporting surface에 맡긴다.
-- repo-wide invariant가 없다면 억지로 만들지 않는다.
+- `Repo-wide Invariant Test`를 통과하지 못하면 global core에 올리지 않는다.
+- split을 택했다면 body thinness보다 navigation + surface fit 개선 근거를 남긴다.
 
 ### Step 5: Validate and Save
 
 마지막으로 아래를 점검한다.
 
-- spec 구조가 프로젝트 규모에 맞는가
+- spec 구조가 프로젝트 규모와 navigation need에 맞는가
+- single-file default를 벗어난 이유가 실제로 설명되었는가
 - 글로벌 스펙 core가 빠지지 않았는가
 - global 본문이 code-obvious detail이나 feature inventory로 오염되지 않았는가
 - 코드베이스와 naming/경로가 크게 어긋나지 않는가
@@ -173,7 +194,7 @@ SDD(Spec-Driven Development)는 스펙을 판단 기준으로 고정하고,
 
 - `_sdd/spec/<domain>.md`
 - `_sdd/spec/<domain>/...`
-- `_sdd/spec/decision_log.md`
+- lowercase canonical `_sdd/spec/decision_log.md`
 - `AGENTS.md`
 - `CLAUDE.md`
 - `_sdd/env.md`

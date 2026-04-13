@@ -11,14 +11,14 @@
 | Component | Purpose | Why | Primary Source | Notes |
 |-----------|---------|-----|----------------|-------|
 | `sdd-autopilot` | reasoning 기반으로 SDD 파이프라인을 조합하고 end-to-end 실행한다 | 대규모 작업에서 수동 handoff와 단계 누락을 줄인다 | `.claude/skills/sdd-autopilot/SKILL.md`<br>`.codex/skills/sdd-autopilot/SKILL.md` | 풀 스킬. non-trivial planning은 `feature-draft`를 기본 entry로 사용하고, multi-phase plan이면 `per-phase` gate와 `final integration review`를 집행한다 |
-| `spec-create` | 초기 global spec과 workspace guidance를 부트스트랩한다 | 스펙 부재 상태에서 workflow 시작점을 만든다 | `.claude/skills/spec-create/SKILL.md` | 워크플로우 시작점. spec이 없을 때 먼저 본다 |
+| `spec-create` | 초기 global spec과 workspace guidance를 부트스트랩한다 | 스펙 부재 상태에서 workflow 시작점을 만들고, thin global 기본 구조를 고정한다 | `.claude/skills/spec-create/SKILL.md` | 워크플로우 시작점. 기본값은 `_sdd/spec/main.md` 단일 파일이며, multi-file은 structure rationale이 있을 때만 연다 |
 | `feature-draft` | spec patch 초안과 구현 계획 초안을 한 번에 만든다 | spec 수정과 구현 계획의 반복 작업을 줄인다 | `.claude/agents/feature-draft.md`<br>`.claude/skills/feature-draft/SKILL.md` | wrapper -> agent 패턴 |
 | `spec-update-todo` | 구현 전 planned persistent truth를 global spec에 반영한다 | spec-code drift를 사전에 줄인다 | `.claude/agents/spec-update-todo.md`<br>`.claude/skills/spec-update-todo/SKILL.md` | wrapper -> agent 패턴 |
 | `spec-update-done` | 구현 evidence를 검토해 검증된 지속 정보만 global spec에 올린다 | 임시 실행 메모와 검증된 truth를 분리한다 | `.claude/agents/spec-update-done.md`<br>`.claude/skills/spec-update-done/SKILL.md` | delta status 분류 기반 sync. lowercase canonical artifact를 우선 읽고 legacy path를 fallback으로 허용한다 |
-| `spec-review` | 스펙 품질과 코드-스펙 drift를 read-only로 진단한다 | 수정 없이 현재 상태를 객관적으로 점검한다 | `.claude/agents/spec-review.md`<br>`.claude/skills/spec-review/SKILL.md` | wrapper -> agent 패턴 |
-| `spec-rewrite` | 비대한 스펙을 canonical-fit 기준으로 재구성한다 | global/spec surface의 구조적 오염을 줄인다 | `.claude/skills/spec-rewrite/SKILL.md`<br>`.codex/skills/spec-rewrite/SKILL.md` | 계획 파일과 rewrite report를 먼저/함께 남긴다 |
+| `spec-review` | 스펙 품질과 코드-스펙 drift를 read-only로 진단한다 | 수정 없이 현재 상태를 객관적으로 점검하고, global/temporary rubric을 섞어 오탐하는 것을 줄인다 | `.claude/agents/spec-review.md`<br>`.claude/skills/spec-review/SKILL.md` | wrapper -> agent 패턴. rubric separation과 evidence strictness를 기준으로 본다 |
+| `spec-rewrite` | 비대한 스펙을 canonical-fit 기준으로 재구성한다 | global/spec surface의 구조적 오염을 줄이되 판단 근거를 잃지 않는다 | `.claude/skills/spec-rewrite/SKILL.md`<br>`.codex/skills/spec-rewrite/SKILL.md` | 계획 파일과 rewrite report를 먼저/함께 남긴다. body에는 최소 rationale만 남기고 정리 메모는 log/report로 내린다 |
 | `spec-summary` | global spec, supporting surface, 필요한 code grounding을 엮어 reader-facing whitepaper를 작성한다 | 문제, 동기, 핵심 설계, 코드 근거, 사용/기대 결과를 한 문서에서 이해하게 한다 | `.claude/skills/spec-summary/SKILL.md` | `_sdd/spec/summary.md` 생성용. 관련 draft/implementation artifact가 있으면 planned/progress 신호를 appendix에만 짧게 덧붙일 수 있다 |
-| `spec-upgrade` | legacy global spec을 current canonical model로 마이그레이션한다 | 오래된 section-map과 inventory-heavy 구조를 정리한다 | `.claude/skills/spec-upgrade/SKILL.md`<br>`.codex/skills/spec-upgrade/SKILL.md` | 구조 업그레이드 전용 |
+| `spec-upgrade` | legacy global spec을 current canonical model로 마이그레이션한다 | 오래된 section-map과 inventory-heavy 구조를 정리하되, rewrite가 필요한 구조 재편은 분리한다 | `.claude/skills/spec-upgrade/SKILL.md`<br>`.codex/skills/spec-upgrade/SKILL.md` | 구조 업그레이드 전용. 시작 시 rewrite boundary를 먼저 판정한다 |
 | `guide-create` | 특정 기능의 구현/리뷰용 deep-dive guide를 생성한다 | thin global spec 밖의 세부 설명 surface가 필요하다 | `.claude/skills/guide-create/SKILL.md`<br>`.codex/skills/guide-create/SKILL.md` | compact template pair를 같이 확인한다 |
 
 ## Delivery & Review
