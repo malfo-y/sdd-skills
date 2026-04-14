@@ -1,7 +1,7 @@
 ---
 name: sdd-autopilot
 description: "적응형 오케스트레이터 메타스킬. /sdd-autopilot으로 호출하여 요구사항 분석부터 스펙 동기화까지 end-to-end SDD 파이프라인을 자율 실행한다."
-version: 2.3.0
+version: 2.3.1
 ---
 
 # SDD Autopilot
@@ -44,7 +44,7 @@ User Request
     v
 [sdd-autopilot] -----> Phase 2 (Autonomous Execution)
                       |- 파이프라인 단계 순차 실행
-                      |- review-fix loop
+                      |- implementation-scoped review-fix gate 즉시 실행
                       |- 테스트 (인라인 or Ralph)
                       `- 최종 요약 + 보고
 ```
@@ -56,14 +56,15 @@ User Request
 3. **오케스트레이터 저장 + 공유 로그 필수**: 오케스트레이터는 `_sdd/pipeline/orchestrators/orchestrator_<topic>.md`에 저장한다. 실행 시 `_sdd/pipeline/log_<topic>_<timestamp>.md`를 생성하고 각 단계 완료 후 핵심 결정사항을 기록한다.
 4. **에이전트 호출 시 원문 전달**: 사용자의 원래 요청과 관련 컨텍스트 파일 경로를 포함한다. 의미를 잃을 정도로 축약하지 않는다.
 5. **Review-Fix 사이클 필수**: review 포함 파이프라인에서는 `sdd-skills:implementation-review` subagent로 review를 수행하고, 이슈 수정이 필요하면 `sdd-skills:implementation` subagent를 다시 호출해 fix를 적용한 뒤, 다시 `sdd-skills:implementation-review` subagent로 re-review를 수행해야 한다. 리뷰만 하고 끝나는 것은 불허한다.
-6. **Execute → Verify 필수**: 모든 단계는 실행(Execute) + 검증(Verify) 두 페이즈를 거친다. 에이전트 호출만으로 완료 간주 금지. Exit Criteria 미충족 시 다음 단계 진행 불가.
-7. **Pre-flight + approval 필수**: Phase 2 진입 전 `_sdd/env.md`와 `.claude/settings.local.json`을 읽고 실행 가능성을 점검한 뒤 explicit approval을 받아야 한다.
-8. **Agent lifecycle 수집 필수**: `spawn_agent(...)`로 시작한 실행 단위는 `wait_agent(...)`로 반드시 수집하고, 필요 시 `send_input(...)` 또는 재-spawn으로 보완한다.
-9. **로그 기반 상태 관리**: 오케스트레이터는 `_sdd/pipeline/orchestrators/`에 유지. 활성/완료 구분은 로그 파일 status로 판단한다.
-10. 한국어를 기본으로 하되 사용자 언어를 따른다.
-11. `_sdd/` artifact 경로는 lowercase canonical을 기본으로 하되, 입력을 읽을 때는 legacy uppercase fallback도 허용한다.
-12. spec-less repo에서도 중단하지 않는다. `_sdd/spec/`가 없으면 `_sdd/` workspace bootstrap + code-first fallback reasoning으로 계속 진행하고, 적절한 시점에 `sdd-skills:spec-create` 또는 spec sync 단계를 파이프라인에 포함한다.
-13. **에이전트/스킬 호출 시 `sdd-skills:` prefix 필수**: plugin으로 설치된 스킬이므로, 모든 SDD 에이전트 호출은 `sdd-skills:<agent_name>` 형식을 사용한다 (예: `sdd-skills:feature-draft`, `sdd-skills:implementation`, `sdd-skills:spec-update-done` 등). prefix 없이 bare name으로 호출하면 안 된다.
+6. **Implementation 직후 즉시 Gate**: 각 `implementation` 실행 단위는 단독으로 완료 처리하지 않는다. single-phase면 해당 `implementation` 직후, multi-phase면 각 phase의 `implementation` 직후 같은 범위의 review-fix gate를 즉시 닫아야 하며, 종료 전까지 다음 phase나 downstream step으로 진행할 수 없다.
+7. **Execute → Verify 필수**: 모든 단계는 실행(Execute) + 검증(Verify) 두 페이즈를 거친다. 에이전트 호출만으로 완료 간주 금지. Exit Criteria 미충족 시 다음 단계 진행 불가.
+8. **Pre-flight + approval 필수**: Phase 2 진입 전 `_sdd/env.md`와 `.claude/settings.local.json`을 읽고 실행 가능성을 점검한 뒤 explicit approval을 받아야 한다.
+9. **Agent lifecycle 수집 필수**: `spawn_agent(...)`로 시작한 실행 단위는 `wait_agent(...)`로 반드시 수집하고, 필요 시 `send_input(...)` 또는 재-spawn으로 보완한다.
+10. **로그 기반 상태 관리**: 오케스트레이터는 `_sdd/pipeline/orchestrators/`에 유지. 활성/완료 구분은 로그 파일 status로 판단한다.
+11. 한국어를 기본으로 하되 사용자 언어를 따른다.
+12. `_sdd/` artifact 경로는 lowercase canonical을 기본으로 하되, 입력을 읽을 때는 legacy uppercase fallback도 허용한다.
+13. spec-less repo에서도 중단하지 않는다. `_sdd/spec/`가 없으면 `_sdd/` workspace bootstrap + code-first fallback reasoning으로 계속 진행하고, 적절한 시점에 `sdd-skills:spec-create` 또는 spec sync 단계를 파이프라인에 포함한다.
+14. **에이전트/스킬 호출 시 `sdd-skills:` prefix 필수**: plugin으로 설치된 스킬이므로, 모든 SDD 에이전트 호출은 `sdd-skills:<agent_name>` 형식을 사용한다 (예: `sdd-skills:feature-draft`, `sdd-skills:implementation`, `sdd-skills:spec-update-done` 등). prefix 없이 bare name으로 호출하면 안 된다.
 
 ## Process
 
@@ -165,6 +166,7 @@ planning precedence 메모:
 - `references/orchestrator-contract.md` 계약 준수
 - "구체화된 요구사항"에서 기능 수준 Acceptance Criteria 도출
 - temporary spec이 예상되면 `Contract/Invariant Delta`와 `Validation Plan` linkage를 pipeline reasoning에 반영
+- 각 `implementation` step에는 같은 범위의 review-fix gate가 즉시 붙어야 한다. `sdd-skills:spec-update-done`은 모든 required review-fix / final integration review / required validation이 닫힌 뒤 최종 단계로만 배치한다.
 - Reasoning Trace 3-6 bullet 간결 작성
 - 저장 경로: `_sdd/pipeline/orchestrators/orchestrator_<topic>.md`
 
@@ -183,6 +185,7 @@ Producer-Reviewer 패턴으로 검증한다.
 - step별 `subagent_type` / 입출력 / 프롬프트 존재
 - 산출물 handoff 정합성
 - `Review-Fix Loop` section/contract 존재
+- 각 `implementation` step 뒤에 같은 범위의 immediate review-fix gate가 해석 가능하며, `spec-update-done`이 그 gate보다 앞서 배치되지 않음
 - test strategy 존재
 - error handling 존재
 
@@ -236,16 +239,19 @@ Phase 2 진입 후 `request_user_input`은 호출하지 않는다. 마일스톤 
 - custom-agent step이면 오케스트레이터에 적힌 Claude `subagent_type`으로 호출한다.
 - 로컬 step이면 오케스트레이터에 적힌 skill 또는 명령을 실행한다.
 - step별 필드, 허용 `subagent_type`, Exit Criteria, Acceptance Criteria는 오케스트레이터 본문과 `references/orchestrator-contract.md`를 그대로 따른다.
+- `implementation` step은 단독 완료가 아니다. 같은 범위의 `Review-Fix Loop` exit condition과 required validation이 닫혀야만 해당 step을 `completed`로 기록할 수 있다.
+- single-phase path이거나 `Review-Fix Loop.scope = global`이면 `implementation` step 직후 즉시 global review-fix loop를 수행한다. 이 gate가 닫히기 전에는 `spec-update-done`을 포함한 다음 downstream step으로 진행할 수 없다.
 - `sdd-skills:implementation-plan`이 multi-phase metadata를 제공하고 `Review-Fix Loop.scope = per-phase`면, autopilot은 phase를 실제 execution gate로 취급한다.
 - per-phase gate에서는 각 phase의 `goal`, `task set / dependency closure`, `validation focus`, `exit criteria`, `carry-over policy`를 읽고 해당 phase 범위의 `sdd-skills:implementation` subagent 실행 -> `sdd-skills:implementation-review` subagent review -> 필요 시 `sdd-skills:implementation` subagent 재호출로 fix -> `sdd-skills:implementation-review` subagent 재실행으로 re-review -> phase validation 순서를 먼저 닫은 뒤 다음 phase로 간다.
 - 현재 phase exit criteria가 충족되지 않으면 다음 phase로 넘어가지 않는다. `medium` 이슈도 기본적으로 exit blocker이며, carry-over는 현재 phase policy가 명시적으로 허용할 때만 로그와 근거를 남기고 진행한다.
 
-#### 7.3 Review-Fix Loop + 테스트 실행
+#### 7.3 Review-Fix Loop 해석 + 테스트 실행
 
-오케스트레이터에 `Review-Fix Loop`와 `Test Strategy` section이 있으면, autopilot은 그 선언을 그대로 집행한다.
-- multi-phase path에서 `scope = per-phase`면 phase마다 review-fix와 validation을 수행하고, 마지막 phase 이후에는 `final integration review`를 반드시 1회 더 수행한다.
-- single-phase path이거나 `scope = global`이면 기존 global review-fix loop를 유지한다.
+오케스트레이터에 `Review-Fix Loop`와 `Test Strategy` section이 있으면, autopilot은 그 선언을 그대로 집행한다. 이 섹션은 파이프라인 마지막에 사후 정리용으로 도는 것이 아니라, 7.2에서 각 `implementation` 실행 직후 붙는 immediate completion gate의 해석 규칙이다.
+- multi-phase path에서 `scope = per-phase`면 각 phase의 `implementation` 직후 review-fix와 validation을 즉시 수행하고, 마지막 phase 이후에는 `final integration review`를 반드시 1회 더 수행한다.
+- single-phase path이거나 `scope = global`이면 해당 `implementation` step 직후 즉시 global review-fix loop를 수행한다.
 - review-fix loop의 agent 매핑은 고정이다: `review = sdd-skills:implementation-review`, `fix = sdd-skills:implementation`, `re-review = sdd-skills:implementation-review`.
+- `spec-update-done`은 모든 required implementation-scoped review-fix gate, required validation, 그리고 필요한 경우 final integration review가 닫힌 뒤에만 실행할 수 있다.
 - 이 섹션에서 별도 loop 규칙이나 테스트 규칙을 다시 정의하지 않는다.
 
 #### 7.4 에러 핸들링

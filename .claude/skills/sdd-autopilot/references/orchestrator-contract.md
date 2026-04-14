@@ -33,6 +33,11 @@
 - `spec-review`
 - `ralph-loop-init`
 
+추가 규칙:
+
+- `implementation` step은 단독 완료 step이 아니다. 같은 범위의 `Review-Fix Loop`와 required validation gate가 즉시 뒤따르며, gate가 닫히기 전에는 다음 downstream step으로 진행할 수 없다.
+- `spec-update-done` step은 모든 required implementation-scoped review-fix gate, 필요한 경우 `final integration review`, required validation/test가 끝난 뒤 최종 단계로만 배치할 수 있다.
+
 ### Model Routing
 
 각 subagent 호출 시 아래 모델을 `model` 파라미터로 지정한다. 에이전트 정의 파일의 프론트매터에도 동일하게 설정되어 있으므로, 오케스트레이터가 명시하지 않아도 기본값으로 적용된다. 오케스트레이터가 `model`을 명시하면 프론트매터보다 우선한다.
@@ -85,12 +90,15 @@
 추가 규칙:
 
 - multi-phase `implementation-plan`을 소비하면 기본값은 `scope = per-phase`다. single-phase path나 direct path만 `scope = global`을 기본으로 둘 수 있다.
+- review-fix loop는 파이프라인 후처리 섹션이 아니라 각 `implementation` 실행 단위의 immediate completion gate다.
 - autopilot은 review-fix loop를 추상 단계로 두지 않는다. review step은 반드시 `implementation-review` subagent 호출이고, fix step은 반드시 `implementation` subagent 재호출이다.
+- single-phase path이거나 `scope = global`이면 해당 `implementation` step 직후 즉시 review -> fix -> re-review gate를 수행하고, 종료 조건 충족 전에는 다음 downstream step으로 진행할 수 없다.
 - `scope = per-phase`면 아래 필드를 함께 명시해야 한다.
   - `phase boundary source`
   - `phase exit criteria`
   - `carry-over policy`
   - `final integration review`
+- `scope = per-phase`면 각 phase의 `implementation` 직후 즉시 같은 범위의 review -> fix -> re-review -> phase validation gate를 닫아야 한다. gate가 닫히기 전에는 다음 phase나 downstream step으로 진행할 수 없다.
 - `medium` 이슈도 기본적으로 phase exit blocker다. carry-over는 정책이 명시적으로 허용하는 severity/조건/로그 근거가 있을 때만 가능하다.
 - `final integration review`는 마지막 phase 이후에 반드시 1회 실행한다.
 
@@ -132,6 +140,7 @@
 - global spec 업데이트 완료
 - implemented + verified information만 반영됨
 - 미구현/미검증 delta는 deferred로 남음
+- 실행 시점은 모든 required implementation-scoped review-fix gate, required validation/test, 필요한 경우 final integration review가 끝난 뒤여야 함
 
 ## 9. Error Handling Contract
 
