@@ -36,7 +36,6 @@
 추가 규칙:
 
 - `implementation` step은 단독 완료 step이 아니다. 같은 범위의 `Review-Fix Loop`와 required validation gate가 즉시 뒤따르며, gate가 닫히기 전에는 다음 downstream step으로 진행할 수 없다.
-- `spec-update-done` step은 모든 required implementation-scoped review-fix gate, 필요한 경우 `final integration review`, required validation/test가 끝난 뒤 최종 단계로만 배치할 수 있다.
 
 ### Model Routing
 

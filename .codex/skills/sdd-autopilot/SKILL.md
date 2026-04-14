@@ -173,7 +173,7 @@ planning precedence 메모:
 - `references/orchestrator-contract.md` 계약 준수
 - "구체화된 요구사항"에서 기능 수준 Acceptance Criteria 도출
 - temporary spec이 예상되면 `Contract/Invariant Delta`와 `Validation Plan` linkage를 pipeline reasoning에 반영
-- 각 `implementation` step에는 같은 범위의 review-fix gate가 즉시 붙어야 한다. `spec_update_done`은 모든 required review-fix / final integration review / required validation이 닫힌 뒤 최종 단계로만 배치한다.
+- 각 `implementation` step에는 같은 범위의 review-fix gate가 즉시 붙어야 한다.
 - Reasoning Trace 3-6 bullet 간결 작성
 - 저장 경로: `_sdd/pipeline/orchestrators/orchestrator_<topic>.md`
 
@@ -193,7 +193,7 @@ Producer-Reviewer 패턴으로 검증한다.
 - step별 `agent_type` / 입출력 / 프롬프트 존재
 - 산출물 handoff 정합성
 - `Review-Fix Loop` section/contract 존재
-- 각 `implementation` step 뒤에 같은 범위의 immediate review-fix gate가 해석 가능하며, `spec_update_done`이 그 gate보다 앞서 배치되지 않음
+- 각 `implementation` step 뒤에 같은 범위의 immediate review-fix gate가 해석 가능함
 - test strategy 존재
 - error handling 존재
 
