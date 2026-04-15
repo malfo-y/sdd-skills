@@ -98,18 +98,36 @@ canonical 7섹션:
 ### 2.1 스킬 의존성 그래프
 
 ```text
-(spec-create) -> feature-draft -> spec-update-todo -> implementation-plan -> implementation
-                                                                       |        |
-                                                                       |        v
-                                                                       |   implementation-review
-                                                                       |        |
-                                                                       |   (fix -> re-review loop, immediate gate)
-                                                                       v
-                                                           final integration review / validation -> spec-update-done
-                                                                                           |
-                                                                                 ralph-loop-init (장시간 테스트)
+[Optional bootstrap]
+(spec-create)
+
+[Default planning path for non-trivial changes]
+feature-draft
+  -> (optional) spec-update-todo
+  -> (optional) implementation-plan
+  -> implementation
+
+[Immediate gate after each implementation unit]
+implementation
+  -> implementation-review
+  -> (if needed) implementation [fix]
+  -> implementation-review [re-review]
+  -> validation / phase validation
+
+[Final gate before spec sync]
+(if multi-phase) final integration review
+  -> required validation/test closure
+  -> spec-update-done
+
+[Optional long-running validation]
+validation / final integration review
+  -> ralph-loop-init
 ```
 
+- 그래프는 "항상 이 순서로 모두 지난다"는 뜻이 아니다. `optional` 표시는 조건부 삽입 단계다.
+- `implementation-review`는 `implementation` 다음의 별도 downstream step이 아니라, 각 `implementation` 실행 단위 직후 즉시 닫는 gate다.
+- `spec-update-done`은 review-fix gate, required validation/test, 필요한 경우 `final integration review`가 모두 끝난 뒤에만 온다.
+- `ralph-loop-init`은 구현 본선 뒤에 무조건 붙는 단계가 아니라, 장시간 검증이 필요할 때 validation surface에 붙는 선택지다.
 - Step 4 orchestrator generation은 `_sdd/pipeline/orchestrators/orchestrator_<topic>.md`만 materialize한다. `_sdd/drafts/*`, `_sdd/implementation/*`, `_sdd/pipeline/report_*`, 코드/테스트 출력은 future step의 planned output으로만 존재한다.
 - review-fix loop에서 agent 역할은 고정이다: review는 `implementation_review`, fix는 `implementation` 재호출, re-review는 다시 `implementation_review`다. 이 loop는 파이프라인 끝의 후처리가 아니라 각 `implementation` 실행 단위 직후 즉시 닫는 completion gate다.
 - review가 포함된 small/medium/large 모든 규모에서 `implementation`과 `implementation_review`는 sub-agent mapping으로만 실행한다. 부모 autopilot이 local implementation/review로 대체하지 않는다.
@@ -127,7 +145,7 @@ canonical 7섹션:
 - **Carry-over default**: `medium` 이슈도 기본적으로 phase exit blocker다. carry-over는 plan과 orchestrator에 정책과 근거가 명시된 경우에만 허용한다.
 - **Standalone implementation-plan exception**: 기존 feature draft, temporary spec, 구현 재개용 plan artifact가 이미 있고 phase/task detail만 더 필요할 때만 허용한다.
 
-### 2.2 오케스트레이션 대상 스킬
+### 2.2 오케스트레이션 대상 실행 유닛
 
 #### feature-draft
 - Role: temporary spec draft + implementation plan 통합 생성

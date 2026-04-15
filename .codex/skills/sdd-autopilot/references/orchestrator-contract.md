@@ -115,6 +115,12 @@
 - review-fix loop는 파이프라인 후처리 섹션이 아니라 각 `implementation` 실행 단위의 immediate completion gate다.
 - autopilot은 review-fix loop를 추상 단계로 두지 않는다. small/medium/large review path 모두 review step은 반드시 `implementation_review` agent 호출이고, fix step은 반드시 `implementation` agent 재호출이다. local inline fallback은 허용되지 않는다.
 - single-phase path이거나 `scope = global`이면 해당 `implementation` step 직후 즉시 review -> fix -> re-review gate를 수행하고, 종료 조건 충족 전에는 다음 downstream step으로 진행할 수 없다.
+- review가 포함된 path의 `implementation` step에는 implementation 직후 실행되는 invocation contract가 명시되어야 한다. 최소한 아래를 포함한다.
+  - autopilot이 `implementation_review` agent를 즉시 호출한다는 사실
+  - review 입력에 포함할 파일/증거
+  - review 프롬프트 계약
+  - fix 재호출 조건과 fix 프롬프트 계약
+  - re-review 재호출 조건과 re-review 프롬프트 계약
 - `scope = per-phase`면 아래 조건을 함께 충족해야 한다.
   - downstream `implementation` step에 `Execution Mode: phase-iterative`와 `Phase Source`가 선언되어 있어야 한다.
   - Review-Fix Loop에 아래 필드를 함께 명시해야 한다.
@@ -133,6 +139,11 @@
   - final integration review를 수행하는 독립 `implementation_review` step
 - `medium` 이슈도 기본적으로 phase exit blocker다. carry-over는 정책이 명시적으로 허용하는 severity/조건/로그 근거가 있을 때만 가능하다.
 - `final integration review`는 마지막 phase 이후에 반드시 1회 실행한다.
+- `Review-Fix Loop`에는 가능하면 아래 invocation prompt contract를 함께 명시한다.
+  - `review invocation prompt contract`
+  - `fix invocation prompt contract`
+  - `re-review invocation prompt contract`
+  - multi-phase path인 경우 `final integration review prompt contract`
 
 ## 7. Test Strategy Contract
 
