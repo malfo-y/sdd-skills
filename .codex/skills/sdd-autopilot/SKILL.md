@@ -173,7 +173,11 @@ planning precedence 메모:
 - `references/orchestrator-contract.md` 계약 준수
 - "구체화된 요구사항"에서 기능 수준 Acceptance Criteria 도출
 - temporary spec이 예상되면 `Contract/Invariant Delta`와 `Validation Plan` linkage를 pipeline reasoning에 반영
+- Step 4에서 실제로 materialize할 수 있는 산출물은 `_sdd/pipeline/orchestrators/orchestrator_<topic>.md` 하나뿐이다.
+- `_sdd/drafts/*`, `_sdd/implementation/*`, `_sdd/pipeline/log_*`, `_sdd/pipeline/report_*`, 코드/테스트 출력은 future step의 planned output으로 선언할 수는 있지만 이 단계에서 미리 생성하면 안 된다.
 - 각 `implementation` step에는 같은 범위의 review-fix gate가 즉시 붙어야 한다.
+- `implementation-plan` output을 downstream `implementation`이 소비하는 expanded path면 해당 `implementation` step을 flat single-shot으로 쓰지 않고 `Execution Mode: phase-iterative`와 `Phase Source`를 명시한다.
+- review가 포함된 모든 path에서는 `implementation`/`implementation_review`/re-review를 모두 Codex custom agent step으로 유지한다. 부모 autopilot이 로컬 구현/로컬 리뷰로 대체하면 안 된다.
 - Reasoning Trace 3-6 bullet 간결 작성
 - 저장 경로: `_sdd/pipeline/orchestrators/orchestrator_<topic>.md`
 
@@ -188,12 +192,16 @@ Gate 4→5: 오케스트레이터 저장 완료 → Step 5.
 
 Producer-Reviewer 패턴으로 검증한다.
 
-구조 검증 (6항목):
+구조 검증:
 - 유효 `agent_type` 참조
 - step별 `agent_type` / 입출력 / 프롬프트 존재
 - 산출물 handoff 정합성
 - `Review-Fix Loop` section/contract 존재
 - 각 `implementation` step 뒤에 같은 범위의 immediate review-fix gate가 해석 가능함
+- Step 4가 orchestrator file 외 downstream artifact를 materialize하지 않았는가
+- expanded path면 downstream `implementation` step에 `Execution Mode: phase-iterative`와 `Phase Source`가 선언되었는가
+- `Execution Mode: phase-iterative` path면 per-phase gate semantics와 `final integration review`가 해석 가능한가
+- review 포함 path에서 `implementation`/`implementation_review`가 custom agent step으로만 매핑되는가
 - test strategy 존재
 - error handling 존재
 
@@ -202,7 +210,7 @@ Producer-Reviewer 패턴으로 검증한다.
 - `profile_key`를 쓴 경우 step 참조와 loop 참조가 해석 가능해야 한다.
 - section-level 기본값과 step-level / loop-level override가 동시에 있으면 우선순위가 모호하지 않아야 한다.
 
-철학 검증 (6항목):
+철학 검증:
 - Spec-first
 - 드리프트 방지
 - Review-fix 완전성
@@ -211,7 +219,7 @@ Producer-Reviewer 패턴으로 검증한다.
 - 스펙 직접 수정 금지
 
 결과 분기:
-- 12/12 통과 → Step 6
+- 모든 구조/철학 검증 통과 → Step 6
 - 구조 이슈 → 자동 수정(최대 2회) 후 재검증
 - 철학 위반 → Step 4로 돌아가 reasoning 재실행(최대 1회)
 - 재시도 후 실패 → Step 6에서 경고 표시
@@ -253,9 +261,11 @@ Phase 2 진입 후 `request_user_input`은 호출하지 않는다. 마일스톤 
 - 프로파일 우선순위는 `step-level Execution profile` -> `Execution Profiles` section 기본값 -> `references/execution-profile-policy.md` 기본값 순서다.
 - 로컬 step이면 오케스트레이터에 적힌 skill 또는 명령을 실행한다.
 - step별 필드, 허용 `agent_type`, Exit Criteria, Acceptance Criteria는 오케스트레이터 본문과 `references/orchestrator-contract.md`를 그대로 따른다.
+- 오케스트레이터에 적힌 출력 파일은 현재 step이 실제로 생성한 materialized output과 future step의 planned output을 구분해 해석한다. 각 step은 자신의 선언된 출력만 materialize하며, 아직 실행되지 않은 downstream step의 planned output을 미리 생성하지 않는다.
+- review 포함 path에서는 `implementation`/`implementation_review`를 항상 Codex custom agent 호출로 실행한다. 부모 autopilot이 local implementation/review로 대체하지 않는다.
 - `implementation` step은 단독 완료가 아니다. 같은 범위의 `Review-Fix Loop` exit condition과 required validation이 닫혀야만 해당 step을 `completed`로 기록할 수 있다.
 - single-phase path이거나 `Review-Fix Loop.scope = global`이면 `implementation` step 직후 즉시 global review-fix loop를 수행한다. 이 gate가 닫히기 전에는 `spec_update_done`을 포함한 다음 downstream step으로 진행할 수 없다.
-- `implementation-plan`이 multi-phase metadata를 제공하고 `Review-Fix Loop.scope = per-phase`면, autopilot은 phase를 실제 execution gate로 취급한다.
+- `implementation-plan` output을 downstream `implementation`이 소비하고 해당 step이 `Execution Mode: phase-iterative`로 선언되어 있으면, autopilot은 `Phase Source`를 읽어 phase count와 boundary를 runtime-resolved metadata로 해석한다. Step 4가 추측한 flat phase list로 실행하지 않는다.
 - per-phase gate에서는 각 phase의 `goal`, `task set / dependency closure`, `validation focus`, `exit criteria`, `carry-over policy`를 읽고 해당 phase 범위의 `implementation` agent 실행 -> `implementation_review` agent review -> 필요 시 `implementation` agent 재호출로 fix -> `implementation_review` agent 재실행으로 re-review -> phase validation 순서를 먼저 닫은 뒤 다음 phase로 간다.
 - 현재 phase exit criteria가 충족되지 않으면 다음 phase로 넘어가지 않는다. `medium` 이슈도 기본적으로 exit blocker이며, carry-over는 현재 phase policy가 명시적으로 허용할 때만 로그와 근거를 남기고 진행한다.
 
@@ -264,7 +274,8 @@ Phase 2 진입 후 `request_user_input`은 호출하지 않는다. 마일스톤 
 오케스트레이터에 `Review-Fix Loop`와 `Test Strategy` section이 있으면, autopilot은 그 선언을 그대로 집행한다. 이 섹션은 파이프라인 마지막에 사후 정리용으로 도는 것이 아니라, 7.2에서 각 `implementation` 실행 직후 붙는 immediate completion gate의 해석 규칙이다.
 - multi-phase path에서 `scope = per-phase`면 각 phase의 `implementation` 직후 review-fix와 validation을 즉시 수행하고, 마지막 phase 이후에는 `final integration review`를 반드시 1회 더 수행한다.
 - single-phase path이거나 `scope = global`이면 해당 `implementation` step 직후 즉시 global review-fix loop를 수행한다.
-- review-fix loop의 agent 매핑은 고정이다: `review = implementation_review`, `fix = implementation`, `re-review = implementation_review`.
+- review-fix loop의 agent 매핑은 small/medium/large review path 모두 고정이다: `review = implementation_review`, `fix = implementation`, `re-review = implementation_review`.
+- `scope = global`이든 `scope = per-phase`든 review/fix/re-review를 local inline work로 대체하지 않는다.
 - review-fix loop 프로파일 우선순위는 `review_profile` / `fix_profile` / `final_integration_review_profile` -> `Execution Profiles` section의 해당 agent_type 기본값 -> `references/execution-profile-policy.md` 기본값 순서다.
 - `final_integration_review_profile`은 실제로 final integration review를 수행하는 경우에만 의미가 있다. 기본적으로는 `scope = per-phase`일 때 사용하며, `scope = global`에서는 별도 final integration review step 또는 명시적 global final integration review 선언이 없으면 사용하지 않는다.
 - `spec_update_done`은 모든 required implementation-scoped review-fix gate, required validation, 그리고 필요한 경우 final integration review가 닫힌 뒤에만 실행할 수 있다.

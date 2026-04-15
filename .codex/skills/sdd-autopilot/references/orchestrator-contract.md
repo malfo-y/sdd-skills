@@ -28,6 +28,11 @@
     - multi-phase path라 phase gate 해석을 문서에 남겨야 한다.
     - 재실행 재현성이나 품질 게이트 근거를 오케스트레이터 자체에 남겨야 한다.
 
+### Generation Boundary
+
+- autopilot의 orchestrator generation 단계에서 실제로 생성 가능한 산출물은 `_sdd/pipeline/orchestrators/orchestrator_<topic>.md` 하나뿐이다.
+- `_sdd/drafts/*`, `_sdd/implementation/*`, `_sdd/pipeline/log_*`, `_sdd/pipeline/report_*`, 코드/테스트 출력은 오케스트레이터 안에서 future step의 planned output으로 선언할 수는 있지만, 해당 step이 실행되기 전에는 materialize하면 안 된다.
+
 ## 2. Step Contract
 
 각 custom-agent step은 아래 4개 필드를 반드시 가진다.
@@ -45,6 +50,12 @@
   - step-level 프로파일은 전체 `Execution Profiles` section을 생략한 경우에도 사용할 수 있다.
   - 기본 policy와 완전히 동일하고 해석 여지가 없으면 step-level 표기도 생략할 수 있다.
   - step-level 프로파일은 같은 agent_type에 대한 section-level 기본값보다 우선한다.
+- `Execution Mode`
+  - `phase-iterative`는 downstream `implementation` step이 `implementation_plan` output을 소비할 때 사용한다.
+  - 이 값이 있으면 phase count와 boundary를 Step 4 generation 시점에 precompute하지 않고 runtime metadata로 해석한다.
+- `Phase Source`
+  - `Execution Mode: phase-iterative` implementation step일 때 필수다.
+  - 값은 runtime에 읽을 `implementation_plan` output 경로다.
 
 허용 `agent_type`:
 
@@ -60,6 +71,9 @@
 추가 규칙:
 
 - `implementation` step은 단독 완료 step이 아니다. 같은 범위의 `Review-Fix Loop`와 required validation gate가 즉시 뒤따르며, gate가 닫히기 전에는 다음 downstream step으로 진행할 수 없다.
+- review가 포함된 path에서는 `implementation`과 `implementation_review`를 항상 custom-agent step으로 사용한다. autopilot 부모가 local inline implementation/review로 대체하면 안 된다.
+- downstream `implementation` step이 `implementation_plan` output을 소비하면, 해당 step은 `Execution Mode: phase-iterative`와 `Phase Source`를 함께 선언해야 한다.
+- 오케스트레이터의 `출력 파일`에 적힌 future artifact는 planned output이며, 현재 실행 중인 step만 자신의 출력물을 materialize할 수 있다.
 
 ## 3. Global vs Temporary Spec Contract
 
@@ -99,10 +113,11 @@
 
 - multi-phase `implementation_plan`을 소비하면 기본값은 `scope = per-phase`다. single-phase path나 direct path만 `scope = global`을 기본으로 둘 수 있다.
 - review-fix loop는 파이프라인 후처리 섹션이 아니라 각 `implementation` 실행 단위의 immediate completion gate다.
-- autopilot은 review-fix loop를 추상 단계로 두지 않는다. review step은 반드시 `implementation_review` agent 호출이고, fix step은 반드시 `implementation` agent 재호출이다.
+- autopilot은 review-fix loop를 추상 단계로 두지 않는다. small/medium/large review path 모두 review step은 반드시 `implementation_review` agent 호출이고, fix step은 반드시 `implementation` agent 재호출이다. local inline fallback은 허용되지 않는다.
 - single-phase path이거나 `scope = global`이면 해당 `implementation` step 직후 즉시 review -> fix -> re-review gate를 수행하고, 종료 조건 충족 전에는 다음 downstream step으로 진행할 수 없다.
-- `scope = per-phase`면 아래 필드를 함께 명시해야 한다.
-  - `phase boundary source`
+- `scope = per-phase`면 아래 조건을 함께 충족해야 한다.
+  - downstream `implementation` step에 `Execution Mode: phase-iterative`와 `Phase Source`가 선언되어 있어야 한다.
+  - Review-Fix Loop에 아래 필드를 함께 명시해야 한다.
   - `phase exit criteria`
   - `carry-over policy`
   - `final integration review`
@@ -147,6 +162,7 @@
 - task와 `Target Files`가 정의됨
 - `feature-draft` 이후 확장 단계인지, 또는 standalone 예외인지가 드러남
 - 각 phase에 `goal`, `task set / dependency closure`, `validation focus`, `exit criteria`, `carry-over policy`가 포함됨
+- downstream `implementation` step이 이 artifact를 소비할 때는 `Execution Mode: phase-iterative`와 `Phase Source`로 연결되어야 함
 
 ### spec_update_todo
 - global spec 업데이트 완료

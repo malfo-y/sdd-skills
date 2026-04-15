@@ -1,7 +1,7 @@
 # SDD-Autopilot User Guide
 
-**Version**: 1.2.0
-**Date**: 2026-04-10
+**Version**: 1.2.1
+**Date**: 2026-04-15
 
 A guide for the sdd-autopilot meta-skill that automatically executes the SDD pipeline.
 
@@ -59,8 +59,8 @@ sdd-autopilot automatically determines the scale based on request analysis and c
 | Scale | Affected Files | New Components | Spec Changes | Default Pipeline |
 |-------|---------------|----------------|-------------|------------------|
 | Small | 1-3 | 0-1 | None | implementation -> inline test |
-| Medium | 4-10 | 1-3 | Existing section patch | feature-draft -> implementation, or on the expanded path feature-draft -> implementation-plan -> phase-gated execution |
-| Large | 10+ | 3+ | New section addition possible | feature-draft -> (conditional spec-update-todo) -> implementation-plan -> per-phase impl/review/fix -> final integration review |
+| Medium | 4-10 | 1-3 | Existing section patch | feature-draft -> implementation, or on the expanded path feature-draft -> implementation-plan -> phase-iterative implementation loop |
+| Large | 10+ | 3+ | New section addition possible | feature-draft -> (conditional spec-update-todo) -> implementation-plan -> phase-iterative implementation loop -> final integration review |
 
 When quantitative criteria and qualitative criteria (complexity, dependencies, test scope) point to different scales, sdd-autopilot **selects the larger scale**.
 
@@ -70,6 +70,7 @@ Additional rules:
 - `implementation-plan` is not a peer alternative to `feature-draft`; it is a follow-up expansion stage used when Part 2 is not sufficient or a multi-phase gate is needed.
 - `spec-update-todo` is added only when planned persistent global alignment is actually needed.
 - Even on medium-scale work, if a multi-phase plan is produced, the default review-fix scope becomes `per-phase`, followed by one mandatory `final integration review`.
+- On every small/medium/large path that includes review, `implementation` and `implementation-review` always remain agent execution units. The parent sdd-autopilot does not replace them with local inline implementation or local review.
 
 ### 2.3 Agent Wrapper Pattern (Skill -> Agent Delegation)
 
@@ -86,11 +87,12 @@ feature-draft agent
     \-- expanded path --> implementation-plan agent
                          | Output: _sdd/implementation/<YYYY-MM-DD>_implementation_plan_<topic>.md
                          v
-                     implementation agent
-                         | Output: Code files
-                         v
-                     implementation-review agent  <-- per-phase review-fix loop
-                         |
+                     phase-iterative implementation loop
+                         | Each phase:
+                         |   implementation agent
+                         |   -> implementation-review agent
+                         |   -> implementation agent (if fix is needed)
+                         |   -> implementation-review agent
                          v
                      final integration review
                          |
@@ -103,6 +105,8 @@ feature-draft agent
 ```
 
 The review-fix loop uses a fixed agent mapping: review is handled by the `implementation-review agent`, fix is a re-invocation of the `implementation agent`, and re-review goes back to the `implementation-review agent`.
+
+During orchestrator generation, the only artifact that materializes is `_sdd/pipeline/orchestrators/orchestrator_<topic>.md`. `_sdd/drafts/*`, `_sdd/implementation/*`, and code/test outputs remain planned outputs until their owning steps actually run. The later artifact/checklist sections assume this boundary rather than redefining it in full.
 
 Each agent receives the **output file path** from the previous agent along with the **user's original request**. sdd-autopilot extracts only key information (output file paths, major decisions) from agent results and records them in the pipeline log.
 
@@ -165,9 +169,9 @@ flowchart TB
 | 2 | **Inline Discussion** | 1-5 rounds of conversation to refine requirements. Each question includes a "That's enough -- please proceed" option |
 | 3 | **Codebase Exploration** | Analyze project structure, related files, existing patterns, and test structure using the Explore agent |
 | 4 | **Scale Assessment** | Determine Small/Medium/Large scale based on affected file count, new component count, spec change scope, etc. |
-| 5 | **Orchestrator Generation** | Save a customized pipeline plan to `_sdd/pipeline/orchestrators/orchestrator_<topic>.md` |
+| 5 | **Orchestrator Generation** | Save a customized pipeline plan to `_sdd/pipeline/orchestrators/orchestrator_<topic>.md`. This stage creates only the orchestrator file and declares downstream artifacts as planned outputs |
 | 6 | **User Confirmation** | Present pipeline summary; user chooses to modify/approve/cancel |
-| 7 | **Autonomous Execution** | Execute the approved pipeline via sequential agent invocation. If the plan is multi-phase, enforce per-phase `implementation -> review -> fix -> validation` gates plus a final integration review |
+| 7 | **Autonomous Execution** | Execute the approved pipeline via sequential agent invocation. If the expanded path consumes an implementation plan, follow `Execution Mode: phase-iterative` and `Phase Source` to enforce per-phase `implementation -> review -> fix -> validation` gates plus a final integration review |
 | 8 | **Final Summary** | Finalize log, report generated/modified file list, remaining issues, and suggested follow-up actions |
 
 ### 3.3 User Role vs sdd-autopilot Role
@@ -203,6 +207,8 @@ implementation agent -> inline test -> (done)
 
 Skips feature-draft, implementation-plan, and spec-update-done. Applies to single function/class modifications, bug fixes, minor UI adjustments, etc.
 
+The default small path may not include review. If review is included, however, the path still uses `implementation agent -> implementation-review agent -> implementation agent (fix) -> implementation-review agent`, and the parent autopilot does not implement or review inline by itself.
+
 **Example request**: "Change the login button color from blue to green"
 
 ### 4.2 Medium (4-10 files)
@@ -227,6 +233,7 @@ feature-draft agent -> implementation agent
 
 ```text
 feature-draft agent -> implementation-plan agent
+-> phase-iterative implementation loop
 -> Phase 1: implementation -> review-fix -> validation
 -> Phase 2..N: implementation -> review-fix -> validation
 -> final integration review -> inline test -> spec-update-done agent
@@ -234,6 +241,7 @@ feature-draft agent -> implementation-plan agent
 
 - Each phase closes its review-fix loop as `implementation-review agent -> implementation agent re-invocation -> implementation-review agent`
 - Use `implementation-plan` only when Part 2 is not sufficient or explicit phase boundaries are needed
+- The generated orchestrator records `Execution Mode: phase-iterative` and `Phase Source` on the downstream `implementation` step; phase count and boundaries are resolved at runtime from the implementation-plan output, not fixed during orchestrator generation
 - Even on medium-scale work, once a multi-phase plan exists, the default review-fix scope becomes `per-phase`
 - `medium` issues block phase exit unless an explicit carry-over policy allows them
 
@@ -247,6 +255,7 @@ feature-draft agent -> implementation-plan agent
 
 ```text
 feature-draft agent -> (conditional) spec-update-todo agent -> implementation-plan agent
+-> phase-iterative implementation loop
 -> Phase 1: implementation -> review-fix -> validation
 -> Phase 2..N: implementation -> review-fix -> validation
 -> final integration review
@@ -255,6 +264,8 @@ feature-draft agent -> (conditional) spec-update-todo agent -> implementation-pl
 ```
 
 Applies to architecture-level changes, large-scale features affecting the entire system, and tasks requiring E2E testing. `spec-update-todo` is added only when planned persistent global spec alignment is actually needed.
+
+On this expanded path as well, the phase count and boundaries are not materialized during orchestrator generation; they are resolved at runtime by reading the `implementation-plan` output via `Phase Source`.
 
 **Example request**: "Implement the entire payment system. Include Stripe API integration, webhook handling, and refund logic."
 
@@ -365,7 +376,7 @@ User: "Looks good -- go ahead"
 
 ## 6. Artifacts
 
-sdd-autopilot generates the following files during pipeline execution.
+sdd-autopilot generates the following files during pipeline execution. The Step 5 generation boundary described above stays in effect, and the paths below appear only when their owning steps execute.
 
 ### 6.1 Pipeline Files
 
@@ -386,7 +397,7 @@ In Codex, this orchestrator directly spawns custom agents from `.codex/agents/`.
 |-------|-------------|---------|
 | feature-draft | `_sdd/drafts/<YYYY-MM-DD>_feature_draft_<topic>.md` | Temporary spec + implementation input draft |
 | spec-update-todo | `_sdd/spec/main.md` (updated) | Pre-reflect planned features in spec |
-| implementation-plan | `_sdd/implementation/<YYYY-MM-DD>_implementation_plan_<topic>.md` | Detailed implementation plan + phase metadata |
+| implementation-plan | `_sdd/implementation/<YYYY-MM-DD>_implementation_plan_<topic>.md` | Detailed implementation plan + phase metadata later consumed as `Phase Source` |
 | implementation | Code files | Implemented source code + test files |
 | implementation-review | Text output | Review report (critical/high/medium/low issues) |
 | spec-update-done | `_sdd/spec/main.md` (updated) | Synchronize implementation results to spec |
@@ -460,6 +471,8 @@ Yes. At Step 6 (User Confirmation), you can choose the following options:
 
 The active orchestrator being modified is maintained at `_sdd/pipeline/orchestrators/orchestrator_<topic>.md`. During execution, the pipeline keeps reading this file as the authoritative contract and handoff source.
 
+At that point, downstream artifacts may still not exist yet. Read the materialization boundary above as the canonical rule.
+
 In Codex, this orchestrator directly uses custom agents from `.codex/agents/`. It does not treat skill names themselves as sub-execution units.
 
 ### Q4. What if sdd-autopilot misjudges the scale?
@@ -505,17 +518,19 @@ In Codex, it is important to verify through manual dry-runs that `sdd-autopilot`
 - Small scenario:
   - Simple change requiring only `implementation`
 - Medium single-phase scenario:
-  - `feature_draft -> implementation -> implementation_review -> spec_update_done`
+  - `feature_draft -> implementation -> global review-fix loop (implementation_review -> implementation fix -> implementation_review) -> spec_update_done`
 - Medium/large expanded scenario:
-  - `feature_draft -> implementation_plan -> phase gate execution -> final integration review -> spec_update_done`
+  - `feature_draft -> implementation_plan -> phase-iterative implementation loop -> final integration review -> spec_update_done`
 
 Verify:
 
 - The generated orchestrator uses custom agent names, not skill names
 - The generated orchestrator is saved to `_sdd/pipeline/orchestrators/orchestrator_<topic>.md`
+- During orchestrator generation, `_sdd/drafts/*`, `_sdd/implementation/*`, and `_sdd/pipeline/report_*` are not materialized ahead of time
 - `_sdd/pipeline/log_*.md` is created/updated
 - `_sdd/pipeline/report_*.md` is created
-- If a multi-phase plan exists, the orchestrator records the phase boundary source, carry-over policy, and final integration review
+- If a multi-phase plan exists, the downstream `implementation` step records `Execution Mode: phase-iterative` and `Phase Source`, and the orchestrator also records carry-over policy plus a final integration review
+- On review-including paths, `implementation` and `implementation-review` are mapped only to custom agent names regardless of scale
 
 ### 8.5 Pre-flight Check
 
@@ -556,9 +571,10 @@ If you want to quickly perform a minimum execution check in the actual Codex app
   - Does the pre-flight before approval read both `_sdd/env.md` and `.codex/config.toml` and summarize risks?
   - Does the generated orchestrator describe using custom agent names rather than skill names?
   - Is `_sdd/pipeline/orchestrators/orchestrator_<topic>.md` maintained in active state?
+  - Does the orchestrator generation stage avoid creating downstream artifacts ahead of time?
   - Is `_sdd/pipeline/log_<topic>_<timestamp>.md` created/updated?
   - Is `_sdd/pipeline/report_<topic>_<timestamp>.md` created?
-  - If a multi-phase plan exists, do the logs show phase gates and a final integration review?
+  - If a multi-phase plan exists, do `Execution Mode: phase-iterative`, `Phase Source`, phase gates, and a final integration review connect correctly?
 
 ---
 
