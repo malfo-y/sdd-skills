@@ -1,7 +1,7 @@
 ---
 name: discussion
 description: This skill should be used when the user asks to "discuss", "discussion", "토론", "토론하자", "let's discuss", "brainstorm", "논의", "의견 나누기", or wants a structured iterative discussion with research support.
-version: 1.3.0
+version: 1.4.2
 ---
 
 # discussion
@@ -34,6 +34,7 @@ version: 1.3.0
 5. 라운드당 질문은 정확히 1개만 한다.
 6. 최신성이나 사실 검증이 필요한 내용은 웹 또는 로컬 근거로 먼저 확인한다.
 7. 출력 언어와 저장 파일 언어는 사용자의 활성 입력 언어를 따른다.
+8. **in-scope 미결 종료 차단**: 카테고리가 `out-of-scope`나 `deferred-deliberately`가 아닌 미결(이하 "in-scope `open_questions`")이 남은 상태로는 Gate 3→4 외 어떤 경로(수렴 신호, stagnation fallback 등)로도 토론을 종료하지 않는다.
 
 ## Key Principles
 
@@ -167,6 +168,21 @@ Analysis 페이즈 진입 직후 첫 라운드에, AI는 다음을 반드시 수
 
 **커버리지 체크:** `critical_review`는 분석 페이즈에서 최소 1회 비판적 개입이 이루어지고 사용자가 응답했을 때 완료로 표시한다. 선호가 없는 비교형 토론도 fallback 비판 질문으로 완료 가능해야 한다. 비판적 검토 없이 수렴으로 넘어가는 것을 방지한다.
 
+#### 3.2.3 Soft Deferral Handling (묵시적 떠넘김 차단)
+
+사용자가 토론 중 묵시적 deferral 신호(예: "나중에 보죠", "그건 구현하면서", "지금은 모르겠는데", "일단 넘어가요")를 보이면, AI는 메타-분류 질문을 사용자에게 노출하지 않고 **내부적으로** 다음 분류를 수행한다.
+
+| 분류 | 조건 | AI 처리 |
+|------|------|---------|
+| (a) 지금 답 가능 | 한 가지 구체 질문으로 좁히면 사용자가 토론 내에서 답할 수 있다 | 좁힌 1회 재질문(1라운드 한정, 3.2.2 비판 카운트에서 제외). 그래도 답 못 하면 (b)로 강등 |
+| (b) 토론 외부 deferred | 다른 작업/외부 데이터 대기/명확한 분리가 정당함 | `open_questions`에 카테고리 `deferred-deliberately` 또는 `needs-data`로 조용히 기록 |
+| (c) 다른 미결 의존 | 동일 토론 내 다른 미결 질문이 풀려야 답 가능 | `blocked-by:Q<n>` 라벨로 기록하고, 의존하는 Q를 **다음 라운드 우선 주제**로 채택 |
+
+**규칙:**
+
+1. 분류는 AI 내부 추론으로만. "이거 (a/b/c) 중 뭐죠?" 같은 메타 질문을 표면에 노출하지 않는다 (fatigue 방지).
+2. 묵시적 deferral을 그냥 받아 `open_questions`에 in-scope로 적재하는 행위는 금지. 반드시 위 분류를 거친다.
+
 #### 3.3 Mid-Discussion Research
 
 토론 중 근거가 필요하면 리서치를 즉시 수행:
@@ -206,6 +222,8 @@ Analysis 페이즈 진입 직후 첫 라운드에, AI는 다음을 반드시 수
 
 사용자가 추가 논의를 선택하면 계속 진행한다. 종료를 강제하지 않는다.
 
+**가드**: in-scope `open_questions`이 1건 이상이면 위 수렴 신호가 충족돼도 종료 권유 메시지를 발화하지 않는다. 대신 해당 미결을 다음 라운드 주제로 자동 채택한다 (`blocked-by:Q<n>` 의존이 있으면 의존하는 Q를 우선).
+
 #### 3.5.1 Stagnation Fallback
 
 토론이 길어지더라도 **단순 라운드 수로 종료하지 않는다**. 대신 아래 정체(stagnation) 신호를 본다.
@@ -221,15 +239,31 @@ Analysis 페이즈 진입 직후 첫 라운드에, AI는 다음을 반드시 수
 **stagnation 대응 규칙:**
 
 1. stagnation 신호가 2회 연속 감지되면 질문 범위를 강제로 좁힌다.
-2. 이때 질문은 아래 둘 중 하나만 제시한다.
-   - "지금까지 정리"
-   - "남은 미결 1개만 더 논의"
-3. 사용자가 "남은 미결 1개만 더 논의"를 선택했는데 다음 라운드도 stagnation이면, 남은 쟁점은 open question으로 기록하고 Step 4로 이동한다.
+2. 이때 노출할 옵션은 in-scope `open_questions` 유무에 따라 다르다.
+
+   | 상태 | 노출 옵션 |
+   |------|-----------|
+   | in-scope `open_questions` 0건 | "지금까지 정리" / "남은 미결 1개만 더 논의" |
+   | in-scope `open_questions` 1건+ | "남은 미결 1개만 더 논의" 만 |
+
+3. "남은 미결 1개만 더 논의"를 선택했는데 다음 라운드도 stagnation이면, 남은 쟁점을 open question으로 기록하고 Gate 3→4로 이동한다 (Step 4 직행 금지 — 카테고리 라벨링이 필요하다).
 4. 이 fallback은 토론을 강제로 닫기 위한 것이 아니라, 진전 없는 반복을 요약 가능한 상태로 전환하기 위한 것이다.
 
 **Gate 3→4**: 미결 질문(open_questions)을 확인한다.
+
 - 0건 → Step 4 진행
-- 1건+ → 미결 질문 목록을 제시하고 추가 논의 여부를 확인한다. 추가 논의 선택 시 Step 3 루프 복귀, 그대로 정리 선택 시 Step 4 진행.
+- 1건+ → 미결 질문 목록을 제시하고 `request_user_input`으로 추가 논의 여부를 확인한다. 추가 논의 선택 시 Step 3 루프 복귀, "그대로 정리(미결로 기록)" 선택 시 **카테고리 라벨링 강제** 후 Step 4 진행.
+
+**카테고리 라벨링 강제 절차 ("그대로 정리" 선택 시):**
+
+1. 모든 미결 질문에 대해 카테고리를 부여한다. 각 미결 질문은 `request_user_input`의 **별도 단일선택 질문**으로 제시하며, 한 번 호출에는 최대 3개 질문만 담는다. 미결 질문이 4개 이상이면 여러 번 순차 호출해 모두 라벨링한다. 카테고리는 다음 4종 고정:
+   - `out-of-scope` — 이 토론 범위 밖이며 별도 토론으로 분리 예정
+   - `needs-data` — 외부 데이터/벤치마크/실측이 있어야 답 가능
+   - `deferred-deliberately` — 의도적 보류 (후속 작업/이해관계자 대기 등)
+   - `blocked-by:Q<n>` — 동일 토론 내 다른 미결 질문 번호 의존
+2. 사용자가 일부 항목 라벨을 비워두면, AI가 토론 맥락에서 가장 가능성 높은 카테고리를 추정해 기본값으로 채우되, **반드시** Step 4 요약의 해당 행에 `(auto-labeled, please review)` 노트를 붙인다.
+3. 카테고리 없는 미결 질문이 단 1건이라도 남으면 Step 4로 진행하지 않는다.
+4. 카테고리 라벨링 후 in-scope `open_questions`이 여전히 있으면 사용자에게 한 번 더 "in-scope 미결이 N건 남아 있습니다. 정말 그대로 종료하시겠어요?"를 확인하고, 사용자가 명시적으로 동의해야 종료한다 (Gate 3→4의 user-confirm 단계).
 
 ### Step 4: Write the Discussion Summary
 
@@ -270,7 +304,12 @@ Analysis 페이즈 진입 직후 첫 라운드에, AI는 다음을 반드시 수
 | 1 | ... | ... | ... |
 
 ## 미결 질문 (Open Questions)
-- [ ] [질문 1]: [맥락]
+| # | 질문 | 카테고리 | 맥락 / 의존 |
+|---|------|----------|-------------|
+| 1 | [질문 1] | needs-data | [맥락] |
+| 2 | [질문 2] | blocked-by:Q1 | Q1이 풀려야 답 가능 |
+
+> 카테고리: `out-of-scope` / `needs-data` / `deferred-deliberately` / `blocked-by:Q<n>` 중 하나. AI가 자동 부여한 항목은 `(auto-labeled, please review)` 표기.
 
 ## 실행 항목 (Action Items)
 | # | 항목 | 우선순위 | 담당 |
