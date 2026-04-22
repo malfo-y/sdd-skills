@@ -1,7 +1,7 @@
 ---
 name: discussion
 description: This skill should be used when the user asks to "discuss", "discussion", "토론", "토론하자", "let's discuss", "brainstorm", "논의", "의견 나누기", or wants a structured iterative discussion with research support.
-version: 1.4.1
+version: 1.4.2
 ---
 
 # Structured Discussion - 구조화된 토론 진행
@@ -273,21 +273,22 @@ Analysis 페이즈 진입 직후 첫 라운드에, AI는 다음을 반드시 수
 **stagnation 대응 규칙:**
 
 1. stagnation 신호가 2회 연속 감지되면 질문 범위를 강제로 좁힌다.
-2. 이때 노출할 옵션은 in-scope `open_questions` 유무에 따라 다르다.
+2. 이때 노출할 옵션은 in-scope `open_questions` 유무에 따라 다르다. **중요**: `"남은 미결 1개만 더 논의"` 옵션을 제시할 때는 generic 문구만 단독으로 쓰지 않고, 반드시 대상 미결 질문의 짧은 요약을 옵션 라벨이나 질문 본문에 함께 노출한다.
 
    | 상태 | 노출 옵션 |
    |------|-----------|
-   | in-scope `open_questions` 0건 | "지금까지 정리" / "남은 미결 1개만 더 논의" |
-   | in-scope `open_questions` 1건+ | "남은 미결 1개만 더 논의" 만 |
+   | in-scope `open_questions` 0건 | "지금까지 정리" / `"남은 미결 1개만 더 논의: [질문 요약]"` |
+   | in-scope `open_questions` 1건+ | `"남은 미결 1개만 더 논의: [질문 요약]"` 만 |
 
-3. "남은 미결 1개만 더 논의"를 선택했는데 다음 라운드도 stagnation이면, 남은 쟁점을 open question으로 기록하고 Gate 3→4로 이동한다 (Step 4 직행 금지 — 카테고리 라벨링이 필요하다).
-4. 이 fallback은 토론을 강제로 닫기 위한 것이 아니라, 진전 없는 반복을 요약 가능한 상태로 전환하기 위한 것이다.
+3. 여기서 `[질문 요약]`은 사용자가 눌러보기 전에도 무엇을 더 논의하는지 알 수 있을 정도로 구체적이어야 한다. 미결이 여러 개면 다음 우선순위로 1개를 고른다: `blocked-by`로 다른 질문들을 막고 있는 선행 질문 > 가장 최근 라운드에서 반복 정체된 질문 > 범위를 가장 많이 줄일 수 있는 질문.
+4. `"남은 미결 1개만 더 논의: [질문 요약]"`를 선택했는데 다음 라운드도 stagnation이면, 남은 쟁점을 open question으로 기록하고 Gate 3→4로 이동한다 (Step 4 직행 금지 — 카테고리 라벨링이 필요하다).
+5. 이 fallback은 토론을 강제로 닫기 위한 것이 아니라, 진전 없는 반복을 요약 가능한 상태로 전환하기 위한 것이다.
 
 **Gate 3→4**: `open_questions`를 확인한다.
 
 - 미결 질문 0건 → Step 4 진행
-- 미결 질문 1건+ → 미결 질문 목록을 제시하고 `AskUserQuestion`: "미결 질문이 N건 남아 있습니다. 추가 논의하시겠습니까?"
-  - "추가 논의" → Step 3 루프 복귀 (미결 질문 중심으로 probing)
+- 미결 질문 1건+ → 미결 질문 목록을 **짧은 요약과 함께** 제시하고 `AskUserQuestion`: "미결 질문이 N건 남아 있습니다. 어떤 질문을 더 논의할지 확인하시겠습니까?"
+  - `"이 질문 더 논의: [질문 요약]"` → Step 3 루프 복귀 (해당 미결 질문 중심으로 probing)
   - "그대로 정리 (미결로 기록)" → **카테고리 라벨링 강제** 후 Step 4 진행
 
 **카테고리 라벨링 강제 절차 ("그대로 정리" 선택 시):**
