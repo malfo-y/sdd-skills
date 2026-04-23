@@ -126,8 +126,9 @@
   - Review-Fix Loop에 아래 필드를 함께 명시해야 한다.
   - `phase exit criteria`
   - `carry-over policy`
-  - `final integration review`
+  - Step 4의 같은 레벨 섹션으로 `final integration review`를 별도 gate로 명시해야 한다.
 - `scope = per-phase`면 각 phase의 `implementation` 직후 즉시 같은 범위의 review -> fix -> re-review -> phase validation gate를 닫아야 한다. gate가 닫히기 전에는 다음 phase나 downstream step으로 진행할 수 없다.
+- 마지막 phase도 예외 없이 per-phase gate를 먼저 닫은 뒤에만 `final integration review`로 넘어갈 수 있다.
 - 필요하면 아래 선택 필드를 함께 명시할 수 있다.
   - `review_profile`
   - `fix_profile`
