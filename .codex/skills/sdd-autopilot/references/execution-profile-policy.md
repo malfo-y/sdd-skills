@@ -7,17 +7,17 @@
 
 | 용도 | agent_type | model | effort |
 |---|---|---|---|
-| 구조 탐색 빠른 스캔 | `explorer` | `gpt-5.4-mini` | `low` |
-| 도메인/리스크 탐색 | `explorer` | `gpt-5.4-mini` | `medium` |
-| feature draft 생성 | `feature_draft` | `gpt-5.4` | `xhigh` |
-| planned spec 반영 | `spec_update_todo` | `gpt-5.4` | `medium` |
-| phase/task 분해 계획 | `implementation_plan` | `gpt-5.4` | `xhigh` |
-| 실제 구현 | `implementation` | `gpt-5.4` | `high` |
-| 구현 리뷰 | `implementation_review` | `gpt-5.4` | `high` |
-| final integration review | `implementation_review` | `gpt-5.4` | `xhigh` |
-| done spec sync | `spec_update_done` | `gpt-5.4` | `medium` |
-| spec 감사성 검토 | `spec_review` | `gpt-5.4` | `high` |
-| 장기 검증 루프 초기화 | `ralph_loop_init` | `gpt-5.4` | `xhigh` |
+| 구조 탐색 빠른 스캔 | `explorer` | `gpt-5.5` | `low` |
+| 도메인/리스크 탐색 | `explorer` | `gpt-5.5` | `medium` |
+| feature draft 생성 | `feature_draft` | `gpt-5.5` | `xhigh` |
+| planned spec 반영 | `spec_update_todo` | `gpt-5.5` | `medium` |
+| phase/task 분해 계획 | `implementation_plan` | `gpt-5.5` | `xhigh` |
+| 실제 구현 | `implementation` | `gpt-5.5` | `high` |
+| 구현 리뷰 | `implementation_review` | `gpt-5.5` | `high` |
+| final integration review | `implementation_review` | `gpt-5.5` | `xhigh` |
+| done spec sync | `spec_update_done` | `gpt-5.5` | `medium` |
+| spec 감사성 검토 | `spec_review` | `gpt-5.5` | `high` |
+| 장기 검증 루프 초기화 | `ralph_loop_init` | `gpt-5.5` | `xhigh` |
 
 ## Precedence
 

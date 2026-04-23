@@ -1,7 +1,7 @@
 ---
 name: sdd-autopilot
 description: "적응형 오케스트레이터 메타스킬. /sdd-autopilot으로 호출하여 요구사항 분석부터 스펙 동기화까지 end-to-end SDD 파이프라인을 자율 실행한다."
-version: 2.3.4
+version: 2.3.6
 ---
 
 # SDD Autopilot
@@ -52,7 +52,7 @@ User Request
 ## Hard Rules
 
 1. **Discussion 인라인 실행 + `_sdd/spec/` 직접 수정 금지**: Step 2 대화는 autopilot 본문에서 직접 수행한다. global spec 수정은 반드시 `spec_update_done` / `spec_update_todo` 에이전트에 위임한다.
-2. **Phase 2 무중단 + 파일 기반 상태 전달**: Phase 2 진입 후 `request_user_input` 금지. 에이전트에는 파일 경로만 전달하며, 전체 출력을 부모 컨텍스트에 누적하지 않는다.
+2. **Phase 2 무중단 + 파일 기반 상태 전달**: Phase 2 진입 후 `request_user_input` 금지. 에이전트에는 파일 경로만 전달하며, 전체 출력을 부모 컨텍스트에 누적하지 않는다. Phase 2의 custom-agent step은 기본적으로 `Interaction Mode: autonomous-no-input`로 해석하며, 사용자 입력 요청 없이 권장안을 선택해 진행한다.
 3. **오케스트레이터 저장 + 공유 로그 필수**: 오케스트레이터는 `_sdd/pipeline/orchestrators/orchestrator_<topic>.md`에 저장한다. 실행 시 `_sdd/pipeline/log_<topic>_<timestamp>.md`를 생성하고 각 단계 완료 후 핵심 결정사항을 기록한다.
 4. **에이전트 호출 시 원문 전달**: 사용자의 원래 요청과 관련 컨텍스트 파일 경로를 포함한다. 의미를 잃을 정도로 축약하지 않는다.
 5. **Review-Fix 사이클 필수**: review 포함 파이프라인에서는 `implementation_review` agent로 review를 수행하고, 이슈 수정이 필요하면 `implementation` agent를 다시 호출해 fix를 적용한 뒤, 다시 `implementation_review` agent로 re-review를 수행해야 한다. 리뷰만 하고 끝나는 것은 불허한다.
@@ -177,6 +177,7 @@ planning precedence 메모:
 - `_sdd/drafts/*`, `_sdd/implementation/*`, `_sdd/pipeline/log_*`, `_sdd/pipeline/report_*`, 코드/테스트 출력은 future step의 planned output으로 선언할 수는 있지만 이 단계에서 미리 생성하면 안 된다.
 - 각 `implementation` step에는 같은 범위의 review-fix gate가 즉시 붙어야 한다.
 - `implementation-plan` output을 downstream `implementation`이 소비하는 expanded path면 해당 `implementation` step을 flat single-shot으로 쓰지 않고 `Execution Mode: phase-iterative`와 `Phase Source`를 명시한다.
+- Phase 2의 custom-agent step에는 `Interaction Mode: autonomous-no-input`을 기본으로 명시한다. 이 계약에는 `request_user_input` 금지, 권장안 우선 판단, 가정/근거 기록, 안전한 추론이 불가능할 때 질문 대신 `BLOCKED`로 종료하는 fallback이 포함된다.
 - review가 포함된 모든 path에서는 `implementation`/`implementation_review`/re-review를 모두 Codex custom agent step으로 유지한다. 부모 autopilot이 로컬 구현/로컬 리뷰로 대체하면 안 된다.
 - Reasoning Trace 3-6 bullet 간결 작성
 - 저장 경로: `_sdd/pipeline/orchestrators/orchestrator_<topic>.md`
@@ -195,6 +196,7 @@ Producer-Reviewer 패턴으로 검증한다.
 구조 검증:
 - 유효 `agent_type` 참조
 - step별 `agent_type` / 입출력 / 프롬프트 존재
+- Phase 2 custom-agent step의 `Interaction Mode`가 해석 가능하고, `autonomous-no-input` runtime contract와 모순되지 않는가
 - 산출물 handoff 정합성
 - `Review-Fix Loop` section/contract 존재
 - 각 `implementation` step 뒤에 같은 범위의 immediate review-fix gate가 해석 가능함
@@ -243,7 +245,7 @@ Phase 1 마지막 단계다. 아래를 사용자에게 짧게 공유한다.
 
 ### Step 7: Autonomous Execution (자율 실행)
 
-Phase 2 진입 후 `request_user_input`은 호출하지 않는다. 마일스톤 텍스트와 로그만 남긴다.
+Phase 2 진입 후 `request_user_input`은 호출하지 않는다. 마일스톤 텍스트와 로그만 남긴다. custom-agent step은 `Interaction Mode: autonomous-no-input`을 기본값으로 사용하며, 질문 대신 권장안 또는 `BLOCKED` 중 하나를 반환해야 한다.
 
 #### 7.1 파이프라인 초기화
 
@@ -258,10 +260,13 @@ Phase 2 진입 후 `request_user_input`은 호출하지 않는다. 마일스톤 
 각 step은 `Execute -> Collect -> Verify -> Record` 순서를 따른다.
 
 - custom-agent step이면 오케스트레이터에 적힌 Codex `agent_type`으로 호출한다.
+- custom-agent step이면 오케스트레이터의 `Interaction Mode`를 함께 해석한다. 값이 없으면 `autonomous-no-input`으로 간주한다.
 - 프로파일 우선순위는 `step-level Execution profile` -> `Execution Profiles` section 기본값 -> `references/execution-profile-policy.md` 기본값 순서다.
 - 로컬 step이면 오케스트레이터에 적힌 skill 또는 명령을 실행한다.
 - step별 필드, 허용 `agent_type`, Exit Criteria, Acceptance Criteria는 오케스트레이터 본문과 `references/orchestrator-contract.md`를 그대로 따른다.
 - 오케스트레이터에 적힌 출력 파일은 현재 step이 실제로 생성한 materialized output과 future step의 planned output을 구분해 해석한다. 각 step은 자신의 선언된 출력만 materialize하며, 아직 실행되지 않은 downstream step의 planned output을 미리 생성하지 않는다.
+- `autonomous-no-input` step을 호출할 때는 런타임 지시를 함께 준다: `request_user_input` 또는 동등한 사용자 확인 금지, 기존 코드/스펙/오케스트레이터/원문 요청에 가장 잘 맞는 권장안을 우선 선택, 모든 핵심 가정과 판단 근거를 출력 파일에 기록, 안전한 추론이 불가능하면 질문 대신 `BLOCKED` 상태와 `blocked_reason`, `why_not_safe_to_assume`, `recommended_next_action`을 남긴다.
+- `autonomous-no-input` step이 사용자 질문만 남기거나 입력 대기를 유도하면 contract violation으로 간주한다. autopilot은 더 강한 no-input 지시로 최대 1회 재-spawn할 수 있고, 재발하면 해당 step을 `BLOCKED` 또는 `failed`로 기록한다.
 - review 포함 path에서는 `implementation`/`implementation_review`를 항상 Codex custom agent 호출로 실행한다. 부모 autopilot이 local implementation/review로 대체하지 않는다.
 - `implementation` step은 단독 완료가 아니다. 같은 범위의 `Review-Fix Loop` exit condition과 required validation이 닫혀야만 해당 step을 `completed`로 기록할 수 있다.
 - single-phase path이거나 `Review-Fix Loop.scope = global`이면 `implementation` step 직후 즉시 global review-fix loop를 수행한다. 이 gate가 닫히기 전에는 `spec_update_done`을 포함한 다음 downstream step으로 진행할 수 없다.
@@ -284,6 +289,7 @@ Phase 2 진입 후 `request_user_input`은 호출하지 않는다. 마일스톤 
 #### 7.4 에러 핸들링
 
 에러 처리는 오케스트레이터의 `Error Handling` section과 `references/orchestrator-contract.md`를 따른다.
+`autonomous-no-input` step의 `BLOCKED` 반환은 hang이 아니라 유효한 controlled stop으로 해석하며, autopilot은 `blocked_reason`과 권장 후속 조치를 로그/보고서에 기록한 뒤 오케스트레이터의 분기 규칙에 따라 재시도 또는 중단을 결정한다.
 재시도, 중단, 건너뛰기 결정은 모두 로그에 남긴다.
 
 #### 7.5 마일스톤 보고 + 로그 관리

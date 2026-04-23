@@ -46,7 +46,7 @@
 
 - `Execution profile`
   - `profile_key` 또는 `model / reasoning_effort` 표시를 허용한다.
-  - 예: `draft_strict` (`gpt-5.4 / xhigh`)
+  - 예: `draft_strict` (`gpt-5.5 / xhigh`)
   - step-level 프로파일은 전체 `Execution Profiles` section을 생략한 경우에도 사용할 수 있다.
   - 기본 policy와 완전히 동일하고 해석 여지가 없으면 step-level 표기도 생략할 수 있다.
   - step-level 프로파일은 같은 agent_type에 대한 section-level 기본값보다 우선한다.
@@ -56,6 +56,10 @@
 - `Phase Source`
   - `Execution Mode: phase-iterative` implementation step일 때 필수다.
   - 값은 runtime에 읽을 `implementation_plan` output 경로다.
+- `Interaction Mode`
+  - `autonomous-no-input` 또는 `interactive-ok`를 허용한다.
+  - `sdd-autopilot`의 Phase 2 custom-agent step은 명시가 없으면 `autonomous-no-input`으로 간주한다.
+  - `interactive-ok`는 Phase 2 custom-agent step에는 사용할 수 없다. Step 6 이전의 interactive phase나 autopilot 바깥의 수동 실행에만 의미가 있다.
 
 허용 `agent_type`:
 
@@ -74,6 +78,9 @@
 - review가 포함된 path에서는 `implementation`과 `implementation_review`를 항상 custom-agent step으로 사용한다. autopilot 부모가 local inline implementation/review로 대체하면 안 된다.
 - downstream `implementation` step이 `implementation_plan` output을 소비하면, 해당 step은 `Execution Mode: phase-iterative`와 `Phase Source`를 함께 선언해야 한다.
 - 오케스트레이터의 `출력 파일`에 적힌 future artifact는 planned output이며, 현재 실행 중인 step만 자신의 출력물을 materialize할 수 있다.
+- `Interaction Mode: autonomous-no-input` step은 `request_user_input` 또는 동등한 사용자 확인을 호출하면 안 된다. 모호성은 기존 코드/스펙/오케스트레이터/사용자 원문 요청에 가장 잘 맞는 권장안으로 해소하고, 그 근거와 가정을 출력 파일에 기록해야 한다.
+- `Interaction Mode: autonomous-no-input` step은 안전한 추론이 불가능하면 질문으로 멈추지 말고 `BLOCKED` 상태로 종료한다. 최소 출력은 `blocked_reason`, `why_not_safe_to_assume`, `recommended_next_action`를 포함해야 한다.
+- interactive-only skill 또는 사용자 입력이 Hard Rule인 로컬 step은 autopilot Phase 2 step으로 배치하면 안 된다.
 
 ## 3. Global vs Temporary Spec Contract
 
@@ -146,6 +153,16 @@
   - `re-review invocation prompt contract`
   - multi-phase path인 경우 `final integration review prompt contract`
 
+### Autonomous-No-Input Prompt Contract
+
+`Interaction Mode: autonomous-no-input` custom-agent step의 프롬프트 계약에는 가능하면 아래 항목을 함께 명시한다.
+
+- 사용자 입력 요청 금지 (`request_user_input` 및 동등 동작 금지)
+- 판단 우선순위: 기존 코드/스펙 패턴 -> 사용자 원문 요청 -> 오케스트레이터의 recommended path -> 최소 변경/보수적 선택
+- 핵심 가정과 판단 근거를 출력 파일에 기록
+- 안전한 추론 불가 시 질문 대신 `BLOCKED` 반환
+- `BLOCKED` 출력 형식: `blocked_reason`, `why_not_safe_to_assume`, `recommended_next_action`
+
 ## 7. Test Strategy Contract
 
 반드시 포함할 필드:
@@ -192,6 +209,7 @@
 - 재시도 횟수
 - 핵심 단계
 - 비핵심 단계
+- `BLOCKED` 반환 처리 규칙 (`retry`, `stop`, `fallback` 중 어느 분기를 타는지)
 
 ## 10. Pipeline Log Contract
 
@@ -206,7 +224,7 @@
 ### Status Table
 - Step
 - Agent
-- Status
+- Status (`pending`, `in_progress`, `completed`, `blocked`, `failed`)
 - Output
 
 ### Execution Log Entries
