@@ -25,6 +25,7 @@ model: inherit
 - [ ] 각 phase에 `goal`, `task set / dependency closure`, `validation focus`, `exit criteria`, `carry-over policy`가 포함된다. single-phase plan도 동일 metadata를 가진 1개 phase로 표현한다.
 - [ ] phase, dependency, risk, open question이 빠지지 않는다.
 - [ ] `_sdd/spec/`는 읽기만 하고 직접 수정하지 않는다.
+- [ ] Plan에 Self-Containment Check (Pass 1 reference enumeration + Pass 2 fresh-reader readthrough) 수행 및 갭 위치/보완 흔적 기록.
 
 ## Hard Rules
 
@@ -38,6 +39,7 @@ model: inherit
 8. `feature-draft` Part 2가 이미 충분히 명확하면 plan 전체를 다시 쓰지 말고 unresolved dependency나 phase detail만 보강한다.
 9. non-trivial planning의 기본 진입은 `feature-draft`다. `implementation-plan`은 `feature-draft` 이후 deeper breakdown 단계로 사용하고, standalone usage는 동등한 temporary spec/기존 plan artifact가 이미 있을 때만 허용한다.
 10. multi-phase plan이면 phase metadata를 반드시 명시한다. `medium` 이슈도 기본적으로 phase exit blocker이며, carry-over는 explicit policy가 있을 때만 허용한다.
+11. **Self-Contained Authoring**: Plan 본문은 외부 문서/작성 대화 의존 없이 독자 단독으로 의도·근거·참조를 따라갈 수 있게 작성한다. Rule 1 (Decision & Assumption Surfacing): 결정·가정은 어디서 도출됐든 이 문서에 명시 기록. 외부 결정도 (a) 내용 재진술 + (b) 출처 Rule 2 grounding. Rule 2 (Reference Grounding): 외부 참조는 bare path 금지, 이 문서 판단과의 연결을 inline 서술, 대명사적 지시 금지. Rule 3 (Vocabulary Grounding): 고유 용어 최초 사용 시 1줄 정의 또는 참조. grounding은 재진술·요약이며 복사 아님 (Thinness 축과 상보).
 
 ## Input Sources
 

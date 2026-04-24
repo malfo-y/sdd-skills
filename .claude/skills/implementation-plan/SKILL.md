@@ -24,6 +24,7 @@ version: 2.2.0
 - [ ] 각 phase에 `goal`, `task set / dependency closure`, `validation focus`, `exit criteria`, `carry-over policy`가 포함된다. single-phase plan도 동일 metadata를 가진 1개 phase로 표현한다.
 - [ ] phase, dependency, risk, open question이 빠지지 않는다.
 - [ ] `_sdd/spec/`는 읽기만 하고 직접 수정하지 않는다.
+- [ ] Plan 본문이 Self-Contained Authoring 원칙(Rule 1/2/3)을 따르며, Self-Containment Check (Pass 1 + Pass 2)를 수행하고 흔적(갭 위치와 보완 내용)을 기록한다.
 
 ## Hard Rules
 
@@ -37,6 +38,11 @@ version: 2.2.0
 8. `feature-draft` Part 2가 이미 충분히 명확하면 plan 전체를 다시 쓰지 말고 unresolved dependency나 phase detail만 보강한다.
 9. non-trivial planning의 기본 진입은 `feature-draft`다. `implementation-plan`은 `feature-draft` 이후 deeper breakdown 단계로 사용하고, standalone usage는 동등한 temporary spec/기존 plan artifact가 이미 있을 때만 허용한다.
 10. multi-phase plan이면 phase metadata를 반드시 명시한다. `medium` 이슈도 기본적으로 phase exit blocker이며, carry-over는 explicit policy가 있을 때만 허용한다.
+11. **Self-Contained Authoring**: 이 plan 산출 문서는 외부 문서나 작성 대화에 암묵 의존하지 않고 reader 단독으로 의도·근거·참조를 따라갈 수 있게 작성한다. 이 원칙은 아래 세 sub-rule로 구성된다.
+    - **Rule 1 (Decision & Assumption Surfacing)**: 이 문서의 실행에 필요한 모든 결정과 가정은 — 작성 대화, 다른 문서, 이전 토론 어디서 도출됐든 — 이 문서에 명시적으로 기록한다. "이미 결정됐으니"라는 이유로 생략하지 않는다. 외부에서 확정된 결정이라도 (a) 결정 내용 자체를 재진술하고 (b) 출처를 Rule 2 형식으로 grounding한다.
+    - **Rule 2 (Reference Grounding)**: 외부 참조(spec 조항, 코드 경로, 결정 로그 등)는 bare path만 남기지 않는다. 참조가 이 문서의 어떤 판단·변경과 연결되는지 inline으로 서술한다. "the X 수정" 류 대명사적 지시는 금지하고 경로/ID를 명시한다.
+    - **Rule 3 (Vocabulary Grounding)**: 프로젝트 고유 용어·개념은 최초 사용 시 1줄 정의 또는 Rule 2 준수 참조를 동반한다.
+    - **Thinness 축과의 관계**: grounding은 재진술·요약이지 복사가 아니므로 `SDD_SPEC_DEFINITION.md`의 Thinness/Anti-duplication 축과 층위가 다르다 (Thinness는 "복사하지 마라", 본 원칙은 "쓴다면 이렇게"). 상보적으로 적용한다.
 
 ## Input Sources
 
@@ -272,6 +278,20 @@ Task 템플릿:
 ## Optional Writing Helper
 
 문서가 길어지면 이 agent가 먼저 skeleton/섹션 헤더를 직접 저장한 뒤 같은 흐름에서 내용을 채운다. 의존 섹션은 순차 fill하고, 독립 섹션은 필요 시 `worker` agent로 bounded 병렬 fill할 수 있다. plan의 필수 구조와 task 내용 결정은 이 agent가 책임진다.
+
+## Self-Containment Check
+
+Plan 본문에 대해 아래 두 pass를 수행하고 흔적을 기록한다. 이 check는 Hard Rule 11 (Self-Contained Authoring)의 검증 절차이다.
+
+**Pass 1 (Reference Enumeration)**: Plan에 등장하는 모든 외부 파일 경로, spec 조항 ID, 결정 로그 참조, feature-draft 링크를 추출해 목록화한다. 각 항목이 이 문서의 어떤 판단·변경과 연결되는지 inline 서술을 동반하는지 확인한다. 미동반 항목은 해당 위치로 돌아가 Rule 2에 따라 보완한다.
+
+**Pass 2 (Fresh-Reader Readthrough)**: 작성 대화와 외부 파일 접근 없는 독자 관점에서 Plan의 각 섹션을 순회한다. 각 섹션의 지시·결정·전제 문장에 대해 "이 문장을 따르려면 독자가 뭘 알아야 하는가?" 질문을 던져 답이 문서 내에 없으면 해당 결정·가정이 누락된 것이므로 Rule 1에 따라 surfacing한다.
+
+**흔적 기록 (필수)**: Plan 말미에 다음 체크리스트를 포함한다. 공허한 값("검토: N, 갭: 0" 식)은 금지 — 발견한 각 갭의 위치와 보완 내용을 구체적으로 적는다.
+- 검토 섹션 수: N
+- Pass 1 발견 갭 및 보완: (각 갭의 위치와 보완 내용)
+- Pass 2 발견 갭 및 보완: (각 갭의 위치와 보완 내용)
+- 보완 완료: Yes / No
 
 ## Final Check
 

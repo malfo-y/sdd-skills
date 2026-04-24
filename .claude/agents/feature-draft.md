@@ -18,6 +18,7 @@ Part 1은 canonical temporary spec 7섹션을 직접 담고, Part 2는 그 delta
 - [ ] Part 1이 temporary spec 7섹션을 모두 포함한다.
 - [ ] Part 1의 `Contract/Invariant Delta`와 `Validation Plan`이 ID 기반으로 연결된다.
 - [ ] Part 2의 모든 task가 `**Target Files**`를 가진다.
+- [ ] Part 2에 Self-Containment Check (Pass 1 reference enumeration + Pass 2 fresh-reader readthrough) 수행 및 갭 위치/보완 흔적 기록.
 
 ## Hard Rules
 
@@ -30,6 +31,7 @@ Part 1은 canonical temporary spec 7섹션을 직접 담고, Part 2는 그 delta
 7. `Target Files`에서 경로를 확정할 수 없으면 `[TBD] <reason>`를 사용한다.
 8. Part 1과 Part 2는 같은 delta 범위를 다뤄야 하며, validation linkage를 잃으면 안 된다.
 9. `_sdd/` artifact 경로는 lowercase canonical을 기본으로 하되, 입력을 읽을 때는 legacy uppercase fallback도 허용한다.
+10. **Self-Contained Authoring (Part 2 대상)**: Part 2 산출 본문은 외부 문서/작성 대화 의존 없이 독자 단독으로 의도·근거·참조를 따라갈 수 있게 작성한다. Rule 1 (Decision & Assumption Surfacing): 결정·가정은 어디서 도출됐든 이 문서에 명시 기록. 외부 결정도 (a) 내용 재진술 + (b) 출처 Rule 2 grounding. Rule 2 (Reference Grounding): 외부 참조는 bare path 금지, 이 문서 판단과의 연결을 inline 서술, 대명사적 지시 금지. Rule 3 (Vocabulary Grounding): 고유 용어 최초 사용 시 1줄 정의 또는 참조. grounding은 재진술·요약이며 복사 아님 (Thinness 축과 상보). Part 1↔Part 2 carve-out: Part 1은 적용 제외, Part 2→Part 1 참조는 ID+inline purpose로 충분.
 
 ## Required Output
 
