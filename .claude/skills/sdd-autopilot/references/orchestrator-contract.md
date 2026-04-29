@@ -53,21 +53,33 @@
 - review가 포함된 path에서는 `implementation`과 `implementation-review`를 항상 subagent step으로 사용한다. autopilot 부모가 local inline implementation/review로 대체하면 안 된다.
 - downstream `implementation` step이 `implementation-plan` output을 소비하면, 해당 step은 `Execution Mode: phase-iterative`와 `Phase Source`를 함께 선언해야 한다.
 - 오케스트레이터의 `출력 파일`에 적힌 future artifact는 planned output이며, 현재 실행 중인 step만 자신의 출력물을 materialize할 수 있다.
+- **Invariant (Phase Source 출처)**: `Execution Mode: phase-iterative`가 선언된 step의 `Phase Source`는 반드시 `implementation-plan` output이어야 한다. `feature-draft` 산출물을 `Phase Source`로 사용하면 Step 5 verification에서 reject하고 `implementation-plan` step을 파이프라인에 삽입한다.
+- **Invariant (multi-phase ⇒ implementation-plan 의무)**: 오케스트레이터 생성 시 multi-phase 실행으로 판단되면, planning precedence에서 `implementation-plan`을 반드시 포함한다. feature-draft → implementation 직행은 single-phase 경로에 한정한다.
 
 ### Model Routing
 
-각 subagent 호출 시 아래 모델을 `model` 파라미터로 지정한다. 에이전트 정의 파일의 프론트매터에도 동일하게 설정되어 있으므로, 오케스트레이터가 명시하지 않아도 기본값으로 적용된다. 오케스트레이터가 `model`을 명시하면 프론트매터보다 우선한다.
+각 subagent 호출 시 아래 모델을 `model` 파라미터로 명시한다. 에이전트 정의 파일의 프론트매터는 `model: inherit`이므로 부모(autopilot)가 호출 시점에 전달한 `model` 값이 그대로 사용된다. 오케스트레이터는 step별로 모델을 명시해 이 표를 그대로 집행한다.
 
 | subagent_type          | model    | 근거                              |
 |------------------------|----------|-----------------------------------|
 | `feature-draft`        | `opus`   | 설계 판단, 스펙 구조화             |
 | `implementation-plan`  | `opus`   | 의존성 분석, 실행 순서 설계         |
-| `implementation`       | `opus`   | 코드 품질, 정확성                  |
+| `implementation`       | `sonnet` | 코드 작성·반복 적용 (효율 최적화)   |
 | `implementation-review`| `opus`   | 구현 깊이 분석, 결함 발견           |
 | `ralph-loop-init`      | `opus`   | 테스트 전략 설계, 고수준 판단       |
 | `spec-update-todo`     | `sonnet` | diff 기반 스펙 반영                |
 | `spec-update-done`     | `sonnet` | diff 기반 스펙 반영                |
 | `spec-review`          | `sonnet` | 스펙 간 비교 분석                  |
+
+#### Review-Fix Gate Model Assignment
+
+review-fix gate(single-phase global, multi-phase per-group, final integration review 모두 포함)에서는 호출 역할마다 모델을 분리해서 명시한다.
+
+- `review` / `re-review` -> `implementation-review` (`opus`)
+- `fix` -> `implementation` (`sonnet`)
+- `final integration review` -> `implementation-review` (`opus`)
+
+오케스트레이터의 `agent_mapping`은 모델을 함께 표기한다. 예: `review = implementation-review (model: opus)`, `fix = implementation (model: sonnet)`, `re-review = implementation-review (model: opus)`. autopilot이 gate를 집행할 때 표기된 모델을 그대로 `model` 파라미터로 전달한다.
 
 ## 3. Global vs Temporary Spec Contract
 
@@ -96,7 +108,7 @@
 
 ## 6. Review-Fix Contract
 
-- scope (`global` 또는 `per-phase`)
+- scope (`global` 또는 `per-group`)
 - 최대 반복 횟수
 - 종료 조건 (`critical = 0 AND high = 0 AND medium = 0`)
 - 수정 대상 (`critical/high/medium/low`)
@@ -105,31 +117,35 @@
 
 추가 규칙:
 
-- multi-phase `implementation-plan`을 소비하면 기본값은 `scope = per-phase`다. single-phase path나 direct path만 `scope = global`을 기본으로 둘 수 있다.
-- review-fix loop는 파이프라인 후처리 섹션이 아니라 각 `implementation` 실행 단위의 immediate completion gate다.
+- multi-phase `implementation-plan`을 소비하면 기본값은 `scope = per-group`이다. single-phase path나 direct path만 `scope = global`을 기본으로 둘 수 있다.
+- review-fix loop는 파이프라인 후처리 섹션이 아니라 각 group의 immediate completion gate다.
 - autopilot은 review-fix loop를 추상 단계로 두지 않는다. small/medium/large review path 모두 review step은 반드시 `implementation-review` subagent 호출이고, fix step은 반드시 `implementation` subagent 재호출이다. local inline fallback은 허용되지 않는다.
 - single-phase path이거나 `scope = global`이면 해당 `implementation` step 직후 즉시 review -> fix -> re-review gate를 수행하고, 종료 조건 충족 전에는 다음 downstream step으로 진행할 수 없다.
-- review가 포함된 path의 `implementation` step에는 implementation 직후 실행되는 invocation contract가 명시되어야 한다. 최소한 아래를 포함한다.
+- review가 포함된 path의 review-fix gate(single-phase global / per-group의 group gate / final integration review 모두 포함)에는 gate 직후 실행되는 invocation contract가 명시되어야 한다. 최소한 아래를 포함한다.
   - autopilot이 `implementation-review` subagent를 즉시 호출한다는 사실
-  - review 입력에 포함할 파일/증거
+  - review 입력에 포함할 파일/증거 (해당 gate 범위의 변경 파일 전체 + 관련 테스트 결과)
   - review 프롬프트 계약
   - fix 재호출 조건과 fix 프롬프트 계약
   - re-review 재호출 조건과 re-review 프롬프트 계약
-- `scope = per-phase`면 아래 조건을 함께 충족해야 한다.
+- `scope = per-group`이면 아래 조건을 함께 충족해야 한다.
+  - **Group 경계**: `implementation-plan` output의 각 phase에 `Checkpoint: true/false` 필드가 있다. `Checkpoint=true` phase 직후에 review-fix gate를 닫는다. 마지막 phase는 explicit 값과 무관하게 implicit `Checkpoint=true`로 처리한다.
+  - **Group 내 phase**(Checkpoint=false)는 light validation(test/typecheck/exit criteria)만 수행한다. review-fix gate 없이 다음 phase로 진행한다.
+  - **Mid-group emergency**: group 내 phase의 light validation이 `critical` 이슈를 잡으면 group boundary forced early로 즉시 review-fix gate를 트리거한다.
   - downstream `implementation` step에 `Execution Mode: phase-iterative`와 `Phase Source`가 선언되어 있어야 한다.
   - Review-Fix Loop에 아래 필드를 함께 명시해야 한다.
-  - `phase exit criteria`
-  - `carry-over policy`
-  - Step 4의 같은 레벨 섹션으로 `final integration review`를 별도 gate로 명시해야 한다.
-- `scope = per-phase`면 각 phase의 `implementation` 직후 즉시 같은 범위의 review -> fix -> re-review -> phase validation gate를 닫아야 한다. gate가 닫히기 전에는 다음 phase나 downstream step으로 진행할 수 없다.
-- 마지막 phase도 예외 없이 per-phase gate를 먼저 닫은 뒤에만 `final integration review`로 넘어갈 수 있다.
-- `medium` 이슈도 기본적으로 phase exit blocker다. carry-over는 정책이 명시적으로 허용하는 severity/조건/로그 근거가 있을 때만 가능하다.
-- `final integration review`는 마지막 phase 이후에 반드시 1회 실행한다.
+    - `group exit criteria`
+    - `carry-over policy`
+    - `group boundary` (Checkpoint=true phase 목록 또는 "마지막 phase 1회" 같은 표현)
+- `scope = per-group`이면 각 Checkpoint phase 직후 즉시 같은 group 범위의 review -> fix -> re-review -> group validation gate를 닫아야 한다. gate가 닫히기 전에는 다음 group이나 downstream step으로 진행할 수 없다.
+- `medium` 이슈도 기본적으로 group exit blocker다. carry-over는 정책이 명시적으로 허용하는 severity/조건/로그 근거가 있을 때만 가능하다.
+- **Final integration review (adaptive)**:
+  - 그룹 1개 (전체 plan의 Checkpoint gate가 1회만 발생): 마지막 group gate가 final integration review를 겸한다. 별도 1회를 추가하지 않는다.
+  - 그룹 2개 이상: 마지막 group gate 후 cross-group regression 전용으로 `final integration review`를 1회 추가 실행한다.
 - `Review-Fix Loop`에는 가능하면 아래 invocation prompt contract를 함께 명시한다.
   - `review invocation prompt contract`
   - `fix invocation prompt contract`
   - `re-review invocation prompt contract`
-  - multi-phase path인 경우 `final integration review prompt contract`
+  - 그룹 2개 이상인 경우 `final integration review prompt contract` (필수)
 
 ## 7. Test Strategy Contract
 
@@ -158,7 +174,8 @@
 - `Contract/Invariant Delta Coverage` 존재
 - task와 `Target Files`가 정의됨
 - `feature-draft` 이후 확장 단계인지, 또는 standalone 예외인지가 드러남
-- 각 phase에 `goal`, `task set / dependency closure`, `validation focus`, `exit criteria`, `carry-over policy`가 포함됨
+- 각 phase에 `goal`, `task set / dependency closure`, `validation focus`, `exit criteria`, `carry-over policy`, `checkpoint`가 포함됨
+- `Checkpoint=true` phase는 이유를 설명하는 `Checkpoint Reason` 한 줄을 동반함
 - downstream `implementation` step이 이 artifact를 소비할 때는 `Execution Mode: phase-iterative`와 `Phase Source`로 연결되어야 함
 
 ### spec-update-todo

@@ -2,8 +2,8 @@
 
 > Markdown 기반 skill bundle로 AI 에이전트의 Spec-Driven Development 워크플로우를 Claude Code와 Codex에서 공통 계약으로 실행한다.
 
-**Spec Version**: 4.1.8
-**Last Updated**: 2026-04-13
+**Spec Version**: 4.1.9
+**Last Updated**: 2026-04-29
 **Status**: Approved
 **Canonical Role**: current thin global spec
 
@@ -62,7 +62,7 @@ SDD Skills는 이 문제를 `SKILL.md = 실행 가능한 프롬프트`라는 관
 - wrapper-backed skill은 사용자 entrypoint와 artifact contract를 유지해야 하며, 지원하지 않는 동작을 조용히 흉내내지 않는다
 - review나 validation이 포함된 workflow는 review-only로 닫지 않고 fix/re-review 또는 명시적 잔여 이슈 보고로 마무리한다
 - non-trivial planning은 기본적으로 `feature-draft`에서 시작하고, `implementation-plan`은 phase/task 세분화가 필요할 때만 follow-up expansion으로 붙인다
-- multi-phase plan은 문서 장식이 아니라 execution gate다. phase별 `implementation -> review -> fix -> validation`을 닫아야 하며 마지막에 `final integration review`를 1회 더 수행한다
+- multi-phase plan은 문서 장식이 아니라 execution gate다. `implementation-plan`의 phase `Checkpoint` 필드가 group boundary를 결정하며, `Checkpoint=true` phase 직후에만 review-fix gate를 닫는다. group 내 phase는 light validation만 수행한다. final integration review는 그룹 수에 따라 adaptive하게 처리한다 (1개 그룹이면 마지막 group gate가 겸함, 2개+ 이상이면 별도 1회 추가).
 - skill-defined output artifact의 이력 관리는 `prev/` 백업 체인보다 append-only artifact와 git history를 기본으로 사용한다
 - spec mutation은 target file을 식별한 뒤에만 수행한다
 - current spec model과 workflow semantics의 기준은 [docs/SDD_SPEC_DEFINITION.md](../../docs/SDD_SPEC_DEFINITION.md)와 [docs/SDD_WORKFLOW.md](../../docs/SDD_WORKFLOW.md)에 둔다
@@ -91,7 +91,7 @@ SDD Skills의 설계는 네 층으로 나뉜다.
 | 장문 산출물 작성 | producer-owned inline 2-phase writing | skeleton/fill/finalize를 같은 문맥에서 처리해 품질 저하를 줄인다 |
 | 오케스트레이션 | reasoning-based `sdd-autopilot` | 고정 템플릿보다 현재 맥락에 맞는 pipeline을 구성할 수 있다 |
 | planning precedence | small direct path 외에는 `feature-draft`를 기본 planning entry로 두고 `implementation-plan`은 후속 확장 단계로 사용 | non-trivial 변경에서 peer-choice 혼선을 줄이고 task/phase 분해 기준을 일정하게 유지한다 |
-| multi-phase quality gate | `per-phase` review-fix + mandatory `final integration review` | phase 경계에서 결함을 닫고 cross-phase regression을 늦게 발견하는 위험을 줄인다 |
+| multi-phase quality gate | `per-group` review-fix (Checkpoint boundary) + adaptive `final integration review` | 의미 있는 group 단위로 review depth를 높이고, review 비용과 latency를 줄이면서 cross-group regression은 adaptive final review로 커버한다 |
 | spec 구조 | thin global spec + execution-focused temporary spec | 장기 기준과 일회성 실행 정보를 분리해 drift를 줄인다 |
 | artifact naming/history | lowercase canonical artifact를 기본으로 하고, skill contract가 정의한 output surface는 dated slug naming과 git-history-first 추적을 따른다 | 산출물 경로 추론을 단순화하고 legacy fixed-name drift를 줄인다 |
 | canonical rollout 순서 | `definition -> generators/transformers -> consumers/planners -> docs -> english mirrors/examples -> audit` | definition, skill behavior, human docs drift를 줄인다 |

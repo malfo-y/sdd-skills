@@ -2,6 +2,16 @@
 
 > 이 파일은 `_sdd/spec/main.md`의 버전별 변경 기록이다.
 
+#### v4.1.9 (2026-04-29)
+
+- **multi-phase quality gate를 per-phase에서 per-group으로 전환**: `implementation-plan` schema에 6번째 필드 `Checkpoint: true/false`를 추가해 group boundary owner를 plan에 두고, autopilot은 `Checkpoint=true` phase 직후에만 review-fix gate를 닫는다. 마지막 phase는 implicit `Checkpoint=true`. `Checkpoint=true` phase에는 `Checkpoint Reason` 한 줄을 동반.
+- **Mid-group emergency 추가**: group 내 phase의 light validation에서 `critical` 이슈를 잡으면 group boundary forced early로 즉시 review-fix gate 트리거.
+- **Adaptive final integration review**: group 1개면 마지막 group gate가 final을 겸하고, 2개 이상이면 마지막 group gate 후 cross-group regression 전용 1회 추가.
+- **Multi-phase ⇒ implementation-plan 의무 (Phase Source invariant)**: multi-phase 실행 시 `implementation-plan` step을 반드시 포함하고, `Phase Source`는 그 output만 가리키도록 강제. 위반 시 autopilot이 reject하고 `feature-draft` 직후에 `implementation-plan` step을 삽입한다.
+- **Backward compat**: `Checkpoint` 필드가 없는 기존 plan은 단일 group 동작(마지막 phase 1회 gate)과 동등하게 처리.
+- **supporting docs sync**: `components.md`, `usage-guide.md`를 per-group + adaptive 표현으로 갱신.
+- 입력: `_sdd/discussion/2026-04-29_discussion_phase_grouped_review_fix_gate.md`, `_sdd/drafts/2026-04-29_feature_draft_phase_grouped_review_fix_gate.md`, `_sdd/implementation/2026-04-29_implementation_review_phase_grouped_review_fix_gate.md`, `_sdd/implementation/2026-04-29_implementation_review_phase_grouped_review_fix_gate_pass2.md`
+
 #### v4.1.8 (2026-04-13)
 
 - **spec lifecycle shared-core sync**: `spec-create`, `spec-review`, `spec-rewrite`, `spec-upgrade`의 공통 코어 4축과 스킬별 1차 추가 축을 supporting surface 설명에 반영

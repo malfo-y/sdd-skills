@@ -1,5 +1,50 @@
 # Decision Log
 
+## 2026-04-29 - Phase-grouped review-fix gate with adaptive final integration review (v4.1.8 -> v4.1.9 spec revision)
+
+### Context
+
+기존 multi-phase quality gate는 `per-phase` review-fix를 모든 phase에 강제했다. 8 phase 같은 큰 plan에서는 review/fix 횟수가 그대로 phase 수에 비례해 늘어나면서, 같은 의존 관계 안에서 같은 코드를 여러 번 다른 시점에 review하는 비효율이 누적됐다. 사용자는 phase들을 의미 있는 단위로 묶어 그 단위가 끝날 때만 review-fix gate가 닫히는 방식을 제안했다.
+
+이번 라운드에서는 (a) implementation-plan output의 각 phase에 group boundary 결정용 필드(`Checkpoint`)를 추가하고, (b) autopilot이 그 boundary를 읽어 `per-group` gate를 집행하도록 contract를 정렬했으며, (c) 그룹 수에 따라 final integration review를 adaptive하게 처리하도록 했다. 동시에 `phase exit/phase gate/cross-phase` 같은 기존 표현을 group equivalent로 일괄 갱신했다.
+
+### Decision
+
+1. **`implementation-plan` schema에 `Checkpoint: true/false` 필드 추가**: 각 phase가 group의 마지막인지 표시하는 6번째 필드를 6필드 schema(goal, task set/dep, validation, exit criteria, carry-over, **checkpoint**)로 정착. `Checkpoint=true`이면 그 phase 직후 review-fix gate를 닫는다. `Checkpoint=true` phase에는 이유를 기록하는 `Checkpoint Reason` 한 줄을 동반한다. 기본값 `Checkpoint=false`이고 마지막 phase는 explicit 값과 무관하게 implicit `Checkpoint=true`로 처리한다.
+2. **review-fix gate scope를 `per-phase`에서 `per-group`으로 전환**: group은 연속된 `Checkpoint=false` phase들 + 그것을 닫는 `Checkpoint=true` phase의 묶음이다. group 내 phase는 light validation(test/typecheck/exit criteria)만 수행하고, group의 마지막에서만 full review-fix-validation gate를 닫는다.
+3. **Mid-group emergency**: group 내 phase의 light validation에서 `critical` 이슈가 잡히면 group boundary를 forced early로 즉시 review-fix gate를 트리거한다.
+4. **Adaptive final integration review**: 전체 plan에서 group이 1개면 마지막 group gate가 final integration review를 겸한다. group이 2개 이상이면 마지막 group gate 후 cross-group regression 전용으로 final integration review를 1회 추가 실행한다.
+5. **Multi-phase ⇒ implementation-plan 의무 (Phase Source invariant)**: multi-phase 실행이 필요하면 반드시 `implementation-plan` step을 포함하고, downstream `implementation`의 `Phase Source`는 `implementation-plan` output을 가리킨다 (`feature-draft` 산출물 사용 금지).
+6. **Backward compatibility**: 기존 plan에 `Checkpoint` 필드가 없으면 모든 phase를 `Checkpoint=false`로 간주하고 마지막 phase의 implicit `Checkpoint=true` 1회만 gate를 닫는다 — 단일 group 동작과 동등.
+
+### Rationale
+
+- 의존 관계가 강한 phase 묶음을 한 번에 평가하면 review-fix 횟수와 latency가 크게 줄어들면서도, group 단위로 리뷰 깊이가 상승해 같은 commit-set 안에서 cross-cutting 결함을 잡기 쉽다.
+- group 경계 결정은 plan을 작성하는 시점에서 가장 잘 알 수 있다. 따라서 boundary metadata는 autopilot 추론이 아니라 `implementation-plan` output에 owner를 둔다.
+- `Checkpoint Reason`은 사후 디버깅·tracing에서 group 경계가 왜 거기에 있는지를 즉시 회수하기 위한 최소 trace다.
+- 1개 그룹에서 final integration review를 별도로 두면 마지막 group gate와 100% 중복되므로 adaptive 처리가 필요하다.
+- multi-phase에서 `feature-draft` Part 2를 직접 `Phase Source`로 쓰면 phase boundary 해석이 흔들리므로, `implementation-plan` output을 single source of truth로 고정한다.
+
+### Changes
+
+- `.claude/skills/implementation-plan/SKILL.md`, `.codex/skills/implementation-plan/SKILL.md`, `.claude/agents/implementation-plan.md`, `.codex/agents/implementation-plan.toml` -- 6필드 schema + Checkpoint Reason 의무 추가
+- `.claude/skills/sdd-autopilot/references/orchestrator-contract.md`, `.codex/skills/sdd-autopilot/references/orchestrator-contract.md` -- per-group rule, group boundary, mid-group emergency, adaptive final, invocation contract 일반화, Section 8 Checkpoint Reason 의무
+- `.claude/skills/sdd-autopilot/SKILL.md`, `.codex/skills/sdd-autopilot/SKILL.md` -- Step 4/5/7.2/7.3 갱신, backward compat 안내, Phase Source insertion 위치 명시
+- `.claude/skills/sdd-autopilot/examples/sample-orchestrator.md`, `.codex/skills/sdd-autopilot/examples/sample-orchestrator.md` -- per-group 시나리오로 전면 재작성, Step 3 prompt에 `checkpoint` 필드 포함, AC/Step 5/Test Strategy를 group 표현으로 갱신
+- `_sdd/spec/main.md` -- guardrail (line 65) + multi-phase quality gate 결정 (line 94) 갱신, 버전 4.1.9
+- `_sdd/spec/components.md` -- `sdd-autopilot` Notes를 per-group + adaptive로 갱신
+- `_sdd/spec/usage-guide.md` -- Phase 2 expected result를 per-group + adaptive로 갱신
+- `_sdd/spec/logs/changelog.md` -- v4.1.9 이력 추가
+
+### References
+
+- discussion: `_sdd/discussion/2026-04-29_discussion_phase_grouped_review_fix_gate.md`
+- feature draft: `_sdd/drafts/2026-04-29_feature_draft_phase_grouped_review_fix_gate.md`
+- implementation report: `_sdd/implementation/2026-04-29_implementation_report_phase_grouped_review_fix_gate.md`
+- implementation reviews (Pass 1+Pass 2):
+  - `_sdd/implementation/2026-04-29_implementation_review_phase_grouped_review_fix_gate.md`
+  - `_sdd/implementation/2026-04-29_implementation_review_phase_grouped_review_fix_gate_pass2.md`
+
 ## 2026-04-13 - Align spec lifecycle skills around shared core checklist (v4.1.7 -> v4.1.8 spec revision)
 
 ### Context

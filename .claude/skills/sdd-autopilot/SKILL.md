@@ -157,7 +157,7 @@ spec-less mode 참고:
 planning precedence 메모:
 - **`sdd-skills:feature-draft`는 기본 포함이다.** 다음 두 조건 중 하나를 만족할 때만 스킵할 수 있다: (1) 정말 간단한 디버깅 수준의 수정(typo fix, config 값 변경, 로그 한 줄 추가 등)이거나, (2) 해당 주제의 feature-draft artifact가 `_sdd/drafts/`에 이미 존재하는 경우. 그 외에는 small/medium/large 무관하게 `sdd-skills:feature-draft`를 반드시 거친다.
 - non-trivial change의 기본 planning entry는 `sdd-skills:feature-draft`다. single-phase medium path에서 Part 2가 충분히 명확하면 그대로 `sdd-skills:implementation` 입력으로 사용한다.
-- `sdd-skills:implementation-plan`은 `sdd-skills:feature-draft` 이후 deeper breakdown이 필요하거나, large/complex 변경이거나, medium이라도 multi-phase execution gate가 필요한 경우에만 추가한다.
+- `sdd-skills:implementation-plan`은 **multi-phase 실행으로 판단되면 반드시 포함한다.** feature-draft → implementation 직행은 single-phase 경로에 한정한다. large/complex 변경, medium이라도 multi-phase execution gate가 필요한 경우 모두 해당한다.
 - `sdd-skills:spec-update-todo`는 planned persistent global alignment가 실제로 필요한 경우에만 `sdd-skills:feature-draft`와 `sdd-skills:implementation-plan` 사이에 조건부로 넣는다.
 - standalone `sdd-skills:implementation-plan`은 기존 feature draft/temporary spec/기존 plan artifact가 이미 있고, 이를 phase/task 수준으로 보강하거나 재개해야 하는 예외 상황에서만 사용한다.
 
@@ -171,6 +171,7 @@ planning precedence 메모:
 - 각 `implementation` step에는 같은 범위의 review-fix gate가 즉시 붙어야 한다.
 - `sdd-skills:implementation-plan` output을 downstream `implementation`이 소비하는 expanded path면 해당 `implementation` step을 flat single-shot으로 쓰지 않고 `Execution Mode: phase-iterative`와 `Phase Source`를 명시한다.
 - review가 포함된 모든 path에서는 `sdd-skills:implementation`/`sdd-skills:implementation-review`/re-review를 모두 subagent step으로 유지한다. 부모 autopilot이 로컬 구현/로컬 리뷰로 대체하면 안 된다.
+- 각 subagent step과 review-fix gate `agent_mapping`에는 `references/orchestrator-contract.md`의 Model Routing 표에 따라 `Model:`(또는 `(model: ...)`)을 명시한다. `implementation` 호출(fix 포함)은 `sonnet`, `implementation-review` 호출(review/re-review/final integration review)은 `opus`로 분리해서 표기한다.
 - Reasoning Trace 3-6 bullet 간결 작성
 - 저장 경로: `_sdd/pipeline/orchestrators/orchestrator_<topic>.md`
 
@@ -192,8 +193,10 @@ Producer-Reviewer 패턴으로 검증한다.
 - 각 `implementation` step 뒤에 같은 범위의 immediate review-fix gate가 해석 가능함
 - Step 4가 orchestrator file 외 downstream artifact를 materialize하지 않았는가
 - expanded path면 downstream `implementation` step에 `Execution Mode: phase-iterative`와 `Phase Source`가 선언되었는가
-- `Execution Mode: phase-iterative` path면 per-phase gate semantics와 `final integration review`가 해석 가능한가
+- `Execution Mode: phase-iterative` path면 per-group gate semantics(`Checkpoint` boundary)와 `final integration review` adaptive 처리가 해석 가능한가
+- phase-iterative path의 `Phase Source`가 `implementation-plan` output인가 (`feature-draft` 산출물 금지). 위반 시 reject하고 `feature-draft` step 직후에 `sdd-skills:implementation-plan` step 삽입.
 - review 포함 path에서 `sdd-skills:implementation`/`sdd-skills:implementation-review`가 subagent step으로만 매핑되는가
+- 각 subagent step과 review-fix gate `agent_mapping`에 `references/orchestrator-contract.md` Model Routing 표와 일치하는 `Model:`/`(model: ...)` 표기가 있는가 (특히 `implementation`은 `sonnet`, `implementation-review`는 `opus`)
 - test strategy 존재
 - error handling 존재
 
@@ -249,19 +252,22 @@ Phase 2 진입 후 `request_user_input`은 호출하지 않는다. 마일스톤 
 - step별 필드, 허용 `subagent_type`, Exit Criteria, Acceptance Criteria는 오케스트레이터 본문과 `references/orchestrator-contract.md`를 그대로 따른다.
 - 오케스트레이터에 적힌 출력 파일은 현재 step이 실제로 생성한 materialized output과 future step의 planned output을 구분해 해석한다. 각 step은 자신의 선언된 출력만 materialize하며, 아직 실행되지 않은 downstream step의 planned output을 미리 생성하지 않는다.
 - review 포함 path에서는 `sdd-skills:implementation`/`sdd-skills:implementation-review`를 항상 subagent 호출로 실행한다. 부모 autopilot이 local implementation/review로 대체하지 않는다.
+- 각 subagent 호출 시점에 오케스트레이터의 `Model:` (또는 review-fix gate `agent_mapping`의 `(model: ...)`) 표기를 그대로 `Agent(model=...)` 파라미터로 전달한다. 표기가 누락된 경우 `references/orchestrator-contract.md` Model Routing 표 기본값(`implementation` -> `sonnet`, `implementation-review` -> `opus` 등)을 적용한다.
 - `implementation` step은 단독 완료가 아니다. 같은 범위의 `Review-Fix Loop` exit condition과 required validation이 닫혀야만 해당 step을 `completed`로 기록할 수 있다.
 - single-phase path이거나 `Review-Fix Loop.scope = global`이면 `implementation` step 직후 즉시 global review-fix loop를 수행한다. 이 gate가 닫히기 전에는 `spec-update-done`을 포함한 다음 downstream step으로 진행할 수 없다.
 - `sdd-skills:implementation-plan` output을 downstream `implementation`이 소비하고 해당 step이 `Execution Mode: phase-iterative`로 선언되어 있으면, autopilot은 `Phase Source`를 읽어 phase count와 boundary를 runtime-resolved metadata로 해석한다. Step 4가 추측한 flat phase list로 실행하지 않는다.
-- per-phase gate에서는 각 phase의 `goal`, `task set / dependency closure`, `validation focus`, `exit criteria`, `carry-over policy`를 읽고 해당 phase 범위의 `sdd-skills:implementation` subagent 실행 -> `sdd-skills:implementation-review` subagent review -> 필요 시 `sdd-skills:implementation` subagent 재호출로 fix -> `sdd-skills:implementation-review` subagent 재실행으로 re-review -> phase validation 순서를 먼저 닫은 뒤 다음 phase로 간다.
-- 현재 phase exit criteria가 충족되지 않으면 다음 phase로 넘어가지 않는다. `medium` 이슈도 기본적으로 exit blocker이며, carry-over는 현재 phase policy가 명시적으로 허용할 때만 로그와 근거를 남기고 진행한다.
+- `scope = per-group`이면 `Phase Source`의 각 phase `Checkpoint` 필드를 읽어 group boundary를 결정한다. `Checkpoint=true` phase가 group의 마지막 phase이며, 해당 phase 직후 같은 group 범위의 review-fix gate를 닫는다. `Checkpoint=false` phase는 light validation(test/typecheck/exit criteria)만 수행하고 다음 phase로 진행한다. 마지막 phase는 explicit 값과 무관하게 implicit `Checkpoint=true`로 처리한다. **Backward compat**: plan에 `Checkpoint` 필드가 없는 경우 모든 phase를 `Checkpoint=false`로 간주하고 마지막 phase의 implicit `Checkpoint=true` 1회만 gate를 닫는다 — 단일 group 동작과 동등하다.
+- group 내 phase의 light validation이 `critical` 이슈를 잡으면 group boundary forced early로 즉시 review-fix gate를 트리거한다 (mid-group emergency).
+- group review-fix gate에서는 group 범위(Checkpoint=false phase들 + 해당 Checkpoint=true phase) 전체를 scope로 `sdd-skills:implementation-review` subagent 실행 -> 필요 시 `sdd-skills:implementation` subagent fix -> re-review 순서를 닫은 뒤 다음 group으로 간다.
+- 현재 group exit criteria가 충족되지 않으면 다음 group으로 넘어가지 않는다. `medium` 이슈도 기본적으로 exit blocker이며, carry-over는 현재 group policy가 명시적으로 허용할 때만 로그와 근거를 남기고 진행한다.
 
 #### 7.3 Review-Fix Loop 해석 + 테스트 실행
 
 오케스트레이터에 `Review-Fix Loop`와 `Test Strategy` section이 있으면, autopilot은 그 선언을 그대로 집행한다. 이 섹션은 파이프라인 마지막에 사후 정리용으로 도는 것이 아니라, 7.2에서 각 `implementation` 실행 직후 붙는 immediate completion gate의 해석 규칙이다.
-- multi-phase path에서 `scope = per-phase`면 각 phase의 `implementation` 직후 review-fix와 validation을 즉시 수행하고, 마지막 phase 이후에는 `final integration review`를 반드시 1회 더 수행한다.
+- multi-phase path에서 `scope = per-group`이면 각 Checkpoint phase 직후 해당 group 범위로 review-fix와 validation을 즉시 수행한다. **Final integration review (adaptive)**: 그룹 1개면 마지막 group gate가 final을 겸하고, 그룹 2개 이상이면 마지막 group gate 후 cross-group regression 전용으로 1회 추가 실행한다.
 - single-phase path이거나 `scope = global`이면 해당 `implementation` step 직후 즉시 global review-fix loop를 수행한다.
 - review-fix loop의 agent 매핑은 small/medium/large review path 모두 고정이다: `review = sdd-skills:implementation-review`, `fix = sdd-skills:implementation`, `re-review = sdd-skills:implementation-review`.
-- `scope = global`이든 `scope = per-phase`든 review/fix/re-review를 local inline work로 대체하지 않는다.
+- `scope = global`이든 `scope = per-group`이든 review/fix/re-review를 local inline work로 대체하지 않는다.
 - `spec-update-done`은 모든 required implementation-scoped review-fix gate, required validation, 그리고 필요한 경우 final integration review가 닫힌 뒤에만 실행할 수 있다.
 - 이 섹션에서 별도 loop 규칙이나 테스트 규칙을 다시 정의하지 않는다.
 

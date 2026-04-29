@@ -21,7 +21,7 @@ version: 2.2.0
 - [ ] `_sdd/implementation/<YYYY-MM-DD>_implementation_plan_<slug>.md`가 생성된다.
 - [ ] 모든 task에 `**Target Files**`가 포함된다.
 - [ ] `Contract/Invariant Delta`와 `Validation Plan` linkage가 plan에 보존된다.
-- [ ] 각 phase에 `goal`, `task set / dependency closure`, `validation focus`, `exit criteria`, `carry-over policy`가 포함된다. single-phase plan도 동일 metadata를 가진 1개 phase로 표현한다.
+- [ ] 각 phase에 `goal`, `task set / dependency closure`, `validation focus`, `exit criteria`, `carry-over policy`, `checkpoint`가 포함된다. single-phase plan도 동일 metadata를 가진 1개 phase로 표현한다.
 - [ ] phase, dependency, risk, open question이 빠지지 않는다.
 - [ ] `_sdd/spec/`는 읽기만 하고 직접 수정하지 않는다.
 - [ ] Plan 본문이 Self-Contained Authoring 원칙(Rule 1/2/3)을 따르며, Self-Containment Check (Pass 1 + Pass 2)를 수행하고 흔적(갭 위치와 보완 내용)을 기록한다.
@@ -176,14 +176,22 @@ Phase 전략 선택:
 Phase gate metadata 규칙:
 
 - single-phase plan도 최소 1개의 phase block으로 표현한다.
-- 각 phase는 아래 5개 필드를 반드시 가진다.
+- 각 phase는 아래 6개 필드를 반드시 가진다.
   - `Goal`
   - `Task Set / Dependency Closure`
   - `Validation Focus`
   - `Exit Criteria`
   - `Carry-over Policy`
+  - `Checkpoint`
 - `Exit Criteria`는 가능하면 관련 `C*`, `I*`, `V*` linkage를 참조하는 검증 가능한 문장으로 작성한다.
 - 기본 `Carry-over Policy`는 `None`이다. 별도 예외를 열지 않으면 `critical/high/medium` 이슈는 phase exit를 막는다.
+- `Checkpoint` 규칙:
+  - 기본값 `false` — phase를 그룹에 포함한다. autopilot은 `Checkpoint=true` phase 직후에만 review-fix gate를 실행한다.
+  - 마지막 phase는 explicit 값과 무관하게 implicit `true`로 해석된다 (gate가 반드시 한 번은 닫히도록).
+  - `Checkpoint=true` 결정에는 `Checkpoint Reason` 한 줄을 반드시 동반한다.
+  - foundation 판단 권장 hint (plan이 자율 판단, hard rule 아님):
+    - (a) 후속 phase 2개 이상이 이 phase의 산출물(파일/schema/module)에 의존
+    - (b) feature-draft에서 high/critical risk로 마크된 phase
 
 ### Step 6: Map Dependencies and Parallelism
 
@@ -234,6 +242,8 @@ Phase 템플릿:
 **Carry-over Policy**:
 - Default: `None` (`critical/high/medium` block)
 - Allowed Exception: ...
+**Checkpoint**: true | false (default: false; 마지막 phase는 implicit true)
+**Checkpoint Reason**: <Checkpoint=true인 경우 한 줄 근거. 예: "후속 3개 phase가 이 phase의 User schema에 의존">
 ```
 
 Task 템플릿:

@@ -10,7 +10,7 @@
 
 | Component | Purpose | Why | Primary Source | Notes |
 |-----------|---------|-----|----------------|-------|
-| `sdd-autopilot` | reasoning 기반으로 SDD 파이프라인을 조합하고 end-to-end 실행한다 | 대규모 작업에서 수동 handoff와 단계 누락을 줄인다 | `.claude/skills/sdd-autopilot/SKILL.md`<br>`.codex/skills/sdd-autopilot/SKILL.md` | 풀 스킬. non-trivial planning은 `feature-draft`를 기본 entry로 사용하고, multi-phase plan이면 `per-phase` gate와 `final integration review`를 집행한다 |
+| `sdd-autopilot` | reasoning 기반으로 SDD 파이프라인을 조합하고 end-to-end 실행한다 | 대규모 작업에서 수동 handoff와 단계 누락을 줄인다 | `.claude/skills/sdd-autopilot/SKILL.md`<br>`.codex/skills/sdd-autopilot/SKILL.md` | 풀 스킬. non-trivial planning은 `feature-draft`를 기본 entry로 사용하고, multi-phase plan이면 `implementation-plan`의 phase `Checkpoint` 필드로 결정되는 `per-group` gate와 adaptive `final integration review`(1 group이면 마지막 group gate가 겸함, 2+ groups이면 별도 1회)를 집행한다 |
 | `spec-create` | 초기 global spec과 workspace guidance를 부트스트랩한다 | 스펙 부재 상태에서 workflow 시작점을 만들고, thin global 기본 구조를 고정한다 | `.claude/skills/spec-create/SKILL.md` | 워크플로우 시작점. 기본값은 `_sdd/spec/main.md` 단일 파일이며, multi-file은 structure rationale이 있을 때만 연다 |
 | `feature-draft` | spec patch 초안과 구현 계획 초안을 한 번에 만든다 | spec 수정과 구현 계획의 반복 작업을 줄인다 | `.claude/agents/feature-draft.md`<br>`.claude/skills/feature-draft/SKILL.md` | wrapper -> agent 패턴 |
 | `spec-update-todo` | 구현 전 planned persistent truth를 global spec에 반영한다 | spec-code drift를 사전에 줄인다 | `.claude/agents/spec-update-todo.md`<br>`.claude/skills/spec-update-todo/SKILL.md` | wrapper -> agent 패턴 |

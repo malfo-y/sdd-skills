@@ -56,7 +56,7 @@
 **Expected Result:**
 - Phase 1: sdd-autopilot이 SDD reference를 로딩하고, 인라인 discussion으로 요구사항을 구체화하고, 코드베이스를 탐색한 뒤, reasoning 기반으로 오케스트레이터를 생성하고 구조/철학 12항목을 자동 검증
 - Phase 1.5: 검증된 오케스트레이터 + Pre-flight Check 결과를 사용자에게 제시 → 확인 후 실행
-- Phase 2: `feature-draft`를 기본 planning entry로 사용하고, 필요 시 `(optional) spec-update-todo -> (optional) implementation-plan`으로 확장한다. multi-phase plan이면 phase별 `implementation -> review -> fix -> validation` gate를 닫고 마지막에 `final integration review`를 1회 더 수행한 뒤 인라인 테스트와 `spec-update-done`까지 자율 실행한다
+- Phase 2: `feature-draft`를 기본 planning entry로 사용하고, 필요 시 `(optional) spec-update-todo -> (optional) implementation-plan`으로 확장한다. multi-phase plan이면 `implementation-plan`의 phase `Checkpoint` 필드로 결정된 group 단위로 `implementation -> review -> fix -> validation` gate를 닫고 (group 내 phase는 light validation만), adaptive `final integration review`(group 1개면 마지막 group gate가 겸함, 2개 이상이면 별도 1회)를 처리한 뒤 인라인 테스트와 `spec-update-done`까지 자율 실행한다
 - `_sdd/pipeline/orchestrators/orchestrator_<topic>.md` — 실행 중 authoritative orchestrator contract
 - `_sdd/pipeline/log_<topic>_<ts>.md` — 파이프라인 실행 로그 (Meta + Status 테이블 + 각 에이전트 시작/완료, 결정사항, 에러)
 - `_sdd/pipeline/report_<topic>_<ts>.md` — 최종 실행/검증 요약과 잔여 이슈 보고
