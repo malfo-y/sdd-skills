@@ -24,6 +24,8 @@ model: inherit
 - [ ] AC3: `_sdd/implementation/<YYYY-MM-DD>_implementation_review_<slug>.md`에 리포트 저장
 - [ ] AC4: `_sdd/spec/`와 `implementation_plan*.md`는 수정하지 않는다.
 - [ ] AC5: 장문 리포트에서도 caller가 inline 2-phase writing으로 구조화 작성할 수 있다.
+- [ ] AC6: Speculative Code 차원이 Step 5 Assessment에서 점검되고, Step 6 Findings에 분류 기준이 적용됐다.
+- [ ] AC7: Recommendations 자체도 Min-Code 원칙을 따른다 — 사변적 권고 금지 (Hard Rule 11).
 
 ## Hard Rules
 
@@ -37,6 +39,7 @@ model: inherit
 8. **Fresh Verification**: "should work" 금지. 테스트 실행 출력을 근거로 판단한다. 이전 실행 결과 재사용 금지. `_sdd/env.md` 미존재 시 코드 분석만 수행하고 리포트에 `UNTESTED` 표기.
 9. 리포트가 길거나 다중 섹션이면 caller가 먼저 skeleton/섹션 헤더를 직접 기록한 뒤 같은 흐름에서 내용을 채운다.
 10. **Path convention**: `_sdd/` artifact 경로는 lowercase canonical을 기본으로 하되, 입력을 읽을 때는 legacy uppercase fallback도 허용한다.
+11. **Recommendations Min-Code**: Recommendations 자체도 Min-Code 원칙을 따른다. "future-proof / extensible / configurable" 같은 사변적 권고 금지. 권고는 발견된 실제 결함 또는 측정된 위험에 직접 대응해야 한다.
 
 ## Tier Selection
 
@@ -129,12 +132,15 @@ lane 예시:
 
 Tier 1:
 - 각 task / AC가 충족되었는지
+- Speculative Code: plan/AC가 요구하지 않는 옵션·설정·추상화, 단일 사용처 추상화, 도달 불가 에러 처리
 
 Tier 2:
 - 구현이 spec과 정합한지
+- Speculative Code: spec이 요구하지 않는 옵션·설정·추상화, 단일 사용처 추상화, 도달 불가 에러 처리
 
 Tier 3:
 - 보안, 에러 처리, 코드 패턴, 성능, 테스트 품질
+- Speculative Code (사변적 추가): AC 외 옵션·설정·추상화, 단일 사용처 추상화, 도달 불가 에러 처리
 
 ### Step 6: Findings Classification
 
@@ -142,8 +148,10 @@ Tier 3:
 
 - **Critical**: 핵심 기능 누락, 실패 테스트, 보안 취약점, 데이터 손실 위험, breaking change
 - **High**: 핵심 acceptance criteria 일부 불충족, 주요 에러 처리 갭, 중요한 통합 깨짐, 즉시 수정이 필요한 stale plan/drift
-- **Medium**: 비핵심 테스트 누락, 패턴 불일치, 중간 수준 성능/유지보수성 우려, 후속 수정이 필요한 구현 품질 문제
+- **Medium**: 비핵심 테스트 누락, 패턴 불일치, 중간 수준 성능/유지보수성 우려, 후속 수정이 필요한 구현 품질 문제, **Speculative Code (사변적 옵션·설정·추상화·도달 불가 에러 처리)의 기본 분류**
 - **Low**: 리팩터링, 문서화, 가독성, 선택적 엣지 케이스, 추후 개선 권고
+
+Speculative Code escalation: 사변적 코드가 실제 버그·보안 영향을 만들거나 데이터 손실 위험을 유발하면 Critical로 escalate.
 
 `Critical / High / Medium`은 autopilot review-fix loop의 수정 대상이고, `Low`는 기본적으로 로그/후속 권고 대상이다.
 
@@ -194,7 +202,7 @@ Tier 3:
 [구현/테스트/정합성]
 
 ## 4. Recommendations
-[Must / Should / Could]
+[Must / Should / Could — 모두 발견된 결함 또는 측정 위험에 직접 연결돼야 한다. 사변적 'future-proof' 권고 금지 (Hard Rule 11)]
 
 ## 5. Conclusion
 [한 단락 요약]
