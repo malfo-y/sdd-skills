@@ -34,7 +34,27 @@ version: 2.4.0
 6. 기존 파일 분할 구조를 변경하지 않는다. 파일 추가만 허용, 기존 구조 재편성 금지.
 7. rationale 변화가 실제로 발생했을 때만 `decision_log.md`를 업데이트한다.
 8. main / supporting / history surface 중 어디에 둘지 먼저 판단하고, 가장 맞는 global surface에만 검증된 사실을 반영한다.
-9. `_sdd/` artifact 경로는 lowercase canonical을 기본으로 하되, 입력을 읽을 때는 legacy uppercase fallback도 허용한다.
+9. repo-wide invariant는 아래 `Repo-wide Invariant Test`를 통과할 때만 guardrails 또는 key decisions에 반영한다.
+
+## Repo-wide Invariant Test
+
+아래 3가지를 모두 만족할 때만 repo-wide invariant candidate로 본다.
+
+1. 코드를 한두 파일 읽는 것만으로 안정적으로 복구되지 않는다.
+2. 두 개 이상 feature/module/workflow에 공통 적용된다.
+3. 틀리게 가정하면 repo-level reasoning, review, implementation 판단이 어긋난다.
+
+Positive example:
+
+- 전체 API 인증 방식
+- 모든 worker가 따라야 하는 retry / backoff 정책
+- `_sdd/` artifact handoff 같은 repo-wide operating rule
+
+Negative example:
+
+- 특정 endpoint의 response schema
+- 한 컴포넌트 내부 state invariant
+- feature 하나에만 필요한 validation detail
 
 ## Input Sources
 
@@ -97,17 +117,6 @@ temporary spec의 각 delta 항목을 아래 중 하나로 분류한다.
 - drift type
 - 적용 action
 
-### Repo-wide Invariant Test
-
-invariant를 global spec에 올리려면 아래 3가지를 모두 만족해야 한다.
-
-1. 코드를 한두 파일 읽는 것만으로 안정적으로 복구되지 않는다.
-2. 두 개 이상 feature/module/workflow에 공통 적용된다.
-3. 틀리게 가정하면 repo-level reasoning, review, implementation 판단이 어긋난다.
-
-예: "모든 API는 Bearer token 인증 필수" → repo-wide ✓
-예: "User 엔드포인트의 response schema" → feature-level ✗
-
 ### Step 4: Apply Updates
 
 global spec 문서를 수정한다.
@@ -119,7 +128,7 @@ global spec 문서를 수정한다.
 - shared scope/non-goal/guardrail 변화 반영
 - 장기 설계 판단 변화 반영
 - 먼저 main / supporting / history surface 중 어디가 맞는지 판단
-- `Repo-wide Invariant Test`를 통과한 항목만 guardrails 또는 decisions에 반영
+- `Repo-wide Invariant Test`를 통과한 invariant만 guardrails 또는 decisions에 반영
 - feature-level contract/validation/touchpoint/usage detail은 global 본문으로 복구하지 않음
 - supporting/history가 더 맞는 정보는 main body를 두껍게 만들지 말고 해당 surface에 반영
 - 신규 sub-spec 파일 생성 시 파일 생성 후 main.md 인덱스에 링크 추가

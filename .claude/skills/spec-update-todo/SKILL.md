@@ -32,13 +32,32 @@ version: 2.4.0
 4. 이미 완료된 구현 sync는 이 agent가 아니라 `spec-update-done`의 책임이다.
 5. temporary spec의 `Touchpoints`, `Implementation Plan`, `Validation Plan` 전체를 global spec 본문에 복사하지 않는다.
 6. global spec에는 배경/개념, scope/non-goals/guardrails, key decisions 같은 지속 정보만 남긴다.
-7. repo-wide invariant가 정말 필요한 경우만 guardrails 또는 key decisions에 반영한다.
+7. repo-wide invariant는 아래 `Repo-wide Invariant Test`를 통과할 때만 guardrails 또는 key decisions에 반영한다.
 8. main / supporting / history surface 중 어디에 둘지 먼저 판단하고, 가장 맞는 global surface에만 보수적으로 반영한다.
 9. 새 sub-spec 파일 생성 시 반드시 main.md 인덱스에 링크를 추가한다. 고아 파일 금지.
 10. 기존 파일 분할 구조를 변경하지 않는다. 파일 추가만 허용, 기존 구조 재편성 금지.
-11. `_sdd/` artifact 경로는 lowercase canonical을 기본으로 하되, 입력을 읽을 때는 legacy uppercase fallback도 허용한다.
-12. 아직 구현되지 않은 planned 정보는 스펙에서 반드시 `🚧 Planned`를 붙여 현재 truth와 구분한다.
-13. planned 내용을 기존 implemented truth와 같은 문단이나 bullet에 무표식으로 섞어 쓰지 않는다.
+11. 아직 구현되지 않은 planned 정보는 스펙에서 반드시 `🚧 Planned`를 붙여 현재 truth와 구분한다.
+12. planned 내용을 기존 implemented truth와 같은 문단이나 bullet에 무표식으로 섞어 쓰지 않는다.
+
+## Repo-wide Invariant Test
+
+아래 3가지를 모두 만족할 때만 repo-wide invariant candidate로 본다.
+
+1. 코드를 한두 파일 읽는 것만으로 안정적으로 복구되지 않는다.
+2. 두 개 이상 feature/module/workflow에 공통 적용된다.
+3. 틀리게 가정하면 repo-level reasoning, review, implementation 판단이 어긋난다.
+
+Positive example:
+
+- 전체 API 인증 방식
+- 모든 worker가 따라야 하는 retry / backoff 정책
+- `_sdd/` artifact handoff 같은 repo-wide operating rule
+
+Negative example:
+
+- 특정 endpoint의 response schema
+- 한 컴포넌트 내부 state invariant
+- feature 하나에만 필요한 validation detail
 
 ## Input Sources
 
@@ -90,26 +109,13 @@ planned delta를 thin global core에 보수적으로 매핑한다.
 
 먼저 이 정보가 `main.md`, supporting surface, history / decision surface, 또는 temporary spec 중 어디에 남아야 하는지 판단한다.
 
-#### Repo-wide Invariant Test
-
-invariant를 global spec에 올리려면 아래 3가지를 모두 만족해야 한다.
-
-1. 코드를 한두 파일 읽는 것만으로 안정적으로 복구되지 않는다.
-2. 두 개 이상 feature/module/workflow에 공통 적용된다.
-3. 틀리게 가정하면 repo-level reasoning, review, implementation 판단이 어긋난다.
-
-예: "모든 API는 Bearer token 인증 필수" → repo-wide ✓
-예: "User 엔드포인트의 response schema" → feature-level ✗
-
-#### 매핑 규칙
-
 예시:
 
 - framing 변화 -> `배경 및 high-level concept`
 - shared scope or non-goal 변화 -> `Scope / Non-goals / Guardrails`
 - repo-wide operating rule 변화 -> `Scope / Non-goals / Guardrails`
 - 장기 설계 판단 변화 -> `핵심 설계와 주요 결정`
-- `Repo-wide Invariant Test` 통과 항목 -> guardrails 또는 key decisions 문장
+- `Repo-wide Invariant Test`를 통과한 invariant implication -> guardrails 또는 key decisions 문장
 
 기본적으로 global spec에 올리지 않는 것:
 

@@ -7,7 +7,13 @@ model: inherit
 
 # Spec Review
 
-global spec 또는 temporary spec의 품질과 코드-스펙 정합성을 review-only로 감사하고 `_sdd/spec/logs/spec_review_report.md`를 생성한다.
+| Workflow | Position | When |
+|----------|----------|------|
+| Large | Optional audit | 구현 전/후 스펙 품질 점검 |
+| Medium | Optional audit | spec drift 확인 |
+| Any | Standalone | strict review-only 검토 |
+
+이 agent는 global spec 또는 temporary spec의 품질과 코드-스펙 정합성을 review-only로 감사하고 `_sdd/spec/logs/spec_review_report.md`를 생성한다.
 
 ## Acceptance Criteria
 
@@ -32,6 +38,8 @@ global spec 또는 temporary spec의 품질과 코드-스펙 정합성을 review
 ## Review Dimensions
 
 ### Global Spec Quality
+
+공통 코어 4축을 global rubric으로 본다.
 
 - `Thinness`: global 본문이 `배경/개념`, `경계`, `결정` 중심을 유지하는가
 - `Decision-bearing truth`: repo-wide 판단을 바꾸는 진술만 남아 있는가
@@ -79,15 +87,24 @@ global spec 또는 temporary spec의 품질과 코드-스펙 정합성을 review
 
 ## Process
 
-### Step 1: Scope and Spec Type
+### Step 1: Scope and Spec Type Selection
 
-`Read`, `Glob`으로 `_sdd/spec/*.md`, `_sdd/drafts/*.md`, `_sdd/implementation/*`를 확인하고 spec type을 판정한다.
+다음 입력을 찾는다.
+
+- 사용자 지정 경로
+- `_sdd/spec/*.md`
+- `_sdd/drafts/*.md`
+- 관련 구현 파일 / 테스트 / `_sdd/implementation/*`
+
+spec type 판별 규칙:
 
 - global spec: `배경/개념`, `Scope / Non-goals / Guardrails`, `핵심 설계와 주요 결정`이 중심
 - temporary spec: canonical 7섹션이 중심
 - 혼합/애매한 문서는 가장 지배적인 구조로 판정하고 근거를 리포트에 적는다
 
 ### Step 2: Spec Quality Audit
+
+스펙만 보고 품질을 평가한다.
 
 - spec type에 맞는 rubric을 먼저 선언한다
 - 공통 코어 4축 위반이 무엇인지 문서 타입 기준으로 판정한다
@@ -96,13 +113,23 @@ global spec 또는 temporary spec의 품질과 코드-스펙 정합성을 review
 
 ### Step 3: Code Drift Audit
 
-`Grep`, `Glob`, `Read`로 spec 주장과 구현/implementation artifact를 비교한다.
+코드/테스트/구현 문서와 대조한다.
 
-상태: `ALIGNED`, `DRIFT`, `MISSING`, `UNTESTED`
+- 실제 구현된 기능과 spec 주장 비교
+- implementation 문서와의 정합성 비교
+- delta ID와 validation evidence의 연결 확인
+- path/reference가 실제 코드와 맞는지 확인
+
+상태 예시:
+
+- `ALIGNED`
+- `DRIFT`
+- `MISSING`
+- `UNTESTED`
 
 ### Step 3.5: Code Analysis Metrics
 
-`Bash`, `Grep`, `Glob`으로 수집:
+`Bash`, `Grep`, `Glob`으로 세 가지 지표를 수집한다.
 
 | Metric | Method | Use |
 |--------|--------|-----|
@@ -112,15 +139,39 @@ global spec 또는 temporary spec의 품질과 코드-스펙 정합성을 review
 
 ### Step 4: Severity and Decision
 
+severity 규칙:
+
 - `Critical`: 문서 타입 혼동, 잘못된 repo-wide truth, 핵심 drift처럼 repo-level 판단을 직접 오도하는 문제
 - `Quality`: global 오염, 약한 경계, evidence가 충분한 중간 수준 drift, 공통 코어 4축 위반
 - `Improvements`: 가독성, 정리, appendix 수준 개선
 
-Decision: `SPEC_OK`, `SYNC_REQUIRED`, `NEEDS_DISCUSSION`
+decision 예시:
 
-### Step 5: Report
+- `SPEC_OK`
+- `SYNC_REQUIRED`
+- `NEEDS_DISCUSSION`
 
-`_sdd/spec/logs/spec_review_report.md`에 저장:
+### Step 5: Report and Handoff
+
+리포트를 `_sdd/spec/logs/spec_review_report.md`에 저장한다.
+
+리포트에는 다음을 포함한다.
+
+- findings
+- spec type과 적용 rubric
+- evidence summary
+- spec quality summary
+- drift summary
+- code analysis metrics
+- next actions
+
+후속 스킬 연결:
+
+- 계획 변경 전 반영: `spec-update-todo`
+- 구현 완료 후 동기화: `spec-update-done`
+- 구현 검증: `implementation-review`
+
+## Output Format
 
 ```markdown
 # Spec Review Report
@@ -153,7 +204,15 @@ Decision: `SPEC_OK`, `SYNC_REQUIRED`, `NEEDS_DISCUSSION`
 ...
 
 ## 6. Code Analysis Metrics
+
+| Metric | Value | Notes |
+|--------|-------|-------|
+| Top Hotspots | file1 (N), file2 (N) | 자주 변경되는 파일 |
+| Focus Score | X% | 스펙 컴포넌트 집중도 |
+| Test Coverage | X/Y features covered | 스펙 기능별 테스트 현황 |
+
 ## 7. Recommended Next Actions
+...
 ```
 
 ## Error Handling
@@ -173,7 +232,9 @@ Decision: `SPEC_OK`, `SYNC_REQUIRED`, `NEEDS_DISCUSSION`
 
 ## Final Check
 
-Acceptance Criteria가 모두 만족되었는지 확인한다. 미충족이면 관련 단계로 돌아간다.
+Acceptance Criteria가 모두 만족되었나 검증한다. 미충족 항목이 있으면 해당 단계로 돌아가 수정한다.
 
 - global/temporary rubric을 잘못 적용한 finding이 없는가
 - weak evidence finding이 `UNTESTED` 없이 severity로 올라가지 않았는가
+
+> **Mirror Notice**: 이 agent의 본문은 `.claude/skills/spec-review/SKILL.md`와 `.codex/agents/spec-review.toml`의 계약과 동기화되어야 한다.

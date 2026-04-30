@@ -7,7 +7,13 @@ model: inherit
 
 # Spec Update from Planned Change
 
-사용자 요구사항이나 temporary spec draft를 읽어 `_sdd/spec/*.md`에 planned global change를 반영한다. 핵심 원칙은 temporary spec의 실행 상세를 그대로 복사하지 않고, global spec에 남아야 할 persistent repo-wide information만 선별해 올리는 것이다.
+| Workflow | Position | When |
+|----------|----------|------|
+| Large | Spec planning 단계 | 구현 전 global spec 반영 |
+| Medium | Step 1 or 2 | feature draft 이후 planned delta 반영 |
+| Any | Standalone | user input 기반 spec update |
+
+이 agent는 사용자 요구사항이나 temporary spec draft를 읽어 `_sdd/spec/*.md`에 planned global change를 반영한다. 핵심 원칙은 temporary spec의 실행 상세를 그대로 복사하지 않고, global spec에 남아야 할 persistent repo-wide information만 선별해 올리는 것이다.
 
 ## Acceptance Criteria
 
@@ -23,7 +29,7 @@ model: inherit
 
 1. 코드와 구현 문서는 수정하지 않는다.
 2. 충돌하거나 불명확한 요구사항은 비파괴적으로 처리하고 `Open Questions`에 남긴다.
-3. decision 기록이 필요하면 lowercase canonical `decision_log.md`에 최소한으로 남긴다. legacy uppercase `DECISION_LOG.md`는 read-only fallback으로만 취급한다.
+3. decision 기록이 필요하면 `decision_log.md`에 최소한으로 남긴다.
 4. 이미 완료된 구현 sync는 이 agent가 아니라 `spec-update-done`의 책임이다.
 5. temporary spec의 `Touchpoints`, `Implementation Plan`, `Validation Plan` 전체를 global spec 본문에 복사하지 않는다.
 6. global spec에는 배경/개념, scope/non-goals/guardrails, key decisions 같은 지속 정보만 남긴다.
@@ -60,7 +66,7 @@ Negative example:
 2. `_sdd/spec/user_spec.md`
 3. `_sdd/spec/user_draft.md`
 4. `_sdd/drafts/*_feature_draft_*.md` (slug 기반 glob), `_sdd/drafts/feature_draft_<name>.md` (legacy fallback)
-5. lowercase canonical `_sdd/spec/decision_log.md`, legacy uppercase `_sdd/spec/DECISION_LOG.md` fallback
+5. `_sdd/spec/decision_log.md`
 
 처리 후 rename:
 
@@ -82,7 +88,7 @@ Negative example:
 다음을 읽는다.
 
 - `_sdd/spec/*.md`
-- lowercase canonical `_sdd/spec/decision_log.md`, legacy uppercase `_sdd/spec/DECISION_LOG.md` fallback
+- `_sdd/spec/decision_log.md`
 
 ### Step 3: Parse Planned Delta
 
@@ -179,7 +185,10 @@ input file을 사용했다면 `_processed_*` 이름으로 변경한다.
 
 ## Final Check
 
-Acceptance Criteria가 모두 만족되었는지 확인한다. 미충족이면 관련 단계로 돌아간다.
+Acceptance Criteria가 모두 만족되었나 검증한다. 미충족 항목이 있으면 해당 단계로 돌아가 수정한다.
 
 - planned truth와 current implemented truth를 섞지 않았고 execution-only detail은 global spec 밖에 남겼는가
 - 가장 맞는 global surface를 골랐고, 문서를 두껍게 만든 경우 decision-bearing value를 설명할 수 있는가
+
+> **Mirror Notice**: 이 agent는 `.claude/skills/spec-update-todo/SKILL.md`와 동일한 계약을 공유한다.
+> 내용을 수정할 때는 skill 파일과 이 agent 파일을 **반드시 함께** 수정해야 한다.

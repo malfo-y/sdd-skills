@@ -7,7 +7,13 @@ model: inherit
 
 # Spec Sync and Update
 
-구현 결과와 temporary spec을 읽고 `_sdd/spec/*.md`를 동기화한다. 핵심 원칙은 temporary execution detail은 버리고, 구현되어 검증된 persistent repo-wide information만 global spec에 올리는 것이다.
+| Workflow | Position | When |
+|----------|----------|------|
+| Large | Step 6 of 6 | 구현 완료 후 global spec 동기화 |
+| Medium | Final | 구현 반영 마무리 |
+| Any | Standalone | code-to-spec sync |
+
+이 agent는 구현 결과와 temporary spec을 읽고 `_sdd/spec/*.md`를 동기화한다. 핵심 원칙은 temporary execution detail은 버리고, 구현되어 검증된 persistent repo-wide information만 global spec에 올리는 것이다.
 
 ## Acceptance Criteria
 
@@ -27,9 +33,9 @@ model: inherit
 4. 코드/구현 문서를 직접 수정하지 않는다. 이 agent의 대상은 global spec이다.
 5. 새 sub-spec 파일 생성 시 반드시 main.md 인덱스에 링크를 추가한다. 고아 파일 금지.
 6. 기존 파일 분할 구조를 변경하지 않는다. 파일 추가만 허용, 기존 구조 재편성 금지.
-7. rationale 변화가 실제로 발생했을 때만 lowercase canonical `decision_log.md`를 업데이트한다. legacy uppercase `DECISION_LOG.md`는 read-only fallback으로만 취급한다.
+7. rationale 변화가 실제로 발생했을 때만 `decision_log.md`를 업데이트한다.
 8. main / supporting / history surface 중 어디에 둘지 먼저 판단하고, 가장 맞는 global surface에만 검증된 사실을 반영한다.
-9. `_sdd/` artifact 경로는 lowercase canonical을 기본으로 하되, 입력을 읽을 때는 legacy uppercase fallback도 허용한다.
+9. repo-wide invariant는 아래 `Repo-wide Invariant Test`를 통과할 때만 guardrails 또는 key decisions에 반영한다.
 
 ## Repo-wide Invariant Test
 
@@ -62,7 +68,7 @@ Negative example:
 5. `_sdd/implementation/*_implementation_review_*.md` (slug 기반 glob), `_sdd/implementation/implementation_review.md` (legacy fallback)
 6. `_sdd/implementation/*_implementation_report_*.md` (slug 기반 glob), `_sdd/implementation/implementation_report*.md` (legacy fallback)
 7. `_sdd/spec/*.md`
-8. lowercase canonical `_sdd/spec/decision_log.md`, legacy uppercase `_sdd/spec/DECISION_LOG.md` fallback
+8. `_sdd/spec/decision_log.md`
 
 ## Drift Types
 
@@ -123,7 +129,7 @@ global spec 문서를 수정한다.
 - shared scope/non-goal/guardrail 변화 반영
 - 장기 설계 판단 변화 반영
 - 먼저 main / supporting / history surface 중 어디가 맞는지 판단
-- `Repo-wide Invariant Test`를 통과한 invariant가 있을 때만 guardrails 또는 decisions에 반영
+- `Repo-wide Invariant Test`를 통과한 invariant만 guardrails 또는 decisions에 반영
 - feature-level contract/validation/touchpoint/usage detail은 global 본문으로 복구하지 않음
 - supporting/history가 더 맞는 정보는 main body를 두껍게 만들지 말고 해당 surface에 반영
 - 신규 sub-spec 파일 생성 시 파일 생성 후 main.md 인덱스에 링크 추가
@@ -176,8 +182,11 @@ global spec 문서를 수정한다.
 
 ## Final Check
 
-Acceptance Criteria가 모두 만족되었는지 확인한다. 미충족이면 관련 단계로 돌아간다.
+Acceptance Criteria가 모두 만족되었나 검증한다. 미충족 항목이 있으면 해당 단계로 돌아가 수정한다.
 
 - 검증된 decision-bearing truth만 승격했고 evidence가 약한 항목은 제외 / 보류했는가
 - feature-level detail을 과복원하지 않았고, 가장 맞는 global surface를 골랐는가
 - global spec을 두껍게 만들었다면 repo-level 판단 가치가 실제로 설명 가능한가
+
+> **Mirror Notice**: 이 agent는 `.claude/skills/spec-update-done/SKILL.md`와 동일한 계약을 공유한다.
+> 내용을 수정할 때는 skill 파일과 이 agent 파일을 **반드시 함께** 수정해야 한다.

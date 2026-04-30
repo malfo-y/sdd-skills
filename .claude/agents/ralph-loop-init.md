@@ -598,3 +598,6 @@ Next steps:
 ## Final Check
 
 Acceptance Criteria가 모두 만족되었나 검증한다. 미충족 항목이 있으면 해당 단계로 돌아가 수정한다.
+
+> **Mirror Notice**: 이 agent는 `.claude/skills/ralph-loop-init/SKILL.md`와 동일한 계약을 공유한다.
+> 내용을 수정할 때는 skill 파일과 이 agent 파일을 **반드시 함께** 수정해야 한다.

@@ -7,7 +7,7 @@ model: inherit
 
 # Investigate -- Systematic Debugging
 
-범용 체계적 디버깅 에이전트. 증상이 아닌 근본원인을 찾아 수정하고, 수정이 올바른지 검증한다.
+범용 체계적 디버깅 스킬. 증상이 아닌 근본원인을 찾아 수정하고, 수정이 올바른지 검증한다.
 
 > ralph-loop-init과 차별화: investigate는 범용/단발 디버깅, ralph-loop-init은 장시간 반복 프로세스 전용.
 
@@ -82,3 +82,6 @@ model: inherit
 ## Final Check
 
 Acceptance Criteria가 모두 만족되었나 검증한다. 미충족 항목이 있으면 해당 단계로 돌아가 수정한다.
+
+> **Mirror Notice**: 이 agent는 `.claude/skills/investigate/SKILL.md`와 동일한 계약을 공유한다.
+> 내용을 수정할 때는 skill 파일과 이 agent 파일을 **반드시 함께** 수정해야 한다.
