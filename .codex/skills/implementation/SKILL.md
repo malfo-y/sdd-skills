@@ -22,6 +22,8 @@ version: 2.0.0
 - [ ] `_sdd/implementation/<YYYY-MM-DD>_implementation_progress_<slug>.md`를 갱신한다.
 - [ ] Target Files 기반 병렬/순차 실행 판단이 가능하다.
 - [ ] 테스트/검증/리포트까지 포함한 구현 사이클이 완료된다.
+- [ ] worker 출력이 AC 외 추가 코드(옵션·설정·추상화·에러 처리)를 포함하지 않으며, 발견 시 Phase Review에서 Quality 또는 Critical로 분류한다 (Hard Rule 9).
+- [ ] 시작 전 Plan Assumptions와 Phase별 Surprises가 사용자에게 노출됐다 (해당 항목이 없으면 생략 가능).
 
 ## Hard Rules
 
@@ -33,6 +35,7 @@ version: 2.0.0
 6. **Verification Gate**: "should work" 금지. 코드 변경 후 반드시 테스트를 재실행하고 출력을 근거로 제시한다. 이전 실행 결과 재사용 금지. `_sdd/env.md` 미존재 시 코드 분석 기반 검증을 허용하되, 리포트에 `UNTESTED` 표기.
 7. **Regression Iron Rule**: 기존 테스트 실패 시 (1) 테스트 업데이트 + (2) 회귀 방지 테스트 추가를 사용자 확인 없이 자동 수행한다.
 8. 출력 artifact는 lowercase canonical 경로에 저장한다. transition 기간에는 plan/progress/report 입력에서 legacy uppercase 경로도 fallback으로 함께 확인한다.
+9. **Minimum-Code Mandate**: worker와 후속 검증은 AC가 요구하는 동작만 구현·검증한다. 요청되지 않은 옵션·설정·추상화·에러 처리 추가 금지. 사변적 형용사("future-proof / extensible / configurable")는 task의 Technical Notes에 근거가 명시될 때만 허용한다. **TDD의 REFACTOR 단계도 단일 사용처 추상화 도입은 금지한다 — 중복 제거·명확성 향상에 한정한다.**
 
 ## Target Files and Conflicts
 
@@ -86,6 +89,15 @@ plan에서 다음을 추출한다.
 - technical notes
 
 plan이 없으면 `implementation-plan` 또는 `feature-draft` 후속 사용을 안내한다.
+
+#### Surface Plan Assumptions
+
+Plan 로드 직후, 사용자에게 다음을 채팅으로 알림한다 (질문 아님 — redirect는 사용자가 다음 turn에 지시):
+
+- Plan `Open Questions` 중 Confidence=LOW 또는 User confirmation needed=Yes 항목 (Decision/Alternatives/Confidence/User confirmation needed 4-필드 스키마를 따르지 않는 plan은 Open Q 항목을 보수적으로 모두 노출)
+- 본 실행에 적용될 Autonomous Decision-Making 카테고리 예고 (해당 항목이 있는 경우)
+
+항목당 1줄: `[Qn] <Decision taken 요약> (출처/근거)`. 해당 항목이 없으면 "사용자 확인이 필요한 항목 없음" 한 줄로 마친다.
 
 ### Step 2: Initialize Task Tracking
 
@@ -177,10 +189,26 @@ phase 종료 후 경량 리뷰를 수행한다.
 - performance
 - test quality
 - integration consistency
+- Speculative Code: AC 외 옵션·설정·추상화, 미사용 추상화, 도달 불가 에러 처리
 
-Critical 이슈가 있으면 수정 후 다시 검증한다.
+Decision Gate:
+
+| 상황 | 조치 |
+|------|------|
+| Critical 이슈 (보안, 데이터 손실, 핵심 기능 결함, 사변적 코드가 실제 버그·보안 영향) | TDD로 수정 → Phase Review 재실행 |
+| Speculative Code (AC 외 옵션·설정·추상화·도달 불가 에러 처리) | 제거 또는 task 근거 보강 → 테스트 재실행 → Phase Review 재실행 |
+| Quality 이슈 (Speculative Code 제외) | 문서화 후 다음 Phase 진행 |
+| 이슈 없음 | 다음 Phase 진행 |
 
 phase 리포트는 필요 시 `_sdd/implementation/implementation_report_phase_<N>.md`로 저장한다.
+
+#### Surface Phase Surprises
+
+Phase Review 종료 시, 그 phase에서 발생한 다음 이벤트를 채팅으로 1-3줄 요약한다 (질문 아님). 발생 항목이 없으면 sub-step 자체를 생략한다.
+
+- `UNPLANNED_DEPENDENCY` 자동 해결 (어느 파일이 추가 수정됐는지)
+- Regression Iron Rule 발동 (어느 기존 테스트가 자동 업데이트됐는지)
+- worker failure → 순차 fallback (어느 task가 재시도했는지)
 
 ### Step 7: Final Report
 
@@ -215,6 +243,7 @@ worker에 전달하는 프롬프트 템플릿:
 1. TDD 필수: 각 AC마다 RED → GREEN → REFACTOR
 2. 파일 경계: Target Files만 생성/수정/삭제. 그 외는 읽기만.
 3. Target Files 외 수정 필요 시: UNPLANNED_DEPENDENCY: {경로} - {설명}
+4. Minimum-Code: AC가 요구하지 않는 옵션·설정·추상화·에러 처리 금지. 사변적 형용사 (configurable / extensible / future-proof)는 task의 Technical Notes에 근거가 명시될 때만 허용. REFACTOR 단계도 단일 사용처 추상화 도입 금지.
 
 ## 환경
 {env_setup}

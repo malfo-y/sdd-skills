@@ -174,7 +174,7 @@ Part 2는 구현 실행을 위한 계획이다.
 - phase와 task를 action-oriented하게 작성한다.
 - `Task details` 에는 각 task의 priority, description, acceptance criteria, target files, dependencies를 포함한다.
 - `Technical Notes`나 `Contract/Invariant Delta Coverage`에서 관련 `C*`, `I*`, `V*` 링크를 보존한다.
-- 병렬 가능성을 파일 겹침 기준으로 설명한다.
+- 병렬 가능성은 파일 겹침과 의미적 충돌 패턴을 함께 기준으로 설명한다.
 
 `Task details`의 각 `Task` 는 다음 템플릿을 따라 작성한다.
 ```markdown
@@ -230,6 +230,9 @@ Part 2 작성 후 Hard Rule 10 self-check를 수행한다:
 - Part 1과 Part 2가 같은 delta 범위를 다루는가
 - `Contract/Invariant Delta`와 `Validation Plan`의 ID linkage가 살아 있는가
 - 모든 task에 `Target Files`가 있는가
+- `Risks / Open Questions`가 Hard Rule 4 스키마(Decision/Alternatives/Confidence/User confirmation needed)를 따르는가
+- Part 2에 Hard Rule 10 (Minimum-Code Mandate) 위반 표현이 없는가
+- Part 2 Self-Containment Check (Pass 1 + Pass 2) 흔적이 구체적으로 기록됐는가
 - `_sdd/` artifact 경로가 실제 워크플로우와 맞는가
 
 파일명 규칙:

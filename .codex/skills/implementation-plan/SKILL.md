@@ -21,15 +21,17 @@ version: 2.2.0
 - [ ] `_sdd/implementation/<YYYY-MM-DD>_implementation_plan_<slug>.md`가 생성된다.
 - [ ] 모든 task에 `**Target Files**`가 포함된다.
 - [ ] `Contract/Invariant Delta`와 `Validation Plan` linkage가 plan에 보존된다.
-- [ ] 각 phase에 `goal`, `task set / dependency closure`, `validation focus`, `exit criteria`, `carry-over policy`가 포함된다. single-phase plan도 동일 metadata를 가진 1개 phase로 표현한다.
+- [ ] 각 phase에 `goal`, `task set / dependency closure`, `validation focus`, `exit criteria`, `carry-over policy`, `checkpoint`가 포함된다. single-phase plan도 동일 metadata를 가진 1개 phase로 표현한다.
 - [ ] phase, dependency, risk, open question이 빠지지 않는다.
 - [ ] `_sdd/spec/`는 읽기만 하고 직접 수정하지 않는다.
 - [ ] Plan 본문이 Self-Contained Authoring 원칙(Rule 1/2/3)을 따르며, Self-Containment Check (Pass 1 + Pass 2)를 수행하고 흔적(갭 위치와 보완 내용)을 기록한다.
+- [ ] Plan task 어느 것도 요청되지 않은 추상화·옵션·설정·에러 처리를 포함하지 않는다 (Hard Rule 12).
+- [ ] `Open Questions`의 각 항목이 Decision / Alternatives / Confidence / User confirmation needed 스키마를 따른다 (Hard Rule 2).
 
 ## Hard Rules
 
 1. 이 agent는 스펙을 입력으로 읽을 수 있지만 `_sdd/spec/` 파일은 수정하지 않는다.
-2. 구조, task boundary, target files, verification 전략을 실질적으로 바꾸는 핵심 ambiguity면 질문 1회를 추가한다. 그 외 부족 정보는 deterministic defaults로 진행한다.
+2. 결과 방향을 바꿀 수 있는 ambiguity (구조, task boundary, target files, verification 전략 포함)는 best-effort로 결정하되 `Open Questions`에 (Decision taken / Alternatives considered / Confidence / User confirmation needed)를 기록한다. 사용자에게 inline 질문을 던지지 않으며, Confidence=LOW 또는 User confirmation needed=Yes인 항목은 Step 8에서 채팅으로 노출한다.
 3. 모든 task는 action-oriented title, acceptance criteria, target files, dependencies를 가져야 한다.
 4. `Contract/Invariant Delta`와 `Validation Plan`의 ID linkage를 plan에서 잃으면 안 된다.
 5. 언어는 기존 스펙/문서의 언어를 따른다. 스펙이 없으면 한국어를 기본으로 사용한다.
@@ -37,12 +39,17 @@ version: 2.2.0
 7. 결과 파일은 lowercase canonical 경로에 저장한다. transition 기간에는 legacy uppercase artifact를 입력 fallback으로 허용한다.
 8. `feature-draft` Part 2가 이미 충분히 명확하면 plan 전체를 다시 쓰지 말고 unresolved dependency나 phase detail만 보강한다.
 9. non-trivial planning의 기본 진입은 `feature-draft`다. `implementation-plan`은 `feature-draft` 이후 deeper breakdown 단계로 사용하고, standalone usage는 동등한 temporary spec/기존 plan artifact가 이미 있을 때만 허용한다.
-10. multi-phase plan이면 phase metadata를 반드시 명시한다. `medium` 이슈도 기본적으로 phase exit blocker이며, carry-over는 explicit policy가 있을 때만 허용한다.
+10. multi-phase plan이면 phase metadata를 반드시 명시한다. `medium` 이슈도 기본적으로 phase exit blocker이며, carry-over는 explicit policy가 있을 때만 허용한다. phase는 실제 dependency closure가 필요할 때만 분리한다 (사변적 phase 분리 금지).
 11. **Self-Contained Authoring**: 이 plan 산출 문서는 외부 문서나 작성 대화에 암묵 의존하지 않고 reader 단독으로 의도·근거·참조를 따라갈 수 있게 작성한다. 이 원칙은 아래 세 sub-rule로 구성된다.
     - **Rule 1 (Decision & Assumption Surfacing)**: 이 문서의 실행에 필요한 모든 결정과 가정은 — 작성 대화, 다른 문서, 이전 토론 어디서 도출됐든 — 이 문서에 명시적으로 기록한다. "이미 결정됐으니"라는 이유로 생략하지 않는다. 외부에서 확정된 결정이라도 (a) 결정 내용 자체를 재진술하고 (b) 출처를 Rule 2 형식으로 grounding한다.
     - **Rule 2 (Reference Grounding)**: 외부 참조(spec 조항, 코드 경로, 결정 로그 등)는 bare path만 남기지 않는다. 참조가 이 문서의 어떤 판단·변경과 연결되는지 inline으로 서술한다. "the X 수정" 류 대명사적 지시는 금지하고 경로/ID를 명시한다.
     - **Rule 3 (Vocabulary Grounding)**: 프로젝트 고유 용어·개념은 최초 사용 시 1줄 정의 또는 Rule 2 준수 참조를 동반한다.
     - **Thinness 축과의 관계**: grounding은 재진술·요약이지 복사가 아니므로 `SDD_SPEC_DEFINITION.md`의 Thinness/Anti-duplication 축과 층위가 다르다 (Thinness는 "복사하지 마라", 본 원칙은 "쓴다면 이렇게"). 상보적으로 적용한다.
+12. **Minimum-Code Mandate (각 task의 description, AC, Technical Notes 대상)**: Plan task는 요청된 동작을 만드는 데 필요한 최소 코드만 명세한다.
+    - 요청되지 않은 기능·옵션·설정 가능성 추가 금지.
+    - 한 곳에서만 쓰이는 코드에 추상화 도입 금지.
+    - 발생할 수 없는 시나리오에 대한 에러 처리 추가 금지.
+    - "future-proof / extensible / configurable" 같은 사변적 형용사는 근거(어떤 contract·invariant·실패 케이스에서 비롯되는지)가 task의 `Technical Notes` 또는 description에 명시될 때만 허용.
 
 ## Input Sources
 
@@ -150,6 +157,14 @@ task를 나눌 때 원칙:
 - setup/common groundwork는 별도 task로 분리한다.
 - `Technical Notes`에 관련 `C*`, `I*`, `V*` 링크를 남긴다.
 - 작은 delta는 compact linkage만 유지하고, 형식적 세분화를 위해 task나 CIV 표를 불필요하게 늘리지 않는다.
+
+Task 작성 후 Hard Rule 12 (Minimum-Code Mandate) self-check:
+
+- 모든 AC가 요청된 동작에서 직접 도출되는가?
+- "configurable / extensible / future-proof" 단어가 등장한다면 근거(contract·invariant·실패 케이스)가 task에 명시돼 있는가?
+- description을 더 줄일 수 있는가? 200줄을 50줄로 줄일 수 있다면 줄인다.
+
+위반 항목이 있으면 해당 task로 돌아가 수정한다.
 
 ### Test Coverage Mapping (조건부)
 
@@ -266,12 +281,33 @@ Task 템플릿:
 **Dependencies**: ...
 ```
 
+Open Questions 템플릿 (Hard Rule 2 스키마):
+
+```markdown
+### Q1. [모호함/위험 한 줄 요약]
+- **Decision taken**: 어느 방향으로 진행했는가
+- **Alternatives considered**: 기각한 대안 1-2개 + 기각 사유
+- **Confidence**: HIGH | MEDIUM | LOW
+- **User confirmation needed**: Yes | No
+```
+
+저장 전 점검:
+
+- 모든 task에 `Target Files`가 있는가
+- `Contract/Invariant Delta`와 `Validation Plan`의 ID linkage가 살아 있는가
+- Hard Rule 12 (Minimum-Code Mandate) 위반 표현이 없는가 (사변적 형용사·옵션·설정·도달 불가 에러 처리)
+- Open Questions가 Hard Rule 2 스키마(Decision/Alternatives/Confidence/User-conf)를 따르는가
+
+### Step 8: Surface Key Decisions to User
+
+파일 저장 후, `Open Questions`의 Confidence=LOW 또는 User confirmation needed=Yes 항목을 채팅에 알림한다 (질문 아님 — redirect는 사용자가 다음 turn에 지시). 항목당 1줄: `[Qn] <Decision taken 요약> (출처/근거)`. 해당 항목이 없으면 "사용자 확인이 필요한 항목 없음".
+
 ## Error Handling
 
 | 상황 | 대응 |
 |------|------|
 | spec 없음 | codebase 기반 plan 생성, 한계를 `Open Questions`에 적는다 |
-| user input 모호 | 방향을 바꿀 핵심 ambiguity면 질문 1회 후 defaults를 적용하고 가정을 남긴다 |
+| user input 모호 | best-effort로 결정한 뒤 Hard Rule 2 스키마로 `Open Questions`에 기록 (Decision/Alternatives/Confidence/User-conf). Step 8에서 LOW/Yes 항목 노출 |
 | 파일 경로 불명확 | `[TBD]`를 사용하고 사유를 남긴다 |
 | task가 너무 많음 | phase로 나누고 overview/index를 유지한다 |
 | spec 갭 발견 | plan 수정으로 덮지 말고 `Open Questions`에 기록한다 |
