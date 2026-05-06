@@ -1,7 +1,7 @@
 ---
 name: discussion
 description: This skill should be used when the user asks to "discuss", "discussion", "토론", "토론하자", "let's discuss", "brainstorm", "논의", "의견 나누기", or wants a structured iterative discussion with research support.
-version: 1.4.2
+version: 1.4.4
 ---
 
 # Structured Discussion - 구조화된 토론 진행
@@ -18,7 +18,7 @@ version: 1.4.2
 - [ ] AC1: 구조화된 토론이 최소 1라운드 이상 진행되었다
 - [ ] AC2: key decisions / action items가 내부 상태에 추적·정리되었다
 - [ ] AC3: 토론 요약 파일이 `_sdd/discussion/<YYYY-MM-DD>_discussion_<slug>.md`에 저장되었다
-- [ ] AC4: 요약에 핵심 논점, 결정 사항, 미결 질문, 실행 항목 섹션이 모두 포함되었다
+- [ ] AC4: 요약에 토론 배경/초기 콘텍스트, 핵심 논점, 결정 사항, 미결 질문, 실행 항목 섹션이 모두 포함되었다
 
 ## Hard Rules
 
@@ -99,6 +99,20 @@ Process의 모든 단계에서 횡단 적용되는 원칙. Hard Rules가 강제 
 | 외부 참고 | ... (있는 경우) |
 ```
 
+#### 2.3 Initial Context Capture (필수)
+
+Step 2에서 수집한 맥락은 사용자에게 보여주는 일회성 요약으로 끝내지 않고, 최종 요약에 재사용할 수 있도록 `initial_context` 내부 상태에 보존한다.
+
+`initial_context`에는 아래를 간결하게 기록한다:
+
+- **사용자 문제 제기**: 사용자가 처음 어떤 필요/불편/질문으로 토론을 시작했는지
+- **토론을 시작한 배경**: 왜 지금 이 토론이 필요한지, 어떤 후속 작업이나 의사결정과 연결되는지
+- **현재 상태**: 코드베이스/문서/운영 상황 등 확인된 현황
+- **범위와 제외 범위**: 이번 토론에서 다루기로 한 것과 명시적으로 미룬 것
+- **수집한 근거**: 로컬 파일, 문서, 외부 자료 등 토론 전제에 영향을 준 자료
+
+이 항목은 결정이나 논점과 중복되더라도 삭제하지 않는다. 목적은 "무엇을 결정했는가"가 아니라 "왜 이 토론이 열렸는가"를 후속 독자가 복원할 수 있게 하는 것이다.
+
 **Decision Gate 2→3**: `context_available AND topic_still_valid` → Step 3 진행. 맥락 없으면 사용자에게 확인. 토픽 무효화 시 Step 1 복귀.
 
 ### Step 3: Iterative Discussion (반복 토론)
@@ -111,7 +125,7 @@ Process의 모든 단계에서 횡단 적용되는 원칙. Hard Rules가 강제 
 
 ```
 내부 상태 추적:
-  key_points, decisions, open_questions, action_items, conversation_log
+  key_points, decisions, open_questions, action_items, conversation_log, initial_context
   round = 0
 
   coverage:
@@ -310,6 +324,7 @@ Analysis 페이즈 진입 직후 첫 라운드에, AI는 다음을 반드시 수
 
 - **파일명**: `<YYYY-MM-DD>_discussion_<slug>.md` 패턴. slug는 소문자 영문, 특수문자는 `_`로 대체, 최대 50자 (예: "인증 시스템 설계" → `2026-04-10_discussion_auth_system_design.md`)
 - **언어**: 토론에서 사용된 언어로 작성
+- **필수 포함**: 토론 배경 및 초기 콘텍스트, 핵심 논점, 결정 사항, 미결 질문, 실행 항목, 리서치 결과 요약, 토론 흐름
 
 #### 요약 출력 형식
 
@@ -319,6 +334,13 @@ Analysis 페이즈 진입 직후 첫 라운드에, AI는 다음을 반드시 수
 **날짜**: YYYY-MM-DD
 **라운드 수**: N
 **참여 방식**: 구조화된 토론 (discussion skill)
+
+## 토론 배경 및 초기 콘텍스트 (Background / Initial Context)
+- **사용자 문제 제기**: [사용자가 처음 제기한 필요, 불편, 질문]
+- **토론을 시작한 배경**: [왜 지금 이 토론이 필요한지 / 어떤 후속 작업과 연결되는지]
+- **현재 상태**: [토론 전에 확인한 코드베이스, 문서, 운영 상황 등]
+- **범위와 제외 범위**: [이번 토론에서 다룬 범위와 의도적으로 미룬 범위]
+- **수집한 근거**: [토론 전제에 영향을 준 로컬 파일, 문서, 외부 자료]
 
 ## 핵심 논점 (Key Discussion Points)
 1. [논점 1]: [요약]
