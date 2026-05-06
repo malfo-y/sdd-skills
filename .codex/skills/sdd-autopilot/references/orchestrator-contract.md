@@ -46,7 +46,7 @@
 
 - `Execution profile`
   - `profile_key` 또는 `model / reasoning_effort` 표시를 허용한다.
-  - 예: `draft_strict` (`gpt-5.5 / xhigh`)
+  - 예: `draft_strict` (`gpt-5.5 / high`)
   - step-level 프로파일은 전체 `Execution Profiles` section을 생략한 경우에도 사용할 수 있다.
   - 기본 policy와 완전히 동일하고 해석 여지가 없으면 step-level 표기도 생략할 수 있다.
   - step-level 프로파일은 같은 agent_type에 대한 section-level 기본값보다 우선한다.
