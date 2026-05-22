@@ -12,7 +12,7 @@ Optional support layers:
 
 - reference information
 - guide links
-- appendix-level code map
+- compact Strategic Code Map or supporting surface link
 - repo-wide invariant wording inside guardrails or key decisions
 
 ## Temporary Spec Reference

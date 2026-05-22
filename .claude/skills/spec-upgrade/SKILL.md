@@ -39,7 +39,6 @@ version: 1.10.1
 - `references/template-compact.md`
 - `references/template-full.md`
 - `references/upgrade-mapping.md`
-- `examples/before-upgrade.md`
 - `examples/after-upgrade.md`
 - SDD 정의 문서: https://github.com/malfo-y/sdd-skills/tree/main/docs
 
