@@ -2,6 +2,15 @@
 
 > 이 파일은 `_sdd/spec/main.md`의 버전별 변경 기록이다.
 
+#### v4.1.10 (2026-05-22)
+
+- **Strategic Code Map 표준화**: `Strategic Code Map`을 optional compact navigation surface로 정의하고, exhaustive file tree / component catalog / API reference / 구현 narrative로 확장하지 않는 guardrail을 고정
+- **spec-create 생성 규칙 정렬**: primary navigation axis를 하나 선택하고, 짧은 map은 `main.md` appendix, 긴 map은 `components.md` 또는 `code-map.md` 같은 supporting surface로 분리하도록 Codex/Claude skill과 template/example 갱신
+- **planning/sync 소비 규칙 정렬**: `feature-draft`는 code map을 hint로만 읽고 `Touchpoints`/`Target Files`를 현재 코드로 재확인하며, `spec-update-*`는 temporary touchpoint 통복사 대신 verified persistent navigation 변화만 승격
+- **mirror parity 보정**: `feature-draft`, `spec-review`, `spec-update-todo`, `spec-update-done`의 Codex/Claude skill-agent normalized body 일치 확인
+- **supporting docs sync**: `main.md`, `components.md`, `usage-guide.md`, `DECISION_LOG.md`를 새 code map semantics와 구현 evidence 기준으로 갱신
+- 입력: `_sdd/drafts/2026-05-22_feature_draft_strategic_code_map_spec_skills.md`, `_sdd/implementation/2026-05-22_implementation_report_strategic_code_map_spec_skills.md`, `_sdd/implementation/2026-05-22_implementation_review_strategic_code_map_spec_skills.md`, `b994366`
+
 #### v4.1.9 (2026-04-29)
 
 - **multi-phase quality gate를 per-phase에서 per-group으로 전환**: `implementation-plan` schema에 6번째 필드 `Checkpoint: true/false`를 추가해 group boundary owner를 plan에 두고, autopilot은 `Checkpoint=true` phase 직후에만 review-fix gate를 닫는다. 마지막 phase는 implicit `Checkpoint=true`. `Checkpoint=true` phase에는 `Checkpoint Reason` 한 줄을 동반.

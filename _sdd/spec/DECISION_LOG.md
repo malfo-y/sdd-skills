@@ -1,5 +1,45 @@
 # Decision Log
 
+## 2026-05-22 - Standardize Strategic Code Map as optional navigation surface (v4.1.9 -> v4.1.10 spec revision)
+
+### Context
+
+`spec-create`는 thin global spec을 기본으로 유지하도록 정렬돼 있었지만, 사람이 코드를 파악하는 navigator 역할과 LLM agent가 구현 중 참고하는 index 역할을 동시에 만족시키기에는 코드 탐색 좌표가 약했다. 기존 `_sdd/spec/components.md`에는 strategic code map appendix가 있었지만, `spec-create`, `feature-draft`, `spec-review`, `spec-update-*` 계열이 이를 어떤 surface로 생성·소비·검증해야 하는지 명시적 계약은 부족했다.
+
+이번 라운드에서는 `Strategic Code Map`을 전체 파일 inventory가 아니라 optional compact navigation surface로 표준화하고, 작은 repo에서는 `main.md` appendix, 큰 repo에서는 `components.md` 또는 `code-map.md` 같은 supporting surface로 배치하는 규칙을 canonical docs, Codex/Claude skills, wrapper-backed agents에 반영했다.
+
+### Decision
+
+1. **`Strategic Code Map`을 optional navigation surface로 고정**: entrypoint, contract source, invariant hotspot, extension point, change hotspot, validation surface, supporting reference만 담는다. 전체 파일 트리, component catalog, API reference, 구현 narrative는 금지한다.
+2. **primary navigation axis 하나를 선택**: app/service/product는 feature/domain/change-path, library/framework/compiler는 module/layer, workflow/tooling repo는 entrypoint/workflow, small repo는 `main.md` appendix를 기본 후보로 본다. secondary axis는 cross-reference로만 둔다.
+3. **single-file default와 배치 기준 유지**: 기본값은 `_sdd/spec/main.md` 단일 파일이다. 5-10개 row 수준의 짧은 map은 appendix로 허용하고, row가 많거나 per-path 설명이 필요하면 supporting surface로 분리한다.
+4. **planning에서는 hint로만 사용**: `feature-draft`와 implementation planning은 code map을 context gathering 출발점으로만 사용하고, 실제 `Touchpoints`와 `Target Files`는 현재 코드 탐색으로 재확인한다.
+5. **sync에서는 persistent navigation 변화만 승격**: `spec-update-todo`와 `spec-update-done`은 temporary `Touchpoints`를 통째로 복사하지 않는다. 구현으로 검증된 장기 entrypoint, extension point, invariant hotspot, validation surface만 code map 후보로 본다.
+6. **Codex/Claude skill과 agent mirror parity 유지**: 변경된 spec lifecycle skill은 `.claude/skills` counterpart와 wrapper-backed `.codex/agents` / `.claude/agents` mirror에 같은 normative rule을 담아야 한다.
+
+### Rationale
+
+- thin global spec을 유지하면서도 agentic coding에는 코드 탐색의 시작 좌표가 필요하다.
+- 전수형 file inventory는 빠르게 stale해지고 global spec을 다시 두껍게 만든다.
+- 작은 repo에서는 별도 파일이 오히려 탐색 비용을 늘리므로 compact appendix가 적합하다.
+- 큰 repo나 설명이 필요한 map은 supporting surface에 둘 때 main body의 decision density가 유지된다.
+- `Strategic Code Map`이 stale할 수 있으므로 planning/implementation은 항상 현재 코드 탐색으로 target files를 확정해야 한다.
+
+### Changes
+
+- `docs/SDD_SPEC_DEFINITION.md`, `docs/en/SDD_SPEC_DEFINITION.md` -- `Strategic Code Map` 정의, 허용 정보, 배치 기준 추가
+- `.claude/skills/spec-create/SKILL.md`, `.codex/skills/spec-create/SKILL.md` 및 template/example -- primary navigation axis와 appendix/supporting surface 생성 규칙 추가
+- `spec-review`, `spec-rewrite`, `spec-upgrade`, `spec-summary`, `spec-update-todo`, `spec-update-done`, `feature-draft` Codex/Claude skill pairs -- code map freshness, exhaustive inventory 구분, temporary touchpoint 통복사 금지 반영
+- `.claude/agents/feature-draft.md`, `.codex/agents/feature-draft.toml`, `.claude/agents/spec-review.md`, `.codex/agents/spec-review.toml`, `.claude/agents/spec-update-todo.md`, `.codex/agents/spec-update-todo.toml`, `.claude/agents/spec-update-done.md`, `.codex/agents/spec-update-done.toml` -- wrapper-backed mirror sync
+- `_sdd/spec/main.md`, `_sdd/spec/components.md`, `_sdd/spec/usage-guide.md`, `_sdd/spec/logs/changelog.md` -- completed implementation evidence 기준으로 global spec surface 동기화
+
+### References
+
+- feature draft: `_sdd/drafts/2026-05-22_feature_draft_strategic_code_map_spec_skills.md`
+- implementation report: `_sdd/implementation/2026-05-22_implementation_report_strategic_code_map_spec_skills.md`
+- implementation review: `_sdd/implementation/2026-05-22_implementation_review_strategic_code_map_spec_skills.md`
+- commit: `b994366`
+
 ## 2026-04-29 - Phase-grouped review-fix gate with adaptive final integration review (v4.1.8 -> v4.1.9 spec revision)
 
 ### Context

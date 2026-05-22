@@ -23,6 +23,7 @@
 **Expected Result:**
 - `_sdd/spec/main.md` 생성 또는 갱신 — current canonical global spec core(배경, Scope / Non-goals / Guardrails, 핵심 설계와 주요 결정)를 갖춘 thin global spec 생성
 - 필요할 때만 supporting file 또는 appendix 분리 — 기본값은 single-file이며, multi-file은 structure rationale이 있을 때만 연다
+- 코드베이스가 있으면 optional `Strategic Code Map` 생성 — 짧으면 `main.md` appendix, 길거나 설명이 필요하면 `components.md` 또는 `code-map.md` 같은 supporting surface에 둔다
 - `_sdd/env.md` 생성 — 환경 설정/실행 방법 가이드
 - `CLAUDE.md` 생성 또는 업데이트 — 워크스페이스 안내에 `_sdd/` 경로 추가
 - `AGENTS.md` 생성 또는 업데이트 — 동일한 워크스페이스 안내 유지

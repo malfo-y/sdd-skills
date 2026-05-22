@@ -2,8 +2,8 @@
 
 > Markdown 기반 skill bundle로 AI 에이전트의 Spec-Driven Development 워크플로우를 Claude Code와 Codex에서 공통 계약으로 실행한다.
 
-**Spec Version**: 4.1.9
-**Last Updated**: 2026-04-29
+**Spec Version**: 4.1.10
+**Last Updated**: 2026-05-22
 **Status**: Approved
 **Canonical Role**: current thin global spec
 
@@ -67,6 +67,7 @@ SDD Skills는 이 문제를 `SKILL.md = 실행 가능한 프롬프트`라는 관
 - spec mutation은 target file을 식별한 뒤에만 수행한다
 - current spec model과 workflow semantics의 기준은 [docs/SDD_SPEC_DEFINITION.md](../../docs/SDD_SPEC_DEFINITION.md)와 [docs/SDD_WORKFLOW.md](../../docs/SDD_WORKFLOW.md)에 둔다
 - 환경 및 실행 제약은 [../env.md](../env.md)를 authoritative source로 본다
+- `Strategic Code Map`은 agentic coding을 위한 optional navigation hint로만 사용한다. 전체 파일 트리, 컴포넌트 카탈로그, API reference, 구현 narrative로 확장하지 않으며, temporary `Touchpoints`는 검증된 persistent entrypoint / extension point / invariant hotspot / validation surface가 된 경우에만 global supporting surface로 승격한다
 
 ## 3. 핵심 설계와 주요 결정
 
@@ -93,6 +94,7 @@ SDD Skills의 설계는 네 층으로 나뉜다.
 | planning precedence | small direct path 외에는 `feature-draft`를 기본 planning entry로 두고 `implementation-plan`은 후속 확장 단계로 사용 | non-trivial 변경에서 peer-choice 혼선을 줄이고 task/phase 분해 기준을 일정하게 유지한다 |
 | multi-phase quality gate | `per-group` review-fix (Checkpoint boundary) + adaptive `final integration review` | 의미 있는 group 단위로 review depth를 높이고, review 비용과 latency를 줄이면서 cross-group regression은 adaptive final review로 커버한다 |
 | spec 구조 | thin global spec + execution-focused temporary spec | 장기 기준과 일회성 실행 정보를 분리해 drift를 줄인다 |
+| Strategic Code Map | optional compact navigation surface | global spec을 inventory로 되돌리지 않으면서 사람과 LLM agent가 entrypoint, contract source, invariant hotspot, extension point, validation surface를 빠르게 찾게 한다 |
 | artifact naming/history | lowercase canonical artifact를 기본으로 하고, skill contract가 정의한 output surface는 dated slug naming과 git-history-first 추적을 따른다 | 산출물 경로 추론을 단순화하고 legacy fixed-name drift를 줄인다 |
 | canonical rollout 순서 | `definition -> generators/transformers -> consumers/planners -> docs -> english mirrors/examples -> audit` | definition, skill behavior, human docs drift를 줄인다 |
 
@@ -104,6 +106,7 @@ SDD Skills의 설계는 네 층으로 나뉜다.
 - skill-defined output artifact는 dated slug + glob-based discovery를 canonical로 사용하고, legacy uppercase/fixed-name artifact는 transition fallback으로만 읽는다
 - canonical model 변경은 definition 문서와 workflow 문서에서 먼저 선언하고, 이후 generator/consumer/docs가 따라간다
 - supporting docs는 global decision-bearing truth를 복제하지 않고, reference 역할만 수행한다
+- spec lifecycle skill은 `Strategic Code Map`을 현재 코드 탐색의 출발점으로만 사용해야 한다. `feature-draft`와 implementation planning의 `Touchpoints` / `Target Files`는 항상 현재 코드로 재확인한다
 
 ### 현재 운영 제약
 
