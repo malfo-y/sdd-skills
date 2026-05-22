@@ -20,5 +20,5 @@
 ### Repo-wide Invariant Note
 ### Supporting References
 ### Feature-Level Guide
-### Appendix-Level Code Map
+### Strategic Code Map (Appendix or Supporting Surface)
 ```

@@ -10,6 +10,6 @@ Optional:
 
 - supporting references
 - guide links
-- appendix code map
+- compact Strategic Code Map or supporting surface link
 - repo-wide invariant note
 - feature-level guide 안내 (`$guide-create`로 생성 가능)

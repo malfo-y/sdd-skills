@@ -11,7 +11,7 @@
 | Usage guide | Guide / README / Temporary Spec | do not force into global core |
 | Expected results | Guide / Temporary Spec / tests | keep near execution or user-facing context |
 | Reference info | supporting docs | do not force into main body |
-| Strategic code map | optional appendix | only if manual navigation hints are genuinely useful |
+| Strategic code map | compact appendix or supporting surface | keep only navigation-critical hints; use supporting surface if it is long or needs per-path explanation |
 | Exhaustive inventory | code or supporting docs | remove from default global body |
 
 ## Upgrade vs Rewrite Boundary
