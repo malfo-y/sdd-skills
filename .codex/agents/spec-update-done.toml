@@ -19,6 +19,7 @@ developer_instructions = '''
 - [ ] 필요한 global spec 업데이트를 적용한다.
 - [ ] 검증된 decision-bearing truth만 global spec에 승격한다.
 - [ ] feature-level detail 과복원이나 wrong-surface restoration 없이 필요한 정보만 반영한다.
+- [ ] temporary `Touchpoints`는 통째로 복사하지 않고, 구현으로 검증된 persistent `Strategic Code Map` 변화만 반영했다.
 - [ ] 검증되지 않았거나 미구현인 planned change를 완료된 사실처럼 쓰지 않는다.
 
 ## Hard Rules
@@ -32,6 +33,7 @@ developer_instructions = '''
 7. rationale 변화가 실제로 발생했을 때만 lowercase canonical `decision_log.md`를 업데이트한다. legacy uppercase `DECISION_LOG.md`는 read-only fallback으로만 취급한다.
 8. main / supporting / history surface 중 어디에 둘지 먼저 판단하고, 가장 맞는 global surface에만 검증된 사실을 반영한다.
 9. `_sdd/` artifact 경로는 lowercase canonical을 기본으로 하되, 입력을 읽을 때는 legacy uppercase fallback도 허용한다.
+10. temporary `Touchpoints` 중 장기적으로 반복 사용될 entrypoint, extension point, invariant hotspot, validation surface만 검증된 `Strategic Code Map` 후보로 본다. 나머지 target file / task-level touchpoint는 global spec에 복구하지 않는다.
 
 ## Repo-wide Invariant Test
 
@@ -74,6 +76,7 @@ Negative example:
 - Guardrail drift
 - Key decision drift
 - Repo-wide invariant drift
+- Strategic Code Map drift
 - Config / environment drift
 - Reference link drift
 
@@ -111,6 +114,7 @@ temporary spec의 각 delta 항목을 아래 중 하나로 분류한다.
 - 어떤 global spec section이 바뀌는지
 - 어떤 delta가 반영되는지
 - 어떤 delta는 미구현/미검증이라 보류되는지
+- `Strategic Code Map`에 반영할 verified persistent navigation 변화가 있는지
 - drift type
 - 적용 action
 
@@ -127,6 +131,7 @@ global spec 문서를 수정한다.
 - 먼저 main / supporting / history surface 중 어디가 맞는지 판단
 - `Repo-wide Invariant Test`를 통과한 invariant가 있을 때만 guardrails 또는 decisions에 반영
 - feature-level contract/validation/touchpoint/usage detail은 global 본문으로 복구하지 않음
+- `Strategic Code Map`은 시작 힌트만 반영하고, temporary `Touchpoints`를 통째로 복사하지 않음
 - supporting/history가 더 맞는 정보는 main body를 두껍게 만들지 말고 해당 surface에 반영
 - 신규 sub-spec 파일 생성 시 파일 생성 후 main.md 인덱스에 링크 추가
 
@@ -138,6 +143,7 @@ global spec 문서를 수정한다.
 - 구현되지 않은 내용이 완료된 것처럼 남지 않았는가
 - global spec이 다시 feature-level detail로 두꺼워지지 않았는가
 - wrong-surface restoration이나 불필요한 truth duplication이 없는가
+- code map이 있다면 현재 코드와 맞는 verified persistent navigation hint만 담고 있는가
 - 신규 파일이 main.md 인덱스에 링크되는가
 
 ## Output Format

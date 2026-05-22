@@ -31,6 +31,15 @@
 
 ## Optional Supporting Notes
 
+### Strategic Code Map
+
+이 repo는 ingestion domain보다 workflow/change-path 중심으로 읽는다. map이 커지면 `_sdd/spec/components.md`로 분리한다.
+
+| Change Path / Area | Start Here | Contract / Hotspot | Validation Surface | Why |
+|--------------------|------------|--------------------|--------------------|-----|
+| Job orchestration | `src/orchestrator.py` | `src/retry_policy.py` | `tests/test_orchestrator.py` | scheduling과 retry guardrail이 모인다. |
+| Domain ingestion | `src/ingestion/` | `src/contracts.py` | `tests/ingestion/` | domain adapter 추가 시 시작점이다. |
+
 ### Supporting References
 - README.md
 - docs/operations.md

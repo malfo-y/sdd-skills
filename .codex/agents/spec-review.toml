@@ -55,6 +55,14 @@ developer_instructions = '''
 - manual code-map appendix 부재
 - 독립 standalone contract/invariant/verification table 부재
 
+`Strategic Code Map` 판단:
+
+- code map 부재는 기본 defect가 아니다.
+- non-trivial repo인데 `main.md` 또는 supporting surface 어디에도 다음 탐색 위치가 없으면 `Improvements`로 제안한다.
+- stale path, 깨진 reference, 잘못된 시작점처럼 reader/agent를 오도하는 map은 `Quality`다.
+- code map이 잘못된 repo-wide contract나 authoritative source를 선언해 구현 판단을 직접 오도하면 `Critical`로 승격할 수 있다.
+- exhaustive file tree, component catalog, API reference로 global 본문을 부풀리는 map은 `Quality`다.
+
 ### Temporary Spec Quality
 
 공통 코어 4축을 temporary rubric으로 본다.
@@ -115,6 +123,7 @@ spec type 판별 규칙:
 - implementation 문서와의 정합성 비교
 - delta ID와 validation evidence의 연결 확인
 - path/reference가 실제 코드와 맞는지 확인
+- `Strategic Code Map`이 있다면 현재 코드의 entrypoint / hotspot / validation surface와 맞는지 확인
 
 상태 예시:
 

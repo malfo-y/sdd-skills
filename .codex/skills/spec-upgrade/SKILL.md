@@ -30,6 +30,7 @@ version: 1.10.1
 - temporary spec은 별도의 실행 청사진이다.
 - repo-wide invariant가 진짜 필요하면 guardrails 또는 key decisions로 남긴다.
 - feature-level usage, validation, current-form CIV는 기본 global core가 아니다.
+- legacy inventory는 decision-bearing truth, navigation-critical hint, stale/exhaustive detail로 먼저 분류한다.
 - 구조 재편이 더 큰 문제라면 Step 1 경계 판정에 따라 `spec-rewrite`로 분기한다.
 
 ## Companion Assets
@@ -75,6 +76,7 @@ version: 1.10.1
 - 새 global core 존재/부족 상태
 - feature-level usage/validation/reference/CIV 오염 여부
 - implementation inventory 과잉 여부
+- legacy code map이나 architecture inventory 중 `Strategic Code Map`으로 보존할 navigation-critical hint가 있는지
 - supporting surface로 내릴 수 있는 정보
 - temporary spec 성격의 내용이 글로벌 스펙에 섞였는지 여부
 
@@ -86,6 +88,7 @@ version: 1.10.1
 - 핵심 엔트리포인트 / 주요 로직 -> core design, key decisions
 - usage docs / examples -> guide 또는 support doc 후보
 - validation notes / temp artifacts -> temporary spec 후보
+- entrypoint / contract source / invariant hotspot / extension point / validation surface -> `Strategic Code Map` 후보
 
 ### Step 4: Migration Checkpoint
 
@@ -102,7 +105,8 @@ version: 1.10.1
 - 기존 내용을 새 global structure로 재배치
 - repo-wide invariant가 진짜 필요한 경우만 guardrails 또는 decisions로 반영
 - feature-level usage / validation / detail inventory는 supporting surface 또는 temp artifact로 재배치
-- truly useful guide/reference/code map만 조건부로 남김
+- truly useful guide/reference/Strategic Code Map만 조건부로 남김
+- stale하거나 exhaustive한 file tree / component catalog는 global 본문으로 보존하지 않음
 
 ### Step 6: Validate
 

@@ -37,6 +37,13 @@
 
 ## Optional Supporting Notes
 
+### Strategic Code Map
+- optional compact navigation hint only; not an exhaustive file list
+
+| Change Path / Area | Start Here | Contract / Hotspot | Validation Surface | Why |
+|--------------------|------------|--------------------|--------------------|-----|
+| ... | `path` | `path` | `path` | ... |
+
 ### Repo-wide Invariant Note
 - only if it is not code-obvious, applies across multiple features/modules, and wrong assumptions would distort repo-level reasoning
 

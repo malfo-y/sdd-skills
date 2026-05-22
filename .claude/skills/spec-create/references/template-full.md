@@ -62,6 +62,16 @@
 
 <!-- 아래 섹션들은 정말 필요할 때만 추가한다. 없어도 defect가 아니다. -->
 
+### Strategic Code Map
+<!-- agentic coding을 위한 compact navigation hint.
+     전체 파일 목록이 아니라 먼저 볼 entrypoint / hotspot / validation surface만 적는다.
+     길어지면 `components.md` 또는 `code-map.md`로 분리한다. -->
+- optional compact navigation hint only
+
+| Change Path / Area | Start Here | Contract / Hotspot | Validation Surface | Why |
+|--------------------|------------|--------------------|--------------------|-----|
+| ... | `path` | `path` | `path` | ... |
+
 ### Repo-wide Invariant Note
 <!-- 모든 모듈/feature가 지켜야 하는 규칙이 있을 때만 적는다.
      한 컴포넌트의 내부 규칙은 여기가 아니다. -->

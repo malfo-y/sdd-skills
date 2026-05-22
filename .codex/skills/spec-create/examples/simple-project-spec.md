@@ -27,3 +27,12 @@
 - global spec은 thin decision memo로 유지한다.
 - 배치 정의 파싱과 실행은 분리한다.
 - repo-wide invariant가 필요한 경우 guardrail wording으로 남긴다.
+
+## Optional Supporting Notes
+
+### Strategic Code Map
+
+| Change Path / Area | Start Here | Contract / Hotspot | Validation Surface | Why |
+|--------------------|------------|--------------------|--------------------|-----|
+| Batch execution | `src/main.py` | `src/runner.py` | `tests/test_runner.py` | 실행 흐름과 실패 처리 판단이 모인다. |
+| Job definition schema | `src/config.py` | `examples/jobs/` | `tests/test_config.py` | 선언형 입력 contract를 확인하는 시작점이다. |

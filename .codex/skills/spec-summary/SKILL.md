@@ -27,6 +27,7 @@ version: 3.0.1
 - summary는 thin global spec을 대체하지 않는다. thin core를 사람에게 설명 가능한 whitepaper surface로 풀어주는 companion 문서다.
 - summary는 status digest나 changelog가 아니라, 문제의식과 설계 이유를 함께 설명하는 기술 화이트페이퍼형 surface다.
 - 좋은 summary는 문제와 동기, 핵심 설계, 코드 근거, 사용과 기대 결과를 함께 보여주되, exhaustive reference detail을 복제하지 않는다.
+- `Strategic Code Map`은 `Code Grounding`의 입력으로 사용할 수 있지만, summary가 code map의 authoritative replacement가 되면 안 된다.
 - guide, README, reference docs, temporary artifact는 summary의 하위 대체물이 아니라 supporting surface다. summary는 이들을 대신하지 않고 연결한다.
 
 ## Companion Assets
@@ -52,7 +53,7 @@ version: 3.0.1
 1. 사용자 지정 spec 경로
 2. `_sdd/spec/main.md` 또는 프로젝트 index spec
 3. `components.md`, `usage-guide.md`, `DECISION_LOG.md`, 관련 supporting surface
-4. summary의 `Code Grounding`에 필요한 실제 코드 경로, 모듈, 함수, 명령 surface
+4. `Strategic Code Map` 또는 summary의 `Code Grounding`에 필요한 실제 코드 경로, 모듈, 함수, 명령 surface
 5. `_sdd/drafts/*_feature_draft_*.md` (관련 appendix signal이 있을 때만)
 6. `_sdd/implementation/*_implementation_progress_*.md`, `_sdd/implementation/*_implementation_review_*.md` (관련 appendix signal이 있을 때만)
 7. `README.md` (README sync 요청 시만)
@@ -66,7 +67,7 @@ version: 3.0.1
 
 ### Step 2: Locate Concrete Source Anchors
 
-핵심 설계를 실제 구현과 연결할 수 있도록 concrete path, module/function anchor, command surface, 또는 source table 후보를 고른다.
+핵심 설계를 실제 구현과 연결할 수 있도록 `Strategic Code Map`을 먼저 참고하되, concrete path, module/function anchor, command surface, 또는 source table 후보를 현재 코드로 확인한다.
 
 ### Step 3: Locate Optional Appendix Inputs
 

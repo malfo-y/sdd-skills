@@ -18,6 +18,7 @@ developer_instructions = '''
 - [ ] planned persistent information만 반영하고, execution-only detail이나 wrong-surface inflation은 남기지 않는다.
 - [ ] planned truth는 current implemented truth와 명시적으로 분리된다.
 - [ ] 아직 구현되지 않은 planned 내용은 스펙에서 `🚧 Planned`로 명시된다.
+- [ ] temporary `Touchpoints`는 통째로 복사하지 않고, 장기적으로 필요한 `Strategic Code Map` entry만 보수적으로 반영했다.
 - [ ] 업데이트 적용 후 요약을 남긴다.
 - [ ] 처리한 input file은 `_processed_*`로 마킹한다.
 
@@ -35,6 +36,7 @@ developer_instructions = '''
 10. 기존 파일 분할 구조를 변경하지 않는다. 파일 추가만 허용, 기존 구조 재편성 금지.
 11. 아직 구현되지 않은 planned 정보는 스펙에서 반드시 `🚧 Planned`를 붙여 현재 truth와 구분한다.
 12. planned 내용을 기존 implemented truth와 같은 문단이나 bullet에 무표식으로 섞어 쓰지 않는다.
+13. temporary `Touchpoints` 중 장기적으로 반복 사용될 entrypoint, extension point, invariant hotspot, validation surface만 `Strategic Code Map` 후보로 볼 수 있다. 나머지 target file / task-level touchpoint는 temporary spec에 남긴다.
 
 ## Repo-wide Invariant Test
 
@@ -113,6 +115,7 @@ planned delta를 thin global core에 보수적으로 매핑한다.
 - repo-wide operating rule 변화 -> `Scope / Non-goals / Guardrails`
 - 장기 설계 판단 변화 -> `핵심 설계와 주요 결정`
 - `Repo-wide Invariant Test`를 통과한 invariant implication -> guardrails 또는 key decisions 문장
+- long-lived navigation hint -> `Strategic Code Map` appendix 또는 supporting surface (`🚧 Planned` 표시 포함)
 
 기본적으로 global spec에 올리지 않는 것:
 
@@ -123,6 +126,7 @@ planned delta를 thin global core에 보수적으로 매핑한다.
 - transient risk log
 - user-facing usage guide
 - exhaustive file inventory
+- one-off target files or task-level implementation touchpoints
 
 ### Step 5: Generate Update Plan
 
@@ -130,6 +134,7 @@ planned delta를 thin global core에 보수적으로 매핑한다.
 
 - 어떤 delta를 어느 global section에 넣는지
 - global spec에 남길 정보와 버릴 실행 정보가 무엇인지
+- `Strategic Code Map`에 반영할 planned persistent navigation hint가 있는지
 - existing spec과 충돌하는지
 - 후속 구현이 필요한지
 
@@ -146,6 +151,7 @@ spec를 갱신한다.
 - planned block을 추가할 때는 `## 🚧 Planned ...`, `- 🚧 Planned: ...`, 또는 이에 준하는 명시적 표식을 사용한다.
 - current implemented truth와 planned truth를 같은 문단/불릿에 무표식으로 섞지 않는다.
 - surface fit상 supporting/history가 더 맞으면 main body를 두껍게 만들지 말고 해당 surface에 배치한다.
+- `Strategic Code Map`은 시작 힌트만 반영하고, temporary `Touchpoints`를 통째로 복사하지 않는다.
 - repo-wide가 아닌 contract/validation detail은 global spec 밖에 둔다.
 - 신규 sub-spec 파일 생성 시 파일 생성 후 main.md 인덱스에 링크를 추가한다.
 

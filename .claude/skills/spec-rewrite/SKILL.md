@@ -29,6 +29,7 @@ version: 1.10.1
 - rewrite의 목표는 global 본문에서 feature-level usage, contract, reference, inventory를 걷어내고 핵심 결정이 잘 보이게 만드는 것이다.
 - repo-wide invariant가 정말 필요하면 guardrails 또는 key decisions에 흡수한다.
 - pruning은 rationale 손실을 정당화하지 않는다.
+- navigation-critical hint는 삭제하지 않고 compact `Strategic Code Map` 또는 supporting surface로 보존한다.
 
 ## Companion Assets
 
@@ -73,6 +74,7 @@ rewrite 고유 진단 축:
 - feature-level usage/contract/reference/inventory가 global 본문을 오염시키는가
 - temporary spec이면 delta / touchpoints / validation linkage가 보이는가
 - appendix/reference가 본문을 대체하지 않는가
+- code map이 exhaustive inventory인지, 아니면 entrypoint / invariant hotspot / extension point / validation surface 중심의 strategic hint인지
 
 ### Step 2: Write the Rewrite Plan
 
@@ -80,6 +82,7 @@ plan에는 아래를 포함한다.
 
 - main에 남길 내용
 - appendix 또는 support surface로 이동할 내용
+- `Strategic Code Map`으로 압축해 보존할 navigation-critical hint
 - `decision_log` 또는 `rewrite_report`로 내려야 할 rationale/history 메모
 - split map 또는 파일 재배치 계획
 - 낮은 점수 metric을 어떻게 개선할지에 대한 rationale
@@ -105,6 +108,7 @@ multi-file 분할이 필요할 때 축 선택:
 - index/main은 먼저 고정한다.
 - global spec이면 `개념 + 경계 + 결정`을 더 잘 드러내도록 구조를 재배치한다.
 - decision-bearing value가 없는 feature inventory는 reference, guide, appendix, code 쪽으로 내린다.
+- exhaustive implementation inventory는 제거하거나 supporting surface로 내리고, entrypoint / contract source / invariant hotspot / extension point / validation surface처럼 실행 판단에 유용한 힌트는 compact map으로 보존한다.
 - 본문에 남길 판단과 log/report로 내릴 실행 메모를 분리한다.
 - 없는 canonical content를 새로 만들어 넣지 말고, 누락은 report에 warning으로 남긴다.
 

@@ -19,9 +19,10 @@ Part 1은 canonical temporary spec 7섹션을 직접 담고, Part 2는 그 delta
 - [ ] Part 1이 temporary spec 7섹션을 모두 포함한다.
 - [ ] Part 1의 `Contract/Invariant Delta`와 `Validation Plan`이 ID 기반으로 연결된다.
 - [ ] Part 2의 모든 task가 `**Target Files**`를 가진다.
-- [ ] Part 2는 Self-Contained Authoring (Hard Rule 9)을 따르며, Pass 1 + Pass 2 검증 결과(갭 위치와 보완 내용)가 Part 2 말미에 기록된다.
+- [ ] `Strategic Code Map` 또는 supporting surface가 있으면 context로 읽었고, `Touchpoints`와 `Target Files`는 현재 코드 기준으로 재검증했다.
+- [ ] Part 2는 Self-Contained Authoring (Hard Rule 11)을 따르며, Pass 1 + Pass 2 검증 결과(갭 위치와 보완 내용)가 Part 2 말미에 기록된다.
 - [ ] `Risks / Open Questions`의 각 항목이 Decision / Alternatives / Confidence / User confirmation needed 스키마를 따른다 (Hard Rule 4).
-- [ ] Part 2의 어느 task도 요청되지 않은 추상화·옵션·설정 가능성·에러 처리를 포함하지 않는다 (Hard Rule 10).
+- [ ] Part 2의 어느 task도 요청되지 않은 추상화·옵션·설정 가능성·에러 처리를 포함하지 않는다 (Hard Rule 12).
 
 ## Hard Rules
 
@@ -29,14 +30,16 @@ Part 1은 canonical temporary spec 7섹션을 직접 담고, Part 2는 그 delta
 2. 출력 파일은 반드시 `_sdd/drafts/` 아래에 저장한다.
 3. 기존 스펙/문서의 언어를 따르고, 스펙이 없으면 한국어를 기본으로 사용한다.
 4. 결과 방향을 바꿀 수 있는 ambiguity는 best-effort로 결정하되 `Risks / Open Questions`에 (Decision taken / Alternatives considered / Confidence / User confirmation needed)를 기록한다. 사용자에게 inline 질문을 던지지 않으며, Confidence=LOW 또는 User confirmation needed=Yes인 항목은 Step 8에서 채팅으로 노출한다.
-5. 여러 관련 기능이 보여도 기본적으로 하나의 temporary spec으로 묶고, 분리 vs. 통합 결정은 Rule 4 스키마에 따라 `Risks / Open Questions`의 Alternatives에 기록한다.
-6. Part 2의 모든 task에는 `**Target Files**`가 있어야 한다.
-7. `Target Files`에서 경로를 확정할 수 없으면 `[TBD] <reason>`를 사용한다.
-8. Part 1과 Part 2는 같은 delta 범위를 다뤄야 하며, validation linkage를 잃으면 안 된다.
-9. **Self-Contained Authoring (Part 2 대상)**: Part 2는 작성 대화·외부 문서 없이 reader 단독으로 의도·근거·참조를 따라갈 수 있어야 한다.
+5. global spec이 thin core만 제공하거나 touchpoint가 code-obvious하지 않으면 Step 2 code exploration을 생략하지 않는다.
+6. `Strategic Code Map`은 context gathering 출발점일 뿐이며 `Target Files`의 source of truth가 아니다. 실제 `Touchpoints`와 `Target Files`는 반드시 현재 코드 탐색으로 재확인한다.
+7. 여러 관련 기능이 보여도 기본적으로 하나의 temporary spec으로 묶고, 분리 vs. 통합 결정은 Rule 4 스키마에 따라 `Risks / Open Questions`의 Alternatives에 기록한다.
+8. Part 2의 모든 task에는 `**Target Files**`가 있어야 한다.
+9. `Target Files`에서 경로를 확정할 수 없으면 `[TBD] <reason>`를 사용한다.
+10. Part 1과 Part 2는 같은 delta 범위를 다뤄야 하며, validation linkage를 잃으면 안 된다.
+11. **Self-Contained Authoring (Part 2 대상)**: Part 2는 작성 대화·외부 문서 없이 reader 단독으로 의도·근거·참조를 따라갈 수 있어야 한다.
     - 결정·가정·외부 참조·고유 용어를 모두 inline grounding 한다 (외부 결정도 재진술+출처, bare path / 대명사적 지시 금지, 용어 최초 사용 시 1줄 정의). Part 1↔Part 2 참조는 `ID + inline purpose` (예: "Contract C3 반영 — 세션 토큰 HMAC 검증")로 충족하며 Part 1 자체는 적용 대상이 아니다 (`spec-update-todo`로 canonical spec에 머지되므로).
     - 검증: Pass 1 (외부 참조의 inline purpose 동반 확인) + Pass 2 (생초 독자 readthrough). 결과를 Part 2 말미에 (검토 섹션 수 / 발견 갭 위치+보완 / 보완 완료 Yes/No)로 기록. 공허한 "갭: 0" 금지.
-10. **Minimum-Code Mandate (Part 2 대상)**: Part 2 task의 description과 acceptance criteria는 요청된 동작을 만드는 데 필요한 최소 코드만 명세한다.
+12. **Minimum-Code Mandate (Part 2 대상)**: Part 2 task의 description과 acceptance criteria는 요청된 동작을 만드는 데 필요한 최소 코드만 명세한다.
     - 요청되지 않은 기능·옵션·설정 가능성 추가 금지.
     - 한 곳에서만 쓰이는 코드에 추상화 도입 금지.
     - 발생할 수 없는 시나리오에 대한 에러 처리 추가 금지.
@@ -92,8 +95,9 @@ Part 1은 canonical temporary spec 7섹션을 직접 담고, Part 2는 그 delta
 필요한 컨텍스트를 읽는다.
 
 1. `_sdd/spec/*.md`
-2. `_sdd/spec/decision_log.md` (있다면)
-3. 관련 코드/테스트/설정 파일
+2. `Strategic Code Map` 탐색: `_sdd/spec/main.md`, `_sdd/spec/components.md`, `_sdd/spec/code-map.md`, 그리고 `Strategic Code Map` heading을 가진 `_sdd/spec/*.md`
+3. `_sdd/spec/decision_log.md` (있다면)
+4. 관련 코드/테스트/설정 파일
 
 수집 목적:
 
@@ -101,6 +105,7 @@ Part 1은 canonical temporary spec 7섹션을 직접 담고, Part 2는 그 delta
 - delta가 영향을 주는 범위 식별
 - 언어/서술 스타일 맞춤
 - 실제 Target Files 후보 추출
+- global spec 또는 code map이 hint를 제공해도 `Touchpoints`와 `Target Files`를 현재 코드 기준으로 재확인
 
 ### Step 3: Requirement Completion
 
@@ -117,7 +122,7 @@ Part 1은 canonical temporary spec 7섹션을 직접 담고, Part 2는 그 delta
 - `Change Summary`: 무엇이 왜 바뀌는가
 - `Scope Delta`: in-scope / out-of-scope / guardrail delta
 - `Contract/Invariant Delta`: 추가/수정/삭제되는 contract와 invariant
-- `Touchpoints`: 바뀌는 코드 지점과 이유
+- `Touchpoints`: 바뀌는 코드 지점과 이유. `Strategic Code Map`을 참고했더라도 현재 코드로 재확인한다.
 - `Implementation Plan`: 실행 순서 요약
 - `Validation Plan`: delta ID와 검증 방식 연결
 - `Risks / Open Questions`: 미해결 가정과 위험 (Hard Rule 4 스키마 적용)
@@ -151,7 +156,7 @@ Part 1은 global 스펙 업데이트 입력으로 바로 사용할 수 있어야
 | V1 | C1, I1 | review, test | verify generated draft structure and template output |
 ```
 
-- `Touchpoints`는 실행에 중요한 code area만 전략적으로 적는다.
+- `Touchpoints`는 실행에 중요한 code area만 전략적으로 적고, `Strategic Code Map`을 참고했더라도 현재 코드로 재확인한다.
 - `Implementation Plan`은 실행 순서와 intent를 요약한다.
 - `Risks / Open Questions`는 아래 스키마를 따른다 (Hard Rule 4):
 
@@ -209,10 +214,11 @@ Part 2는 구현 실행을 위한 계획이다.
 - `[C]` Create, `[M]` Modify, `[D]` Delete
 - 읽기 전용 참조 파일은 포함하지 않는다.
 - 경로는 가능한 한 실제 코드베이스 구조와 naming convention에 맞춘다.
+- `Strategic Code Map`에 나온 경로도 현재 코드에 존재하고 이번 변경과 관련되는지 확인한 뒤 Target Files에 넣는다.
 - 5개 이상 task가 있고 파일이 많이 겹치면 phase를 나누거나 shared setup task를 먼저 둔다.
 - 파일이 겹치지 않아도 의미적 충돌이 있으면 같은 phase에 두거나 dependency를 명시한다. 대표 패턴: 모델/타입 정의와 import, 동시 DB 마이그레이션, 동일 config 가정, API contract 생산-소비 관계.
 
-Part 2 작성 후 Hard Rule 10 self-check를 수행한다:
+Part 2 작성 후 Hard Rule 12 self-check를 수행한다:
 
 - 모든 AC가 요청된 동작에서 직접 도출되는가?
 - "configurable / extensible / future-proof" 단어가 등장한다면 근거(contract·invariant·실패 케이스)가 task에 명시돼 있는가?
@@ -220,7 +226,7 @@ Part 2 작성 후 Hard Rule 10 self-check를 수행한다:
 
 위반 항목이 있으면 해당 task로 돌아가 수정한다.
 
-이어서 Hard Rule 9 검증 (Pass 1 + Pass 2)을 수행하고 Part 2 말미에 흔적을 기록한다.
+이어서 Hard Rule 11 검증 (Pass 1 + Pass 2)을 수행하고 Part 2 말미에 흔적을 기록한다.
 
 ### Step 7: Review and Save
 
@@ -231,7 +237,8 @@ Part 2 작성 후 Hard Rule 10 self-check를 수행한다:
 - `Contract/Invariant Delta`와 `Validation Plan`의 ID linkage가 살아 있는가
 - 모든 task에 `Target Files`가 있는가
 - `Risks / Open Questions`가 Hard Rule 4 스키마(Decision/Alternatives/Confidence/User confirmation needed)를 따르는가
-- Part 2에 Hard Rule 10 (Minimum-Code Mandate) 위반 표현이 없는가
+- Part 2에 Hard Rule 12 (Minimum-Code Mandate) 위반 표현이 없는가
+- `Strategic Code Map`을 사용했다면 stale hint를 그대로 옮기지 않고 현재 코드로 검증했는가
 - Part 2 Self-Containment Check (Pass 1 + Pass 2) 흔적이 구체적으로 기록됐는가
 - `_sdd/` artifact 경로가 실제 워크플로우와 맞는가
 

@@ -19,6 +19,7 @@ version: 1.9.1
 - [ ] 구조 선택 근거를 명시했다. 기본값은 `_sdd/spec/main.md` 단일 파일로 두고, multi-file이면 왜 single-file default가 충분하지 않은지 설명했다.
 - [ ] 글로벌 스펙 본문이 `배경/개념`, `Scope / Non-goals / Guardrails`, `핵심 설계와 주요 결정`을 포함한다.
 - [ ] repo-wide invariant가 정말 필요할 때만 guardrails 또는 key decisions에 흡수했다.
+- [ ] 코드베이스가 있으면 primary navigation axis를 하나 선택했고, 유용할 때만 compact `Strategic Code Map`을 appendix 또는 supporting file로 배치했다.
 - [ ] supporting information은 필요할 때만 appendix 또는 별도 supporting file로 분리했다.
 - [ ] 코드베이스가 있으면 스펙이 실제 코드 구조와 naming을 반영한다.
 - [ ] 필요한 경우에만 `AGENTS.md`, `CLAUDE.md`, `_sdd/env.md`를 최소 범위로 생성/보강했다.
@@ -29,6 +30,7 @@ version: 1.9.1
 - temporary spec은 delta와 execution을 담는 별도 문서다.
 - global 본문 기본 구조는 feature-level usage, validation, contract detail을 담기 위한 것이 아니다.
 - architecture/component inventory나 reference detail은 supporting surface가 더 기본값에 가깝다.
+- `Strategic Code Map`은 agentic coding용 optional navigation hint다. 전체 파일 목록이 아니라 entrypoint, contract source, invariant hotspot, extension point, change hotspot, validation surface, supporting reference만 압축해 둔다.
 
 ## Repo-wide Invariant Test
 
@@ -66,6 +68,7 @@ Negative example:
 4. `AGENTS.md`, `CLAUDE.md`, `_sdd/env.md`는 없을 때 생성하고, 이미 있으면 필수 안내 문구가 빠진 경우에만 최소 수정한다.
 5. 거버넌스 문서는 기본적으로 lowercase canonical `decision_log.md`까지만 사용한다. legacy uppercase `DECISION_LOG.md`는 read-only fallback으로만 취급한다.
 6. global spec을 feature-level usage/validation/reference 문서로 부풀리지 않는다.
+7. `Strategic Code Map`을 exhaustive file tree, component catalog, API reference, 구현 narrative로 만들지 않는다.
 
 ## Structure Decision
 
@@ -82,12 +85,14 @@ Negative example:
 - 소규모: `_sdd/spec/main.md` 단일 파일
 - 중규모 이상: `_sdd/spec/main.md` + 추가 파일
 
-중규모 이상에서 multi-file로 분할할 때는 repo 성격에 따라 축을 선택한다.
+코드베이스가 있으면 primary navigation axis를 하나 선택한다. secondary axis는 별도 동등 문서 체계가 아니라 cross-reference로만 둔다.
 
-| repo 성격 | 분할 축 | 예시 |
-|-----------|---------|------|
-| 독립적인 사용자 기능/endpoint가 여러 개 | domain | `auth.md`, `payments.md` |
-| 기능은 단일에 가까우나 repo가 큼 | topic | `architecture.md`, `data-conventions.md` |
+| repo 성격 | 탐색 축 / 배치 | 예시 |
+|-----------|----------------|------|
+| app / service / product | feature / domain / change-path | `auth.md`, `payments.md`, `checkout.md` |
+| library / framework / compiler | module / layer | `parser.md`, `runtime.md`, `adapters.md` |
+| workflow / tooling repo | entrypoint / workflow | `cli.md`, `agents.md`, `artifact-flow.md` |
+| small repo | `main.md` appendix | `Strategic Code Map` 5-10 row |
 
 어떤 축이든 각 파일에 담는 건 global-level 결정만이다. domain 축의 `payments.md`여도 그 안에 들어가는 건 payments 도메인의 장기 설계 판단이지, feature-level validation이나 API response schema가 아니다.
 
@@ -100,9 +105,16 @@ global spec core는 항상 유지한다.
 필요 시에만 아래를 추가한다.
 
 - supporting reference notes
-- appendix-level code map
+- compact `Strategic Code Map`
 - guide 링크
 - repo-wide invariant note
+
+`Strategic Code Map` 배치 기준:
+
+- 5-10개 row 수준의 짧은 navigation hint면 `_sdd/spec/main.md` appendix에 둔다.
+- row가 많거나 per-path 설명이 필요하면 `_sdd/spec/components.md` 또는 `_sdd/spec/code-map.md` 같은 supporting file로 분리한다.
+- 특정 변경의 touchpoint, target file, validation detail은 temporary spec에 둔다.
+- 특정 기능의 상세 구현/리뷰 설명은 guide로 둔다.
 
 ## Process
 
@@ -125,6 +137,7 @@ global spec core는 항상 유지한다.
 - 주요 경계와 scope / non-goals
 - 유지해야 할 설계 결정
 - `Repo-wide Invariant Test`를 통과할 수 있는 repo-wide invariant 후보
+- primary navigation axis 후보와 `Strategic Code Map` 후보(entrypoint, contract source, invariant hotspot, extension point, change hotspot, validation surface, supporting reference)
 - supporting surface나 guide로 내려야 할 정보
 - single-file default가 충분한지, 아니라면 split rationale이 실제로 필요한지
 
@@ -156,7 +169,7 @@ SDD(Spec-Driven Development)는 스펙을 판단 기준으로 고정하고,
 조건부 요소:
 
 - reference notes
-- appendix-level code map
+- compact `Strategic Code Map`
 - guide links
 - repo-wide invariant note
 
@@ -165,6 +178,7 @@ SDD(Spec-Driven Development)는 스펙을 판단 기준으로 고정하고,
 - scope는 책임 범위와 out-of-scope 경계를 같이 고정한다.
 - feature-level usage / expected result / validation detail은 global 기본 본문에 강제하지 않는다.
 - implementation inventory는 코드나 supporting surface에 맡긴다.
+- `Strategic Code Map`은 구현 inventory가 아니라 탐색 시작점만 담는다.
 - `Repo-wide Invariant Test`를 통과하지 못하면 global core에 올리지 않는다.
 - split을 택했다면 body thinness보다 navigation + surface fit 개선 근거를 남긴다.
 
@@ -176,6 +190,7 @@ SDD(Spec-Driven Development)는 스펙을 판단 기준으로 고정하고,
 - multi-file이면 single-file default를 벗어난 이유가 실제로 설명되었는가
 - 글로벌 스펙 core가 빠지지 않았는가
 - global 본문이 code-obvious detail이나 feature inventory로 오염되지 않았는가
+- `Strategic Code Map`이 있다면 compact navigation hint이며 exhaustive inventory로 변질되지 않았는가
 - 코드베이스와 naming/경로가 크게 어긋나지 않는가
 - bootstrap 문서가 최소 기준을 충족하는가
 
@@ -187,6 +202,8 @@ SDD(Spec-Driven Development)는 스펙을 판단 기준으로 고정하고,
 
 조건부 산출물:
 
+- `_sdd/spec/components.md`
+- `_sdd/spec/code-map.md`
 - `_sdd/spec/<domain>.md`
 - `_sdd/spec/<domain>/...`
 - lowercase canonical `_sdd/spec/decision_log.md`
