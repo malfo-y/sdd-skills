@@ -1,240 +1,30 @@
 ---
 name: implementation-review
 description: "Use this skill to review implementation progress against the plan, verify acceptance criteria, identify issues, and determine next steps. Triggered by \"review implementation\", \"check progress\", \"verify implementation\", \"what's done\", \"implementation status\", or \"audit the code\". Works with or without an implementation plan (Graceful Degradation)."
-version: 3.0.0
+version: 5.0.0
 ---
 
-# Implementation Review
+# Implementation Review (Entrypoint Wrapper — Mode B)
 
-| Workflow | Position | When |
-|----------|----------|------|
-| Large | Step 5 of 6 | Phase별 검증 |
-| Medium | Step 3 of 3 | 구현 완료 후 검증 |
-| Small | Optional | 독립 코드 감사 |
+이 스킬은 entrypoint wrapper다. 사용자의 implementation-review 요청을 `sdd-skills:implementation-review-agent`에 위임하고 그 결과를 사용자에게 전달한다. 전체 리뷰 프로세스·Tier graceful degradation·findings-first severity·리포트 형식은 agent가 단일 소스로 보유한다.
 
-이 agent는 구현 상태를 리뷰하고 `_sdd/implementation/<YYYY-MM-DD>_implementation_review_<slug>.md`에 findings-first 리포트를 저장한다.
+## 실행 (Mode B: context-forwarding)
 
-## Acceptance Criteria
+plan 파일이 있으면 agent가 그것으로 범위를 잡지만(Tier 1), **plan 없이 "방금 구현한 거 리뷰"처럼 호출되면 무엇을·왜 구현했는지·리뷰 범위가 대화에 산다**. agent는 파일은 read하지만 **이번 세션의 대화는 못 읽으므로**, wrapper가 그 맥락을 정리해 전달한다.
 
-> 프로세스 완료 후 아래 기준을 자체 검증한다. 미충족 항목은 해당 단계로 돌아가 수정한다.
+1. 다음을 수집한다:
+   - 사용자 요청 원문 + 인자
+   - 이미 아는 경로(plan/spec/코드, 직전 산출물)
+   - **대화에만 있는 맥락 digest**: 이번 세션에서 무엇을 구현/변경했는지, 그 의도, 리뷰 대상 범위(plan 파일이 없을 때 특히). plan 파일이 분명하면 이 digest는 짧아진다.
+2. `Agent(subagent_type="sdd-skills:implementation-review-agent", prompt=<요청 + 경로 + 대화 맥락 digest>)`로 dispatch한다. 대상 경로가 불명확하면 agent가 Tier Selection·Input 우선순위로 자체 탐색하도록 위임한다.
+3. agent의 반환(리포트 경로 `_sdd/implementation/<YYYY-MM-DD>_implementation_review_<slug>.md`, Tier, findings 요약, blocker)을 사용자에게 그대로 relay한다.
 
-- [ ] AC1: Tier 1 / 2 / 3 graceful degradation이 정상 동작한다.
-- [ ] AC2: 리뷰 결과가 findings-first 구조와 severity 기준으로 정리된다.
-- [ ] AC3: `_sdd/implementation/<YYYY-MM-DD>_implementation_review_<slug>.md`에 리포트 저장
-- [ ] AC4: `_sdd/spec/`와 `implementation_plan*.md`는 수정하지 않는다.
-- [ ] AC5: 장문 리포트에서도 caller가 inline 2-phase writing으로 구조화 작성할 수 있다.
-- [ ] AC6: Speculative Code 차원이 Step 5 Assessment에서 점검되고, Step 6 Findings에 분류 기준이 적용됐다.
-- [ ] AC7: Recommendations 자체도 Min-Code 원칙을 따른다 — 사변적 권고 금지 (Hard Rule 11).
+> **경계**: wrapper는 *대화 맥락을 모아 전달*까지만 한다. Tier 판별·검증·findings 분류·리포트 작성은 agent의 Process가 수행한다(중복 금지).
 
-## Hard Rules
+## 계약 (entrypoint·artifact 유지, 흉내 금지)
 
-1. 이 agent는 **리뷰/검증 및 리포트 생성만** 수행한다.
-2. `_sdd/spec/` 아래 파일은 생성/수정/삭제하지 않는다.
-3. `implementation_plan*.md`와 진행 문서는 수정하지 않는다. 제안은 리포트에만 기록한다.
-4. 출력 언어는 사용자 언어를 우선한다. 신호가 약하면 기존 implementation review 문서나 repo 기본 문서 언어를 fallback으로 사용한다.
-5. Tier 판별, stale plan 감지, 리뷰 범위 결정은 가능한 한 자율적으로 수행하고 판단 근거를 리포트에 남긴다.
-6. `_sdd/env.md`가 있으면 환경 설정을 참고해 테스트를 시도하고, 없으면 코드 분석 중심으로 진행한다.
-7. 보안 취약점, 실패 테스트, 핵심 기능 결함은 Critical로 분류한다.
-8. **Fresh Verification**: "should work" 금지. 테스트 실행 출력을 근거로 판단한다. 이전 실행 결과 재사용 금지. `_sdd/env.md` 미존재 시 코드 분석만 수행하고 리포트에 `UNTESTED` 표기.
-9. 리포트가 길거나 다중 섹션이면 caller가 먼저 skeleton/섹션 헤더를 직접 기록한 뒤 같은 흐름에서 내용을 채운다.
-10. **Path convention**: `_sdd/` artifact 경로는 lowercase canonical을 기본으로 하되, 입력을 읽을 때는 legacy uppercase fallback도 허용한다.
-11. **Recommendations Min-Code**: Recommendations 자체도 Min-Code 원칙을 따른다. "future-proof / extensible / configurable" 같은 사변적 권고 금지. 권고는 발견된 실제 결함 또는 측정된 위험에 직접 대응해야 한다.
+- trigger(implementation-review 호출)와 리포트 경로 계약은 이 wrapper가 유지한다.
+- 실제 검증·리포트 작성은 agent가 수행한다. agent가 지원하지 않는 동작을 wrapper가 흉내내지 않는다.
+- agent가 노출하는 Tier·Critical/High findings·blocker를 wrapper가 relay해 보존한다.
 
-## Tier Selection
-
-리뷰는 다음 우선순위로 결정한다.
-
-- **Tier 1**: Plan 존재 + 현재 코드와 정합성 OK
-- **Tier 2**: Plan 없음 또는 stale + Spec 존재
-- **Tier 3**: Plan/Spec 모두 없거나 요구사항 추출이 불충분
-
-stale 판단 예시:
-- plan이 참조하는 주요 파일/모듈이 없음
-- plan 구조와 현재 코드 구조가 크게 다름
-- plan 생성 이후 대규모 변경이 있었음
-
-## Review Output
-
-기본 저장 경로:
-- `<project-root>/_sdd/implementation/<YYYY-MM-DD>_implementation_review_<slug>.md`
-- `slug`는 소문자 snake_case (영문 소문자, 숫자, `_`만 사용)
-
-리포트는 findings-first로 작성하며, severity는 `Critical / High / Medium / Low` 네 단계로 정리한다.
-
-장문 리포트는 caller가 먼저 섹션 뼈대를 직접 기록한 뒤 같은 흐름에서 채운다. Tier 3 리뷰는 한계와 추정 범위를 드러내기 위해 `Assumptions` 섹션을 추가한다.
-
-## Process
-
-### Step 1: Select Tier and Scope
-
-다음 순서로 입력을 찾는다.
-1. 사용자 지정 경로
-2. `_sdd/implementation/*_implementation_plan_*.md` (slug 기반 glob)
-3. `_sdd/implementation/implementation_plan.md` (legacy 고정 경로)
-4. `_sdd/implementation/implementation_plan_phase_<n>.md`
-5. legacy uppercase fallback: `_sdd/implementation/IMPLEMENTATION_PLAN.md`, `_sdd/implementation/IMPLEMENTATION_PLAN_PHASE_<N>.md`
-6. `_sdd/spec/*.md`
-
-여러 phase 파일이 있으면 기본은 최신 phase 우선이다. 범위를 확정할 수 없으면 최신 phase 기준으로 진행하고 가정을 리포트에 적는다.
-
-### Step 2: Inventory
-
-Tier별로 기대 항목을 정리한다.
-
-- Tier 1: plan의 task, acceptance criteria, expected artifacts
-- Tier 2: spec의 요구사항, 핵심 플로우, 제약
-- Tier 3: `git log`, `git diff`, 최근 변경 파일을 기반으로 현재 코드 변화 범위와 품질 관점을 정의
-
-이 단계 산출물:
-- 리뷰 기준 목록
-- expected artifacts 목록
-- 리뷰 범위 가정
-
-### Step 3: Verification
-
-실제 구현 상태를 확인한다.
-
-코드 검증:
-- 파일/함수/모듈 존재 여부
-- 구현 범위 충족 여부
-- 주요 통합 지점
-
-테스트 검증:
-- 테스트 파일 존재 여부
-- 실행 가능 여부
-- PASSING / FAILING / MISSING 분류
-
-상태 마커:
-- 구현: EXISTS / PARTIAL / MISSING
-- 기준 충족: MET / NOT MET / UNTESTED
-- 스펙 정합성: ALIGNED / DRIFT / MISSING
-
-### Step 4: Review Lanes (Large Scope Only)
-
-리뷰 범위가 큰 경우, read-only lane으로 나눠 검토한다.
-
-lane 예시:
-- task/module verification
-- test/quality verification
-- drift/risk verification
-
-규칙:
-- 각 lane은 읽기 전용이다.
-- lane은 서로 겹치지 않는 질문/파일 범위를 가진다.
-- 각 lane의 결과로 최종 severity와 next actions를 통합한다.
-
-작은 범위 리뷰는 lane 구분 없이 수행한다.
-
-### Step 5: Assessment
-
-수집한 결과를 기준과 비교한다.
-
-Tier 1:
-- 각 task / AC가 충족되었는지
-- Speculative Code: plan/AC가 요구하지 않는 옵션·설정·추상화, 단일 사용처 추상화, 도달 불가 에러 처리
-
-Tier 2:
-- 구현이 spec과 정합한지
-- Speculative Code: spec이 요구하지 않는 옵션·설정·추상화, 단일 사용처 추상화, 도달 불가 에러 처리
-
-Tier 3:
-- 보안, 에러 처리, 코드 패턴, 성능, 테스트 품질
-- Speculative Code (사변적 추가): AC 외 옵션·설정·추상화, 단일 사용처 추상화, 도달 불가 에러 처리
-
-### Step 6: Findings Classification
-
-발견 사항을 아래 기준으로 분류한다.
-
-- **Critical**: 핵심 기능 누락, 실패 테스트, 보안 취약점, 데이터 손실 위험, breaking change
-- **High**: 핵심 acceptance criteria 일부 불충족, 주요 에러 처리 갭, 중요한 통합 깨짐, 즉시 수정이 필요한 stale plan/drift
-- **Medium**: 비핵심 테스트 누락, 패턴 불일치, 중간 수준 성능/유지보수성 우려, 후속 수정이 필요한 구현 품질 문제, **Speculative Code (사변적 옵션·설정·추상화·도달 불가 에러 처리)의 기본 분류**
-- **Low**: 리팩터링, 문서화, 가독성, 선택적 엣지 케이스, 추후 개선 권고
-
-Speculative Code escalation: 사변적 코드가 실제 버그·보안 영향을 만들거나 데이터 손실 위험을 유발하면 Critical로 escalate.
-
-`Critical / High / Medium`은 autopilot review-fix loop의 수정 대상이고, `Low`는 기본적으로 로그/후속 권고 대상이다.
-
-리포트는 항상 findings-first로 시작한다.
-
-### Step 7: Save Report
-
-리포트 저장 시 다음 규칙을 따른다.
-
-1. 리포트가 장문이거나 섹션이 많으면 caller가 먼저 skeleton/섹션 헤더를 직접 기록한다.
-2. skeleton 작성 후 의존성 없는 섹션부터 내용을 채운다.
-3. Tier 3 리뷰는 `Assumptions` 섹션을 포함한다.
-4. 사용자가 빠른 상태 확인만 원했다면 최종 리포트와 별도로 Quick Review 요약을 함께 제공한다.
-
-리포트에는 다음을 포함한다.
-- findings
-- progress overview
-- verification summary
-- recommended next actions
-- spec/plan 수정이 필요할 경우 후속 스킬 제안
-
-이 agent는 plan/spec를 직접 수정하지 않는다.
-
-## Output Format
-
-```markdown
-# Implementation Review: [Project Name]
-
-**Review Date**: YYYY-MM-DD
-**Review Mode**: Tier 1 | Tier 2 | Tier 3
-**Reference**: [plan/spec/codebase]
-**Model**: [model]
-
-## 1. Findings
-### Critical
-- [finding]
-### High
-- [finding]
-### Medium
-- [finding]
-### Low
-- [finding]
-
-## 2. Progress Overview
-[요약]
-
-## 3. Verification Summary
-[구현/테스트/정합성]
-
-## 4. Recommendations
-[Must / Should / Could — 모두 발견된 결함 또는 측정 위험에 직접 연결돼야 한다. 사변적 'future-proof' 권고 금지 (Hard Rule 11)]
-
-## 5. Conclusion
-[한 단락 요약]
-
-## 6. Assumptions
-[Tier 3에서만 추가]
-```
-
-## Error Handling
-
-| 상황 | 대응 |
-|------|------|
-| 테스트 실행 실패 | `_sdd/env.md` 확인 후 실패 사실과 원인을 리포트에 기록 |
-| `_sdd/env.md` 없음 | 코드 분석 중심 리뷰로 진행 |
-| Plan이 stale | Tier 2로 fallback하고 stale 사실을 High 또는 Medium finding으로 기록 |
-| Spec이 비구조화 | 전체적 정합성 판단으로 전환하고 한계를 적는다 |
-| 대규모 코드베이스 | 핵심 컴포넌트 중심으로 범위를 줄이고 가정을 적는다 |
-| 기준이 모호함 | UNTESTED로 표시하고 판단 근거를 적는다 |
-
-## Quick Review
-
-사용자가 빠른 상태 확인을 요청하면 진행률, 핵심 blockers, next action만 3-5줄로 요약한다. 다만 가능하면 정식 리포트도 함께 저장한다.
-
-## Integration
-
-- `implementation-plan`: 기대 구현 항목의 기준
-- `implementation`: 후속 수정 작업의 입력
-- `write-phased`: 장문 리뷰 리포트의 inline 2-phase writing contract
-- `spec-update-todo` / `spec-update-done`: 리뷰 결과상 스펙 변경이 필요할 때 후속 스킬로 안내
-
-## Final Check
-
-Acceptance Criteria가 모두 만족되었나 검증한다. 미충족 항목이 있으면 해당 단계로 돌아가 수정한다.
-
-> **Mirror Notice**: 이 스킬은 `.claude/agents/implementation-review-agent.md`와 동일한 계약을 공유한다.
-> 내용을 수정할 때는 agent 파일과 이 스킬 파일을 **반드시 함께** 수정해야 한다.
+> Source: 전체 계약·Tier·severity·출력 형식은 `.claude/agents/implementation-review-agent.md`가 단일 소스로 보유한다 (wrapper↔agent; 더 이상 동일 본문 mirror 아님).

@@ -237,5 +237,4 @@ Speculative Code escalation: 사변적 코드가 실제 버그·보안 영향을
 
 Acceptance Criteria가 모두 만족되었나 검증한다. 미충족 항목이 있으면 해당 단계로 돌아가 수정한다.
 
-> **Mirror Notice**: 이 agent는 `.claude/skills/implementation-review/SKILL.md`와 동일한 계약을 공유한다.
-> 내용을 수정할 때는 skill 파일과 이 agent 파일을 **반드시 함께** 수정해야 한다.
+> **Source Pointer**: 이 agent가 implementation-review의 전체 계약·프로세스·출력 형식을 보유하는 **단일 소스**다. .claude/skills/implementation-review/SKILL.md는 이 agent를 dispatch하는 thin entrypoint wrapper다 (wrapper↔agent; 더 이상 동일 본문 mirror 아님 — 함께 수정 의무 없음).
