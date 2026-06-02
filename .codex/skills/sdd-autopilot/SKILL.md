@@ -179,6 +179,7 @@ planning precedence 메모:
 - `implementation-plan` output을 downstream `implementation`이 소비하는 expanded path면 해당 `implementation` step을 flat single-shot으로 쓰지 않고 `Execution Mode: phase-iterative`와 `Phase Source`를 명시한다.
 - Phase 2의 custom-agent step에는 `Interaction Mode: autonomous-no-input`을 기본으로 명시한다. 이 계약에는 `request_user_input` 금지, 권장안 우선 판단, 가정/근거 기록, 안전한 추론이 불가능할 때 질문 대신 `BLOCKED`로 종료하는 fallback이 포함된다.
 - review가 포함된 모든 path에서는 `implementation`/`implementation_review`/re-review를 모두 Codex custom agent step으로 유지한다. 부모 autopilot이 로컬 구현/로컬 리뷰로 대체하면 안 된다.
+- `implementation_agent`는 단일 task leaf다(`references/orchestrator-contract.md` §2 Implementation Dispatch Granularity). 따라서 `implementation` step은 phase를 한 agent에 통째로 넘기지 않고, autopilot이 phase의 task를 **병렬 dispatch 그룹**으로 파생해 task당 leaf를 spawn한다(초기 구현=group 병렬, fix=finding 순차). 이 phase-내부 병렬 dispatch 그룹은 review-fix gate의 Checkpoint 리뷰 그룹과 다른 중첩 개념이며, progress/report는 autopilot이 canonical 경로로 소유한다.
 - Reasoning Trace 3-6 bullet 간결 작성
 - 저장 경로: `_sdd/pipeline/orchestrators/orchestrator_<topic>.md`
 

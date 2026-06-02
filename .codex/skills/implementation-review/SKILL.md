@@ -141,9 +141,9 @@ Tier별로 기대 항목을 정리한다.
 - 기준 충족: MET / NOT MET / UNTESTED
 - 스펙 정합성: ALIGNED / DRIFT / MISSING
 
-### Step 4: Parallel Review Lanes (Large Scope Only)
+### Step 4: Review Lanes (Large Scope Only)
 
-리뷰 범위가 큰 경우에만 read-only 병렬 lane을 사용한다.
+리뷰 범위가 큰 경우, read-only lane으로 나눠 검토한다.
 
 lane 예시:
 - task/module verification
@@ -153,9 +153,9 @@ lane 예시:
 규칙:
 - 각 lane은 읽기 전용이다.
 - lane은 서로 겹치지 않는 질문/파일 범위를 가진다.
-- 최종 severity와 next actions는 부모 review가 통합한다.
+- 각 lane의 결과로 최종 severity와 next actions를 통합한다.
 
-작은 범위 리뷰는 lane 없이 순차 수행한다.
+작은 범위 리뷰는 lane 구분 없이 수행한다.
 
 ### Step 5: Assessment
 

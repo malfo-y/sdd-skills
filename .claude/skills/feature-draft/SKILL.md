@@ -215,7 +215,7 @@ Part 2는 구현 실행을 위한 계획이다.
 - 경로는 가능한 한 실제 코드베이스 구조와 naming convention에 맞춘다.
 - `Strategic Code Map`에 나온 경로도 현재 코드에 존재하고 이번 변경과 관련되는지 확인한 뒤 Target Files에 넣는다.
 - 5개 이상 task가 있고 파일이 많이 겹치면 phase를 나누거나 shared setup task를 먼저 둔다.
-- 파일이 겹치지 않아도 의미적 충돌이 있으면 같은 phase에 두거나 dependency를 명시한다. 대표 패턴: 모델/타입 정의와 import, 동시 DB 마이그레이션, 동일 config 가정, API contract 생산-소비 관계.
+- 파일이 겹치지 않아도 의미적 충돌이 있으면 **명시적 dependency로 인코딩**한다(권장 — 같은 phase에만 두는 것으로 끝내지 않는다). 대표 5패턴: ① 모델/타입 정의를 다른 task가 import, ② 두 task가 동시 DB 마이그레이션, ③ 동일 config/env 값 가정, ④ API contract 생산-소비, ⑤ 동일 상수/타입을 다른 값으로 가정. 마이그레이션·config·상수처럼 **방향이 없는 상호배제(mutex)도 임의 방향 dependency로 흡수**한다(실행·readiness 결과가 동일하므로 새 개념 불필요). orchestrator(`implementation` skill)는 이 dependency로 병렬 그룹을 파생하므로("dependency 없음 + Target Files disjoint → 병렬"), dependency가 그룹화의 권위 있는 신호다.
 
 Part 2 작성 후 Hard Rule 12 self-check를 수행한다:
 

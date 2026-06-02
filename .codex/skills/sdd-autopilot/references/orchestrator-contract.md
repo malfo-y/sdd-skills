@@ -84,6 +84,14 @@
 - `Interaction Mode: autonomous-no-input` step은 안전한 추론이 불가능하면 질문으로 멈추지 말고 `BLOCKED` 상태로 종료한다. 최소 출력은 `blocked_reason`, `why_not_safe_to_assume`, `recommended_next_action`를 포함해야 한다.
 - interactive-only skill 또는 사용자 입력이 Hard Rule인 로컬 step은 autopilot Phase 2 step으로 배치하면 안 된다.
 
+### Implementation Dispatch Granularity (leaf fan-out)
+
+`implementation_agent`는 **단일 task만 TDD로 수행하는 leaf**다(sub-agent를 spawn하지 않음). 따라서 autopilot은 phase를 한 agent에 통째로 넘기지 않고, autopilot 자신이 orchestrator로서 task 단위로 fan-out한다.
+
+- **초기 구현 step**: autopilot이 phase의 task를 dependency 기반으로 **병렬 dispatch 그룹**으로 파생하고("같은 phase + dependency edge 없음 + Target Files disjoint → 병렬"; planner가 의미적 충돌을 dependency로 인코딩하므로 trivial 규칙), 그룹 내 task마다 `implementation_agent` leaf를 **task당 spawn**한다. 병렬 불가·저확신이면 순차로 하나씩 spawn한다(file-disjoint 가드레일 + "확신 없으면 순차").
+- **용어 구분 (2-group 중첩)**: 여기서 **병렬 dispatch 그룹**(phase 내부, task 단위 동시 spawn)은 §6의 **Checkpoint 리뷰 그룹**(phase 경계, review-fix gate 단위)과 다른 개념이다 — 병렬 dispatch 그룹은 "무엇을 동시에 dispatch하나", Checkpoint 리뷰 그룹은 "언제 review-fix gate를 닫나"를 정한다. 둘은 중첩 관계다.
+- **progress/report 소유**: leaf는 결과(SUCCESS/PARTIAL/FAILED·TDD표·파일·테스트·UNPLANNED_DEPENDENCY·발견)만 반환한다. **실행 주체인 autopilot**이 `_sdd/implementation/<YYYY-MM-DD>_implementation_progress_<slug>.md`·`*_implementation_report_<slug>.md`를 canonical 경로·소비 필드로 작성·소유한다(downstream `spec_update_done`·`spec_summary` 호환 유지).
+
 ## 3. Global vs Temporary Spec Contract
 
 - global spec은 장기적 SoT다.
@@ -122,7 +130,8 @@
 
 - multi-phase `implementation_plan`을 소비하면 기본값은 `scope = per-group`이다. single-phase path나 direct path만 `scope = global`을 기본으로 둘 수 있다.
 - review-fix loop는 파이프라인 후처리 섹션이 아니라 각 group의 immediate completion gate다.
-- autopilot은 review-fix loop를 추상 단계로 두지 않는다. small/medium/large review path 모두 review step은 반드시 `implementation_review` agent 호출이고, fix step은 반드시 `implementation` agent 재호출이다. local inline fallback은 허용되지 않는다.
+- autopilot은 review-fix loop를 추상 단계로 두지 않는다. small/medium/large review path 모두 review step은 반드시 `implementation_review` agent 호출이고, fix step은 반드시 `implementation` 재호출이다(= `implementation_agent` leaf spawn). local inline fallback은 허용되지 않는다.
+- **fix step dispatch granularity**: `fix = implementation` 재호출은 review finding을 fix-task로 보고 **finding 하나씩 순차로** `implementation_agent` leaf를 spawn하는 것이다(finding의 영향 파일 = 그 leaf의 Target Files). 별도 fix 분해 기계장치는 없으며, fix step에는 병렬을 도입하지 않는다(finding 수가 적고 상호작용 가능 → 순차 안전). 초기 구현 step의 병렬 dispatch 그룹(§2)과 달리 fix는 순차다.
 - single-phase path이거나 `scope = global`이면 해당 `implementation` step 직후 즉시 review -> fix -> re-review gate를 수행하고, 종료 조건 충족 전에는 다음 downstream step으로 진행할 수 없다.
 - review가 포함된 path의 review-fix gate(single-phase global / per-group의 group gate / final integration review 모두 포함)에는 gate 직후 실행되는 invocation contract가 명시되어야 한다. 최소한 아래를 포함한다.
   - autopilot이 `implementation_review` agent를 즉시 호출한다는 사실
