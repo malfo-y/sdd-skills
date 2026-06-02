@@ -39,16 +39,16 @@
         "./.claude/skills/second-opinion"
       ],
       "agents": [
-        "./.claude/agents/feature-draft.md",
-        "./.claude/agents/implementation-plan.md",
-        "./.claude/agents/plan-review.md",
-        "./.claude/agents/implementation-review.md",
-        "./.claude/agents/implementation.md",
-        "./.claude/agents/ralph-loop-init.md",
-        "./.claude/agents/spec-review.md",
-        "./.claude/agents/spec-update-done.md",
-        "./.claude/agents/spec-update-todo.md",
-        "./.claude/agents/investigate.md"
+        "./.claude/agents/feature-draft-agent.md",
+        "./.claude/agents/implementation-plan-agent.md",
+        "./.claude/agents/plan-review-agent.md",
+        "./.claude/agents/implementation-review-agent.md",
+        "./.claude/agents/implementation-agent.md",
+        "./.claude/agents/ralph-loop-init-agent.md",
+        "./.claude/agents/spec-review-agent.md",
+        "./.claude/agents/spec-update-done-agent.md",
+        "./.claude/agents/spec-update-todo-agent.md",
+        "./.claude/agents/investigate-agent.md"
       ]
     }
   ]
