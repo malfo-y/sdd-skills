@@ -78,4 +78,6 @@ developer_instructions = '''
 ## Final Check
 
 Acceptance Criteria가 모두 만족되었나 검증한다. 미충족 항목이 있으면 해당 단계로 돌아가 수정한다.
+
+> **Source Pointer**: 이 agent가 investigate의 전체 계약·프로세스·출력 형식을 보유하는 **단일 소스**다. .codex/skills/investigate/SKILL.md는 이 agent를 `spawn_agent`로 dispatch하는 thin entrypoint wrapper다 (wrapper↔agent; 더 이상 동일 본문 mirror 아님 — 함께 수정 의무 없음).
 '''

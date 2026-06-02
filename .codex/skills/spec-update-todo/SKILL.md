@@ -1,200 +1,23 @@
 ---
 name: spec-update-todo
 description: This skill should be used when the user asks to "update spec with features", "add features to spec", "update spec from input", "add requirements to spec", "spec update", "expand spec", "add to-do to spec", "add to-implement to spec", or mentions adding new features, requirements, or planned improvements to an existing specification document.
-version: 2.4.0
+version: 3.0.0
 ---
 
-# Spec Update from Planned Change
+# Spec Update (To-do) (Entrypoint Wrapper)
 
-| Workflow | Position | When |
-|----------|----------|------|
-| Large | Spec planning 단계 | 구현 전 global spec 반영 |
-| Medium | Step 1 or 2 | feature draft 이후 planned delta 반영 |
-| Any | Standalone | user input 기반 spec update |
+이 스킬은 entrypoint wrapper다. 사용자의 spec-update-todo 요청을 `spec_update_todo_agent`에 위임하고 그 결과를 사용자에게 전달한다. 전체 프로세스·Hard Rules·Repo-wide Invariant Test·매핑 규칙·출력 형식은 agent가 단일 소스로 보유한다.
 
-이 agent는 사용자 요구사항이나 temporary spec draft를 읽어 `_sdd/spec/*.md`에 planned global change를 반영한다. 핵심 원칙은 temporary spec의 실행 상세를 그대로 복사하지 않고, global spec에 남아야 할 persistent repo-wide information만 선별해 올리는 것이다.
+## 실행 (Mode A: pass-through)
 
-## Acceptance Criteria
+1. 사용자 요청 + 입력 소스 경로(있으면 temporary spec / feature draft / user input 경로)와 이미 아는 결정을 수집한다 (wrapper는 새 분석 read를 하지 않는다).
+2. `spawn_agent(agent_type="spec_update_todo_agent", prompt=<요청 + 알려진 경로/컨텍스트>)`로 dispatch하고 `wait_agent`로 결과를 수거한다. 입력 소스가 불명확하면 agent가 Input Sources 우선순위로 자체 탐색하도록 위임한다.
+3. agent의 반환(갱신한 `_sdd/spec/*.md` 파일·반영/제외 요약·남은 open questions·`_processed_*` 마킹)을 사용자에게 그대로 relay한다.
 
-- [ ] 입력 소스를 식별하고 파싱한다.
-- [ ] temporary spec 또는 user input을 global spec의 thin core와 가장 맞는 global surface에 매핑한다.
-- [ ] planned persistent information만 반영하고, execution-only detail이나 wrong-surface inflation은 남기지 않는다.
-- [ ] planned truth는 current implemented truth와 명시적으로 분리된다.
-- [ ] 아직 구현되지 않은 planned 내용은 스펙에서 `🚧 Planned`로 명시된다.
-- [ ] temporary `Touchpoints`는 통째로 복사하지 않고, 장기적으로 필요한 `Strategic Code Map` entry만 보수적으로 반영했다.
-- [ ] 업데이트 적용 후 요약을 남긴다.
-- [ ] 처리한 input file은 `_processed_*`로 마킹한다.
+## 계약 (entrypoint·artifact 유지, 흉내 금지)
 
-## Hard Rules
+- trigger(spec-update-todo 호출)와 `_sdd/spec/*.md` 갱신 계약은 이 wrapper가 유지한다.
+- 실제 spec 갱신은 agent가 수행한다. agent가 지원하지 않는 동작을 wrapper가 흉내내지 않는다.
+- agent가 노출하는 planned/implemented 분리, open questions, spec drift 경고를 wrapper가 relay해 보존한다.
 
-1. 코드와 구현 문서는 수정하지 않는다.
-2. 충돌하거나 불명확한 요구사항은 비파괴적으로 처리하고 `Open Questions`에 남긴다.
-3. decision 기록이 필요하면 lowercase canonical `decision_log.md`에 최소한으로 남긴다. legacy uppercase `DECISION_LOG.md`는 read-only fallback으로만 취급한다.
-4. 이미 완료된 구현 sync는 이 agent가 아니라 `spec-update-done`의 책임이다.
-5. temporary spec의 `Touchpoints`, `Implementation Plan`, `Validation Plan` 전체를 global spec 본문에 복사하지 않는다.
-6. global spec에는 배경/개념, scope/non-goals/guardrails, key decisions 같은 지속 정보만 남긴다.
-7. repo-wide invariant는 아래 `Repo-wide Invariant Test`를 통과할 때만 guardrails 또는 key decisions에 반영한다.
-8. main / supporting / history surface 중 어디에 둘지 먼저 판단하고, 가장 맞는 global surface에만 보수적으로 반영한다.
-9. 새 sub-spec 파일 생성 시 반드시 main.md 인덱스에 링크를 추가한다. 고아 파일 금지.
-10. 기존 파일 분할 구조를 변경하지 않는다. 파일 추가만 허용, 기존 구조 재편성 금지.
-11. 아직 구현되지 않은 planned 정보는 스펙에서 반드시 `🚧 Planned`를 붙여 현재 truth와 구분한다.
-12. planned 내용을 기존 implemented truth와 같은 문단이나 bullet에 무표식으로 섞어 쓰지 않는다.
-13. temporary `Touchpoints` 중 장기적으로 반복 사용될 entrypoint, extension point, invariant hotspot, validation surface만 `Strategic Code Map` 후보로 볼 수 있다. 나머지 target file / task-level touchpoint는 temporary spec에 남긴다.
-
-## Repo-wide Invariant Test
-
-아래 3가지를 모두 만족할 때만 repo-wide invariant candidate로 본다.
-
-1. 코드를 한두 파일 읽는 것만으로 안정적으로 복구되지 않는다.
-2. 두 개 이상 feature/module/workflow에 공통 적용된다.
-3. 틀리게 가정하면 repo-level reasoning, review, implementation 판단이 어긋난다.
-
-Positive example:
-
-- 전체 API 인증 방식
-- 모든 worker가 따라야 하는 retry / backoff 정책
-- `_sdd/` artifact handoff 같은 repo-wide operating rule
-
-Negative example:
-
-- 특정 endpoint의 response schema
-- 한 컴포넌트 내부 state invariant
-- feature 하나에만 필요한 validation detail
-
-## Input Sources
-
-1. 사용자 대화
-2. `_sdd/spec/user_spec.md`
-3. `_sdd/spec/user_draft.md`
-4. `_sdd/drafts/*_feature_draft_*.md` (slug 기반 glob), `_sdd/drafts/feature_draft_<name>.md` (legacy fallback)
-5. lowercase canonical `_sdd/spec/decision_log.md`, legacy uppercase `_sdd/spec/DECISION_LOG.md` fallback
-
-처리 후 rename:
-
-- `user_spec.md` -> `_processed_user_spec.md`
-- `user_draft.md` -> `_processed_user_draft.md`
-
-## Process
-
-### Step 1: Identify Input Source
-
-입력이 어디서 왔는지 결정한다.
-
-- 직접 요청
-- 구조화된 spec input file
-- feature draft의 Part 1 temporary spec
-
-### Step 2: Load Current Global Spec
-
-다음을 읽는다.
-
-- `_sdd/spec/*.md`
-- lowercase canonical `_sdd/spec/decision_log.md`, legacy uppercase `_sdd/spec/DECISION_LOG.md` fallback
-
-### Step 3: Parse Planned Delta
-
-입력을 다음 축으로 분해한다.
-
-- `Change Summary`
-- `Scope Delta`
-- `Contract/Invariant Delta`
-- `Touchpoints`
-- `Implementation Plan`
-- `Validation Plan`
-- `Risks / Open Questions`
-
-또는 user input을 위 구조로 best-effort 정규화한다.
-
-### Step 4: Map to Global Spec Sections
-
-planned delta를 thin global core에 보수적으로 매핑한다.
-
-먼저 이 정보가 `main.md`, supporting surface, history / decision surface, 또는 temporary spec 중 어디에 남아야 하는지 판단한다.
-
-예시:
-
-- framing 변화 -> `배경 및 high-level concept`
-- shared scope or non-goal 변화 -> `Scope / Non-goals / Guardrails`
-- repo-wide operating rule 변화 -> `Scope / Non-goals / Guardrails`
-- 장기 설계 판단 변화 -> `핵심 설계와 주요 결정`
-- `Repo-wide Invariant Test`를 통과한 invariant implication -> guardrails 또는 key decisions 문장
-- long-lived navigation hint -> `Strategic Code Map` appendix 또는 supporting surface (`🚧 Planned` 표시 포함)
-
-기본적으로 global spec에 올리지 않는 것:
-
-- feature-level contract table
-- validation execution detail
-- task breakdown
-- touchpoint 목록
-- transient risk log
-- user-facing usage guide
-- exhaustive file inventory
-- one-off target files or task-level implementation touchpoints
-
-### Step 5: Generate Update Plan
-
-적용 전 요약을 만든다.
-
-- 어떤 delta를 어느 global section에 넣는지
-- global spec에 남길 정보와 버릴 실행 정보가 무엇인지
-- `Strategic Code Map`에 반영할 planned persistent navigation hint가 있는지
-- existing spec과 충돌하는지
-- 후속 구현이 필요한지
-
-### Step 6: Apply Updates
-
-spec를 갱신한다.
-
-원칙:
-
-- 기존 문체와 언어를 맞춘다.
-- 중복 서술을 만들지 않는다.
-- 구현 완료처럼 쓰지 않고 planned requirement로 쓴다.
-- 아직 구현되지 않은 새 heading, bullet, 문장에는 `🚧 Planned`를 직접 붙인다.
-- planned block을 추가할 때는 `## 🚧 Planned ...`, `- 🚧 Planned: ...`, 또는 이에 준하는 명시적 표식을 사용한다.
-- current implemented truth와 planned truth를 같은 문단/불릿에 무표식으로 섞지 않는다.
-- surface fit상 supporting/history가 더 맞으면 main body를 두껍게 만들지 말고 해당 surface에 배치한다.
-- `Strategic Code Map`은 시작 힌트만 반영하고, temporary `Touchpoints`를 통째로 복사하지 않는다.
-- repo-wide가 아닌 contract/validation detail은 global spec 밖에 둔다.
-- 신규 sub-spec 파일 생성 시 파일 생성 후 main.md 인덱스에 링크를 추가한다.
-
-### Step 7: Process Input Files
-
-input file을 사용했다면 `_processed_*` 이름으로 변경한다.
-
-## Output Format
-
-최종 보고에는 최소한 아래를 포함한다.
-
-- 변경된 파일/섹션
-- 반영된 planned persistent information 요약
-- global spec에 반영하지 않은 execution detail
-- 남은 open questions
-- 후속 추천 스킬
-
-## Error Handling
-
-| 상황 | 대응 |
-|------|------|
-| 입력이 매우 모호함 | best-effort 반영 후 `Open Questions`에 불확실성 기록 |
-| spec section 매핑이 어려움 | 가장 가까운 thin global section에 보수적으로 반영 |
-| 충돌 요구사항 발견 | 비파괴적 방향만 적용하고 충돌을 남긴다 |
-| input file 형식이 거칠음 | 핵심 persistent 정보만 추출하고 나머지는 notes로 남긴다 |
-| 파일 배치 판단 모호 | 가장 관련도 높은 기존 파일에 보수적 배치 |
-
-## Integration
-
-- `feature-draft`: Part 1 temporary spec draft를 직접 입력으로 받을 수 있다.
-- `implementation-plan`: 반영된 global spec와 temporary spec를 기준으로 계획 생성
-- `spec-review`: 반영 후 품질 감사
-
-## Final Check
-
-Acceptance Criteria가 모두 만족되었나 검증한다. 미충족 항목이 있으면 해당 단계로 돌아가 수정한다.
-
-- planned truth와 current implemented truth를 섞지 않았고 execution-only detail은 global spec 밖에 남겼는가
-- 가장 맞는 global surface를 골랐고, 문서를 두껍게 만든 경우 decision-bearing value를 설명할 수 있는가
-
-> **Mirror Notice**: 이 스킬의 본문은 `.codex/agents/spec-update-todo-agent.toml`의 `developer_instructions` 복사본이다.
-> 사용자가 직접 호출할 때 중간 과정의 가시성을 확보하기 위해 복붙되었다.
-> 내용을 수정할 때는 agent 파일과 이 스킬 파일을 반드시 함께 수정해야 한다.
+> Source: 전체 계약·Hard Rules·Repo-wide Invariant Test·매핑 규칙·출력 형식은 `.codex/agents/spec-update-todo-agent.toml`이 단일 소스로 보유한다 (wrapper↔agent; 더 이상 동일 본문 mirror 아님).

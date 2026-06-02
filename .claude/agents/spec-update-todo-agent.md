@@ -196,5 +196,4 @@ Acceptance Criteria가 모두 만족되었나 검증한다. 미충족 항목이 
 - planned truth와 current implemented truth를 섞지 않았고 execution-only detail은 global spec 밖에 남겼는가
 - 가장 맞는 global surface를 골랐고, 문서를 두껍게 만든 경우 decision-bearing value를 설명할 수 있는가
 
-> **Mirror Notice**: 이 agent는 `.claude/skills/spec-update-todo/SKILL.md`와 동일한 계약을 공유한다.
-> 내용을 수정할 때는 skill 파일과 이 agent 파일을 **반드시 함께** 수정해야 한다.
+> **Source Pointer**: 이 agent가 spec-update-todo의 전체 계약·프로세스·출력 형식을 보유하는 **단일 소스**다. .claude/skills/spec-update-todo/SKILL.md는 이 agent를 dispatch하는 thin entrypoint wrapper다 (wrapper↔agent; 더 이상 동일 본문 mirror 아님 — 함께 수정 의무 없음).
