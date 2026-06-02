@@ -63,7 +63,7 @@
 
 허용 `agent_type`:
 
-- `feature_draft`
+- `feature_draft_agent`
 - `spec_update_todo`
 - `implementation_plan`
 - `implementation`

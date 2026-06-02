@@ -38,7 +38,7 @@
 
 허용 `subagent_type`:
 
-- `feature-draft`
+- `feature-draft-agent`
 - `spec-update-todo`
 - `implementation-plan`
 - `implementation`
@@ -62,7 +62,7 @@
 
 | subagent_type          | model    | 근거                              |
 |------------------------|----------|-----------------------------------|
-| `feature-draft`        | `opus`   | 설계 판단, 스펙 구조화             |
+| `feature-draft-agent`        | `opus`   | 설계 판단, 스펙 구조화             |
 | `implementation-plan`  | `opus`   | 의존성 분석, 실행 순서 설계         |
 | `implementation`       | `sonnet` | 코드 작성·반복 적용 (효율 최적화)   |
 | `implementation-review`| `opus`   | 구현 깊이 분석, 결함 발견           |
