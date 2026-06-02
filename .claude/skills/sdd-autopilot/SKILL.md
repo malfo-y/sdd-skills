@@ -171,6 +171,7 @@ planning precedence 메모:
 - 각 `implementation` step에는 같은 범위의 review-fix gate가 즉시 붙어야 한다.
 - `sdd-skills:implementation-plan-agent` output을 downstream `implementation`이 소비하는 expanded path면 해당 `implementation` step을 flat single-shot으로 쓰지 않고 `Execution Mode: phase-iterative`와 `Phase Source`를 명시한다.
 - review가 포함된 모든 path에서는 `sdd-skills:implementation-agent`/`sdd-skills:implementation-review-agent`/re-review를 모두 subagent step으로 유지한다. 부모 autopilot이 로컬 구현/로컬 리뷰로 대체하면 안 된다.
+- `sdd-skills:implementation-agent`는 단일 task leaf다(`references/orchestrator-contract.md` §2 Implementation Dispatch Granularity). 따라서 `implementation` step은 phase를 한 agent에 통째로 넘기지 않고, autopilot이 phase의 task를 **병렬 dispatch 그룹**으로 파생해 task당 leaf를 dispatch한다(초기 구현=group 병렬, fix=finding 순차). 이 phase-내부 병렬 dispatch 그룹은 review-fix gate의 Checkpoint 리뷰 그룹과 다른 중첩 개념이며, progress/report는 autopilot이 canonical 경로로 소유한다.
 - 각 subagent step과 review-fix gate `agent_mapping`에는 `references/orchestrator-contract.md`의 Model Routing 표에 따라 `Model:`(또는 `(model: ...)`)을 명시한다. `implementation-agent` 호출(fix 포함)은 `sonnet`, `implementation-review-agent` 호출(review/re-review/final integration review)은 `opus`로 분리해서 표기한다.
 - Reasoning Trace 3-6 bullet 간결 작성
 - 저장 경로: `_sdd/pipeline/orchestrators/orchestrator_<topic>.md`

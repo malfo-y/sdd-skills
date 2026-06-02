@@ -83,7 +83,7 @@ version: 2.2.0
   3. 두 task가 같은 config/env 값을 가정한다.
   4. 한 task가 정의한 API contract를 다른 task가 소비한다.
   5. 두 task가 같은 상수/타입을 다른 값으로 가정한다.
-- 의미적 충돌 가능성이 있으면 같은 phase에 두거나 명시적 dependency를 추가한다.
+- 의미적 충돌 가능성이 있으면 **명시적 dependency로 인코딩**한다(권장 — 같은 phase에만 두는 것으로 끝내지 않는다). 마이그레이션·config·상수처럼 **방향이 없는 상호배제(mutex)도 임의 방향 dependency로 흡수**한다(실행·readiness 결과가 동일하므로 새 개념 불필요). orchestrator(`implementation` skill)는 이 dependency로 병렬 그룹을 파생하므로("dependency 없음 + Target Files disjoint → 병렬"), dependency가 그룹화의 권위 있는 신호다.
 - 판단 확신이 낮으면 병렬보다 순차/의존성 보강이 우선이다.
 
 ## Process
@@ -217,7 +217,9 @@ dependency를 정리한다.
 - integration order
 - delta/validation sequencing
 
-병렬 가능성은 `Target Files` 겹침과 의미적 충돌 기준으로 판단한다.
+병렬 가능성은 `Target Files` 겹침과 의미적 충돌 기준으로 판단하되, 의미적 충돌은 위 규칙대로 **task `Dependencies` edge로 인코딩**한다(orchestrator가 그룹 파생에 사용).
+
+> **역할 구분**: phase `Checkpoint`는 phase 경계의 **리뷰 group**(구현→리뷰→fix gate) 신호이고, task `Dependencies`는 phase 내부의 **병렬 dispatch 판단** 신호다. 둘은 중첩된 별개 개념이다 — Checkpoint는 "언제 리뷰하나", dependency는 "무엇을 동시에 dispatch하나"를 정한다.
 
 추가 규칙:
 
