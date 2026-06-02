@@ -1,6 +1,6 @@
 ---
-name: plan-review
-description: "Internal agent. Called explicitly by other agents or skills via Agent(subagent_type=plan-review)."
+name: plan-review-agent
+description: "Internal agent. Called explicitly by other agents or skills via Agent(subagent_type=plan-review-agent)."
 tools: ["Read", "Write", "Glob", "Grep", "Agent"]
 model: inherit
 ---

@@ -195,5 +195,5 @@ Acceptance Criteria가 모두 만족되었나 검증한다. 미충족 항목이 
 - planned truth와 current implemented truth를 섞지 않았고 execution-only detail은 global spec 밖에 남겼는가
 - 가장 맞는 global surface를 골랐고, 문서를 두껍게 만든 경우 decision-bearing value를 설명할 수 있는가
 
-> **Mirror Notice**: 이 스킬은 `.claude/agents/spec-update-todo.md`와 동일한 계약을 공유한다.
+> **Mirror Notice**: 이 스킬은 `.claude/agents/spec-update-todo-agent.md`와 동일한 계약을 공유한다.
 > 내용을 수정할 때는 agent 파일과 이 스킬 파일을 **반드시 함께** 수정해야 한다.

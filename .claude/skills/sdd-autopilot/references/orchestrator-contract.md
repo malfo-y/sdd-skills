@@ -39,13 +39,13 @@
 허용 `subagent_type`:
 
 - `feature-draft-agent`
-- `spec-update-todo`
-- `implementation-plan`
-- `implementation`
-- `implementation-review`
-- `spec-update-done`
-- `spec-review`
-- `ralph-loop-init`
+- `spec-update-todo-agent`
+- `implementation-plan-agent`
+- `implementation-agent`
+- `implementation-review-agent`
+- `spec-update-done-agent`
+- `spec-review-agent`
+- `ralph-loop-init-agent`
 
 추가 규칙:
 
@@ -63,13 +63,13 @@
 | subagent_type          | model    | 근거                              |
 |------------------------|----------|-----------------------------------|
 | `feature-draft-agent`        | `opus`   | 설계 판단, 스펙 구조화             |
-| `implementation-plan`  | `opus`   | 의존성 분석, 실행 순서 설계         |
-| `implementation`       | `sonnet` | 코드 작성·반복 적용 (효율 최적화)   |
-| `implementation-review`| `opus`   | 구현 깊이 분석, 결함 발견           |
-| `ralph-loop-init`      | `opus`   | 테스트 전략 설계, 고수준 판단       |
-| `spec-update-todo`     | `sonnet` | diff 기반 스펙 반영                |
-| `spec-update-done`     | `sonnet` | diff 기반 스펙 반영                |
-| `spec-review`          | `sonnet` | 스펙 간 비교 분석                  |
+| `implementation-plan-agent`  | `opus`   | 의존성 분석, 실행 순서 설계         |
+| `implementation-agent`       | `sonnet` | 코드 작성·반복 적용 (효율 최적화)   |
+| `implementation-review-agent`| `opus`   | 구현 깊이 분석, 결함 발견           |
+| `ralph-loop-init-agent`      | `opus`   | 테스트 전략 설계, 고수준 판단       |
+| `spec-update-todo-agent`     | `sonnet` | diff 기반 스펙 반영                |
+| `spec-update-done-agent`     | `sonnet` | diff 기반 스펙 반영                |
+| `spec-review-agent`          | `sonnet` | 스펙 간 비교 분석                  |
 
 #### Review-Fix Gate Model Assignment
 

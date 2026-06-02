@@ -1,5 +1,5 @@
-name = "plan_review"
-description = "Internal agent. Called explicitly by orchestrators or skills via spawn_agent(agent_type=\"plan_review\")."
+name = "plan_review_agent"
+description = "Internal agent. Called explicitly by orchestrators or skills via spawn_agent(agent_type=\"plan_review_agent\")."
 developer_instructions = '''
 # Plan Review
 

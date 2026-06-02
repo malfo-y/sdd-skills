@@ -236,5 +236,5 @@ Speculative Code escalation: 사변적 코드가 실제 버그·보안 영향을
 
 Acceptance Criteria가 모두 만족되었나 검증한다. 미충족 항목이 있으면 해당 단계로 돌아가 수정한다.
 
-> **Mirror Notice**: 이 스킬은 `.claude/agents/implementation-review.md`와 동일한 계약을 공유한다.
+> **Mirror Notice**: 이 스킬은 `.claude/agents/implementation-review-agent.md`와 동일한 계약을 공유한다.
 > 내용을 수정할 때는 agent 파일과 이 스킬 파일을 **반드시 함께** 수정해야 한다.
