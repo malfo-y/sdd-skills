@@ -245,4 +245,4 @@ Acceptance Criteria가 모두 만족되었나 검증한다. 미충족 항목이 
 - global/temporary rubric을 잘못 적용한 finding이 없는가
 - weak evidence finding이 `UNTESTED` 없이 severity로 올라가지 않았는가
 
-> **Mirror Notice**: 이 스킬의 본문은 `.codex/agents/spec-review.toml`와 `.claude/agents/spec-review.md`의 계약과 동기화되어야 한다.
+> **Mirror Notice**: 이 스킬의 본문은 `.codex/agents/spec-review-agent.toml`와 `.claude/agents/spec-review-agent.md`의 계약과 동기화되어야 한다.

@@ -325,5 +325,5 @@ Open Questions 템플릿 (Hard Rule 2 스키마):
 
 Acceptance Criteria가 모두 만족되었나 검증한다. 미충족 항목이 있으면 해당 단계로 돌아가 수정한다.
 
-> **Sync Notice**: `.claude/skills/implementation-plan/SKILL.md`와 `.claude/agents/implementation-plan.md`는 같은 계약을 유지한다.
+> **Sync Notice**: `.claude/skills/implementation-plan/SKILL.md`와 `.claude/agents/implementation-plan-agent.md`는 같은 계약을 유지한다.
 > 사용자가 직접 호출할 때와 autopilot이 내부 agent를 호출할 때 의미 drift가 생기지 않도록 한쪽 수정 시 다른 쪽도 함께 동기화한다.

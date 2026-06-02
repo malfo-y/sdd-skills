@@ -63,14 +63,14 @@
 
 허용 `agent_type`:
 
-- `feature_draft`
-- `spec_update_todo`
-- `implementation_plan`
-- `implementation`
-- `implementation_review`
-- `spec_update_done`
-- `spec_review`
-- `ralph_loop_init`
+- `feature_draft_agent`
+- `spec_update_todo_agent`
+- `implementation_plan_agent`
+- `implementation_agent`
+- `implementation_review_agent`
+- `spec_update_done_agent`
+- `spec_review_agent`
+- `ralph_loop_init_agent`
 
 추가 규칙:
 

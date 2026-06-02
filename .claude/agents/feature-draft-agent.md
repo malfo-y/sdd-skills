@@ -1,6 +1,6 @@
 ---
-name: feature-draft
-description: "Internal agent. Called explicitly by other agents or by the write-phased skill via Agent(subagent_type=feature-draft)."
+name: feature-draft-agent
+description: "Internal agent. Called explicitly by other agents or by the write-phased skill via Agent(subagent_type=feature-draft-agent)."
 tools: ["Read", "Write", "Edit", "Glob", "Grep", "Agent"]
 model: inherit
 ---

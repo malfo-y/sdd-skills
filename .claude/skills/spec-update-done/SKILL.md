@@ -193,5 +193,5 @@ Acceptance Criteria가 모두 만족되었나 검증한다. 미충족 항목이 
 - feature-level detail을 과복원하지 않았고, 가장 맞는 global surface를 골랐는가
 - global spec을 두껍게 만들었다면 repo-level 판단 가치가 실제로 설명 가능한가
 
-> **Mirror Notice**: 이 스킬은 `.claude/agents/spec-update-done.md`와 동일한 계약을 공유한다.
+> **Mirror Notice**: 이 스킬은 `.claude/agents/spec-update-done-agent.md`와 동일한 계약을 공유한다.
 > 내용을 수정할 때는 agent 파일과 이 스킬 파일을 **반드시 함께** 수정해야 한다.

@@ -1,6 +1,6 @@
 ---
-name: spec-update-todo
-description: "Internal agent. Called explicitly by other agents or skills via Agent(subagent_type=spec-update-todo)."
+name: spec-update-todo-agent
+description: "Internal agent. Called explicitly by other agents or skills via Agent(subagent_type=spec-update-todo-agent)."
 tools: ["Read", "Write", "Edit", "Glob", "Grep"]
 model: inherit
 ---

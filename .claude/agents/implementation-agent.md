@@ -1,6 +1,6 @@
 ---
-name: implementation
-description: "Internal agent. Called explicitly by other agents or skills via Agent(subagent_type=implementation)."
+name: implementation-agent
+description: "Internal agent. Called explicitly by other agents or skills via Agent(subagent_type=implementation-agent)."
 tools: ["Read", "Write", "Edit", "Bash", "Glob", "Grep", "Agent"]
 model: inherit
 ---

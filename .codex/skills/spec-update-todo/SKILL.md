@@ -195,6 +195,6 @@ Acceptance Criteria가 모두 만족되었나 검증한다. 미충족 항목이 
 - planned truth와 current implemented truth를 섞지 않았고 execution-only detail은 global spec 밖에 남겼는가
 - 가장 맞는 global surface를 골랐고, 문서를 두껍게 만든 경우 decision-bearing value를 설명할 수 있는가
 
-> **Mirror Notice**: 이 스킬의 본문은 `.codex/agents/spec-update-todo.toml`의 `developer_instructions` 복사본이다.
+> **Mirror Notice**: 이 스킬의 본문은 `.codex/agents/spec-update-todo-agent.toml`의 `developer_instructions` 복사본이다.
 > 사용자가 직접 호출할 때 중간 과정의 가시성을 확보하기 위해 복붙되었다.
 > 내용을 수정할 때는 agent 파일과 이 스킬 파일을 반드시 함께 수정해야 한다.

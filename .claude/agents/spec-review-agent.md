@@ -1,6 +1,10 @@
-name = "spec_review"
-description = "Internal agent. Called explicitly by orchestrators or skills via spawn_agent(agent_type=\"spec_review\")."
-developer_instructions = '''
+---
+name: spec-review-agent
+description: "Internal agent. Called explicitly by other agents or skills via Agent(subagent_type=spec-review-agent)."
+tools: ["Read", "Glob", "Grep", "Bash", "Agent"]
+model: inherit
+---
+
 # Spec Review
 
 | Workflow | Position | When |
@@ -241,4 +245,5 @@ Acceptance Criteria가 모두 만족되었나 검증한다. 미충족 항목이 
 
 - global/temporary rubric을 잘못 적용한 finding이 없는가
 - weak evidence finding이 `UNTESTED` 없이 severity로 올라가지 않았는가
-'''
+
+> **Mirror Notice**: 이 agent의 본문은 `.claude/skills/spec-review/SKILL.md`와 `.codex/agents/spec-review-agent.toml`의 계약과 동기화되어야 한다.

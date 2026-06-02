@@ -1,6 +1,6 @@
 ---
-name: spec-update-done
-description: "Internal agent. Called explicitly by other agents or skills via Agent(subagent_type=spec-update-done)."
+name: spec-update-done-agent
+description: "Internal agent. Called explicitly by other agents or skills via Agent(subagent_type=spec-update-done-agent)."
 tools: ["Read", "Write", "Edit", "Glob", "Grep", "Bash"]
 model: inherit
 ---

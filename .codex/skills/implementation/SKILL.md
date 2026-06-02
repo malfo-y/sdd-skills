@@ -292,6 +292,6 @@ worker에 전달하는 프롬프트 템플릿:
 
 Acceptance Criteria가 모두 만족되었나 검증한다. 미충족 항목이 있으면 해당 단계로 돌아가 수정한다.
 
-> **Mirror Notice**: 이 스킬의 본문은 `.codex/agents/implementation.toml`의 `developer_instructions` 복사본이다.
+> **Mirror Notice**: 이 스킬의 본문은 `.codex/agents/implementation-agent.toml`의 `developer_instructions` 복사본이다.
 > 사용자가 직접 호출할 때 중간 과정의 가시성을 확보하기 위해 복붙되었다.
 > 내용을 수정할 때는 agent 파일과 이 스킬 파일을 **반드시 함께** 수정해야 한다.
