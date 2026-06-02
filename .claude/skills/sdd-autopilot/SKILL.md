@@ -171,7 +171,7 @@ planning precedence 메모:
 - 각 `implementation` step에는 같은 범위의 review-fix gate가 즉시 붙어야 한다.
 - `sdd-skills:implementation-plan-agent` output을 downstream `implementation`이 소비하는 expanded path면 해당 `implementation` step을 flat single-shot으로 쓰지 않고 `Execution Mode: phase-iterative`와 `Phase Source`를 명시한다.
 - review가 포함된 모든 path에서는 `sdd-skills:implementation-agent`/`sdd-skills:implementation-review-agent`/re-review를 모두 subagent step으로 유지한다. 부모 autopilot이 로컬 구현/로컬 리뷰로 대체하면 안 된다.
-- 각 subagent step과 review-fix gate `agent_mapping`에는 `references/orchestrator-contract.md`의 Model Routing 표에 따라 `Model:`(또는 `(model: ...)`)을 명시한다. `implementation` 호출(fix 포함)은 `sonnet`, `implementation-review` 호출(review/re-review/final integration review)은 `opus`로 분리해서 표기한다.
+- 각 subagent step과 review-fix gate `agent_mapping`에는 `references/orchestrator-contract.md`의 Model Routing 표에 따라 `Model:`(또는 `(model: ...)`)을 명시한다. `implementation-agent` 호출(fix 포함)은 `sonnet`, `implementation-review-agent` 호출(review/re-review/final integration review)은 `opus`로 분리해서 표기한다.
 - Reasoning Trace 3-6 bullet 간결 작성
 - 저장 경로: `_sdd/pipeline/orchestrators/orchestrator_<topic>.md`
 
@@ -196,7 +196,7 @@ Producer-Reviewer 패턴으로 검증한다.
 - `Execution Mode: phase-iterative` path면 per-group gate semantics(`Checkpoint` boundary)와 `final integration review` adaptive 처리가 해석 가능한가
 - phase-iterative path의 `Phase Source`가 `implementation-plan` output인가 (`feature-draft` 산출물 금지). 위반 시 reject하고 `feature-draft` step 직후에 `sdd-skills:implementation-plan-agent` step 삽입.
 - review 포함 path에서 `sdd-skills:implementation-agent`/`sdd-skills:implementation-review-agent`가 subagent step으로만 매핑되는가
-- 각 subagent step과 review-fix gate `agent_mapping`에 `references/orchestrator-contract.md` Model Routing 표와 일치하는 `Model:`/`(model: ...)` 표기가 있는가 (특히 `implementation`은 `sonnet`, `implementation-review`는 `opus`)
+- 각 subagent step과 review-fix gate `agent_mapping`에 `references/orchestrator-contract.md` Model Routing 표와 일치하는 `Model:`/`(model: ...)` 표기가 있는가 (특히 `implementation-agent`는 `sonnet`, `implementation-review-agent`는 `opus`)
 - test strategy 존재
 - error handling 존재
 
@@ -252,7 +252,7 @@ Phase 2 진입 후 `request_user_input`은 호출하지 않는다. 마일스톤 
 - step별 필드, 허용 `subagent_type`, Exit Criteria, Acceptance Criteria는 오케스트레이터 본문과 `references/orchestrator-contract.md`를 그대로 따른다.
 - 오케스트레이터에 적힌 출력 파일은 현재 step이 실제로 생성한 materialized output과 future step의 planned output을 구분해 해석한다. 각 step은 자신의 선언된 출력만 materialize하며, 아직 실행되지 않은 downstream step의 planned output을 미리 생성하지 않는다.
 - review 포함 path에서는 `sdd-skills:implementation-agent`/`sdd-skills:implementation-review-agent`를 항상 subagent 호출로 실행한다. 부모 autopilot이 local implementation/review로 대체하지 않는다.
-- 각 subagent 호출 시점에 오케스트레이터의 `Model:` (또는 review-fix gate `agent_mapping`의 `(model: ...)`) 표기를 그대로 `Agent(model=...)` 파라미터로 전달한다. 표기가 누락된 경우 `references/orchestrator-contract.md` Model Routing 표 기본값(`implementation` -> `sonnet`, `implementation-review` -> `opus` 등)을 적용한다.
+- 각 subagent 호출 시점에 오케스트레이터의 `Model:` (또는 review-fix gate `agent_mapping`의 `(model: ...)`) 표기를 그대로 `Agent(model=...)` 파라미터로 전달한다. 표기가 누락된 경우 `references/orchestrator-contract.md` Model Routing 표 기본값(`implementation-agent` -> `sonnet`, `implementation-review-agent` -> `opus` 등)을 적용한다.
 - `implementation` step은 단독 완료가 아니다. 같은 범위의 `Review-Fix Loop` exit condition과 required validation이 닫혀야만 해당 step을 `completed`로 기록할 수 있다.
 - single-phase path이거나 `Review-Fix Loop.scope = global`이면 `implementation` step 직후 즉시 global review-fix loop를 수행한다. 이 gate가 닫히기 전에는 `spec-update-done`을 포함한 다음 downstream step으로 진행할 수 없다.
 - `sdd-skills:implementation-plan-agent` output을 downstream `implementation`이 소비하고 해당 step이 `Execution Mode: phase-iterative`로 선언되어 있으면, autopilot은 `Phase Source`를 읽어 phase count와 boundary를 runtime-resolved metadata로 해석한다. Step 4가 추측한 flat phase list로 실행하지 않는다.
