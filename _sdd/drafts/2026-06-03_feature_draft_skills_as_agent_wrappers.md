@@ -135,9 +135,9 @@ In/Out-of-scope는 Part 1 `Scope Delta`와 동일. 요약: 9종 × (claude skill
 
 원리: **agent는 파일은 read하지만 대화는 못 읽는다.** 따라서 wrapper가 무엇을 전달할지는 "그 입력이 어디 사는가"로 갈린다.
 
-- **Mode A — pass-through (기본)**: 요청 원문 + 이미 아는 경로·산출물·결정만 relay. wrapper는 **새 read·분석을 하지 않는다**. 입력이 파일+직접 요청인 스킬(plan-review, spec-review, spec-update-*, implementation-review, ralph-loop-init, investigate, implementation-plan)에 적용.
-- **Mode B — context-forwarding (feature-draft 전용)**: Mode A에 더해, **대화에만 있는 맥락**(이번 세션의 요구사항·결정·제약·기각한 대안)을 주제 기준으로 정리한 digest를 dispatch 프롬프트에 포함한다. 경계: wrapper는 *맥락을 모아 전달*까지만 하고, 요구사항 분석·delta 설계는 agent의 Step 1/delta 단계가 그대로 수행한다(중복 금지).
-- **모드 선택 = 동등성 게이트(H1)와 연동**: 기본 Mode A로 시도 → 게이트(직접-호출 동등성) 미통과면 Mode B로 승격 → 그래도 미통과면 mirror 유지. feature-draft는 입력이 대화 태생이라 **처음부터 Mode B**로 지정.
+- **Mode A — pass-through (기본)**: 요청 원문 + 이미 아는 경로·산출물·결정만 relay. wrapper는 **새 read·분석을 하지 않는다**. 입력이 파일+직접 요청인 스킬(plan-review, spec-review, spec-update-done, spec-update-todo, ralph-loop-init, implementation-plan)에 적용.
+- **Mode B — context-forwarding**: Mode A에 더해, **대화에만 있는 맥락**을 주제 기준 digest로 정리해 dispatch 프롬프트에 포함한다. 경계: wrapper는 *맥락을 모아 전달*까지만 하고, 분석·설계는 agent가 수행(중복 금지). **적용 스킬(동등성 게이트로 확정, 2026-06-03)**: feature-draft(요구사항·결정·기각안), **investigate**(증상·재현·기대 동작·시도한 가설 — 입력이 대화 태생), **implementation-review**(무엇을·왜 구현했는지·범위, plan 부재 시 특히).
+- **모드 선택 = 동등성 게이트(H1)와 연동**: 기본 Mode A로 시도 → 게이트(직접-호출 동등성; "agent는 파일은 read하나 대화는 못 읽는다") 미통과면 Mode B로 승격 → 그래도 미통과면 mirror 유지. 게이트 결과: feature-draft·investigate·implementation-review = Mode B, 나머지 6종 = Mode A.
 
 ### wrapper 템플릿 (확정안)
 
