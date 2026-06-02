@@ -21,6 +21,7 @@
 - `feature_draft`
 - `implementation_plan`
 - `implementation`
+- `plan_review`
 - `implementation_review`
 - `investigate`
 - `spec_update_todo`
@@ -34,6 +35,7 @@
 
 - `feature_draft`
 - `implementation_plan`
+- `plan_review`
 - `implementation_review`
 - `spec_review`
 

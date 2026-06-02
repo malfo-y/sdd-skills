@@ -21,6 +21,7 @@
         "./.claude/skills/guide-create",
         "./.claude/skills/implementation",
         "./.claude/skills/implementation-plan",
+        "./.claude/skills/plan-review",
         "./.claude/skills/implementation-review",
         "./.claude/skills/pr-review",
         "./.claude/skills/ralph-loop-init",
@@ -40,6 +41,7 @@
       "agents": [
         "./.claude/agents/feature-draft.md",
         "./.claude/agents/implementation-plan.md",
+        "./.claude/agents/plan-review.md",
         "./.claude/agents/implementation-review.md",
         "./.claude/agents/implementation.md",
         "./.claude/agents/ralph-loop-init.md",

@@ -26,6 +26,7 @@
 | Component | Purpose | Why | Primary Source | Notes |
 |-----------|---------|-----|----------------|-------|
 | `implementation-plan` | 대규모 구현을 phase/task 단위로 나눈다 | 한 세션에 모든 구현을 몰아넣을 때 생기는 품질 저하를 줄인다 | `.claude/agents/implementation-plan.md`<br>`.claude/skills/implementation-plan/SKILL.md` | `feature-draft` 후속 확장 단계. phase metadata가 autopilot의 execution gate source가 된다 |
+| `plan-review` | 구현 전 계획을 findings-first로 감사한다 | 과잉 설계, 불필요한 새 파일, 약한 검증 기준이 구현으로 전파되기 전에 드러낸다 | `.claude/agents/plan-review.md`<br>`.claude/skills/plan-review/SKILL.md`<br>`.codex/agents/plan-review.toml`<br>`.codex/skills/plan-review/SKILL.md` | wrapper -> agent. review-only gate이며 Critical/High finding만 implementation blocker로 표시한다 |
 | `implementation` | 구현 계획을 따라 코드를 작성하고 검증한다 | execute와 verify를 분리하지 않는 delivery step이 필요하다 | `.claude/agents/implementation.md`<br>`.claude/skills/implementation/SKILL.md` | wrapper -> agent. AC-first와 재검증 loop가 핵심 |
 | `implementation-review` | 구현 결과를 계획/AC 기준으로 다시 검증한다 | 누락과 품질 이탈을 조기에 드러낸다 | `.claude/agents/implementation-review.md`<br>`.claude/skills/implementation-review/SKILL.md` | wrapper -> agent. fresh verification 중시 |
 | `pr-review` | PR 코드 품질과 spec 준수 여부를 함께 판정한다 | 코드 리뷰와 spec 기반 검증을 한 surface로 묶는다 | `.claude/skills/pr-review/SKILL.md`<br>`.codex/skills/pr-review/SKILL.md` | findings-first. spec 존재 시 추가 검증 |
