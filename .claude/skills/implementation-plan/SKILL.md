@@ -8,17 +8,17 @@ version: 4.0.0
 
 이 스킬은 **메인 루프 orchestrator**다. `implementation-plan-agent`를 dispatch해 plan을 생성하고, `plan-review-agent`로 **review→fix→re-review loop**를 돌려 산출물 품질 gate를 자체 소유한다. agent는 plan producer 단일 소스이고 스킬이 loop를 소유한다 — producer/reviewer agent는 sub-agent를 spawn하지 못하므로 loop orchestration은 메인 루프(스킬)의 책임이다.
 
-implementation-plan은 입력이 파일/경로에서 태어나는 스킬이다(Mode A). feature-draft의 Mode B와 달리 대화 맥락 digest forwarding을 두지 않는다 — agent가 입력 경로를 자체 read한다.
+implementation-plan은 입력이 파일/경로에서 태어난다. 대화 맥락 digest forwarding을 두지 않는다 — agent가 입력 경로를 자체 read한다.
 
 ## Process
 
-### Step 1: 입력 수집 (Mode A)
+### Step 1: 입력 수집
 
 사용자 요청 + 계획 입력 경로(있으면 feature draft / temporary spec 경로)와 이미 아는 결정을 수집한다. 입력 경로가 불명확하면 agent가 Input Sources 우선순위로 자체 탐색하도록 위임한다(스킬은 새 분석 read를 하지 않는다).
 
 ### Step 2: 생성 (producer dispatch)
 
-`Agent(subagent_type="sdd-skills:implementation-plan-agent", model="opus", prompt=<요청 + 알려진 경로/컨텍스트>)`로 **생성 mode** dispatch한다. agent가 plan을 `_sdd/implementation/<YYYY-MM-DD>_implementation_plan_<slug>.md`에 저장하고 경로 + phase/task 요약 + Open Questions(LOW/Yes)를 반환한다.
+`Agent(subagent_type="sdd-skills:implementation-plan-agent", prompt=<요청 + 알려진 경로/컨텍스트>)`로 **생성 mode** dispatch한다. agent가 plan을 `_sdd/implementation/<YYYY-MM-DD>_implementation_plan_<slug>.md`에 저장하고 경로 + phase/task 요약 + Open Questions(LOW/Yes)를 반환한다.
 
 ### Step 3: review-fix loop
 
@@ -32,7 +32,7 @@ implementation-plan은 입력이 파일/경로에서 태어나는 스킬이다(M
 
 단계:
 
-1. **review**: `Agent(subagent_type="sdd-skills:plan-review-agent", model="opus")`로 plan을 review한다(Tier 1 — implementation plan 입력). reviewer가 Blocker Status + severity별 finding을 리포트(`_sdd/implementation/<YYYY-MM-DD>_plan_review_<slug>.md`)로 낸다.
+1. **review**: `Agent(subagent_type="sdd-skills:plan-review-agent")`로 plan을 review한다(Tier 1 — implementation plan 입력). reviewer가 Blocker Status + severity별 finding을 리포트(`_sdd/implementation/<YYYY-MM-DD>_plan_review_<slug>.md`)로 낸다.
 2. **fix**: critical/high/medium finding이 있으면 `implementation-plan-agent`를 **fix mode**로 재dispatch한다 — 입력: review 리포트 경로 + plan 경로 + 대상 findings. agent가 finding 부분만 surgical 수정한다.
 3. **re-review**: fix 후 loop 범위 전체를 `plan-review-agent`로 재리뷰한다.
 4. exit 충족 또는 MAX 도달까지 1~3을 반복한다. MAX 분기 적용.
@@ -45,6 +45,5 @@ implementation-plan은 입력이 파일/경로에서 태어나는 스킬이다(M
 
 - 산출물(plan) 작성·수정은 `implementation-plan-agent`만 한다(산출물 단일 작성자 — orchestrator는 직접 rewrite하지 않는다). 스킬은 loop만 소유한다.
 - review·findings 분류는 `plan-review-agent`가 수행한다(중복 금지).
-- **Model Routing**: producer/fix=`implementation-plan-agent`(opus), review/re-review=`plan-review-agent`(opus).
 
-> **Role Pointer**: 이 스킬은 review-fix loop를 소유하는 **orchestrator**다. `implementation-plan-agent`는 plan producer 단일 소스(생성·fix mode 수정), `plan-review-agent`는 reviewer다. (구 entrypoint 형태에서 orchestrator로 승격됨 — 더 이상 단순 pass-through가 아니다.)
+> **Role Pointer**: 이 스킬은 review-fix loop를 소유하는 **orchestrator**다. `implementation-plan-agent`는 plan producer 단일 소스(생성·fix mode 수정), `plan-review-agent`는 reviewer다. (구 entrypoint 형태에서 orchestrator로 승격됨 — 더 이상 단순 위임이 아니다.)

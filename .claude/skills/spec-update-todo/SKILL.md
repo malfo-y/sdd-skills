@@ -8,7 +8,7 @@ version: 3.0.0
 
 이 스킬은 entrypoint wrapper다. 사용자의 spec-update-todo 요청을 `sdd-skills:spec-update-todo-agent`에 위임하고 그 결과를 사용자에게 전달한다. 전체 프로세스·Hard Rules·Repo-wide Invariant Test·매핑 규칙·출력 형식은 agent가 단일 소스로 보유한다.
 
-## 실행 (Mode A: pass-through)
+## 실행
 
 1. 사용자 요청 + 입력 소스 경로(있으면 temporary spec / feature draft / user input 경로)와 이미 아는 결정을 수집한다 (wrapper는 새 분석 read를 하지 않는다).
 2. `Agent(subagent_type="sdd-skills:spec-update-todo-agent", prompt=<요청 + 알려진 경로/컨텍스트>)`로 dispatch한다. 입력 소스가 불명확하면 agent가 Input Sources 우선순위로 자체 탐색하도록 위임한다.

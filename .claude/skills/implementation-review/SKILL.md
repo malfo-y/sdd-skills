@@ -4,11 +4,11 @@ description: "Use this skill to review implementation progress against the plan,
 version: 5.0.0
 ---
 
-# Implementation Review (Entrypoint Wrapper — Mode B)
+# Implementation Review (Entrypoint Wrapper)
 
 이 스킬은 entrypoint wrapper다. 사용자의 implementation-review 요청을 `sdd-skills:implementation-review-agent`에 위임하고 그 결과를 사용자에게 전달한다. 전체 리뷰 프로세스·Tier graceful degradation·findings-first severity·리포트 형식은 agent가 단일 소스로 보유한다.
 
-## 실행 (Mode B: context-forwarding)
+## 실행
 
 plan 파일이 있으면 agent가 그것으로 범위를 잡지만(Tier 1), **plan 없이 "방금 구현한 거 리뷰"처럼 호출되면 무엇을·왜 구현했는지·리뷰 범위가 대화에 산다**. agent는 파일은 read하지만 **이번 세션의 대화는 못 읽으므로**, wrapper가 그 맥락을 정리해 전달한다.
 
