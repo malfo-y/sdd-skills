@@ -2,6 +2,13 @@
 
 > 이 파일은 `_sdd/spec/main.md`의 버전별 변경 기록이다.
 
+#### v4.1.12 (2026-06-03)
+
+- **investigate 재분류**: v4.1.11에서 census 오분류로 wrapper(Mode B)+`investigate-agent`로 전환됐던 `investigate`를 orchestrator(skill)로 재분류. 전체 디버깅 계약을 메인 루프 skill이 인라인 소유하고, 탐색이 넓고·모호할 때만 빌트인 범용 read-only explore 역할(claude `Explore`, codex `spawn_agent(agent_type="explorer")`)을 병렬 fan-out한다(custom leaf 미신설). investigate SKILL 2종 v4.0.0
+- **investigate-agent 제거**: `.claude/agents/investigate-agent.md`, `.codex/agents/investigate-agent.toml` 삭제 및 `marketplace.json` `agents` 목록에서 제외(skill 항목 유지). 참조자가 wrapper+매니페스트뿐이라 제거 격리
+- **supporting/history sync**: `components.md` investigate 행 정정, `DECISION_LOG.md`에 reclassification entry 추가 + v4.1.11 entry의 investigate 분류 3곳(비-fan-out 목록·Mode B 목록·`Agent` 도구 제거 목록)에 정정 마커
+- 입력: `_sdd/drafts/2026-06-03_feature_draft_investigate_orchestrator.md`, `_sdd/implementation/2026-06-03_plan_review_investigate_orchestrator.md` (CLEAR), implementation review READY (branch `refactor/investigate-orchestrator`)
+
 #### v4.1.11 (2026-06-03)
 
 - **orchestrator/leaf 실행 형태 고정**: fan-out이 필요한 `implementation`을 orchestrator(skill) + leaf(agent)로 분리. skill이 task-set 확보·dependency 기반 그룹 파생·leaf fan-out·통합/회귀/phase review/report를 소유하고, `implementation-agent` leaf는 단일 task TDD만 수행한다(sub-agent spawn 없음). nesting 1단계 제한 아래 fan-out을 메인 루프로 올림
