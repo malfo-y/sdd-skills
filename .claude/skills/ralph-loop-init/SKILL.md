@@ -10,7 +10,7 @@ version: 3.0.0
 
 > **Security Notice**: 생성된 `run.sh`는 `--dangerously-skip-permissions`를 사용한다. **격리된 환경(컨테이너, VM, 샌드박스)에서만 실행할 것.**
 
-## 실행 (Mode A: pass-through)
+## 실행
 
 1. 사용자 요청 + 대상 프로세스/진입점 컨텍스트와 이미 아는 결정을 수집한다 (wrapper는 새 분석 read를 하지 않는다).
 2. `Agent(subagent_type="sdd-skills:ralph-loop-init-agent", prompt=<요청 + 알려진 진입점/환경 컨텍스트>)`로 dispatch한다. 진입점이 불명확하면 agent가 Step 1 discovery로 자체 탐색하도록 위임한다.

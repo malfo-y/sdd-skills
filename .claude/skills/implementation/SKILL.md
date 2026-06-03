@@ -194,8 +194,8 @@ Phase 내 모든 태스크 완료 후, orchestrator는 **외부 `implementation-
 
 **단계**:
 
-1. **review**: `Agent(subagent_type="sdd-skills:implementation-review-agent", model="opus")`를 호출해 이 phase 범위의 변경 파일 전체 + 테스트 결과를 전달한다. reviewer가 severity별 finding을 반환한다.
-2. **fix**: critical/high/medium finding이 있으면, finding을 **하나씩 순차** fix-task로 변환해 `Agent(subagent_type="sdd-skills:implementation-agent", model="sonnet")` leaf를 재dispatch한다(finding 영향 파일 = 그 leaf의 Target Files). `implementation-agent`는 fix mode 별도 계약 없이 finding을 task로 받아 기존 TDD 계약으로 처리한다(I3 — leaf는 단일 task 실행자라 finding이 곧 task).
+1. **review**: `Agent(subagent_type="sdd-skills:implementation-review-agent")`를 호출해 이 phase 범위의 변경 파일 전체 + 테스트 결과를 전달한다. reviewer가 severity별 finding을 반환한다.
+2. **fix**: critical/high/medium finding이 있으면, finding을 **하나씩 순차** fix-task로 변환해 `Agent(subagent_type="sdd-skills:implementation-agent")` leaf를 재dispatch한다(finding 영향 파일 = 그 leaf의 Target Files). `implementation-agent`는 fix mode 별도 계약 없이 finding을 task로 받아 기존 TDD 계약으로 처리한다(I3 — leaf는 단일 task 실행자라 finding이 곧 task).
 3. **re-review**: fix 후 loop 범위 전체를 `implementation-review-agent`로 재리뷰한다.
 4. exit 조건 충족 또는 MAX 도달까지 1~3을 반복한다. MAX 도달 시 분기 정책 적용.
 
