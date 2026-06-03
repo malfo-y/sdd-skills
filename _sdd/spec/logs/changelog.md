@@ -2,6 +2,17 @@
 
 > 이 파일은 `_sdd/spec/main.md`의 버전별 변경 기록이다.
 
+#### v4.1.13 (2026-06-03)
+
+- **세 producer 스킬에 review-fix loop 내장**: `implementation`/`feature-draft`/`implementation-plan`이 autopilot 없이 직접 호출되는 경로에서도 review→fix→re-review loop를 자체 소유한다. 공통 정책(exit `critical=high=medium=0`·MAX 3·loop 범위 전체 재리뷰·MAX 분기)을 autopilot orchestrator-contract §6에서 차용, 각 스킬 인라인 보유(공유 파일 미생성)
+- **`implementation` Step 6 외부 loop 교체**: 인라인 경량 self-review 제거 → 외부 `implementation-review-agent` review→fix→re-review. fix=`implementation-agent` finding 순차 재dispatch(leaf는 fix mode 별도 계약 없이 task 처리, I3). loop scope=phase 단위 1 gate(autopilot global/per-group 미차용). SKILL 2종 v3.0.0→3.1.0
+- **`feature-draft`/`implementation-plan` wrapper→orchestrator 승격**: 두 thin wrapper를 loop-owning orchestrator로 재작성. producer 생성 dispatch 직후 `plan-review-agent` loop 소유. feature-draft는 Mode B digest를 생성·fix 라운드 모두 유지, implementation-plan은 Mode A(digest 없음). Role Pointer 재정의. SKILL 4종 v3.0.0→4.0.0
+- **producer-agent fix mode 추가**: `feature-draft-agent`/`implementation-plan-agent`(claude .md + codex .toml)에 fix mode 입력 계약(리포트+산출물+findings 모두→fix, 입력 존재가 신호) 추가. surgical 수정·산출물 단일 작성자(I1) 보존. codex feature-draft `spec-update-todo-input` 마커 보존
+- **범위 경계**: autopilot·`orchestrator-contract.md`·`implementation-agent`/reviewer agent 본문 미변경(실행 경로 비중첩, 재사용만)
+- **supporting/history sync**: `main.md`(실행 분리·guardrail·결정 행), `components.md`(feature-draft/implementation-plan 재분류·implementation Step 6·Platform Notes), `DECISION_LOG.md` 갱신
+- **잔여(미검증)**: V6 reload smoke(trigger resolve + multi-phase gate 1회 종료)는 self-referential 제약상 DEFERRED. 정적 게이트 V1~V5/V7 전부 PASS
+- 입력: `_sdd/drafts/2026-06-03_feature_draft_skills_embed_review_fix_loop.md`, `_sdd/implementation/2026-06-03_implementation_report_skills_embed_review_fix_loop.md`, `_sdd/implementation/2026-06-03_plan_review_skills_embed_review_fix_loop.md` (CLEAR), branch `refactor/skills-embed-review-fix-loop` (`52a4c7f`)
+
 #### v4.1.12 (2026-06-03)
 
 - **investigate 재분류**: v4.1.11에서 census 오분류로 wrapper(Mode B)+`investigate-agent`로 전환됐던 `investigate`를 orchestrator(skill)로 재분류. 전체 디버깅 계약을 메인 루프 skill이 인라인 소유하고, 탐색이 넓고·모호할 때만 빌트인 범용 read-only explore 역할(claude `Explore`, codex `spawn_agent(agent_type="explorer")`)을 병렬 fan-out한다(custom leaf 미신설). investigate SKILL 2종 v4.0.0

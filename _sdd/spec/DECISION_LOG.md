@@ -1,5 +1,51 @@
 # Decision Log
 
+## 2026-06-03 - Embed review-fix loop in three producer skills; promote feature-draft/implementation-plan to loop-owning orchestrators
+
+### Context
+
+세 entrypoint 스킬(`implementation`, `feature-draft`, `implementation-plan`)을 autopilot 없이 직접 호출하는 경로에는 산출물 품질 gate가 일관되게 없었다. `implementation`만 Step 6에 인라인 경량 self-review(orchestrator가 직접 품질 판정 후 Critical만 leaf 재dispatch)를 가졌고 외부 reviewer를 쓰지 않았으며, `feature-draft`/`implementation-plan`은 thin entrypoint wrapper라 review gate가 전혀 없었다. autopilot 경로는 reviewer-fix gate를 갖지만, autopilot은 스킬이 아니라 `*-agent` leaf를 직접 dispatch하므로 직접 호출 경로는 그 gate를 공유하지 못했다.
+
+### Decision
+
+1. **`implementation` Step 6 = 외부 review-fix loop**: 인라인 경량 self-review를 제거하고 외부 `implementation-review-agent` review→fix→re-review loop로 교체한다. fix는 `implementation-agent` leaf를 finding 하나씩 순차 재dispatch(finding 영향 파일 = 그 leaf의 Target Files)한다. loop scope는 실행분(phase) 단위 1 gate로 단순화하고 autopilot의 global/per-group·Checkpoint 메타 개념은 도입하지 않는다(직접 호출 경로엔 Checkpoint 신호를 줄 상위 오케스트레이터가 없음). `implementation-agent`는 fix mode 별도 계약 없이 finding을 task로 받아 기존 TDD 계약으로 처리한다(I3 — leaf는 단일 task 실행자라 finding이 곧 task로 매핑). version 3.0.0→3.1.0.
+2. **`feature-draft`/`implementation-plan` wrapper → orchestrator 승격**: 두 thin wrapper를 loop-owning orchestrator로 재작성한다. producer-agent 생성 dispatch 직후 `plan-review-agent` review→fix→re-review loop를 메인 루프(스킬)가 직접 소유한다. producer/reviewer agent는 sub-agent를 spawn하지 못하므로 loop orchestration은 반드시 메인 루프(스킬)가 소유해야 하고, 이것이 wrapper→orchestrator 승격을 강제한다. `feature-draft`는 Mode B 대화 맥락 digest를 생성·fix 라운드 모두에 유지하고, `implementation-plan`은 Mode A(파일/경로 입력)라 digest forwarding이 없다. version 3.0.0→4.0.0.
+3. **producer-agent fix mode 입력 계약 추가**: `feature-draft-agent`/`implementation-plan-agent`에 fix mode를 추가한다. dispatch 입력에 (a) review 리포트 경로, (b) 기존 산출물 경로, (c) 대상 findings가 **모두** 있으면 fix mode, 하나라도 없으면 생성 mode로 분기한다(별도 플래그 토큰 없음 — 입력 존재가 결정적 신호). fix mode는 기존 산출물을 Read해 finding 부분만 surgical 수정하고 전체 재생성하지 않는다(I1 산출물 단일 작성자). Source Pointer는 "producer 단일 소스 + skill=loop orchestrator"로 재정의한다.
+4. **공통 loop 정책 통일**: 세 loop 모두 exit `critical=high=medium=0`, MAX 기본 3회, 매 라운드 loop 범위 전체 재리뷰, MAX 도달 시 critical/high 잔존→중단·보고·medium만 잔존→로그 후 진행. 별도 공유 정책 파일을 만들지 않고 각 스킬이 인라인 보유한다(autopilot `orchestrator-contract.md` §6 차용·재진술).
+
+### Rationale
+
+- 직접 호출 경로도 reviewer gate를 통과해야 산출물 품질이 호출 경로에 무관하게 보장된다.
+- nesting 1단계 제한 아래에서 producer/reviewer agent는 leaf라 loop를 spawn할 수 없으므로, loop 소유 주체는 메인 루프 스킬일 수밖에 없다 — 이 제약이 ②③ 승격을 강제한다. 검증된 선례는 `implementation`(orchestrator가 loop 소유 + fix를 leaf 재dispatch)이다.
+- 산출물 단일 작성자(I1)를 유지하려면 fix도 producer 재dispatch여야 하며, orchestrator 스킬은 loop만 소유하고 산출물을 직접 rewrite하지 않는다.
+- autopilot은 실행 경로가 비중첩(스킬이 아니라 `*-agent` leaf를 직접 dispatch)이므로 본 변경에서 건드리지 않는다(개념적 유사 ≠ 이중 실행).
+
+### Changes
+
+- `.claude/skills/implementation/SKILL.md`, `.codex/skills/implementation/SKILL.md` -- Step 6 인라인 self-review → 외부 `implementation-review-agent` review-fix loop. v3.0.0→3.1.0
+- `.claude/skills/feature-draft/SKILL.md`, `.codex/skills/feature-draft/SKILL.md` -- wrapper → orchestrator(loop 소유), Role Pointer 재정의. v3.0.0→4.0.0
+- `.claude/skills/implementation-plan/SKILL.md`, `.codex/skills/implementation-plan/SKILL.md` -- wrapper → orchestrator(loop 소유), Role Pointer 재정의. v3.0.0→4.0.0
+- `.claude/agents/feature-draft-agent.md`, `.codex/agents/feature-draft-agent.toml` -- fix mode 입력 계약 추가, Source Pointer 보강. codex `spec-update-todo-input` 마커 보존
+- `.claude/agents/implementation-plan-agent.md`, `.codex/agents/implementation-plan-agent.toml` -- fix mode 입력 계약 추가, Source Pointer 보강
+- `_sdd/spec/main.md` -- 실행 분리 결정·guardrail에 orchestrator-owned review-fix loop 반영, producer 스킬 품질 gate 결정 행 추가, v4.1.12→4.1.13
+- `_sdd/spec/components.md` -- feature-draft/implementation-plan을 orchestrator+loop로 재분류, implementation Step 6 외부 loop 반영, Platform Notes split 갱신
+- `_sdd/spec/DECISION_LOG.md`, `_sdd/spec/logs/changelog.md` -- 본 entry 추가
+
+### Scope Boundary
+
+- **autopilot 미변경**: autopilot 오케스트레이터·`orchestrator-contract.md`는 건드리지 않았다(실행 경로 비중첩). `implementation-agent`(leaf TDD)·`plan-review-agent`·`implementation-review-agent` 본문 review/TDD 계약도 재사용만 했다.
+
+### Deferred / Unverified
+
+- **V6 reload smoke**: 플러그인 reload 후 `/implementation`·`/feature-draft`·`/implementation-plan` trigger resolve + dispatch 표기 유효성 + multi-phase phase별 gate 1회 종료 확인은 self-referential 제약상 미실행(DEFERRED). 정적 게이트(V1~V5/V7 grep/diff)는 전부 PASS.
+
+### References
+
+- feature draft: `_sdd/drafts/2026-06-03_feature_draft_skills_embed_review_fix_loop.md`
+- implementation report: `_sdd/implementation/2026-06-03_implementation_report_skills_embed_review_fix_loop.md` (READY, 정적 게이트 기준)
+- plan review: `_sdd/implementation/2026-06-03_plan_review_skills_embed_review_fix_loop.md` (CLEAR)
+- branch: `refactor/skills-embed-review-fix-loop` (`52a4c7f`)
+
 ## 2026-06-03 - Reclassify investigate as orchestrator with reused generic Explore fan-out (investigate-agent removed)
 
 ### Context
