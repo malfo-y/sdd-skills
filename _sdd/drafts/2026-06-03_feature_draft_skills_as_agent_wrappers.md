@@ -1,5 +1,7 @@
 # Feature Draft: mirror 스킬을 agent thin wrapper로 전환
 
+> **STATUS: _processed_ (2026-06-03)** — Part 1 delta(C1~C6, I1~I4)가 구현·머지·검증된 사실로 canonical spec에 동기화됨. 반영: `_sdd/spec/main.md`(v4.1.11), `components.md`, `DECISION_LOG.md`(2026-06-03 entry), `logs/changelog.md`. 추가 spec 반영 불필요.
+
 > 근거 토론: `_sdd/discussion/2026-06-03_discussion_implementation_orchestrator_leaf_split.md` — 통합 규칙 "fan-out→orchestrator+leaf / non-fan-out→wrapper→agent" 확정. 이 작업은 후자(wrapper) 트랙.
 > 선행: implementation은 orchestrator/leaf 분리로 별도 해결되어 main 머지됨(`70f0fc2`). 본 작업 범위에서 제외.
 > census(2026-06-03): 후보 9개 중 core fan-out 0 · interactive(AskUserQuestion) 0. 예외는 implementation-plan의 선택적 worker 병렬 fill뿐(순차 degrade 수용, 사용자 확정).

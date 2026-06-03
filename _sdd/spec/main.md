@@ -2,8 +2,8 @@
 
 > Markdown 기반 skill bundle로 AI 에이전트의 Spec-Driven Development 워크플로우를 Claude Code와 Codex에서 공통 계약으로 실행한다.
 
-**Spec Version**: 4.1.10
-**Last Updated**: 2026-05-22
+**Spec Version**: 4.1.11
+**Last Updated**: 2026-06-03
 **Status**: Approved
 **Canonical Role**: current thin global spec
 
@@ -56,10 +56,10 @@ SDD Skills는 이 문제를 `SKILL.md = 실행 가능한 프롬프트`라는 관
 ### Guardrails
 
 - global spec은 thin decision document로 유지하고, execution detail은 `_sdd/drafts/`, `_sdd/implementation/`, `_sdd/pipeline/` 같은 temporary surface로 분리한다
-- 사용자 entrypoint는 skill layer에, 재사용 execution unit은 agent layer에 둔다
+- 사용자 entrypoint는 skill layer에, 재사용 execution unit은 agent layer에 둔다. dispatch된 agent는 sub-agent를 다시 spawn하지 않는다(nesting 1단계 제한). 따라서 core fan-out이 필요한 execution은 `orchestrator(skill) + leaf(agent)` 형태로 두고(메인 루프 skill/autopilot만 fan-out, leaf는 단일 단위만 실행), fan-out이 없는 execution은 `wrapper-backed skill + single-source agent` 형태로 둔다
 - persistent handoff는 `_sdd/spec/`, `_sdd/drafts/`, `_sdd/implementation/`, `_sdd/pipeline/`, `_sdd/discussion/`의 canonical 경로를 통해 이뤄진다
 - 새 temporary artifact는 가능한 한 lowercase canonical 경로를 사용하고, skill contract가 dated slug 패턴을 정의한 output surface는 그 형식을 따라야 한다. reader는 legacy uppercase/fixed-name artifact를 fallback으로 읽을 수 있어야 한다
-- wrapper-backed skill은 사용자 entrypoint와 artifact contract를 유지해야 하며, 지원하지 않는 동작을 조용히 흉내내지 않는다
+- wrapper-backed skill은 사용자 entrypoint와 artifact contract를 유지해야 하며, 지원하지 않는 동작을 조용히 흉내내지 않는다. wrapper는 thin entrypoint로 두고 전체 계약·프로세스는 agent를 단일 소스로 유지한다. 입력이 대화에서 태어나는 wrapper는 그 대화 맥락을 agent에 forwarding해야 한다(agent는 파일은 read하지만 대화는 읽지 못한다)
 - review나 validation이 포함된 workflow는 review-only로 닫지 않고 fix/re-review 또는 명시적 잔여 이슈 보고로 마무리한다
 - non-trivial planning은 기본적으로 `feature-draft`에서 시작하고, `implementation-plan`은 phase/task 세분화가 필요할 때만 follow-up expansion으로 붙인다
 - 구현 전 계획 품질 점검이 필요하면 `plan-review`를 review-only gate로 사용한다. 이 gate는 plan을 직접 수정하지 않고 Critical/High finding만 implementation blocker로 표시한다
@@ -87,7 +87,7 @@ SDD Skills의 설계는 네 층으로 나뉜다.
 |------|-----------|-----------|
 | Skill 정의 형식 | Markdown `SKILL.md` | AI 에이전트가 직접 읽고 실행 규약을 추론하기 쉽다 |
 | 런타임 구조 | Claude/Codex dual bundle | 동일한 SDD 철학을 유지하면서 플랫폼별 실행 차이를 흡수한다 |
-| 실행 분리 | skill entrypoint + reusable agent | direct invocation과 autopilot 재사용성을 동시에 확보한다 |
+| 실행 분리 | skill entrypoint + reusable agent. fan-out execution은 `orchestrator skill + leaf agent`, non-fan-out execution은 `wrapper skill + single-source agent` | direct invocation과 autopilot 재사용성을 확보하면서 nesting 1단계 제한 안에서 fan-out을 안전하게 둔다 |
 | 상태 전달 | `_sdd/` 파일 아티팩트 중심 | 세션 메모리 의존을 줄이고 재현성과 git 추적성을 높인다 |
 | 품질 게이트 | AC-First + explicit verification | "should work" 식 추측을 줄이고 종료 조건을 명확히 한다 |
 | 장문 산출물 작성 | producer-owned inline 2-phase writing | skeleton/fill/finalize를 같은 문맥에서 처리해 품질 저하를 줄인다 |
@@ -112,7 +112,7 @@ SDD Skills의 설계는 네 층으로 나뉜다.
 
 ### 현재 운영 제약
 
-- Claude와 Codex 문서/skill parity는 아직 완전 자동 동기화가 아니라 유지보수자의 관리가 필요하며, public skill과 internal agent mirror도 함께 동기화해야 한다
+- Claude와 Codex 문서/skill parity는 아직 완전 자동 동기화가 아니라 유지보수자의 관리가 필요하다. wrapper-backed skill에서는 agent가 단일 소스이므로 "skill 본문과 agent 본문을 함께 미러링"하는 의무는 대부분 해소됐고, 유지보수는 agent 본문과 thin wrapper의 entrypoint/dispatch 정합으로 좁혀졌다(claude/codex 양 플랫폼 parity는 여전히 수동 관리)
 - 일부 version metadata 갱신은 여전히 문서 편집 discipline에 의존한다
 - 이 저장소는 전통적인 테스트 프레임워크보다 실제 skill invocation과 리뷰 기반 검증에 크게 의존한다
 

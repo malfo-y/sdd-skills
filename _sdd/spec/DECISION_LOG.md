@@ -1,5 +1,44 @@
 # Decision Log
 
+## 2026-06-03 - Split execution into orchestrator/leaf vs wrapper-backed shapes under the nesting limit (v4.1.10 -> v4.1.11 spec revision)
+
+### Context
+
+`skill entrypoint + reusable agent`라는 기존 실행 분리 결정은 dispatch된 agent가 sub-agent를 다시 spawn할 수 없다는 플랫폼 제약(nesting 1단계)을 만나면서 두 가지 결이 갈렸다. `implementation`은 skill과 agent가 동일 본문(병렬 TDD 전체)을 mirror해, agent가 dispatch되는 경로(autopilot 등)에서는 병렬 dispatch 지시가 실행 불가능한 죽은 코드가 됐다. 반대로 fan-out이 없는 9종(`feature-draft`, `implementation-plan`, `plan-review`, `implementation-review`, `ralph-loop-init`, `spec-review`, `spec-update-done`, `spec-update-todo`, `investigate`)은 skill과 agent가 full 본문을 4벌(claude/codex × skill/agent) 중복 유지해 "함께 수정" 동기화 부담이 컸다.
+
+### Decision
+
+1. **fan-out execution = orchestrator(skill) + leaf(agent)**: 메인 루프 skill(또는 autopilot)만 fan-out하고, leaf agent는 단일 단위만 실행하며 sub-agent를 spawn하지 않는다. `implementation`이 이 형태로 전환됐다 — skill이 task-set 확보(plan 파싱 / no-plan 경량 분해), dependency 기반 그룹 파생("dependency edge 없음 + Target Files disjoint → 병렬") + file-disjoint 가드레일, leaf fan-out, 통합/회귀/phase review/report를 소유하고, `implementation-agent` leaf는 단일 task TDD만 수행한다.
+2. **non-fan-out execution = wrapper(skill) + single-source agent**: 9종 skill을 thin entrypoint wrapper로 전환하고 전체 계약·프로세스는 agent를 단일 소스로 보유한다. wrapper는 entrypoint(trigger)·artifact 경로 계약을 유지하고 결과를 relay한다.
+3. **wrapper 2-모드**: 입력이 파일+직접 요청인 wrapper는 pass-through(Mode A)로, 입력이 대화에서 태어나는 wrapper(`feature-draft`, `investigate`, `implementation-review`)는 대화 맥락을 digest로 forwarding(Mode B)한다. 원리는 "agent는 파일은 read하지만 대화는 읽지 못한다".
+4. **planner가 그룹화 두뇌를 소유**: `feature-draft`/`implementation-plan`이 의미적 충돌(모델 import, 동시 마이그레이션, 동일 config, API 생산-소비, 상수 충돌)을 명시적 dependency로 인코딩(무방향 mutex는 임의 방향으로 흡수)하고, orchestrator는 그 dependency로 trivial하게 그룹을 파생한다.
+5. **autopilot dispatch granularity 고정**: 초기 구현 = group 단위 병렬 leaf fan-out, fix = review finding 단위 순차 leaf 재dispatch. progress/report 소유는 실행 주체(skill 또는 autopilot)이며 canonical 경로·소비 필드를 보존한다(downstream `spec-update-done`·`spec-summary` 호환). orchestrator-contract §2 "Implementation Dispatch Granularity"에 명시.
+6. **mirror sync 의무 해소**: wrapper-backed skill에서 agent가 단일 소스이므로 "skill 본문과 agent 본문을 함께 미러링"하는 의무는 대부분 사라졌다. 유지보수는 agent 본문과 thin wrapper의 entrypoint/dispatch 정합 + claude/codex parity로 좁혀졌다.
+
+### Rationale
+
+- nesting 1단계 제한 아래에서 fan-out을 안전하게 두려면 fan-out 책임을 메인 루프(orchestrator)로 올리고 leaf는 더 쪼갤 것 없는 단위로 두어야 한다.
+- TDD 로직을 leaf 단일 소스로 두면 DRY가 강화되고, 직접 `/implementation` 호출도 병렬성을 얻는다(병렬은 최적화 토글, 불가하면 동일 흐름으로 순차).
+- 그룹화 판단을 planner의 dependency 인코딩에 두면 orchestrator는 dumb한 trivial 규칙만 적용하면 되고, 구식 plan은 file-disjoint 가드레일 + "확신 없으면 순차"로 안전하게 덜 병렬화될 뿐 오작동하지 않는다.
+- non-fan-out skill을 wrapper+single-source agent로 두면 full 본문 중복이 4벌에서 2벌로 줄고(실측 약 -4,700줄), "조용한 흉내 금지"(지원 못 하는 fan-out을 wrapper가 흉내내지 않음) 원칙과도 맞는다.
+- 이 결정은 main.md L59(skill=entrypoint, agent=reusable unit)·L62(wrapper-backed)·L90이 이미 선언한 모델의 구체적 실현이며, 새 모델 도입이 아니라 검증된 사실 반영이다.
+
+### Changes
+
+- `.claude/agents/implementation-agent.md`, `.codex/agents/implementation-agent.toml` -- 단일 task TDD leaf로 축소, `Agent` 도구 제거, 그룹화/phase review/report 섹션 삭제
+- `.claude/skills/implementation/SKILL.md`, `.codex/skills/implementation/SKILL.md` -- orchestrator(v3)로 재작성(task-set 확보·그룹 파생·leaf fan-out·통합/report 소유)
+- `.claude/skills/sdd-autopilot/SKILL.md` 및 `references/orchestrator-contract.md`, `examples/sample-orchestrator.md` (claude/codex) -- §2 Implementation Dispatch Granularity 신설(초기=병렬 그룹/fix=finding 순차/report 소유)
+- `feature-draft`, `implementation-plan`의 skill+agent (claude/codex 8파일) -- 의미적 충돌 → 명시적 dependency 인코딩(B1 포함) 정식화
+- 9종 mirror skill의 SKILL(claude/codex 18파일) -- thin wrapper로 전환, dispatch 참조(claude `sdd-skills:<name>-agent` / codex `spawn_agent(<name>_agent)`+`wait_agent`)
+- 미사용 `Agent` 도구 제거 5종(`feature-draft`, `plan-review`, `spec-review`, `investigate`, `implementation-plan`), Mirror/Sync Notice → Source/Role Pointer
+- `_sdd/spec/main.md`, `_sdd/spec/components.md`, `_sdd/spec/usage-guide.md`, `_sdd/spec/logs/changelog.md` -- 검증된 구현 evidence 기준 global spec surface 동기화
+
+### References
+
+- feature drafts: `_sdd/drafts/2026-06-03_feature_draft_implementation_orchestrator_leaf_split.md`, `_sdd/drafts/2026-06-03_feature_draft_skills_as_agent_wrappers.md`
+- implementation reports: `_sdd/implementation/2026-06-03_implementation_report_implementation_orchestrator_leaf_split.md`, `_sdd/implementation/2026-06-03_implementation_report_skills_as_agent_wrappers.md`
+- implementation reviews: `_sdd/implementation/2026-06-03_implementation_review_implementation_orchestrator_leaf_split.md` (READY), `_sdd/implementation/2026-06-03_implementation_review_skills_as_agent_wrappers.md` (READY)
+
 ## 2026-05-22 - Standardize Strategic Code Map as optional navigation surface (v4.1.9 -> v4.1.10 spec revision)
 
 ### Context

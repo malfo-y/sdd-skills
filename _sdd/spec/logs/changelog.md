@@ -2,6 +2,17 @@
 
 > 이 파일은 `_sdd/spec/main.md`의 버전별 변경 기록이다.
 
+#### v4.1.11 (2026-06-03)
+
+- **orchestrator/leaf 실행 형태 고정**: fan-out이 필요한 `implementation`을 orchestrator(skill) + leaf(agent)로 분리. skill이 task-set 확보·dependency 기반 그룹 파생·leaf fan-out·통합/회귀/phase review/report를 소유하고, `implementation-agent` leaf는 단일 task TDD만 수행한다(sub-agent spawn 없음). nesting 1단계 제한 아래 fan-out을 메인 루프로 올림
+- **wrapper-backed skill 형태 고정**: fan-out이 없는 9종(`feature-draft`, `implementation-plan`, `plan-review`, `implementation-review`, `ralph-loop-init`, `spec-review`, `spec-update-done`, `spec-update-todo`, `investigate`) SKILL을 thin entrypoint wrapper로 전환하고 agent를 단일 소스로 둠. full 본문 중복 4벌→2벌(실측 약 -4,700줄)
+- **wrapper 2-모드**: 파일+직접 요청 입력은 pass-through(Mode A), 대화 태생 입력(`feature-draft`·`investigate`·`implementation-review`)은 대화 맥락 digest forwarding(Mode B). 원리 "agent는 파일은 read하나 대화는 못 읽는다"
+- **planner dependency 인코딩 정식화**: `feature-draft`/`implementation-plan`이 의미적 충돌 5패턴을 명시적 dependency로 인코딩(무방향 mutex 임의 방향 흡수), orchestrator는 trivial 규칙으로 그룹 파생
+- **autopilot dispatch granularity**: 초기 구현=group 병렬 leaf fan-out / fix=finding 순차 leaf 재dispatch / progress·report 소유=실행 주체(canonical 경로 보존). orchestrator-contract §2 신설
+- **mirror sync 의무 해소**: wrapper-backed skill은 agent가 단일 소스 — "skill·agent 본문 함께 미러링" 의무 대부분 해소, dead `Agent` 도구 5종 제거, Mirror/Sync Notice → Source/Role Pointer
+- **supporting docs sync**: `main.md`, `components.md`, `usage-guide.md`를 검증된 구현 evidence 기준으로 갱신. Strategic Code Map 경로 freshness 보정(`-agent` suffix 정합)
+- 입력: `_sdd/drafts/2026-06-03_feature_draft_implementation_orchestrator_leaf_split.md`, `_sdd/drafts/2026-06-03_feature_draft_skills_as_agent_wrappers.md`, `_sdd/implementation/2026-06-03_implementation_report_implementation_orchestrator_leaf_split.md`, `_sdd/implementation/2026-06-03_implementation_report_skills_as_agent_wrappers.md`, `_sdd/implementation/2026-06-03_implementation_review_implementation_orchestrator_leaf_split.md`, `_sdd/implementation/2026-06-03_implementation_review_skills_as_agent_wrappers.md`
+
 #### v4.1.10 (2026-05-22)
 
 - **Strategic Code Map 표준화**: `Strategic Code Map`을 optional compact navigation surface로 정의하고, exhaustive file tree / component catalog / API reference / 구현 narrative로 확장하지 않는 guardrail을 고정

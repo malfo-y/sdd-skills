@@ -1,5 +1,7 @@
 # Feature Draft: implementation orchestrator/leaf 분리
 
+> **STATUS: _processed_ (2026-06-03)** — Part 1 delta(C1~C6, I1~I4)가 구현·머지·검증된 사실로 canonical spec에 동기화됨. 반영: `_sdd/spec/main.md`(v4.1.11), `components.md`, `DECISION_LOG.md`(2026-06-03 entry), `logs/changelog.md`. 추가 spec 반영 불필요.
+
 > 근거 토론: `_sdd/discussion/2026-06-03_discussion_implementation_orchestrator_leaf_split.md` (leaf/orchestrator 분리, 그룹화=B 충돌→의존성, B1 mutex 흡수, 통합 규칙, Min scope)
 > 선행 발견: `_sdd/implementation/2026-06-02_implementation_report_mirror_skills_to_agent_wrappers.md` (dispatch된 agent는 sub-agent spawn 불가 — nesting 1단계 제한)
 
