@@ -85,7 +85,7 @@ canonical 7섹션:
 ### 1.7 파이프라인 구성 원칙
 
 1. **Spec-optional**: global spec이 있으면 활용하고, 없으면 spec-less 모드로 진행한다. `spec-create`는 파이프라인 필수 선행이 아니라 사용자에게 추천하는 가이드 수준이다.
-2. **Delta-first for non-trivial changes**: 추가적인 계획이 필요한 모든 변경은 temporary spec 또는 `feature-draft`를 선행.
+2. **Delta-first for non-trivial changes**: `feature-draft`는 기본 포함이다. 정말 간단한 디버깅 수준의 수정(typo fix, config 값 변경, 로그 한 줄 추가 등)이거나 해당 주제의 feature-draft artifact가 `_sdd/drafts/`에 이미 존재하는 경우에만 스킵할 수 있다.
 3. **Review-fix 필수**: review만 하고 끝나지 않는다.
 4. **Execute -> Verify**: 에이전트 호출 != 완료. evidence까지 확인해야 한다.
 5. **파일 기반 handoff**: 상태 전달은 artifact 파일 경로 중심.
@@ -103,8 +103,10 @@ canonical 7섹션:
 
 [Default planning path for non-trivial changes]
 feature-draft
+  -> plan-review [producer gate]
   -> (optional) spec-update-todo
-  -> (optional) implementation-plan
+  -> (required if multi-phase) implementation-plan
+  -> plan-review [producer gate if implementation-plan ran]
   -> implementation
 
 [Immediate gate after each implementation unit]
@@ -115,7 +117,7 @@ implementation
   -> validation / phase validation
 
 [Final gate before spec sync]
-(if multi-phase) final integration review
+(if required by per-group final integration review adaptive policy) final integration review
   -> required validation/test closure
   -> spec-update-done
 
@@ -129,6 +131,9 @@ validation / final integration review
 - `spec-update-done`은 review-fix gate, required validation/test, 필요한 경우 `final integration review`가 모두 끝난 뒤에만 온다.
 - `ralph-loop-init`은 구현 본선 뒤에 무조건 붙는 단계가 아니라, 장시간 검증이 필요할 때 validation surface에 붙는 선택지다.
 - Step 4 orchestrator generation은 `_sdd/pipeline/orchestrators/orchestrator_<topic>.md`만 materialize한다. `_sdd/drafts/*`, `_sdd/implementation/*`, `_sdd/pipeline/report_*`, 코드/테스트 출력은 future step의 planned output으로만 존재한다.
+- `plan-review`는 planning producer output gate다. `feature-draft` output은 `spec-update-todo`, `implementation-plan`, `implementation` 어느 downstream step으로 소비되기 전에도 먼저 `plan-review`를 통과해야 한다.
+- `implementation-plan`을 실행한 경우 그 output도 `implementation`이 소비하기 전에 `plan-review`를 통과해야 한다.
+- producer gate가 fail이면 finding을 implementation fix task로 normalize하지 않는다. 해당 producer 산출물을 reject/regenerate한다.
 - review-fix loop에서 agent 역할은 고정이다: review는 `implementation-review`, fix는 `implementation` 재호출, re-review는 다시 `implementation-review`다. 이 loop는 파이프라인 끝의 후처리가 아니라 각 `implementation` 실행 단위 직후 즉시 닫는 completion gate다.
 - review가 포함된 small/medium/large 모든 규모에서 `implementation`과 `implementation-review`는 subagent mapping으로만 실행한다. 부모 autopilot이 local implementation/review로 대체하지 않는다.
 `spec-review`는 파이프라인 끝이나 중간의 감사 단계로 선택적으로 추가한다.
@@ -137,10 +142,10 @@ validation / final integration review
 
 ### 2.1.1 Planning precedence by scale
 
-- **Small direct path**: 바로 `implementation`으로 간다. feature-level delta가 작고 single-pass 검증이면 `feature-draft`와 `implementation-plan`을 생략할 수 있다. review가 포함되면 규모와 무관하게 `implementation -> implementation-review -> implementation -> implementation-review` subagent loop를 사용하고, 부모 autopilot이 로컬 구현/로컬 리뷰로 대체하지 않는다.
+- **Small direct path**: 바로 `implementation`으로 간다. 정말 간단한 디버깅 수준의 수정(typo fix, config 값 변경, 로그 한 줄 추가 등)이거나 해당 주제의 feature-draft artifact가 `_sdd/drafts/`에 이미 존재하는 경우에만 `feature-draft`를 생략할 수 있다. review가 포함되면 규모와 무관하게 `implementation -> implementation-review -> implementation -> implementation-review` subagent loop를 사용하고, 부모 autopilot이 로컬 구현/로컬 리뷰로 대체하지 않는다.
 - **Single-phase medium path**: 기본 진입은 `feature-draft`다. Part 2가 task/dependency/validation 측면에서 충분히 명확하면 `implementation-plan` 없이 `implementation`으로 바로 연결한다. 이 경우에도 해당 `implementation` 직후 global review-fix gate를 즉시 닫아야 하며, 그 전에는 downstream step으로 진행할 수 없다. review가 있으면 실행 주체는 항상 `implementation`/`implementation-review` subagent mapping이다.
-- **Multi-phase medium / large expanded path**: `feature-draft`로 temporary spec을 고정한 뒤, planned persistent global alignment가 필요할 때만 `spec-update-todo`를 조건부로 추가하고, 실제 phase/task 세분화가 필요하면 `implementation-plan`으로 확장한다. 이 path에서 downstream `implementation` step은 flat single-shot step이 아니라 `Execution Mode: phase-iterative`와 `Phase Source`를 선언하는 runtime control-flow unit이어야 하며, phase count와 boundary는 Step 4가 아니라 runtime에 plan output을 읽어 해석한다.
-- **Phase-gated execution rule**: medium 이상에서 multi-phase plan이 생성되면 `Review-Fix Loop.scope = per-phase`를 기본값으로 본다. 각 phase는 `implementation` agent 실행 -> `implementation-review` agent review -> 필요 시 `implementation` agent 재호출로 fix -> `implementation-review` agent re-review -> phase validation을 닫아야 하며 마지막에 `final integration review`를 1회 더 수행한다.
+- **Multi-phase medium / large expanded path**: `feature-draft`로 temporary spec을 고정한 뒤, planned persistent global alignment가 필요할 때만 `spec-update-todo`를 조건부로 추가하고, multi-phase 실행으로 판단되면 `implementation-plan`을 반드시 포함한다. feature-draft -> implementation 직행은 single-phase 경로에 한정한다. 이 path에서 downstream `implementation` step은 flat single-shot step이 아니라 `Execution Mode: phase-iterative`와 `Phase Source`를 선언하는 runtime control-flow unit이어야 하며, phase count와 boundary는 Step 4가 아니라 runtime에 plan output을 읽어 해석한다.
+- **Group-gated execution rule**: medium 이상에서 multi-phase plan이 생성되면 `Review-Fix Loop.scope = per-group`을 기본값으로 본다. `Phase Source`의 `Checkpoint` 필드가 group boundary를 결정하며, Checkpoint phase 직후 같은 group 범위의 review-fix gate와 validation을 닫는다. 그룹 2개 이상이면 마지막 group gate 후 cross-group regression 전용 `final integration review`를 1회 더 수행한다.
 - **Spec sync ordering rule**: `spec-update-done`은 모든 required implementation-scoped review-fix gate, required validation/test, 필요한 경우 `final integration review`가 끝난 뒤 최종 단계에서만 수행한다.
 - **Carry-over default**: `medium` 이슈도 기본적으로 phase exit blocker다. carry-over는 plan과 orchestrator에 정책과 근거가 명시된 경우에만 허용한다.
 - **Standalone implementation-plan exception**: 기존 feature draft, temporary spec, 구현 재개용 plan artifact가 이미 있고 phase/task detail만 더 필요할 때만 허용한다.
@@ -151,13 +156,17 @@ validation / final integration review
 - Role: temporary spec draft + implementation plan 통합 생성
 - Reasoning note: non-trivial change의 기본 planning entry다. feature-level execution surface를 먼저 고정한다. global spec이 thin core면 관련 코드 탐색이 필수다. single-phase medium path에서 Part 2가 충분히 명확하면 별도 implementation-plan 없이도 implementation 입력으로 쓸 수 있다.
 
+#### plan-review
+- Role: planning producer output gate
+- Reasoning note: `feature-draft`와 `implementation-plan` output을 downstream step이 소비하기 전에 검토한다. 실패하면 finding을 implementation fix task로 바꾸지 않고, 해당 producer output을 reject/regenerate 대상으로 돌린다.
+
 #### spec-update-todo
 - Role: planned persistent global change 반영
 - Reasoning note: temporary execution detail은 global에 올리지 않는다. complex planned global alignment가 실제로 필요할 때만 조건부로 사용한다.
 
 #### implementation-plan
 - Role: temporary spec delta를 phase/task 중심 계획으로 세분화
-- Reasoning note: `feature-draft` 이후 phase/task/validation linkage를 강화하는 확장 단계다. `feature-draft` Part 2가 충분하지 않거나 multi-phase gate가 필요한 경우에만 deeper breakdown을 추가한다. multi-phase plan이면 각 phase에 `goal`, `task set / dependency closure`, `validation focus`, `exit criteria`, `carry-over policy`를 제공해야 하며, downstream `implementation` step은 이 output을 `Execution Mode: phase-iterative`와 `Phase Source`로 참조해야 한다.
+- Reasoning note: `feature-draft` 이후 phase/task/validation linkage를 강화하는 확장 단계다. `feature-draft` Part 2가 충분하지 않거나 multi-phase gate가 필요한 경우에 사용한다. multi-phase 실행으로 판단되면 반드시 포함하며, 각 phase에 `goal`, `task set / dependency closure`, `validation focus`, `exit criteria`, `carry-over policy`를 제공해야 한다. downstream `implementation` step은 이 output을 `Execution Mode: phase-iterative`와 `Phase Source`로 참조해야 한다.
 
 #### implementation
 - Role: actual code generation/modification 단계

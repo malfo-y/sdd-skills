@@ -1,7 +1,7 @@
 ---
 name: sdd-autopilot
 description: "적응형 오케스트레이터 메타스킬. /sdd-autopilot으로 호출하여 요구사항 분석부터 스펙 동기화까지 end-to-end SDD 파이프라인을 자율 실행한다."
-version: 2.3.1
+version: 2.3.6
 ---
 
 # SDD Autopilot
@@ -52,7 +52,7 @@ User Request
 ## Hard Rules
 
 1. **Discussion 인라인 실행 + `_sdd/spec/` 직접 수정 금지**: Step 2 대화는 autopilot 본문에서 직접 수행한다. global spec 수정은 반드시 `sdd-skills:spec-update-done-agent` / `sdd-skills:spec-update-todo-agent` 에이전트에 위임한다.
-2. **Phase 2 무중단 + 파일 기반 상태 전달**: Phase 2 진입 후 `request_user_input` 금지. 에이전트에는 파일 경로만 전달하며, 전체 출력을 부모 컨텍스트에 누적하지 않는다.
+2. **Phase 2 무중단 + 파일 기반 상태 전달**: Phase 2 진입 후 `request_user_input` 금지. 에이전트에는 파일 경로만 전달하며, 전체 출력을 부모 컨텍스트에 누적하지 않는다. Phase 2의 subagent step은 기본적으로 `Interaction Mode: autonomous-no-input`로 해석하며, 사용자 입력 요청 없이 권장안을 선택해 진행한다.
 3. **오케스트레이터 저장 + 공유 로그 필수**: 오케스트레이터는 `_sdd/pipeline/orchestrators/orchestrator_<topic>.md`에 저장한다. 실행 시 `_sdd/pipeline/log_<topic>_<timestamp>.md`를 생성하고 각 단계 완료 후 핵심 결정사항을 기록한다.
 4. **에이전트 호출 시 원문 전달**: 사용자의 원래 요청과 관련 컨텍스트 파일 경로를 포함한다. 의미를 잃을 정도로 축약하지 않는다.
 5. **Review-Fix 사이클 필수**: review 포함 파이프라인에서는 `sdd-skills:implementation-review-agent` subagent로 review를 수행하고, 이슈 수정이 필요하면 `sdd-skills:implementation-agent` subagent를 다시 호출해 fix를 적용한 뒤, 다시 `sdd-skills:implementation-review-agent` subagent로 re-review를 수행해야 한다. 리뷰만 하고 끝나는 것은 불허한다.
@@ -79,7 +79,7 @@ autopilot 호출 시 기존 파이프라인 상태를 확인한다.
 | `_sdd/drafts/`, `_sdd/implementation/` 스캔 | 기존 산출물 활용 여부 판단 |
 
 상태별 분기:
-- 미완료 로그 0건 + `_sdd/spec/` 없음 → spec-less mode로 Step 1. 오케스트레이터에 `sdd-skills:spec-create`를 후반부 step으로 포함시킨다.
+- 미완료 로그 0건 + `_sdd/spec/` 없음 → spec-less mode로 Step 1
 - 미완료 로그 0건 + 산출물 없음 → Step 1
 - 미완료 로그 1건 → 재개 후보 제시
 - 미완료 로그 2건 이상 → 목록 제시 + 선택
@@ -91,12 +91,14 @@ autopilot 호출 시 기존 파이프라인 상태를 확인한다.
 
 - `references/sdd-reasoning-reference.md`
 - `references/orchestrator-contract.md`
+- `references/execution-profile-policy.md`
 - `examples/sample-orchestrator.md`
 
 내재화 대상:
 - SDD 원칙 3개
 - 스킬 의존성 그래프
 - 파이프라인 구성 가이드라인
+- step별 execution profile 고정 기본값과 override 규칙
 - 테스트 전략 판단 기준
 - review-fix 및 final report 규칙
 
@@ -169,9 +171,13 @@ planning precedence 메모:
 - Step 4에서 실제로 materialize할 수 있는 산출물은 `_sdd/pipeline/orchestrators/orchestrator_<topic>.md` 하나뿐이다.
 - `_sdd/drafts/*`, `_sdd/implementation/*`, `_sdd/pipeline/log_*`, `_sdd/pipeline/report_*`, 코드/테스트 출력은 future step의 planned output으로 선언할 수는 있지만 이 단계에서 미리 생성하면 안 된다.
 - 각 `implementation` step에는 같은 범위의 review-fix gate가 즉시 붙어야 한다.
+- planning producer(`sdd-skills:feature-draft-agent`, `sdd-skills:implementation-plan-agent`) output은 downstream 소비 전에 `sdd-skills:plan-review-agent` producer review gate를 통과해야 한다. gate 실패 시 finding을 normalize하지 않고 producer 산출물을 reject/regenerate한다.
 - `sdd-skills:implementation-plan-agent` output을 downstream `implementation`이 소비하는 expanded path면 해당 `implementation` step을 flat single-shot으로 쓰지 않고 `Execution Mode: phase-iterative`와 `Phase Source`를 명시한다.
+- Phase 2의 subagent step에는 `Interaction Mode: autonomous-no-input`을 기본으로 명시한다. 이 계약에는 `request_user_input` 금지, 권장안 우선 판단, 가정/근거 기록, 안전한 추론이 불가능할 때 질문 대신 `BLOCKED`로 종료하는 fallback이 포함된다.
 - review가 포함된 모든 path에서는 `sdd-skills:implementation-agent`/`sdd-skills:implementation-review-agent`/re-review를 모두 subagent step으로 유지한다. 부모 autopilot이 로컬 구현/로컬 리뷰로 대체하면 안 된다.
-- `sdd-skills:implementation-agent`는 단일 task leaf다(`references/orchestrator-contract.md` §2 Implementation Dispatch Granularity). 따라서 `implementation` step은 phase를 한 agent에 통째로 넘기지 않고, autopilot이 phase의 task를 **병렬 dispatch 그룹**으로 파생해 task당 leaf를 dispatch한다(초기 구현=group 병렬, fix=finding 순차). 이 phase-내부 병렬 dispatch 그룹은 review-fix gate의 Checkpoint 리뷰 그룹과 다른 중첩 개념이며, progress/report는 autopilot이 canonical 경로로 소유한다.
+- Implementation Dispatch Controller: `sdd-skills:implementation-agent`는 단일 task leaf다(`references/orchestrator-contract.md` §2 Implementation Dispatch Controller). 따라서 `implementation` step은 phase를 한 agent에 통째로 넘기지 않고, autopilot이 phase의 task를 **병렬 dispatch 그룹**으로 파생해 task당 leaf를 dispatch한다(초기 구현=group 병렬, fix=finding 순차). 이 phase-내부 병렬 dispatch 그룹은 review-fix gate의 Checkpoint 리뷰 그룹과 다른 중첩 개념이며, progress/report는 autopilot이 canonical 경로로 소유한다.
+- `sdd-skills:implementation-agent` dispatch controller semantics는 generic subagent dispatch 규칙보다 우선한다. 오케스트레이터는 이 special case가 runtime에 task-level leaf dispatch로 해석된다는 점을 명시해야 한다.
+- canonical `sdd-skills:<agent>-agent` 이름만 허용한다. 최종 `-agent` suffix가 빠진 `sdd-skills:` invocation alias를 발견하면 canonical 이름으로 normalize하지 않고 해당 오케스트레이터를 reject/regenerate한다.
 - 각 subagent step과 review-fix gate `agent_mapping`에는 `references/orchestrator-contract.md`의 Model Routing 표에 따라 `Model:`(또는 `(model: ...)`)을 명시한다. `implementation-agent` 호출(fix 포함)은 `sonnet`, `implementation-review-agent` 호출(review/re-review/final integration review)은 `opus`로 분리해서 표기한다.
 - Reasoning Trace 3-6 bullet 간결 작성
 - 저장 경로: `_sdd/pipeline/orchestrators/orchestrator_<topic>.md`
@@ -188,10 +194,14 @@ Producer-Reviewer 패턴으로 검증한다.
 
 구조 검증:
 - 유효 `subagent_type` 참조
+- canonical-only `subagent_type` 정책 준수. `-agent` suffix 없는 invocation, suffix-less `sdd-skills:*` alias, legacy alias는 normalize하지 않고 reject/regenerate 대상인가
 - step별 `subagent_type` / 입출력 / 프롬프트 존재
+- Phase 2 subagent step의 `Interaction Mode`가 해석 가능하고, `autonomous-no-input` runtime contract와 모순되지 않는가
 - 산출물 handoff 정합성
+- Planning Producer Review Gate 존재. `sdd-skills:feature-draft-agent`와 `sdd-skills:implementation-plan-agent` output이 downstream 소비 전에 `sdd-skills:plan-review-agent` gate를 통과하며, fail 시 reject/regenerate로 분기하는가
 - `Review-Fix Loop` section/contract 존재
 - 각 `implementation` step 뒤에 같은 범위의 immediate review-fix gate가 해석 가능함
+- Implementation Dispatch Controller 존재. `sdd-skills:implementation-agent` step이 generic subagent single call보다 우선되는 task-level leaf dispatch controller로 해석되는가
 - Step 4가 orchestrator file 외 downstream artifact를 materialize하지 않았는가
 - expanded path면 downstream `implementation` step에 `Execution Mode: phase-iterative`와 `Phase Source`가 선언되었는가
 - `Execution Mode: phase-iterative` path면 per-group gate semantics(`Checkpoint` boundary)와 `final integration review` adaptive 처리가 해석 가능한가
@@ -200,6 +210,7 @@ Producer-Reviewer 패턴으로 검증한다.
 - 각 subagent step과 review-fix gate `agent_mapping`에 `references/orchestrator-contract.md` Model Routing 표와 일치하는 `Model:`/`(model: ...)` 표기가 있는가 (특히 `implementation-agent`는 `sonnet`, `implementation-review-agent`는 `opus`)
 - test strategy 존재
 - error handling 존재
+- Low advisory policy 존재. `low` finding은 advisory/logged follow-up이며 critical/high/medium exit condition을 통과한 gate를 막지 않는가
 
 철학 검증:
 - Spec-first
@@ -253,11 +264,12 @@ Phase 2 진입 후 `request_user_input`은 호출하지 않는다. 마일스톤 
 - step별 필드, 허용 `subagent_type`, Exit Criteria, Acceptance Criteria는 오케스트레이터 본문과 `references/orchestrator-contract.md`를 그대로 따른다.
 - 오케스트레이터에 적힌 출력 파일은 현재 step이 실제로 생성한 materialized output과 future step의 planned output을 구분해 해석한다. 각 step은 자신의 선언된 출력만 materialize하며, 아직 실행되지 않은 downstream step의 planned output을 미리 생성하지 않는다.
 - review 포함 path에서는 `sdd-skills:implementation-agent`/`sdd-skills:implementation-review-agent`를 항상 subagent 호출로 실행한다. 부모 autopilot이 local implementation/review로 대체하지 않는다.
+- `sdd-skills:implementation-agent` step은 generic single subagent call이 아니라 Implementation Dispatch Controller로 우선 해석한다. autopilot이 phase/task metadata를 읽고 task당 leaf를 dispatch한다.
 - 각 subagent 호출 시점에 오케스트레이터의 `Model:` (또는 review-fix gate `agent_mapping`의 `(model: ...)`) 표기를 그대로 `Agent(model=...)` 파라미터로 전달한다. 표기가 누락된 경우 `references/orchestrator-contract.md` Model Routing 표 기본값(`implementation-agent` -> `sonnet`, `implementation-review-agent` -> `opus` 등)을 적용한다.
 - `implementation` step은 단독 완료가 아니다. 같은 범위의 `Review-Fix Loop` exit condition과 required validation이 닫혀야만 해당 step을 `completed`로 기록할 수 있다.
 - single-phase path이거나 `Review-Fix Loop.scope = global`이면 `implementation` step 직후 즉시 global review-fix loop를 수행한다. 이 gate가 닫히기 전에는 `spec-update-done`을 포함한 다음 downstream step으로 진행할 수 없다.
 - `sdd-skills:implementation-plan-agent` output을 downstream `implementation`이 소비하고 해당 step이 `Execution Mode: phase-iterative`로 선언되어 있으면, autopilot은 `Phase Source`를 읽어 phase count와 boundary를 runtime-resolved metadata로 해석한다. Step 4가 추측한 flat phase list로 실행하지 않는다.
-- `scope = per-group`이면 `Phase Source`의 각 phase `Checkpoint` 필드를 읽어 group boundary를 결정한다. `Checkpoint=true` phase가 group의 마지막 phase이며, 해당 phase 직후 같은 group 범위의 review-fix gate를 닫는다. `Checkpoint=false` phase는 light validation(test/typecheck/exit criteria)만 수행하고 다음 phase로 진행한다. 마지막 phase는 explicit 값과 무관하게 implicit `Checkpoint=true`로 처리한다. **Backward compat**: plan에 `Checkpoint` 필드가 없는 경우 모든 phase를 `Checkpoint=false`로 간주하고 마지막 phase의 implicit `Checkpoint=true` 1회만 gate를 닫는다 — 단일 group 동작과 동등하다.
+- `scope = per-group`이면 `Phase Source`의 각 phase `Checkpoint` 필드를 읽어 group boundary를 결정한다. `Checkpoint=true` phase가 group의 마지막 phase이며, 해당 phase 직후 같은 group 범위의 review-fix gate를 닫는다. `Checkpoint=false` phase는 light validation(test/typecheck/exit criteria)만 수행하고 다음 phase로 진행한다. 마지막 phase는 explicit 값과 무관하게 implicit `Checkpoint=true`로 처리한다. 마지막 phase를 제외한 phase에 `Checkpoint` 필드가 없으면 plan schema violation으로 보고 downstream 구현을 시작하지 않으며, producer review gate/Step 5 verification에서 `sdd-skills:implementation-plan-agent` 산출물을 reject/regenerate한다.
 - group 내 phase의 light validation이 `critical` 이슈를 잡으면 group boundary forced early로 즉시 review-fix gate를 트리거한다 (mid-group emergency).
 - group review-fix gate에서는 group 범위(Checkpoint=false phase들 + 해당 Checkpoint=true phase) 전체를 scope로 `sdd-skills:implementation-review-agent` subagent 실행 -> 필요 시 `sdd-skills:implementation-agent` subagent fix -> re-review 순서를 닫은 뒤 다음 group으로 간다.
 - 현재 group exit criteria가 충족되지 않으면 다음 group으로 넘어가지 않는다. `medium` 이슈도 기본적으로 exit blocker이며, carry-over는 현재 group policy가 명시적으로 허용할 때만 로그와 근거를 남기고 진행한다.
@@ -268,6 +280,7 @@ Phase 2 진입 후 `request_user_input`은 호출하지 않는다. 마일스톤 
 - multi-phase path에서 `scope = per-group`이면 각 Checkpoint phase 직후 해당 group 범위로 review-fix와 validation을 즉시 수행한다. **Final integration review (adaptive)**: 그룹 1개면 마지막 group gate가 final을 겸하고, 그룹 2개 이상이면 마지막 group gate 후 cross-group regression 전용으로 1회 추가 실행한다.
 - single-phase path이거나 `scope = global`이면 해당 `implementation` step 직후 즉시 global review-fix loop를 수행한다.
 - review-fix loop의 agent 매핑은 small/medium/large review path 모두 고정이다: `review = sdd-skills:implementation-review-agent`, `fix = sdd-skills:implementation-agent`, `re-review = sdd-skills:implementation-review-agent`.
+- `low` finding은 advisory/logged follow-up이다. 기본 fix 대상에 포함하지 않으며, critical/high/medium 종료 조건을 만족한 gate를 막지 않는다.
 - `scope = global`이든 `scope = per-group`이든 review/fix/re-review를 local inline work로 대체하지 않는다.
 - `spec-update-done`은 모든 required implementation-scoped review-fix gate, required validation, 그리고 필요한 경우 final integration review가 닫힌 뒤에만 실행할 수 있다.
 - 이 섹션에서 별도 loop 규칙이나 테스트 규칙을 다시 정의하지 않는다.
