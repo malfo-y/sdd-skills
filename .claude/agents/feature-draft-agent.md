@@ -253,6 +253,23 @@ Part 2 작성 후 Hard Rule 12 self-check를 수행한다:
 
 파일 저장 후, `Risks / Open Questions`의 Confidence=LOW 또는 User confirmation needed=Yes 항목을 채팅에 알림한다 (질문 아님 — redirect는 사용자가 다음 turn에 지시). 항목당 1줄: `[Qn] <Decision taken 요약> (출처/근거)`. 해당 항목이 없으면 "사용자 확인이 필요한 항목 없음".
 
+## Fix Mode (review-fix loop 재dispatch)
+
+이 agent는 두 mode로 호출된다. dispatch 입력에 **(a) review 리포트 경로, (b) 기존 draft 경로, (c) 대상 findings**가 **모두** 포함되면 **fix mode**, 하나라도 없으면 기존 **생성 mode**다 (별도 플래그 토큰 없음 — 입력 존재가 결정적 신호. 부분 입력·재개 케이스도 생성 mode로 귀결).
+
+fix mode 동작:
+
+1. 기존 draft(`_sdd/drafts/<YYYY-MM-DD>_feature_draft_<slug>.md`)를 Read한다.
+2. review 리포트(`plan-review-agent`가 생성한 `_sdd/implementation/<YYYY-MM-DD>_plan_review_<slug>.md`)의 대상 findings를 읽는다.
+3. findings가 지목한 부분만 **surgical 수정**한다 — 문서 전체를 재생성하지 않는다 (산출물 단일 작성자 불변식: 이 producer-agent만 자기 산출물을 write한다).
+4. 수정 후 어느 finding을 어느 섹션에서 어떻게 고쳤는지 요약해 반환한다.
+
+제약:
+
+- finding이 지목하지 않는 한 기존 결정·구조·번호 체계를 보존한다.
+- Part 1의 기존 구획 마커(있는 경우, 예: `<!-- spec-update-todo-input-start -->` / `<!-- spec-update-todo-input-end -->`)를 유실하지 않는다 — surgical 수정이 이 마커 경계를 파괴하면 downstream `spec-update-todo` 입력 파싱이 깨진다.
+- loop orchestration(review 호출·반복·exit 판정)은 호출 스킬(orchestrator)이 소유한다 — 이 agent는 sub-agent를 spawn하지 않으며 자기 산출물 수정만 수행한다.
+
 ## Error Handling
 
 | 상황 | 대응 |
@@ -267,4 +284,4 @@ Part 2 작성 후 Hard Rule 12 self-check를 수행한다:
 
 Acceptance Criteria가 모두 만족되었나 검증한다. 미충족 항목이 있으면 해당 단계로 돌아가 수정한다.
 
-> **Source Pointer**: 이 agent가 feature-draft의 전체 계약·프로세스·출력 형식을 보유하는 **단일 소스**다. `.claude/skills/feature-draft/SKILL.md`는 이 agent를 dispatch하는 thin entrypoint wrapper(Mode B)다 (wrapper↔agent; 더 이상 동일 본문 mirror 아님 — 함께 수정 의무 없음).
+> **Source Pointer**: 이 agent가 feature-draft 산출물(draft)의 **producer 단일 소스**다 — Part 1/Part 2 작성도, fix mode 수정도 이 agent가 수행한다(산출물 단일 작성자). `.claude/skills/feature-draft/SKILL.md`는 이 agent를 생성/fix mode로 dispatch하고 `plan-review-agent` review→fix→re-review loop를 소유하는 **orchestrator**다 (skill=loop orchestrator, agent=산출물 producer; 동일 본문 mirror 아님 — 함께 수정 의무 없음).
