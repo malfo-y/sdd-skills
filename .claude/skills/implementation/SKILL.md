@@ -1,7 +1,7 @@
 ---
 name: implementation
 description: "Use this skill when the user wants to execute an implementation plan, start implementing tasks from a plan, work through a development roadmap, says \"implement the plan\", \"start implementation\", \"execute the plan\", \"work on the tasks\", or explicitly asks for \"implement parallel\", \"parallel implementation\", \"병렬 구현\", \"병렬로 구현\". Uses conflict-aware parallel execution when Target Files are available."
-version: 3.0.0
+version: 3.1.0
 ---
 
 # Implementation Orchestrator (Parallel TDD)
@@ -178,33 +178,30 @@ leaf는 단일 task를 TDD로 구현하고 구조화된 결과(SUCCESS/PARTIAL/F
 | 파일 경계 위반 | 미승인 변경 롤백 → 순차 재실행 |
 | 태스크 상태 | 성공 → completed, 실패 → in_progress (재시도용), 부분 → 미완료 기준 기록 |
 
-### Step 6: Phase Review
+### Step 6: Phase Review-Fix Gate (외부 reviewer loop)
 
-Phase 내 모든 태스크 완료 후 orchestrator가 경량 품질 리뷰를 수행한다.
+Phase 내 모든 태스크 완료 후, orchestrator는 **외부 `implementation-review-agent` review→fix→re-review loop**를 닫는다. 이 gate는 인라인 경량 self-review를 대체한다 — orchestrator가 직접 품질을 판정하지 않고 독립 reviewer agent를 호출한다.
 
-**수집**: Phase 중 생성/수정 파일, 테스트 결과, AC 달성 현황, 블로커.
+**loop scope**: **실행분(phase) 단위 1 gate**. 각 phase 완료 직후 이 gate를 1회 닫고 다음 phase로 진행한다. autopilot의 global/per-group·Checkpoint 메타 개념은 도입하지 않는다(직접 호출 경로엔 Checkpoint 신호를 줄 상위 오케스트레이터가 없음). multi-phase plan이면 phase마다 이 gate가 1회씩 닫힌다.
 
-**품질 체크**:
+**공통 loop 정책** (autopilot `references/orchestrator-contract.md` §6 Review-Fix Contract 차용):
 
-| Category | What to Check |
-|----------|---------------|
-| Security | SQL injection, XSS, hardcoded secrets, missing auth |
-| Error Handling | 일관된 응답 형식, 로깅, graceful degradation |
-| Code Patterns | 네이밍, 추상화 수준, 중복, 프로젝트 컨벤션 |
-| Performance | N+1 쿼리, 누락 인덱스, async 블로킹 |
-| Test Quality | 독립적, 결정적, 행위 중심 |
-| Integration | 태스크 간 + leaf 간 출력 일관성 |
-| Speculative Code | AC 외 옵션·설정·추상화, 미사용 추상화, 도달 불가 에러 처리 (Minimum-Code Mandate) |
+- **exit 조건**: `critical=0 AND high=0 AND medium=0` (= `critical=high=medium=0`).
+- **MAX**: 기본 3 iteration.
+- **re-review scope**: loop 범위(이 phase) **전체 재리뷰** (변경분만 아님).
+- **1 iteration 경계**: `review/re-review → finding>0이면 fix → 산출물 갱신`.
+- **MAX 도달 분기**: critical/high 잔존 → 중단·사용자 보고. medium만 잔존 → 로그 후 진행(advisory degrade).
 
-**Decision Gate**:
+**단계**:
 
-| 상황 | 조치 |
-|------|------|
-| Critical 이슈 (보안, 데이터 손실, 핵심 기능 결함, 사변적 코드가 실제 버그·보안 영향) | leaf 재dispatch로 TDD 수정 → Phase Review 재실행 |
-| Quality 이슈 (Speculative Code 기본 분류 포함) | 문서화 후 다음 Phase 진행 |
-| 이슈 없음 | 다음 Phase 진행 |
+1. **review**: `Agent(subagent_type="sdd-skills:implementation-review-agent", model="opus")`를 호출해 이 phase 범위의 변경 파일 전체 + 테스트 결과를 전달한다. reviewer가 severity별 finding을 반환한다.
+2. **fix**: critical/high/medium finding이 있으면, finding을 **하나씩 순차** fix-task로 변환해 `Agent(subagent_type="sdd-skills:implementation-agent", model="sonnet")` leaf를 재dispatch한다(finding 영향 파일 = 그 leaf의 Target Files). `implementation-agent`는 fix mode 별도 계약 없이 finding을 task로 받아 기존 TDD 계약으로 처리한다(I3 — leaf는 단일 task 실행자라 finding이 곧 task).
+3. **re-review**: fix 후 loop 범위 전체를 `implementation-review-agent`로 재리뷰한다.
+4. exit 조건 충족 또는 MAX 도달까지 1~3을 반복한다. MAX 도달 시 분기 정책 적용.
 
-Phase 리포트 저장: `_sdd/implementation/implementation_report_phase_<N>.md`
+Speculative Code(AC 외 옵션·설정·추상화·도달 불가 에러 처리)는 reviewer가 finding으로 분류하며, 실제 버그·보안 영향 시 Critical로 escalate된다.
+
+Phase 리포트는 필요 시 `_sdd/implementation/implementation_report_phase_<N>.md`로 저장한다(loop iteration·finding·해소 요약 포함).
 
 #### Surface Phase Surprises
 

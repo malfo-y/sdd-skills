@@ -1,23 +1,50 @@
 ---
 name: implementation-plan
 description: This skill should be used when the user asks to "create an implementation plan", "plan the implementation", "break down this spec", "create a development roadmap", "analyze requirements and create tasks", "create a parallel implementation plan", "plan parallel implementation", "병렬 구현 계획", "create parallel development roadmap", or wants a structured implementation plan with Target Files for parallel execution support.
-version: 3.0.0
+version: 4.0.0
 ---
 
-# Implementation Plan (Entrypoint Wrapper)
+# Implementation Plan (Orchestrator)
 
-이 스킬은 entrypoint wrapper다. 사용자의 implementation-plan 요청을 `sdd-skills:implementation-plan-agent`에 위임하고 그 결과를 사용자에게 전달한다. 전체 계획 프로세스·Target Files 규칙·phase metadata·plan 출력 형식은 agent가 단일 소스로 보유한다.
+이 스킬은 **메인 루프 orchestrator**다. `implementation-plan-agent`를 dispatch해 plan을 생성하고, `plan-review-agent`로 **review→fix→re-review loop**를 돌려 산출물 품질 gate를 자체 소유한다. agent는 plan producer 단일 소스이고 스킬이 loop를 소유한다 — producer/reviewer agent는 sub-agent를 spawn하지 못하므로 loop orchestration은 메인 루프(스킬)의 책임이다.
 
-## 실행 (Mode A: pass-through)
+implementation-plan은 입력이 파일/경로에서 태어나는 스킬이다(Mode A). feature-draft의 Mode B와 달리 대화 맥락 digest forwarding을 두지 않는다 — agent가 입력 경로를 자체 read한다.
 
-1. 사용자 요청 + 계획 입력 경로(있으면 feature draft / temporary spec 경로)와 이미 아는 결정을 수집한다 (wrapper는 새 분석 read를 하지 않는다).
-2. `Agent(subagent_type="sdd-skills:implementation-plan-agent", prompt=<요청 + 알려진 경로/컨텍스트>)`로 dispatch한다. 입력 경로가 불명확하면 agent가 Input Sources 우선순위로 자체 탐색하도록 위임한다.
-3. agent의 반환(plan 경로 `_sdd/implementation/<YYYY-MM-DD>_implementation_plan_<slug>.md`, phase/task 요약, Open Questions 중 LOW/Yes 항목)을 사용자에게 그대로 relay한다.
+## Process
 
-## 계약 (entrypoint·artifact 유지, 흉내 금지)
+### Step 1: 입력 수집 (Mode A)
 
-- trigger(implementation-plan 호출)와 plan 경로 계약은 이 wrapper가 유지한다.
-- 실제 task 분해·plan 작성은 agent가 수행한다. agent가 지원하지 않는 동작을 wrapper가 흉내내지 않는다.
-- agent가 노출하는 Open Questions(Confidence=LOW / User confirmation needed=Yes)를 wrapper가 relay해 보존한다.
+사용자 요청 + 계획 입력 경로(있으면 feature draft / temporary spec 경로)와 이미 아는 결정을 수집한다. 입력 경로가 불명확하면 agent가 Input Sources 우선순위로 자체 탐색하도록 위임한다(스킬은 새 분석 read를 하지 않는다).
 
-> Source: 전체 계약·프로세스·Target Files 규칙·출력 형식은 `.claude/agents/implementation-plan-agent.md`가 단일 소스로 보유한다 (wrapper↔agent; 더 이상 동일 본문 mirror 아님).
+### Step 2: 생성 (producer dispatch)
+
+`Agent(subagent_type="sdd-skills:implementation-plan-agent", model="opus", prompt=<요청 + 알려진 경로/컨텍스트>)`로 **생성 mode** dispatch한다. agent가 plan을 `_sdd/implementation/<YYYY-MM-DD>_implementation_plan_<slug>.md`에 저장하고 경로 + phase/task 요약 + Open Questions(LOW/Yes)를 반환한다.
+
+### Step 3: review-fix loop
+
+산출 직후 review→fix→re-review loop를 닫는다. **공통 loop 정책**(autopilot `references/orchestrator-contract.md` §6 Review-Fix Contract 차용):
+
+- **exit 조건**: `critical=high=medium=0`.
+- **MAX**: 기본 3 iteration.
+- **re-review scope**: loop 범위(plan) **전체 재리뷰** (변경분만 아님).
+- **1 iteration 경계**: `review/re-review → finding>0이면 fix → 산출물 갱신`.
+- **MAX 도달 분기**: critical/high 잔존 → 중단·사용자 보고. medium만 잔존 → 로그 후 진행(advisory degrade).
+
+단계:
+
+1. **review**: `Agent(subagent_type="sdd-skills:plan-review-agent", model="opus")`로 plan을 review한다(Tier 1 — implementation plan 입력). reviewer가 Blocker Status + severity별 finding을 리포트(`_sdd/implementation/<YYYY-MM-DD>_plan_review_<slug>.md`)로 낸다.
+2. **fix**: critical/high/medium finding이 있으면 `implementation-plan-agent`를 **fix mode**로 재dispatch한다 — 입력: review 리포트 경로 + plan 경로 + 대상 findings. agent가 finding 부분만 surgical 수정한다.
+3. **re-review**: fix 후 loop 범위 전체를 `plan-review-agent`로 재리뷰한다.
+4. exit 충족 또는 MAX 도달까지 1~3을 반복한다. MAX 분기 적용.
+
+### Step 4: relay
+
+최종 plan 경로 + phase/task 요약 + Open Questions(LOW/Yes) + loop 결과(iteration 수, 최종 Blocker Status, 잔존 advisory)를 사용자에게 relay한다.
+
+## 경계
+
+- 산출물(plan) 작성·수정은 `implementation-plan-agent`만 한다(산출물 단일 작성자 — orchestrator는 직접 rewrite하지 않는다). 스킬은 loop만 소유한다.
+- review·findings 분류는 `plan-review-agent`가 수행한다(중복 금지).
+- **Model Routing**: producer/fix=`implementation-plan-agent`(opus), review/re-review=`plan-review-agent`(opus).
+
+> **Role Pointer**: 이 스킬은 review-fix loop를 소유하는 **orchestrator**다. `implementation-plan-agent`는 plan producer 단일 소스(생성·fix mode 수정), `plan-review-agent`는 reviewer다. (구 entrypoint 형태에서 orchestrator로 승격됨 — 더 이상 단순 pass-through가 아니다.)
