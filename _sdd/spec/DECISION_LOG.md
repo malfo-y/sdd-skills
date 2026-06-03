@@ -1,10 +1,46 @@
 # Decision Log
 
+## 2026-06-03 - Reclassify investigate as orchestrator with reused generic Explore fan-out (investigate-agent removed)
+
+### Context
+
+직전 v4.1.11 라운드는 `investigate`를 비-fan-out 9종에 포함해 wrapper(Mode B) + single-source `investigate-agent` 구조로 전환했다. 이 분류는 census 오판("현재 agent 본문이 sub-agent를 안 깐다 → non-fan-out → wrapper")에서 나왔다. 그러나 investigate는 탐색·가설 검증 단계에서 read-only sub-agent fan-out이 실제로 유익한 스킬이고, 통합 규칙(`fan-out이 필요한 execution → orchestrator(skill) + leaf`)에 비추면 orchestrator여야 한다. wrapper화는 investigate의 병렬 잠재력을 죽였다.
+
+### Decision
+
+1. **investigate를 orchestrator(skill)로 재분류**: 전체 디버깅 계약(문제정의·근본원인 종합·Blast Radius·fix·Fresh Verification·Investigation Report)을 메인 루프 skill이 인라인 소유한다. 더 이상 wrapper도, single-source agent dispatch도 아니다.
+2. **fan-out 단위 = 빌트인 범용 read-only explore 역할 재사용**: custom leaf agent를 신설하지 않고 런타임 빌트인 역할을 재사용한다 — claude `Explore`, codex `spawn_agent(agent_type="explorer")`+`wait_agent`. 탐색이 넓고·모호할 때만 병렬 fan-out하고, 단순 버그·fix·검증·종합은 orchestrator가 인라인 수행한다(fix는 write 필요라 read-only explore 불가).
+3. **`investigate-agent` 제거**: `.claude/agents/investigate-agent.md`, `.codex/agents/investigate-agent.toml`을 삭제하고 `.claude-plugin/marketplace.json` `agents` 목록에서 제외한다. 참조자가 자기 파일 + wrapper + 매니페스트뿐이고 autopilot·타 스킬 dispatch가 0건이라 제거가 격리됐다. `marketplace.json`의 investigate **skill** 항목은 유지된다(orchestrator도 사용자 진입점 skill).
+4. **v4.1.11 entry의 investigate 분류 3곳을 대체**: 비-fan-out 목록은 실질 8종, Mode B wrapper 목록은 `feature-draft`/`implementation-review` 2종, `Agent` 도구 제거 목록의 investigate는 agent 파일 자체 제거로 흡수된다.
+
+### Rationale
+
+- nesting 1단계 제한 아래에서 fan-out이 유익한 execution은 메인 루프 orchestrator로 둬야 leaf를 안전하게 병렬화할 수 있다. investigate가 그 케이스다.
+- 빌트인 범용 explore 역할을 재사용하면 custom leaf 신설 없이(YAGNI) read-only 병렬을 얻고, fix/검증은 단일 스레드 인라인으로 read/write 경계를 지킨다.
+- 디버깅 안전성 계약(근본원인 우선, Scope Lock, Blast Radius Gate, Fresh Verification, Investigation Report 6필드)은 소유 위치만 agent→skill로 이동했을 뿐 의미는 보존됐다.
+
+### Changes
+
+- `.claude/skills/investigate/SKILL.md`, `.codex/skills/investigate/SKILL.md` -- wrapper → orchestrator(v4.0.0)로 재작성. 조건부 explore fan-out + fix·검증·종합 인라인. dispatch pointer → Role Pointer
+- `.claude/agents/investigate-agent.md`, `.codex/agents/investigate-agent.toml` -- 삭제
+- `.claude-plugin/marketplace.json` -- `agents` 목록에서 investigate-agent 제외(skill 항목 유지)
+- `_sdd/spec/components.md` -- investigate 행을 orchestrator(빌트인 explore 재사용, investigate-agent 제거)로 정정
+- `_sdd/spec/DECISION_LOG.md` -- v4.1.11 entry의 investigate 분류 3곳에 정정 마커 + 본 entry 추가
+- `_sdd/spec/main.md` -- v4.1.11 → v4.1.12 version bump
+
+### References
+
+- feature draft: `_sdd/drafts/2026-06-03_feature_draft_investigate_orchestrator.md`
+- plan review: `_sdd/implementation/2026-06-03_plan_review_investigate_orchestrator.md` (CLEAR)
+- implementation review: READY (branch `refactor/investigate-orchestrator`)
+
 ## 2026-06-03 - Split execution into orchestrator/leaf vs wrapper-backed shapes under the nesting limit (v4.1.10 -> v4.1.11 spec revision)
 
 ### Context
 
 `skill entrypoint + reusable agent`라는 기존 실행 분리 결정은 dispatch된 agent가 sub-agent를 다시 spawn할 수 없다는 플랫폼 제약(nesting 1단계)을 만나면서 두 가지 결이 갈렸다. `implementation`은 skill과 agent가 동일 본문(병렬 TDD 전체)을 mirror해, agent가 dispatch되는 경로(autopilot 등)에서는 병렬 dispatch 지시가 실행 불가능한 죽은 코드가 됐다. 반대로 fan-out이 없는 9종(`feature-draft`, `implementation-plan`, `plan-review`, `implementation-review`, `ralph-loop-init`, `spec-review`, `spec-update-done`, `spec-update-todo`, `investigate`)은 skill과 agent가 full 본문을 4벌(claude/codex × skill/agent) 중복 유지해 "함께 수정" 동기화 부담이 컸다.
+
+> **2026-06-03 정정**: 이 entry의 investigate 분류 3곳(위 비-fan-out 9종 목록, 아래 Decision 3의 Mode B wrapper 목록, Changes의 `Agent` 도구 제거 5종 목록)은 census 오분류였다. investigate는 탐색 단계에서 read-only fan-out이 유익한 orchestrator로 재분류됐고 custom investigate-agent는 제거됐다. 아래 "2026-06-03 - Reclassify investigate as orchestrator with reused generic Explore fan-out" entry가 이 3곳을 대체한다(비-fan-out은 실질 8종, Mode B wrapper는 `feature-draft`/`implementation-review` 2종).
 
 ### Decision
 

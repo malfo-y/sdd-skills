@@ -47,8 +47,7 @@
         "./.claude/agents/ralph-loop-init-agent.md",
         "./.claude/agents/spec-review-agent.md",
         "./.claude/agents/spec-update-done-agent.md",
-        "./.claude/agents/spec-update-todo-agent.md",
-        "./.claude/agents/investigate-agent.md"
+        "./.claude/agents/spec-update-todo-agent.md"
       ]
     }
   ]

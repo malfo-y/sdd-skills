@@ -30,7 +30,7 @@
 | `implementation` | 구현 계획을 따라 코드를 작성하고 검증한다 | execute와 verify를 분리하지 않는 delivery step이 필요하다 | `.claude/skills/implementation/SKILL.md`<br>`.claude/agents/implementation-agent.md` | orchestrator(skill) + leaf(agent). skill이 task-set 확보·dependency 기반 그룹 파생·leaf fan-out·통합/회귀/phase review/report를 소유하고, `implementation-agent` leaf는 단일 task TDD만 수행한다(sub-agent spawn 없음). AC-first와 재검증 loop가 핵심 |
 | `implementation-review` | 구현 결과를 계획/AC 기준으로 다시 검증한다 | 누락과 품질 이탈을 조기에 드러낸다 | `.claude/agents/implementation-review-agent.md`<br>`.claude/skills/implementation-review/SKILL.md` | wrapper -> agent. fresh verification 중시. 대화 태생 입력은 wrapper가 forwarding(Mode B) |
 | `pr-review` | PR 코드 품질과 spec 준수 여부를 함께 판정한다 | 코드 리뷰와 spec 기반 검증을 한 surface로 묶는다 | `.claude/skills/pr-review/SKILL.md`<br>`.codex/skills/pr-review/SKILL.md` | findings-first. spec 존재 시 추가 검증 |
-| `investigate` | 범용 근본원인 분석과 수정/검증을 수행한다 | 임의 수정 반복 대신 root-cause-first 디버깅을 강제한다 | `.claude/agents/investigate-agent.md`<br>`.claude/skills/investigate/SKILL.md` | wrapper -> agent. blast radius와 fresh verification 포함. 대화 태생 입력은 wrapper가 forwarding(Mode B) |
+| `investigate` | 범용 근본원인 분석과 수정/검증을 수행한다 | 임의 수정 반복 대신 root-cause-first 디버깅을 강제한다 | `.claude/skills/investigate/SKILL.md`<br>`.codex/skills/investigate/SKILL.md` | orchestrator(skill). 탐색이 넓고·모호할 때만 빌트인 범용 read-only explore 역할(claude `Explore`, codex `spawn_agent(agent_type="explorer")`)을 병렬 fan-out하고, fix·검증·종합은 인라인 소유한다. custom investigate-agent는 제거됨. blast radius와 fresh verification 포함 |
 
 ## Discussion & Utilities
 
