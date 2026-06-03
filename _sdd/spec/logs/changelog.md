@@ -2,6 +2,15 @@
 
 > 이 파일은 `_sdd/spec/main.md`의 버전별 변경 기록이다.
 
+#### v4.1.14 (2026-06-03)
+
+- **sdd-autopilot generated orchestrator contract hardening 반영**: generated orchestrator가 `feature_draft_agent` / `implementation_plan_agent` output을 downstream 소비 전 `plan_review_agent` gate로 검증하도록 global spec에 반영
+- **implementation dispatch controller 고정**: generated orchestrator의 `implementation_agent` / `sdd-skills:implementation-agent` step은 feature/phase 전체 leaf call이 아니라 task-level leaf fan-out을 파생하는 dispatch controller임을 명시
+- **canonical-only invocation rule 반영**: Codex `_agent` names, Claude `sdd-skills:<agent>-agent` names만 generated invocation으로 허용하고 legacy alias normalization은 추가하지 않는 결정 기록
+- **review-fix severity 및 Checkpoint schema 정렬**: Critical/High/Medium은 gate blocker, Low는 advisory/logged follow-up으로 정리. missing non-final `Checkpoint` metadata는 single late gate fallback이 아니라 plan schema violation으로 reject/regenerate
+- **Strategic Code Map 보강**: `sdd-autopilot` contract/reference entrypoint(`orchestrator-contract.md`, `sdd-reasoning-reference.md`)만 navigation hint로 추가하고 temporary Touchpoints는 복구하지 않음
+- 입력: commit `7c0f99e`, `_sdd/drafts/2026-06-03_feature_draft_sdd_autopilot_contract_hardening.md`, `_sdd/implementation/2026-06-03_implementation_report_sdd_autopilot_contract_hardening.md`, `_sdd/implementation/2026-06-03_implementation_review_sdd_autopilot_contract_hardening.md` (CLEAR), `_sdd/implementation/test_results/test_results_sdd_autopilot_contract_hardening.md`
+
 #### v4.1.13 (2026-06-03)
 
 - **세 producer 스킬에 review-fix loop 내장**: `implementation`/`feature-draft`/`implementation-plan`이 autopilot 없이 직접 호출되는 경로에서도 review→fix→re-review loop를 자체 소유한다. 공통 정책(exit `critical=high=medium=0`·MAX 3·loop 범위 전체 재리뷰·MAX 분기)을 autopilot orchestrator-contract §6에서 차용, 각 스킬 인라인 보유(공유 파일 미생성)

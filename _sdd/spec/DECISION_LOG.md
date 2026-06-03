@@ -1,5 +1,43 @@
 # Decision Log
 
+## 2026-06-03 - Harden sdd-autopilot generated orchestrator contract
+
+### Context
+
+`sdd-autopilot` generated orchestrator는 wrapper skill이 아니라 custom agent를 직접 호출한다. producer skill 직접 호출 경로가 review-fix loop를 소유하도록 강화된 뒤에도, autopilot-generated path에는 같은 planning producer gate가 명시적으로 필요했다. 동시에 `implementation_agent`가 단일 task leaf로 축소된 상태에서 generated orchestrator가 feature/phase 전체를 한 leaf에게 넘기면 nesting 제한과 leaf 계약을 위반할 수 있었다.
+
+### Decision
+
+1. **planning producer output gate**: `feature_draft_agent` / `implementation_plan_agent` output은 downstream 소비 전에 `plan_review_agent` gate를 통과해야 한다. 실패 시 finding을 implementation fix task로 normalize하지 않고 producer output을 reject/regenerate한다.
+2. **implementation dispatch controller**: generated orchestrator의 `implementation_agent` / `sdd-skills:implementation-agent` step은 feature/phase 전체 leaf call이 아니라 autopilot이 task-level leaf calls로 fan out하는 dispatch controller다.
+3. **canonical invocation names only**: Codex generated orchestrator는 `_agent` names, Claude generated orchestrator는 `sdd-skills:<agent>-agent` names만 사용한다. legacy alias는 normalize하지 않고 verification에서 reject/regenerate한다.
+4. **review-fix severity boundary**: Critical/High/Medium은 review-fix blocker이고 Low는 advisory/logged follow-up이다.
+5. **missing non-final `Checkpoint` rejection**: multi-phase plan에서 마지막 phase가 아닌 phase의 `Checkpoint` metadata가 없으면 plan schema violation으로 보고, single late gate fallback 대신 producer review/Step 5 verification에서 reject/regenerate한다.
+
+### Rationale
+
+- generated orchestrator가 wrapper skill을 우회하더라도 직접 호출 경로와 같은 planning quality gate를 유지해야 한다.
+- fan-out 책임은 nesting 1단계 제한 때문에 parent autopilot orchestrator가 가져야 하며, implementation leaf는 단일 task TDD executor로 남아야 한다.
+- canonical-only rule은 오래된 pipeline artifact 호환 레이어를 새 contract에 끌고 오지 않기 위한 단순화다.
+- Low advisory 정책은 loop 종료 조건(`critical=high=medium=0`)과 fix 대상 범위를 일치시킨다.
+- `Checkpoint`는 execution gate boundary metadata이므로, 누락을 fallback으로 처리하면 per-group review model이 조용히 약화된다.
+
+### Changes
+
+- `.claude/skills/sdd-autopilot/SKILL.md`, `.codex/skills/sdd-autopilot/SKILL.md` -- generation/verification/execution semantics 강화.
+- `.claude/skills/sdd-autopilot/references/orchestrator-contract.md`, `.codex/skills/sdd-autopilot/references/orchestrator-contract.md` -- canonical agent names, producer gate, implementation dispatch controller, Low advisory, missing-Checkpoint rejection 반영.
+- `.claude/skills/sdd-autopilot/references/sdd-reasoning-reference.md`, `.codex/skills/sdd-autopilot/references/sdd-reasoning-reference.md` -- planning graph에 `plan-review` producer gate와 현재 per-group execution policy 반영.
+- `.claude/skills/sdd-autopilot/examples/sample-orchestrator.md`, `.codex/skills/sdd-autopilot/examples/sample-orchestrator.md` -- hardened contract 예시 반영.
+- `_sdd/spec/main.md`, `_sdd/spec/components.md`, `_sdd/spec/usage-guide.md`, `_sdd/spec/logs/changelog.md` -- verified persistent truth 기준 global spec sync.
+
+### References
+
+- commit: `7c0f99e Harden sdd-autopilot orchestrator contract`
+- feature draft: `_sdd/drafts/2026-06-03_feature_draft_sdd_autopilot_contract_hardening.md`
+- implementation report: `_sdd/implementation/2026-06-03_implementation_report_sdd_autopilot_contract_hardening.md`
+- implementation review: `_sdd/implementation/2026-06-03_implementation_review_sdd_autopilot_contract_hardening.md` (CLEAR)
+- test results: `_sdd/implementation/test_results/test_results_sdd_autopilot_contract_hardening.md` (PASS after review-fix updates)
+
 ## 2026-06-03 - Embed review-fix loop in three producer skills; promote feature-draft/implementation-plan to loop-owning orchestrators
 
 ### Context
