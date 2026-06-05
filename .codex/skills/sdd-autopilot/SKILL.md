@@ -16,7 +16,7 @@ version: 2.3.6
 
 - [ ] AC1: 8-step pipeline(Step 0~8)이 순서대로 실행 완료되었다 (부분 파이프라인은 해당 범위 내 완료)
 - [ ] AC2: `_sdd/pipeline/orchestrators/orchestrator_<topic>.md`에 generated orchestrator를 저장하고 검증을 통과했다
-- [ ] AC3: orchestrator 기반 Phase 2 자율 실행이 완료되었다 (에이전트 호출 + Exit Criteria 검증)
+- [ ] AC3: orchestrator 기반 Phase 2 자율 실행이 완료되었다 (에이전트 호출 + final status 수거 + `close_agent` 정리 + Exit Criteria 검증)
 - [ ] AC4: review 포함 파이프라인에서 review-fix loop가 정상 동작했다
 - [ ] AC5: E2E 테스트/검증이 실제로 실행되었다 (인라인 또는 ralph-loop). Execute → Verify 패턴 준수. 결과가 사용자가 볼 수 있는 형태로 저장되었다 (`_sdd/implementation/test_results/` 또는 `ralph/state.md`). 테스트 건너뛰기 금지 — 실행 불가 시 사유와 수동 검증 방법을 보고서에 명시해야 한다.
 - [ ] AC6: 테스트/검증 결과가 사용자에게 명시적으로 보고되었다 (통과/실패 건수, 실패 시 원인 요약, 수동 확인 필요 항목)
@@ -59,7 +59,7 @@ User Request
 6. **Implementation 직후 즉시 Gate**: 각 `implementation` 실행 단위는 단독으로 완료 처리하지 않는다. single-phase면 해당 `implementation` 직후, multi-phase면 각 phase의 `implementation` 직후 같은 범위의 review-fix gate를 즉시 닫아야 하며, 종료 전까지 다음 phase나 downstream step으로 진행할 수 없다.
 7. **Execute → Verify 필수**: 모든 단계는 실행(Execute) + 검증(Verify) 두 페이즈를 거친다. 에이전트 호출만으로 완료 간주 금지. Exit Criteria 미충족 시 다음 단계 진행 불가.
 8. **Pre-flight + approval 필수**: Phase 2 진입 전 `_sdd/env.md`와 `.codex/config.toml`을 읽고 실행 가능성을 점검한 뒤 explicit approval을 받아야 한다.
-9. **Agent lifecycle 수집 필수**: `spawn_agent(...)`로 시작한 실행 단위는 `wait_agent(...)`로 반드시 수집하고, 필요 시 `send_input(...)` 또는 재-spawn으로 보완한다.
+9. **Agent lifecycle 수집/정리 필수**: `spawn_agent(...)`로 시작한 실행 단위는 `wait_agent(...)`로 반드시 final status를 수집하고, 결과를 로그/보고서에 기록한 직후 `close_agent(target=<agent_id>)`로 닫아 병렬 slot을 반납한다. 보완 지시가 필요하면 닫기 전에 `send_input(...)`을 사용하고, 이미 닫은 뒤 추가 작업이 필요하면 새로 `spawn_agent(...)` 한다. `wait_agent` timeout은 수집 완료가 아니므로 더 기다리거나 controlled stop/abandon을 기록한 뒤에만 닫는다.
 10. **로그 기반 상태 관리**: 오케스트레이터는 `_sdd/pipeline/orchestrators/`에 유지. 활성/완료 구분은 로그 파일 status로 판단한다.
 11. 한국어를 기본으로 하되 사용자 언어를 따른다.
 12. spec-less repo에서도 중단하지 않는다. `_sdd/spec/`가 없으면 `_sdd/` workspace bootstrap + code-first fallback reasoning으로 계속 진행하고, 적절한 시점에 `spec-create` 또는 spec sync 단계를 파이프라인에 포함한다.
@@ -140,7 +140,7 @@ Gate 2→3: 핵심 요구사항이 확정되면 Step 3.
 - `_sdd/spec/` 현황
 - 수정 범위와 예상 리스크
 
-필요하면 구조/도메인/테스트 관점으로 explorer를 병렬 호출한다. 결과는 전체 로그가 아니라 핵심 사실만 요약한다.
+필요하면 구조/도메인/테스트 관점으로 explorer를 병렬 호출한다. 각 explorer는 `wait_agent` final status 수거 후 핵심 사실을 요약하고 즉시 `close_agent`로 닫는다. 결과는 전체 로그가 아니라 핵심 사실만 요약한다.
 
 Gate 3→4: 프로젝트 구조와 관련 파일 식별 완료 → Step 4.
 
@@ -180,7 +180,7 @@ planning precedence 메모:
 - `implementation-plan` output을 downstream `implementation`이 소비하는 expanded path면 해당 `implementation` step을 flat single-shot으로 쓰지 않고 `Execution Mode: phase-iterative`와 `Phase Source`를 명시한다.
 - Phase 2의 custom-agent step에는 `Interaction Mode: autonomous-no-input`을 기본으로 명시한다. 이 계약에는 `request_user_input` 금지, 권장안 우선 판단, 가정/근거 기록, 안전한 추론이 불가능할 때 질문 대신 `BLOCKED`로 종료하는 fallback이 포함된다.
 - review가 포함된 모든 path에서는 `implementation`/`implementation_review`/re-review를 모두 Codex custom agent step으로 유지한다. 부모 autopilot이 로컬 구현/로컬 리뷰로 대체하면 안 된다.
-- Implementation Dispatch Controller: `implementation_agent`는 단일 task leaf다(`references/orchestrator-contract.md` §2 Implementation Dispatch Granularity). 따라서 `implementation` step은 phase를 한 agent에 통째로 넘기지 않고, autopilot이 phase의 task를 **병렬 dispatch 그룹**으로 파생해 task당 leaf를 spawn한다(초기 구현=group 병렬, fix=finding 순차). 이 phase-내부 병렬 dispatch 그룹은 review-fix gate의 Checkpoint 리뷰 그룹과 다른 중첩 개념이며, progress/report는 autopilot이 canonical 경로로 소유한다.
+- Implementation Dispatch Controller: `implementation_agent`는 단일 task leaf다(`references/orchestrator-contract.md` §2 Implementation Dispatch Granularity). 따라서 `implementation` step은 phase를 한 agent에 통째로 넘기지 않고, autopilot이 phase의 task를 **병렬 dispatch 그룹**으로 파생해 task당 leaf를 spawn한다(초기 구현=group 병렬, fix=finding 순차). 각 leaf는 final status 수거와 progress 기록 직후 `close_agent`로 닫는다. 이 phase-내부 병렬 dispatch 그룹은 review-fix gate의 Checkpoint 리뷰 그룹과 다른 중첩 개념이며, progress/report는 autopilot이 canonical 경로로 소유한다.
 - `implementation_agent` dispatch controller semantics는 generic custom-agent dispatch 규칙보다 우선한다. 오케스트레이터는 이 special case가 runtime에 task-level leaf spawn으로 해석된다는 점을 명시해야 한다.
 - canonical `_agent` 이름만 허용한다. legacy alias를 발견하면 canonical 이름으로 normalize하지 않고 해당 오케스트레이터를 reject/regenerate한다.
 - Reasoning Trace 3-6 bullet 간결 작성
@@ -266,9 +266,10 @@ Phase 2 진입 후 `request_user_input`은 호출하지 않는다. 마일스톤 
 
 `_sdd/pipeline/orchestrators/orchestrator_<topic>.md`를 다시 읽고, 정의된 `Pipeline Steps`를 순서대로 실행한다.
 
-각 step은 `Execute -> Collect -> Verify -> Record` 순서를 따른다.
+각 step은 `Execute -> Collect -> Record -> Close -> Verify` 순서를 따른다.
 
 - custom-agent step이면 오케스트레이터에 적힌 Codex `agent_type`으로 호출한다.
+- custom-agent step이면 `wait_agent` final status를 수거한 뒤 step output/log를 기록하고 `close_agent(target=<agent_id>)`로 handle을 닫는다. 여러 agent를 병렬 spawn한 step은 완료된 handle을 모두 닫은 뒤 다음 dispatch group 또는 downstream step으로 진행한다.
 - custom-agent step이면 오케스트레이터의 `Interaction Mode`를 함께 해석한다. 값이 없으면 `autonomous-no-input`으로 간주한다.
 - 단, `implementation_agent` step은 generic custom-agent dispatch보다 먼저 Implementation Dispatch Controller로 해석한다. phase나 feature 전체를 한 번에 넘기지 않고 phase의 task를 dependency와 Target Files 기준 dispatch 그룹으로 나누어 task당 leaf를 spawn한다.
 - 프로파일 우선순위는 `step-level Execution profile` -> `Execution Profiles` section 기본값 -> `references/execution-profile-policy.md` 기본값 순서다.
@@ -293,7 +294,7 @@ Phase 2 진입 후 `request_user_input`은 호출하지 않는다. 마일스톤 
 - single-phase path이거나 `scope = global`이면 해당 `implementation` step 직후 즉시 global review-fix loop를 수행한다.
 - review-fix loop의 agent 매핑은 small/medium/large review path 모두 고정이다: `review = implementation_review_agent`, `fix = implementation_agent`, `re-review = implementation_review_agent`.
 - `scope = global`이든 `scope = per-group`이든 review/fix/re-review를 local inline work로 대체하지 않는다.
-- fix 단계의 `implementation_agent` 재호출은 review finding 하나를 단일 task leaf로 보는 순차 spawn이다. finding의 영향 파일만 Target Files로 전달하며, 초기 구현 dispatch 그룹처럼 병렬화하지 않는다.
+- fix 단계의 `implementation_agent` 재호출은 review finding 하나를 단일 task leaf로 보는 순차 spawn이다. finding의 영향 파일만 Target Files로 전달하며, 초기 구현 dispatch 그룹처럼 병렬화하지 않는다. 각 fix leaf도 수거 후 즉시 `close_agent`로 닫는다.
 - `low` finding은 advisory/logged follow-up으로 기록하며 기본 fix 대상과 gate blocker에 포함하지 않는다.
 - review-fix loop 프로파일 우선순위는 `review_profile` / `fix_profile` / `final_integration_review_profile` -> `Execution Profiles` section의 해당 agent_type 기본값 -> `references/execution-profile-policy.md` 기본값 순서다.
 - `final_integration_review_profile`은 실제로 final integration review를 수행하는 경우에만 의미가 있다. `scope = per-group`에서 그룹 2개 이상일 때 사용하며, 그룹 1개나 `scope = global`에서는 별도 final integration review step 또는 명시적 global final integration review 선언이 없으면 사용하지 않는다.

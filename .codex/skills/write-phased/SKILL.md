@@ -48,6 +48,7 @@ helper를 쓰는 경우에도 최소한 아래를 넘긴다.
 - 대상 파일 경로
 - 채워야 할 섹션 또는 책임 범위
 - 유지해야 할 skeleton 구조
+- helper agent를 spawn했다면 `wait_agent` final status 수거 후 결과를 반영하고 즉시 `close_agent(target=<agent_id>)`로 닫는다.
 - 언어/톤/출력 형식
 - placeholder를 실제 내용으로 치환하라는 지시
 

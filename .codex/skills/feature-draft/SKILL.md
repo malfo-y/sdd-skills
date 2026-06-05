@@ -21,7 +21,7 @@ feature-draft는 **입력이 대화에서 태어나는** 스킬이다. agent는 
 
 ### Step 2: 생성 (producer spawn)
 
-`spawn_agent(agent_type="feature_draft_agent", prompt=<요청 + 경로 + 대화 맥락 digest>)`로 **생성 mode** spawn하고 `wait_agent`로 결과를 수거한다. agent가 draft를 `_sdd/drafts/<YYYY-MM-DD>_feature_draft_<slug>.md`에 저장하고 경로 + Step 8 surface 결정을 반환한다.
+`spawn_agent(agent_type="feature_draft_agent", prompt=<요청 + 경로 + 대화 맥락 digest>)`로 **생성 mode** spawn하고 `wait_agent`로 결과를 수거한다. final status를 기록한 직후 `close_agent(target=<agent_id>)`로 producer handle을 닫는다. agent가 draft를 `_sdd/drafts/<YYYY-MM-DD>_feature_draft_<slug>.md`에 저장하고 경로 + Step 8 surface 결정을 반환한다.
 
 ### Step 3: review-fix loop
 
@@ -35,8 +35,8 @@ feature-draft는 **입력이 대화에서 태어나는** 스킬이다. agent는 
 
 단계:
 
-1. **review**: `spawn_agent(agent_type="plan_review_agent", ...)`로 draft Part 2(+Part 1 delta)를 review하고 `wait_agent`로 수거한다(`plan_review_agent`는 feature draft Part 2를 입력으로 수용 — Tier 2). reviewer가 Blocker Status + severity별 finding을 리포트(`_sdd/implementation/<YYYY-MM-DD>_plan_review_<slug>.md`)로 낸다.
-2. **fix**: critical/high/medium finding이 있으면 `feature_draft_agent`를 **fix mode**로 재spawn한다 — 입력: review 리포트 경로 + draft 경로 + 대상 findings + **대화 맥락 digest(유지)**. agent가 finding 부분만 surgical 수정한다.
+1. **review**: `spawn_agent(agent_type="plan_review_agent", ...)`로 draft Part 2(+Part 1 delta)를 review하고 `wait_agent`로 수거한 뒤 `close_agent`로 reviewer handle을 닫는다(`plan_review_agent`는 feature draft Part 2를 입력으로 수용 — Tier 2). reviewer가 Blocker Status + severity별 finding을 리포트(`_sdd/implementation/<YYYY-MM-DD>_plan_review_<slug>.md`)로 낸다.
+2. **fix**: critical/high/medium finding이 있으면 `feature_draft_agent`를 **fix mode**로 재spawn한다 — 입력: review 리포트 경로 + draft 경로 + 대상 findings + **대화 맥락 digest(유지)**. `wait_agent`로 수거한 뒤 `close_agent`로 producer handle을 닫는다. agent가 finding 부분만 surgical 수정한다.
 3. **re-review**: fix 후 loop 범위 전체를 `plan_review_agent`로 재리뷰한다.
 4. exit 충족 또는 MAX 도달까지 1~3을 반복한다. MAX 분기 적용.
 

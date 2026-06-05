@@ -312,7 +312,7 @@ fix mode 동작:
 
 ## Optional Nested Writing
 
-출력 문서가 길고 구조가 복잡하면 이 agent가 먼저 skeleton/섹션 헤더를 직접 저장한 뒤 같은 흐름에서 내용을 채운다. 의존 섹션은 순차 fill하고, 독립 섹션은 필요 시 `worker` agent로 bounded 병렬 fill할 수 있다. helper를 쓰더라도 skeleton 구조와 필수 필드는 이 agent가 결정한다.
+출력 문서가 길고 구조가 복잡하면 이 agent가 먼저 skeleton/섹션 헤더를 직접 저장한 뒤 같은 흐름에서 내용을 채운다. 의존 섹션은 순차 fill하고, 독립 섹션은 필요 시 `worker` agent로 bounded 병렬 fill할 수 있다. helper를 쓰면 `wait_agent` final status 수거 후 결과를 반영하고 `close_agent(target=<agent_id>)`로 닫는다. helper를 쓰더라도 skeleton 구조와 필수 필드는 이 agent가 결정한다.
 
 ## Self-Containment Check
 

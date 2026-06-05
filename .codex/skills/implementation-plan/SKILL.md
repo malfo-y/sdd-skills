@@ -18,7 +18,7 @@ implementation-plan은 입력이 파일/경로에서 태어난다. 대화 맥락
 
 ### Step 2: 생성 (producer spawn)
 
-`spawn_agent(agent_type="implementation_plan_agent", prompt=<요청 + 알려진 경로/컨텍스트>)`로 **생성 mode** spawn하고 `wait_agent`로 결과를 수거한다. agent가 plan을 `_sdd/implementation/<YYYY-MM-DD>_implementation_plan_<slug>.md`에 저장하고 경로 + phase/task 요약 + Open Questions(LOW/Yes)를 반환한다.
+`spawn_agent(agent_type="implementation_plan_agent", prompt=<요청 + 알려진 경로/컨텍스트>)`로 **생성 mode** spawn하고 `wait_agent`로 결과를 수거한다. final status를 기록한 직후 `close_agent(target=<agent_id>)`로 producer handle을 닫는다. agent가 plan을 `_sdd/implementation/<YYYY-MM-DD>_implementation_plan_<slug>.md`에 저장하고 경로 + phase/task 요약 + Open Questions(LOW/Yes)를 반환한다.
 
 ### Step 3: review-fix loop
 
@@ -32,8 +32,8 @@ implementation-plan은 입력이 파일/경로에서 태어난다. 대화 맥락
 
 단계:
 
-1. **review**: `spawn_agent(agent_type="plan_review_agent", ...)`로 plan을 review하고 `wait_agent`로 수거한다(Tier 1 — implementation plan 입력). reviewer가 Blocker Status + severity별 finding을 리포트(`_sdd/implementation/<YYYY-MM-DD>_plan_review_<slug>.md`)로 낸다.
-2. **fix**: critical/high/medium finding이 있으면 `implementation_plan_agent`를 **fix mode**로 재spawn한다 — 입력: review 리포트 경로 + plan 경로 + 대상 findings. agent가 finding 부분만 surgical 수정한다.
+1. **review**: `spawn_agent(agent_type="plan_review_agent", ...)`로 plan을 review하고 `wait_agent`로 수거한 뒤 `close_agent`로 reviewer handle을 닫는다(Tier 1 — implementation plan 입력). reviewer가 Blocker Status + severity별 finding을 리포트(`_sdd/implementation/<YYYY-MM-DD>_plan_review_<slug>.md`)로 낸다.
+2. **fix**: critical/high/medium finding이 있으면 `implementation_plan_agent`를 **fix mode**로 재spawn한다 — 입력: review 리포트 경로 + plan 경로 + 대상 findings. `wait_agent`로 수거한 뒤 `close_agent`로 producer handle을 닫는다. agent가 finding 부분만 surgical 수정한다.
 3. **re-review**: fix 후 loop 범위 전체를 `plan_review_agent`로 재리뷰한다.
 4. exit 충족 또는 MAX 도달까지 1~3을 반복한다. MAX 분기 적용.
 

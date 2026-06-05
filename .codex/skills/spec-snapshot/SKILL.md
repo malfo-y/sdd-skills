@@ -74,6 +74,7 @@ snapshot 루트에 아래 정보를 담은 `summary.md`를 만든다.
 2. 같은 흐름에서 요약 내용을 채움
 3. TODO/placeholder를 제거하고 finalize
 4. 의존 섹션은 `default`, 독립 요약 섹션은 `worker`로 채운다
+5. helper agent를 썼다면 `wait_agent` final status 수거 후 결과를 반영하고 `close_agent(target=<agent_id>)`로 닫는다
 
 ### Step 4: Report Completion
 

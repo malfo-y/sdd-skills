@@ -16,7 +16,7 @@ plan 파일이 있으면 agent가 그것으로 범위를 잡지만(Tier 1), **pl
    - 사용자 요청 원문 + 인자
    - 이미 아는 경로(plan/spec/코드, 직전 산출물)
    - **대화에만 있는 맥락 digest**: 이번 세션에서 무엇을 구현/변경했는지, 그 의도, 리뷰 대상 범위(plan 파일이 없을 때 특히). plan 파일이 분명하면 이 digest는 짧아진다.
-2. `spawn_agent(agent_type="implementation_review_agent", prompt=<요청 + 경로 + 대화 맥락 digest>)`로 dispatch하고 `wait_agent`로 결과를 수거한다. 대상 경로가 불명확하면 agent가 Tier Selection·Input 우선순위로 자체 탐색하도록 위임한다.
+2. `spawn_agent(agent_type="implementation_review_agent", prompt=<요청 + 경로 + 대화 맥락 digest>)`로 dispatch하고 `wait_agent`로 결과를 수거한 뒤 `close_agent(target=<agent_id>)`로 handle을 닫는다. 대상 경로가 불명확하면 agent가 Tier Selection·Input 우선순위로 자체 탐색하도록 위임한다.
 3. agent의 반환(리포트 경로 `_sdd/implementation/<YYYY-MM-DD>_implementation_review_<slug>.md`, Tier, findings 요약, blocker)을 사용자에게 그대로 relay한다.
 
 > **경계**: wrapper는 *대화 맥락을 모아 전달*까지만 한다. Tier 판별·검증·findings 분류·리포트 작성은 agent의 Process가 수행한다(중복 금지).

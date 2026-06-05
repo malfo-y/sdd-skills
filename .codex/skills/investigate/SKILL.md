@@ -42,7 +42,7 @@ version: 4.0.0
 
 기본은 **인라인 순차 증거 수집**이다: 에러 메시지·스택 트레이스·관련 코드 경로·최근 변경(`git log`/`git diff`)·관련 테스트를 수집하고 가설을 세운다.
 
-**넓고·모호할 때만**(경쟁 가설이 여럿 / 출처가 불분명 / 탐색 범위가 큼) read-only explore 역할을 **병렬 spawn**한다: `spawn_agent(agent_type="explorer", ...)`를 여러 개 띄우고 `wait_agent`로 결과를 수거한다. lane은 케이스에 맞게 선택한다 (리지드 분기 없음):
+**넓고·모호할 때만**(경쟁 가설이 여럿 / 출처가 불분명 / 탐색 범위가 큼) read-only explore 역할을 **병렬 spawn**한다: `spawn_agent(agent_type="explorer", ...)`를 여러 개 띄우고 `wait_agent`로 결과를 수거한다. final status가 온 explorer는 핵심 사실을 기록한 직후 `close_agent(target=<agent_id>)`로 닫아 병렬 slot을 반납한다. lane은 케이스에 맞게 선택한다 (리지드 분기 없음):
 
 - **가설-lane** (anti-anchoring): 경쟁 가설을 lane별로 분리해 각 explorer가 독립적으로 한 가설을 검증 + 가설 없는 독립 탐지 lane 1개를 둬 앵커링 바이어스를 막는다.
 - **영역-lane** (broad sweep): 코드 영역·증거 출처(에러 경로 / 최근 변경 / 의존·설정 / 테스트)별로 explorer가 동시 sweep한다.
