@@ -1,5 +1,5 @@
-name = "spec_update_done_agent"
-description = "Internal agent. Called explicitly by orchestrators or skills via spawn_agent(agent_type=\"spec_update_done_agent\")."
+name = "spec-update-done-agent"
+description = "Internal agent. Called explicitly by orchestrators or skills via spawn_agent(agent_type=\"spec-update-done-agent\")."
 developer_instructions = '''
 # Spec Sync and Update
 

@@ -1,5 +1,5 @@
-name = "implementation_agent"
-description = "Internal leaf agent. 단일 task를 TDD로 구현한다. orchestrator(implementation skill 또는 sdd-autopilot)가 spawn_agent(agent_type=\"implementation_agent\")로 task당 dispatch한다."
+name = "implementation-agent"
+description = "Internal leaf agent. 단일 task를 TDD로 구현한다. orchestrator(implementation skill 또는 sdd-autopilot)가 spawn_agent(agent_type=\"implementation-agent\")로 task당 dispatch한다."
 developer_instructions = '''
 # Implementation Task (Leaf)
 

@@ -1,5 +1,40 @@
 # Decision Log
 
+## 2026-06-09 - Use kebab-case Codex custom agent names
+
+### Context
+
+Codex custom agent files already used kebab-case filenames such as `feature-draft-agent.toml`, but the TOML `name` fields and wrapper dispatch examples used underscore IDs such as `feature_draft_agent`. Codex resolves runtime custom agents by the TOML `name`, so the mismatch made skill instructions and actual file names look like different identities. A pilot confirmed kebab-case custom agent names are supported in a fresh Codex process, while the current session's agent registry does not hot-reload renamed agents.
+
+### Decision
+
+1. **Codex custom agent IDs use kebab-case**: managed `.codex/agents/*.toml` files now set `name` to the kebab-case file stem, including the `-agent` suffix.
+2. **Wrapper dispatch uses the same ID**: Codex `spawn_agent(agent_type=...)` examples and contracts use the kebab-case custom agent IDs.
+3. **Legacy underscore IDs are rejected, not normalized**: sdd-autopilot generated orchestrators must use canonical kebab-case IDs. Underscore custom agent IDs and suffix-less skill names remain unsupported legacy aliases.
+4. **Historical artifacts are not rewritten**: old decision/changelog text remains historical. Current spec surfaces and new history entries record the canonical naming change.
+
+### Rationale
+
+- Matching file stem and TOML `name` removes the mental split between "agent file" and "agent_type" without adding alias logic.
+- Kebab-case names are already the visible convention for skill and agent files.
+- Rejecting legacy aliases keeps generated orchestrator validation simple and avoids a compatibility layer that would keep the old mismatch alive.
+
+### Changes
+
+- `.codex/agents/*.toml` -- `name` fields renamed to kebab-case custom agent IDs.
+- `.codex/skills/*/SKILL.md` and sdd-autopilot references/examples -- dispatch and canonical contract references updated.
+- `.codex/agents/README.md` -- naming rule and managed agent inventory updated.
+- `.claude/skills/implementation/SKILL.md` -- Codex-side cross-reference updated where it mentions Codex agent IDs.
+- `_sdd/spec/main.md`, `_sdd/spec/components.md`, `_sdd/spec/logs/changelog.md` -- current global spec sync.
+
+### References
+
+- feature draft: `_sdd/drafts/2026-06-09_feature_draft_codex_agent_kebab_names.md`
+- plan review: `_sdd/implementation/2026-06-09_plan_review_codex_agent_kebab_names.md` (CLEAR)
+- implementation progress: `_sdd/implementation/2026-06-09_implementation_progress_codex_agent_kebab_names.md`
+- implementation report: `_sdd/implementation/2026-06-09_implementation_report_codex_agent_kebab_names.md`
+- validation: static grep gates PASS, `git diff --check` PASS, fresh `codex exec` smoke for `feature-draft-agent` PASS
+
 ## 2026-06-03 - Harden sdd-autopilot generated orchestrator contract
 
 ### Context

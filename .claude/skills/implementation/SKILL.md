@@ -141,7 +141,7 @@ For each phase:
 그룹 내 task마다 leaf를 dispatch한다 (병렬 시 한 메시지에서 동시 호출):
 
 - **claude**: `Agent(subagent_type="sdd-skills:implementation-agent", prompt=<leaf 입력>)` — 플러그인 설치 환경에서 resolve되도록 `sdd-skills:` prefix 필수(bare name 금지). 로컬 dev에서도 동일하게 동작.
-- **codex**: `spawn_agent(agent_type="implementation_agent", prompt=<leaf 입력>)` 후 `wait_agent`로 수거
+- **codex**: `spawn_agent(agent_type="implementation-agent", prompt=<leaf 입력>)` 후 `wait_agent`로 수거
 
 leaf 입력(프롬프트)에 다음 4종을 전달한다 (leaf는 재탐색하지 않음):
 

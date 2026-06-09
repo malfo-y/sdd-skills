@@ -6,7 +6,7 @@ version: 4.0.0
 
 # Implementation Plan (Orchestrator)
 
-이 스킬은 **메인 루프 orchestrator**다. `implementation_plan_agent`를 spawn해 plan을 생성하고, `plan_review_agent`로 **review→fix→re-review loop**를 돌려 산출물 품질 gate를 자체 소유한다. agent는 plan producer 단일 소스이고 스킬이 loop를 소유한다 — producer/reviewer agent는 sub-agent를 spawn하지 못하므로 loop orchestration은 메인 루프(스킬)의 책임이다.
+이 스킬은 **메인 루프 orchestrator**다. `implementation-plan-agent`를 spawn해 plan을 생성하고, `plan-review-agent`로 **review→fix→re-review loop**를 돌려 산출물 품질 gate를 자체 소유한다. agent는 plan producer 단일 소스이고 스킬이 loop를 소유한다 — producer/reviewer agent는 sub-agent를 spawn하지 못하므로 loop orchestration은 메인 루프(스킬)의 책임이다.
 
 implementation-plan은 입력이 파일/경로에서 태어난다. 대화 맥락 digest forwarding을 두지 않는다 — agent가 입력 경로를 자체 read한다.
 
@@ -18,7 +18,7 @@ implementation-plan은 입력이 파일/경로에서 태어난다. 대화 맥락
 
 ### Step 2: 생성 (producer spawn)
 
-`spawn_agent(agent_type="implementation_plan_agent", prompt=<요청 + 알려진 경로/컨텍스트>)`로 **생성 mode** spawn하고 `wait_agent`로 결과를 수거한다. final status를 기록한 직후 `close_agent(target=<agent_id>)`로 producer handle을 닫는다. agent가 plan을 `_sdd/implementation/<YYYY-MM-DD>_implementation_plan_<slug>.md`에 저장하고 경로 + phase/task 요약 + Open Questions(LOW/Yes)를 반환한다.
+`spawn_agent(agent_type="implementation-plan-agent", prompt=<요청 + 알려진 경로/컨텍스트>)`로 **생성 mode** spawn하고 `wait_agent`로 결과를 수거한다. final status를 기록한 직후 `close_agent(target=<agent_id>)`로 producer handle을 닫는다. agent가 plan을 `_sdd/implementation/<YYYY-MM-DD>_implementation_plan_<slug>.md`에 저장하고 경로 + phase/task 요약 + Open Questions(LOW/Yes)를 반환한다.
 
 ### Step 3: review-fix loop
 
@@ -32,9 +32,9 @@ implementation-plan은 입력이 파일/경로에서 태어난다. 대화 맥락
 
 단계:
 
-1. **review**: `spawn_agent(agent_type="plan_review_agent", ...)`로 plan을 review하고 `wait_agent`로 수거한 뒤 `close_agent`로 reviewer handle을 닫는다(Tier 1 — implementation plan 입력). reviewer가 Blocker Status + severity별 finding을 리포트(`_sdd/implementation/<YYYY-MM-DD>_plan_review_<slug>.md`)로 낸다.
-2. **fix**: critical/high/medium finding이 있으면 `implementation_plan_agent`를 **fix mode**로 재spawn한다 — 입력: review 리포트 경로 + plan 경로 + 대상 findings. `wait_agent`로 수거한 뒤 `close_agent`로 producer handle을 닫는다. agent가 finding 부분만 surgical 수정한다.
-3. **re-review**: fix 후 loop 범위 전체를 `plan_review_agent`로 재리뷰한다.
+1. **review**: `spawn_agent(agent_type="plan-review-agent", ...)`로 plan을 review하고 `wait_agent`로 수거한 뒤 `close_agent`로 reviewer handle을 닫는다(Tier 1 — implementation plan 입력). reviewer가 Blocker Status + severity별 finding을 리포트(`_sdd/implementation/<YYYY-MM-DD>_plan_review_<slug>.md`)로 낸다.
+2. **fix**: critical/high/medium finding이 있으면 `implementation-plan-agent`를 **fix mode**로 재spawn한다 — 입력: review 리포트 경로 + plan 경로 + 대상 findings. `wait_agent`로 수거한 뒤 `close_agent`로 producer handle을 닫는다. agent가 finding 부분만 surgical 수정한다.
+3. **re-review**: fix 후 loop 범위 전체를 `plan-review-agent`로 재리뷰한다.
 4. exit 충족 또는 MAX 도달까지 1~3을 반복한다. MAX 분기 적용.
 
 ### Step 4: relay
@@ -43,7 +43,7 @@ implementation-plan은 입력이 파일/경로에서 태어난다. 대화 맥락
 
 ## 경계
 
-- 산출물(plan) 작성·수정은 `implementation_plan_agent`만 한다(산출물 단일 작성자 — orchestrator는 직접 rewrite하지 않는다). 스킬은 loop만 소유한다.
-- review·findings 분류는 `plan_review_agent`가 수행한다(중복 금지).
+- 산출물(plan) 작성·수정은 `implementation-plan-agent`만 한다(산출물 단일 작성자 — orchestrator는 직접 rewrite하지 않는다). 스킬은 loop만 소유한다.
+- review·findings 분류는 `plan-review-agent`가 수행한다(중복 금지).
 
-> **Role Pointer**: 이 스킬은 review-fix loop를 소유하는 **orchestrator**다. `implementation_plan_agent`는 plan producer 단일 소스(생성·fix mode 수정), `plan_review_agent`는 reviewer다. (구 entrypoint 형태에서 orchestrator로 승격됨 — 더 이상 단순 위임이 아니다.)
+> **Role Pointer**: 이 스킬은 review-fix loop를 소유하는 **orchestrator**다. `implementation-plan-agent`는 plan producer 단일 소스(생성·fix mode 수정), `plan-review-agent`는 reviewer다. (구 entrypoint 형태에서 orchestrator로 승격됨 — 더 이상 단순 위임이 아니다.)

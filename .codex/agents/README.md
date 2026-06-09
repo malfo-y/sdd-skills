@@ -5,7 +5,7 @@
 ## Naming
 
 - 파일명은 skill 대응 관계가 바로 보이도록 `kebab-case`를 사용한다.
-- `name` 필드는 spawn 안정성을 위해 `snake_case`를 사용한다.
+- `name` 필드도 `spawn_agent(agent_type=...)`와 일치하도록 `kebab-case`를 사용한다.
 - wrapper skill은 `.codex/skills/<skill-name>/`에 남고, 실행 backbone은 여기의 custom agent가 맡는다.
 
 ## Ownership
@@ -18,26 +18,25 @@
 
 ## Agent Set
 
-- `feature_draft`
-- `implementation_plan`
-- `implementation`
-- `plan_review`
-- `implementation_review`
-- `investigate`
-- `spec_update_todo`
-- `spec_update_done`
-- `spec_review`
-- `ralph_loop_init`
+- `feature-draft-agent`
+- `implementation-plan-agent`
+- `implementation-agent`
+- `plan-review-agent`
+- `implementation-review-agent`
+- `spec-update-todo-agent`
+- `spec-update-done-agent`
+- `spec-review-agent`
+- `ralph-loop-init-agent`
 
 ## Inline Writing
 
 장문 산출물은 별도 writing helper agent에 넘기지 않는다. caller가 같은 흐름에서 skeleton -> fill -> finalize를 수행하고, 필요할 때만 `default` 또는 `worker`를 bounded helper로 사용한다.
 
-- `feature_draft`
-- `implementation_plan`
-- `plan_review`
-- `implementation_review`
-- `spec_review`
+- `feature-draft-agent`
+- `implementation-plan-agent`
+- `plan-review-agent`
+- `implementation-review-agent`
+- `spec-review-agent`
 
 ## Invocation Contract
 

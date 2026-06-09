@@ -61,8 +61,8 @@ SDD Skills는 이 문제를 `SKILL.md = 실행 가능한 프롬프트`라는 관
 - 새 temporary artifact는 가능한 한 lowercase canonical 경로를 사용하고, skill contract가 dated slug 패턴을 정의한 output surface는 그 형식을 따라야 한다. reader는 legacy uppercase/fixed-name artifact를 fallback으로 읽을 수 있어야 한다
 - wrapper-backed skill은 사용자 entrypoint와 artifact contract를 유지해야 하며, 지원하지 않는 동작을 조용히 흉내내지 않는다. wrapper는 thin entrypoint로 두고 전체 계약·프로세스는 agent를 단일 소스로 유지한다. 입력이 대화에서 태어나는 wrapper는 그 대화 맥락을 agent에 forwarding해야 한다(agent는 파일은 read하지만 대화는 읽지 못한다)
 - review나 validation이 포함된 workflow는 review-only로 닫지 않고 fix/re-review 또는 명시적 잔여 이슈 보고로 마무리한다. 산출물 producer 스킬(`feature-draft`, `implementation-plan`, `implementation`)은 autopilot 없이 직접 호출되는 경로에서도 외부 reviewer agent를 호출하는 review→fix→re-review loop를 자체 소유한다. 공통 loop 정책은 autopilot `orchestrator-contract.md` §6에서 차용한다(exit `critical=high=medium=0`, MAX 기본 3회, 매 라운드 loop 범위 전체 재리뷰, MAX 도달 시 critical/high 잔존이면 중단·보고하고 medium만 잔존이면 로그 후 진행). fix는 producer/leaf agent 재dispatch로 수행하고 orchestrator 스킬은 산출물을 직접 rewrite하지 않는다(산출물 단일 작성자)
-- `sdd-autopilot`이 생성하는 orchestrator는 planning producer output을 downstream 입력으로 소비하기 전에 `plan-review` gate를 통과시켜야 한다. `feature_draft_agent` / `implementation_plan_agent` output이 gate를 통과하지 못하면 finding을 implementation fix task로 변환하지 않고 producer output을 reject/regenerate 대상으로 돌린다
-- `sdd-autopilot` 생성 orchestrator의 agent invocation은 canonical 이름만 사용한다. Codex는 `_agent` suffix 이름, Claude는 `sdd-skills:<agent>-agent` invocation이 canonical이며, legacy alias는 normalize하지 않고 reject/regenerate한다
+- `sdd-autopilot`이 생성하는 orchestrator는 planning producer output을 downstream 입력으로 소비하기 전에 `plan-review` gate를 통과시켜야 한다. `feature-draft-agent` / `implementation-plan-agent` output이 gate를 통과하지 못하면 finding을 implementation fix task로 변환하지 않고 producer output을 reject/regenerate 대상으로 돌린다
+- `sdd-autopilot` 생성 orchestrator의 agent invocation은 canonical 이름만 사용한다. Codex와 Claude 모두 kebab-case agent invocation을 canonical으로 사용한다(Codex `feature-draft-agent`, Claude `sdd-skills:<agent>-agent`). Legacy alias와 Codex underscore custom agent ID는 normalize하지 않고 reject/regenerate한다
 - non-trivial planning은 기본적으로 `feature-draft`에서 시작하고, `implementation-plan`은 phase/task 세분화가 필요할 때만 follow-up expansion으로 붙인다
 - 구현 전 계획 품질 점검이 필요하면 `plan-review`를 review-only gate로 사용한다. 이 gate는 plan을 직접 수정하지 않고 Critical/High finding만 implementation blocker로 표시한다
 - multi-phase plan은 문서 장식이 아니라 execution gate다. `implementation-plan`의 phase `Checkpoint` 필드가 group boundary를 결정하며, `Checkpoint=true` phase 직후에만 review-fix gate를 닫는다. group 내 phase는 light validation만 수행한다. final integration review는 그룹 수에 따라 adaptive하게 처리한다 (1개 그룹이면 마지막 group gate가 겸함, 2개+ 이상이면 별도 1회 추가). 마지막 phase를 제외한 phase에 `Checkpoint` metadata가 없으면 schema violation으로 보고 single late gate로 fallback하지 않는다
@@ -97,7 +97,7 @@ SDD Skills의 설계는 네 층으로 나뉜다.
 | planning precedence | small direct path 외에는 `feature-draft`를 기본 planning entry로 두고 `implementation-plan`은 후속 확장 단계로 사용 | non-trivial 변경에서 peer-choice 혼선을 줄이고 task/phase 분해 기준을 일정하게 유지한다 |
 | plan quality gate | optional `plan-review` review-only gate | 구현 전 Target Files, task boundary, verification weakness, overengineering smell을 findings-first로 드러내되 plan 자체는 수정하지 않는다 |
 | producer 스킬 자체 품질 gate | `feature-draft`/`implementation-plan`/`implementation`이 review→fix→re-review loop를 직접 소유(orchestrator). fix=producer/leaf agent 재dispatch, 산출물 단일 작성자 | autopilot 없이 직접 호출되는 경로에서도 산출물이 reviewer gate를 통과하도록 보장한다. producer/reviewer agent는 sub-agent를 spawn하지 못하므로 loop orchestration은 메인 루프(스킬)가 소유해야 한다 |
-| autopilot producer handoff gate | generated orchestrator가 `feature_draft_agent` / `implementation_plan_agent` output을 `plan_review_agent`로 검증한 뒤 downstream 소비 | autopilot이 wrapper skill을 우회해 custom agent를 직접 호출해도 직접 호출 경로와 같은 planning quality gate를 유지한다 |
+| autopilot producer handoff gate | generated orchestrator가 `feature-draft-agent` / `implementation-plan-agent` output을 `plan-review-agent`로 검증한 뒤 downstream 소비 | autopilot이 wrapper skill을 우회해 custom agent를 직접 호출해도 직접 호출 경로와 같은 planning quality gate를 유지한다 |
 | multi-phase quality gate | `per-group` review-fix (Checkpoint boundary) + adaptive `final integration review`; missing non-final `Checkpoint`는 reject/regenerate | 의미 있는 group 단위로 review depth를 높이고, review 비용과 latency를 줄이면서 cross-group regression은 adaptive final review로 커버한다 |
 | spec 구조 | thin global spec + execution-focused temporary spec | 장기 기준과 일회성 실행 정보를 분리해 drift를 줄인다 |
 | Strategic Code Map | optional compact navigation surface | global spec을 inventory로 되돌리지 않으면서 사람과 LLM agent가 entrypoint, contract source, invariant hotspot, extension point, validation surface를 빠르게 찾게 한다 |
@@ -109,7 +109,7 @@ SDD Skills의 설계는 네 층으로 나뉜다.
 - draft/plan/review skill chain은 `_sdd/` 산출물을 다음 단계 입력 계약으로 사용한다
 - temporary delta는 global truth를 반복 복사하지 않고, 변경 범위와 검증 정보만 다룬다
 - multi-phase implementation plan은 review-fix scope와 phase exit 기준을 실제 execution control로 제공해야 한다
-- generated orchestrator에서 `implementation_agent` / `sdd-skills:implementation-agent` step은 feature/phase 전체 leaf call이 아니라 autopilot이 task-level leaf calls로 fan out하는 dispatch controller다
+- generated orchestrator에서 `implementation-agent` / `sdd-skills:implementation-agent` step은 feature/phase 전체 leaf call이 아니라 autopilot이 task-level leaf calls로 fan out하는 dispatch controller다
 - skill-defined output artifact는 dated slug + glob-based discovery를 canonical로 사용하고, legacy uppercase/fixed-name artifact는 transition fallback으로만 읽는다
 - canonical model 변경은 definition 문서와 workflow 문서에서 먼저 선언하고, 이후 generator/consumer/docs가 따라간다
 - supporting docs는 global decision-bearing truth를 복제하지 않고, reference 역할만 수행한다

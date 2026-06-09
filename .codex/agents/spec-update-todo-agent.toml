@@ -1,5 +1,5 @@
-name = "spec_update_todo_agent"
-description = "Internal agent. Called explicitly by orchestrators or skills via spawn_agent(agent_type=\"spec_update_todo_agent\")."
+name = "spec-update-todo-agent"
+description = "Internal agent. Called explicitly by orchestrators or skills via spawn_agent(agent_type=\"spec-update-todo-agent\")."
 developer_instructions = '''
 # Spec Update from Planned Change
 

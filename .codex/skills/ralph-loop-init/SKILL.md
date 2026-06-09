@@ -6,14 +6,14 @@ version: 3.0.0
 
 # Ralph Loop Init (Entrypoint Wrapper)
 
-이 스킬은 entrypoint wrapper다. 사용자의 ralph-loop-init 요청을 `ralph_loop_init_agent`에 위임하고 그 결과를 사용자에게 전달한다. 전체 discovery 프로세스·상태 머신·파일 생성·CHECKS 검증·출력 형식은 agent가 단일 소스로 보유한다.
+이 스킬은 entrypoint wrapper다. 사용자의 ralph-loop-init 요청을 `ralph-loop-init-agent`에 위임하고 그 결과를 사용자에게 전달한다. 전체 discovery 프로세스·상태 머신·파일 생성·CHECKS 검증·출력 형식은 agent가 단일 소스로 보유한다.
 
 > **Security Notice**: 생성된 `run.sh`는 Codex CLI의 `--dangerously-bypass-approvals-and-sandbox`를 사용한다. **격리된 환경(컨테이너, VM, 샌드박스)에서만 실행할 것.**
 
 ## 실행
 
 1. 사용자 요청 + 대상 프로세스/진입점 컨텍스트와 이미 아는 결정을 수집한다 (wrapper는 새 분석 read를 하지 않는다).
-2. `spawn_agent(agent_type="ralph_loop_init_agent", prompt=<요청 + 알려진 진입점/환경 컨텍스트>)`로 dispatch하고 `wait_agent`로 결과를 수거한 뒤 `close_agent(target=<agent_id>)`로 handle을 닫는다. 진입점이 불명확하면 agent가 Step 1 discovery로 자체 탐색하도록 위임한다.
+2. `spawn_agent(agent_type="ralph-loop-init-agent", prompt=<요청 + 알려진 진입점/환경 컨텍스트>)`로 dispatch하고 `wait_agent`로 결과를 수거한 뒤 `close_agent(target=<agent_id>)`로 handle을 닫는다. 진입점이 불명확하면 agent가 Step 1 discovery로 자체 탐색하도록 위임한다.
 3. agent의 반환(생성된 `ralph/` 산출물 — `config.sh`, `PROMPT.md`, `run.sh`, `state.md`, `CHECKS.md`, `results/` — 경로와 CHECKS 검증 요약, next steps)을 사용자에게 그대로 relay한다.
 
 ## 계약 (entrypoint·artifact 유지, 흉내 금지)

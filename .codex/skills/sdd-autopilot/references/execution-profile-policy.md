@@ -9,15 +9,15 @@
 |---|---|---|---|
 | 구조 탐색 빠른 스캔 | `explorer` | `gpt-5.5` | `low` |
 | 도메인/리스크 탐색 | `explorer` | `gpt-5.5` | `medium` |
-| feature draft 생성 | `feature_draft_agent` | `gpt-5.5` | `high` |
-| planned spec 반영 | `spec_update_todo_agent` | `gpt-5.5` | `medium` |
-| phase/task 분해 계획 | `implementation_plan_agent` | `gpt-5.5` | `high` |
-| 실제 구현 | `implementation_agent` | `gpt-5.5` | `medium` |
-| 구현 리뷰 | `implementation_review_agent` | `gpt-5.5` | `medium` |
-| final integration review | `implementation_review_agent` | `gpt-5.5` | `high` |
-| done spec sync | `spec_update_done_agent` | `gpt-5.5` | `medium` |
-| spec 감사성 검토 | `spec_review_agent` | `gpt-5.5` | `medium` |
-| 장기 검증 루프 초기화 | `ralph_loop_init_agent` | `gpt-5.5` | `high` |
+| feature draft 생성 | `feature-draft-agent` | `gpt-5.5` | `high` |
+| planned spec 반영 | `spec-update-todo-agent` | `gpt-5.5` | `medium` |
+| phase/task 분해 계획 | `implementation-plan-agent` | `gpt-5.5` | `high` |
+| 실제 구현 | `implementation-agent` | `gpt-5.5` | `medium` |
+| 구현 리뷰 | `implementation-review-agent` | `gpt-5.5` | `medium` |
+| final integration review | `implementation-review-agent` | `gpt-5.5` | `high` |
+| done spec sync | `spec-update-done-agent` | `gpt-5.5` | `medium` |
+| spec 감사성 검토 | `spec-review-agent` | `gpt-5.5` | `medium` |
+| 장기 검증 루프 초기화 | `ralph-loop-init-agent` | `gpt-5.5` | `high` |
 
 ## Precedence
 

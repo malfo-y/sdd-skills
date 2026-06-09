@@ -2,6 +2,15 @@
 
 > 이 파일은 `_sdd/spec/main.md`의 버전별 변경 기록이다.
 
+#### v4.1.15 (2026-06-09)
+
+- **Codex custom agent canonical ID kebab-case 전환**: `.codex/agents/*.toml`의 `name` 필드를 파일 stem과 같은 kebab-case `*-agent` ID로 정렬했다. Codex runtime은 TOML `name`을 `agent_type`으로 resolve하므로 파일명과 호출명이 같은 형태가 된다.
+- **Codex wrapper dispatch 정렬**: `feature-draft`, `implementation-plan`, `implementation`, review/spec/ralph wrapper의 `spawn_agent(agent_type=...)` 참조를 kebab-case custom agent ID로 갱신했다.
+- **sdd-autopilot generated orchestrator contract 정렬**: 허용 `agent_type` 목록, producer gate, review-fix loop mapping, dispatch controller, sample orchestrator/reference 문서가 kebab-case custom agent ID만 canonical으로 사용한다. underscore custom agent ID와 suffix 없는 skill 이름은 legacy alias로 reject/regenerate 대상이다.
+- **current spec/docs sync**: `_sdd/spec/main.md`, `_sdd/spec/components.md`, `.codex/agents/README.md`에 Codex/Claude 모두 kebab-case invocation을 canonical으로 쓰는 정책을 반영했다.
+- **검증**: stale exact underscore custom agent ID grep PASS, Codex agent `name = ".*_agent"` grep PASS, `git diff --check` PASS, fresh `codex exec` smoke에서 `feature-draft-agent` resolve PASS.
+- 입력: `_sdd/drafts/2026-06-09_feature_draft_codex_agent_kebab_names.md`, `_sdd/implementation/2026-06-09_plan_review_codex_agent_kebab_names.md` (CLEAR), `_sdd/implementation/2026-06-09_implementation_report_codex_agent_kebab_names.md`
+
 #### v4.1.14 (2026-06-03)
 
 - **sdd-autopilot generated orchestrator contract hardening 반영**: generated orchestrator가 `feature_draft_agent` / `implementation_plan_agent` output을 downstream 소비 전 `plan_review_agent` gate로 검증하도록 global spec에 반영

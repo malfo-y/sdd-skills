@@ -134,16 +134,16 @@ validation / final integration review
 - `spec-update-done`은 review-fix gate, required validation/test, 필요한 경우 `final integration review`가 모두 끝난 뒤에만 온다.
 - `ralph-loop-init`은 구현 본선 뒤에 무조건 붙는 단계가 아니라, 장시간 검증이 필요할 때 validation surface에 붙는 선택지다.
 - Step 4 orchestrator generation은 `_sdd/pipeline/orchestrators/orchestrator_<topic>.md`만 materialize한다. `_sdd/drafts/*`, `_sdd/implementation/*`, `_sdd/pipeline/report_*`, 코드/테스트 출력은 future step의 planned output으로만 존재한다.
-- review-fix loop에서 agent 역할은 고정이다: review는 `implementation_review_agent`, fix는 `implementation_agent` 재호출, re-review는 다시 `implementation_review_agent`다. 이 loop는 파이프라인 끝의 후처리가 아니라 각 `implementation` 실행 단위 직후 즉시 닫는 completion gate다.
-- review가 포함된 small/medium/large 모든 규모에서 `implementation`과 `implementation_review`는 sub-agent mapping으로만 실행한다. 부모 autopilot이 local implementation/review로 대체하지 않는다.
+- review-fix loop에서 agent 역할은 고정이다: review는 `implementation-review-agent`, fix는 `implementation-agent` 재호출, re-review는 다시 `implementation-review-agent`다. 이 loop는 파이프라인 끝의 후처리가 아니라 각 `implementation` 실행 단위 직후 즉시 닫는 completion gate다.
+- review가 포함된 small/medium/large 모든 규모에서 `implementation-agent`와 `implementation-review-agent`는 sub-agent mapping으로만 실행한다. 부모 autopilot이 local implementation/review로 대체하지 않는다.
 `spec-review`는 파이프라인 끝이나 중간의 감사 단계로 선택적으로 추가한다.
 `spec-update-done`은 global spec이 없으면 수행하지 않는다.
 `spec-summary`와 `spec-rewrite`는 비오케스트레이션 보조 스킬이다.
 
 ### 2.1.1 Planning precedence by scale
 
-- **Small direct path**: 바로 `implementation`으로 간다. 정말 간단한 디버깅 수준의 수정(typo fix, config 값 변경, 로그 한 줄 추가 등)이거나 해당 주제의 feature-draft artifact가 `_sdd/drafts/`에 이미 존재하는 경우에만 `feature-draft`를 생략할 수 있다. review가 포함되면 규모와 무관하게 `implementation -> implementation_review -> implementation -> implementation_review` custom-agent mapping을 사용하고, 부모 autopilot이 로컬 구현/로컬 리뷰로 대체하지 않는다.
-- **Single-phase medium path**: 기본 진입은 `feature-draft`다. Part 2가 task/dependency/validation 측면에서 충분히 명확하면 `implementation-plan` 없이 `implementation`으로 바로 연결한다. 이 경우에도 해당 `implementation` 직후 global review-fix gate를 즉시 닫아야 하며, 그 전에는 downstream step으로 진행할 수 없다. review가 있으면 실행 주체는 항상 `implementation`/`implementation_review` custom-agent mapping이다.
+- **Small direct path**: 바로 `implementation`으로 간다. 정말 간단한 디버깅 수준의 수정(typo fix, config 값 변경, 로그 한 줄 추가 등)이거나 해당 주제의 feature-draft artifact가 `_sdd/drafts/`에 이미 존재하는 경우에만 `feature-draft`를 생략할 수 있다. review가 포함되면 규모와 무관하게 `implementation-agent -> implementation-review-agent -> implementation-agent -> implementation-review-agent` custom-agent mapping을 사용하고, 부모 autopilot이 로컬 구현/로컬 리뷰로 대체하지 않는다.
+- **Single-phase medium path**: 기본 진입은 `feature-draft`다. Part 2가 task/dependency/validation 측면에서 충분히 명확하면 `implementation-plan` 없이 `implementation`으로 바로 연결한다. 이 경우에도 해당 `implementation` 직후 global review-fix gate를 즉시 닫아야 하며, 그 전에는 downstream step으로 진행할 수 없다. review가 있으면 실행 주체는 항상 `implementation-agent`/`implementation-review-agent` custom-agent mapping이다.
 - **Multi-phase medium / large expanded path**: `feature-draft`로 temporary spec을 고정한 뒤, planned persistent global alignment가 필요할 때만 `spec-update-todo`를 조건부로 추가하고, multi-phase 실행으로 판단되면 `implementation-plan`을 반드시 포함한다. feature-draft -> implementation 직행은 single-phase 경로에 한정한다. 이 path에서 downstream `implementation` step은 flat single-shot step이 아니라 `Execution Mode: phase-iterative`와 `Phase Source`를 선언하는 runtime control-flow unit이어야 하며, phase count와 boundary는 Step 4가 아니라 runtime에 plan output을 읽어 해석한다.
 - **Group-gated execution rule**: medium 이상에서 multi-phase plan이 생성되면 `Review-Fix Loop.scope = per-group`을 기본값으로 본다. `Phase Source`의 `Checkpoint` 필드가 group boundary를 결정하며, Checkpoint phase 직후 같은 group 범위의 review-fix gate와 validation을 닫는다. 그룹 2개 이상이면 마지막 group gate 후 cross-group regression 전용 `final integration review`를 1회 더 수행한다.
 - **Spec sync ordering rule**: `spec-update-done`은 모든 required implementation-scoped review-fix gate, required validation/test, 필요한 경우 `final integration review`가 끝난 뒤 최종 단계에서만 수행한다.

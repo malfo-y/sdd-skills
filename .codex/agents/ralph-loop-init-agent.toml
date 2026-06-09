@@ -1,5 +1,5 @@
-name = "ralph_loop_init_agent"
-description = "Internal agent. Called explicitly by orchestrators or skills via spawn_agent(agent_type=\"ralph_loop_init_agent\")."
+name = "ralph-loop-init-agent"
+description = "Internal agent. Called explicitly by orchestrators or skills via spawn_agent(agent_type=\"ralph-loop-init-agent\")."
 developer_instructions = '''
 # Ralph Loop Initialization
 

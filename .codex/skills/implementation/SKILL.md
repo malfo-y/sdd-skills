@@ -6,7 +6,7 @@ version: 3.1.0
 
 # Implementation Orchestrator (Parallel TDD)
 
-이 스킬은 **orchestrator**다. 메인 루프에서 실행되어 fan-out이 가능하다. task-set을 확보하고(plan 파싱 또는 plan 없으면 경량 분해), dependency 기반으로 병렬 그룹을 파생해 **`implementation_agent` leaf를 task당 spawn**하며, 통합·회귀·phase review·report를 소유한다. 각 task의 TDD(RED→GREEN→REFACTOR)는 leaf가 수행한다. 병렬화는 최적화 토글일 뿐 — 불가하면 동일 흐름으로 순차 실행한다.
+이 스킬은 **orchestrator**다. 메인 루프에서 실행되어 fan-out이 가능하다. task-set을 확보하고(plan 파싱 또는 plan 없으면 경량 분해), dependency 기반으로 병렬 그룹을 파생해 **`implementation-agent` leaf를 task당 spawn**하며, 통합·회귀·phase review·report를 소유한다. 각 task의 TDD(RED→GREEN→REFACTOR)는 leaf가 수행한다. 병렬화는 최적화 토글일 뿐 — 불가하면 동일 흐름으로 순차 실행한다.
 
 ## Acceptance Criteria
 
@@ -14,7 +14,7 @@ version: 3.1.0
 
 - [ ] AC1: task-set을 확보한다 — plan 파싱(있을 때) 또는 plan 없으면 요청을 task로 경량 분해
 - [ ] AC2: dependency 기반 병렬 그룹 파생("같은 phase + dependency edge 없음 + Target Files disjoint → 병렬") + file-disjoint 가드레일 + 순차 fallback
-- [ ] AC3: 그룹 내 task마다 `implementation_agent` leaf를 spawn하고 leaf 입력 4종(task 필드 + Target Files + 환경/테스트 + 선행 보장)을 전달하며, final status 수거 직후 `close_agent`로 handle을 반납
+- [ ] AC3: 그룹 내 task마다 `implementation-agent` leaf를 spawn하고 leaf 입력 4종(task 필드 + Target Files + 환경/테스트 + 선행 보장)을 전달하며, final status 수거 직후 `close_agent`로 handle을 반납
 - [ ] AC4: post-group 통합·회귀·phase review를 orchestrator가 수행하고 leaf 출력(UNPLANNED_DEPENDENCY 등)을 처리
 - [ ] AC5: `_sdd/implementation/<YYYY-MM-DD>_implementation_report_<slug>.md` 및 progress artifact를 canonical 경로·필드로 생성(orchestrator 소유)
 - [ ] AC6: leaf 출력이 AC 외 추가 코드(옵션·설정·추상화·에러 처리)를 포함하지 않으며, 발견 시 Phase Review에서 Quality 또는 Critical로 분류 (Minimum-Code Mandate)
@@ -23,7 +23,7 @@ version: 3.1.0
 ## Hard Rules
 
 1. **Spec 파일 불가침**: `_sdd/spec/` 하위 파일을 생성/수정/삭제하지 않는다. Spec drift 발견 시 리포트에 기록하고 `spec-update-todo` 사용을 안내한다.
-2. **TDD는 leaf가 수행**: 각 task의 RED→GREEN→REFACTOR는 leaf(`implementation_agent`)가 담당한다. orchestrator는 per-task TDD 절차를 복제하지 않는다.
+2. **TDD는 leaf가 수행**: 각 task의 RED→GREEN→REFACTOR는 leaf(`implementation-agent`)가 담당한다. orchestrator는 per-task TDD 절차를 복제하지 않는다.
 3. **파일 경계 준수**: leaf는 할당된 Target Files만 생성/수정/삭제한다. 그 외 파일은 읽기 전용이며, leaf가 `UNPLANNED_DEPENDENCY`로 보고하면 orchestrator가 유효성을 판단해 처리한다.
 4. **Verification Gate**: "should work" 금지. post-group 검증에서 테스트를 실제 재실행하고 출력을 근거로 제시한다. 이전 실행 결과 재사용 금지. `_sdd/env.md` 미존재 시 코드 분석 기반 검증을 허용하되, 리포트에 `UNTESTED` 표기.
 5. **Regression Iron Rule**: 기존 테스트 실패 시 (1) 테스트 업데이트 + (2) 회귀 방지 테스트 추가를 사용자 확인 없이 자동 수행한다.
@@ -128,7 +128,7 @@ function deriveGroups(unblockedTasks):   # 모두 같은 phase
 For each phase:
   1. Unblocked 태스크에서 그룹 파생 (Step 3)
   2. For each group:
-     a. 그룹 내 task마다 implementation_agent leaf를 spawn
+     a. 그룹 내 task마다 implementation-agent leaf를 spawn
      b. wait_agent로 전원 완료 수거
      c. 각 leaf 결과 기록 후 close_agent로 완료 handle 정리
      d. Post-group 통합·검증 (Step 5)
@@ -140,7 +140,7 @@ For each phase:
 
 그룹 내 task마다 leaf를 dispatch한다:
 
-- `spawn_agent(agent_type="implementation_agent", prompt=<leaf 입력>)`로 그룹 내 task를 동시 spawn하고, `wait_agent`로 결과를 수거한 뒤 각 완료 leaf를 `close_agent`로 닫는다.
+- `spawn_agent(agent_type="implementation-agent", prompt=<leaf 입력>)`로 그룹 내 task를 동시 spawn하고, `wait_agent`로 결과를 수거한 뒤 각 완료 leaf를 `close_agent`로 닫는다.
 
 leaf 입력(프롬프트)에 다음 4종을 전달한다 (leaf는 재탐색하지 않음):
 
@@ -179,7 +179,7 @@ leaf는 단일 task를 TDD로 구현하고 구조화된 결과(SUCCESS/PARTIAL/F
 
 ### Step 6: Phase Review-Fix Gate (외부 reviewer loop)
 
-Phase 내 모든 태스크 완료 후, orchestrator는 **외부 `implementation_review_agent` review→fix→re-review loop**를 닫는다. 인라인 경량 self-review를 대체한다 — orchestrator가 직접 품질을 판정하지 않고 독립 reviewer agent를 spawn한다.
+Phase 내 모든 태스크 완료 후, orchestrator는 **외부 `implementation-review-agent` review→fix→re-review loop**를 닫는다. 인라인 경량 self-review를 대체한다 — orchestrator가 직접 품질을 판정하지 않고 독립 reviewer agent를 spawn한다.
 
 **loop scope**: **실행분(phase) 단위 1 gate**. 각 phase 완료 직후 1회 닫고 다음 phase로 진행한다. autopilot의 global/per-group·Checkpoint 메타 개념은 도입하지 않는다(직접 호출 경로엔 Checkpoint 신호를 줄 상위 오케스트레이터가 없음). multi-phase plan이면 phase마다 1회씩 닫힌다.
 
@@ -193,9 +193,9 @@ Phase 내 모든 태스크 완료 후, orchestrator는 **외부 `implementation_
 
 **단계**:
 
-1. **review**: `spawn_agent(agent_type="implementation_review_agent", ...)`로 이 phase 범위의 변경 파일 전체 + 테스트 결과를 전달하고 `wait_agent`로 severity별 finding을 수거한 뒤 reviewer handle을 `close_agent`로 닫는다.
-2. **fix**: critical/high/medium finding이 있으면, finding을 **하나씩 순차** fix-task로 변환해 `spawn_agent(agent_type="implementation_agent", ...)` leaf를 재spawn하고 `wait_agent`로 수거한 뒤 완료 leaf handle을 `close_agent`로 닫는다(finding 영향 파일 = Target Files). `implementation_agent`는 fix mode 별도 계약 없이 finding을 task로 받아 기존 TDD 계약으로 처리한다(I3 — leaf는 단일 task 실행자라 finding이 곧 task).
-3. **re-review**: fix 후 loop 범위 전체를 `implementation_review_agent`로 재리뷰한다.
+1. **review**: `spawn_agent(agent_type="implementation-review-agent", ...)`로 이 phase 범위의 변경 파일 전체 + 테스트 결과를 전달하고 `wait_agent`로 severity별 finding을 수거한 뒤 reviewer handle을 `close_agent`로 닫는다.
+2. **fix**: critical/high/medium finding이 있으면, finding을 **하나씩 순차** fix-task로 변환해 `spawn_agent(agent_type="implementation-agent", ...)` leaf를 재spawn하고 `wait_agent`로 수거한 뒤 완료 leaf handle을 `close_agent`로 닫는다(finding 영향 파일 = Target Files). `implementation-agent`는 fix mode 별도 계약 없이 finding을 task로 받아 기존 TDD 계약으로 처리한다(I3 — leaf는 단일 task 실행자라 finding이 곧 task).
+3. **re-review**: fix 후 loop 범위 전체를 `implementation-review-agent`로 재리뷰한다.
 4. exit 조건 충족 또는 MAX 도달까지 1~3을 반복한다. MAX 도달 시 분기 정책 적용.
 
 Speculative Code(AC 외 옵션·설정·추상화·도달 불가 에러 처리)는 reviewer가 finding으로 분류하며, 실제 버그·보안 영향 시 Critical로 escalate된다.
@@ -246,4 +246,4 @@ Phase Review 종료 시, 그 phase에서 발생한 다음 이벤트를 채팅으
 
 Acceptance Criteria가 모두 만족되었나 검증한다. 미충족 항목이 있으면 해당 단계로 돌아가 수정한다.
 
-> **Role Pointer**: 이 스킬은 orchestrator다. 단일 task TDD를 수행하는 leaf는 `.codex/agents/implementation-agent.toml`(agent_type `implementation_agent`)다. 더 이상 leaf와 동일 계약을 mirror하지 않는다 (orchestrator↔leaf 관계) — 변경 시 함께 수정할 동기화 의무 없음.
+> **Role Pointer**: 이 스킬은 orchestrator다. 단일 task TDD를 수행하는 leaf는 `.codex/agents/implementation-agent.toml`(agent_type `implementation-agent`)다. 더 이상 leaf와 동일 계약을 mirror하지 않는다 (orchestrator↔leaf 관계) — 변경 시 함께 수정할 동기화 의무 없음.
