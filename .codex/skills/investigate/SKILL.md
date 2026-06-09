@@ -10,6 +10,18 @@ version: 4.0.0
 
 > ralph-loop-init과 차별화: investigate는 범용/단발 디버깅, ralph-loop-init은 장시간 반복 프로세스 전용.
 
+## Codex Runtime Adapter
+
+이 스킬의 직접 호출은 Step 2의 조건부 `explorer` dispatch에 대한 사용자 명시 허가로 간주한다. 단, AC5에 따라 탐색이 넓고·모호할 때만 fan-out한다. dispatch 전에 `spawn_agent`, `wait_agent`, `close_agent`가 active tools에 없으면 `tool_search` query `spawn_agent wait_agent close_agent multi-agent sub-agent`로 multi-agent tools를 먼저 로드한다.
+
+실제 Codex 호출은 `prompt`가 아니라 `message`를 사용한다:
+
+```text
+spawn_agent({agent_type: "explorer", message: "<구체적 read-only 탐색 질문>"})
+wait_agent({targets: ["<agent_id>"], timeout_ms: 600000})
+close_agent({target: "<agent_id>"})
+```
+
 ## Acceptance Criteria
 
 > 프로세스 완료 후 아래 기준을 자체 검증한다. 미충족 항목은 해당 단계로 돌아가 수정한다.
@@ -42,7 +54,7 @@ version: 4.0.0
 
 기본은 **인라인 순차 증거 수집**이다: 에러 메시지·스택 트레이스·관련 코드 경로·최근 변경(`git log`/`git diff`)·관련 테스트를 수집하고 가설을 세운다.
 
-**넓고·모호할 때만**(경쟁 가설이 여럿 / 출처가 불분명 / 탐색 범위가 큼) read-only explore 역할을 **병렬 spawn**한다: `spawn_agent(agent_type="explorer", ...)`를 여러 개 띄우고 `wait_agent`로 결과를 수거한다. final status가 온 explorer는 핵심 사실을 기록한 직후 `close_agent(target=<agent_id>)`로 닫아 병렬 slot을 반납한다. lane은 케이스에 맞게 선택한다 (리지드 분기 없음):
+**넓고·모호할 때만**(경쟁 가설이 여럿 / 출처가 불분명 / 탐색 범위가 큼) read-only explore 역할을 **병렬 spawn**한다: `spawn_agent({agent_type: "explorer", message: <구체적 read-only 탐색 질문>})`를 여러 개 띄우고 `wait_agent`로 결과를 수거한다. final status가 온 explorer는 핵심 사실을 기록한 직후 `close_agent({target: <agent_id>})`로 닫아 병렬 slot을 반납한다. lane은 케이스에 맞게 선택한다 (리지드 분기 없음):
 
 - **가설-lane** (anti-anchoring): 경쟁 가설을 lane별로 분리해 각 explorer가 독립적으로 한 가설을 검증 + 가설 없는 독립 탐지 lane 1개를 둬 앵커링 바이어스를 막는다.
 - **영역-lane** (broad sweep): 코드 영역·증거 출처(에러 경로 / 최근 변경 / 의존·설정 / 테스트)별로 explorer가 동시 sweep한다.
@@ -80,4 +92,4 @@ version: 4.0.0
 
 Acceptance Criteria가 모두 만족되었나 검증한다. 미충족 항목이 있으면 해당 단계로 돌아가 수정한다.
 
-> **Role Pointer**: 이 스킬은 메인 루프 orchestrator다. 탐색 fan-out 단위는 빌트인 범용 read-only `explorer` 역할(`spawn_agent(agent_type="explorer")`)을 재사용하며 별도 custom leaf agent를 두지 않는다. (구 `investigate_agent`는 제거됨 — 전체 디버깅 계약을 이 skill이 인라인 소유한다.)
+> **Role Pointer**: 이 스킬은 메인 루프 orchestrator다. 탐색 fan-out 단위는 빌트인 범용 read-only `explorer` 역할(`spawn_agent({agent_type: "explorer", message: ...})`)을 재사용하며 별도 custom leaf agent를 두지 않는다. (구 `investigate_agent`는 제거됨 — 전체 디버깅 계약을 이 skill이 인라인 소유한다.)

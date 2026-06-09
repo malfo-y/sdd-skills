@@ -8,13 +8,26 @@ version: 3.1.0
 
 이 스킬은 **orchestrator**다. 메인 루프에서 실행되어 fan-out이 가능하다. task-set을 확보하고(plan 파싱 또는 plan 없으면 경량 분해), dependency 기반으로 병렬 그룹을 파생해 **`implementation-agent` leaf를 task당 spawn**하며, 통합·회귀·phase review·report를 소유한다. 각 task의 TDD(RED→GREEN→REFACTOR)는 leaf가 수행한다. 병렬화는 최적화 토글일 뿐 — 불가하면 동일 흐름으로 순차 실행한다.
 
+## Codex Runtime Adapter
+
+이 스킬의 직접 호출은 이 스킬 내부의 `implementation-agent` / `implementation-review-agent` dispatch에 대한 사용자 명시 허가로 간주한다. dispatch 전에 `spawn_agent`, `wait_agent`, `close_agent`가 active tools에 없으면 `tool_search` query `spawn_agent wait_agent close_agent multi-agent sub-agent`로 multi-agent tools를 먼저 로드한다.
+
+실제 Codex 호출은 `prompt`가 아니라 `message`를 사용한다:
+
+```text
+spawn_agent({agent_type: "implementation-agent", message: "<leaf 입력>"})
+spawn_agent({agent_type: "implementation-review-agent", message: "<phase 범위 + 변경 파일 + 테스트 결과>"})
+wait_agent({targets: ["<agent_id>"], timeout_ms: 600000})
+close_agent({target: "<agent_id>"})
+```
+
 ## Acceptance Criteria
 
 > 프로세스 완료 후 아래 기준을 자체 검증한다. 미충족 항목은 해당 단계로 돌아가 수정한다.
 
 - [ ] AC1: task-set을 확보한다 — plan 파싱(있을 때) 또는 plan 없으면 요청을 task로 경량 분해
 - [ ] AC2: dependency 기반 병렬 그룹 파생("같은 phase + dependency edge 없음 + Target Files disjoint → 병렬") + file-disjoint 가드레일 + 순차 fallback
-- [ ] AC3: 그룹 내 task마다 `implementation-agent` leaf를 spawn하고 leaf 입력 4종(task 필드 + Target Files + 환경/테스트 + 선행 보장)을 전달하며, final status 수거 직후 `close_agent`로 handle을 반납
+- [ ] AC3: 그룹 내 task마다 `implementation-agent` leaf를 spawn하고 leaf 입력 4종(task 필드 + Target Files + 환경/테스트 + 선행 보장)을 전달하며, final status 수거 직후 `close_agent({target: <agent_id>})`로 handle을 반납
 - [ ] AC4: post-group 통합·회귀·phase review를 orchestrator가 수행하고 leaf 출력(UNPLANNED_DEPENDENCY 등)을 처리
 - [ ] AC5: `_sdd/implementation/<YYYY-MM-DD>_implementation_report_<slug>.md` 및 progress artifact를 canonical 경로·필드로 생성(orchestrator 소유)
 - [ ] AC6: leaf 출력이 AC 외 추가 코드(옵션·설정·추상화·에러 처리)를 포함하지 않으며, 발견 시 Phase Review에서 Quality 또는 Critical로 분류 (Minimum-Code Mandate)
@@ -29,7 +42,7 @@ version: 3.1.0
 5. **Regression Iron Rule**: 기존 테스트 실패 시 (1) 테스트 업데이트 + (2) 회귀 방지 테스트 추가를 사용자 확인 없이 자동 수행한다.
 6. **Artifact Naming Transition**: 결과 파일은 lowercase canonical 경로에 저장하고, transition 기간에는 plan/progress/report의 legacy uppercase 경로를 입력 fallback으로 허용한다.
 7. **Minimum-Code Mandate**: leaf와 후속 검증은 AC가 요구하는 동작만 구현·검증한다. 요청되지 않은 옵션·설정·추상화·에러 처리 추가 금지. 사변적 형용사("future-proof / extensible / configurable")는 task의 Technical Notes에 근거가 명시될 때만 허용. **REFACTOR 단계도 단일 사용처 추상화 도입은 금지한다.**
-8. **Agent lifecycle 정리**: `spawn_agent(...)`로 만든 leaf/reviewer는 `wait_agent(...)`가 final status를 반환한 직후 결과를 progress/report에 기록하고 `close_agent(target=<agent_id>)`로 닫는다. group 단위 fan-out에서는 완료된 handle을 모두 닫은 뒤 다음 group을 spawn한다. `wait_agent` timeout은 수거 완료가 아니므로 더 기다리거나 controlled stop을 기록한 뒤에만 닫는다.
+8. **Agent lifecycle 정리**: `spawn_agent({agent_type: ..., message: ...})`로 만든 leaf/reviewer는 `wait_agent(...)`가 final status를 반환한 직후 결과를 progress/report에 기록하고 `close_agent({target: <agent_id>})`로 닫는다. group 단위 fan-out에서는 완료된 handle을 모두 닫은 뒤 다음 group을 spawn한다. `wait_agent` timeout은 수거 완료가 아니므로 더 기다리거나 controlled stop을 기록한 뒤에만 닫는다.
 
 ### Target Files 규격
 
@@ -130,7 +143,7 @@ For each phase:
   2. For each group:
      a. 그룹 내 task마다 implementation-agent leaf를 spawn
      b. wait_agent로 전원 완료 수거
-     c. 각 leaf 결과 기록 후 close_agent로 완료 handle 정리
+     c. 각 leaf 결과 기록 후 `close_agent({target: <agent_id>})`로 완료 handle 정리
      d. Post-group 통합·검증 (Step 5)
      e. 실패/Unplanned Dependency 처리
   3. 전체 그룹 완료 → Phase Review (Step 6)
@@ -140,7 +153,7 @@ For each phase:
 
 그룹 내 task마다 leaf를 dispatch한다:
 
-- `spawn_agent(agent_type="implementation-agent", prompt=<leaf 입력>)`로 그룹 내 task를 동시 spawn하고, `wait_agent`로 결과를 수거한 뒤 각 완료 leaf를 `close_agent`로 닫는다.
+- `spawn_agent({agent_type: "implementation-agent", message: <leaf 입력>})`로 그룹 내 task를 동시 spawn하고, `wait_agent`로 결과를 수거한 뒤 각 완료 leaf를 `close_agent({target: <agent_id>})`로 닫는다.
 
 leaf 입력(프롬프트)에 다음 4종을 전달한다 (leaf는 재탐색하지 않음):
 
@@ -193,8 +206,8 @@ Phase 내 모든 태스크 완료 후, orchestrator는 **외부 `implementation-
 
 **단계**:
 
-1. **review**: `spawn_agent(agent_type="implementation-review-agent", ...)`로 이 phase 범위의 변경 파일 전체 + 테스트 결과를 전달하고 `wait_agent`로 severity별 finding을 수거한 뒤 reviewer handle을 `close_agent`로 닫는다.
-2. **fix**: critical/high/medium finding이 있으면, finding을 **하나씩 순차** fix-task로 변환해 `spawn_agent(agent_type="implementation-agent", ...)` leaf를 재spawn하고 `wait_agent`로 수거한 뒤 완료 leaf handle을 `close_agent`로 닫는다(finding 영향 파일 = Target Files). `implementation-agent`는 fix mode 별도 계약 없이 finding을 task로 받아 기존 TDD 계약으로 처리한다(I3 — leaf는 단일 task 실행자라 finding이 곧 task).
+1. **review**: `spawn_agent({agent_type: "implementation-review-agent", message: <phase 범위 변경 파일 전체 + 테스트 결과>})`로 이 phase 범위의 변경 파일 전체 + 테스트 결과를 전달하고 `wait_agent`로 severity별 finding을 수거한 뒤 reviewer handle을 `close_agent({target: <agent_id>})`로 닫는다.
+2. **fix**: critical/high/medium finding이 있으면, finding을 **하나씩 순차** fix-task로 변환해 `spawn_agent({agent_type: "implementation-agent", message: <fix-task 입력>})` leaf를 재spawn하고 `wait_agent`로 수거한 뒤 완료 leaf handle을 `close_agent({target: <agent_id>})`로 닫는다(finding 영향 파일 = Target Files). `implementation-agent`는 fix mode 별도 계약 없이 finding을 task로 받아 기존 TDD 계약으로 처리한다(I3 — leaf는 단일 task 실행자라 finding이 곧 task).
 3. **re-review**: fix 후 loop 범위 전체를 `implementation-review-agent`로 재리뷰한다.
 4. exit 조건 충족 또는 MAX 도달까지 1~3을 반복한다. MAX 도달 시 분기 정책 적용.
 

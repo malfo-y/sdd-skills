@@ -129,7 +129,7 @@ summary 기본 순서:
 | code grounding 근거가 약함 | summary 본문을 확장하기 전에 concrete path 또는 source table anchor를 먼저 확보한다 |
 | 구현 문서 없음 | whitepaper 본문만 작성하고 appendix는 생략한다 |
 | README 요청이 없는데 README 관련 문서만 있음 | README는 수정하지 않음 |
-| 문서가 너무 큼 | caller가 skeleton을 먼저 저장한 뒤 같은 흐름에서 fill 또는 bounded fan-out. helper agent를 썼다면 `wait_agent` final status 수거 후 결과를 반영하고 `close_agent(target=<agent_id>)`로 닫음 |
+| 문서가 너무 큼 | caller가 skeleton을 먼저 저장한 뒤 같은 흐름에서 fill 또는 bounded fan-out. helper agent를 썼다면 필요한 경우 먼저 `tool_search` query `spawn_agent wait_agent close_agent multi-agent sub-agent`로 multi-agent tools를 로드하고, `spawn_agent({agent_type: "worker", message: ...})`로 dispatch한 뒤 `wait_agent` final status 수거 후 결과를 반영하고 `close_agent({target: <agent_id>})`로 닫음 |
 
 ## Final Check
 

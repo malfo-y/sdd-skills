@@ -29,4 +29,4 @@
 - override는 사용자 요청이 있을 때만 사용한다.
 - 기본값에서 벗어날 때만 오케스트레이터에 명시한다.
 - `final_integration_review_profile`은 실제 final integration review가 있을 때만 유효하다.
-- 프로파일 변경이 필요하면 기존 agent를 재사용하지 말고 새로 `spawn_agent(...)` 한다.
+- 프로파일 변경이 필요하면 기존 agent를 재사용하지 말고 새로 `spawn_agent({agent_type: ..., message: ...})` 한다.

@@ -8,6 +8,18 @@ version: 3.0.0
 
 별도 writing helper agent를 spawn하지 않는다. 호출자가 현재 콘텍스트에서 먼저 skeleton/outline/TODO marker를 파일에 기록하고, 같은 흐름에서 내용을 채우고 finalize한다.
 
+## Codex Runtime Adapter
+
+이 스킬은 기본적으로 helper agent 없이 인라인 작성한다. 독립 섹션 때문에 bounded helper가 필요할 때는 이 스킬의 직접 호출을 `default` / `worker` helper dispatch에 대한 사용자 명시 허가로 간주한다. dispatch 전에 `spawn_agent`, `wait_agent`, `close_agent`가 active tools에 없으면 `tool_search` query `spawn_agent wait_agent close_agent multi-agent sub-agent`로 multi-agent tools를 먼저 로드한다.
+
+실제 Codex 호출은 `prompt`가 아니라 `message`를 사용한다:
+
+```text
+spawn_agent({agent_type: "worker", message: "<대상 파일 + 섹션 책임 + 유지할 skeleton>"})
+wait_agent({targets: ["<agent_id>"], timeout_ms: 600000})
+close_agent({target: "<agent_id>"})
+```
+
 ## Acceptance Criteria
 
 > 프로세스 완료 후 아래 기준을 자체 검증한다. 미충족 항목은 해당 단계로 돌아가 수정한다.
@@ -48,7 +60,7 @@ helper를 쓰는 경우에도 최소한 아래를 넘긴다.
 - 대상 파일 경로
 - 채워야 할 섹션 또는 책임 범위
 - 유지해야 할 skeleton 구조
-- helper agent를 spawn했다면 `wait_agent` final status 수거 후 결과를 반영하고 즉시 `close_agent(target=<agent_id>)`로 닫는다.
+- helper agent를 spawn했다면 `wait_agent` final status 수거 후 결과를 반영하고 즉시 `close_agent({target: <agent_id>})`로 닫는다.
 - 언어/톤/출력 형식
 - placeholder를 실제 내용으로 치환하라는 지시
 
