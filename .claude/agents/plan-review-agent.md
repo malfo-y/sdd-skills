@@ -152,10 +152,12 @@ stale 판단 예시:
 ...
 
 ## 2. Smell Checklist
+> 섹션 1 finding으로 이미 기록된 항목은 `Evidence / Reference`에 finding 참조만 적는다 (재진술 금지). finding 없는 PASS/WARN만 근거 1줄.
 | Smell | Status | Evidence / Reference | Notes |
 |-------|--------|----------------------|-------|
 
 ## 3. Decision and Assumption Review
+> 섹션 1 finding으로 승격된 decision은 status + finding 참조만 적고 재진술하지 않는다.
 | Decision / Assumption | Status | Evidence / Reference | Notes |
 |-----------------------|--------|----------------------|-------|
 
@@ -218,7 +220,7 @@ Tier 3에서는 이 섹션을 input-readiness 중심으로 작성한다. plan이
 - `FAIL`: Critical/High blocker 가능
 - `UNKNOWN`: 근거 부족. Tier limitation에 기록
 
-각 smell row는 `Evidence / Reference`를 포함해야 한다. `PASS`, `WARN`, `FAIL`은 plan section/task/Target Files/AC/C-I-V 중 최소 하나를 근거로 둔다. `UNKNOWN`은 limitation 근거를 적는다.
+각 smell row는 `Status`를 가진다. **이미 섹션 1 finding으로 기록된 smell은 `Evidence / Reference`에 finding 참조(예: "Critical #1")만 적고 evidence를 재진술하지 않는다.** finding으로 승격되지 않은 `PASS`/`WARN`만 plan section/task/Target Files/AC/C-I-V 중 최소 하나를 근거로 1줄 둔다. `UNKNOWN`은 limitation 근거를 적는다.
 
 Tier 3에서는 6-smell checklist를 정상 PASS/FAIL로 채우지 않는다. plan 없음 또는 stale 때문에 리뷰할 수 없는 항목은 `UNKNOWN`으로 두고 input-readiness limitation을 기록한다.
 

@@ -20,7 +20,7 @@ Part 1은 canonical temporary spec 7섹션을 직접 담고, Part 2는 그 delta
 - [ ] Part 1의 `Contract/Invariant Delta`와 `Validation Plan`이 ID 기반으로 연결된다.
 - [ ] Part 2의 모든 task가 `**Target Files**`를 가진다.
 - [ ] `Strategic Code Map` 또는 supporting surface가 있으면 context로 읽었고, `Touchpoints`와 `Target Files`는 현재 코드 기준으로 재검증했다.
-- [ ] Part 2는 Self-Contained Authoring (Hard Rule 11)을 따르며, Pass 1 + Pass 2 검증 결과(갭 위치와 보완 내용)가 Part 2 말미에 기록된다.
+- [ ] Part 2는 Self-Contained Authoring (Hard Rule 11)을 따른다. Pass 1 + Pass 2 검증은 수행하되 검증 흔적은 산출물에 남기지 않는다 (보완 불가능한 잔여 갭이 있을 때만 1줄).
 - [ ] `Risks / Open Questions`의 각 항목이 Decision / Alternatives / Confidence / User confirmation needed 스키마를 따른다 (Hard Rule 4).
 - [ ] Part 2의 어느 task도 요청되지 않은 추상화·옵션·설정 가능성·에러 처리를 포함하지 않는다 (Hard Rule 12).
 
@@ -37,8 +37,9 @@ Part 1은 canonical temporary spec 7섹션을 직접 담고, Part 2는 그 delta
 9. `Target Files`에서 경로를 확정할 수 없으면 `[TBD] <reason>`를 사용한다.
 10. Part 1과 Part 2는 같은 delta 범위를 다뤄야 하며, validation linkage를 잃으면 안 된다.
 11. **Self-Contained Authoring (Part 2 대상)**: Part 2는 작성 대화·외부 문서 없이 reader 단독으로 의도·근거·참조를 따라갈 수 있어야 한다.
-    - 결정·가정·외부 참조·고유 용어를 모두 inline grounding 한다 (외부 결정도 재진술+출처, bare path / 대명사적 지시 금지, 용어 최초 사용 시 1줄 정의). Part 1↔Part 2 참조는 `ID + inline purpose` (예: "Contract C3 반영 — 세션 토큰 HMAC 검증")로 충족하며 Part 1 자체는 적용 대상이 아니다 (`spec-update-todo`로 canonical spec에 머지되므로).
-    - 검증: Pass 1 (외부 참조의 inline purpose 동반 확인) + Pass 2 (생초 독자 readthrough). 결과를 Part 2 말미에 (검토 섹션 수 / 발견 갭 위치+보완 / 보완 완료 Yes/No)로 기록. 공허한 "갭: 0" 금지.
+    - **외부**(작성 대화·타 문서) 결정·가정·참조·고유 용어는 inline grounding 한다 (재진술+출처, bare path / 대명사적 지시 금지). Part 1↔Part 2 참조는 `ID + inline purpose` (예: "Contract C3 반영 — 세션 토큰 HMAC 검증")로 충족하며 Part 1 자체는 적용 대상이 아니다 (`spec-update-todo`로 canonical spec에 머지되므로).
+    - **같은 산출물 안에서 재진술 금지**: 한 draft 안에서 이미 정의·설명된 용어·결정·내용은 다시 풀어쓰지 않고 섹션/ID 참조로 갈음한다. 용어 정의는 문서 전체에서 1회, Part 1에서 설명한 것을 Part 2에서 재서술하지 않으며, Part 2 Open Questions는 Part 1 항목을 재진술하지 않고 실행을 차단하는 것만 ID로 가리킨다.
+    - 검증: Pass 1 (외부 참조의 inline purpose 동반 확인) + Pass 2 (생초 독자 readthrough)를 **수행한다**. 검증 과정·갭 목록·"보완 완료" 흔적은 산출물에 기록하지 않는다 (보완 불가능한 잔여 갭만 1줄 명시).
 12. **Minimum-Code Mandate (Part 2 대상)**: Part 2 task의 description과 acceptance criteria는 요청된 동작을 만드는 데 필요한 최소 코드만 명세한다.
     - 요청되지 않은 기능·옵션·설정 가능성 추가 금지.
     - 한 곳에서만 쓰이는 코드에 추상화 도입 금지.
@@ -226,7 +227,7 @@ Part 2 작성 후 Hard Rule 12 self-check를 수행한다:
 
 위반 항목이 있으면 해당 task로 돌아가 수정한다.
 
-이어서 Hard Rule 11 검증 (Pass 1 + Pass 2)을 수행하고 Part 2 말미에 흔적을 기록한다.
+이어서 Hard Rule 11 검증 (Pass 1 + Pass 2)을 수행한다. Hard Rule 11·12 검증은 모두 수행하되, 그 흔적(검토 섹션 수·갭 목록·self-check 결과·"보완 완료" 표기)은 산출물에 남기지 않는다 — 보완 불가능한 잔여 갭이 있을 때만 1줄로 명시한다.
 
 ### Step 7: Review and Save
 
