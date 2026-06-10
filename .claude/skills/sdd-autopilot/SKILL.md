@@ -1,7 +1,7 @@
 ---
 name: sdd-autopilot
 description: "적응형 오케스트레이터 메타스킬. /sdd-autopilot으로 호출하여 요구사항 분석부터 스펙 동기화까지 end-to-end SDD 파이프라인을 자율 실행한다."
-version: 2.3.6
+version: 2.3.7
 ---
 
 # SDD Autopilot
@@ -91,14 +91,12 @@ autopilot 호출 시 기존 파이프라인 상태를 확인한다.
 
 - `references/sdd-reasoning-reference.md`
 - `references/orchestrator-contract.md`
-- `references/execution-profile-policy.md`
 - `examples/sample-orchestrator.md`
 
 내재화 대상:
 - SDD 원칙 3개
 - 스킬 의존성 그래프
 - 파이프라인 구성 가이드라인
-- step별 execution profile 고정 기본값과 override 규칙
 - 테스트 전략 판단 기준
 - review-fix 및 final report 규칙
 
@@ -178,7 +176,6 @@ planning precedence 메모:
 - Implementation Dispatch Controller: `sdd-skills:implementation-agent`는 단일 task leaf다(`references/orchestrator-contract.md` §2 Implementation Dispatch Controller). 따라서 `implementation` step은 phase를 한 agent에 통째로 넘기지 않고, autopilot이 phase의 task를 **병렬 dispatch 그룹**으로 파생해 task당 leaf를 dispatch한다(초기 구현=group 병렬, fix=finding 순차). 이 phase-내부 병렬 dispatch 그룹은 review-fix gate의 Checkpoint 리뷰 그룹과 다른 중첩 개념이며, progress/report는 autopilot이 canonical 경로로 소유한다.
 - `sdd-skills:implementation-agent` dispatch controller semantics는 generic subagent dispatch 규칙보다 우선한다. 오케스트레이터는 이 special case가 runtime에 task-level leaf dispatch로 해석된다는 점을 명시해야 한다.
 - canonical `sdd-skills:<agent>-agent` 이름만 허용한다. 최종 `-agent` suffix가 빠진 `sdd-skills:` invocation alias를 발견하면 canonical 이름으로 normalize하지 않고 해당 오케스트레이터를 reject/regenerate한다.
-- 각 subagent step과 review-fix gate `agent_mapping`에는 `references/orchestrator-contract.md`의 Model Routing 표에 따라 `Model:`(또는 `(model: ...)`)을 명시한다. `implementation-agent` 호출(fix 포함)은 `sonnet`, `implementation-review-agent` 호출(review/re-review/final integration review)은 `opus`로 분리해서 표기한다.
 - Reasoning Trace 3-6 bullet 간결 작성
 - 저장 경로: `_sdd/pipeline/orchestrators/orchestrator_<topic>.md`
 
@@ -207,7 +204,6 @@ Producer-Reviewer 패턴으로 검증한다.
 - `Execution Mode: phase-iterative` path면 per-group gate semantics(`Checkpoint` boundary)와 `final integration review` adaptive 처리가 해석 가능한가
 - phase-iterative path의 `Phase Source`가 `implementation-plan` output인가 (`feature-draft` 산출물 금지). 위반 시 reject하고 `feature-draft` step 직후에 `sdd-skills:implementation-plan-agent` step 삽입.
 - review 포함 path에서 `sdd-skills:implementation-agent`/`sdd-skills:implementation-review-agent`가 subagent step으로만 매핑되는가
-- 각 subagent step과 review-fix gate `agent_mapping`에 `references/orchestrator-contract.md` Model Routing 표와 일치하는 `Model:`/`(model: ...)` 표기가 있는가 (특히 `implementation-agent`는 `sonnet`, `implementation-review-agent`는 `opus`)
 - test strategy 존재
 - error handling 존재
 - Low advisory policy 존재. `low` finding은 advisory/logged follow-up이며 critical/high/medium exit condition을 통과한 gate를 막지 않는가
@@ -265,7 +261,6 @@ Phase 2 진입 후 `request_user_input`은 호출하지 않는다. 마일스톤 
 - 오케스트레이터에 적힌 출력 파일은 현재 step이 실제로 생성한 materialized output과 future step의 planned output을 구분해 해석한다. 각 step은 자신의 선언된 출력만 materialize하며, 아직 실행되지 않은 downstream step의 planned output을 미리 생성하지 않는다.
 - review 포함 path에서는 `sdd-skills:implementation-agent`/`sdd-skills:implementation-review-agent`를 항상 subagent 호출로 실행한다. 부모 autopilot이 local implementation/review로 대체하지 않는다.
 - `sdd-skills:implementation-agent` step은 generic single subagent call이 아니라 Implementation Dispatch Controller로 우선 해석한다. autopilot이 phase/task metadata를 읽고 task당 leaf를 dispatch한다.
-- 각 subagent 호출 시점에 오케스트레이터의 `Model:` (또는 review-fix gate `agent_mapping`의 `(model: ...)`) 표기를 그대로 `Agent(model=...)` 파라미터로 전달한다. 표기가 누락된 경우 `references/orchestrator-contract.md` Model Routing 표 기본값(`implementation-agent` -> `sonnet`, `implementation-review-agent` -> `opus` 등)을 적용한다.
 - `implementation` step은 단독 완료가 아니다. 같은 범위의 `Review-Fix Loop` exit condition과 required validation이 닫혀야만 해당 step을 `completed`로 기록할 수 있다.
 - single-phase path이거나 `Review-Fix Loop.scope = global`이면 `implementation` step 직후 즉시 global review-fix loop를 수행한다. 이 gate가 닫히기 전에는 `spec-update-done`을 포함한 다음 downstream step으로 진행할 수 없다.
 - `sdd-skills:implementation-plan-agent` output을 downstream `implementation`이 소비하고 해당 step이 `Execution Mode: phase-iterative`로 선언되어 있으면, autopilot은 `Phase Source`를 읽어 phase count와 boundary를 runtime-resolved metadata로 해석한다. Step 4가 추측한 flat phase list로 실행하지 않는다.

@@ -13,15 +13,6 @@
 7. Test Strategy
 8. Error Handling
 
-선택 섹션:
-
-- `Execution Profiles`
-  - step별 `model` 기본값 또는 profile key를 선언할 수 있다.
-  - 이 섹션을 사용할 때는 `references/execution-profile-policy.md`와 정합해야 한다.
-  - 모든 step과 review-fix loop가 policy 기본값을 그대로 따를 때는 생략할 수 있다.
-  - 이 섹션은 기본값 레이어다. step-level 또는 loop-level 프로파일이 있으면 더 좁은 범위의 선언이 우선한다.
-  - 기본 policy에서 벗어나는 선언은 사용자 요청이 있을 때만 허용한다.
-
 ### Generation Boundary
 
 - autopilot의 orchestrator generation 단계에서 실제로 생성 가능한 산출물은 `_sdd/pipeline/orchestrators/orchestrator_<topic>.md` 하나뿐이다.
@@ -95,32 +86,6 @@ planning producer step은 `sdd-skills:feature-draft-agent`와 `sdd-skills:implem
 - `sdd-skills:implementation-plan-agent` 직후 `sdd-skills:plan-review-agent`를 호출해 `Contract/Invariant Delta Coverage`, task/Target Files, dependency/checkpoint/carry-over 필드, downstream implementation controller 입력 적합성을 검증한다.
 - gate가 fail이면 producer output을 소비하지 않는다. autopilot은 같은 producer step을 regenerate하도록 요구하고, review finding을 normalize해서 통과 처리하면 안 된다.
 - gate는 canonical `subagent_type` 정책도 검증한다. legacy alias가 발견되면 reject/regenerate 대상이다.
-
-### Model Routing
-
-각 subagent 호출 시 아래 모델을 `model` 파라미터로 명시한다. 에이전트 정의 파일의 프론트매터는 `model: inherit`이므로 부모(autopilot)가 호출 시점에 전달한 `model` 값이 그대로 사용된다. 오케스트레이터는 step별로 모델을 명시해 이 표를 그대로 집행한다.
-
-| subagent_type          | model    | 근거                              |
-|------------------------|----------|-----------------------------------|
-| `feature-draft-agent`        | `opus`   | 설계 판단, 스펙 구조화             |
-| `implementation-plan-agent`  | `opus`   | 의존성 분석, 실행 순서 설계         |
-| `plan-review-agent`          | `opus`   | planning producer gate 검증        |
-| `implementation-agent`       | `sonnet` | 코드 작성·반복 적용 (효율 최적화)   |
-| `implementation-review-agent`| `opus`   | 구현 깊이 분석, 결함 발견           |
-| `ralph-loop-init-agent`      | `opus`   | 테스트 전략 설계, 고수준 판단       |
-| `spec-update-todo-agent`     | `sonnet` | diff 기반 스펙 반영                |
-| `spec-update-done-agent`     | `sonnet` | diff 기반 스펙 반영                |
-| `spec-review-agent`          | `sonnet` | 스펙 간 비교 분석                  |
-
-#### Review-Fix Gate Model Assignment
-
-review-fix gate(single-phase global, multi-phase per-group, final integration review 모두 포함)에서는 호출 역할마다 모델을 분리해서 명시한다.
-
-- `review` / `re-review` -> `sdd-skills:implementation-review-agent` (`opus`)
-- `fix` -> `sdd-skills:implementation-agent` (`sonnet`)
-- `final integration review` -> `sdd-skills:implementation-review-agent` (`opus`)
-
-오케스트레이터의 `agent_mapping`은 모델을 함께 표기한다. 예: `review = sdd-skills:implementation-review-agent (model: opus)`, `fix = sdd-skills:implementation-agent (model: sonnet)`, `re-review = sdd-skills:implementation-review-agent (model: opus)`. autopilot이 gate를 집행할 때 표기된 모델을 그대로 `model` 파라미터로 전달한다.
 
 ## 3. Global vs Temporary Spec Contract
 

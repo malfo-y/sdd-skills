@@ -1,7 +1,7 @@
 ---
 name: sdd-autopilot
 description: "적응형 오케스트레이터 메타스킬. /sdd-autopilot으로 호출하여 요구사항 분석부터 스펙 동기화까지 end-to-end SDD 파이프라인을 자율 실행한다."
-version: 2.3.6
+version: 2.3.7
 ---
 
 # SDD Autopilot
@@ -77,13 +77,6 @@ User Request
 11. 한국어를 기본으로 하되 사용자 언어를 따른다.
 12. spec-less repo에서도 중단하지 않는다. `_sdd/spec/`가 없으면 `_sdd/` workspace bootstrap + code-first fallback reasoning으로 계속 진행하고, 적절한 시점에 `spec-create` 또는 spec sync 단계를 파이프라인에 포함한다.
 
-## Execution Profile Reference
-
-- step별 `model` / `reasoning_effort` 기본값과 조정 규칙은 `references/execution-profile-policy.md`를 따른다.
-- 기본 원칙은 고정 프로파일이며, 명시적 override가 없는 한 동일하게 적용한다.
-- 설계 단계, phase/task planning, final integration review는 실패 비용이 크므로 보수적으로 유지한다.
-- 실행 중 프로파일 변경이 필요하면 기존 agent를 재사용하지 말고 새로 `spawn_agent({agent_type: ..., message: ...})` 한다.
-
 ## Process
 
 ### Step 0: Pipeline State Detection (파이프라인 상태 감지)
@@ -109,14 +102,12 @@ autopilot 호출 시 기존 파이프라인 상태를 확인한다.
 
 - `references/sdd-reasoning-reference.md`
 - `references/orchestrator-contract.md`
-- `references/execution-profile-policy.md`
 - `examples/sample-orchestrator.md`
 
 내재화 대상:
 - SDD 원칙 3개
 - 스킬 의존성 그래프
 - 파이프라인 구성 가이드라인
-- step별 execution profile 고정 기본값과 override 규칙
 - 테스트 전략 판단 기준
 - review-fix 및 final report 규칙
 
@@ -229,11 +220,6 @@ Producer-Reviewer 패턴으로 검증한다.
 - error handling 존재
 - Low advisory policy 존재. `low` finding은 advisory/logged follow-up이며 critical/high/medium exit condition을 통과한 gate를 막지 않는가
 
-추가 검증:
-- `Execution Profiles` section 또는 step-level `Execution profile`이 있으면 `references/execution-profile-policy.md`와 정합해야 한다.
-- `profile_key`를 쓴 경우 step 참조와 loop 참조가 해석 가능해야 한다.
-- section-level 기본값과 step-level / loop-level override가 동시에 있으면 우선순위가 모호하지 않아야 한다.
-
 철학 검증:
 - Spec-first
 - 드리프트 방지
@@ -285,7 +271,6 @@ Phase 2 진입 후 `request_user_input`은 호출하지 않는다. 마일스톤 
 - custom-agent step이면 `wait_agent` final status를 수거한 뒤 step output/log를 기록하고 `close_agent({target: <agent_id>})`로 handle을 닫는다. 여러 agent를 병렬 spawn한 step은 완료된 handle을 모두 닫은 뒤 다음 dispatch group 또는 downstream step으로 진행한다.
 - custom-agent step이면 오케스트레이터의 `Interaction Mode`를 함께 해석한다. 값이 없으면 `autonomous-no-input`으로 간주한다.
 - 단, `implementation-agent` step은 generic custom-agent dispatch보다 먼저 Implementation Dispatch Controller로 해석한다. phase나 feature 전체를 한 번에 넘기지 않고 phase의 task를 dependency와 Target Files 기준 dispatch 그룹으로 나누어 task당 leaf를 spawn한다.
-- 프로파일 우선순위는 `step-level Execution profile` -> `Execution Profiles` section 기본값 -> `references/execution-profile-policy.md` 기본값 순서다.
 - 로컬 step이면 오케스트레이터에 적힌 skill 또는 명령을 실행한다.
 - step별 필드, 허용 `agent_type`, Exit Criteria, Acceptance Criteria는 오케스트레이터 본문과 `references/orchestrator-contract.md`를 그대로 따른다.
 - 오케스트레이터에 적힌 출력 파일은 현재 step이 실제로 생성한 materialized output과 future step의 planned output을 구분해 해석한다. 각 step은 자신의 선언된 출력만 materialize하며, 아직 실행되지 않은 downstream step의 planned output을 미리 생성하지 않는다.
@@ -309,8 +294,6 @@ Phase 2 진입 후 `request_user_input`은 호출하지 않는다. 마일스톤 
 - `scope = global`이든 `scope = per-group`이든 review/fix/re-review를 local inline work로 대체하지 않는다.
 - fix 단계의 `implementation-agent` 재호출은 review finding 하나를 단일 task leaf로 보는 순차 spawn이다. finding의 영향 파일만 Target Files로 전달하며, 초기 구현 dispatch 그룹처럼 병렬화하지 않는다. 각 fix leaf도 수거 후 즉시 `close_agent({target: <agent_id>})`로 닫는다.
 - `low` finding은 advisory/logged follow-up으로 기록하며 기본 fix 대상과 gate blocker에 포함하지 않는다.
-- review-fix loop 프로파일 우선순위는 `review_profile` / `fix_profile` / `final_integration_review_profile` -> `Execution Profiles` section의 해당 agent_type 기본값 -> `references/execution-profile-policy.md` 기본값 순서다.
-- `final_integration_review_profile`은 실제로 final integration review를 수행하는 경우에만 의미가 있다. `scope = per-group`에서 그룹 2개 이상일 때 사용하며, 그룹 1개나 `scope = global`에서는 별도 final integration review step 또는 명시적 global final integration review 선언이 없으면 사용하지 않는다.
 - `spec-update-done-agent`는 모든 required implementation-scoped review-fix gate, required validation, 그리고 필요한 경우 final integration review가 닫힌 뒤에만 실행할 수 있다.
 - 이 섹션에서 별도 loop 규칙이나 테스트 규칙을 다시 정의하지 않는다.
 
@@ -342,7 +325,6 @@ Phase 2 진입 후 `request_user_input`은 호출하지 않는다. 마일스톤 
 
 - `references/sdd-reasoning-reference.md`: SDD 철학, skill catalog, reasoning 기준
 - `references/orchestrator-contract.md`: 오케스트레이터/로그 최소 계약
-- `references/execution-profile-policy.md`: step별 모델/effort 고정 기본값과 override 규칙
 - `examples/sample-orchestrator.md`: 중규모 기본형 + 대규모 차이점 예시
 
 ## Final Check
