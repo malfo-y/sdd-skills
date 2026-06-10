@@ -12,7 +12,7 @@ version: 2.4.0
 
 ## Codex Runtime Adapter
 
-`/sdd-autopilot` 직접 호출은 이 스킬이 생성한 orchestrator 안의 internal agent dispatch에 대한 사용자 명시 허가로 간주한다. Phase 1 탐색 fan-out, Phase 2 custom-agent step, implementation/review/fix/re-review dispatch 전에 `spawn_agent`, `wait_agent`, `close_agent`, `send_input`이 active tools에 없으면 `tool_search` query `spawn_agent wait_agent close_agent send_input multi-agent sub-agent`로 multi-agent tools를 먼저 로드한다.
+런타임이 skill-internal agent dispatch를 허용하는 경우, `/sdd-autopilot` 직접 호출은 이 스킬이 생성한 orchestrator 안의 internal agent dispatch 범위에 대한 사용자 요청으로 처리한다. Phase 1 탐색 fan-out, Phase 2 custom-agent step, implementation/review/fix/re-review dispatch 전에 `spawn_agent`, `wait_agent`, `close_agent`, `send_input`이 active tools에 없으면 `tool_search` query `spawn_agent wait_agent close_agent send_input multi-agent sub-agent`로 multi-agent tools를 먼저 로드한다. 현재 런타임 정책이 명시적 sub-agent 허가를 추가로 요구하면, dispatch 전에 사용자에게 위임 허가를 요청한다.
 
 실제 Codex 호출은 `prompt`가 아니라 `message`를 사용한다:
 
@@ -71,7 +71,7 @@ User Request
 6. **Implementation 직후 즉시 Gate**: 각 `implementation` 실행 단위는 단독으로 완료 처리하지 않는다. single-phase면 해당 `implementation` 직후, multi-phase면 각 phase의 `implementation` 직후 같은 범위의 review-fix gate를 즉시 닫아야 하며, 종료 전까지 다음 phase나 downstream step으로 진행할 수 없다.
 7. **Execute → Verify 필수**: 모든 단계는 실행(Execute) + 검증(Verify) 두 페이즈를 거친다. 에이전트 호출만으로 완료 간주 금지. Exit Criteria 미충족 시 다음 단계 진행 불가.
 8. **Pre-flight + approval 필수**: Phase 2 진입 전 `_sdd/env.md`와 `.codex/config.toml`을 읽고 실행 가능성을 점검한 뒤 explicit approval을 받아야 한다.
-9. **Agent lifecycle 수집/정리 필수**: `spawn_agent({agent_type: ..., message: ...})`로 시작한 실행 단위는 `wait_agent(...)`로 반드시 final status를 수집하고, 결과를 로그/보고서에 기록한 직후 `close_agent({target: <agent_id>})`로 닫아 병렬 slot을 반납한다. 보완 지시가 필요하면 닫기 전에 `send_input({target: <agent_id>, message: ...})`을 사용하고, 이미 닫은 뒤 추가 작업이 필요하면 새로 `spawn_agent({agent_type: ..., message: ...})` 한다. `wait_agent` timeout은 수집 완료가 아니므로 더 기다리거나 controlled stop/abandon을 기록한 뒤에만 닫는다.
+9. **Agent lifecycle 수집/정리 필수**: `spawn_agent({agent_type: ..., message: ...})`로 시작한 실행 단위는 `wait_agent(...)`로 반드시 final status를 수집하고, 결과를 로그/보고서에 기록한 직후 `close_agent({target: <agent_id>})`로 닫아 병렬 slot을 반납한다. 보완 지시가 필요하면 닫기 전에 `send_input({target: <agent_id>, message: ...})`을 사용하고, 이미 닫은 뒤 추가 작업이 필요하면 새로 `spawn_agent({agent_type: ..., message: ...})` 한다. `wait_agent` timeout은 수집 완료가 아니므로 더 기다리거나 controlled stop/abandon을 기록한 뒤에만 닫는다. 여러 agent를 병렬 spawn한 단계는 remaining agent ids를 유지하고, final status가 반환된 handle만 기록·닫은 뒤 remaining이 빌 때까지 `wait_agent({targets: remaining, ...})`를 반복한다.
 10. **로그 기반 상태 관리**: 오케스트레이터는 `_sdd/pipeline/orchestrators/`에 유지. 활성/완료 구분은 로그 파일 status로 판단한다.
 11. 한국어를 기본으로 하되 사용자 언어를 따른다.
 12. spec-less repo에서도 중단하지 않는다. `_sdd/spec/`가 없으면 `_sdd/` workspace bootstrap + code-first fallback reasoning으로 계속 진행하고, 적절한 시점에 `spec-create` 또는 spec sync 단계를 파이프라인에 포함한다.
@@ -146,7 +146,7 @@ Gate 2→3: 핵심 요구사항이 확정되면 Step 3.
 - `_sdd/spec/` 현황
 - 수정 범위와 예상 리스크
 
-필요하면 구조/도메인/테스트 관점으로 explorer를 병렬 호출한다. 각 explorer는 `wait_agent` final status 수거 후 핵심 사실을 요약하고 즉시 `close_agent({target: <agent_id>})`로 닫는다. 결과는 전체 로그가 아니라 핵심 사실만 요약한다.
+필요하면 구조/도메인/테스트 관점으로 explorer를 병렬 호출한다. 각 explorer는 `wait_agent`가 final status를 반환한 뒤에만 핵심 사실을 요약하고 `close_agent({target: <agent_id>})`로 닫는다. 병렬 호출 시 remaining agent ids가 빌 때까지 반복 수거한다. 결과는 전체 로그가 아니라 핵심 사실만 요약한다.
 
 Gate 3→4: 프로젝트 구조와 관련 파일 식별 완료 → Step 4.
 
@@ -219,7 +219,7 @@ python3 <skill_dir>/scripts/validate_orchestrator.py _sdd/pipeline/orchestrators
 
 #### 5.2 철학/품질 검증 (plan-review gate)
 
-구조 검증 PASS 후, `spawn_agent({agent_type: "plan-review-agent", message: <orchestrator 경로 + references/orchestrator-contract.md 경로 + 사용자 원문 요청 + "Orchestrator Review Mode로 검토">})`로 dispatch하고 `wait_agent` 수거 후 `close_agent`로 닫는다. 검토 rubric(기능 수준 AC, Reasoning Trace 정당화, planning precedence, immediate gate/dispatch controller 해석 가능성, 산출물 handoff 정합성, generation boundary, spec 직접 수정 금지, 입출력 비대)은 plan-review-agent의 Orchestrator Review Mode 계약이 단일 소스다.
+구조 검증 PASS 후, `spawn_agent({agent_type: "plan-review-agent", message: <orchestrator 경로 + references/orchestrator-contract.md 경로 + 사용자 원문 요청 + "Orchestrator Review Mode로 검토">})`로 dispatch하고 `wait_agent`로 final status를 수거한다. final status가 반환된 뒤에만 결과를 기록하고 `close_agent({target: <agent_id>})`로 닫는다. 검토 rubric(기능 수준 AC, Reasoning Trace 정당화, planning precedence, immediate gate/dispatch controller 해석 가능성, 산출물 handoff 정합성, generation boundary, spec 직접 수정 금지, 입출력 비대)은 plan-review-agent의 Orchestrator Review Mode 계약이 단일 소스다.
 
 결과 분기:
 - Critical/High 없음 → Step 6
@@ -261,7 +261,7 @@ Phase 2 진입 후 `request_user_input`은 호출하지 않는다. 마일스톤 
 각 step은 `Execute -> Collect -> Record -> Close -> Verify` 순서를 따른다.
 
 - custom-agent step이면 오케스트레이터에 적힌 Codex `agent_type`으로 호출한다.
-- custom-agent step이면 `wait_agent` final status를 수거한 뒤 step output/log를 기록하고 `close_agent({target: <agent_id>})`로 handle을 닫는다. 여러 agent를 병렬 spawn한 step은 완료된 handle을 모두 닫은 뒤 다음 dispatch group 또는 downstream step으로 진행한다.
+- custom-agent step이면 `wait_agent`가 final status를 반환한 뒤에만 step output/log를 기록하고 `close_agent({target: <agent_id>})`로 handle을 닫는다. 여러 agent를 병렬 spawn한 step은 remaining agent ids를 반복 수거하고, 모든 handle이 final status로 정리된 뒤에만 다음 dispatch group 또는 downstream step으로 진행한다.
 - custom-agent step이면 오케스트레이터의 `Interaction Mode`를 함께 해석한다. 값이 없으면 `autonomous-no-input`으로 간주한다.
 - 단, `implementation-agent` step은 generic custom-agent dispatch보다 먼저 Implementation Dispatch Controller로 해석한다. phase나 feature 전체를 한 번에 넘기지 않고 phase의 task를 dependency와 Target Files 기준 dispatch 그룹으로 나누어 task당 leaf를 spawn한다.
 - 로컬 step이면 오케스트레이터에 적힌 skill 또는 명령을 실행한다.
@@ -285,7 +285,7 @@ Phase 2 진입 후 `request_user_input`은 호출하지 않는다. 마일스톤 
 - single-phase path이거나 `scope = global`이면 해당 `implementation` step 직후 즉시 global review-fix loop를 수행한다.
 - review-fix loop의 agent 매핑은 small/medium/large review path 모두 고정이다: `review = implementation-review-agent`, `fix = implementation-agent`, `re-review = implementation-review-agent`.
 - `scope = global`이든 `scope = per-group`이든 review/fix/re-review를 local inline work로 대체하지 않는다.
-- fix 단계의 `implementation-agent` 재호출은 review finding 하나를 단일 task leaf로 보는 순차 spawn이다. finding의 영향 파일만 Target Files로 전달하며, 초기 구현 dispatch 그룹처럼 병렬화하지 않는다. 각 fix leaf도 수거 후 즉시 `close_agent({target: <agent_id>})`로 닫는다.
+- fix 단계의 `implementation-agent` 재호출은 review finding 하나를 단일 task leaf로 보는 순차 spawn이다. finding의 영향 파일만 Target Files로 전달하며, 초기 구현 dispatch 그룹처럼 병렬화하지 않는다. 각 fix leaf도 `wait_agent`가 final status를 반환한 뒤에만 결과를 기록하고 `close_agent({target: <agent_id>})`로 닫는다.
 - `low` finding은 advisory/logged follow-up으로 기록하며 기본 fix 대상과 gate blocker에 포함하지 않는다.
 - `spec-update-done-agent`는 모든 required implementation-scoped review-fix gate, required validation, 그리고 필요한 경우 final integration review가 닫힌 뒤에만 실행할 수 있다.
 - 이 섹션에서 별도 loop 규칙이나 테스트 규칙을 다시 정의하지 않는다.

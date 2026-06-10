@@ -12,9 +12,9 @@ implementation-plan은 입력이 파일/경로에서 태어난다. 대화 맥락
 
 ## Codex Runtime Adapter
 
-이 스킬의 직접 호출은 이 스킬 내부의 `implementation-plan-agent` / `plan-review-agent` dispatch에 대한 사용자 명시 허가로 간주한다. dispatch 전에 `spawn_agent`, `wait_agent`, `close_agent`가 active tools에 없으면 `tool_search` query `spawn_agent wait_agent close_agent multi-agent sub-agent`로 multi-agent tools를 먼저 로드한다.
+런타임이 skill-internal agent dispatch를 허용하는 경우, 이 스킬의 직접 호출은 이 스킬 내부의 `implementation-plan-agent` / `plan-review-agent` dispatch 범위에 대한 사용자 요청으로 처리한다. dispatch 전에 `spawn_agent`, `wait_agent`, `close_agent`가 active tools에 없으면 `tool_search` query `spawn_agent wait_agent close_agent multi-agent sub-agent`로 multi-agent tools를 먼저 로드한다. 현재 런타임 정책이 명시적 sub-agent 허가를 추가로 요구하면, dispatch 전에 사용자에게 위임 허가를 요청한다.
 
-실제 Codex 호출은 `prompt`가 아니라 `message`를 사용한다:
+실제 Codex 호출은 `prompt`가 아니라 `message`를 사용한다. 아래는 호출 형태 예시이며, 실제 실행 순서는 Process를 따른다:
 
 ```text
 spawn_agent({agent_type: "implementation-plan-agent", message: "<요청 + 알려진 경로/컨텍스트>"})
@@ -31,7 +31,7 @@ close_agent({target: "<agent_id>"})
 
 ### Step 2: 생성 (producer spawn)
 
-`spawn_agent({agent_type: "implementation-plan-agent", message: <요청 + 알려진 경로/컨텍스트>})`로 **생성 mode** spawn하고 `wait_agent`로 결과를 수거한다. final status를 기록한 직후 `close_agent({target: <agent_id>})`로 producer handle을 닫는다. agent가 plan을 `_sdd/implementation/<YYYY-MM-DD>_implementation_plan_<slug>.md`에 저장하고 경로 + phase/task 요약 + Open Questions(LOW/Yes)를 반환한다.
+`spawn_agent({agent_type: "implementation-plan-agent", message: <요청 + 알려진 경로/컨텍스트>})`로 **생성 mode** spawn하고 `wait_agent`로 final status를 수거한다. final status가 반환된 뒤에만 결과를 기록하고 `close_agent({target: <agent_id>})`로 producer handle을 닫는다. `wait_agent`가 timeout이면 완료로 간주하지 말고 더 기다리거나, controlled stop/blocked 상태를 사용자에게 보고한 뒤에만 handle 정리를 결정한다. agent가 plan을 `_sdd/implementation/<YYYY-MM-DD>_implementation_plan_<slug>.md`에 저장하고 경로 + phase/task 요약 + Open Questions(LOW/Yes)를 반환한다.
 
 ### Step 3: review-fix loop
 
@@ -45,8 +45,8 @@ close_agent({target: "<agent_id>"})
 
 단계:
 
-1. **review**: `spawn_agent({agent_type: "plan-review-agent", message: <plan 경로 + review 요청>})`로 plan을 review하고 `wait_agent`로 수거한 뒤 `close_agent({target: <agent_id>})`로 reviewer handle을 닫는다(Tier 1 — implementation plan 입력). reviewer가 Blocker Status + severity별 finding을 리포트(`_sdd/implementation/<YYYY-MM-DD>_plan_review_<slug>.md`)로 낸다.
-2. **fix**: critical/high/medium finding이 있으면 `spawn_agent({agent_type: "implementation-plan-agent", message: <review 리포트 경로 + plan 경로 + 대상 findings>})`로 **fix mode** 재spawn한다. `wait_agent`로 수거한 뒤 `close_agent({target: <agent_id>})`로 producer handle을 닫는다. agent가 finding 부분만 surgical 수정한다.
+1. **review**: `spawn_agent({agent_type: "plan-review-agent", message: <plan 경로 + review 요청>})`로 plan을 review하고 `wait_agent`로 final status를 수거한다. final status가 반환된 뒤에만 결과를 기록하고 `close_agent({target: <agent_id>})`로 reviewer handle을 닫는다(Tier 1 — implementation plan 입력). reviewer가 Blocker Status + severity별 finding을 리포트(`_sdd/implementation/<YYYY-MM-DD>_plan_review_<slug>.md`)로 낸다.
+2. **fix**: critical/high/medium finding이 있으면 `spawn_agent({agent_type: "implementation-plan-agent", message: <review 리포트 경로 + plan 경로 + 대상 findings>})`로 **fix mode** 재spawn한다. `wait_agent`로 final status를 수거하고, final status가 반환된 뒤에만 결과를 기록한 후 `close_agent({target: <agent_id>})`로 producer handle을 닫는다. agent가 finding 부분만 surgical 수정한다.
 3. **re-review**: fix 후 loop 범위 전체를 `plan-review-agent`로 재리뷰한다.
 4. exit 충족 또는 MAX 도달까지 1~3을 반복한다. MAX 분기 적용.
 

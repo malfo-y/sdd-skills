@@ -6,11 +6,11 @@ version: 5.0.0
 
 # Implementation Review (Entrypoint Wrapper)
 
-이 스킬은 entrypoint wrapper다. 사용자의 implementation-review 요청을 `implementation-review-agent`에 위임하고 그 결과를 사용자에게 전달한다. 전체 리뷰 프로세스·Tier graceful degradation·findings-first severity·리포트 형식은 agent가 단일 소스로 보유한다.
+이 스킬은 entrypoint wrapper다. 사용자의 implementation-review 요청을 `implementation-review-agent`에 위임하고 결과를 사용자에게 전달한다. 전체 리뷰 프로세스·Tier graceful degradation·findings-first severity·리포트 형식은 agent가 단일 소스로 보유한다.
 
 ## Codex Runtime Adapter
 
-이 스킬의 직접 호출은 아래 내부 agent dispatch에 대한 사용자 명시 허가로 간주한다. dispatch 전에 `spawn_agent`, `wait_agent`, `close_agent`가 active tools에 없으면 `tool_search` query `spawn_agent wait_agent close_agent multi-agent sub-agent`로 multi-agent tools를 먼저 로드한다.
+런타임이 skill-internal agent dispatch를 허용하는 경우, 이 스킬의 직접 호출은 아래 내부 dispatch 범위에 대한 사용자 요청으로 처리한다. dispatch 전에 `spawn_agent`, `wait_agent`, `close_agent`가 active tools에 없으면 `tool_search` query `spawn_agent wait_agent close_agent multi-agent sub-agent`로 multi-agent tools를 먼저 로드한다. 현재 런타임 정책이 명시적 sub-agent 허가를 추가로 요구하면, dispatch 전에 사용자에게 위임 허가를 요청한다.
 
 실제 Codex 호출은 `prompt`가 아니라 `message`를 사용한다:
 
@@ -28,7 +28,7 @@ plan 파일이 있으면 agent가 그것으로 범위를 잡지만(Tier 1), **pl
    - 사용자 요청 원문 + 인자
    - 이미 아는 경로(plan/spec/코드, 직전 산출물)
    - **대화에만 있는 맥락 digest**: 이번 세션에서 무엇을 구현/변경했는지, 그 의도, 리뷰 대상 범위(plan 파일이 없을 때 특히). plan 파일이 분명하면 이 digest는 짧아진다.
-2. `spawn_agent({agent_type: "implementation-review-agent", message: <요청 + 경로 + 대화 맥락 digest>})`로 dispatch하고 `wait_agent`로 결과를 수거한 뒤 `close_agent({target: <agent_id>})`로 handle을 닫는다. 대상 경로가 불명확하면 agent가 Tier Selection·Input 우선순위로 자체 탐색하도록 위임한다.
+2. `spawn_agent({agent_type: "implementation-review-agent", message: <요청 + 경로 + 대화 맥락 digest>})`로 dispatch하고 `wait_agent`로 final status를 수거한다. final status가 반환된 뒤에만 결과를 기록하고 `close_agent({target: <agent_id>})`로 handle을 닫는다. `wait_agent`가 timeout이면 완료로 간주하지 말고 더 기다리거나, controlled stop/blocked 상태를 사용자에게 보고한 뒤에만 handle 정리를 결정한다. 대상 경로가 불명확하면 agent가 Tier Selection·Input 우선순위로 자체 탐색하도록 위임한다.
 3. agent의 반환(리포트 경로 `_sdd/implementation/<YYYY-MM-DD>_implementation_review_<slug>.md`, Tier, findings 요약, blocker)을 사용자에게 그대로 relay한다.
 
 > **경계**: wrapper는 *대화 맥락을 모아 전달*까지만 한다. Tier 판별·검증·findings 분류·리포트 작성은 agent의 Process가 수행한다(중복 금지).

@@ -10,7 +10,7 @@ version: 3.1.0
 
 ## Codex Runtime Adapter
 
-이 스킬의 직접 호출은 이 스킬 내부의 `implementation-agent` / `implementation-review-agent` dispatch에 대한 사용자 명시 허가로 간주한다. dispatch 전에 `spawn_agent`, `wait_agent`, `close_agent`가 active tools에 없으면 `tool_search` query `spawn_agent wait_agent close_agent multi-agent sub-agent`로 multi-agent tools를 먼저 로드한다.
+런타임이 skill-internal agent dispatch를 허용하는 경우, 이 스킬의 직접 호출은 이 스킬 내부의 `implementation-agent` / `implementation-review-agent` dispatch 범위에 대한 사용자 요청으로 처리한다. dispatch 전에 `spawn_agent`, `wait_agent`, `close_agent`가 active tools에 없으면 `tool_search` query `spawn_agent wait_agent close_agent multi-agent sub-agent`로 multi-agent tools를 먼저 로드한다. 현재 런타임 정책이 명시적 sub-agent 허가를 추가로 요구하면, dispatch 전에 사용자에게 위임 허가를 요청한다.
 
 실제 Codex 호출은 `prompt`가 아니라 `message`를 사용한다:
 
@@ -42,7 +42,7 @@ close_agent({target: "<agent_id>"})
 5. **Regression Iron Rule**: 기존 테스트 실패 시 (1) 테스트 업데이트 + (2) 회귀 방지 테스트 추가를 사용자 확인 없이 자동 수행한다.
 6. **Artifact Naming Transition**: 결과 파일은 lowercase canonical 경로에 저장하고, transition 기간에는 plan/progress/report의 legacy uppercase 경로를 입력 fallback으로 허용한다.
 7. **Minimum-Code Mandate**: leaf와 후속 검증은 AC가 요구하는 동작만 구현·검증한다. 요청되지 않은 옵션·설정·추상화·에러 처리 추가 금지. 사변적 형용사("future-proof / extensible / configurable")는 task의 Technical Notes에 근거가 명시될 때만 허용. **REFACTOR 단계도 단일 사용처 추상화 도입은 금지한다.**
-8. **Agent lifecycle 정리**: `spawn_agent({agent_type: ..., message: ...})`로 만든 leaf/reviewer는 `wait_agent(...)`가 final status를 반환한 직후 결과를 progress/report에 기록하고 `close_agent({target: <agent_id>})`로 닫는다. group 단위 fan-out에서는 완료된 handle을 모두 닫은 뒤 다음 group을 spawn한다. `wait_agent` timeout은 수거 완료가 아니므로 더 기다리거나 controlled stop을 기록한 뒤에만 닫는다.
+8. **Agent lifecycle 정리**: `spawn_agent({agent_type: ..., message: ...})`로 만든 leaf/reviewer는 `wait_agent(...)`가 final status를 반환한 직후 결과를 progress/report에 기록하고 `close_agent({target: <agent_id>})`로 닫는다. `wait_agent` timeout은 수거 완료가 아니므로 더 기다리거나 controlled stop을 기록한 뒤에만 닫는다. group 단위 fan-out에서는 remaining agent ids를 유지하고, final status가 반환된 handle만 기록·닫은 뒤 remaining이 빌 때까지 `wait_agent({targets: remaining, ...})`를 반복한다. 모든 handle이 final status로 정리된 뒤에만 다음 group을 spawn한다.
 
 ### Target Files 규격
 
@@ -142,8 +142,8 @@ For each phase:
   1. Unblocked 태스크에서 그룹 파생 (Step 3)
   2. For each group:
      a. 그룹 내 task마다 implementation-agent leaf를 spawn
-     b. wait_agent로 전원 완료 수거
-     c. 각 leaf 결과 기록 후 `close_agent({target: <agent_id>})`로 완료 handle 정리
+     b. remaining agent ids가 빌 때까지 `wait_agent({targets: remaining, ...})` 반복
+     c. final status가 반환된 leaf만 결과 기록 후 `close_agent({target: <agent_id>})`로 handle 정리
      d. Post-group 통합·검증 (Step 5)
      e. 실패/Unplanned Dependency 처리
   3. 전체 그룹 완료 → Phase Review (Step 6)
@@ -153,7 +153,7 @@ For each phase:
 
 그룹 내 task마다 leaf를 dispatch한다:
 
-- `spawn_agent({agent_type: "implementation-agent", message: <leaf 입력>})`로 그룹 내 task를 동시 spawn하고, `wait_agent`로 결과를 수거한 뒤 각 완료 leaf를 `close_agent({target: <agent_id>})`로 닫는다.
+- `spawn_agent({agent_type: "implementation-agent", message: <leaf 입력>})`로 그룹 내 task를 동시 spawn한다. 반환된 agent ids를 remaining set으로 관리하고, `wait_agent({targets: remaining, timeout_ms: 600000})`가 final status를 반환한 leaf만 결과 기록 후 `close_agent({target: <agent_id>})`로 닫는다. 완료된 id를 remaining에서 제거하고 remaining이 빌 때까지 반복한다.
 
 leaf 입력(프롬프트)에 다음 4종을 전달한다 (leaf는 재탐색하지 않음):
 
@@ -206,8 +206,8 @@ Phase 내 모든 태스크 완료 후, orchestrator는 **외부 `implementation-
 
 **단계**:
 
-1. **review**: `spawn_agent({agent_type: "implementation-review-agent", message: <phase 범위 변경 파일 전체 + 테스트 결과>})`로 이 phase 범위의 변경 파일 전체 + 테스트 결과를 전달하고 `wait_agent`로 severity별 finding을 수거한 뒤 reviewer handle을 `close_agent({target: <agent_id>})`로 닫는다.
-2. **fix**: critical/high/medium finding이 있으면, finding을 **하나씩 순차** fix-task로 변환해 `spawn_agent({agent_type: "implementation-agent", message: <fix-task 입력>})` leaf를 재spawn하고 `wait_agent`로 수거한 뒤 완료 leaf handle을 `close_agent({target: <agent_id>})`로 닫는다(finding 영향 파일 = Target Files). `implementation-agent`는 fix mode 별도 계약 없이 finding을 task로 받아 기존 TDD 계약으로 처리한다(I3 — leaf는 단일 task 실행자라 finding이 곧 task).
+1. **review**: `spawn_agent({agent_type: "implementation-review-agent", message: <phase 범위 변경 파일 전체 + 테스트 결과>})`로 이 phase 범위의 변경 파일 전체 + 테스트 결과를 전달하고 `wait_agent`로 final status를 수거한다. final status가 반환된 뒤에만 severity별 finding을 기록하고 reviewer handle을 `close_agent({target: <agent_id>})`로 닫는다.
+2. **fix**: critical/high/medium finding이 있으면, finding을 **하나씩 순차** fix-task로 변환해 `spawn_agent({agent_type: "implementation-agent", message: <fix-task 입력>})` leaf를 재spawn하고 `wait_agent`로 final status를 수거한다. final status가 반환된 뒤에만 결과를 기록하고 완료 leaf handle을 `close_agent({target: <agent_id>})`로 닫는다(finding 영향 파일 = Target Files). `implementation-agent`는 fix mode 별도 계약 없이 finding을 task로 받아 기존 TDD 계약으로 처리한다(I3 — leaf는 단일 task 실행자라 finding이 곧 task).
 3. **re-review**: fix 후 loop 범위 전체를 `implementation-review-agent`로 재리뷰한다.
 4. exit 조건 충족 또는 MAX 도달까지 1~3을 반복한다. MAX 도달 시 분기 정책 적용.
 

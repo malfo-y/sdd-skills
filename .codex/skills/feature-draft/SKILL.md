@@ -12,9 +12,9 @@ feature-draft는 **입력이 대화에서 태어나는** 스킬이다. agent는 
 
 ## Codex Runtime Adapter
 
-이 스킬의 직접 호출은 이 스킬 내부의 `feature-draft-agent` / `plan-review-agent` dispatch에 대한 사용자 명시 허가로 간주한다. dispatch 전에 `spawn_agent`, `wait_agent`, `close_agent`가 active tools에 없으면 `tool_search` query `spawn_agent wait_agent close_agent multi-agent sub-agent`로 multi-agent tools를 먼저 로드한다.
+런타임이 skill-internal agent dispatch를 허용하는 경우, 이 스킬의 직접 호출은 이 스킬 내부의 `feature-draft-agent` / `plan-review-agent` dispatch 범위에 대한 사용자 요청으로 처리한다. dispatch 전에 `spawn_agent`, `wait_agent`, `close_agent`가 active tools에 없으면 `tool_search` query `spawn_agent wait_agent close_agent multi-agent sub-agent`로 multi-agent tools를 먼저 로드한다. 현재 런타임 정책이 명시적 sub-agent 허가를 추가로 요구하면, dispatch 전에 사용자에게 위임 허가를 요청한다.
 
-실제 Codex 호출은 `prompt`가 아니라 `message`를 사용한다:
+실제 Codex 호출은 `prompt`가 아니라 `message`를 사용한다. 아래는 호출 형태 예시이며, 실제 실행 순서는 Process를 따른다:
 
 ```text
 spawn_agent({agent_type: "feature-draft-agent", message: "<요청 + 경로 + 대화 맥락 digest>"})
@@ -34,7 +34,7 @@ close_agent({target: "<agent_id>"})
 
 ### Step 2: 생성 (producer spawn)
 
-`spawn_agent({agent_type: "feature-draft-agent", message: <요청 + 경로 + 대화 맥락 digest>})`로 **생성 mode** spawn하고 `wait_agent`로 결과를 수거한다. final status를 기록한 직후 `close_agent({target: <agent_id>})`로 producer handle을 닫는다. agent가 draft를 `_sdd/drafts/<YYYY-MM-DD>_feature_draft_<slug>.md`에 저장하고 경로 + Step 8 surface 결정을 반환한다.
+`spawn_agent({agent_type: "feature-draft-agent", message: <요청 + 경로 + 대화 맥락 digest>})`로 **생성 mode** spawn하고 `wait_agent`로 final status를 수거한다. final status가 반환된 뒤에만 결과를 기록하고 `close_agent({target: <agent_id>})`로 producer handle을 닫는다. `wait_agent`가 timeout이면 완료로 간주하지 말고 더 기다리거나, controlled stop/blocked 상태를 사용자에게 보고한 뒤에만 handle 정리를 결정한다. agent가 draft를 `_sdd/drafts/<YYYY-MM-DD>_feature_draft_<slug>.md`에 저장하고 경로 + Step 8 surface 결정을 반환한다.
 
 ### Step 3: review-fix loop
 
@@ -48,8 +48,8 @@ close_agent({target: "<agent_id>"})
 
 단계:
 
-1. **review**: `spawn_agent({agent_type: "plan-review-agent", message: <draft Part 2 + Part 1 delta + review 요청>})`로 draft Part 2(+Part 1 delta)를 review하고 `wait_agent`로 수거한 뒤 `close_agent({target: <agent_id>})`로 reviewer handle을 닫는다(`plan-review-agent`는 feature draft Part 2를 입력으로 수용 — Tier 2). reviewer가 Blocker Status + severity별 finding을 리포트(`_sdd/implementation/<YYYY-MM-DD>_plan_review_<slug>.md`)로 낸다.
-2. **fix**: critical/high/medium finding이 있으면 `spawn_agent({agent_type: "feature-draft-agent", message: <review 리포트 경로 + draft 경로 + 대상 findings + 대화 맥락 digest>})`로 **fix mode** 재spawn한다. `wait_agent`로 수거한 뒤 `close_agent({target: <agent_id>})`로 producer handle을 닫는다. agent가 finding 부분만 surgical 수정한다.
+1. **review**: `spawn_agent({agent_type: "plan-review-agent", message: <draft Part 2 + Part 1 delta + review 요청>})`로 draft Part 2(+Part 1 delta)를 review하고 `wait_agent`로 final status를 수거한다. final status가 반환된 뒤에만 결과를 기록하고 `close_agent({target: <agent_id>})`로 reviewer handle을 닫는다(`plan-review-agent`는 feature draft Part 2를 입력으로 수용 — Tier 2). reviewer가 Blocker Status + severity별 finding을 리포트(`_sdd/implementation/<YYYY-MM-DD>_plan_review_<slug>.md`)로 낸다.
+2. **fix**: critical/high/medium finding이 있으면 `spawn_agent({agent_type: "feature-draft-agent", message: <review 리포트 경로 + draft 경로 + 대상 findings + 대화 맥락 digest>})`로 **fix mode** 재spawn한다. `wait_agent`로 final status를 수거하고, final status가 반환된 뒤에만 결과를 기록한 후 `close_agent({target: <agent_id>})`로 producer handle을 닫는다. agent가 finding 부분만 surgical 수정한다.
 3. **re-review**: fix 후 loop 범위 전체를 `plan-review-agent`로 재리뷰한다.
 4. exit 충족 또는 MAX 도달까지 1~3을 반복한다. MAX 분기 적용.
 
