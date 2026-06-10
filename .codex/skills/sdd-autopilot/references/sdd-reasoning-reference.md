@@ -159,6 +159,7 @@ validation / final integration review
 #### plan-review
 - Role: planning producer output gate
 - Reasoning note: `feature-draft`와 `implementation-plan` output을 downstream step이 소비하기 전에 검토한다. 실패하면 finding을 implementation fix task로 바꾸지 않고, 해당 producer output을 reject/regenerate 대상으로 돌린다.
+- Reasoning note: 오케스트레이터 자체도 producer output이다. autopilot Step 5에서 Orchestrator Review Mode로 이 gate를 통과해야 Phase 2로 진행한다.
 
 #### spec-update-todo
 - Role: planned persistent global change 반영

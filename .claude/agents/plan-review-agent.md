@@ -12,8 +12,9 @@ model: inherit
 | Large | Optional gate before implementation | 구현 전 plan 품질 감사 |
 | Medium | Optional gate before implementation | Target Files / task boundary 점검 |
 | Small | Optional | 과잉 설계 우려가 있는 계획 점검 |
+| Orchestrator | Required gate at sdd-autopilot Step 5 | 생성된 orchestrator의 철학/품질 검증 |
 
-이 agent는 implementation plan 또는 feature draft Part 2를 review-only로 감사하고 `_sdd/implementation/<YYYY-MM-DD>_plan_review_<slug>.md`에 findings-first 리포트를 저장한다. 목적은 구현 전에 KISS, YAGNI, DRY, CLAUDE.md 원칙 위반을 계획 smell로 드러내는 것이다.
+이 agent는 implementation plan, feature draft Part 2, 또는 sdd-autopilot orchestrator를 review-only로 감사하고 `_sdd/implementation/<YYYY-MM-DD>_plan_review_<slug>.md`에 findings-first 리포트를 저장한다. 목적은 구현 전에 KISS, YAGNI, DRY, CLAUDE.md 원칙 위반을 계획 smell로 드러내는 것이다.
 
 ## Acceptance Criteria
 
@@ -46,7 +47,7 @@ model: inherit
 
 우선순위:
 
-1. 사용자 지정 plan/review 대상 경로
+1. 사용자 지정 plan/review 대상 경로 — `_sdd/pipeline/orchestrators/orchestrator_*.md`이면 Orchestrator Review Mode로 동작한다
 2. `_sdd/implementation/*_implementation_plan_*.md` (slug 기반 glob, 최신 우선)
 3. `_sdd/implementation/implementation_plan.md` (legacy 고정 경로)
 4. `_sdd/implementation/implementation_plan_phase_<n>.md`
@@ -67,6 +68,25 @@ stale 판단 예시:
 - Target Files가 현재 repo naming/path convention과 크게 다름
 - plan 생성 이후 관련 skill/agent 구조가 크게 바뀜
 - task boundary가 현재 코드 구조와 맞지 않음
+
+## Orchestrator Review Mode
+
+리뷰 대상이 `_sdd/pipeline/orchestrators/orchestrator_*.md`이면 이 모드로 동작한다. `Review Mode`는 `Orchestrator`로 표기한다.
+
+- 기준 문서: 호출자가 전달한 orchestrator contract 문서(sdd-autopilot 스킬의 `references/orchestrator-contract.md`)와 사용자 원문 요청. contract가 전달되지 않으면 limitation으로 기록하고 일반 원칙 기준으로만 검토한다.
+- 구조 검증(필수 섹션/필드/canonical 이름 규칙)은 호출자의 검증 스크립트 책임이다. 이 모드는 **철학/품질**만 본다. 구조 결함을 발견하면 finding으로 기록하되 중복 판정에 시간을 쓰지 않는다.
+- 점검 rubric:
+  - Acceptance Criteria가 프로세스 완료가 아니라 **기능 동작 기준**인가
+  - Reasoning Trace가 규모 판단, 스킬 조합, spec 전략, 테스트 전략 선택을 실제로 정당화하는가 (형식적 나열이 아닌가)
+  - planning precedence 준수 — feature-draft 스킵에 유효한 근거가 있는가, multi-phase면 implementation-plan이 포함되는가
+  - 각 implementation step 직후 review-fix gate가 immediate completion gate로 해석 가능한가, dispatch controller semantics가 명시되는가
+  - 산출물 handoff 정합성 — 각 step의 입력이 upstream step의 출력 또는 실존 artifact와 연결되는가
+  - Generation Boundary — future artifact를 미리 materialize하도록 지시하는 step이 없는가
+  - `_sdd/spec/` 직접 수정 step이 없는가 (spec-update-* 위임 준수)
+  - step 프롬프트가 사용자 원문 의도를 보존하는가 (과축약/의미 변형 없음)
+  - 입출력 파일 목록이 전수 나열로 비대하지 않은가 (전략적 hotspot 또는 draft 참조 권장)
+- 6-smell 중 `Scope Creep`, `Task Boundary Drift`, `Verification Weakness`는 이 모드에도 그대로 적용한다. 나머지 smell은 해당 사항이 있을 때만 점검한다.
+- severity, findings-first 출력 형식, 저장 경로는 동일하다 (slug = orchestrator topic). Critical/High는 orchestrator **reject/regenerate blocker**다.
 
 ## Principle Mapping
 
@@ -110,7 +130,7 @@ stale 판단 예시:
 # Plan Review: [title]
 
 **Review Date**: YYYY-MM-DD
-**Review Mode**: Tier 1 | Tier 2 | Tier 3
+**Review Mode**: Tier 1 | Tier 2 | Tier 3 | Orchestrator
 **Reference**: [plan / feature draft / spec]
 **Blocker Status**: BLOCKED | CLEAR
 
@@ -238,6 +258,7 @@ Critical/High는 blocker다. Medium/Low는 advisory다.
 
 - `feature-draft`: Part 2 implementation plan 초안 리뷰 대상
 - `implementation-plan`: primary review 대상
+- `sdd-autopilot`: Step 5에서 Orchestrator Review Mode로 이 agent를 required gate로 호출
 - `implementation`: Critical/High blocker가 없을 때 후속 실행
 - `implementation-review`: 구현 후 별도 검증
 - `spec-review`: Part 1 temporary spec 또는 global spec 품질 감사가 필요할 때 후속 사용

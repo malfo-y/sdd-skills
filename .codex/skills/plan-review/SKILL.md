@@ -1,7 +1,7 @@
 ---
 name: plan-review
 description: Use this skill to review an implementation plan before coding, identify overengineering and sloppy-code risks, and produce a findings-first plan review report. Triggered by "plan review", "review plan", "implementation plan review", "계획 리뷰", "플랜 리뷰", "구현 계획 리뷰", or when the user wants to check a plan against KISS/YAGNI/DRY/minimum-code principles before implementation.
-version: 2.0.0
+version: 2.1.0
 ---
 
 # Plan Review (Entrypoint Wrapper)

@@ -86,6 +86,8 @@ planning producer step은 `sdd-skills:feature-draft-agent`와 `sdd-skills:implem
 - `sdd-skills:implementation-plan-agent` 직후 `sdd-skills:plan-review-agent`를 호출해 `Contract/Invariant Delta Coverage`, task/Target Files, dependency/checkpoint/carry-over 필드, downstream implementation controller 입력 적합성을 검증한다.
 - gate가 fail이면 producer output을 소비하지 않는다. autopilot은 같은 producer step을 regenerate하도록 요구하고, review finding을 normalize해서 통과 처리하면 안 된다.
 - gate는 canonical `subagent_type` 정책도 검증한다. legacy alias가 발견되면 reject/regenerate 대상이다.
+- **Regenerate 상한**: 같은 producer step의 reject/regenerate는 최대 2회다. 상한 도달 시 gate를 통과 처리하지 않고 `BLOCKED`로 종료해 잔존 finding과 함께 사용자 결정을 받는다.
+- **오케스트레이터 자체도 producer output이다**: Step 5에서 구조 검증 스크립트(`scripts/validate_orchestrator.py` PASS)와 `sdd-skills:plan-review-agent`의 Orchestrator Review Mode gate(Critical/High = 0)를 통과해야 Phase 2로 진행할 수 있다. 미통과 orchestrator에는 `승인 후 실행` 옵션을 제공하지 않는다.
 
 ## 3. Global vs Temporary Spec Contract
 
@@ -199,10 +201,19 @@ planning producer step은 `sdd-skills:feature-draft-agent`와 `sdd-skills:implem
 
 ## 9. Error Handling Contract
 
+필수 필드:
+
 - 재시도 횟수
 - 핵심 단계
 - 비핵심 단계
 - `BLOCKED` 반환 처리 규칙 (`retry`, `stop`, `fallback` 중 어느 분기를 타는지)
+
+공통 규칙 (orchestrator가 달리 명시하지 않는 한 기본값):
+
+- **빈/계약 불일치 반환**: subagent가 빈 결과 또는 출력 계약과 다른 형식을 반환하면 같은 입력으로 1회 재dispatch한다. 재발 시 해당 step을 `failed`로 기록하고, 핵심 단계면 중단·비핵심 단계면 로그 후 계속한다.
+- **병렬 dispatch group 부분 실패**: 성공한 leaf의 결과는 보존한다. 실패한 task만 순차로 1회 재시도하고, 잔존 실패가 있으면 group을 `failed`로 닫고 다음 group이나 downstream step으로 진행하지 않는다.
+- **timeout**: timeout은 완료가 아니다. 더 기다리거나 controlled stop을 기록한 뒤에만 step 상태를 확정한다.
+- 모든 재시도/중단/건너뛰기 결정은 로그에 남긴다.
 
 ## 10. Pipeline Log Contract
 
@@ -235,3 +246,13 @@ planning producer step은 `sdd-skills:feature-draft-agent`와 `sdd-skills:implem
 - 테스트 결과
 - 스펙 동기화 여부
 - 잔여 이슈
+
+## 11. Resume Contract
+
+미완료 로그(`pending`/`in_progress`/`failed`)에서 재개할 때 적용한다.
+
+1. **재검증 우선**: 재개 전 해당 orchestrator를 현행 계약으로 다시 검증한다 (Step 5와 동일: 구조 스크립트 + 필요 시 plan-review gate). legacy alias 등 현행 계약 위반이 발견되면 그대로 실행하지 않고 reject/regenerate 후 사용자 확인을 받는다.
+2. **completed step**: 재실행하지 않는다. 단, 선언된 출력 artifact가 실존하는지 확인하고, 없으면 해당 step을 `failed`로 강등해 재실행 대상에 포함한다.
+3. **in_progress / failed step**: step은 자신의 선언된 출력만 다시 materialize한다는 전제(idempotent)로 처음부터 재실행한다. 부분 산출물은 신뢰하지 않는다.
+4. **gate 상태**: implementation step이 `completed`라도 같은 범위의 review-fix gate가 닫힌 기록이 로그에 없으면 gate부터 재개한다.
+5. 재개 사실, 기준 로그, 강등된 step을 새 Execution Log Entry로 기록한다.

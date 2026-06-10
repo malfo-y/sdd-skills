@@ -1,7 +1,7 @@
 ---
 name: sdd-autopilot
 description: "적응형 오케스트레이터 메타스킬. /sdd-autopilot으로 호출하여 요구사항 분석부터 스펙 동기화까지 end-to-end SDD 파이프라인을 자율 실행한다."
-version: 2.3.7
+version: 2.4.0
 ---
 
 # SDD Autopilot
@@ -27,15 +27,14 @@ close_agent({target: "<agent_id>"})
 
 > 완료 전 아래 기준을 자체 검증한다. 미충족 항목이 있으면 해당 단계로 돌아가 수정한다.
 
-- [ ] AC1: 8-step pipeline(Step 0~8)이 순서대로 실행 완료되었다 (부분 파이프라인은 해당 범위 내 완료)
-- [ ] AC2: `_sdd/pipeline/orchestrators/orchestrator_<topic>.md`에 generated orchestrator를 저장하고 검증을 통과했다
-- [ ] AC3: orchestrator 기반 Phase 2 자율 실행이 완료되었다 (에이전트 호출 + final status 수거 + `close_agent` 정리 + Exit Criteria 검증)
-- [ ] AC4: review 포함 파이프라인에서 review-fix loop가 정상 동작했다
-- [ ] AC5: E2E 테스트/검증이 실제로 실행되었다 (인라인 또는 ralph-loop). Execute → Verify 패턴 준수. 결과가 사용자가 볼 수 있는 형태로 저장되었다 (`_sdd/implementation/test_results/` 또는 `ralph/state.md`). 테스트 건너뛰기 금지 — 실행 불가 시 사유와 수동 검증 방법을 보고서에 명시해야 한다.
-- [ ] AC6: 테스트/검증 결과가 사용자에게 명시적으로 보고되었다 (통과/실패 건수, 실패 시 원인 요약, 수동 확인 필요 항목)
-- [ ] AC7: 최종 결과와 후속 조치를 `_sdd/pipeline/report_<topic>_<timestamp>.md`에 정리했다
-- [ ] AC8: `_sdd/spec/` 직접 수정은 `spec-update-done-agent` 또는 `spec-update-todo-agent`에만 위임했다
-- [ ] AC9: Phase 2 진입 전에 Step 6 checkpoint에서 pre-flight 결과를 공유하고 explicit approval을 받았다
+- [ ] AC1: 사용자 요청이 검증 통과 orchestrator로 변환되어 `_sdd/pipeline/orchestrators/orchestrator_<topic>.md`에 저장되었다 — 구조 검증 스크립트 PASS + plan-review gate Critical/High 0
+- [ ] AC2: orchestrator의 모든 step이 Execute → Verify로 닫혔고(final status 수거 + `close_agent` 정리 포함), 각 step이 선언한 출력 artifact가 실제로 존재한다
+- [ ] AC3: review 포함 path에서 critical/high/medium finding이 0이 되었거나, 정책이 허용한 carry-over만 근거와 함께 로그에 남았다
+- [ ] AC4: E2E 테스트/검증이 실제 실행되어 PASS/FAIL 판정이 결과 파일(`_sdd/implementation/test_results/` 또는 `ralph/state.md`)에 존재한다. 테스트 건너뛰기 금지 — 실행 불가 시 사유와 수동 검증 방법이 보고서에 있다
+- [ ] AC5: 테스트/검증 결과가 통과/실패 건수, 실패 원인 요약, 수동 확인 필요 항목과 함께 사용자에게 보고되었다
+- [ ] AC6: `_sdd/pipeline/report_<topic>_<timestamp>.md`가 Step 8 필수 항목을 갖춰 존재한다
+- [ ] AC7: 이번 실행의 `_sdd/spec/` 변경이 모두 `spec-update-done-agent` / `spec-update-todo-agent` 출력으로만 발생했다 (autopilot 직접 수정 0건)
+- [ ] AC8: Phase 2 진입 전 Step 6 checkpoint의 explicit approval이 로그에 기록되어 있다
 
 ## Workflow Position
 
@@ -76,6 +75,7 @@ User Request
 10. **로그 기반 상태 관리**: 오케스트레이터는 `_sdd/pipeline/orchestrators/`에 유지. 활성/완료 구분은 로그 파일 status로 판단한다.
 11. 한국어를 기본으로 하되 사용자 언어를 따른다.
 12. spec-less repo에서도 중단하지 않는다. `_sdd/spec/`가 없으면 `_sdd/` workspace bootstrap + code-first fallback reasoning으로 계속 진행하고, 적절한 시점에 `spec-create` 또는 spec sync 단계를 파이프라인에 포함한다.
+13. **계약 우선순위**: 규칙의 canonical home은 `references/orchestrator-contract.md`다. 이 SKILL.md 또는 example과 contract가 충돌하면 contract가 우선한다.
 
 ## Process
 
@@ -95,6 +95,8 @@ autopilot 호출 시 기존 파이프라인 상태를 확인한다.
 - 미완료 로그 1건 → 재개 후보 제시
 - 미완료 로그 2건 이상 → 목록 제시 + 선택
 - 미완료 로그 0건 + 산출물 있음 → Step 1에서 활용 여부 판단
+
+재개를 선택하면 `references/orchestrator-contract.md`의 Resume Contract를 따른다: orchestrator를 현행 계약으로 재검증 → completed step의 출력 artifact 실존 확인 → 미완료/실패 step만 재실행.
 
 ### Step 1: Reference Loading (레퍼런스 로딩)
 
@@ -199,40 +201,30 @@ Gate 4→5: 오케스트레이터 저장 완료 → Step 5.
 
 ### Step 5: Orchestrator Verification (오케스트레이터 검증)
 
-Producer-Reviewer 패턴으로 검증한다.
+오케스트레이터도 planning producer output이다. 구조는 스크립트로, 철학/품질은 reviewer agent로 검증한다. autopilot 본인이 인라인 자기 검증으로 대체하지 않는다.
 
-구조 검증:
-- 유효 `agent_type` 참조
-- canonical-only `agent_type` 정책 준수. underscore custom agent 이름, suffix 없는 skill 이름, legacy alias는 normalize하지 않고 reject/regenerate 대상인가
-- step별 `agent_type` / 입출력 / 프롬프트 존재
-- Phase 2 custom-agent step의 `Interaction Mode`가 해석 가능하고, `autonomous-no-input` runtime contract와 모순되지 않는가
-- 산출물 handoff 정합성
-- Planning Producer Review Gate 존재. `feature-draft-agent`와 `implementation-plan-agent` output이 downstream 소비 전에 `plan-review-agent` gate를 통과하며, fail 시 reject/regenerate로 분기하는가
-- `Review-Fix Loop` section/contract 존재
-- 각 `implementation` step 뒤에 같은 범위의 immediate review-fix gate가 해석 가능함
-- Implementation Dispatch Controller 존재. `implementation-agent` step이 generic custom-agent single call보다 우선되는 task-level leaf spawn controller로 해석되는가
-- Step 4가 orchestrator file 외 downstream artifact를 materialize하지 않았는가
-- expanded path면 downstream `implementation` step에 `Execution Mode: phase-iterative`와 `Phase Source`가 선언되었는가
-- `Execution Mode: phase-iterative` path면 per-group gate semantics(`Checkpoint` boundary)와 `final integration review` adaptive 처리가 해석 가능한가
-- phase-iterative path의 `Phase Source`가 `implementation-plan` output인가 (`feature-draft` 산출물 금지). 위반 시 reject하고 `feature-draft` step 직후에 `implementation-plan` step 삽입.
-- review 포함 path에서 `implementation-agent`/`implementation-review-agent`가 custom agent step으로만 매핑되는가
-- test strategy 존재
-- error handling 존재
-- Low advisory policy 존재. `low` finding은 advisory/logged follow-up이며 critical/high/medium exit condition을 통과한 gate를 막지 않는가
+#### 5.1 구조 검증 (기계)
 
-철학 검증:
-- Spec-first
-- 드리프트 방지
-- Review-fix 완전성
-- Execute → Verify Exit Criteria
-- 파일 기반 handoff
-- 스펙 직접 수정 금지
+이 스킬 디렉토리의 `scripts/validate_orchestrator.py`를 실행한다:
+
+```bash
+python3 <skill_dir>/scripts/validate_orchestrator.py _sdd/pipeline/orchestrators/orchestrator_<topic>.md
+```
+
+스크립트가 검사하는 항목(필수 섹션, canonical kebab-case agent 이름, step 필수 필드, phase-iterative ⇒ Phase Source invariant, review-fix gate 필드와 고정 agent 매핑, `fix_targets`의 `low` 미포함, per-group 필수 필드, `Interaction Mode` 값)은 스크립트가 단일 소스다.
+
+- FAIL → finding 기반으로 오케스트레이터를 수정 후 재실행 (최대 2회)
+- 2회 후에도 FAIL → Step 4로 돌아가 재생성 (최대 1회)
+- 그래도 FAIL → BLOCKED. Step 6에서 실행 불가로 보고한다
+
+#### 5.2 철학/품질 검증 (plan-review gate)
+
+구조 검증 PASS 후, `spawn_agent({agent_type: "plan-review-agent", message: <orchestrator 경로 + references/orchestrator-contract.md 경로 + 사용자 원문 요청 + "Orchestrator Review Mode로 검토">})`로 dispatch하고 `wait_agent` 수거 후 `close_agent`로 닫는다. 검토 rubric(기능 수준 AC, Reasoning Trace 정당화, planning precedence, immediate gate/dispatch controller 해석 가능성, 산출물 handoff 정합성, generation boundary, spec 직접 수정 금지, 입출력 비대)은 plan-review-agent의 Orchestrator Review Mode 계약이 단일 소스다.
 
 결과 분기:
-- 모든 구조/철학 검증 통과 → Step 6
-- 구조 이슈 → 자동 수정(최대 2회) 후 재검증
-- 철학 위반 → Step 4로 돌아가 reasoning 재실행(최대 1회)
-- 재시도 후 실패 → Step 6에서 경고 표시
+- Critical/High 없음 → Step 6
+- Critical/High 있음 → Step 4 reject/regenerate (최대 2회). finding을 normalize해서 통과 처리하지 않는다
+- regenerate 상한 도달 → BLOCKED. Step 6에서 잔존 finding과 함께 실행 불가로 보고하고 사용자 결정을 받는다
 
 ### Step 6: User Checkpoint (사용자 확인)
 
@@ -247,6 +239,7 @@ Phase 1 마지막 단계다. 아래를 사용자에게 짧게 공유한다.
 
 확인 규칙:
 - `request_user_input` 또는 동등한 단일 승인 질문으로 `승인 후 실행`, `파이프라인 수정`, `중단` 중 하나를 받는다
+- Step 5 검증을 통과하지 못한(BLOCKED) 오케스트레이터에는 `승인 후 실행` 옵션을 제공하지 않는다. 잔존 finding을 보여주고 `파이프라인 수정` 또는 `중단`만 제시한다
 - `승인 후 실행`일 때만 Step 7로 진행한다
 - `파이프라인 수정`이면 Step 4 또는 5로 돌아가 오케스트레이터를 조정한 뒤 Step 6을 다시 수행한다
 - `중단`이면 active orchestrator를 유지하고 현재 상태를 로그에 남긴 뒤 종료한다

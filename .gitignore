@@ -2,7 +2,7 @@
 **/.DS_Store
 __pycache__/
 *.py[cod]
-scripts/
+/scripts/
 
 _sdd/spec/prev/
 _sdd/implementation/*

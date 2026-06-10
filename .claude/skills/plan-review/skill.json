@@ -2,5 +2,5 @@
   "name": "plan-review",
   "description": "Use this skill to review an implementation plan before coding, identify overengineering and sloppy-code risks, and produce a findings-first plan review report.",
   "instruction_file": "SKILL.md",
-  "version": "1.0.0"
+  "version": "2.1.0"
 }
