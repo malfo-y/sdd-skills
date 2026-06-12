@@ -1,4 +1,3 @@
-# Workspace Guidance
-
-- 프로젝트 스펙 문서는 `_sdd/spec/`를 기준으로 확인합니다.
-- 환경 관련 설정/실행 방법은 `_sdd/env.md`를 기준으로 확인합니다.
+<!-- SDD-HARNESS:START -->
+> 이 repo의 작업 하네스는 `AGENTS.md` 단일 소스다. 작업 전 `AGENTS.md`를 먼저 읽는다.
+<!-- SDD-HARNESS:END -->
