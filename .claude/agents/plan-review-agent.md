@@ -176,31 +176,15 @@ stale 판단 예시:
 
 ### Step 1: Select Scope and Tier
 
-입력 우선순위에 따라 review 대상 plan을 찾고 Tier를 판별한다. 여러 후보가 있으면 최신 dated slug를 기본으로 삼고, 사용자 지정 경로가 있으면 그것을 우선한다.
+Input Sources 우선순위로 대상 plan을 찾고 Plan Source Tier를 판별한다 (최신 dated slug 기본, 사용자 지정 경로 우선).
 
 ### Step 2: Inventory Plan Surface
 
-다음을 추출한다:
-
-- Scope / Non-goals
-- Tier 2 feature draft Part 2 sections: `Contract/Invariant Delta and Coverage`, `Task Details`, `Validation Plan`
-- Part 2 coverage와 Part 2 Validation Plan linkage
-- phases and tasks / `Task Details`
-- Target Files and `[C]` new file entries
-- dependencies and parallelism / parallel execution assumptions
-- acceptance criteria and technical notes
-- top-level `Risks/Mitigations and Open Questions`
-- open questions and risk decisions
-- assumptions, alternatives, confidence, user-confirmation markers
+Review Output §4(Plan Surface Summary) 항목과 AC·`[C]` 신규 파일·Part 2 coverage/Validation Plan linkage·top-level `Risks/Mitigations and Open Questions`·decision markers(assumptions·alternatives·confidence·user-confirmation)를 추출한다.
 
 ### Step 3: Read Supporting Context
 
-필요한 범위만 읽는다:
-
-- `_sdd/spec/*.md` for global guardrails and component references
-- `_sdd/discussion/*.md` when the plan references a discussion artifact
-- Target Files path existence and nearby naming conventions
-- related tests only when validation adequacy depends on test surface
+필요한 범위만 읽는다: spec guardrails/component 참조, 참조된 discussion, Target Files 경로 존재/naming, validation 적정성이 걸린 테스트.
 
 ### Step 4: Review Decisions and Assumptions
 
@@ -231,21 +215,11 @@ Tier 3에서는 6-smell checklist를 정상 PASS/FAIL로 채우지 않는다. pl
 
 ### Step 6: Classify Findings
 
-finding은 다음 필드를 포함한다:
-
-- smell category
-- severity
-- evidence
-- affected plan surface
-- principle link
-- recommended plan change
-- implementation blocker yes/no
-
-Critical/High는 blocker다. Medium/Low는 advisory다.
+각 finding은 Review Output 템플릿 필드(smell category·severity·evidence·affected plan surface·principle link·recommended plan change·implementation blocker)를 채운다. Critical/High는 blocker, Medium/Low는 advisory다.
 
 ### Step 7: Save Report
 
-리포트를 `_sdd/implementation/<YYYY-MM-DD>_plan_review_<slug>.md`에 저장한다. 리포트가 길면 skeleton을 먼저 만들고 같은 흐름에서 fill/finalize한다.
+리포트를 `_sdd/implementation/<YYYY-MM-DD>_plan_review_<slug>.md`에 저장한다. 길면 skeleton 먼저(write-phased fill/finalize).
 
 ### Step 8: Surface Blockers to User
 

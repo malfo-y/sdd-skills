@@ -104,63 +104,19 @@ stale 판단 예시:
 
 ### Step 1: Select Tier and Scope
 
-다음 순서로 입력을 찾는다.
-1. 사용자 지정 경로
-2. `_sdd/implementation/*_implementation_plan_*.md` (slug 기반 glob)
-3. `_sdd/implementation/implementation_plan.md` (legacy 고정 경로)
-4. `_sdd/implementation/implementation_plan_phase_<n>.md`
-5. legacy uppercase fallback: `_sdd/implementation/IMPLEMENTATION_PLAN.md`, `_sdd/implementation/IMPLEMENTATION_PLAN_PHASE_<N>.md`
-6. `_sdd/spec/*.md`
-
-여러 phase 파일이 있으면 기본은 최신 phase 우선이다. 범위를 확정할 수 없으면 최신 phase 기준으로 진행하고 가정을 리포트에 적는다.
+입력 우선순위(사용자 경로 → `_sdd/implementation/*_implementation_plan_*.md` glob → legacy 고정/phase/uppercase fallback → `_sdd/spec/*.md`)로 대상을 찾고 Tier를 판별한다. 여러 phase면 최신 우선, 범위 불확정 시 최신 phase로 진행하고 가정을 리포트에 적는다.
 
 ### Step 2: Inventory
 
-Tier별로 기대 항목을 정리한다.
-
-- Tier 1: plan의 task, acceptance criteria, expected artifacts
-- Tier 2: spec의 요구사항, 핵심 플로우, 제약
-- Tier 3: `git log`, `git diff`, 최근 변경 파일을 기반으로 현재 코드 변화 범위와 품질 관점을 정의
-
-이 단계 산출물:
-- 리뷰 기준 목록
-- expected artifacts 목록
-- 리뷰 범위 가정
+Tier별 리뷰 기준 목록·expected artifacts·범위 가정을 정리한다 (Tier 1=plan task/AC/artifacts, Tier 2=spec 요구사항·플로우·제약, Tier 3=`git log`/`git diff` 변경 범위·품질 관점).
 
 ### Step 3: Verification
 
-실제 구현 상태를 확인한다.
-
-코드 검증:
-- 파일/함수/모듈 존재 여부
-- 구현 범위 충족 여부
-- 주요 통합 지점
-
-테스트 검증:
-- 테스트 파일 존재 여부
-- 실행 가능 여부
-- PASSING / FAILING / MISSING 분류
-
-상태 마커:
-- 구현: EXISTS / PARTIAL / MISSING
-- 기준 충족: MET / NOT MET / UNTESTED
-- 스펙 정합성: ALIGNED / DRIFT / MISSING
+코드(파일/함수/모듈 존재·구현 범위·주요 통합)와 테스트(존재·실행 가능·PASSING/FAILING/MISSING)를 확인한다. 상태 마커로 기록: 구현 EXISTS/PARTIAL/MISSING · 기준 충족 MET/NOT MET/UNTESTED · 스펙 정합성 ALIGNED/DRIFT/MISSING. (Fresh Verification — Hard Rule 8: should-work 금지, 실행 출력 근거)
 
 ### Step 4: Review Lanes (Large Scope Only)
 
-리뷰 범위가 큰 경우, read-only lane으로 나눠 검토한다.
-
-lane 예시:
-- task/module verification
-- test/quality verification
-- drift/risk verification
-
-규칙:
-- 각 lane은 읽기 전용이다.
-- lane은 서로 겹치지 않는 질문/파일 범위를 가진다.
-- 각 lane의 결과로 최종 severity와 next actions를 통합한다.
-
-작은 범위 리뷰는 lane 구분 없이 수행한다.
+큰 범위면 read-only lane(task/module · test/quality · drift/risk)으로 나눠 검토하되, 각 lane은 읽기 전용이고 질문·파일 범위가 겹치지 않게 하며 결과를 최종 severity·next actions로 통합한다. 작은 범위는 단일 패스.
 
 ### Step 5: Assessment
 
@@ -195,21 +151,7 @@ Speculative Code escalation: 사변적 코드가 실제 버그·보안 영향을
 
 ### Step 7: Save Report
 
-리포트 저장 시 다음 규칙을 따른다.
-
-1. 리포트가 장문이거나 섹션이 많으면 caller가 먼저 skeleton/섹션 헤더를 직접 기록한다.
-2. skeleton 작성 후 의존성 없는 섹션부터 내용을 채운다.
-3. Tier 3 리뷰는 `Assumptions` 섹션을 포함한다.
-4. 사용자가 빠른 상태 확인만 원했다면 최종 리포트와 별도로 Quick Review 요약을 함께 제공한다.
-
-리포트에는 다음을 포함한다.
-- findings
-- progress overview
-- verification summary
-- recommended next actions
-- spec/plan 수정이 필요할 경우 후속 스킬 제안
-
-이 agent는 plan/spec를 직접 수정하지 않는다.
+findings-first로 저장하고 Review Output 섹션(findings·progress·verification summary·recommended next actions·필요 시 후속 스킬 제안)을 채운다. 장문이면 caller가 skeleton/헤더를 먼저 기록한 뒤 의존성 없는 섹션부터 채운다(write-phased). Tier 3는 `Assumptions` 포함, 빠른 확인 요청 시 Quick Review 요약 병행. 이 agent는 plan/spec를 직접 수정하지 않는다.
 
 ## Error Handling
 
