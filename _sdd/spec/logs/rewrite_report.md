@@ -1,92 +1,53 @@
-# Spec Rewrite Report
+# Spec Rewrite Report — Scoped Guardrails Legibility Polish
 
-**Target**: `_sdd/spec/main.md`, `_sdd/spec/components.md` (v4.0.1 -> v4.1.1 active spec surface)
-**Executed**: 2026-04-04
+**Date**: 2026-06-12
+**Target**: `_sdd/spec/main.md` §2 Scope / Non-goals / Guardrails (Guardrails bullet legibility only)
+**Type**: scoped polish (NOT full rewrite)
 **Plan**: `_sdd/spec/logs/spec-rewrite-plan.md`
 
----
-
-## Rewrite Summary
-
-2단계 리라이트를 수행했다. 먼저 `main.md`를 current global thin 기준에 맞춰 다시 압축해 standalone `Contract / Invariants / Verifiability`, usage summary, decision-bearing structure table, reference/code-map appendix를 제거하고, repo-wide 판단 기준만 `Scope / Non-goals / Guardrails`와 `핵심 설계와 주요 결정`에 흡수했다. 이어서 `components.md`를 reference-only compact catalog로 재구성해 Purpose/Why/Source와 최소 navigation note만 남겼다.
-
-## File Impact
-
-| 파일 | 변경 | 결과 |
-|------|------|------|
-| `_sdd/spec/main.md` | 전면 재작성 + version bump | 257줄 -> 111줄. 3개 mandatory core + 짧은 supporting surface index만 유지 |
-| `_sdd/spec/components.md` | 전면 재작성 | 284줄 -> 71줄. category-based compact catalog + strategic code map만 유지 |
-| `_sdd/spec/usage-guide.md` | 도입부 보정 | `main.md`의 legacy §5 참조 제거, usage/expected result surface 역할 명시 |
-| `_sdd/spec/logs/spec-rewrite-plan.md` | 갱신 | thin rewrite 기준과 prune rationale 기록 |
-| `_sdd/spec/DECISION_LOG.md` | 갱신 | 구조 판단 이력 추가 |
-| `_sdd/spec/logs/changelog.md` | 갱신 | v4.1.0 변경 이력 추가 |
-
-## Pruned / Absorbed from Main
-
-| 대상 | 조치 | 보존 방식 |
-|------|------|----------|
-| standalone CIV table | 본문 제거 | artifact contract, verification discipline, backup rule을 `Guardrails`로 흡수 |
-| usage summary table | 본문 제거 | `usage-guide.md` 링크로 대체 |
-| decision-bearing structure 대형 표 | 본문 제거 | layered design, rollout order, supporting-doc rule을 §3에 흡수 |
-| reference section + appendix code map | 본문 제거 | supporting surface index와 외부 기준 문서 링크만 유지 |
-| component별 Input/Output/Process/완료 이력 | `components.md`에서 제거 | 원문 재복제 대신 compact reference와 source 링크만 유지 |
+## Diagnosis Summary (Step 1)
+직전 review→update-done→upgrade로 spec은 이미 thin·canonical 정합. 4 공통축 + rewrite 고유 4축 모두 PASS. 유일 결함은 §2 Guardrails 일부 bullet이 한 문장에 다중 결정을 담은 run-on이라 legibility만 저하. → full rewrite 회피, scoped polish만 수행 (Error Handling "잘 구조화된 spec" 경로).
 
 ## Metric Scorecard
 
-| Metric | Before | After | 근거 |
-|--------|--------|-------|------|
-| Component Separation | 3 | 3 | component detail은 계속 `components.md`에 남아 있다 |
-| Findability | 3 | 3 | main이 더 짧아졌고, supporting surface 링크가 상단과 하단에 고정돼 있다 |
-| Repo Purpose Clarity | 3 | 3 | §1 narrative는 유지됐다 |
-| Boundary Clarity | 2 | 3 | repo-wide operating rule이 §2에 직접 모였다 |
-| Decision Preservation | 3 | 3 | layered design, key decisions, rollout order를 유지했다 |
-| Contamination Control | 1 | 3 | usage/reference/appendix/CIV detail을 main body에서 제거했다 |
-| Canonical Fit | 1 | 3 | main body가 `Background / Scope / Core Design` 중심으로 재구성됐다 |
+| 축 | Before | After | 비고 |
+|----|--------|-------|------|
+| Thinness | PASS | PASS | bullet 수·내용 동일, 줄바꿈만 추가. 비대화 없음 |
+| Decision-bearing truth | PASS | PASS | 모든 절 §2 body 잔류. log 이동 0 |
+| Anti-duplication | PASS | PASS | 신규 중복 0 |
+| Navigation + surface fit | PASS | PASS | 동일 surface 내 가독성만 ↑ |
+| Component Separation | PASS | PASS | 미변경 |
+| Findability | PASS | PASS | 미변경 |
+| Boundary Clarity | PASS | PASS | 미변경 |
+| Canonical Fit | PASS | PASS+ | run-on 6개 → lead+sub 구조로 결정 경계 명료화 |
 
-## Components Surface Assessment
+## Canonical-fit 평가
+global spec은 여전히 `개념 + 경계 + 결정` thin 문서. polish는 결정의 가독성만 높였고 feature-level usage/contract/inventory 유입 없음. Hard Rule 5(재비대화 금지) 준수 — 총 정보량 동일, 표현 구조만 개선.
 
-| Metric | Before | After | 근거 |
-|--------|--------|-------|------|
-| Reference Density | 1 | 3 | component별 상세 runtime prose를 compact table로 정리했다 |
-| Findability | 2 | 3 | 카테고리 기준으로 필요한 스킬을 더 빨리 찾을 수 있다 |
-| Why Preservation | 3 | 3 | 모든 컴포넌트에 Why 열을 유지했다 |
-| Source Preservation | 3 | 3 | primary source와 platform note를 유지했다 |
+## Pruning / Move / Split 결과
+- Pruning: 없음 (내용 삭제 0)
+- Move(body→log): 없음 (rationale 전량 body 잔류, Hard Rule 1 비해당)
+- Split: 6개 run-on bullet을 lead 문장 + nested sub-bullet으로 분할
+  - L59 → lead + 3 sub (orchestrator형 / wrapper형 / producer orchestrator)
+  - L62(현 L65) → lead + 2 sub (thin entrypoint / 대화입력 forwarding)
+  - L63(현 L68) → lead + 3 sub (producer 자체소유 / 공통 loop 정책 / fix=재dispatch)
+  - L64(현 L72) → lead + 1 sub (미통과 reject/regenerate)
+  - L65(현 L74) → lead + 2 sub (kebab-case canonical / legacy alias reject)
+  - L68(현 L79) → lead + 3 sub (Checkpoint boundary / adaptive final review / missing=schema violation)
 
-## Canonical-Fit Assessment
+## Rationale Preservation
+원본 절 ↔ 결과 sub-bullet 1:1 대조 검증 통과. `code` span(`feature-draft`, `Checkpoint`, `critical=high=medium=0`, agent 이름 등)·inline 링크·`orchestrator-contract.md §6` citation 전부 유지. component-level `Why`/`Source`는 §2 대상 아님(미변경).
 
-| 항목 | 상태 | 비고 |
-|------|------|------|
-| Background & High-Level Concept | Yes | §1 유지 |
-| Scope / Non-goals / Guardrails | Yes | §2 유지, repo-wide invariants 흡수 |
-| Core Design & Key Decisions | Yes | §3 유지, 구조적 판단 흡수 |
-| usage / expected result detail | Moved out | `usage-guide.md` |
-| component reference / code navigation | Moved out | `components.md` compact catalog + appendix |
-| decision log / release history | Moved out | `DECISION_LOG.md`, `logs/changelog.md` |
+## Body vs Log Placement
+이 작업은 legibility 재배치이지 pruning이 아니므로 decision-bearing 내용 전량 §2 body 잔류가 의도된 결과. log/report로 내린 rationale 없음. 메타 메모(scorecard/deviation)만 본 report에 기록.
 
-## Validation
+## 링크/경로 유효성
+§2 내 링크 미변경(`docs/SDD_SPEC_DEFINITION.md`, `docs/SDD_WORKFLOW.md`, `../env.md`) — edit 대상 bullet 밖이라 깨짐 없음.
 
-- `prev/` 백업 확인: `prev_main_20260404_130259.md`, `prev_components_20260404_130259.md`, `prev_usage-guide_20260404_130259.md`, `prev_DECISION_LOG_20260404_130259.md`
-- 2차 백업 확인: `prev_components_20260404_130827.md`, `prev_spec-rewrite-plan_20260404_130827.md`, `prev_rewrite_report_20260404_130827.md`, `prev_DECISION_LOG_20260404_130827.md`, `prev_changelog_20260404_130827.md`
-- `main.md`, `components.md`, `usage-guide.md`에서 legacy `main.md` section/appendix 참조가 남지 않았는지 `rg`로 확인
-- 줄 수 확인: `main.md 111`, `components.md 71`, `usage-guide.md 85`
+## Plan 대비 Deviation
+- 계획된 6개 bullet만 수정, 그 외 §2/§3/타 파일 무수정 — 계획 일치.
+- Minor: L68→현 L81 분할 시 "처리한다 (1개" 앞 공백 1칸 제거("처리한다(1개")로 정규화. 의미 무관 표기 정리.
+- 그 외 deviation 없음.
 
-## Warnings Intentionally Left Unresolved
-
-1. supporting reference 안의 platform count나 일부 세부 수치는 stale할 수 있다. 이번 작업은 thin/compact rewrite가 우선이었다
-2. standalone CIV table은 제거됐지만, repo-wide invariant 자체는 guardrails와 key decisions에만 압축 보존돼 있다. 더 상세한 execution-level validation은 global main에 다시 복구하지 않는다
-
-## Notable Deviation from Plan
-
-- 계획상 supporting surface 안내는 짧은 링크 수준을 목표로 했지만, 실제로는 `Supporting Surfaces` 섹션을 별도로 남겼다. 본문 오염을 늘리지 않으면서 탐색 진입점을 분명히 하는 편이 유지보수에 유리하다고 판단했다
-- `components.md`는 처음에는 도입부 보정만 계획했지만, 사용자 요청에 따라 compact catalog 단계까지 확장했다. 변경 전 계획 파일을 addendum으로 먼저 갱신했다
-
-## Decision Preservation Check
-
-- `SKILL.md` 중심 구조
-- Claude/Codex dual bundle
-- skill entrypoint + reusable agent split
-- `_sdd/` artifact handoff
-- AC-First + explicit verification
-- producer-owned inline 2-phase writing
-- reasoning-based `sdd-autopilot`
-- thin global spec + execution-focused temporary spec
+## Unresolved Warning
+- 없음. missing canonical core 없음(자동 생성 비해당). ambiguity 없음.
