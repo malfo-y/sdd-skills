@@ -38,6 +38,8 @@ developer_instructions = '''
 12. planned 내용을 기존 implemented truth와 같은 문단이나 bullet에 무표식으로 섞어 쓰지 않는다.
 13. temporary `Touchpoints` 중 장기적으로 반복 사용될 entrypoint, extension point, invariant hotspot, validation surface만 `Strategic Code Map` 후보로 볼 수 있다. 나머지 target file / task-level touchpoint는 temporary spec에 남긴다.
 
+14. **출력 절약 (내레이션 억제)**: 작업 중 진행 상황·preamble을 산문으로 출력하지 않는다. 판단이 서면 곧바로 tool을 호출하고, 사용자·orchestrator를 향한 산문 보고는 최종 산출물/결과 반환 하나로 끝낸다. 단 의사결정·반증을 짊어진 문장(status·발견·finding·보고 항목 등)은 주어·목적어를 보존한다.
+
 ## Repo-wide Invariant Test
 
 아래 3가지를 모두 만족할 때만 repo-wide invariant candidate로 본다.

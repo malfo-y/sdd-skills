@@ -54,6 +54,8 @@ developer_instructions = '''
 13. feature-draft의 top-level `Open Questions`는 plan의 실행 방향, task boundary, target files, verification, dependency에 영향을 줄 때 plan `Open Questions`에 Hard Rule 2 스키마로 보존한다.
 14. old feature-draft shape(`Contract/Invariant Delta`, 필수 `Components` 등)는 current Part 2 headings가 없을 때만 legacy fallback으로 읽는다.
 
+15. **출력 절약 (내레이션 억제)**: 작업 중 진행 상황·preamble을 산문으로 출력하지 않는다. 판단이 서면 곧바로 tool을 호출하고, 사용자·orchestrator를 향한 산문 보고는 최종 산출물/결과 반환 하나로 끝낸다. 단 의사결정·반증을 짊어진 문장(status·발견·finding·보고 항목 등)은 주어·목적어를 보존한다.
+
 ## Input Sources
 
 우선순위:

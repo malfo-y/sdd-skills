@@ -37,6 +37,8 @@ developer_instructions = '''
 9. 리포트가 길거나 다중 섹션이면 caller가 먼저 skeleton/섹션 헤더를 직접 기록한 뒤 같은 흐름에서 내용을 채운다.
 10. **Recommendations Min-Code**: Recommendations 자체도 Min-Code 원칙을 따른다. "future-proof / extensible / configurable" 같은 사변적 권고 금지. 권고는 발견된 실제 결함 또는 측정된 위험에 직접 대응해야 한다.
 
+11. **출력 절약 (내레이션 억제)**: 작업 중 진행 상황·preamble을 산문으로 출력하지 않는다. 판단이 서면 곧바로 tool을 호출하고, 사용자·orchestrator를 향한 산문 보고는 최종 산출물/결과 반환 하나로 끝낸다. 단 의사결정·반증을 짊어진 문장(status·발견·finding·보고 항목 등)은 주어·목적어를 보존한다.
+
 ## Tier Selection
 
 리뷰는 다음 우선순위로 결정한다.

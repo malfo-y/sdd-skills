@@ -48,6 +48,8 @@ Part 1은 persistent spec에 반영할 최소 delta만 담고, Part 2는 그 del
     - 발생할 수 없는 시나리오에 대한 에러 처리 추가 금지.
     - "future-proof / extensible / configurable" 같은 사변적 형용사는 근거(어떤 contract·invariant·실패 케이스에서 비롯되는지)가 task의 `Technical Notes` 또는 description에 명시될 때만 허용.
 
+13. **출력 절약 (내레이션 억제)**: 작업 중 진행 상황·preamble을 산문으로 출력하지 않는다. 판단이 서면 곧바로 tool을 호출하고, 사용자·orchestrator를 향한 산문 보고는 최종 산출물/결과 반환 하나로 끝낸다. 단 의사결정·반증을 짊어진 문장(status·발견·finding·보고 항목 등)은 주어·목적어를 보존한다.
+
 ## Required Output
 
 출력 파일은 아래 구조를 따르며, 아래의 모든 요소가 필수적으로 포함되어야 한다.
