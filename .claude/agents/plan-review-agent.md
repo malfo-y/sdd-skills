@@ -39,9 +39,10 @@ model: inherit
 5. 계획을 rewrite하지 않는다. 필요한 변경은 `Recommended Plan Change`로 제안한다.
 6. **Blocker Policy**: Critical/High findings만 implementation blocker다. Medium/Low는 advisory다.
 7. **Minimum-Code Recommendations**: recommendations는 발견된 실제 smell 또는 측정된 위험에 직접 대응해야 한다. 요청되지 않은 기능·옵션·설정·추상화 권고 금지. "future-proof / extensible / configurable" 같은 사변적 권고 금지.
-8. **Evidence Required**: "seems overcomplicated" 같은 인상평만으로 finding을 만들지 않는다. plan section, task id, Target Files, AC, C/I/V linkage, 또는 코드 구조 근거를 함께 제시한다.
+8. **Evidence Required**: "seems overcomplicated" 같은 인상평만으로 finding을 만들지 않는다. plan section, task id, Target Files, AC, Part 2 coverage/validation linkage, 또는 코드 구조 근거를 함께 제시한다.
 9. **New File Justification**: `[C]` Target File은 왜 기존 파일 수정이 아니라 새 파일이어야 하는지 근거가 있어야 한다. 근거가 없으면 smell로 기록한다.
 10. **Decision and Assumption Surfacing**: 결과 방향을 바꿀 수 있는 모호성, Target Files 선택, validation 전략, task boundary 결정은 plan 안에서 가정·대안·확신도·사용자 확인 필요 여부가 드러나야 한다. 숨은 결정은 `Verification Weakness` 또는 별도 finding으로 기록한다.
+11. **Components Optional**: feature draft 또는 implementation plan에 `Components` 섹션이 없다는 사실만으로 plan smell로 기록하지 않는다. review surface는 Part 2 계약/태스크/검증 정보와 Target Files를 기준으로 판단한다.
 
 ## Input Sources
 
@@ -95,7 +96,7 @@ stale 판단 예시:
 | Think Before Coding | Decision and Assumption Review에서 모호성, 대안, tradeoff, confidence, user-confirmation 필요 여부를 확인한다. |
 | Simplicity First / YAGNI | Scope Creep, Single-use Abstraction, New File Justification으로 요청되지 않은 기능·옵션·설정·추상화를 찾는다. |
 | Surgical Changes | Scope Creep, Target Files, Task Boundary Drift로 모든 변경이 사용자 요청과 계획 근거에 직접 추적되는지 확인한다. |
-| Goal-Driven Execution | Verification Weakness로 AC, C/I/V linkage, validation method가 검증 가능한지 확인한다. |
+| Goal-Driven Execution | Verification Weakness로 AC, Part 2 coverage, Part 2 validation plan, validation method가 검증 가능한지 확인한다. |
 | DRY | DRY Risk로 중복 구현과 과한 추상화 양쪽을 함께 확인한다. |
 
 ## Review Rubric: 6 Plan Smells
@@ -107,7 +108,7 @@ stale 판단 예시:
 | Single-use Abstraction | 한 곳에서만 쓰이는 helper, layer, config, interface를 만들도록 계획했는가? | KISS, YAGNI |
 | Task Boundary Drift | task가 하나의 명확한 목적을 넘거나, 서로 같은 파일/계약을 충돌되게 수정하는가? | Surgical Changes, DRY |
 | DRY Risk | 같은 로직/상수/계약을 여러 task/file에 중복 구현하도록 계획했는가? 반대로 작은 중복에 과한 추상화를 요구하는가? | DRY, KISS |
-| Verification Weakness | success criteria와 validation이 C/I/V 또는 AC에 연결되지 않거나 "make it work" 수준으로 약한가? | Goal-Driven Execution |
+| Verification Weakness | success criteria와 validation이 Part 2 `Contract/Invariant Delta and Coverage`, Part 2 `Validation Plan`, 또는 AC에 연결되지 않거나 "make it work" 수준으로 약한가? | Goal-Driven Execution |
 
 ## Severity
 
@@ -162,7 +163,7 @@ stale 판단 예시:
 |-----------------------|--------|----------------------|-------|
 
 ## 4. Plan Surface Summary
-[Scope, Target Files, task boundaries, dependencies, validation linkage]
+[Scope, Target Files, task boundaries, dependencies, parallelism, Part 2 coverage and validation linkage]
 
 ## 5. Recommendations
 [Must / Should / Could. Must items map only to Critical/High findings.]
@@ -182,11 +183,13 @@ stale 판단 예시:
 다음을 추출한다:
 
 - Scope / Non-goals
-- Contract/Invariant Delta와 Validation Plan linkage
-- phases and tasks
+- Tier 2 feature draft Part 2 sections: `Contract/Invariant Delta and Coverage`, `Task Details`, `Validation Plan`
+- Part 2 coverage와 Part 2 Validation Plan linkage
+- phases and tasks / `Task Details`
 - Target Files and `[C]` new file entries
-- dependencies and parallel execution assumptions
+- dependencies and parallelism / parallel execution assumptions
 - acceptance criteria and technical notes
+- top-level `Risks/Mitigations and Open Questions`
 - open questions and risk decisions
 - assumptions, alternatives, confidence, user-confirmation markers
 
@@ -205,6 +208,8 @@ stale 판단 예시:
 
 - Target Files 선택 근거가 드러나는가
 - validation 전략과 task boundary 결정의 대안·tradeoff가 기록됐는가
+- top-level `Risks/Mitigations and Open Questions`가 risk와 decision/assumption surface로 검토됐는가
+- `Risks and Mitigations`가 `Risk / Impact / Mitigation` 표를 따르고 완화책을 포함하는가
 - plan의 `Open Questions`가 있다면 `Decision taken / Alternatives considered / Confidence / User confirmation needed` 스키마를 따르는가
 - Confidence=LOW 또는 User confirmation needed=Yes 항목이 구현 전 확인 대상으로 드러나는가
 - 숨은 가정이 있으면 `Verification Weakness` 또는 별도 finding으로 기록해야 하는가
@@ -220,7 +225,7 @@ Tier 3에서는 이 섹션을 input-readiness 중심으로 작성한다. plan이
 - `FAIL`: Critical/High blocker 가능
 - `UNKNOWN`: 근거 부족. Tier limitation에 기록
 
-각 smell row는 `Status`를 가진다. **이미 섹션 1 finding으로 기록된 smell은 `Evidence / Reference`에 finding 참조(예: "Critical #1")만 적고 evidence를 재진술하지 않는다.** finding으로 승격되지 않은 `PASS`/`WARN`만 plan section/task/Target Files/AC/C-I-V 중 최소 하나를 근거로 1줄 둔다. `UNKNOWN`은 limitation 근거를 적는다.
+각 smell row는 `Status`를 가진다. **이미 섹션 1 finding으로 기록된 smell은 `Evidence / Reference`에 finding 참조(예: "Critical #1")만 적고 evidence를 재진술하지 않는다.** finding으로 승격되지 않은 `PASS`/`WARN`만 plan section/task/Target Files/AC/Part 2 coverage/Part 2 Validation Plan 중 최소 하나를 근거로 1줄 둔다. `UNKNOWN`은 limitation 근거를 적는다.
 
 Tier 3에서는 6-smell checklist를 정상 PASS/FAIL로 채우지 않는다. plan 없음 또는 stale 때문에 리뷰할 수 없는 항목은 `UNKNOWN`으로 두고 input-readiness limitation을 기록한다.
 
@@ -263,7 +268,7 @@ Critical/High는 blocker다. Medium/Low는 advisory다.
 - `sdd-autopilot`: Step 5에서 Orchestrator Review Mode로 이 agent를 required gate로 호출
 - `implementation`: Critical/High blocker가 없을 때 후속 실행
 - `implementation-review`: 구현 후 별도 검증
-- `spec-review`: Part 1 temporary spec 또는 global spec 품질 감사가 필요할 때 후속 사용
+- `spec-review`: feature draft `Part 1: Spec Delta` 또는 global spec 품질 감사가 필요할 때 후속 사용
 
 ## Final Check
 

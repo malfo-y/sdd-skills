@@ -50,31 +50,28 @@ global spec 규칙:
 - usage guide, expected result, feature-level contract/validation은 기본 global core가 아니다.
 - architecture/component inventory를 본문 필수로 강제하지 않는다.
 
-### 1.5 Temporary Spec Canonical Shape
+### 1.5 Feature Draft Canonical Shape
 
-temporary spec은 global spec의 축약 복사본이 아니다. 변경 작업을 위한 실행 청사진이다.
+feature draft는 global spec의 축약 복사본이 아니다. 변경 작업을 위한 spec delta와 실행 청사진이다.
 
-canonical 7섹션:
+canonical shape:
 
-1. `Change Summary`
-2. `Scope Delta`
-3. `Contract/Invariant Delta`
-4. `Touchpoints`
-5. `Implementation Plan`
-6. `Validation Plan`
-7. `Risks / Open Questions`
+1. `Part 1: Spec Delta`
+2. `Part 2: Implementation and Validation Plan`
+3. `Risks/Mitigations and Open Questions`
 
 핵심 규칙:
 
-- `Contract/Invariant Delta`는 `C*`, `I*` ID를 사용한다.
-- `Validation Plan`은 `V*` ID를 사용하고 delta ID를 `Targets`로 연결한다.
-- 작은 변경이면 `C1/I1/V1` 수준의 compact linkage로 충분하다. traceability를 위해 ID는 유지하되 형식적 분해를 늘리지 않는다.
-- `Touchpoints`는 전수형 파일 목록이 아니라 전략적 change hotspot이다.
-- temporary spec의 실행 정보는 global spec에 그대로 병합하지 않는다.
+- `Part 1: Spec Delta`는 `<!-- spec-update-todo-input-start -->` / `<!-- spec-update-todo-input-end -->` 마커를 포함하고, 필수 섹션은 `Change Summary`, `Scope Delta`, `Persistent Spec Implications`뿐이다.
+- `Persistent Spec Implications`는 persistent spec에 남아야 하는 repo-wide contract/invariant/validation 의도 후보를 compact하게 적는다. feature-level table, 상세 ID linkage, task plan, validation execution detail은 Part 1에 요구하지 않는다.
+- `Part 2: Implementation and Validation Plan`은 execution-facing 섹션을 둔다: `Contract/Invariant Delta and Coverage`, `Touchpoints`, `Implementation Phases`, `Task Details`, `Validation Plan`, `Parallel Execution Summary`.
+- Part 2의 `Contract/Invariant Delta and Coverage`는 `C*`, `I*`, `V*` ID와 task/validation coverage를 보존한다.
+- `Risks/Mitigations and Open Questions`는 top-level 섹션이며, `Risks and Mitigations`는 `Risk / Impact / Mitigation` 표를 따르고 `Open Questions`는 Decision / Alternatives / Confidence / User confirmation needed 스키마를 따른다.
+- feature draft의 실행 정보는 global spec에 그대로 병합하지 않는다.
 
 ### 1.6 spec-update-todo / done의 역할
 
-- `spec-update-todo`: temporary spec이나 user input을 읽고, global spec에 남아야 할 planned persistent information만 올린다.
+- `spec-update-todo`: feature draft `Part 1: Spec Delta`나 user input을 읽고, global spec에 남아야 할 planned persistent information만 올린다.
 - `spec-update-done`: 실제 구현과 validation evidence를 읽고, global spec에 남아야 할 implemented persistent information만 올린다.
 
 즉:
@@ -144,7 +141,7 @@ validation / final integration review
 
 - **Small direct path**: 바로 `implementation`으로 간다. 정말 간단한 디버깅 수준의 수정(typo fix, config 값 변경, 로그 한 줄 추가 등)이거나 해당 주제의 feature-draft artifact가 `_sdd/drafts/`에 이미 존재하는 경우에만 `feature-draft`를 생략할 수 있다. review가 포함되면 규모와 무관하게 `implementation -> implementation-review -> implementation -> implementation-review` subagent loop를 사용하고, 부모 autopilot이 로컬 구현/로컬 리뷰로 대체하지 않는다.
 - **Single-phase medium path**: 기본 진입은 `feature-draft`다. Part 2가 task/dependency/validation 측면에서 충분히 명확하면 `implementation-plan` 없이 `implementation`으로 바로 연결한다. 이 경우에도 해당 `implementation` 직후 global review-fix gate를 즉시 닫아야 하며, 그 전에는 downstream step으로 진행할 수 없다. review가 있으면 실행 주체는 항상 `implementation`/`implementation-review` subagent mapping이다.
-- **Multi-phase medium / large expanded path**: `feature-draft`로 temporary spec을 고정한 뒤, planned persistent global alignment가 필요할 때만 `spec-update-todo`를 조건부로 추가하고, multi-phase 실행으로 판단되면 `implementation-plan`을 반드시 포함한다. feature-draft -> implementation 직행은 single-phase 경로에 한정한다. 이 path에서 downstream `implementation` step은 flat single-shot step이 아니라 `Execution Mode: phase-iterative`와 `Phase Source`를 선언하는 runtime control-flow unit이어야 하며, phase count와 boundary는 Step 4가 아니라 runtime에 plan output을 읽어 해석한다.
+- **Multi-phase medium / large expanded path**: `feature-draft`로 slim Part 1과 execution-facing Part 2를 고정한 뒤, planned persistent global alignment가 필요할 때만 `spec-update-todo`를 조건부로 추가하고, multi-phase 실행으로 판단되면 `implementation-plan`을 반드시 포함한다. feature-draft -> implementation 직행은 single-phase 경로에 한정한다. 이 path에서 downstream `implementation` step은 flat single-shot step이 아니라 `Execution Mode: phase-iterative`와 `Phase Source`를 선언하는 runtime control-flow unit이어야 하며, phase count와 boundary는 Step 4가 아니라 runtime에 plan output을 읽어 해석한다.
 - **Group-gated execution rule**: medium 이상에서 multi-phase plan이 생성되면 `Review-Fix Loop.scope = per-group`을 기본값으로 본다. `Phase Source`의 `Checkpoint` 필드가 group boundary를 결정하며, Checkpoint phase 직후 같은 group 범위의 review-fix gate와 validation을 닫는다. 그룹 2개 이상이면 마지막 group gate 후 cross-group regression 전용 `final integration review`를 1회 더 수행한다.
 - **Spec sync ordering rule**: `spec-update-done`은 모든 required implementation-scoped review-fix gate, required validation/test, 필요한 경우 `final integration review`가 끝난 뒤 최종 단계에서만 수행한다.
 - **Carry-over default**: `medium` 이슈도 기본적으로 phase exit blocker다. carry-over는 plan과 orchestrator에 정책과 근거가 명시된 경우에만 허용한다.
@@ -166,7 +163,7 @@ validation / final integration review
 - Reasoning note: temporary execution detail은 global에 올리지 않는다. complex planned global alignment가 실제로 필요할 때만 조건부로 사용한다.
 
 #### implementation-plan
-- Role: temporary spec delta를 phase/task 중심 계획으로 세분화
+- Role: feature draft Part 2를 phase/task 중심 계획으로 세분화
 - Reasoning note: `feature-draft` 이후 phase/task/validation linkage를 강화하는 확장 단계다. `feature-draft` Part 2가 충분하지 않거나 multi-phase gate가 필요한 경우에 사용한다. multi-phase 실행으로 판단되면 반드시 포함하며, 각 phase에 `goal`, `task set / dependency closure`, `validation focus`, `exit criteria`, `carry-over policy`를 제공해야 한다. downstream `implementation` step은 이 output을 `Execution Mode: phase-iterative`와 `Phase Source`로 참조해야 한다.
 
 #### implementation

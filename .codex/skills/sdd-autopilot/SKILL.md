@@ -165,7 +165,7 @@ Step 1 내재화 + Step 2~3 결과를 바탕으로 추론한다.
 
 spec-less mode 참고:
 - spec이 없으면 spec-less 모드로 진행한다. `spec-create`를 파이프라인에 자동 배치하지 않고, 사용자에게 구현 완료 후 global spec을 만드는 것을 추천한다. 코드가 먼저 존재해야 spec이 실제 구조를 반영할 수 있기 때문이다.
-- spec-less인 경우에도 feature-draft의 Part 1 temporary spec은 생성할 수 있다. global spec 없이도 delta 기반 reasoning은 가능하다.
+- spec-less인 경우에도 feature-draft의 `Part 1: Spec Delta`는 생성할 수 있다. global spec 없이도 delta 기반 reasoning은 가능하다.
 
 planning precedence 메모:
 - **`feature-draft`는 기본 포함이다.** 다음 두 조건 중 하나를 만족할 때만 스킵할 수 있다: (1) 정말 간단한 디버깅 수준의 수정(typo fix, config 값 변경, 로그 한 줄 추가 등)이거나, (2) 해당 주제의 feature-draft artifact가 `_sdd/drafts/`에 이미 존재하는 경우. 그 외에는 small/medium/large 무관하게 `feature-draft`를 반드시 거친다.
@@ -178,7 +178,10 @@ planning precedence 메모:
 - 의존성 그래프 기반 동적 조합
 - `references/orchestrator-contract.md` 계약 준수
 - "구체화된 요구사항"에서 기능 수준 Acceptance Criteria 도출
-- temporary spec이 예상되면 `Contract/Invariant Delta`와 `Validation Plan` linkage를 pipeline reasoning에 반영
+- feature draft가 예상되면 아래 downstream linkage를 pipeline reasoning에 반영:
+  - `Part 1: Spec Delta`
+  - `Part 2: Implementation and Validation Plan`
+  - top-level `Risks/Mitigations and Open Questions`
 - Step 4에서 실제로 materialize할 수 있는 산출물은 `_sdd/pipeline/orchestrators/orchestrator_<topic>.md` 하나뿐이다.
 - `_sdd/drafts/*`, `_sdd/implementation/*`, `_sdd/pipeline/log_*`, `_sdd/pipeline/report_*`, 코드/테스트 출력은 future step의 planned output으로 선언할 수는 있지만 이 단계에서 미리 생성하면 안 된다.
 - 각 `implementation` step에는 같은 범위의 review-fix gate가 즉시 붙어야 한다.

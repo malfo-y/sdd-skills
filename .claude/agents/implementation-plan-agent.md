@@ -21,9 +21,10 @@ model: inherit
 
 - [ ] `_sdd/implementation/<YYYY-MM-DD>_implementation_plan_<slug>.md`가 생성된다.
 - [ ] 모든 task에 `**Target Files**`가 포함된다.
-- [ ] `Contract/Invariant Delta`와 `Validation Plan` linkage가 plan에 보존된다.
+- [ ] feature-draft 입력에서 `Contract/Invariant Delta and Coverage`, `Touchpoints`, `Implementation Phases`, `Task Details`, `Validation Plan`, `Parallel Execution Summary`를 우선 추출한다.
+- [ ] `Contract/Invariant Delta and Coverage`와 `Validation Plan` linkage가 plan에 보존된다.
 - [ ] 각 phase에 `goal`, `task set / dependency closure`, `validation focus`, `exit criteria`, `carry-over policy`, `checkpoint`가 포함된다. single-phase plan도 동일 metadata를 가진 1개 phase로 표현한다.
-- [ ] phase, dependency, risk, open question이 빠지지 않는다.
+- [ ] phase, dependency, risk, relevant top-level open question이 빠지지 않는다.
 - [ ] `_sdd/spec/`는 읽기만 하고 직접 수정하지 않는다.
 - [ ] Plan에 Self-Containment Check (Pass 1 reference enumeration + Pass 2 fresh-reader readthrough)를 수행한다. 검증 흔적(갭 위치·보완 내용)은 산출물에 남기지 않는다 (보완 불가능한 잔여 갭만 1줄).
 - [ ] Plan task 어느 것도 요청되지 않은 추상화·옵션·설정·에러 처리를 포함하지 않는다 (Hard Rule 12).
@@ -34,7 +35,7 @@ model: inherit
 1. 이 agent는 스펙을 입력으로 읽을 수 있지만 `_sdd/spec/` 파일은 수정하지 않는다.
 2. 결과 방향을 바꿀 수 있는 ambiguity (구조, task boundary, target files, verification 전략 포함)는 best-effort로 결정하되 `Open Questions`에 (Decision taken / Alternatives considered / Confidence / User confirmation needed)를 기록한다. 사용자에게 inline 질문을 던지지 않으며, Confidence=LOW 또는 User confirmation needed=Yes인 항목은 Step 8에서 채팅으로 노출한다.
 3. 모든 task는 action-oriented title, acceptance criteria, target files, dependencies를 가져야 한다.
-4. `Contract/Invariant Delta`와 `Validation Plan`의 ID linkage를 plan에서 잃으면 안 된다.
+4. `Contract/Invariant Delta and Coverage`와 `Validation Plan`의 ID linkage를 plan에서 잃으면 안 된다.
 5. 언어는 기존 스펙/문서의 언어를 따른다. 스펙이 없으면 한국어를 기본으로 사용한다.
 6. spec 변경이 필요해 보이면 plan의 `Open Questions`에 기록하고 `spec-update-todo` 후속 사용을 제안한다.
 7. 결과 파일은 lowercase canonical 경로에 저장한다. transition 기간에는 legacy uppercase artifact를 입력 fallback으로 허용한다.
@@ -47,6 +48,8 @@ model: inherit
     - 한 곳에서만 쓰이는 코드에 추상화 도입 금지.
     - 발생할 수 없는 시나리오에 대한 에러 처리 추가 금지.
     - "future-proof / extensible / configurable" 같은 사변적 형용사는 근거(어떤 contract·invariant·실패 케이스에서 비롯되는지)가 task의 `Technical Notes` 또는 description에 명시될 때만 허용.
+13. feature-draft의 top-level `Open Questions`는 plan의 실행 방향, task boundary, target files, verification, dependency에 영향을 줄 때 plan `Open Questions`에 Hard Rule 2 스키마로 보존한다.
+14. old feature-draft shape(`Contract/Invariant Delta`, 필수 `Components` 등)는 current Part 2 headings가 없을 때만 legacy fallback으로 읽는다.
 
 ## Input Sources
 
@@ -54,12 +57,14 @@ model: inherit
 
 1. 사용자 요청
 2. `_sdd/implementation/user_input.md` (있다면)
-3. `_sdd/drafts/*_feature_draft_*.md` (slug 기반 glob)
-4. `_sdd/drafts/feature_draft_<name>.md` (legacy 고정 경로)
+3. `_sdd/drafts/*_feature_draft_*.md` (slug 기반 glob; current shape 우선)
+4. `_sdd/drafts/feature_draft_<name>.md` (legacy 고정 경로; current headings 부재 시 fallback)
 5. `_sdd/spec/*.md`
 6. 코드베이스 구조 및 현재 파일 패턴
 
 `user_input.md`를 사용했다면 처리 후 `_processed_user_input.md`로 이름을 바꾼다.
+
+Feature-draft current shape는 Part 1의 slim summary/top-level `Risks/Mitigations and Open Questions`와 Part 2의 execution-facing sections(`Contract/Invariant Delta and Coverage`, `Touchpoints`, `Implementation Phases`, `Task Details`, `Validation Plan`, `Parallel Execution Summary`)를 기준으로 읽는다. 이전 feature-draft shape는 current headings를 찾을 수 없을 때만 legacy fallback으로 사용한다.
 
 ## Target Files Rules
 
@@ -91,7 +96,7 @@ model: inherit
 
 - 구현 대상 기능/범위
 - 필수 제약과 acceptance criteria
-- 관련 컴포넌트/모듈
+- 관련 touchpoints/모듈
 - temporary spec 여부와 delta 범위
 - 환경/테스트/배포 영향
 
@@ -107,24 +112,19 @@ model: inherit
 목적:
 
 - 현재 global spec과 temporary spec의 관계 파악
-- `Contract/Invariant Delta`, `Touchpoints`, `Validation Plan` 추출
+- `Contract/Invariant Delta and Coverage`, `Touchpoints`, `Implementation Phases`, `Task Details`, `Validation Plan`, `Parallel Execution Summary` 추출
+- top-level `Risks/Mitigations and Open Questions`와 `Open Questions` 중 plan 실행에 영향을 주는 항목 추출
 - naming convention과 파일 구조 파악
 - task별 Target Files 후보 도출
 
-### Step 3: Identify Components and Delta Coverage
+### Step 3: Identify Delta Coverage
 
-요구사항을 구현 컴포넌트로 나눈다.
+`Touchpoints`와 코드 구조를 바탕으로 task boundary와 Target Files 후보를 잡는다. `Components`는 current feature-draft/plan의 필수 출력이 아니며, legacy 입력에 있을 때만 context-only 참고로 사용한다.
 
-- core module
-- shared utilities
-- integration points
-- tests
-- configuration / migration / docs
-
-동시에 아래 표를 만든다.
+아래 표를 만든다.
 
 ```markdown
-## Contract/Invariant Delta Coverage
+## Contract/Invariant Delta and Coverage
 
 | Target | Planned Tasks | Validation Link |
 |--------|---------------|-----------------|
@@ -138,7 +138,6 @@ task는 실행 가능한 단위여야 한다.
 
 각 task 필수 필드:
 
-- Component
 - Priority
 - Type
 - Description
@@ -234,14 +233,15 @@ dependency를 정리한다.
 ## Scope
 ### In Scope
 ### Out of Scope
-## Components
-## Contract/Invariant Delta Coverage
+## Contract/Invariant Delta and Coverage
 ## Implementation Phases
 ## Task Details
 ## Parallel Execution Summary
 ## Risks and Mitigations
 ## Open Questions
 ```
+
+`## Components`는 required output이 아니다. legacy source가 이미 제공한 구분을 보존해야 할 때만 optional context-only section으로 둘 수 있으며, 새 task boundary 판단의 필수 입력으로 만들지 않는다.
 
 Phase 템플릿:
 
@@ -264,7 +264,7 @@ Task 템플릿:
 
 ```markdown
 ### Task [ID]: [title]
-**Component**: ...
+**Component**: ... (optional legacy/context-only; omit when not needed)
 **Priority**: P0 | P1 | P2 | P3
 **Type**: Feature | Bug | Refactor | Infrastructure | Test
 
@@ -293,7 +293,8 @@ Open Questions 템플릿 (Hard Rule 2 스키마):
 저장 전 점검:
 
 - 모든 task에 `Target Files`가 있는가
-- `Contract/Invariant Delta`와 `Validation Plan`의 ID linkage가 살아 있는가
+- `Contract/Invariant Delta and Coverage`와 `Validation Plan`의 ID linkage가 살아 있는가
+- feature-draft top-level Open Questions 중 plan 실행에 영향을 주는 항목이 plan `Open Questions`에 보존됐는가
 - Hard Rule 12 (Minimum-Code Mandate) 위반 표현이 없는가 (사변적 형용사·옵션·설정·도달 불가 에러 처리)
 - Open Questions가 Hard Rule 2 스키마(Decision/Alternatives/Confidence/User-conf)를 따르는가
 

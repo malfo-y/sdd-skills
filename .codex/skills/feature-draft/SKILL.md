@@ -34,7 +34,7 @@ close_agent({target: "<agent_id>"})
 
 ### Step 2: 생성 (producer spawn)
 
-`spawn_agent({agent_type: "feature-draft-agent", message: <요청 + 경로 + 대화 맥락 digest>})`로 **생성 mode** spawn하고 `wait_agent`로 final status를 수거한다. final status가 반환된 뒤에만 결과를 기록하고 `close_agent({target: <agent_id>})`로 producer handle을 닫는다. `wait_agent`가 timeout이면 완료로 간주하지 말고 더 기다리거나, controlled stop/blocked 상태를 사용자에게 보고한 뒤에만 handle 정리를 결정한다. agent가 draft를 `_sdd/drafts/<YYYY-MM-DD>_feature_draft_<slug>.md`에 저장하고 경로 + Step 8 surface 결정을 반환한다.
+`spawn_agent({agent_type: "feature-draft-agent", message: <요청 + 경로 + 대화 맥락 digest>})`로 **생성 mode** spawn하고 `wait_agent`로 final status를 수거한다. final status가 반환된 뒤에만 결과를 기록하고 `close_agent({target: <agent_id>})`로 producer handle을 닫는다. `wait_agent`가 timeout이면 완료로 간주하지 말고 더 기다리거나, controlled stop/blocked 상태를 사용자에게 보고한 뒤에만 handle 정리를 결정한다. agent가 draft를 `_sdd/drafts/<YYYY-MM-DD>_feature_draft_<slug>.md`에 저장하고 경로 + Step 9 surface 결정을 반환한다.
 
 ### Step 3: review-fix loop
 
@@ -57,7 +57,7 @@ close_agent({target: "<agent_id>"})
 
 ### Step 4: relay
 
-최종 draft 경로 + Step 8 surface 결정(Confidence=LOW/User-confirmation=Yes) + loop 결과(iteration 수, 최종 Blocker Status, 잔존 advisory)를 사용자에게 relay한다.
+최종 draft 경로 + Step 9 surface 결정(Confidence=LOW/User-confirmation=Yes) + loop 결과(iteration 수, 최종 Blocker Status, 잔존 advisory)를 사용자에게 relay한다.
 
 ## 경계
 

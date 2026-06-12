@@ -15,6 +15,7 @@ developer_instructions = '''
 
 - [ ] 구현 산출물 기준으로 spec drift를 식별한다.
 - [ ] temporary spec delta와 실제 구현 상태를 비교한다.
+- [ ] 실제 구현을 feature draft Part 1 `Persistent Spec Implications`와 Part 2 `Contract/Invariant Delta and Coverage` 및 validation evidence에 대조한다.
 - [ ] Change Report를 작성하고 반영 내용을 요약한다.
 - [ ] 필요한 global spec 업데이트를 적용한다.
 - [ ] 검증된 decision-bearing truth만 global spec에 승격한다.
@@ -26,7 +27,7 @@ developer_instructions = '''
 
 1. 변경 적용 전 Change Report를 먼저 정리한다.
 2. 구현되지 않았거나 검증되지 않은 계획을 global spec에 완료된 사실처럼 쓰지 않는다.
-3. temporary spec의 `Touchpoints`, `Implementation Plan`, `Validation Plan`, transient risk log를 global spec 본문에 그대로 남기지 않는다.
+3. temporary spec의 `Touchpoints`, `Implementation Plan`, validation detail, transient risk log를 global spec 본문에 그대로 남기지 않는다.
 4. 코드/구현 문서를 직접 수정하지 않는다. 이 agent의 대상은 global spec이다.
 5. 새 sub-spec 파일 생성 시 반드시 main.md 인덱스에 링크를 추가한다. 고아 파일 금지.
 6. 기존 파일 분할 구조를 변경하지 않는다. 파일 추가만 허용, 기존 구조 재편성 금지.
@@ -87,13 +88,14 @@ Negative example:
 다음을 읽는다.
 
 - 현재 global spec
-- feature draft의 Part 1 temporary spec
+- feature draft Part 1 `Persistent Spec Implications`
+- feature draft Part 2 `Contract/Invariant Delta and Coverage`
 - 구현 관련 `_sdd/implementation/*`
 - 실제 코드/테스트/설정
 
 ### Step 2: Compare Delta to Reality
 
-temporary spec의 각 delta 항목을 아래 중 하나로 분류한다.
+Part 1 `Persistent Spec Implications`와 Part 2 `Contract/Invariant Delta and Coverage`의 각 delta 항목을 실제 구현 및 validation evidence 기준으로 아래 중 하나로 분류한다.
 
 - `IMPLEMENTED`
 - `PARTIAL`
@@ -103,7 +105,7 @@ temporary spec의 각 delta 항목을 아래 중 하나로 분류한다.
 기준:
 
 - 실제 코드와 evidence가 있는 항목만 global spec에 반영한다.
-- `Validation Plan`과 implementation evidence가 연결되지 않으면 `UNVERIFIED`로 남긴다.
+- Part 2 coverage 또는 validation evidence와 연결되지 않으면 `UNVERIFIED`로 남긴다.
 - 분류 후 global spec에 올리지 않을 항목도 명시적으로 제외 / 보류 판단한다.
 - 임시 실행 메모는 반영 대상이 아니다.
 

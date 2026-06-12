@@ -82,8 +82,12 @@ task-level `sdd-skills:implementation-agent` leaf는 **단일 task만 TDD로 수
 
 planning producer step은 `sdd-skills:feature-draft-agent`와 `sdd-skills:implementation-plan-agent`다. 두 producer의 output은 downstream 소비 전에 `sdd-skills:plan-review-agent` gate를 통과해야 한다.
 
-- `sdd-skills:feature-draft-agent` 직후 `sdd-skills:plan-review-agent`를 호출해 temporary spec 7섹션, `Contract/Invariant Delta`, `Validation Plan` linkage, downstream planning 입력 적합성을 검증한다.
-- `sdd-skills:implementation-plan-agent` 직후 `sdd-skills:plan-review-agent`를 호출해 `Contract/Invariant Delta Coverage`, task/Target Files, dependency/checkpoint/carry-over 필드, downstream implementation controller 입력 적합성을 검증한다.
+- `sdd-skills:feature-draft-agent` 직후 `sdd-skills:plan-review-agent`를 호출해 다음을 검증한다:
+  - `Part 1: Spec Delta`의 marker/3-section slim shape
+  - `Part 2: Implementation and Validation Plan`의 `Contract/Invariant Delta and Coverage`/`Validation Plan` linkage
+  - top-level `Risks/Mitigations and Open Questions`
+  - downstream planning 입력 적합성
+- `sdd-skills:implementation-plan-agent` 직후 `sdd-skills:plan-review-agent`를 호출해 `Contract/Invariant Delta and Coverage`, task/Target Files, dependency/checkpoint/carry-over 필드, downstream implementation controller 입력 적합성을 검증한다.
 - gate가 fail이면 producer output을 소비하지 않는다. autopilot은 같은 producer step을 regenerate하도록 요구하고, review finding을 normalize해서 통과 처리하면 안 된다.
 - gate는 canonical `subagent_type` 정책도 검증한다. legacy alias가 발견되면 reject/regenerate 대상이다.
 - **Regenerate 상한**: 같은 producer step의 reject/regenerate는 최대 2회다. 상한 도달 시 gate를 통과 처리하지 않고 `BLOCKED`로 종료해 잔존 finding과 함께 사용자 결정을 받는다.
@@ -93,7 +97,7 @@ planning producer step은 `sdd-skills:feature-draft-agent`와 `sdd-skills:implem
 
 - global spec은 장기적 SoT다.
 - temporary spec은 실행 청사진이다.
-- `feature-draft`는 temporary spec 7섹션을 만든다.
+- `feature-draft`는 slim `Part 1: Spec Delta`, execution-facing Part 2, top-level risk surface를 만든다.
 - `spec-update-todo`와 `spec-update-done`만 global spec을 수정한다.
 - temporary execution detail을 global spec 본문으로 복사하는 step은 허용되지 않는다.
 - global spec은 thin core를 유지해야 하며, feature-level usage/validation/reference를 기본 본문으로 되돌리면 안 된다.
@@ -102,7 +106,7 @@ planning producer step은 `sdd-skills:feature-draft-agent`와 `sdd-skills:implem
 
 - 각 요구사항을 검증 가능한 조건 1개 이상으로 변환한다.
 - 프로세스 완료 여부가 아니라 기능 동작 여부를 검증한다.
-- temporary spec이 있으면 `Contract/Invariant Delta`와 `Validation Plan`을 AC와 연결한다.
+- feature draft가 있으면 Part 2 `Contract/Invariant Delta and Coverage`와 `Validation Plan`을 AC와 연결한다.
 
 ## 5. Reasoning Trace
 
@@ -176,12 +180,14 @@ planning producer step은 `sdd-skills:feature-draft-agent`와 `sdd-skills:implem
 
 ### feature-draft
 - feature draft 파일 존재
-- Part 1 temporary spec 7섹션 존재
-- `Contract/Invariant Delta`와 `Validation Plan` linkage 존재
+- `Part 1: Spec Delta` 존재, `<!-- spec-update-todo-input-start -->` / `<!-- spec-update-todo-input-end -->` 마커 포함
+- Part 1 필수 섹션은 `Change Summary`, `Scope Delta`, `Persistent Spec Implications`뿐임
+- `Part 2: Implementation and Validation Plan` 존재, `Contract/Invariant Delta and Coverage`와 `Validation Plan` linkage 포함
+- top-level `Risks/Mitigations and Open Questions` 존재
 
 ### implementation-plan
 - implementation plan 존재
-- `Contract/Invariant Delta Coverage` 존재
+- `Contract/Invariant Delta and Coverage` 존재
 - task와 `Target Files`가 정의됨
 - `feature-draft` 이후 확장 단계인지, 또는 standalone 예외인지가 드러남
 - 각 phase에 `goal`, `task set / dependency closure`, `validation focus`, `exit criteria`, `carry-over policy`, `checkpoint`가 포함됨

@@ -70,6 +70,8 @@ Negative example:
 4. `_sdd/drafts/*_feature_draft_*.md` (slug 기반 glob), `_sdd/drafts/feature_draft_<name>.md` (legacy fallback)
 5. `_sdd/spec/decision_log.md`
 
+Feature draft 입력은 current contract의 `Part 1: Spec Delta`를 우선 읽는다. legacy feature draft 형식은 read fallback으로만 사용하고, 새 planned global input requirement로 승격하지 않는다.
+
 처리 후 rename:
 
 - `user_spec.md` -> `_processed_user_spec.md`
@@ -83,7 +85,8 @@ Negative example:
 
 - 직접 요청
 - 구조화된 spec input file
-- feature draft의 Part 1 temporary spec
+- feature draft의 `Part 1: Spec Delta`
+- legacy feature draft의 Part 1 temporary spec (read fallback only)
 
 ### Step 2: Load Current Global Spec
 
@@ -94,17 +97,17 @@ Negative example:
 
 ### Step 3: Parse Planned Delta
 
-입력을 다음 축으로 분해한다.
+feature draft의 `Part 1: Spec Delta` 입력은 다음 planned global input을 중심으로 파싱한다.
 
 - `Change Summary`
 - `Scope Delta`
-- `Contract/Invariant Delta`
-- `Touchpoints`
-- `Implementation Plan`
-- `Validation Plan`
-- `Risks / Open Questions`
+- `Persistent Spec Implications`
 
-또는 user input을 위 구조로 best-effort 정규화한다.
+`Persistent Spec Implications`는 feature-level contract / invariant / validation table이 아니라, global spec에 남길 수 있는 repo-wide candidate input이다. 각 항목은 아래 `Repo-wide Invariant Test`와 surface-fit 판단을 통과할 때만 guardrails, key decisions, 또는 long-lived navigation hint로 반영한다.
+
+`Contract/Invariant Delta`, `Touchpoints`, `Implementation Plan`, `Validation Plan`, risk log, top-level `Risks/Mitigations and Open Questions`는 Part 1 planned global input으로 요구하지 않는다. 필요한 경우 context 또는 read fallback으로만 참고하고, execution-only detail은 global spec에 올리지 않는다.
+
+직접 user input은 위 3개 축으로 best-effort 정규화한다.
 
 ### Step 4: Map to Global Spec Sections
 
@@ -185,7 +188,7 @@ input file을 사용했다면 `_processed_*` 이름으로 변경한다.
 
 ## Integration
 
-- `feature-draft`: Part 1 temporary spec draft를 직접 입력으로 받을 수 있다.
+- `feature-draft`: current `Part 1: Spec Delta`를 직접 입력으로 받을 수 있다.
 - `implementation-plan`: 반영된 global spec와 temporary spec를 기준으로 계획 생성
 - `spec-review`: 반영 후 품질 감사
 

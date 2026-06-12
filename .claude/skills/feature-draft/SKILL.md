@@ -21,7 +21,7 @@ feature-draft는 **입력이 대화에서 태어나는** 스킬이다. agent는 
 
 ### Step 2: 생성 (producer dispatch)
 
-`Agent(subagent_type="sdd-skills:feature-draft-agent", prompt=<요청 + 경로 + 대화 맥락 digest>)`로 **생성 mode** dispatch한다. agent가 draft를 `_sdd/drafts/<YYYY-MM-DD>_feature_draft_<slug>.md`에 저장하고 경로 + Step 8 surface 결정을 반환한다.
+`Agent(subagent_type="sdd-skills:feature-draft-agent", prompt=<요청 + 경로 + 대화 맥락 digest>)`로 **생성 mode** dispatch한다. agent가 draft를 `_sdd/drafts/<YYYY-MM-DD>_feature_draft_<slug>.md`에 저장하고 경로 + Step 9 surface 결정을 반환한다.
 
 ### Step 3: review-fix loop
 
@@ -44,7 +44,7 @@ feature-draft는 **입력이 대화에서 태어나는** 스킬이다. agent는 
 
 ### Step 4: relay
 
-최종 draft 경로 + Step 8 surface 결정(Confidence=LOW/User-confirmation=Yes) + loop 결과(iteration 수, 최종 Blocker Status, 잔존 advisory)를 사용자에게 relay한다.
+최종 draft 경로 + Step 9 surface 결정(Confidence=LOW/User-confirmation=Yes) + loop 결과(iteration 수, 최종 Blocker Status, 잔존 advisory)를 사용자에게 relay한다.
 
 ## 경계
 
