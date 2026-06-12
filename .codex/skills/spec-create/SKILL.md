@@ -1,7 +1,7 @@
 ---
 name: spec-create
 description: This skill should be used when the user asks to "create a spec", "write a spec document", "generate SDD", "create software design document", "document the project", "create spec for project", or mentions "_sdd" directory, specification documents, or project documentation needs.
-version: 1.9.1
+version: 1.10.0
 ---
 
 # spec-create
@@ -22,7 +22,8 @@ version: 1.9.1
 - [ ] 코드베이스가 있으면 primary navigation axis를 하나 선택했고, 유용할 때만 compact `Strategic Code Map`을 appendix 또는 supporting file로 배치했다.
 - [ ] supporting information은 필요할 때만 appendix 또는 별도 supporting file로 분리했다.
 - [ ] 코드베이스가 있으면 스펙이 실제 코드 구조와 naming을 반영한다.
-- [ ] 필요한 경우에만 `AGENTS.md`, `CLAUDE.md`, `_sdd/env.md`를 최소 범위로 생성/보강했다.
+- [ ] 필요한 경우에만 `AGENTS.md`(하네스 템플릿 기반 §0~§4 채움), `CLAUDE.md`(`→ AGENTS.md 참조` 포인터), `_sdd/env.md`를 최소 범위로 생성/보강했다.
+- [ ] `AGENTS.md`·`CLAUDE.md` 생성/보강 시 SDD-HARNESS 마커 멱등 병합을 적용했고(부재→생성, 존재→맨 위 prepend·기존 보존, 마커 블록 존재→블록만 교체), legacy `## SDD란` 블록은 하네스로 흡수·제거했다.
 
 ## SDD Lens
 
@@ -56,6 +57,7 @@ Negative example:
 
 - `references/template-compact.md`
 - `references/template-full.md`
+- `references/agents-harness-template.md`
 - `examples/simple-project-spec.md`
 - `examples/complex-project-spec.md`
 - `examples/additional-specs.md`
@@ -65,7 +67,7 @@ Negative example:
 1. `src/`, `tests/` 등 구현 코드 파일은 수정하지 않는다.
 2. 문서 언어는 기존 스펙/문서를 따른다. 기존 스펙이 없으면 한국어를 기본으로 한다.
 3. 스펙 출력은 `_sdd/spec/`에만 저장한다.
-4. `AGENTS.md`, `CLAUDE.md`, `_sdd/env.md`는 없을 때 생성하고, 이미 있으면 필수 안내 문구가 빠진 경우에만 최소 수정한다.
+4. `AGENTS.md`, `CLAUDE.md`는 없을 때 SDD-HARNESS 마커 블록으로 생성하고, 이미 있으면 마커 멱등 병합(맨 위 prepend·기존 보존, 마커 블록 존재 시 블록만 교체)한다. `_sdd/env.md`는 없을 때 생성하고 이미 있으면 필수 안내 문구가 빠진 경우에만 최소 수정한다.
 5. 거버넌스 문서는 기본적으로 lowercase canonical `decision_log.md`까지만 사용한다. legacy uppercase `DECISION_LOG.md`는 read-only fallback으로만 취급한다.
 6. global spec을 feature-level usage/validation/reference 문서로 부풀리지 않는다.
 7. `Strategic Code Map`을 exhaustive file tree, component catalog, API reference, 구현 narrative로 만들지 않는다.
@@ -145,18 +147,43 @@ global spec core는 항상 유지한다.
 
 필요 시 아래 파일을 보강한다.
 
-- `AGENTS.md`
-- `CLAUDE.md`
+- `AGENTS.md` — SDD 작업 하네스 본체
+- `CLAUDE.md` — `→ AGENTS.md 참조` 포인터
 - `_sdd/env.md`
 
-`CLAUDE.md`와 `AGENTS.md` 생성/보강 시 아래 SDD 참조 블록을 포함한다.
+#### 3a. AGENTS.md 하네스 생성
+
+하네스 템플릿 `references/agents-harness-template.md`의 `SDD-HARNESS:START`~`SDD-HARNESS:END` 마커 블록을 본문으로 사용한다. 템플릿 상단의 관리용 주석(`<!-- 이 파일은 … -->`)은 산출물로 복사하지 않는다.
+
+§0~§4 슬롯을 repo 맥락으로 채운다.
+
+- `<repo-name>` — repo 이름
+- `<test command>` — 테스트 실행 명령 (없으면 해당 줄 삭제)
+- `<lint command>` — 린트/타입체크 명령 (없으면 해당 줄에서 삭제)
+- `<커밋·PR 규칙>` — repo의 커밋/PR 규칙
+- spec §`<scope 섹션>` / §`<decisions 섹션>` — 작성한 global spec의 실제 섹션 이름
+
+§0 작업 원칙 4개는 영어 원문 그대로 유지한다. §3 워크플로우 단계 순서와 §4 ⚠️ 경계 문구(repo-specific 불변 규칙은 spec Guardrails가 단일 소스)는 그대로 둔다.
+
+legacy `## SDD란` 참조 블록은 생성하지 않는다. 그 정보(SDD 개념·워크플로우 안내) 역할은 하네스 §3 워크플로우 + §4 판단 기준이 흡수한다.
+
+#### 3b. CLAUDE.md 포인터 생성
+
+`CLAUDE.md`는 `→ AGENTS.md 참조` 한 줄 포인터로 생성하고 `SDD-HARNESS:START`~`SDD-HARNESS:END` 마커로 감싼다.
 
 ```markdown
-## SDD란
-SDD(Spec-Driven Development)는 스펙을 판단 기준으로 고정하고,
-그 기준에 따라 구현·검증·동기화하는 개발 방식이다.
-상세 정의: https://github.com/malfo-y/sdd-skills/tree/main/docs
+<!-- SDD-HARNESS:START -->
+> 이 repo의 작업 하네스는 `AGENTS.md` 단일 소스다. 작업 전 `AGENTS.md`를 먼저 읽는다.
+<!-- SDD-HARNESS:END -->
 ```
+
+#### 3c. 마커 멱등 병합
+
+`AGENTS.md`·`CLAUDE.md` 각각에 아래 절차를 적용한다.
+
+- 파일 부재 → SDD-HARNESS 마커 블록만으로 새 파일 생성.
+- 파일 존재 + 마커 블록 없음 → 마커 블록을 **파일 맨 위에 prepend**하고, 마커 밖 기존 내용은 아래에 그대로 보존한다. 기존 파일의 legacy `## SDD란` 블록은 하네스가 흡수·대체하므로 제거하고, 기존 테스트/커밋 규칙 등 중복 항목은 하네스 슬롯으로 흡수한다. SDD와 무관한 사용자 고유 내용은 보존한다.
+- 파일 존재 + 마커 블록 있음 → **그 마커 블록만 교체**하고 마커 밖 내용은 건드리지 않는다(마커-only 교체 = 멱등, 재실행해도 블록이 중복 누적되지 않는다).
 
 ### Step 4: Write the Spec
 
@@ -192,7 +219,9 @@ SDD(Spec-Driven Development)는 스펙을 판단 기준으로 고정하고,
 - global 본문이 code-obvious detail이나 feature inventory로 오염되지 않았는가
 - `Strategic Code Map`이 있다면 compact navigation hint이며 exhaustive inventory로 변질되지 않았는가
 - 코드베이스와 naming/경로가 크게 어긋나지 않는가
-- bootstrap 문서가 최소 기준을 충족하는가
+- `AGENTS.md`가 하네스 §0~§4 슬롯을 채워 생성/병합되었고, `CLAUDE.md`가 포인터인가
+- 생성/병합 결과 `AGENTS.md`·`CLAUDE.md`에 하네스와 별개의 중복 `## SDD란` 블록이 남지 않았는가(legacy 흡수·제거, SDD 무관 사용자 내용 보존)
+- 마커 블록이 재실행 시 중복 누적 없이 블록만 교체되는가(멱등)
 
 ## Output Contract
 
@@ -207,8 +236,8 @@ SDD(Spec-Driven Development)는 스펙을 판단 기준으로 고정하고,
 - `_sdd/spec/<domain>.md`
 - `_sdd/spec/<domain>/...`
 - lowercase canonical `_sdd/spec/decision_log.md`
-- `AGENTS.md`
-- `CLAUDE.md`
+- `AGENTS.md` — `references/agents-harness-template.md` 기반 §0~§4 하네스(SDD-HARNESS 마커 블록)
+- `CLAUDE.md` — `→ AGENTS.md 참조` 포인터(SDD-HARNESS 마커 블록)
 - `_sdd/env.md`
 
 ## Error Handling

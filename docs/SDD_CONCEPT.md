@@ -6,10 +6,13 @@
 
 | Layer | 역할 | 담는 것 |
 |------|------|---------|
+| Harness (AGENTS.md) | repo 작업 규약(how) / 작업 진입 | 작업 원칙, 읽는 순서, 검증 표준, 워크플로우 단계 순서, 판단 기준 포인터 |
 | Global spec | repo-wide 판단 기준 | 개념, 경계, 핵심 결정 |
 | Temporary spec | 변경 실행 청사진 | delta, touchpoints, validation, plan |
 | Code/Test | 실제 동작과 세부 truth | 구현, 실행 흐름, 세부 contract |
 | Guide/README/Refs | 보조 설명 | 사용 예시, 환경 상세, 참조 정보 |
+
+하네스는 별도 레이어이며 global spec 본문을 키우지 않는다. 이해(what/why)는 global spec, 작업 규약(how)은 하네스가 담는다. 하네스는 스킬 카탈로그·라우팅 표를 담지 않고(설치된 SDD 스킬을 가리킨다), repo-specific 행동 트리거도 담지 않는다(이는 global spec Guardrails가 단일 소스다).
 
 ## 2. Global Spec의 역할
 

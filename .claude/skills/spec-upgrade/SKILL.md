@@ -22,7 +22,9 @@ version: 1.10.1
 - [ ] old feature-level usage/validation/reference/CIV 의존성을 적절한 surface로 내렸다.
 - [ ] 단순 implementation inventory는 줄이고, 필요한 supporting note만 남겼다.
 - [ ] 멀티파일 spec이면 index와 supporting file의 역할이 더 명확해졌다.
-- [ ] `AGENTS.md`, `CLAUDE.md`가 존재한다 (미존재 시 생성)
+- [ ] `AGENTS.md`가 하네스 템플릿(§0~§4) 기준으로 존재한다 (부재/부분존재 시 SDD-HARNESS 마커 멱등 병합으로 생성/보강).
+- [ ] `CLAUDE.md`가 `→ AGENTS.md 참조` 마커 포인터 블록을 가진다 (부재 시 생성, 기존 파일이면 prepend).
+- [ ] 병합 결과 `AGENTS.md`·`CLAUDE.md`에 하네스와 별개의 중복 `## SDD란` 블록이 남지 않는다 (기존 산출물 흡수·제거, SDD 무관 사용자 내용은 보존).
 
 ## SDD Lens
 
@@ -39,6 +41,7 @@ version: 1.10.1
 - `references/template-compact.md`
 - `references/template-full.md`
 - `references/upgrade-mapping.md`
+- `references/agents-harness-template.md`
 - `examples/after-upgrade.md`
 - SDD 정의 문서: https://github.com/malfo-y/sdd-skills/tree/main/docs
 
@@ -107,7 +110,25 @@ version: 1.10.1
 - truly useful guide/reference/Strategic Code Map만 조건부로 남김
 - stale하거나 exhaustive한 file tree / component catalog는 global 본문으로 보존하지 않음
 
-### Step 6: Validate
+### Step 6: Harness Merge (AGENTS.md / CLAUDE.md)
+
+작업 하네스(`AGENTS.md`)가 하네스 템플릿(`references/agents-harness-template.md`) 기준으로 존재하도록 SDD-HARNESS 마커 기반 멱등 병합을 적용한다. spec-upgrade 자체에는 `## SDD란` 같은 삽입 로직이 없다. 여기서 만나는 기존 `## SDD란` 블록은 spec-upgrade가 만든 게 아니라 **과거 spec-create 부트스트랩으로 생긴 소비 repo의 산출물**이며, 이 step은 그것을 삭제 로직 제거가 아니라 **병합 시 하네스 슬롯으로 흡수**한다.
+
+`AGENTS.md` 병합 규칙:
+
+- **부재** → 하네스 템플릿의 `<!-- SDD-HARNESS:START -->` ... `<!-- SDD-HARNESS:END -->` 마커 블록을 생성하고, §0~§4 `<…>` 슬롯을 repo 맥락(`<repo-name>`, `<test command>`, `<lint command>`, spec §`<…>` 등)으로 채운다.
+- **존재(마커 없음)** → 마커 블록을 파일 **맨 위에 prepend**한다. 마커 밖 기존 내용은 아래에 그대로 보존한다.
+- **마커 블록 존재** → **그 마커 블록만 교체**한다(마커-only 교체). 마커 밖 내용은 건드리지 않는다. 재실행해도 블록이 중복 적층되지 않는다(멱등).
+- **중복 흡수**: 기존 `AGENTS.md`에 하네스 슬롯과 겹치는 항목(테스트 명령 등)이나 과거 spec-create 부트스트랩으로 생긴 legacy `## SDD란` 블록이 있으면, 그 정보를 하네스 슬롯(§2 검증 표준 / §3 워크플로우 / §4 판단 기준)으로 흡수하고 마커 밖 중복본은 제거한다. SDD와 무관한 사용자 고유 내용은 보존한다.
+
+`CLAUDE.md` 병합 규칙:
+
+- 부재면 아래 한 줄 포인터를 SDD-HARNESS 마커 블록으로 감싸 생성하고, 존재하면 그 마커 포인터 블록을 맨 위 prepend한다(마커 블록이 이미 있으면 그 블록만 교체). 포인터 본문은 `> 이 repo의 작업 하네스는 \`AGENTS.md\` 단일 소스다. 작업 전 \`AGENTS.md\`를 먼저 읽는다.`로 spec-create와 동일하게 한다.
+- 기존 `CLAUDE.md`에 과거 spec-create 부트스트랩으로 생긴 legacy `## SDD란` 블록이 있으면 AGENTS.md 하네스로 일원화하여 흡수·제거한다. SDD와 무관한 사용자 고유 내용은 보존한다.
+
+병합 후 `AGENTS.md`·`CLAUDE.md` 어디에도 하네스와 별개의 중복 `## SDD란` 블록이 남지 않아야 한다.
+
+### Step 7: Validate
 
 아래를 확인한다.
 
@@ -116,6 +137,7 @@ version: 1.10.1
 - feature-level detail을 global 본문에서 걷어냈는가
 - implementation inventory를 그대로 옮겨 적지 않았는가
 - Step 1 경계 판정을 어기고 rewrite 문제를 upgrade로 덮지 않았는가
+- `AGENTS.md`가 하네스(§0~§4) 마커 블록을 가지고, `CLAUDE.md`가 포인터 마커 블록을 가지며, 하네스와 별개의 중복 `## SDD란` 블록이 남지 않았는가
 
 ## Output Contract
 
@@ -126,6 +148,7 @@ version: 1.10.1
 - thin global model gap과 조치
 - global에 남긴 판단과 밖으로 내린 정보
 - 축약 또는 supporting surface 이동된 old inventory 항목
+- 하네스 병합 결과(AGENTS.md/CLAUDE.md 생성·prepend·마커 교체 여부, 흡수·제거된 legacy `## SDD란`/중복 항목)
 - 남은 구조 문제와 후속 추천
 
 ## Error Handling
