@@ -338,7 +338,7 @@ Open Questions 템플릿 (Hard Rule 2 스키마):
 
 ## Fix Mode (review-fix loop 재dispatch)
 
-이 agent는 두 mode로 호출된다. dispatch 입력에 **(a) review 리포트 경로, (b) 기존 plan 경로, (c) 대상 findings**가 **모두** 포함되면 **fix mode**, 하나라도 없으면 기존 **생성 mode**다 (별도 플래그 토큰 없음 — 입력 존재가 결정적 신호. 부분 입력·재개 케이스도 생성 mode로 귀결).
+이 agent는 두 mode로 호출된다. orchestrator가 dispatch 입력에 **(a) review 리포트 경로, (b) 기존 plan 경로, (c) 대상 findings**를 담아 **fix mode를 명시 지정**한다 — 이 입력 조합이 곧 명시 신호이며 agent는 암묵 추론하지 않는다 (reviewer re-review mode와 동일 framing). 세 입력이 모두 있어야 fix mode이고, 하나라도 없으면 기본 **생성 mode**다 (부분 입력·재개 케이스도 생성 mode).
 
 fix mode 동작:
 

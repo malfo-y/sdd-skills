@@ -96,7 +96,7 @@ Part 2의 `Contract/Invariant Delta and Coverage`와 `Validation Plan`을 기준
 - `fix invocation prompt contract`:
   - "직전 `implementation-review-agent` finding 중 `critical/high/medium`만 닫으세요. unrelated dirty changes를 되돌리지 말고, 수정 후 관련 테스트가 다시 실행 가능한 상태를 유지하세요."
 - `re-review invocation prompt contract`:
-  - "직전 review finding이 실제로 해소되었는지 먼저 검증하고, 같은 범위에서 새 `critical/high/medium`이 남는지만 다시 보고하세요. findings first 형식을 유지하세요."
+  - "기존 review 리포트 경로를 전달해 re-review mode로 진입하세요. 새 리포트를 만들지 말고, 직전 review finding이 실제로 해소됐는지 검증한 뒤 같은 범위에서 새 `critical/high/medium`이 남는지 판정해, 기존 리포트의 `Current Status`를 갱신하고 `Iteration History`에 이번 회차(resolved/still-open/new)를 append하세요. findings first 형식 유지."
 - `implementation-review-agent` 결과에 `critical/high/medium`이 하나라도 있으면 autopilot은 fix를 수행한다 — finding을 fix-task로 보고 **finding 하나씩 순차로** `implementation-agent` leaf를 spawn한다(finding 영향 파일 = leaf Target Files). 각 fix leaf는 수거와 기록 직후 `close_agent({target: <agent_id>})`로 닫는다. 초기 구현의 병렬 dispatch 그룹과 달리 fix는 순차다(별도 fix 분해 기계장치 없음).
 - fix 후 autopilot은 같은 scope로 `implementation-review-agent`를 재호출한다.
 - 이 gate와 required inline validation이 모두 닫힌 뒤에만 Step 4로 진행한다.
@@ -275,7 +275,7 @@ gate 실패 시 finding을 fix task로 normalize하지 말고 `implementation-pl
 - `fix invocation prompt contract`:
   - "직전 `implementation-review-agent` finding 중 현재 group 범위의 `critical/high/medium`만 닫으세요. unrelated dirty changes를 되돌리지 말고, 수정 후 관련 테스트가 다시 실행 가능한 상태를 유지하세요."
 - `re-review invocation prompt contract`:
-  - "직전 review finding이 실제로 해소되었는지 먼저 검증하고, 같은 group 범위에서 새 `critical/high/medium`이 남는지만 다시 보고하세요. findings first 형식을 유지하세요."
+  - "기존 review 리포트 경로를 전달해 re-review mode로 진입하세요. 새 리포트를 만들지 말고, 직전 review finding이 실제로 해소됐는지 검증한 뒤 같은 group 범위에서 새 `critical/high/medium`이 남는지 판정해, 기존 리포트의 `Current Status`를 갱신하고 `Iteration History`에 이번 회차(resolved/still-open/new)를 append하세요. findings first 형식 유지."
 - `implementation-review-agent` 결과에 `critical/high/medium`이 하나라도 있으면 autopilot은 fix를 수행한다 — finding을 fix-task로 보고 **finding 하나씩 순차로** `implementation-agent` leaf를 spawn한다(finding 영향 파일 = leaf Target Files). 각 fix leaf는 수거와 기록 직후 `close_agent({target: <agent_id>})`로 닫는다. 초기 구현의 병렬 dispatch 그룹과 달리 fix는 순차다(별도 fix 분해 기계장치 없음).
 - 현재 group gate가 닫히기 전에는 다음 group 또는 Step 7로 진행하지 않는다.
 
