@@ -34,7 +34,7 @@ implementation-plan은 입력이 파일/경로에서 태어난다. 대화 맥락
 
 1. **review**: `Agent(subagent_type="sdd-skills:plan-review-agent")`로 plan을 review한다(Tier 1 — implementation plan 입력). reviewer가 Blocker Status + severity별 finding을 리포트(`_sdd/implementation/<YYYY-MM-DD>_plan_review_<slug>.md`)로 낸다.
 2. **fix**: critical/high/medium finding이 있으면 `implementation-plan-agent`를 **fix mode**로 재dispatch한다 — 입력: review 리포트 경로 + plan 경로 + 대상 findings. agent가 finding 부분만 surgical 수정한다.
-3. **re-review**: fix 후 loop 범위 전체를 `plan-review-agent`로 재리뷰한다.
+3. **re-review**: fix 후 loop 범위 전체를 `plan-review-agent`로 재리뷰한다. dispatch message에 **기존 review 리포트 경로**를 포함해 re-review mode로 진입시킨다 — reviewer는 새 리포트를 만들지 않고 기존 리포트의 `Current Status`를 갱신하고 `Iteration History`에 이번 회차(resolved/still-open/new)를 append한다.
 4. exit 충족 또는 MAX 도달까지 1~3을 반복한다. MAX 분기 적용.
 
 ### Step 4: relay

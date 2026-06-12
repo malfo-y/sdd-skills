@@ -140,7 +140,7 @@ planning producer step은 `sdd-skills:feature-draft-agent`와 `sdd-skills:implem
   - review 입력에 포함할 파일/증거 (해당 gate 범위의 변경 파일 전체 + 관련 테스트 결과)
   - review 프롬프트 계약
   - fix 재호출 조건과 fix 프롬프트 계약
-  - re-review 재호출 조건과 re-review 프롬프트 계약
+  - re-review 재호출 조건과 re-review 프롬프트 계약 (기존 review 리포트 경로를 전달해 `implementation-review-agent` re-review mode로 진입시킨다 — 새 리포트 생성이 아니라 기존 리포트의 `Current Status` 갱신 + `Iteration History` append)
 - `scope = per-group`이면 아래 조건을 함께 충족해야 한다.
   - **Group 경계**: `implementation-plan` output의 각 phase에 `Checkpoint: true/false` 필드가 있다. `Checkpoint=true` phase 직후에 review-fix gate를 닫는다. 마지막 phase는 explicit 값과 무관하게 implicit `Checkpoint=true`로 처리한다.
   - **Group 내 phase**(Checkpoint=false)는 light validation(test/typecheck/exit criteria)만 수행한다. review-fix gate 없이 다음 phase로 진행한다.

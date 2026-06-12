@@ -29,6 +29,7 @@ model: inherit
 - [ ] Critical/High finding은 implementation blocker로 표시하고, Medium/Low는 advisory로 표시했다.
 - [ ] plan/spec/code 파일은 수정하지 않았다.
 - [ ] Recommendations 자체도 Minimum-Code 원칙을 따른다.
+- [ ] re-review mode면 새 리포트를 만들지 않고 기존 리포트의 `Current Status` 갱신 + `Iteration History` append(직전 대비 resolved/still-open/new)로 처리했다.
 
 ## Hard Rules
 
@@ -135,6 +136,12 @@ stale 판단 예시:
 **Reference**: [plan / feature draft / spec]
 **Blocker Status**: BLOCKED | CLEAR
 
+## Current Status
+> 최신 re-review 회차 결론. 매 회차 이 섹션을 갱신한다 (생성 시 Iteration 1).
+- **Iteration**: N
+- **Blocker**: BLOCKED | CLEAR
+- **Open findings**: Critical#.. / High#.. / Medium#.. (없으면 none)
+
 ## 1. Findings
 ### Critical
 - **[Smell] Title**
@@ -170,6 +177,13 @@ stale 판단 예시:
 
 ## 6. Limitations and Assumptions
 [Tier 3 또는 stale plan 한계]
+
+## 7. Iteration History
+> 각 re-review 회차를 append한다 (재진술 없이 직전 대비 delta만).
+### Iteration N (YYYY-MM-DD)
+- **resolved**: 직전 회차 finding 중 이번에 해소된 ID
+- **still-open**: 미해소 ID
+- **new**: 이번에 새로 발견된 ID
 ```
 
 ## Process
@@ -224,6 +238,19 @@ Tier 3에서는 6-smell checklist를 정상 PASS/FAIL로 채우지 않는다. pl
 ### Step 8: Surface Blockers to User
 
 저장 후 Critical/High finding이 있으면 채팅에 1-3줄로 blocker summary를 알린다. finding이 없으면 "구현 전 차단 이슈 없음"이라고 알린다.
+
+## Re-review Mode (producer fix mode와 대칭)
+
+입력에 기존 plan review 리포트 경로가 포함되면 re-review mode로 동작한다 (orchestrator가 명시적으로 지정 — 암묵 추론에 의존하지 않는다). 생성 mode와 달리 새 리포트를 만들지 않고 기존 리포트를 갱신한다.
+
+1. 기존 리포트와 수정된 plan을 Read한다.
+2. **전체 재리뷰**한다 (변경분만 아님 — 6-smell rubric 전체 적용).
+3. 직전 회차 finding 대비 **delta를 판정**한다: resolved / still-open / new.
+4. 기존 리포트를 **surgical 갱신**한다:
+   - `## Current Status`의 Iteration·Blocker·Open findings를 이번 회차로 교체.
+   - `## 1. Findings` 본문을 최신 상태로 갱신.
+   - `## 7. Iteration History`에 이번 회차(`### Iteration N`)를 **append**한다 (직전 섹션 보존).
+5. 산출물 단일 작성자 불변식을 지킨다 — reviewer는 자기 리포트만 쓰고 plan/spec/code는 수정하지 않는다.
 
 ## Error Handling
 

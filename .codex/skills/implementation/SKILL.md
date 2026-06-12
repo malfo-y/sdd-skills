@@ -208,7 +208,7 @@ Phase 내 모든 태스크 완료 후, orchestrator는 **외부 `implementation-
 
 1. **review**: `spawn_agent({agent_type: "implementation-review-agent", message: <phase 범위 변경 파일 전체 + 테스트 결과>})`로 이 phase 범위의 변경 파일 전체 + 테스트 결과를 전달하고 `wait_agent`로 final status를 수거한다. final status가 반환된 뒤에만 severity별 finding을 기록하고 reviewer handle을 `close_agent({target: <agent_id>})`로 닫는다.
 2. **fix**: critical/high/medium finding이 있으면, finding을 **하나씩 순차** fix-task로 변환해 `spawn_agent({agent_type: "implementation-agent", message: <fix-task 입력>})` leaf를 재spawn하고 `wait_agent`로 final status를 수거한다. final status가 반환된 뒤에만 결과를 기록하고 완료 leaf handle을 `close_agent({target: <agent_id>})`로 닫는다(finding 영향 파일 = Target Files). `implementation-agent`는 fix mode 별도 계약 없이 finding을 task로 받아 기존 TDD 계약으로 처리한다(I3 — leaf는 단일 task 실행자라 finding이 곧 task).
-3. **re-review**: fix 후 loop 범위 전체를 `implementation-review-agent`로 재리뷰한다.
+3. **re-review**: fix 후 loop 범위 전체를 `implementation-review-agent`로 재리뷰한다. dispatch message에 **기존 review 리포트 경로**를 포함해 re-review mode로 진입시킨다 — reviewer는 새 리포트를 만들지 않고 기존 리포트의 `Current Status`를 갱신하고 `Iteration History`에 이번 회차(resolved/still-open/new)를 append한다.
 4. exit 조건 충족 또는 MAX 도달까지 1~3을 반복한다. MAX 도달 시 분기 정책 적용.
 
 Speculative Code(AC 외 옵션·설정·추상화·도달 불가 에러 처리)는 reviewer가 finding으로 분류하며, 실제 버그·보안 영향 시 Critical로 escalate된다.

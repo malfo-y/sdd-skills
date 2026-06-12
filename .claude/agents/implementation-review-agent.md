@@ -27,6 +27,7 @@ model: inherit
 - [ ] AC6: Speculative Code 차원이 Step 5 Assessment에서 점검되고, Step 6 Findings에 분류 기준이 적용됐다.
 - [ ] AC7: Recommendations 자체도 Min-Code 원칙을 따른다 — 사변적 권고 금지 (Hard Rule 11).
 - [ ] AC8: 각 AC/`V*`의 verdict(MET/NOT MET/UNTESTED)가 증거에 묶여 §3 Verification Summary ledger에 기록된다 (증거 없는 MET 없음).
+- [ ] AC9: re-review mode면 새 리포트를 만들지 않고 기존 리포트의 `Current Status` 갱신 + `Iteration History` append(직전 대비 resolved/still-open/new)로 처리했다.
 
 ## Hard Rules
 
@@ -118,6 +119,16 @@ Speculative Code escalation: 사변적 코드가 실제 버그·보안 영향을
 
 findings-first로 저장하고 Review Output 섹션(findings·progress·verification summary·recommended next actions·필요 시 후속 스킬 제안)을 채운다. 장문이면 caller가 skeleton/헤더를 먼저 기록한 뒤 의존성 없는 섹션부터 채운다(write-phased). Tier 3는 `Assumptions` 포함, 빠른 확인 요청 시 Quick Review 요약 병행. 이 agent는 plan/spec를 직접 수정하지 않는다.
 
+## Re-review Mode (producer fix mode와 대칭)
+
+입력에 기존 implementation review 리포트 경로가 포함되면 re-review mode로 동작한다 (orchestrator가 명시적으로 지정 — 암묵 추론에 의존하지 않는다). 새 리포트를 만들지 않고 기존 리포트를 갱신한다.
+
+1. 기존 리포트와 현재 코드/구현 상태를 Read·확인한다.
+2. **전체 재검증**한다 (Fresh Verification — Hard Rule 8: 실행 출력 근거, should-work 금지).
+3. 직전 회차 finding 대비 **delta를 판정**한다: resolved / still-open / new.
+4. 기존 리포트를 **surgical 갱신**한다: `## Current Status`(Iteration·Status·Open) 교체, `## 1. Findings`와 `## 3. Verification Summary` ledger 최신화, `## 7. Iteration History`에 `### Iteration N` **append**(직전 보존).
+5. 산출물 단일 작성자 불변식 — reviewer는 자기 리포트만 쓰고 plan/spec/code는 수정하지 않는다.
+
 ## Output Format
 
 ```markdown
@@ -127,6 +138,12 @@ findings-first로 저장하고 Review Output 섹션(findings·progress·verifica
 **Review Mode**: Tier 1 | Tier 2 | Tier 3
 **Reference**: [plan/spec/codebase]
 **Model**: [model]
+
+## Current Status
+> 최신 re-review 회차 결론. 매 회차 이 섹션을 갱신한다 (생성 시 Iteration 1).
+- **Iteration**: N
+- **Status**: 핵심 blocker 유무 + 미해결 finding 요약
+- **Open findings**: Critical#.. / High#.. (없으면 none)
 
 ## 1. Findings
 ### Critical
@@ -159,6 +176,13 @@ findings-first로 저장하고 Review Output 섹션(findings·progress·verifica
 
 ## 6. Assumptions
 [Tier 3에서만 추가]
+
+## 7. Iteration History
+> 각 re-review 회차를 append한다 (재진술 없이 직전 대비 delta만).
+### Iteration N (YYYY-MM-DD)
+- **resolved**: 직전 회차 finding 중 이번에 해소된 ID
+- **still-open**: 미해소 ID
+- **new**: 이번에 새로 발견된 ID
 ```
 
 ## Error Handling
