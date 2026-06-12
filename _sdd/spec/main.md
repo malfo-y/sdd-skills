@@ -2,8 +2,8 @@
 
 > Markdown 기반 skill bundle로 AI 에이전트의 Spec-Driven Development 워크플로우를 Claude Code와 Codex에서 공통 계약으로 실행한다.
 
-**Spec Version**: 4.1.14
-**Last Updated**: 2026-06-03
+**Spec Version**: 4.1.16
+**Last Updated**: 2026-06-12
 **Status**: Approved
 **Canonical Role**: current thin global spec
 
@@ -56,16 +56,30 @@ SDD Skills는 이 문제를 `SKILL.md = 실행 가능한 프롬프트`라는 관
 ### Guardrails
 
 - global spec은 thin decision document로 유지하고, execution detail은 `_sdd/drafts/`, `_sdd/implementation/`, `_sdd/pipeline/` 같은 temporary surface로 분리한다
-- 사용자 entrypoint는 skill layer에, 재사용 execution unit은 agent layer에 둔다. dispatch된 agent는 sub-agent를 다시 spawn하지 않는다(nesting 1단계 제한). 따라서 leaf dispatch가 필요한 execution은 `orchestrator(skill) + leaf/producer(agent)` 형태로 두고(메인 루프 skill/autopilot만 dispatch, agent는 단일 단위/단일 산출물만 처리), dispatch가 없는 단순 위임 execution만 `wrapper-backed skill + single-source agent` 형태로 둔다. 직접 호출 경로에서도 자기 산출물 품질 gate가 필요한 producer 스킬(`feature-draft`, `implementation-plan`, `implementation`)은 review-fix loop를 직접 소유하는 orchestrator다
+- 사용자 entrypoint는 skill layer에, 재사용 execution unit은 agent layer에 둔다. dispatch된 agent는 sub-agent를 다시 spawn하지 않는다(nesting 1단계 제한)
+  - leaf dispatch가 필요한 execution은 `orchestrator(skill) + leaf/producer(agent)` 형태로 둔다(메인 루프 skill/autopilot만 dispatch, agent는 단일 단위/단일 산출물만 처리)
+  - dispatch가 없는 단순 위임 execution만 `wrapper-backed skill + single-source agent` 형태로 둔다
+  - 직접 호출 경로에서도 자기 산출물 품질 gate가 필요한 producer 스킬(`feature-draft`, `implementation-plan`, `implementation`)은 review-fix loop를 직접 소유하는 orchestrator다
 - persistent handoff는 `_sdd/spec/`, `_sdd/drafts/`, `_sdd/implementation/`, `_sdd/pipeline/`, `_sdd/discussion/`의 canonical 경로를 통해 이뤄진다
 - 새 temporary artifact는 가능한 한 lowercase canonical 경로를 사용하고, skill contract가 dated slug 패턴을 정의한 output surface는 그 형식을 따라야 한다. reader는 legacy uppercase/fixed-name artifact를 fallback으로 읽을 수 있어야 한다
-- wrapper-backed skill은 사용자 entrypoint와 artifact contract를 유지해야 하며, 지원하지 않는 동작을 조용히 흉내내지 않는다. wrapper는 thin entrypoint로 두고 전체 계약·프로세스는 agent를 단일 소스로 유지한다. 입력이 대화에서 태어나는 wrapper는 그 대화 맥락을 agent에 forwarding해야 한다(agent는 파일은 read하지만 대화는 읽지 못한다)
-- review나 validation이 포함된 workflow는 review-only로 닫지 않고 fix/re-review 또는 명시적 잔여 이슈 보고로 마무리한다. 산출물 producer 스킬(`feature-draft`, `implementation-plan`, `implementation`)은 autopilot 없이 직접 호출되는 경로에서도 외부 reviewer agent를 호출하는 review→fix→re-review loop를 자체 소유한다. 공통 loop 정책은 autopilot `orchestrator-contract.md` §6에서 차용한다(exit `critical=high=medium=0`, MAX 기본 3회, 매 라운드 loop 범위 전체 재리뷰, MAX 도달 시 critical/high 잔존이면 중단·보고하고 medium만 잔존이면 로그 후 진행). fix는 producer/leaf agent 재dispatch로 수행하고 orchestrator 스킬은 산출물을 직접 rewrite하지 않는다(산출물 단일 작성자)
-- `sdd-autopilot`이 생성하는 orchestrator는 planning producer output을 downstream 입력으로 소비하기 전에 `plan-review` gate를 통과시켜야 한다. `feature-draft-agent` / `implementation-plan-agent` output이 gate를 통과하지 못하면 finding을 implementation fix task로 변환하지 않고 producer output을 reject/regenerate 대상으로 돌린다
-- `sdd-autopilot` 생성 orchestrator의 agent invocation은 canonical 이름만 사용한다. Codex와 Claude 모두 kebab-case agent invocation을 canonical으로 사용한다(Codex `feature-draft-agent`, Claude `sdd-skills:<agent>-agent`). Legacy alias와 Codex underscore custom agent ID는 normalize하지 않고 reject/regenerate한다
+- wrapper-backed skill은 사용자 entrypoint와 artifact contract를 유지해야 하며, 지원하지 않는 동작을 조용히 흉내내지 않는다
+  - wrapper는 thin entrypoint로 두고 전체 계약·프로세스는 agent를 단일 소스로 유지한다
+  - 입력이 대화에서 태어나는 wrapper는 그 대화 맥락을 agent에 forwarding해야 한다(agent는 파일은 read하지만 대화는 읽지 못한다)
+- review나 validation이 포함된 workflow는 review-only로 닫지 않고 fix/re-review 또는 명시적 잔여 이슈 보고로 마무리한다
+  - 산출물 producer 스킬(`feature-draft`, `implementation-plan`, `implementation`)은 autopilot 없이 직접 호출되는 경로에서도 외부 reviewer agent를 호출하는 review→fix→re-review loop를 자체 소유한다
+  - 공통 loop 정책은 autopilot `orchestrator-contract.md` §6에서 차용한다(exit `critical=high=medium=0`, MAX 기본 3회, 매 라운드 loop 범위 전체 재리뷰, MAX 도달 시 critical/high 잔존이면 중단·보고하고 medium만 잔존이면 로그 후 진행)
+  - fix는 producer/leaf agent 재dispatch로 수행하고 orchestrator 스킬은 산출물을 직접 rewrite하지 않는다(산출물 단일 작성자)
+- `sdd-autopilot`이 생성하는 orchestrator는 planning producer output을 downstream 입력으로 소비하기 전에 `plan-review` gate를 통과시켜야 한다
+  - `feature-draft-agent` / `implementation-plan-agent` output이 gate를 통과하지 못하면 finding을 implementation fix task로 변환하지 않고 producer output을 reject/regenerate 대상으로 돌린다
+- `sdd-autopilot` 생성 orchestrator의 agent invocation은 canonical 이름만 사용한다
+  - Codex와 Claude 모두 kebab-case agent invocation을 canonical으로 사용한다(Codex `feature-draft-agent`, Claude `sdd-skills:<agent>-agent`)
+  - Legacy alias와 Codex underscore custom agent ID는 normalize하지 않고 reject/regenerate한다
 - non-trivial planning은 기본적으로 `feature-draft`에서 시작하고, `implementation-plan`은 phase/task 세분화가 필요할 때만 follow-up expansion으로 붙인다
 - 구현 전 계획 품질 점검이 필요하면 `plan-review`를 review-only gate로 사용한다. 이 gate는 plan을 직접 수정하지 않고 Critical/High finding만 implementation blocker로 표시한다
-- multi-phase plan은 문서 장식이 아니라 execution gate다. `implementation-plan`의 phase `Checkpoint` 필드가 group boundary를 결정하며, `Checkpoint=true` phase 직후에만 review-fix gate를 닫는다. group 내 phase는 light validation만 수행한다. final integration review는 그룹 수에 따라 adaptive하게 처리한다 (1개 그룹이면 마지막 group gate가 겸함, 2개+ 이상이면 별도 1회 추가). 마지막 phase를 제외한 phase에 `Checkpoint` metadata가 없으면 schema violation으로 보고 single late gate로 fallback하지 않는다
+- multi-phase plan은 문서 장식이 아니라 execution gate다
+  - `implementation-plan`의 phase `Checkpoint` 필드가 group boundary를 결정하며, `Checkpoint=true` phase 직후에만 review-fix gate를 닫는다. group 내 phase는 light validation만 수행한다
+  - final integration review는 그룹 수에 따라 adaptive하게 처리한다(1개 그룹이면 마지막 group gate가 겸함, 2개+ 이상이면 별도 1회 추가)
+  - 마지막 phase를 제외한 phase에 `Checkpoint` metadata가 없으면 schema violation으로 보고 single late gate로 fallback하지 않는다
 - skill-defined output artifact의 이력 관리는 `prev/` 백업 체인보다 append-only artifact와 git history를 기본으로 사용한다
 - spec mutation은 target file을 식별한 뒤에만 수행한다
 - current spec model과 workflow semantics의 기준은 [docs/SDD_SPEC_DEFINITION.md](../../docs/SDD_SPEC_DEFINITION.md)와 [docs/SDD_WORKFLOW.md](../../docs/SDD_WORKFLOW.md)에 둔다
@@ -76,12 +90,14 @@ SDD Skills는 이 문제를 `SKILL.md = 실행 가능한 프롬프트`라는 관
 
 ### 핵심 설계
 
-SDD Skills의 설계는 네 층으로 나뉜다.
+SDD Skills의 설계는 다음 층으로 나뉜다.
 
 1. Skill layer: 사용자가 직접 호출하는 entrypoint
 2. Agent layer: 재사용 가능한 execution unit
 3. Artifact layer: `_sdd/` 아래의 persistent handoff contract
 4. Reference layer: README, `docs/`, global spec이 유지하는 설명과 경계
+
+이 위에 별도의 **Harness layer(`AGENTS.md`)** 가 놓인다. harness는 repo 작업 진입점이자 작업 규약(how) 레이어로, global spec(이해 = what/why) 위에서 작업 시작 시 먼저 읽는 surface다. global spec 본문을 키우지 않는 별도 레이어이며(둘은 같은 정보를 중복 보유하지 않는다), 작업 원칙·읽는 순서·검증 표준·워크플로우 단계 순서·판단 기준 포인터만 담는다. repo-specific 행동 트리거와 핵심 결정은 여전히 global spec Guardrails가 단일 소스다. layer model과 사용 시점의 기준은 [docs/SDD_CONCEPT.md](../../docs/SDD_CONCEPT.md)와 [docs/SDD_WORKFLOW.md](../../docs/SDD_WORKFLOW.md)에 둔다.
 
 ### 유지해야 할 주요 결정
 

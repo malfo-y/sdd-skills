@@ -1,5 +1,41 @@
 # Decision Log
 
+## 2026-06-12 - Introduce the work harness (AGENTS.md) as a separate layer
+
+### Context
+
+global spec 본문을 키우면 "fat 톱니(sawtooth)" 재팽창이 재발한다. 변화 속도·성격이 다른 두 종류의 정보가 한 문서에 섞이는 것이 원인이었다: "이해(what/why, 느림·수동 참조)"와 "작업 규약(how, 빠름·능동 적용)". global spec은 thin understanding anchor로 유지하면서 작업 규약을 어디에 둘지가 미정이었다.
+
+### Decision
+
+1. **작업 규약을 별도 Harness 레이어(`AGENTS.md`)로 분리**: harness는 global spec 위에 놓이는 작업 진입·작업 규약(how) 레이어로, 작업 원칙·읽는 순서·검증 표준·워크플로우 단계 순서·판단 기준 포인터만 담는다. §0~§4 표준 템플릿으로 형태를 고정한다.
+2. **global spec 본문 thinness 불변(I1)**: harness 도입으로 global spec 본문은 한 줄도 두꺼워지지 않는다. harness와 global spec은 같은 정보를 중복 보유하지 않는다(단일 소스, I3).
+3. **누수 차단(I2)**: harness에는 스킬 카탈로그·라우팅 표를 박지 않고(설치된 SDD 스킬을 가리킨다), repo-specific 행동 트리거도 적지 않는다(이는 global spec Guardrails가 단일 소스).
+4. **멱등 병합**: 모든 harness 블록은 `<!-- SDD-HARNESS:START -->`...`<!-- SDD-HARNESS:END -->` 마커로 감싸, `spec-create`/`spec-upgrade` 재실행 시 마커 블록만 교체(마커 밖 기존 내용 보존)로 멱등하게 갱신한다.
+
+### Rationale
+
+- 키우는 것은 내용이 아니라 역할이다. 변화 속도가 다른 정보를 같은 문서에 두면 thin spec이 다시 fat해진다.
+- harness는 repo에 배포되는 산출물이라 user-level `~/.claude/CLAUDE.md`가 없는 협업자에게도 작업 원칙이 전달된다.
+- 마커 멱등 병합은 별도 실행 스크립트 없이 자연어 절차만으로 재실행 안전성을 확보해 미러·배포 부담을 늘리지 않는다.
+
+### Changes
+
+- `.claude`/`.codex` × `spec-create`/`spec-upgrade`의 `references/agents-harness-template.md` -- §0~§4 정본 템플릿 4곳 byte-identical 미러 신규.
+- `.claude`/`.codex` `spec-create/SKILL.md` -- AGENTS.md bootstrap을 harness 템플릿 기반으로 격상, legacy `## SDD란` 삽입 제거, CLAUDE.md 포인터화, 마커 멱등 병합.
+- `.claude`/`.codex` `spec-upgrade/SKILL.md` -- harness 부재/부분존재 시 마커 멱등 병합 step 추가, 소비 repo legacy 산출물 흡수.
+- `docs/SDD_CONCEPT.md`, `docs/SDD_WORKFLOW.md` -- harness 레이어를 layer 표·workflow에 도입(canonical model).
+- `_sdd/spec/main.md`, `_sdd/spec/usage-guide.md`, `_sdd/spec/components.md`, `_sdd/spec/logs/changelog.md` -- global spec surface sync(설계 모델 layer 서술 보정, AGENTS.md expected result, navigation hint, version metadata).
+
+### References
+
+- discussion: `_sdd/discussion/2026-06-12_discussion_agents_md_harness_layer.md` (결정 9건)
+- feature draft: `_sdd/drafts/2026-06-12_feature_draft_agents_md_harness_layer.md`
+- implementation report: `_sdd/implementation/2026-06-12_implementation_report_agents_md_harness_layer.md` (READY, Blocker 없음)
+- spec review: `_sdd/spec/logs/spec_review_report.md` (SYNC_REQUIRED, C-1/Q-1/Q-2)
+- commit: `e5ad765` "Introduce AGENTS.md work harness layer"
+- validation: harness 템플릿 4곳 md5 `7e85521b08a0b758142c2cfdc9495d54` 동일, spec-create SKILL harness 참조 18건, docs 2종 layer 도입 확인 (grep/diff/review evidence — 마크다운 자산 repo)
+
 ## 2026-06-09 - Use kebab-case Codex custom agent names
 
 ### Context

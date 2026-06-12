@@ -2,6 +2,14 @@
 
 > 이 파일은 `_sdd/spec/main.md`의 버전별 변경 기록이다.
 
+#### v4.1.16 (2026-06-12)
+
+- **Harness(AGENTS.md) 레이어를 global 설계 모델에 반영**: `main.md` 핵심 설계의 layer 서술이 Skill/Agent/Artifact/Reference 4-layer 단정에 더해, 그 위에 놓이는 별도 Harness layer(`AGENTS.md` = 작업 진입·작업 규약 how)를 명시하도록 보정했다. canonical 문서(`docs/SDD_CONCEPT.md`, `docs/SDD_WORKFLOW.md`)가 도입한 harness layer와의 모순을 제거. harness는 global spec 본문을 키우지 않는 별도 레이어이며 repo-specific 트리거·핵심 결정은 여전히 global spec Guardrails가 단일 소스다(I1·I2 보존).
+- **usage-guide AGENTS.md expected result 동기화**: `spec-create`의 AGENTS.md 산출 기술을 legacy "동일 안내 유지"에서 harness 템플릿(§0~§4) 기반 생성 + `SDD-HARNESS` 마커 멱등 병합으로 갱신. CLAUDE.md는 `→ AGENTS.md 참조` 포인터로 정정.
+- **version metadata 정합**: header를 changelog 최신과 정렬(v4.1.14 → v4.1.16).
+- **범위 경계**: harness 구현(템플릿 4곳 미러·`spec-create`/`spec-upgrade` SKILL 격상)은 commit `e5ad765`에서 이미 머지됨. 본 sync는 global spec surface lag만 보정하며 guardrails/decision 테이블에 harness 작업 규약 detail을 옮기지 않는다(thin 유지).
+- 입력: commit `e5ad765`, `_sdd/drafts/2026-06-12_feature_draft_agents_md_harness_layer.md`, `_sdd/implementation/2026-06-12_implementation_report_agents_md_harness_layer.md` (READY), `_sdd/spec/logs/spec_review_report.md` (SYNC_REQUIRED, C-1/Q-1/Q-2)
+
 #### v4.1.15 (2026-06-09)
 
 - **Codex custom agent canonical ID kebab-case 전환**: `.codex/agents/*.toml`의 `name` 필드를 파일 stem과 같은 kebab-case `*-agent` ID로 정렬했다. Codex runtime은 TOML `name`을 `agent_type`으로 resolve하므로 파일명과 호출명이 같은 형태가 된다.

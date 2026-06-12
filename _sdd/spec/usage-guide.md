@@ -25,8 +25,8 @@
 - 필요할 때만 supporting file 또는 appendix 분리 — 기본값은 single-file이며, multi-file은 structure rationale이 있을 때만 연다
 - 코드베이스가 있으면 optional `Strategic Code Map` 생성 — 짧으면 `main.md` appendix, 길거나 설명이 필요하면 `components.md` 또는 `code-map.md` 같은 supporting surface에 둔다
 - `_sdd/env.md` 생성 — 환경 설정/실행 방법 가이드
-- `CLAUDE.md` 생성 또는 업데이트 — 워크스페이스 안내에 `_sdd/` 경로 추가
-- `AGENTS.md` 생성 또는 업데이트 — 동일한 워크스페이스 안내 유지
+- `AGENTS.md` 생성 또는 멱등 병합 — harness 템플릿(§0~§4: 작업 원칙 / 읽는 순서 / 작업 규약·검증 표준 / SDD 워크플로우 순서 / 판단 기준) 기반으로 작업 진입·작업 규약 레이어를 생성한다. 기존 파일이 있으면 `SDD-HARNESS` 마커 블록만 멱등 교체하고 마커 밖 내용은 보존한다
+- `CLAUDE.md` 생성 또는 업데이트 — `→ AGENTS.md 참조` 포인터로 harness를 단일 소스로 가리킨다
 - 사용자에게 요약 테이블 제시 후 전체 스펙 출력
 
 ### Scenario 2: 대규모 기능 추가 (수동 Full SDD Workflow)
