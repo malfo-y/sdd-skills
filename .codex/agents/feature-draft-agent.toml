@@ -24,6 +24,7 @@ Part 1은 persistent spec에 반영할 최소 delta만 담고, Part 2는 그 del
 - [ ] Part 1이 `<!-- spec-update-todo-input-start -->` / `<!-- spec-update-todo-input-end -->` 마커를 포함한다.
 - [ ] Part 1이 `Change Summary`, `Scope Delta`, `Persistent Spec Implications`만 필수 섹션으로 가진다.
 - [ ] Part 2의 `Contract/Invariant Delta and Coverage`와 `Validation Plan`이 ID 기반으로 연결된다.
+- [ ] Part 2의 모든 task AC가 falsifiable하며 평가방법(`V*`)에 1:1 대응된다 (1등급 정량 측정형 / 2등급 정성 rubric 판정형 중 하나로 분류되고 증거형태가 명시된다).
 - [ ] Part 2의 모든 task가 `**Target Files**`를 가진다.
 - [ ] `Strategic Code Map` 또는 supporting surface가 있으면 context로 읽었고, `Touchpoints`와 `Target Files`는 현재 코드 기준으로 재검증했다.
 - [ ] Part 2는 Self-Contained Authoring 원칙(Rule 1/2/3/4)을 따른다. Self-Containment Check (Pass 1 + Pass 2)는 수행하되 검증 흔적은 산출물에 남기지 않는다 (보완 불가능한 잔여 갭만 1줄).
@@ -204,8 +205,18 @@ Part 2는 `implementation` 실행과 검증을 위한 계획이다.
 - phase와 task를 action-oriented하게 작성한다.
 - 각 task에 priority, type, description, acceptance criteria, target files, technical notes, dependencies를 포함한다. task `Component` 필드는 요구하지 않는다.
 - `Contract/Invariant Delta and Coverage`에서 관련 `C*`, `I*`, `V*` 링크와 task coverage를 보존한다.
-- `Validation Plan`은 `V*` ID를 사용하고 `Targets`로 delta ID를 연결한다.
+- `Validation Plan`은 `V*` ID를 사용하고 `Targets`로 delta ID를 연결한다. 각 `V*`의 `Verification Method`는 1등급(정량 측정형) 또는 2등급(정성 rubric 판정형)으로 분류하고 `Evidence / Notes`에 증거형태(재현 가능한 출력 또는 리뷰 판정 근거)를 적는다 — 빈 method/evidence로 ID만 남기지 않는다.
 - 병렬 가능성은 파일 겹침과 의미적 충돌 패턴을 함께 기준으로 설명한다.
+
+**AC와 Validation 작성 위계 (목표 → AC → 평가방법)**: Part 2의 `Validation Plan`은 이 draft가 평가방법의 원천이다 (downstream `implementation-plan`은 이를 전사한다). 각 task AC와 `V*`는 다음 순서로 만든다.
+
+1. **AC를 먼저 도출한다**: 각 AC는 delta(`C*`/`I*`)에서 "충족됐다는 것의 정의"로 직접 도출한다. 코드 품질·가독성처럼 정량화하기 어려운 충족 조건도 여기서는 일단 AC로 받는다 (평가방법은 다음 단계에서 맞춘다).
+2. **각 AC를 falsifiable하게 만든다**: 모든 AC는 충족/미충족이 증거에 묶여 닫혀야 한다. "미충족"이라고 말할 수 있는 관찰/증거가 정의되지 않는 AC는 다시 쓰거나 버린다. 어중간한 판정(충족도 미충족도 아님)을 남기지 않는다.
+3. **각 AC에 평가방법(`V*`)을 대응시킨다**: AC를 어떻게 확인하는지를 두 등급 중 하나로 명시한다. 기준은 "측정 가능"이 아니라 "증거 기반 판정 가능"이다.
+   - **1등급 (정량 측정형)**: metric + 임계로 표현하고, 재현 가능한 증거형태(명령 출력/수치/테스트 pass-fail)를 명시한다.
+   - **2등급 (정성 rubric 판정형)**: 명시된 판정 기준 + 리뷰어 판정으로 표현하고, 증거형태(판정 + 인용한 코드 지점/근거)를 명시한다. 품질·가독성 AC는 이 등급으로 받되 "리뷰어가 위반 사례를 지목하지 못하면 충족"처럼 반박 가능한 형태로 적는다.
+   - 두 등급 모두 세 요건을 만족해야 한다: (a) 이진 판정으로 닫힌다, (b) 외부에 남는 증거에 묶인다, (c) 제3자가 증거만으로 반박할 수 있다.
+4. **완전 대응을 강제한다**: 평가방법(`V*`) 없는 AC, AC 없는 `V*`를 남기지 않는다. 대응이 비면 `Validation Plan` 또는 AC를 고쳐 맞춘다.
 
 Part 2 coverage example:
 

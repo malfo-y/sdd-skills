@@ -23,6 +23,8 @@ model: inherit
 - [ ] 모든 task에 `**Target Files**`가 포함된다.
 - [ ] feature-draft 입력에서 `Contract/Invariant Delta and Coverage`, `Touchpoints`, `Implementation Phases`, `Task Details`, `Validation Plan`, `Parallel Execution Summary`를 우선 추출한다.
 - [ ] `Contract/Invariant Delta and Coverage`와 `Validation Plan` linkage가 plan에 보존된다.
+- [ ] `## Validation Plan` 테이블(`ID | Targets | Verification Method | Evidence / Notes`)이 plan 산출물에 독립 섹션으로 전사된다 — phase `Validation Focus`의 `V*` 참조가 가리키는 정의를 plan 단독으로 resolve할 수 있어야 한다 (V ID dangling 참조 없음). feature-draft 입력이 있으면 그 `Validation Plan`을 전사하고, standalone이면 delta(C*/I*)별 검증 방식을 자체 작성한다.
+- [ ] 모든 task AC가 falsifiable하며 평가방법(`V*`)에 1:1 대응된다 (1등급 정량 측정형 / 2등급 정성 rubric 판정형 중 하나로 분류되고 증거형태가 명시된다).
 - [ ] 각 phase에 `goal`, `task set / dependency closure`, `validation focus`, `exit criteria`, `carry-over policy`, `checkpoint`가 포함된다. single-phase plan도 동일 metadata를 가진 1개 phase로 표현한다.
 - [ ] phase, dependency, risk, relevant top-level open question이 빠지지 않는다.
 - [ ] `_sdd/spec/`는 읽기만 하고 직접 수정하지 않는다.
@@ -35,7 +37,7 @@ model: inherit
 1. 이 agent는 스펙을 입력으로 읽을 수 있지만 `_sdd/spec/` 파일은 수정하지 않는다.
 2. 결과 방향을 바꿀 수 있는 ambiguity (구조, task boundary, target files, verification 전략 포함)는 best-effort로 결정하되 `Open Questions`에 (Decision taken / Alternatives considered / Confidence / User confirmation needed)를 기록한다. 사용자에게 inline 질문을 던지지 않으며, Confidence=LOW 또는 User confirmation needed=Yes인 항목은 Step 8에서 채팅으로 노출한다.
 3. 모든 task는 action-oriented title, acceptance criteria, target files, dependencies를 가져야 한다.
-4. `Contract/Invariant Delta and Coverage`와 `Validation Plan`의 ID linkage를 plan에서 잃으면 안 된다.
+4. `Contract/Invariant Delta and Coverage`와 `Validation Plan`의 ID linkage를 plan에서 잃으면 안 된다. 특히 `Validation Plan`은 `V*` ID 참조만 남기지 말고 `Verification Method`를 포함한 테이블 전체를 plan에 전사한다 — plan 단독으로 "무엇을 어떻게 검증하는가"를 알 수 있어야 한다 (Hard Rule 11 Self-Contained Authoring의 직접 귀결).
 5. 언어는 기존 스펙/문서의 언어를 따른다. 스펙이 없으면 한국어를 기본으로 사용한다.
 6. spec 변경이 필요해 보이면 plan의 `Open Questions`에 기록하고 `spec-update-todo` 후속 사용을 제안한다.
 7. 결과 파일은 lowercase canonical 경로에 저장한다. transition 기간에는 legacy uppercase artifact를 입력 fallback으로 허용한다.
@@ -117,11 +119,13 @@ Feature-draft current shape는 Part 1의 slim summary/top-level `Risks/Mitigatio
 - naming convention과 파일 구조 파악
 - task별 Target Files 후보 도출
 
-### Step 3: Identify Delta Coverage
+### Step 3: Identify Delta Coverage and Validation
 
 `Touchpoints`와 코드 구조를 바탕으로 task boundary와 Target Files 후보를 잡는다. `Components`는 current feature-draft/plan의 필수 출력이 아니며, legacy 입력에 있을 때만 context-only 참고로 사용한다.
 
-아래 표를 만든다.
+아래 두 표를 만든다.
+
+(1) Contract/Invariant ↔ task ↔ validation 매핑:
 
 ```markdown
 ## Contract/Invariant Delta and Coverage
@@ -132,7 +136,23 @@ Feature-draft current shape는 Part 1의 slim summary/top-level `Risks/Mitigatio
 | I1 | T2 | V1 |
 ```
 
-### Step 4: Define Tasks
+(2) Validation 정의 전사 — 각 `V*`가 무엇을 어떻게 검증하는지를 plan 안에 둔다:
+
+```markdown
+## Validation Plan
+
+| ID | Targets | Verification Method | Evidence / Notes |
+|----|---------|---------------------|------------------|
+| V1 | C1, I1 | review, test | <검증 대상과 통과 기준> |
+```
+
+전사 규칙:
+
+- feature-draft 입력이 있으면 그 `## Validation Plan` 테이블을 plan에 옮긴다. plan의 task 분할에 맞춰 `Targets`에 영향 task를 보강할 수 있으나, `Verification Method`/`Evidence` 칸을 비워 `V*` ID만 남기지 않는다.
+- standalone(feature-draft 없음)이면 delta(`C*`/`I*`)별 검증 방식을 직접 작성한다.
+- phase `Validation Focus`는 이 표의 `V*`를 참조한다 — 참조의 정의가 같은 plan 안에 있어야 하며 외부 feature-draft re-open이 필요하지 않아야 한다.
+
+### Step 4: Define Tasks (AC-first)
 
 task는 실행 가능한 단위여야 한다.
 
@@ -146,6 +166,16 @@ task는 실행 가능한 단위여야 한다.
 - Technical Notes
 - Dependencies
 
+**AC 작성 위계 (목표 → AC → 평가방법)**: plan은 task의 How를 상세 명세하지 않는다. 그만큼 AC가 통제의 닻이 되므로, 각 task의 AC는 다음 순서로 작성한다.
+
+1. **AC를 먼저 도출한다**: 각 AC는 목표/delta(`C*`/`I*`)에서 "충족됐다는 것의 정의"로 직접 도출한다. 코드 품질·가독성처럼 정량화하기 어려운 충족 조건도 여기서는 일단 AC로 받는다 (평가방법은 다음 단계에서 맞춘다).
+2. **각 AC를 falsifiable하게 만든다**: 모든 AC는 충족/미충족이 증거에 묶여 닫혀야 한다. "미충족"이라고 말할 수 있는 관찰/증거가 정의되지 않는 AC는 다시 쓰거나 버린다. 어중간한 판정(충족도 미충족도 아님)을 남기지 않는다.
+3. **각 AC에 평가방법(`V*`)을 대응시킨다**: AC를 어떻게 확인하는지를 두 등급 중 하나로 명시하고 Step 3 `Validation Plan`의 `V*`에 연결한다. 기준은 "측정 가능"이 아니라 "증거 기반 판정 가능"이다.
+   - **1등급 (정량 측정형)**: metric + 임계로 표현하고, 재현 가능한 증거형태(명령 출력/수치/테스트 pass-fail)를 명시한다.
+   - **2등급 (정성 rubric 판정형)**: 명시된 판정 기준 + 리뷰어 판정으로 표현하고, 증거형태(판정 + 인용한 코드 지점/근거)를 명시한다. 품질·가독성 AC는 이 등급으로 받되 "리뷰어가 위반 사례를 지목하지 못하면 충족"처럼 반박 가능한 형태로 적는다.
+   - 두 등급 모두 세 요건을 만족해야 한다: (a) 이진 판정으로 닫힌다, (b) 외부에 남는 증거에 묶인다, (c) 제3자가 증거만으로 반박할 수 있다.
+4. **완전 대응을 강제한다**: 평가방법(`V*`) 없는 AC, AC 없는 `V*`를 남기지 않는다. 대응이 비면 `Validation Plan`을 보강하거나 AC를 falsifiable하게 고친다.
+
 task를 나눌 때 원칙:
 
 - 하나의 task는 하나의 명확한 목적을 가진다.
@@ -154,9 +184,10 @@ task를 나눌 때 원칙:
 - `Technical Notes`에 관련 `C*`, `I*`, `V*` 링크를 남긴다.
 - 작은 delta는 compact linkage만 유지하고, 형식적 세분화를 위해 task나 CIV 표를 불필요하게 늘리지 않는다.
 
-Task 작성 후 Hard Rule 12 (Minimum-Code Mandate) self-check:
+Task 작성 후 self-check:
 
-- 모든 AC가 요청된 동작에서 직접 도출되는가?
+- 모든 AC가 falsifiable하고 평가방법(`V*`)에 1:1 대응되는가 (1등급/2등급 중 하나로 분류되고 증거형태가 명시됐는가).
+- (Hard Rule 12 Minimum-Code Mandate) 모든 AC가 요청된 동작에서 직접 도출되는가?
 - "configurable / extensible / future-proof" 단어가 등장한다면 근거(contract·invariant·실패 케이스)가 task에 명시돼 있는가?
 - description을 더 줄일 수 있는가? 200줄을 50줄로 줄일 수 있다면 줄인다.
 
@@ -234,6 +265,7 @@ dependency를 정리한다.
 ### In Scope
 ### Out of Scope
 ## Contract/Invariant Delta and Coverage
+## Validation Plan
 ## Implementation Phases
 ## Task Details
 ## Parallel Execution Summary
@@ -293,6 +325,8 @@ Open Questions 템플릿 (Hard Rule 2 스키마):
 저장 전 점검:
 
 - 모든 task에 `Target Files`가 있는가
+- `## Validation Plan` 테이블이 plan에 전사돼 있고, 모든 phase `Validation Focus`의 `V*`가 그 표에서 resolve되는가 (dangling V 참조 없음)
+- 모든 task AC가 평가방법(`V*`)에 1:1 대응되고 falsifiable한가 (평가방법 없는 AC·AC 없는 `V*` 없음; 각 AC가 1등급 정량 / 2등급 정성 중 하나로 분류되고 증거형태가 명시됨)
 - `Contract/Invariant Delta and Coverage`와 `Validation Plan`의 ID linkage가 살아 있는가
 - feature-draft top-level Open Questions 중 plan 실행에 영향을 주는 항목이 plan `Open Questions`에 보존됐는가
 - Hard Rule 12 (Minimum-Code Mandate) 위반 표현이 없는가 (사변적 형용사·옵션·설정·도달 불가 에러 처리)

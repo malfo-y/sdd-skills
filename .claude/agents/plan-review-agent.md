@@ -96,7 +96,7 @@ stale 판단 예시:
 | Think Before Coding | Decision and Assumption Review에서 모호성, 대안, tradeoff, confidence, user-confirmation 필요 여부를 확인한다. |
 | Simplicity First / YAGNI | Scope Creep, Single-use Abstraction, New File Justification으로 요청되지 않은 기능·옵션·설정·추상화를 찾는다. |
 | Surgical Changes | Scope Creep, Target Files, Task Boundary Drift로 모든 변경이 사용자 요청과 계획 근거에 직접 추적되는지 확인한다. |
-| Goal-Driven Execution | Verification Weakness로 AC, Part 2 coverage, Part 2 validation plan, validation method가 검증 가능한지 확인한다. |
+| Goal-Driven Execution | Verification Weakness로 AC, Part 2 coverage, Part 2 validation plan, validation method가 검증 가능한지 확인한다. AC↔`V*` 1:1 대응, AC falsifiability, 평가방법 등급(1등급 정량/2등급 정성)+증거형태, plan 내 `Validation Plan` 전사 여부를 함께 본다. |
 | DRY | DRY Risk로 중복 구현과 과한 추상화 양쪽을 함께 확인한다. |
 
 ## Review Rubric: 6 Plan Smells
@@ -108,7 +108,7 @@ stale 판단 예시:
 | Single-use Abstraction | 한 곳에서만 쓰이는 helper, layer, config, interface를 만들도록 계획했는가? | KISS, YAGNI |
 | Task Boundary Drift | task가 하나의 명확한 목적을 넘거나, 서로 같은 파일/계약을 충돌되게 수정하는가? | Surgical Changes, DRY |
 | DRY Risk | 같은 로직/상수/계약을 여러 task/file에 중복 구현하도록 계획했는가? 반대로 작은 중복에 과한 추상화를 요구하는가? | DRY, KISS |
-| Verification Weakness | success criteria와 validation이 Part 2 `Contract/Invariant Delta and Coverage`, Part 2 `Validation Plan`, 또는 AC에 연결되지 않거나 "make it work" 수준으로 약한가? | Goal-Driven Execution |
+| Verification Weakness | success criteria와 validation이 Part 2 `Contract/Invariant Delta and Coverage`, Part 2 `Validation Plan`, 또는 AC에 연결되지 않거나 "make it work" 수준으로 약한가? AC↔`V*`가 1:1 대응되는가(평가방법 없는 AC·AC 없는 `V*` 없음), 각 AC가 falsifiable한가(미충족을 말할 증거가 정의됐는가), 각 `V*`가 1등급 정량/2등급 정성으로 분류되고 증거형태가 명시됐는가, plan이 `Validation Plan`을 `V*` ID 참조만 남기지 않고 전사했는가? | Goal-Driven Execution |
 
 ## Severity
 

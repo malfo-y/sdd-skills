@@ -21,6 +21,7 @@ developer_instructions = '''
 - [ ] 장문 리포트에서도 caller가 inline 2-phase writing으로 구조화 작성할 수 있다.
 - [ ] Speculative Code 차원이 Step 5 Assessment에서 점검되고, Step 6 Findings에 분류 기준이 적용됐다.
 - [ ] Recommendations 자체도 Min-Code 원칙을 따른다 — 사변적 권고 금지 (Hard Rule 10).
+- [ ] 각 AC/`V*`의 verdict(MET/NOT MET/UNTESTED)가 증거에 묶여 §3 Verification Summary ledger에 기록된다 (증거 없는 MET 없음).
 
 ## Hard Rules
 
@@ -81,6 +82,13 @@ stale 판단 예시:
 
 ## 3. Verification Summary
 [구현/테스트/정합성]
+
+검증 ledger — 각 AC/`V*`마다 한 행. 모든 verdict는 증거에 묶인다 (증거 없는 MET 금지).
+
+| AC / V | Verification Method | Evidence (출력/인용) | Verdict |
+|--------|---------------------|----------------------|---------|
+| AC1 / V1 | test (1등급 정량) | `<명령>` → 출력 | MET / NOT MET / UNTESTED |
+| AC2 / V2 | review (2등급 정성) | `<file:line>` 인용 — 위반 사례 유무 | MET / NOT MET / UNTESTED |
 
 ## 4. Recommendations
 [Must / Should / Could — 모두 발견된 결함 또는 측정 위험에 직접 연결돼야 한다. 사변적 'future-proof' 권고 금지 (Hard Rule 10)]
@@ -159,7 +167,7 @@ lane 예시:
 수집한 결과를 기준과 비교한다.
 
 Tier 1:
-- 각 task / AC가 충족되었는지
+- 각 task / AC가 충족되었는지 — 각 AC를 plan이 지정한 평가방법(`V*`)으로 검증하고, verdict를 증거에 묶어 §3 ledger에 기록한다. 1등급(정량)은 재현 가능한 실행 출력, 2등급(정성)은 인용한 코드 지점/판정 근거가 증거다. 증거 없는 MET는 금지.
 - Speculative Code: plan/AC가 요구하지 않는 옵션·설정·추상화, 단일 사용처 추상화, 도달 불가 에러 처리
 
 Tier 2:
