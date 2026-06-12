@@ -1,5 +1,39 @@
 # Decision Log
 
+## 2026-06-13 - AC-first validation rubric across the plan/review chain
+
+### Context
+
+plan이 task의 How를 상세 명세하지 않는 방향으로 가면 검증(AC + `Validation Plan`)이 통제의 유일한 닻이 된다. 기존 구조에서는 (a) `Validation Plan`의 평가방법이 `review, test` 수준으로 희석되고, (b) implementation-plan이 feature-draft의 `Validation Plan`을 `V*` ID 참조로만 들고 내려가 plan 단독으로 "무엇을 어떻게 검증하는가"를 알 수 없었으며, (c) AC를 metric-first로 좁히면 품질·가독성이 AC에 진입하지 못하는 문제가 있었다.
+
+### Decision
+
+1. **목표 → AC → 평가방법 → 증거 사슬을 SDD 규범으로 고정**: 검증 정의의 닻은 `docs/SDD_SPEC_DEFINITION.md` §6 `Validation Plan`이고, planning/implementation/review 스킬이 이를 구현한다.
+2. **AC falsifiability**: 모든 AC는 충족/미충족이 증거로 닫혀야 한다 ("미충족"을 말할 증거가 없는 AC 금지).
+3. **평가방법 2등급**: 기준은 "측정 가능"이 아니라 "증거 기반 판정 가능". 1등급(정량 측정형) / 2등급(정성 rubric 판정형) 모두 이진 판정·외부 증거 결착·제3자 반박 가능을 요구한다. 품질·가독성은 2등급으로 받는다.
+4. **AC↔`V*` 완전 대응 + Validation Plan 전사**: 평가방법 없는 AC·AC 없는 `V*` 금지. implementation-plan은 feature-draft의 `Validation Plan`을 plan에 독립 섹션으로 전사한다 (dangling V 참조 제거, Self-Contained Authoring 귀결).
+5. **증거 기반 결과 기록**: implementation-review는 각 AC/`V*`의 verdict를 증거에 묶어 Verification Summary ledger에 기록한다 (증거 없는 MET 금지).
+
+### Rationale
+
+- How를 위임하는 만큼 검증을 강화해야 통제 총량이 보존된다.
+- AC가 metric의 부모(목표 분해)이고 metric은 AC의 자식(확인 수단)이다. AC-first여야 측정 어려운 품질도 목표로 진입하고, falsifiability + 평가방법 완전대응이 "측정 불가 소망 목록"을 막는다.
+- 검증 정의를 plan에 전사하면 구현자가 plan 한 장만으로 "무엇을 어떻게 검증하는가"를 안다.
+
+### Changes
+
+- `docs/SDD_SPEC_DEFINITION.md`, `docs/en/SDD_SPEC_DEFINITION.md` §6 -- `Validation Plan` rubric 규범(falsifiability, 2등급, 완전대응, 증거 기반 결과) 추가.
+- `.codex`/`.claude` `feature-draft-agent` -- 평가방법 원천으로서 AC-first 위계·2등급·완전대응 정의.
+- `.codex`/`.claude` `implementation-plan-agent` -- `Validation Plan` 전사(독립 섹션) + Step 4 AC-first 재배선.
+- `.codex`/`.claude` `plan-review-agent` -- AC↔`V*`·falsifiability·등급·전사 위반을 Verification Weakness로 검출.
+- `.codex`/`.claude` `implementation-review-agent` -- Verification Summary에 증거-판정 ledger 추가.
+
+### References
+
+- design 합의: 이 turn의 설계 토론 (목표→AC→평가방법→증거 위계, metric-first 과교정 교정)
+- commit: `46a9e14` "feat(agents): enforce AC-first validation rubric across SDD plan/review chain" (agent 8개 파일)
+- validation: 8개 agent 파일 codex/claude 미러 키워드 짝 일치, `git diff --check` clean (grep/diff/review evidence — 마크다운 자산 repo)
+
 ## 2026-06-12 - Introduce the work harness (AGENTS.md) as a separate layer
 
 ### Context

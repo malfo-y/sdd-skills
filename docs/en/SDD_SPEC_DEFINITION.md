@@ -162,6 +162,13 @@ Canonical 7 sections:
 
 Its purpose is to handle what changes now, what gets touched, and how the change will be verified.
 
+The `Validation Plan` is the single definition point for verification. Each item (`V*`) ties a delta (`C*`/`I*`) to its ACs and follows this rubric — this is where the norm is anchored, and the planning/implementation/review skills implement it.
+
+- **AC falsifiability**: every AC must close as met/unmet against evidence. Do not keep an AC for which no observation/evidence could ever say "unmet".
+- **Two evaluation tiers**: the bar is not "measurable" but "evidence-decidable". Allow Tier 1 (quantitative: metric + threshold, reproducible output) and Tier 2 (qualitative rubric judgment: stated criteria + reviewer verdict, cited grounds), but both must (a) close as a binary verdict, (b) bind to external evidence, and (c) be refutable by a third party. Quality/readability ACs are taken as Tier 2.
+- **Full AC↔`V*` correspondence**: no AC without an evaluation method, no `V*` without an AC.
+- **Evidence-bound results**: after execution, each `V*` verdict is recorded bound to evidence (reproducible output or cited grounds). A "met" without evidence is not accepted.
+
 ## 7. Information placement rules
 
 | Information | Default home | Why |
