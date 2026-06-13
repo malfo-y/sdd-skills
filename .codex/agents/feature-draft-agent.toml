@@ -30,6 +30,7 @@ Part 1은 persistent spec에 반영할 최소 delta만 담고, Part 2는 그 del
 - [ ] Part 2는 Self-Contained Authoring 원칙(Rule 1/2/3/4)을 따른다. Self-Containment Check (Pass 1 + Pass 2)는 수행하되 검증 흔적은 산출물에 남기지 않는다 (보완 불가능한 잔여 갭만 1줄).
 - [ ] `Risks and Mitigations`는 `Risk / Impact / Mitigation` 표를 따르고, `Open Questions`의 각 항목은 Decision / Alternatives / Confidence / User confirmation needed 스키마를 따른다 (Hard Rule 4).
 - [ ] Part 2의 어느 task도 요청되지 않은 추상화·옵션·설정 가능성·에러 처리를 포함하지 않는다 (Hard Rule 12).
+- [ ] Part 2의 모든 `[C]`에 신규파일 근거가 있고, 각 task가 단일 목적이며, task 간 중복 구현이 없음을 생성 단계에서 self-check했다 (흔적 비노출).
 
 ## Hard Rules
 
@@ -266,6 +267,14 @@ Part 2 작성 후 Hard Rule 12 self-check를 수행한다:
 
 위반 항목이 있으면 해당 task로 돌아가 수정한다.
 
+이어서 계획 품질 self-check를 수행한다 (생성 단계에서 닫을 수 있는 계획 smell — 통과 흔적은 산출물에 남기지 않는다):
+
+- **신규 파일 근거**: 모든 `[C]` Target File에 "왜 기존 파일 수정이 아니라 신규 생성인가" 근거가 해당 task description 또는 Technical Notes에 있는가? 없으면 `[M]`으로 바꾸거나 근거를 추가한다.
+- **task 단일 목적**: 각 task가 하나의 명확한 목적을 갖는가? 한 task가 독립적 변경 2개 이상을 묶었으면 분리하거나, 묶는 이유를 Technical Notes에 적는다.
+- **중복 구현**: 같은 로직·상수·계약을 여러 task가 각자 구현하도록 계획하지 않았는가? 중복이 있으면 shared setup task로 추출하거나 dependency로 연결한다 (단 단일 사용처 추상화는 금지 — Hard Rule 12와 균형).
+
+위반 항목이 있으면 해당 task로 돌아가 수정한다.
+
 ### Step 7: Generate Risks/Mitigations and Open Questions
 
 Part 1과 Part 2를 모두 작성한 뒤, top-level `Risks/Mitigations and Open Questions`를 생성한다.
@@ -311,6 +320,7 @@ Part 1과 Part 2를 모두 작성한 뒤, top-level `Risks/Mitigations and Open 
 - 모든 task에 `Target Files`가 있는가
 - `Risks and Mitigations`가 Risk/Impact/Mitigation 표를 따르고, `Open Questions`가 Hard Rule 4 스키마(Decision/Alternatives/Confidence/User confirmation needed)를 따르는가
 - Part 2에 Hard Rule 12 (Minimum-Code Mandate) 위반 표현이 없는가
+- Part 2의 `[C]` 신규파일 근거·task 단일 목적·task 간 중복 구현 없음 계획 품질 self-check를 수행했는가
 - `Strategic Code Map`을 사용했다면 stale hint를 그대로 옮기지 않고 현재 코드로 검증했는가
 - Part 2 Self-Containment Check (Pass 1 + Pass 2)를 수행했는가 (흔적은 산출물에 남기지 않는다)
 - thin global spec 상태에서도 code exploration evidence를 바탕으로 `Touchpoints`와 `Target Files`를 잡았는가

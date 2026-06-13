@@ -30,6 +30,7 @@ model: inherit
 - [ ] `_sdd/spec/`는 읽기만 하고 직접 수정하지 않는다.
 - [ ] Plan에 Self-Containment Check (Pass 1 reference enumeration + Pass 2 fresh-reader readthrough)를 수행한다. 검증 흔적(갭 위치·보완 내용)은 산출물에 남기지 않는다 (보완 불가능한 잔여 갭만 1줄).
 - [ ] Plan task 어느 것도 요청되지 않은 추상화·옵션·설정·에러 처리를 포함하지 않는다 (Hard Rule 12).
+- [ ] Plan의 모든 `[C]`에 신규파일 근거가 있고, 각 task가 단일 목적이며, task 간 중복 구현이 없음을 생성 단계에서 self-check했다 (흔적 비노출).
 - [ ] `Open Questions`의 각 항목이 Decision / Alternatives / Confidence / User confirmation needed 스키마를 따른다 (Hard Rule 2).
 
 ## Hard Rules
@@ -195,6 +196,14 @@ Task 작성 후 self-check:
 
 위반 항목이 있으면 해당 task로 돌아가 수정한다.
 
+이어서 계획 품질 self-check를 수행한다 (생성 단계에서 닫을 수 있는 계획 smell — 통과 흔적은 산출물에 남기지 않는다):
+
+- **신규 파일 근거**: 모든 `[C]` Target File에 "왜 기존 파일 수정이 아니라 신규 생성인가" 근거가 해당 task description 또는 Technical Notes에 있는가? 없으면 `[M]`으로 바꾸거나 근거를 추가한다.
+- **task 단일 목적**: 각 task가 하나의 명확한 목적을 갖는가? 한 task가 독립적 변경 2개 이상을 묶었으면 분리하거나, 묶는 이유를 Technical Notes에 적는다.
+- **중복 구현**: 같은 로직·상수·계약을 여러 task가 각자 구현하도록 계획하지 않았는가? 중복이 있으면 setup/common task로 추출하거나 dependency로 연결한다 (단 단일 사용처 추상화는 금지 — Hard Rule 12와 균형).
+
+위반 항목이 있으면 해당 task로 돌아가 수정한다.
+
 ### Test Coverage Mapping (조건부)
 
 > `[M]` 마커 대상 파일이 1개 이상일 때만 실행. `[C]` 전용 계획이면 스킵.
@@ -332,6 +341,7 @@ Open Questions 템플릿 (Hard Rule 2 스키마):
 - `Contract/Invariant Delta and Coverage`와 `Validation Plan`의 ID linkage가 살아 있는가
 - feature-draft top-level Open Questions 중 plan 실행에 영향을 주는 항목이 plan `Open Questions`에 보존됐는가
 - Hard Rule 12 (Minimum-Code Mandate) 위반 표현이 없는가 (사변적 형용사·옵션·설정·도달 불가 에러 처리)
+- Plan의 `[C]` 신규파일 근거·task 단일 목적·task 간 중복 구현 없음 계획 품질 self-check를 수행했는가
 - Open Questions가 Hard Rule 2 스키마(Decision/Alternatives/Confidence/User-conf)를 따르는가
 
 ### Step 8: Surface Key Decisions to User
