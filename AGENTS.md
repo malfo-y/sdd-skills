@@ -19,8 +19,8 @@
 
 ## 3. SDD 워크플로우
 이 repo는 SDD를 따른다. 단계 순서:
-discussion → feature-draft / temporary spec → implementation-plan → implementation → review-fix → verify → spec sync
-각 단계의 구체 스킬은 **설치된 SDD 스킬**을 사용한다. (스킬 카탈로그를 여기 복사하지 않는다 — 최신 스킬셋이 단일 소스다.)
+discussion → feature-draft / temporary spec → (spec sync todo) → (implementation-plan) → implementation → review-fix → verify → spec sync done
+괄호 단계(`spec sync todo`·`implementation-plan`)는 **대규모 구현용 optional**이다 — 소규모 변경은 생략 가능. 각 단계의 구체 스킬은 **설치된 SDD 스킬**을 사용한다. (스킬 카탈로그를 여기 복사하지 않는다 — 최신 스킬셋이 단일 소스다.)
 
 ## 4. 판단 기준이 필요할 때 (가리키기, 복사 금지)
 - scope / 경계 → `_sdd/spec/main.md` §2. Scope / Non-goals / Guardrails
