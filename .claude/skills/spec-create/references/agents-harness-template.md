@@ -18,6 +18,7 @@
 ## 2. 작업 규약 / 검증 표준
 - 테스트: `<test command>` · 린트/타입체크: `<lint command>` (repo 변수, 없으면 줄 삭제)
 - Execute → Verify 필수 (문서/스킬 변경은 diff·grep·review가 유효한 검증)
+- 브랜치: 기능 추가/변경 시작 시 `<브랜치 규칙, 예: main에서 feature 브랜치>` 생성 후 작업
 - 커밋/PR: `<커밋·PR 규칙>` · 코드가 global spec과 어긋나면 코드보다 spec을 먼저 갱신
 
 ## 3. SDD 워크플로우
