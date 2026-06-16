@@ -1,7 +1,7 @@
 ---
 name: implementation
 description: "Use this skill when the user wants to execute an implementation plan, start implementing tasks from a plan, work through a development roadmap, says \"implement the plan\", \"start implementation\", \"execute the plan\", \"work on the tasks\", or explicitly asks for \"implement parallel\", \"parallel implementation\", \"병렬 구현\", \"병렬로 구현\". Uses conflict-aware parallel execution when Target Files are available."
-version: 3.1.0
+version: 3.2.0
 ---
 
 # Implementation Orchestrator (Parallel TDD)
@@ -211,12 +211,14 @@ Phase Review 종료 시, 그 phase에서 발생한 다음 이벤트를 채팅으
 - Regression Iron Rule 발동 (어느 기존 테스트가 자동 업데이트됐는지)
 - leaf failure → 순차 fallback (어느 task가 재시도했는지)
 
-### Step 7: Final Review & Report
+### Step 7: Final Cross-Phase Review-Fix Gate & Report
 
-모든 Phase 완료 후 orchestrator가 종합 리뷰를 수행한다.
+모든 Phase 완료 후, orchestrator는 **cross-phase 범위로 외부 `implementation-review-agent` review→fix→re-review loop를 1회 닫는다**. Step 6과 동일하게 orchestrator가 직접 품질을 판정하지 않고 독립 reviewer agent를 호출한다.
 
-- Cross-phase 통합 검증: 모듈 간 연동, 보안 경계, 전체 규모 성능
-- Critical 이슈 발견 시 leaf 재dispatch로 TDD 수정
+- **single-phase 가드**: phase가 1개뿐이면 Step 6 gate가 이미 전체 구현분을 동일 범위로 리뷰했으므로 이 gate를 **스킵하고 곧장 report 생성으로 진행**한다(중복 회피). multi-phase plan일 때만 이 gate를 닫는다.
+- **loop scope**: 전체 구현분(all phases). phase별 gate에서 phase-local 품질은 이미 닫혔으므로, 이 gate는 **phase 경계를 넘는 이슈**(모듈 간 연동, 보안 경계, 전체 규모 성능, cross-phase 통합 일관성)에 초점을 둔다.
+- **loop 정책**: Step 6의 공통 loop 정책을 그대로 재사용한다 (exit `critical=high=medium=0`, MAX 3 iteration, re-review는 loop 범위 전체 재리뷰, MAX 도달 분기 동일).
+- **단계**: Step 6의 review→fix→re-review와 동일. review는 `Agent(subagent_type="sdd-skills:implementation-review-agent")`에 전체 변경 파일 + cross-phase 통합 관점 + 최종 테스트 결과를 전달하고, finding은 하나씩 fix-task로 `sdd-skills:implementation-agent` leaf에 재dispatch한다.
 
 #### implementation_report 생성 (orchestrator 소유)
 
