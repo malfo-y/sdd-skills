@@ -2,7 +2,7 @@
 
 > Markdown 기반 skill bundle로 AI 에이전트의 Spec-Driven Development 워크플로우를 Claude Code와 Codex에서 공통 계약으로 실행한다.
 
-**Spec Version**: 4.2.0
+**Spec Version**: 4.3.0
 **Last Updated**: 2026-06-17
 **Status**: Approved
 **Canonical Role**: current thin global spec
@@ -70,6 +70,7 @@ SDD Skills는 이 문제를 `SKILL.md = 실행 가능한 프롬프트`라는 관
   - 공통 loop 정책은 autopilot `orchestrator-contract.md` §6에서 차용한다(exit `critical=high=medium=0`, MAX 기본 3회, 매 라운드 loop 범위 전체 재리뷰, MAX 도달 시 critical/high 잔존이면 중단·보고하고 medium만 잔존이면 로그 후 진행)
   - implementation-scoped review-gate(`implementation` 스킬 phase/final gate, autopilot global/per-group/final-integration gate)는 단일 reviewer가 아니라 표적이 disjoint한 두 read-only leaf reviewer를 병렬 dispatch한다: correctness(`implementation-review-agent` — 정확성/AC/버그/보안/spec drift)와 simplicity(`simplicity-review-agent` — 동작-불변 형태: 중복·죽은 코드·단일 사용처 추상화·도달 불가 에러 처리·과잉압축). gating exit는 두 report의 합집합 `critical=high=medium=0`이다. simplicity 렌즈는 `spec-review`로 확장하지 않는다(코드 형태 품질이라 spec 문서 품질에 부적합)
   - simplicity finding은 falsifiable-only gating을 따른다: 동작 변화 없이 더 단순한 동등 형태를 구체적으로 제시할 수 있는 객관적 위반만 Medium 이상(gating)이고, 주관적 취향은 Low(advisory)다. 병렬화는 벽시계만 줄이고 수렴은 보장하지 않으므로 gating을 falsifiable finding으로 한정하는 규칙이 수렴성의 핵심이다
+  - simplicity 렌즈는 implementation-scoped review-gate에 더해 PR review(`pr-review` 스킬)에도 적용한다 — `pr-review`는 자체 correctness 검증 ∥ `simplicity-review-agent` 병렬 dispatch의 PR 차원 직교 2-렌즈 review이며, 표적은 disjoint하다(correctness=PR/spec 정합·보안·테스트·verdict + 정확성-중복, simplicity=동작-불변 형태 + 형태-중복). simplicity reviewer는 read-only leaf로 자기 리포트(`_sdd/implementation/...`)만 write하고 pr-review는 자기 리포트(`_sdd/pr/...`)만 write한다. simplicity finding은 verdict를 자동 강제하지 않고 falsifiable gating finding(Medium+)이 REQUEST CHANGES rationale에 기여하며 주관(Low)은 Suggested Improvements로 흐른다 — pr-review는 인간 리뷰 보조이므로 implementation gate의 합집합 자동 exit를 적용하지 않는다. Medium=gating/Low=advisory 분류는 위 falsifiable-only gating 규칙을 그대로 재사용한다
   - fix는 producer/leaf agent 재dispatch로 수행하고 orchestrator 스킬은 산출물을 직접 rewrite하지 않는다(산출물 단일 작성자). 두 reviewer의 finding은 합산되어 기존 단일 fix 경로(`implementation-agent` 순차 재dispatch)로 처리되며, simplicity reviewer도 코드/리포트 외 산출물을 직접 수정하지 않는다
 - `sdd-autopilot`이 생성하는 orchestrator는 planning producer output을 downstream 입력으로 소비하기 전에 `plan-review` gate를 통과시켜야 한다
   - `feature-draft-agent` / `implementation-plan-agent` output이 gate를 통과하지 못하면 finding을 implementation fix task로 변환하지 않고 producer output을 reject/regenerate 대상으로 돌린다
@@ -117,7 +118,7 @@ SDD Skills의 설계는 다음 층으로 나뉜다.
 | producer 스킬 자체 품질 gate | `feature-draft`/`implementation-plan`/`implementation`이 review→fix→re-review loop를 직접 소유(orchestrator). fix=producer/leaf agent 재dispatch, 산출물 단일 작성자 | autopilot 없이 직접 호출되는 경로에서도 산출물이 reviewer gate를 통과하도록 보장한다. producer/reviewer agent는 sub-agent를 spawn하지 못하므로 loop orchestration은 메인 루프(스킬)가 소유해야 한다 |
 | autopilot producer handoff gate | generated orchestrator가 `feature-draft-agent` / `implementation-plan-agent` output을 `plan-review-agent`로 검증한 뒤 downstream 소비 | autopilot이 wrapper skill을 우회해 custom agent를 직접 호출해도 직접 호출 경로와 같은 planning quality gate를 유지한다 |
 | multi-phase quality gate | `per-group` review-fix (Checkpoint boundary) + adaptive `final integration review`; missing non-final `Checkpoint`는 reject/regenerate | 의미 있는 group 단위로 review depth를 높이고, review 비용과 latency를 줄이면서 cross-group regression은 adaptive final review로 커버한다 |
-| implementation review 렌즈 | correctness(`implementation-review-agent`) ∥ simplicity(`simplicity-review-agent`) 직교 2-reviewer 병렬 dispatch, gating exit는 두 report 합집합 `critical=high=medium=0`, simplicity는 falsifiable-only gating | 정확성과 동작-불변 형태 품질을 disjoint 표적으로 분리해 한 reviewer에 과부하 없이 검출 범위를 넓히고, 벽시계는 병렬로 유지하면서 falsifiable 한정으로 수렴성을 보장한다 |
+| 직교 2-렌즈 review 렌즈 | correctness ∥ simplicity(`simplicity-review-agent`) 직교 2-reviewer 병렬 dispatch를 두 진입점에 적용: implementation review-gate(correctness=`implementation-review-agent`, gating exit는 두 report 합집합 `critical=high=medium=0`)와 PR review(`pr-review` 자체 correctness 렌즈, verdict 자동 강제 없이 Medium+ → REQUEST CHANGES rationale 기여). 양쪽 모두 simplicity는 falsifiable-only gating | 정확성과 동작-불변 형태 품질을 disjoint 표적으로 분리해 한 reviewer에 과부하 없이 검출 범위를 넓히고, 벽시계는 병렬로 유지하면서 falsifiable 한정으로 수렴성을 보장한다. PR review는 인간 보조라 합집합 자동 exit 대신 rationale 기여로 합류시킨다 |
 | spec 구조 | thin global spec + execution-focused temporary spec | 장기 기준과 일회성 실행 정보를 분리해 drift를 줄인다 |
 | Strategic Code Map | optional compact navigation surface | global spec을 inventory로 되돌리지 않으면서 사람과 LLM agent가 entrypoint, contract source, invariant hotspot, extension point, validation surface를 빠르게 찾게 한다 |
 | artifact naming/history | lowercase canonical artifact를 기본으로 하고, skill contract가 정의한 output surface는 dated slug naming과 git-history-first 추적을 따른다 | 산출물 경로 추론을 단순화하고 legacy fixed-name drift를 줄인다 |

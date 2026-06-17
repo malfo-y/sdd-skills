@@ -1,5 +1,23 @@
 # Decision Log
 
+## 2026-06-17 - Orthogonal 2-lens review extended to PR review (human-assist verdict integration)
+
+### Context
+
+직교 2-렌즈 병렬 review 패턴(correctness ∥ simplicity, 표적 disjoint, falsifiable-only gating)이 implementation review-gate에 정착한 뒤, 두 번째 진입점인 PR review(`pr-review`)에도 같은 검출 가치가 필요했다. 단, `pr-review`는 자동 수렴 gate가 아니라 인간 리뷰 보조라서 implementation gate의 합집합 자동 exit(`critical=high=medium=0`)를 그대로 옮기면 simplicity finding(동작-불변 형태)이 merge를 false-block할 위험이 있었다.
+
+### Decision
+
+1. **PR review에 simplicity 렌즈 추가**: `pr-review`가 자체 correctness 검증(PR/spec 정합·보안·테스트·verdict)을 유지하면서 `simplicity-review-agent`(read-only leaf, 동작-불변 형태)를 병렬 dispatch하는 PR 차원 직교 2-렌즈 review로 승격한다. simplicity 차원을 자체 복제하지 않고 단일 소스 agent를 재사용(DRY).
+2. **verdict 통합 = rationale 기여(자동 강제 아님)**: simplicity finding은 verdict를 자동 강제하지 않는다. falsifiable gating finding(Medium+)은 REQUEST CHANGES rationale에 기여하고 주관(Low)은 Suggested Improvements로 흐른다. implementation gate의 합집합 자동 exit는 PR에 적용하지 않으며 최종 판단은 인간 리뷰어가 한다. (대안 기각: Medium+ 자동 REQUEST CHANGES는 인간 보조 성격과 충돌 + false-block 위험; verdict 완전 분리는 Medium+ 위반의 검출 가치 저하.)
+3. **계약 재사용**: 표적 disjoint(correctness=정확성-중복 잔존, simplicity=형태-중복 위임), Medium=gating/Low=advisory falsifiable 분류, 단일 작성자 경로 분리(pr-review→`_sdd/pr/`, simplicity→`_sdd/implementation/`)는 기존 simplicity reviewer 계약을 그대로 소비한다(신규 계약 복제 없음). `simplicity-review-agent`는 무변경.
+4. **범위 한정**: `spec-review` 비확장 제약은 유지한다. pr-review에 fix → re-review loop는 도입하지 않는다(verdict + 리포트로 닫는 인간 보조).
+
+### Consequences
+
+- `pr-review` claude+codex SKILL 두 surface에 dispatch 레인·표적 disjoint·verdict 정책·Output Format Simplicity 섹션이 동형 반영되고 v2.0.0→3.0.0 bump됐다(report READY, 2-reviewer gate 통과).
+- global spec은 이 패턴이 두 진입점(implementation gate, PR review)에 적용됨을 guardrail sub-bullet + 결정 테이블 `직교 2-렌즈 review 렌즈` 행으로 thin하게 고정한다.
+
 ## 2026-06-17 - Orthogonal 2-lens parallel review for implementation gates
 
 ### Context

@@ -2,6 +2,14 @@
 
 > 이 파일은 `_sdd/spec/main.md`의 버전별 변경 기록이다.
 
+#### v4.3.0 (2026-06-17)
+
+- **직교 2-렌즈 review를 PR review 진입점으로 확장(surgical 절 추가)**: review/validation guardrail에, simplicity 렌즈가 implementation-scoped review-gate에 더해 PR review(`pr-review` 스킬)에도 적용됨을 새 sub-bullet으로 명시. `pr-review`는 자체 correctness 검증 ∥ `simplicity-review-agent` 병렬 dispatch의 PR 차원 직교 2-렌즈 review이며, 표적 disjoint(correctness=PR/spec 정합·보안·테스트·verdict + 정확성-중복, simplicity=동작-불변 형태 + 형태-중복), 단일 작성자 경로 분리(pr-review→`_sdd/pr/`, simplicity→`_sdd/implementation/`)를 담음. 기존 L71 `spec-review` 비확장 종속 절은 무손상 유지(교체·재작성 없음).
+- **PR verdict 통합 정책 명시**: simplicity finding은 verdict를 자동 강제하지 않고 falsifiable gating finding(Medium+) → REQUEST CHANGES rationale 기여, 주관(Low) → Suggested Improvements. pr-review는 인간 리뷰 보조이므로 implementation gate의 합집합 자동 exit(`critical=high=medium=0`)를 적용하지 않음을 명시. Medium=gating/Low=advisory 분류는 기존 falsifiable-only gating 규칙을 재사용(신규 계약 복제 없음).
+- **결정 테이블 정합**: 기존 `implementation review 렌즈` 행을 `직교 2-렌즈 review 렌즈` 행으로 확장해 implementation review-gate와 PR review 두 진입점에 같은 패턴이 적용됨을 한 결정으로 고정.
+- **범위 경계**: 구현 surface(`pr-review` claude+codex SKILL 2개 — dispatch 레인·표적 disjoint·verdict 정책·Output Format Simplicity 섹션, v2.0.0→3.0.0)는 이미 머지됨(report READY, 2-reviewer gate 통과, gating finding 0). 본 sync는 global spec surface lag만 보정하며 pr-review Process step / Output Format 같은 feature-level dispatch detail을 main 본문에 옮기지 않는다(thin 유지). `simplicity-review-agent`는 단일 소스 read-only 재사용이라 무변경.
+- 입력: `_sdd/drafts/2026-06-17_feature_draft_pr_review_simplicity_lens.md` Part 1, `_sdd/implementation/2026-06-17_implementation_report_pr_review_simplicity_lens.md` (READY).
+
 #### v4.2.0 (2026-06-17)
 
 - **직교 2-렌즈 병렬 review 계약을 Guardrails에 반영**: review/validation guardrail에, implementation-scoped review-gate(`implementation` 스킬 phase/final gate, autopilot global/per-group/final-integration gate)가 단일 reviewer가 아니라 표적이 disjoint한 두 read-only leaf reviewer(`implementation-review-agent` correctness ∥ `simplicity-review-agent`)를 병렬 dispatch하고 gating exit가 두 report 합집합 `critical=high=medium=0`임을 명시. simplicity 렌즈는 `spec-review`로 확장하지 않음을 못박음.
