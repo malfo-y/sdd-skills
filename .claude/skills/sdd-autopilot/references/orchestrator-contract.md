@@ -50,6 +50,7 @@
 - `sdd-skills:plan-review-agent`
 - `sdd-skills:implementation-agent`
 - `sdd-skills:implementation-review-agent`
+- `sdd-skills:simplicity-review-agent`
 - `sdd-skills:spec-update-done-agent`
 - `sdd-skills:spec-review-agent`
 - `sdd-skills:ralph-loop-init-agent`
@@ -125,22 +126,27 @@ planning producer step은 `sdd-skills:feature-draft-agent`와 `sdd-skills:implem
 - 종료 조건 (`critical = 0 AND high = 0 AND medium = 0`)
 - 수정 대상 (`critical/high/medium`)
 - MAX 도달 시 분기: critical/high 잔존 -> 중단, medium만 잔존 -> 로그 기록 후 계속 진행
-- agent mapping: `review = sdd-skills:implementation-review-agent`, `fix = sdd-skills:implementation-agent`, `re-review = sdd-skills:implementation-review-agent`
+- agent mapping (review/re-review는 correctness ∥ simplicity 2-reviewer 병렬, exit는 두 report의 합집합; `fix`는 단일):
+  - `review = sdd-skills:implementation-review-agent`
+  - `review = sdd-skills:simplicity-review-agent`
+  - `re-review = sdd-skills:implementation-review-agent`
+  - `re-review = sdd-skills:simplicity-review-agent`
+  - `fix = sdd-skills:implementation-agent`
 
 추가 규칙:
 
 - multi-phase `implementation-plan`을 소비하면 기본값은 `scope = per-group`이다. single-phase path나 direct path만 `scope = global`을 기본으로 둘 수 있다.
 - review-fix loop는 파이프라인 후처리 섹션이 아니라 각 group의 immediate completion gate다.
-- autopilot은 review-fix loop를 추상 단계로 두지 않는다. small/medium/large review path 모두 review step은 반드시 `sdd-skills:implementation-review-agent` subagent 호출이고, fix step은 반드시 `sdd-skills:implementation-agent` 재호출이다. local inline fallback은 허용되지 않는다.
+- autopilot은 review-fix loop를 추상 단계로 두지 않는다. small/medium/large review path 모두 review step은 반드시 correctness(`sdd-skills:implementation-review-agent`) ∥ simplicity(`sdd-skills:simplicity-review-agent`) 2-reviewer 병렬 subagent 호출이고(exit는 두 report의 합집합), fix step은 반드시 `sdd-skills:implementation-agent` 재호출이다. local inline fallback은 허용되지 않는다.
 - **fix step dispatch granularity**: `fix = sdd-skills:implementation-agent` 재호출은 review finding을 fix-task로 보고 **finding 하나씩 순차로** `sdd-skills:implementation-agent` leaf를 dispatch하는 것이다(finding의 영향 파일 = 그 leaf의 Target Files). 별도 fix 분해 기계장치는 없으며, fix step에는 병렬을 도입하지 않는다(finding 수가 적고 상호작용 가능 → 순차 안전). 초기 구현 step의 병렬 dispatch 그룹(§2)과 달리 fix는 순차다.
 - `low` finding은 advisory/logged follow-up이다. 기본 `fix_targets`에 포함하지 않으며, critical/high/medium 종료 조건을 만족한 gate를 막지 않는다.
 - single-phase path이거나 `scope = global`이면 해당 `implementation` step 직후 즉시 review -> fix -> re-review gate를 수행하고, 종료 조건 충족 전에는 다음 downstream step으로 진행할 수 없다.
 - review가 포함된 path의 review-fix gate(single-phase global / per-group의 group gate / final integration review 모두 포함)에는 gate 직후 실행되는 invocation contract가 명시되어야 한다. 최소한 아래를 포함한다.
-  - autopilot이 `sdd-skills:implementation-review-agent` subagent를 즉시 호출한다는 사실
+  - autopilot이 correctness(`sdd-skills:implementation-review-agent`) ∥ simplicity(`sdd-skills:simplicity-review-agent`) 2-reviewer subagent를 즉시 병렬 호출한다는 사실 (exit는 두 report의 합집합)
   - review 입력에 포함할 파일/증거 (해당 gate 범위의 변경 파일 전체 + 관련 테스트 결과)
   - review 프롬프트 계약
   - fix 재호출 조건과 fix 프롬프트 계약
-  - re-review 재호출 조건과 re-review 프롬프트 계약 (기존 review 리포트 경로를 전달해 `implementation-review-agent` re-review mode로 진입시킨다 — 새 리포트 생성이 아니라 기존 리포트의 `Current Status` 갱신 + `Iteration History` append)
+  - re-review 재호출 조건과 re-review 프롬프트 계약 (correctness ∥ simplicity 각 reviewer에 해당 lens의 기존 review 리포트 경로를 전달해 re-review mode로 진입시킨다 — 새 리포트 생성이 아니라 각 lens 기존 리포트의 `Current Status` 갱신 + `Iteration History` append)
 - `scope = per-group`이면 아래 조건을 함께 충족해야 한다.
   - **Group 경계**: `implementation-plan` output의 각 phase에 `Checkpoint: true/false` 필드가 있다. `Checkpoint=true` phase 직후에 review-fix gate를 닫는다. 마지막 phase는 explicit 값과 무관하게 implicit `Checkpoint=true`로 처리한다.
   - **Group 내 phase**(Checkpoint=false)는 light validation(test/typecheck/exit criteria)만 수행한다. review-fix gate 없이 다음 phase로 진행한다.

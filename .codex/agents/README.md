@@ -23,6 +23,7 @@
 - `implementation-agent`
 - `plan-review-agent`
 - `implementation-review-agent`
+- `simplicity-review-agent`
 - `spec-update-todo-agent`
 - `spec-update-done-agent`
 - `spec-review-agent`
@@ -36,6 +37,7 @@
 - `implementation-plan-agent`
 - `plan-review-agent`
 - `implementation-review-agent`
+- `simplicity-review-agent`
 - `spec-review-agent`
 
 ## Invocation Contract

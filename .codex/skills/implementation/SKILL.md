@@ -1,7 +1,7 @@
 ---
 name: implementation
 description: Use this skill when the user wants to execute an implementation plan, start implementing tasks from a plan, work through a development roadmap, says "implement the plan", "start implementation", "execute the plan", "work on the tasks", or explicitly asks for "implement parallel", "parallel implementation", "병렬 구현", "병렬로 구현". Uses conflict-aware parallel execution when Target Files are available.
-version: 3.2.0
+version: 3.3.0
 ---
 
 # Implementation Orchestrator (Parallel TDD)
@@ -10,13 +10,14 @@ version: 3.2.0
 
 ## Codex Runtime Adapter
 
-런타임이 skill-internal agent dispatch를 허용하는 경우, 이 스킬의 직접 호출은 이 스킬 내부의 `implementation-agent` / `implementation-review-agent` dispatch 범위에 대한 사용자 요청으로 처리한다. dispatch 전에 `spawn_agent`, `wait_agent`, `close_agent`가 active tools에 없으면 `tool_search` query `spawn_agent wait_agent close_agent multi-agent sub-agent`로 multi-agent tools를 먼저 로드한다. 현재 런타임 정책이 명시적 sub-agent 허가를 추가로 요구하면, dispatch 전에 사용자에게 위임 허가를 요청한다.
+런타임이 skill-internal agent dispatch를 허용하는 경우, 이 스킬의 직접 호출은 이 스킬 내부의 `implementation-agent` / `implementation-review-agent` / `simplicity-review-agent` dispatch 범위에 대한 사용자 요청으로 처리한다. dispatch 전에 `spawn_agent`, `wait_agent`, `close_agent`가 active tools에 없으면 `tool_search` query `spawn_agent wait_agent close_agent multi-agent sub-agent`로 multi-agent tools를 먼저 로드한다. 현재 런타임 정책이 명시적 sub-agent 허가를 추가로 요구하면, dispatch 전에 사용자에게 위임 허가를 요청한다.
 
-실제 Codex 호출은 `prompt`가 아니라 `message`를 사용한다:
+실제 Codex 호출은 `prompt`가 아니라 `message`를 사용한다. review gate는 두 reviewer를 한 번에 spawn한 뒤 함께 수거한다:
 
 ```text
 spawn_agent({agent_type: "implementation-agent", message: "<leaf 입력>"})
 spawn_agent({agent_type: "implementation-review-agent", message: "<phase 범위 + 변경 파일 + 테스트 결과>"})
+spawn_agent({agent_type: "simplicity-review-agent", message: "<phase 범위 + 변경 파일 + 테스트 결과>"})
 wait_agent({targets: ["<agent_id>"], timeout_ms: 600000})
 close_agent({target: "<agent_id>"})
 ```
@@ -192,13 +193,13 @@ leaf는 단일 task를 TDD로 구현하고 구조화된 결과(SUCCESS/PARTIAL/F
 
 ### Step 6: Phase Review-Fix Gate (외부 reviewer loop)
 
-Phase 내 모든 태스크 완료 후, orchestrator는 **외부 `implementation-review-agent` review→fix→re-review loop**를 닫는다. 인라인 경량 self-review를 대체한다 — orchestrator가 직접 품질을 판정하지 않고 독립 reviewer agent를 spawn한다.
+Phase 내 모든 태스크 완료 후, orchestrator는 **외부 2-reviewer review→fix→re-review loop**를 닫는다. 각 review/re-review 단계는 correctness(`implementation-review-agent`) ∥ simplicity(`simplicity-review-agent`)를 **병렬 dispatch**한다. 인라인 경량 self-review를 대체한다 — orchestrator가 직접 품질을 판정하지 않고 독립 reviewer agent를 spawn한다.
 
 **loop scope**: **실행분(phase) 단위 1 gate**. 각 phase 완료 직후 1회 닫고 다음 phase로 진행한다. autopilot의 global/per-group·Checkpoint 메타 개념은 도입하지 않는다(직접 호출 경로엔 Checkpoint 신호를 줄 상위 오케스트레이터가 없음). multi-phase plan이면 phase마다 1회씩 닫힌다.
 
 **공통 loop 정책** (autopilot `references/orchestrator-contract.md` §6 Review-Fix Contract 차용):
 
-- **exit 조건**: `critical=0 AND high=0 AND medium=0` (= `critical=high=medium=0`).
+- **exit 조건**: **두 report 합집합** `critical=0 AND high=0 AND medium=0` (= `critical=high=medium=0`). correctness·simplicity 두 리포트의 finding을 합산해 판정한다.
 - **MAX**: 기본 3 iteration.
 - **re-review scope**: loop 범위(이 phase) **전체 재리뷰** (변경분만 아님).
 - **1 iteration 경계**: `review/re-review → finding>0이면 fix → 산출물 갱신`.
@@ -206,12 +207,12 @@ Phase 내 모든 태스크 완료 후, orchestrator는 **외부 `implementation-
 
 **단계**:
 
-1. **review**: `spawn_agent({agent_type: "implementation-review-agent", message: <phase 범위 변경 파일 전체 + 테스트 결과>})`로 이 phase 범위의 변경 파일 전체 + 테스트 결과를 전달하고 `wait_agent`로 final status를 수거한다. final status가 반환된 뒤에만 severity별 finding을 기록하고 reviewer handle을 `close_agent({target: <agent_id>})`로 닫는다.
-2. **fix**: critical/high/medium finding이 있으면, finding을 **하나씩 순차** fix-task로 변환해 `spawn_agent({agent_type: "implementation-agent", message: <fix-task 입력>})` leaf를 재spawn하고 `wait_agent`로 final status를 수거한다. final status가 반환된 뒤에만 결과를 기록하고 완료 leaf handle을 `close_agent({target: <agent_id>})`로 닫는다(finding 영향 파일 = Target Files). `implementation-agent`는 fix mode 별도 계약 없이 finding을 task로 받아 기존 TDD 계약으로 처리한다(I3 — leaf는 단일 task 실행자라 finding이 곧 task).
-3. **re-review**: fix 후 loop 범위 전체를 `implementation-review-agent`로 재리뷰한다. dispatch message에 **기존 review 리포트 경로**를 포함해 re-review mode로 진입시킨다 — reviewer는 새 리포트를 만들지 않고 기존 리포트의 `Current Status`를 갱신하고 `Iteration History`에 이번 회차(resolved/still-open/new)를 append한다.
-4. exit 조건 충족 또는 MAX 도달까지 1~3을 반복한다. MAX 도달 시 분기 정책 적용.
+1. **review**: 두 reviewer를 한 번에 spawn한다 — `spawn_agent({agent_type: "implementation-review-agent", message: <phase 범위 변경 파일 전체 + 테스트 결과>})`(correctness)와 `spawn_agent({agent_type: "simplicity-review-agent", message: <phase 범위 변경 파일 전체 + 테스트 결과>})`(simplicity)로 이 phase 범위의 변경 파일 전체 + 테스트 결과를 각각 전달하고, 두 agent ids를 `wait_agent({targets: [<correctness_id>, <simplicity_id>], timeout_ms: 600000})`로 함께 수거한다. 두 handle 모두 final status가 반환된 뒤에만 각 severity별 finding을 기록하고 두 reviewer handle을 `close_agent({target: <agent_id>})`로 닫는다.
+2. **fix**: 두 report의 critical/high/medium finding을 **합산**해, finding이 있으면 **하나씩 순차** fix-task로 변환해 `spawn_agent({agent_type: "implementation-agent", message: <fix-task 입력>})` leaf를 재spawn하고 `wait_agent`로 final status를 수거한다. final status가 반환된 뒤에만 결과를 기록하고 완료 leaf handle을 `close_agent({target: <agent_id>})`로 닫는다(finding 영향 파일 = Target Files). fix 경로는 무변경이다 — `implementation-agent`는 fix mode 별도 계약 없이 finding을 task로 받아 기존 TDD 계약으로 순차 처리한다(I3 — leaf는 단일 task 실행자라 finding이 곧 task).
+3. **re-review**: fix 후 loop 범위 전체를 두 reviewer(`implementation-review-agent` ∥ `simplicity-review-agent`)로 **병렬 재리뷰**한다. dispatch message에 각 reviewer의 **기존 리포트 경로**를 포함해 re-review mode로 진입시킨다 — 각 reviewer는 새 리포트를 만들지 않고 자기 기존 리포트의 `Current Status`를 갱신하고 `Iteration History`에 이번 회차(resolved/still-open/new)를 append한다.
+4. exit 조건(두 report 합집합 `critical=high=medium=0`) 충족 또는 MAX 도달까지 1~3을 반복한다. MAX 도달 시 분기 정책 적용.
 
-Speculative Code(AC 외 옵션·설정·추상화·도달 불가 에러 처리)는 reviewer가 finding으로 분류하며, 실제 버그·보안 영향 시 Critical로 escalate된다.
+Speculative Code(AC 외 옵션·설정·추상화·도달 불가 에러 처리)는 simplicity reviewer(`simplicity-review-agent`)가 finding으로 분류하며, 실제 버그·보안 영향 시 correctness reviewer가 Critical로 escalate한다.
 
 phase 리포트는 필요 시 `_sdd/implementation/implementation_report_phase_<N>.md`로 저장한다(loop iteration·finding·해소 요약 포함).
 
@@ -225,12 +226,12 @@ Phase Review 종료 시, 그 phase에서 발생한 다음 이벤트를 채팅으
 
 ### Step 7: Final Cross-Phase Review-Fix Gate & Report
 
-모든 Phase 완료 후, orchestrator는 **cross-phase 범위로 외부 `implementation-review-agent` review→fix→re-review loop를 1회 닫는다**. Step 6과 동일하게 orchestrator가 직접 품질을 판정하지 않고 독립 reviewer agent를 spawn한다.
+모든 Phase 완료 후, orchestrator는 **cross-phase 범위로 외부 2-reviewer review→fix→re-review loop를 1회 닫는다**. Step 6과 동일하게 각 review/re-review 단계는 correctness(`implementation-review-agent`) ∥ simplicity(`simplicity-review-agent`)를 병렬 dispatch하며, orchestrator가 직접 품질을 판정하지 않고 독립 reviewer agent를 spawn한다.
 
 - **single-phase 가드**: phase가 1개뿐이면 Step 6 gate가 이미 전체 구현분을 동일 범위로 리뷰했으므로 이 gate를 **스킵하고 곧장 report 생성으로 진행**한다(중복 회피). multi-phase plan일 때만 이 gate를 닫는다.
 - **loop scope**: 전체 구현분(all phases). phase별 gate에서 phase-local 품질은 이미 닫혔으므로, 이 gate는 **phase 경계를 넘는 이슈**(모듈 간 연동, 보안 경계, 전체 규모 성능, cross-phase 통합 일관성)에 초점을 둔다.
-- **loop 정책**: Step 6의 공통 loop 정책을 그대로 재사용한다 (exit `critical=high=medium=0`, MAX 3 iteration, re-review는 loop 범위 전체 재리뷰, MAX 도달 분기 동일).
-- **단계**: Step 6의 review→fix→re-review와 동일하게 `spawn_agent`/`wait_agent`/`close_agent`를 사용한다. review는 전체 변경 파일 + cross-phase 통합 관점 + 최종 테스트 결과를 전달하고, finding은 하나씩 fix-task로 `implementation-agent` leaf에 재spawn한다.
+- **loop 정책**: Step 6의 공통 loop 정책을 그대로 재사용한다 (exit는 **두 report 합집합** `critical=high=medium=0`, MAX 3 iteration, re-review는 loop 범위 전체 재리뷰, MAX 도달 분기 동일).
+- **단계**: Step 6의 review→fix→re-review와 동일하게 `spawn_agent`/`wait_agent`/`close_agent`를 사용한다. review는 `implementation-review-agent`(correctness) ∥ `simplicity-review-agent`(simplicity)를 병렬 spawn해 전체 변경 파일 + cross-phase 통합 관점 + 최종 테스트 결과를 전달하고, 두 report finding을 합산해 finding은 하나씩 fix-task로 `implementation-agent` leaf에 재spawn한다(fix 경로 무변경).
 
 #### implementation_report 생성 (orchestrator 소유)
 

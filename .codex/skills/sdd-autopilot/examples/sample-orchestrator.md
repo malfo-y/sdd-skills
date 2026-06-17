@@ -2,7 +2,7 @@
 
 이 파일은 autopilot이 생성하는 오케스트레이터의 품질 기준 예시다.
 
-review가 포함된 small/medium/large 모든 path에서는 `implementation-agent`와 `implementation-review-agent`가 항상 custom agent mapping으로 실행된다. 경로가 단순하더라도 부모 autopilot이 local implementation/review로 대체하지 않는다.
+review가 포함된 small/medium/large 모든 path에서는 `implementation-agent`와 correctness(`implementation-review-agent`) ∥ simplicity(`simplicity-review-agent`) 2-reviewer가 항상 custom agent mapping으로 실행된다(review는 두 reviewer 병렬, exit는 두 report의 합집합). 경로가 단순하더라도 부모 autopilot이 local implementation/review로 대체하지 않는다.
 
 ## Example A: single-phase medium direct path
 
@@ -86,19 +86,24 @@ Part 2의 `Contract/Invariant Delta and Coverage`와 `Validation Plan`을 기준
 - `fix_targets`: `critical/high/medium`
 - `low_policy`: `low` findings are advisory/logged follow-up and do not block this gate.
 - `timing`: Step 3 `implementation-agent` dispatch controller 직후 즉시 실행하는 completion gate
-- `agent_mapping`: `review = implementation-review-agent`, `fix = implementation-agent`, `re-review = implementation-review-agent`
-- `execution_sequence`: `implementation-agent -> implementation-review-agent -> implementation-agent (if needed) -> implementation-review-agent`
-- `agent_lifecycle`: every spawned review/fix/re-review agent is `wait_agent` collected, logged, then `close_agent({target: <agent_id>})` closed before the next spawn.
-- autopilot은 Step 3 구현 직후 같은 범위로 `implementation-review-agent`를 즉시 호출한다.
+- `agent_mapping`:
+  - `review = implementation-review-agent`
+  - `review = simplicity-review-agent`
+  - `re-review = implementation-review-agent`
+  - `re-review = simplicity-review-agent`
+  - `fix = implementation-agent`
+- `execution_sequence`: `implementation-agent -> [implementation-review-agent ∥ simplicity-review-agent] -> implementation-agent (if needed) -> [implementation-review-agent ∥ simplicity-review-agent]` (두 reviewer 병렬, exit는 두 report의 합집합)
+- `agent_lifecycle`: every spawned review/fix/re-review agent is `wait_agent` collected, logged, then `close_agent({target: <agent_id>})` closed before the next spawn. 병렬 review는 두 reviewer를 모두 `wait_agent` 수거한 뒤 닫는다.
+- autopilot은 Step 3 구현 직후 같은 범위로 correctness(`implementation-review-agent`) ∥ simplicity(`simplicity-review-agent`) 2-reviewer를 즉시 병렬 호출한다(exit는 두 report의 합집합).
 - review 입력에는 최소한 `_sdd/drafts/2026-04-10_feature_draft_jwt_auth.md`, `_sdd/spec/main.md`, 현재 변경 파일 목록, 관련 테스트 결과를 포함한다.
 - `review invocation prompt contract`:
   - "방금 끝난 JWT 인증 구현 범위만 검토하세요. 응답은 findings first여야 하며, 각 finding은 severity, 파일/라인, 관련 Acceptance Criteria 또는 temporary spec linkage, 근거, 권장 수정 방향을 포함해야 합니다."
 - `fix invocation prompt contract`:
-  - "직전 `implementation-review-agent` finding 중 `critical/high/medium`만 닫으세요. unrelated dirty changes를 되돌리지 말고, 수정 후 관련 테스트가 다시 실행 가능한 상태를 유지하세요."
+  - "직전 두 reviewer(correctness ∥ simplicity) finding의 합집합 중 `critical/high/medium`만 닫으세요. unrelated dirty changes를 되돌리지 말고, 수정 후 관련 테스트가 다시 실행 가능한 상태를 유지하세요."
 - `re-review invocation prompt contract`:
-  - "기존 review 리포트 경로를 전달해 re-review mode로 진입하세요. 새 리포트를 만들지 말고, 직전 review finding이 실제로 해소됐는지 검증한 뒤 같은 범위에서 새 `critical/high/medium`이 남는지 판정해, 기존 리포트의 `Current Status`를 갱신하고 `Iteration History`에 이번 회차(resolved/still-open/new)를 append하세요. findings first 형식 유지."
-- `implementation-review-agent` 결과에 `critical/high/medium`이 하나라도 있으면 autopilot은 fix를 수행한다 — finding을 fix-task로 보고 **finding 하나씩 순차로** `implementation-agent` leaf를 spawn한다(finding 영향 파일 = leaf Target Files). 각 fix leaf는 수거와 기록 직후 `close_agent({target: <agent_id>})`로 닫는다. 초기 구현의 병렬 dispatch 그룹과 달리 fix는 순차다(별도 fix 분해 기계장치 없음).
-- fix 후 autopilot은 같은 scope로 `implementation-review-agent`를 재호출한다.
+  - "correctness ∥ simplicity 각 reviewer에 해당 lens의 기존 review 리포트 경로를 전달해 re-review mode로 진입하세요. 새 리포트를 만들지 말고, 직전 review finding이 실제로 해소됐는지 검증한 뒤 같은 범위에서 새 `critical/high/medium`이 남는지 판정해, 각 lens 기존 리포트의 `Current Status`를 갱신하고 `Iteration History`에 이번 회차(resolved/still-open/new)를 append하세요. findings first 형식 유지."
+- 두 reviewer(`implementation-review-agent` correctness ∥ `simplicity-review-agent` simplicity) report의 **합집합**에 `critical/high/medium`이 하나라도 있으면 autopilot은 fix를 수행한다 — finding을 fix-task로 보고 **finding 하나씩 순차로** `implementation-agent` leaf를 spawn한다(finding 영향 파일 = leaf Target Files). 각 fix leaf는 수거와 기록 직후 `close_agent({target: <agent_id>})`로 닫는다. 초기 구현의 병렬 dispatch 그룹과 달리 fix는 순차다(별도 fix 분해 기계장치 없음).
+- fix 후 autopilot은 같은 scope로 두 reviewer(correctness ∥ simplicity)를 다시 병렬 재호출한다(exit는 두 report의 합집합).
 - 이 gate와 required inline validation이 모두 닫힌 뒤에만 Step 4로 진행한다.
 
 ### Step 4: spec_update_done
@@ -248,6 +253,8 @@ gate 실패 시 finding을 fix task로 normalize하지 말고 `implementation-pl
 **Per-group review-fix gate (must finish before Step 7)**:
 - `scope`: `per-group`
 - `max_rounds_per_group`: 3
+- `exit_condition`: `critical = 0 AND high = 0 AND medium = 0`
+- `fix_targets`: `critical/high/medium`
 - `timing`: 각 `Checkpoint=true` phase 직후 즉시 실행하는 completion gate. 마지막 phase는 implicit `Checkpoint=true`.
 - `Phase Source`: `_sdd/implementation/2026-04-10_implementation_plan_payment_system.md`
 - `group boundary`:
@@ -264,24 +271,27 @@ gate 실패 시 finding을 fix task로 normalize하지 말고 `implementation-pl
   - 예외 carry-over는 plan에 명시된 항목만 허용하고, 로그에 근거와 후속 group absorb point를 남긴다.
 - `agent_mapping`:
   - `review = implementation-review-agent`
-  - `fix = implementation-agent`
+  - `review = simplicity-review-agent`
   - `re-review = implementation-review-agent`
-- `execution_sequence_per_group`: `[Checkpoint=false phases: light validation only] -> Checkpoint=true phase implementation-agent -> implementation-review-agent -> implementation-agent (if needed) -> implementation-review-agent -> group validation`
-- `agent_lifecycle`: every spawned group/review/fix/re-review agent is `wait_agent` collected, logged, then `close_agent({target: <agent_id>})` closed before the next group or downstream step.
-- autopilot은 각 Checkpoint phase 직후 해당 group 전체 범위로 `implementation-review-agent`를 즉시 호출한다.
+  - `re-review = simplicity-review-agent`
+  - `fix = implementation-agent`
+- `execution_sequence_per_group`: `[Checkpoint=false phases: light validation only] -> Checkpoint=true phase implementation-agent -> [implementation-review-agent ∥ simplicity-review-agent] -> implementation-agent (if needed) -> [implementation-review-agent ∥ simplicity-review-agent] -> group validation` (두 reviewer 병렬, exit는 두 report의 합집합)
+- `agent_lifecycle`: every spawned group/review/fix/re-review agent is `wait_agent` collected, logged, then `close_agent({target: <agent_id>})` closed before the next group or downstream step. 병렬 review는 두 reviewer를 모두 `wait_agent` 수거한 뒤 닫는다.
+- autopilot은 각 Checkpoint phase 직후 해당 group 전체 범위로 correctness(`implementation-review-agent`) ∥ simplicity(`simplicity-review-agent`) 2-reviewer를 즉시 병렬 호출한다(exit는 두 report의 합집합).
 - review 입력에는 최소한 `_sdd/implementation/2026-04-10_implementation_plan_payment_system.md`, `_sdd/drafts/2026-04-10_feature_draft_payment_system.md`, 해당 group의 전체 변경 파일, focused test 결과를 포함한다.
 - `review invocation prompt contract`:
   - "현재 group 범위(Phase N~M) 전체를 검토하세요. 응답은 findings first여야 하며, 각 finding은 severity, 파일/라인, 관련 group task 또는 temporary spec linkage, 근거, 권장 수정 방향을 포함해야 합니다."
 - `fix invocation prompt contract`:
-  - "직전 `implementation-review-agent` finding 중 현재 group 범위의 `critical/high/medium`만 닫으세요. unrelated dirty changes를 되돌리지 말고, 수정 후 관련 테스트가 다시 실행 가능한 상태를 유지하세요."
+  - "직전 두 reviewer(correctness ∥ simplicity) finding 합집합 중 현재 group 범위의 `critical/high/medium`만 닫으세요. unrelated dirty changes를 되돌리지 말고, 수정 후 관련 테스트가 다시 실행 가능한 상태를 유지하세요."
 - `re-review invocation prompt contract`:
-  - "기존 review 리포트 경로를 전달해 re-review mode로 진입하세요. 새 리포트를 만들지 말고, 직전 review finding이 실제로 해소됐는지 검증한 뒤 같은 group 범위에서 새 `critical/high/medium`이 남는지 판정해, 기존 리포트의 `Current Status`를 갱신하고 `Iteration History`에 이번 회차(resolved/still-open/new)를 append하세요. findings first 형식 유지."
-- `implementation-review-agent` 결과에 `critical/high/medium`이 하나라도 있으면 autopilot은 fix를 수행한다 — finding을 fix-task로 보고 **finding 하나씩 순차로** `implementation-agent` leaf를 spawn한다(finding 영향 파일 = leaf Target Files). 각 fix leaf는 수거와 기록 직후 `close_agent({target: <agent_id>})`로 닫는다. 초기 구현의 병렬 dispatch 그룹과 달리 fix는 순차다(별도 fix 분해 기계장치 없음).
+  - "correctness ∥ simplicity 각 reviewer에 해당 lens의 기존 review 리포트 경로를 전달해 re-review mode로 진입하세요. 새 리포트를 만들지 말고, 직전 review finding이 실제로 해소됐는지 검증한 뒤 같은 group 범위에서 새 `critical/high/medium`이 남는지 판정해, 각 lens 기존 리포트의 `Current Status`를 갱신하고 `Iteration History`에 이번 회차(resolved/still-open/new)를 append하세요. findings first 형식 유지."
+- 두 reviewer(`implementation-review-agent` correctness ∥ `simplicity-review-agent` simplicity) report의 **합집합**에 `critical/high/medium`이 하나라도 있으면 autopilot은 fix를 수행한다 — finding을 fix-task로 보고 **finding 하나씩 순차로** `implementation-agent` leaf를 spawn한다(finding 영향 파일 = leaf Target Files). 각 fix leaf는 수거와 기록 직후 `close_agent({target: <agent_id>})`로 닫는다. 초기 구현의 병렬 dispatch 그룹과 달리 fix는 순차다(별도 fix 분해 기계장치 없음).
 - 현재 group gate가 닫히기 전에는 다음 group 또는 Step 7로 진행하지 않는다.
 
 **Final integration review (must finish before Step 7) — 그룹 2개이므로 별도 실행**:
 - `timing`: 마지막 group(Group 2)의 review-fix gate와 group validation이 모두 닫힌 직후 1회 실행
-- `implementation-review-agent`를 1회 더 실행해 cross-group regressions를 점검한다.
+- `agent`: correctness(`implementation-review-agent`) ∥ simplicity(`simplicity-review-agent`) 2-reviewer 병렬 (exit는 두 report의 합집합)
+- 두 reviewer(correctness ∥ simplicity)를 1회 더 병렬 실행해 cross-group regressions를 점검한다(exit는 두 report의 합집합).
 - `final integration review prompt contract`:
   - "group 경계를 넘는 회귀와 남은 cross-group gap을 검토하세요. 응답은 findings first 형식이며, overall integration readiness와 spec sync readiness를 함께 평가해야 합니다."
 - 모든 group gate, 마지막 `final integration review`, required inline test가 모두 닫힌 뒤에만 Step 7로 진행한다.

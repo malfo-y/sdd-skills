@@ -23,6 +23,7 @@ ALLOWED_BASE_AGENTS = {
     "plan-review-agent",
     "implementation-agent",
     "implementation-review-agent",
+    "simplicity-review-agent",
     "spec-update-done-agent",
     "spec-review-agent",
     "ralph-loop-init-agent",
@@ -113,23 +114,35 @@ def check(text):
             "review-fix gate: exit_condition 'critical = 0 AND high = 0 AND medium = 0' not found"
         )
 
-    mapping_specs = [
-        ("re-review", "implementation-review-agent"),
-        ("fix", "implementation-agent"),
-        ("review", "implementation-review-agent"),
-    ]
-    for role, expected_base in mapping_specs:
+    def mapped_agents(role):
         pattern = r"(?<![\w-])" + re.escape(role) + r"\s*=\s*`?([A-Za-z0-9:_-]+)"
-        role_match = re.search(pattern, text)
-        if not role_match:
+        return [m.strip() for m in re.findall(pattern, text)]
+
+    # review/re-review must declare BOTH reviewers (correctness + simplicity);
+    # fix maps to a single implementation-agent.
+    for role in ("review", "re-review"):
+        mapped = mapped_agents(role)
+        if not mapped:
             findings.append(f"agent_mapping: '{role} = ...' not found")
-        else:
-            mapped = role_match.group(1).strip()
-            if mapped != AGENT_PREFIX + expected_base:
+            continue
+        for expected_base in (
+            "implementation-review-agent",
+            "simplicity-review-agent",
+        ):
+            if AGENT_PREFIX + expected_base not in mapped:
                 findings.append(
                     f"agent_mapping: '{role}' must map to "
-                    f"'{AGENT_PREFIX}{expected_base}', got '{mapped}'"
+                    f"'{AGENT_PREFIX}{expected_base}'"
                 )
+
+    fix_mapped = mapped_agents("fix")
+    if not fix_mapped:
+        findings.append("agent_mapping: 'fix = ...' not found")
+    elif fix_mapped != [AGENT_PREFIX + "implementation-agent"]:
+        findings.append(
+            f"agent_mapping: 'fix' must map only to "
+            f"'{AGENT_PREFIX}implementation-agent', got {fix_mapped}"
+        )
 
     fix_targets_match = re.search(r"fix_targets`?\s*[:=]\s*`?([^\n`]+)", text)
     if fix_targets_match and re.search(r"\blow\b", fix_targets_match.group(1)):

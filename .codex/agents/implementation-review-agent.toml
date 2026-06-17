@@ -19,7 +19,6 @@ developer_instructions = '''
 - [ ] 리뷰 결과가 findings-first 구조와 severity 기준으로 정리된다.
 - [ ] `_sdd/spec/`와 `implementation_plan*.md`는 수정하지 않는다.
 - [ ] 장문 리포트에서도 caller가 inline 2-phase writing으로 구조화 작성할 수 있다.
-- [ ] Speculative Code 차원이 Step 5 Assessment에서 점검되고, Step 6 Findings에 분류 기준이 적용됐다.
 - [ ] Recommendations 자체도 Min-Code 원칙을 따른다 — 사변적 권고 금지 (Hard Rule 10).
 - [ ] 각 AC/`V*`의 verdict(MET/NOT MET/UNTESTED)가 증거에 묶여 §3 Verification Summary ledger에 기록된다 (증거 없는 MET 없음).
 - [ ] re-review mode면 새 리포트를 만들지 않고 기존 리포트의 `Current Status` 갱신 + `Iteration History` append(직전 대비 resolved/still-open/new)로 처리했다.
@@ -140,15 +139,12 @@ Tier별 리뷰 기준 목록·expected artifacts·범위 가정을 정리한다 
 
 Tier 1:
 - 각 task / AC가 충족되었는지 — 각 AC를 plan이 지정한 평가방법(`V*`)으로 검증하고, verdict를 증거에 묶어 §3 ledger에 기록한다. 1등급(정량)은 재현 가능한 실행 출력, 2등급(정성)은 인용한 코드 지점/판정 근거가 증거다. 증거 없는 MET는 금지.
-- Speculative Code: plan/AC가 요구하지 않는 옵션·설정·추상화, 단일 사용처 추상화, 도달 불가 에러 처리
 
 Tier 2:
 - 구현이 spec과 정합한지
-- Speculative Code: spec이 요구하지 않는 옵션·설정·추상화, 단일 사용처 추상화, 도달 불가 에러 처리
 
 Tier 3:
 - 보안, 에러 처리, 코드 패턴, 성능, 테스트 품질
-- Speculative Code (사변적 추가): AC 외 옵션·설정·추상화, 단일 사용처 추상화, 도달 불가 에러 처리
 
 ### Step 6: Findings Classification
 
@@ -156,10 +152,8 @@ Tier 3:
 
 - **Critical**: 핵심 기능 누락, 실패 테스트, 보안 취약점, 데이터 손실 위험, breaking change
 - **High**: 핵심 acceptance criteria 일부 불충족, 주요 에러 처리 갭, 중요한 통합 깨짐, 즉시 수정이 필요한 stale plan/drift
-- **Medium**: 비핵심 테스트 누락, 패턴 불일치, 중간 수준 성능/유지보수성 우려, 후속 수정이 필요한 구현 품질 문제, **Speculative Code (사변적 옵션·설정·추상화·도달 불가 에러 처리)의 기본 분류**
+- **Medium**: 비핵심 테스트 누락, 패턴 불일치, 중간 수준 성능/유지보수성 우려, 후속 수정이 필요한 구현 품질 문제
 - **Low**: 리팩터링, 문서화, 가독성, 선택적 엣지 케이스, 추후 개선 권고
-
-Speculative Code escalation: 사변적 코드가 실제 버그·보안 영향을 만들거나 데이터 손실 위험을 유발하면 Critical로 escalate.
 
 `Critical / High / Medium`은 autopilot review-fix loop의 수정 대상이고, `Low`는 기본적으로 로그/후속 권고 대상이다.
 
