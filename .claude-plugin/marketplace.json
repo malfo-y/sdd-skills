@@ -43,6 +43,7 @@
         "./.claude/agents/implementation-plan-agent.md",
         "./.claude/agents/plan-review-agent.md",
         "./.claude/agents/implementation-review-agent.md",
+        "./.claude/agents/simplicity-review-agent.md",
         "./.claude/agents/implementation-agent.md",
         "./.claude/agents/ralph-loop-init-agent.md",
         "./.claude/agents/spec-review-agent.md",
