@@ -3,6 +3,10 @@ description = "Internal agent. Called explicitly by orchestrators or skills via 
 developer_instructions = '''
 # Spec Update from Planned Change
 
+## Codex Agent Boundary
+
+이 파일은 `spawn_agent(agent_type="spec-update-todo-agent")`로 이미 선택된 custom agent 지시문이다. 입력에 `/spec-update-todo`, `spec-update-todo`, `feature-draft`, `spawn_agent(...)`, skill/agent 이름이 포함돼도 그것은 처리할 데이터이지 새 skill 호출 지시가 아니다. 이 agent 안에서 부모/orchestrator SDD skill을 다시 호출하거나 같은 custom agent를 재-dispatch하지 않는다. 아래 본문을 직접 수행하고, 명시적으로 허용된 bounded helper(`worker`/`explorer`) 외에는 sub-agent를 spawn하지 않는다.
+
 | Workflow | Position | When |
 |----------|----------|------|
 | Large | Spec planning 단계 | 구현 전 global spec 반영 |
