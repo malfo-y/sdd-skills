@@ -1,5 +1,29 @@
 # Decision Log
 
+## 2026-06-17 - Orthogonal 2-lens parallel review for implementation gates
+
+### Context
+
+implementation review-gate는 단일 reviewer(`implementation-review-agent`)가 정확성과 코드 형태 품질을 함께 점검했다. 이는 (a) 한 reviewer에 이질적 표적(정확성 vs 동작-불변 형태)을 과부하시키고, (b) "단순화" 차원이 correctness finding에 묻혀 일관되게 검출되지 않는 문제가 있었다. 앤트로픽 pr-review-toolkit의 code-simplifier(코드를 직접 고치는 reviewer-editor)는 이 repo의 단일 작성자 불변식(reviewer는 자기 리포트만 쓰고 code/plan/spec을 수정하지 않는다)과 충돌해 그대로 차용할 수 없었다.
+
+### Decision
+
+1. **직교 2-렌즈 병렬 review**: implementation-scoped review-gate(`implementation` 스킬 phase/final gate, autopilot global/per-group/final-integration gate)는 표적이 disjoint한 두 read-only leaf reviewer를 병렬 dispatch한다 — correctness(`implementation-review-agent`: 정확성/AC/버그/보안/spec drift)와 simplicity(`simplicity-review-agent`: 동작-불변 형태 — 중복·죽은 코드·단일 사용처 추상화·도달 불가 에러 처리·과잉압축). `Speculative Code` 차원은 correctness에서 simplicity로 이관해 disjoint를 강제한다.
+2. **gating exit는 두 report 합집합** `critical=high=medium=0`.
+3. **falsifiable-only gating**: 동작 변화 없이 더 단순한 동등 형태를 구체적으로 제시할 수 있는 객관적 위반만 Medium 이상(gating), 주관적 취향은 Low(advisory). 병렬화는 벽시계만 줄이고 수렴은 보장하지 않으므로 이 한정이 수렴성의 닻이다.
+4. **fix 경로 무변경**: 두 reviewer finding은 합산되어 기존 단일 fix 경로(`implementation-agent` 순차 재dispatch)로 처리된다. simplicity reviewer는 코드를 직접 고치지 않는다(단일 작성자 불변식).
+5. **범위 한정**: simplicity 렌즈는 `spec-review`로 확장하지 않는다(코드 형태 품질이라 spec 문서 품질에 부적합). autopilot canonical agent set에 `simplicity-review-agent`를 추가하고, 결정적 게이트키퍼 `validate_orchestrator.py`가 2-reviewer 매핑을 강제(단일 reviewer 매핑을 FAIL)한다.
+
+### Rationale
+
+- 이질적 표적을 disjoint 렌즈로 분리하면 한 reviewer 과부하 없이 검출 범위가 넓어지고, 중복 finding이 방지된다.
+- 두 reviewer가 read-only leaf라 동시 dispatch가 안전하고, 벽시계는 max(둘)≈1 reviewer로 유지된다(토큰 비용만 증가 — 사용자 명시 수용).
+- code-simplifier의 "직접 수정" 대신 "리뷰만" 형제 agent로 번역해 단일 작성자 불변식과 nesting 1단계 제한을 보존한다.
+
+### Status
+
+구현 완료(`_sdd/implementation/2026-06-17_implementation_report_simplicity_reviewer.md`, READY — 10 task, 4 review-fix gate 통과, `validate_orchestrator.py` PASS/FAIL fixture 실행 검증). 입력: `_sdd/drafts/2026-06-17_feature_draft_simplicity_reviewer.md` Part 1.
+
 ## 2026-06-13 - AC-first validation rubric across the plan/review chain
 
 ### Context

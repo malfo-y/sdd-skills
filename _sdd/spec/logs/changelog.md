@@ -2,6 +2,16 @@
 
 > 이 파일은 `_sdd/spec/main.md`의 버전별 변경 기록이다.
 
+#### v4.2.0 (2026-06-17)
+
+- **직교 2-렌즈 병렬 review 계약을 Guardrails에 반영**: review/validation guardrail에, implementation-scoped review-gate(`implementation` 스킬 phase/final gate, autopilot global/per-group/final-integration gate)가 단일 reviewer가 아니라 표적이 disjoint한 두 read-only leaf reviewer(`implementation-review-agent` correctness ∥ `simplicity-review-agent`)를 병렬 dispatch하고 gating exit가 두 report 합집합 `critical=high=medium=0`임을 명시. simplicity 렌즈는 `spec-review`로 확장하지 않음을 못박음.
+- **falsifiable-only gating 불변식 명시**: simplicity finding은 더 단순한 동등 형태를 구체적으로 제시할 수 있는 객관적 위반만 Medium 이상(gating), 주관적 취향은 Low(advisory)라는 수렴성 닻을 guardrail에 반영.
+- **fix 경로 단일성 보강**: 두 reviewer finding이 합산돼 기존 단일 fix 경로(`implementation-agent` 순차 재dispatch)로 처리되며 simplicity reviewer도 산출물을 직접 수정하지 않음(단일 작성자 불변식)을 명시.
+- **결정 테이블에 `implementation review 렌즈` 행 추가**: correctness ∥ simplicity 직교 2-reviewer 병렬, 합집합 exit, falsifiable-only gating을 유지 결정으로 고정.
+- **DECISION_LOG**: "Orthogonal 2-lens parallel review for implementation gates" 결정 기록 추가.
+- **범위 경계**: 6+개 구현 surface(reviewer agent 신규/경량화, producer orchestration, autopilot 매핑, `validate_orchestrator.py` 게이트키퍼, contract §6, sample)는 이미 머지됨. 본 sync는 global spec surface lag만 보정하며 feature-level dispatch detail이나 canonical agent 전체 열거를 main 본문에 옮기지 않는다(thin 유지 — agent set 열거는 contract가 단일 소스).
+- 입력: `_sdd/drafts/2026-06-17_feature_draft_simplicity_reviewer.md` Part 1, `_sdd/implementation/2026-06-17_implementation_report_simplicity_reviewer.md` (READY).
+
 #### v4.1.16 (2026-06-12)
 
 - **Harness(AGENTS.md) 레이어를 global 설계 모델에 반영**: `main.md` 핵심 설계의 layer 서술이 Skill/Agent/Artifact/Reference 4-layer 단정에 더해, 그 위에 놓이는 별도 Harness layer(`AGENTS.md` = 작업 진입·작업 규약 how)를 명시하도록 보정했다. canonical 문서(`docs/SDD_CONCEPT.md`, `docs/SDD_WORKFLOW.md`)가 도입한 harness layer와의 모순을 제거. harness는 global spec 본문을 키우지 않는 별도 레이어이며 repo-specific 트리거·핵심 결정은 여전히 global spec Guardrails가 단일 소스다(I1·I2 보존).
