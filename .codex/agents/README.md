@@ -24,9 +24,8 @@
 - `plan-review-agent`
 - `implementation-review-agent`
 - `simplicity-review-agent`
-- `spec-update-todo-agent`
-- `spec-update-done-agent`
 - `spec-review-agent`
+- `spec-sync-agent`
 - `ralph-loop-init-agent`
 
 ## Inline Writing

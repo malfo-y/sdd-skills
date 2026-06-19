@@ -1,5 +1,23 @@
 # Decision Log
 
+## 2026-06-19 - spec-update-todo + spec-update-done 단일 `spec-sync` 진입점으로 통합
+
+### Context
+
+spec sync는 구현 전 planned delta 반영(`spec-update-todo`)과 구현 후 검증 사실 승격(`spec-update-done`)이 별도 스킬/agent로 분리돼 있었다. 두 스킬은 공유 substrate(Repo-wide Invariant Test, main/supporting/history surface 매핑, Strategic Code Map 보수 반영 규율, `🚧 Planned` 표식 규율, sub-spec 링크 규율, 내레이션 억제)를 거의 글자 단위로 중복 보유해, claude/codex × skill/agent 4벌 미러 동기화 부담과 "언제 어느 스킬을 부르나" 진입점 혼선을 유발했다.
+
+### Decision
+
+1. **단일 진입점으로 통합**: spec sync 책임을 단일 `spec-sync` 스킬 + `spec-sync-agent`가 보유한다. 구 `spec-update-todo`/`spec-update-done`의 skill·agent·codex mirror·skill.json 12파일은 hard-delete하고 deprecated alias는 남기지 않는다(내부 dogfooding repo).
+2. **evidence-driven status 분류가 파이프라인 위치에 자동 적응**: 분류 축을 "코드 evidence 유무" 하나로 통일한다. 각 delta를 IMPLEMENTED/VERIFIED·PARTIAL·PLANNED/NOT_IMPLEMENTED·UNVERIFIED 4분류로 routing한다. 구현 전 호출은 evidence 부재로 전 항목이 PLANNED로 degrade(구 todo 동작)되고, 구현 후 호출은 코드 대조로 IMPLEMENTED를 승격하면서 잔여 PLANNED를 분리한다(구 done 동작). 두 동작이 한 sync에 혼합될 수 있다.
+3. **안전 불변식 2개 보존**: evidence 없으면 승격 금지(기본값 PLANNED/보류), verified/planned 무표식 혼합 금지를 통합 agent Hard Rule로 유지한다. 미구현·미검증을 완료 사실로 기록하지 않는 안전성이 두 구 스킬에서 그대로 이전된다.
+4. **호출 시점/횟수 보존**: 진입점만 통합하고, orchestrator는 동일 `spec-sync`를 호출 시점에 따라 최대 2회(구현 전 planned 반영 1회 조건부, 구현 완료 후 sync 1회) 호출한다. codex framed payload Mode는 단일 통합 모드로 둔다(evidence가 판정하므로 모드 힌트 잉여). (대안 기각: 구현 후 1회 통합은 대규모 변경의 사전 planned alignment 가치를 잃음; evidence 자동 감지로 호출 횟수까지 추론은 오판 위험.)
+
+### Consequences
+
+- global spec main.md §3 결정 테이블에 `spec sync 진입점` 행, "운영상 반드시 유지할 구조적 판단"에 evidence-driven 승격·무표식 혼합 금지 불변식이 thin하게 고정된다.
+- 신규 4파일(`spec-sync-agent` .md/.toml, `spec-sync` wrapper×2 + skill.json), 삭제 12파일, 수정 46파일. autopilot 5쌍·AGENTS.md §3·harness template 4부·producer/reviewer agent 4쌍·docs en/ko·components.md/usage-guide.md dead-link가 단일 `spec-sync` 명칭으로 정렬됐다(V1~V7 + 외부 2-reviewer gate 통과, critical/high/medium 0).
+
 ## 2026-06-17 - Orthogonal 2-lens review extended to PR review (human-assist verdict integration)
 
 ### Context

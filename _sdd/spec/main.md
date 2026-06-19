@@ -2,12 +2,12 @@
 
 > Markdown 기반 skill bundle로 AI 에이전트의 Spec-Driven Development 워크플로우를 Claude Code와 Codex에서 공통 계약으로 실행한다.
 
-**Spec Version**: 4.3.0
-**Last Updated**: 2026-06-17
+**Spec Version**: 4.4.0
+**Last Updated**: 2026-06-19
 **Status**: Approved
 **Canonical Role**: current thin global spec
 
-이 문서는 repo-wide `개념 + 경계 + 결정`만 고정하는 thin global spec이다. 상세 component reference는 [components.md](./components.md), 사용 시나리오와 기대 결과는 [usage-guide.md](./usage-guide.md), 구조 변경 이력은 [DECISION_LOG.md](./DECISION_LOG.md), 릴리스/문서 변경 이력은 [logs/changelog.md](./logs/changelog.md), 환경과 실행 제약은 [../env.md](../env.md)에서 확인한다.
+이 문서는 repo-wide `개념 + 경계 + 결정`만 고정하는 thin global spec이다. 상세 component reference는 [components.md](./components.md), 사용 시나리오와 기대 결과는 [usage-guide.md](./usage-guide.md), 구조 변경 이력은 [decision_log.md](./decision_log.md), 릴리스/문서 변경 이력은 [logs/changelog.md](./logs/changelog.md), 환경과 실행 제약은 [../env.md](../env.md)에서 확인한다.
 
 ## 1. 배경 및 high-level concept
 
@@ -120,6 +120,7 @@ SDD Skills의 설계는 다음 층으로 나뉜다.
 | multi-phase quality gate | `per-group` review-fix (Checkpoint boundary) + adaptive `final integration review`; missing non-final `Checkpoint`는 reject/regenerate | 의미 있는 group 단위로 review depth를 높이고, review 비용과 latency를 줄이면서 cross-group regression은 adaptive final review로 커버한다 |
 | 직교 2-렌즈 review 렌즈 | correctness ∥ simplicity(`simplicity-review-agent`) 직교 2-reviewer 병렬 dispatch를 두 진입점에 적용: implementation review-gate(correctness=`implementation-review-agent`, gating exit는 두 report 합집합 `critical=high=medium=0`)와 PR review(`pr-review` 자체 correctness 렌즈, verdict 자동 강제 없이 Medium+ → REQUEST CHANGES rationale 기여). 양쪽 모두 simplicity는 falsifiable-only gating | 정확성과 동작-불변 형태 품질을 disjoint 표적으로 분리해 한 reviewer에 과부하 없이 검출 범위를 넓히고, 벽시계는 병렬로 유지하면서 falsifiable 한정으로 수렴성을 보장한다. PR review는 인간 보조라 합집합 자동 exit 대신 rationale 기여로 합류시킨다 |
 | spec 구조 | thin global spec + execution-focused temporary spec | 장기 기준과 일회성 실행 정보를 분리해 drift를 줄인다 |
+| spec sync 진입점 | 단일 `spec-sync` 스킬 + `spec-sync-agent`. 구현 전/후 구분은 별도 스킬이 아니라 evidence-driven status 분류로 처리 | 두 진입점(`spec-update-todo`/`spec-update-done`) 이분 진입을 제거해 운영 표면을 줄이면서, 코드+validation evidence 유무로 동작이 자동 적응한다 |
 | Strategic Code Map | optional compact navigation surface | global spec을 inventory로 되돌리지 않으면서 사람과 LLM agent가 entrypoint, contract source, invariant hotspot, extension point, validation surface를 빠르게 찾게 한다 |
 | artifact naming/history | lowercase canonical artifact를 기본으로 하고, skill contract가 정의한 output surface는 dated slug naming과 git-history-first 추적을 따른다 | 산출물 경로 추론을 단순화하고 legacy fixed-name drift를 줄인다 |
 | canonical rollout 순서 | `definition -> generators/transformers -> consumers/planners -> docs -> english mirrors/examples -> audit` | definition, skill behavior, human docs drift를 줄인다 |
@@ -134,6 +135,7 @@ SDD Skills의 설계는 다음 층으로 나뉜다.
 - canonical model 변경은 definition 문서와 workflow 문서에서 먼저 선언하고, 이후 generator/consumer/docs가 따라간다
 - supporting docs는 global decision-bearing truth를 복제하지 않고, reference 역할만 수행한다
 - spec lifecycle skill은 `Strategic Code Map`을 현재 코드 탐색의 출발점으로만 사용해야 한다. `feature-draft`와 implementation planning의 `Touchpoints` / `Target Files`는 항상 현재 코드로 재확인한다
+- `spec-sync`는 코드+validation evidence가 있는 항목만 현재 사실로 승격하고, evidence 없는 항목은 기본적으로 `🚧 Planned` 또는 보류로 둔다. verified truth와 planned truth를 같은 문단·불릿에 무표식으로 섞지 않는다(미구현·미검증을 완료 사실로 기록하지 않는 안전 불변식)
 
 ### 현재 운영 제약
 
@@ -145,6 +147,6 @@ SDD Skills의 설계는 다음 층으로 나뉜다.
 
 - [components.md](./components.md): component reference와 탐색용 code/navigation hint
 - [usage-guide.md](./usage-guide.md): scenario-oriented usage guide와 expected result surface
-- [DECISION_LOG.md](./DECISION_LOG.md): 구조 변경과 주요 spec 판단 이력
+- [decision_log.md](./decision_log.md): 구조 변경과 주요 spec 판단 이력
 - [logs/changelog.md](./logs/changelog.md): 릴리스 및 문서 변경 이력
 - [README.md](../../README.md), [docs/SDD_SPEC_DEFINITION.md](../../docs/SDD_SPEC_DEFINITION.md), [docs/SDD_WORKFLOW.md](../../docs/SDD_WORKFLOW.md): 설치, canonical model, workflow semantics 기준 문서

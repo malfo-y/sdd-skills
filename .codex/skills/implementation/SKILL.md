@@ -49,7 +49,7 @@ You are already running as <agent_type>. Do not invoke or re-enter SDD skills fr
 
 ## Hard Rules
 
-1. **Spec 파일 불가침**: `_sdd/spec/` 하위 파일을 생성/수정/삭제하지 않는다. Spec drift 발견 시 리포트에 기록하고 `spec-update-todo` 사용을 안내한다.
+1. **Spec 파일 불가침**: `_sdd/spec/` 하위 파일을 생성/수정/삭제하지 않는다. Spec drift 발견 시 리포트에 기록하고 `spec-sync` 사용을 안내한다.
 2. **TDD는 leaf가 수행**: 각 task의 RED→GREEN→REFACTOR는 leaf(`implementation-agent`)가 담당한다. orchestrator는 per-task TDD 절차를 복제하지 않는다.
 3. **파일 경계 준수**: leaf는 할당된 Target Files만 생성/수정/삭제한다. 그 외 파일은 읽기 전용이며, leaf가 `UNPLANNED_DEPENDENCY`로 보고하면 orchestrator가 유효성을 판단해 처리한다.
 4. **Verification Gate**: "should work" 금지. post-group 검증에서 테스트를 실제 재실행하고 출력을 근거로 제시한다. 이전 실행 결과 재사용 금지. `_sdd/env.md` 미존재 시 코드 분석 기반 검증을 허용하되, 리포트에 `UNTESTED` 표기.
@@ -110,7 +110,7 @@ task-set 확보 직후, 사용자에게 다음을 채팅으로 알림한다 (질
 - task_id, title, phase, dependencies, status, owner/leaf, notes
 - 초기 상태는 dependency 존재 시 `BLOCKED`, 없으면 `READY`
 
-이 progress artifact는 orchestrator가 소유하며, 경로·필드는 downstream(`spec-update-done`·`spec-summary`)이 소비하므로 canonical 형식을 보존한다.
+이 progress artifact는 orchestrator가 소유하며, 경로·필드는 downstream(`spec-sync`·`spec-summary`)이 소비하므로 canonical 형식을 보존한다.
 
 ### Step 3: Derive Parallel Groups
 
@@ -250,7 +250,7 @@ Phase Review 종료 시, 그 phase에서 발생한 다음 이벤트를 채팅으
 
 저장 경로: `_sdd/implementation/<YYYY-MM-DD>_implementation_report_<slug>.md`
 - `slug`는 소문자 snake_case (영문 소문자, 숫자, `_`만 사용)
-- progress·report 경로·필드는 `spec-update-done`·`spec-summary` 소비와 호환되도록 canonical 형식을 유지한다.
+- progress·report 경로·필드는 `spec-sync`·`spec-summary` 소비와 호환되도록 canonical 형식을 유지한다.
 
 포함 내용: 완료/미완료 task, parallel execution stats(groups·parallel·sequential·leaf failures), 테스트 결과, unplanned dependency, critical/quality follow-up, conclusion(READY/NEEDS WORK/BLOCKED).
 

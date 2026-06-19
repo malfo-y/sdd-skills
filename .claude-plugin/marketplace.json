@@ -30,8 +30,7 @@
         "./.claude/skills/spec-rewrite",
         "./.claude/skills/spec-snapshot",
         "./.claude/skills/spec-summary",
-        "./.claude/skills/spec-update-done",
-        "./.claude/skills/spec-update-todo",
+        "./.claude/skills/spec-sync",
         "./.claude/skills/spec-upgrade",
         "./.claude/skills/write-phased",
         "./.claude/skills/sdd-autopilot",
@@ -47,8 +46,7 @@
         "./.claude/agents/implementation-agent.md",
         "./.claude/agents/ralph-loop-init-agent.md",
         "./.claude/agents/spec-review-agent.md",
-        "./.claude/agents/spec-update-done-agent.md",
-        "./.claude/agents/spec-update-todo-agent.md"
+        "./.claude/agents/spec-sync-agent.md"
       ]
     }
   ]

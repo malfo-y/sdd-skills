@@ -87,8 +87,8 @@ Relevant draft or implementation signals may be attached only as a short appendi
 ## 7. Role of review and update skills
 
 - `spec-review`: audits quality and drift. It does not edit.
-- `spec-update-todo`, `spec-update-done`: they lift only persistent repo-wide information into the global spec.
-- update skills do not copy temporary execution detail into the global body.
+- `spec-sync`: it lifts only persistent repo-wide information into the global spec (handling pre-implementation planned alignment and post-implementation evidence sync, adapting to evidence).
+- the sync skill does not copy temporary execution detail into the global body.
 
 ## 8. Verification rule
 

@@ -60,7 +60,7 @@ sdd-autopilot automatically determines the scale based on request analysis and c
 |-------|---------------|----------------|-------------|------------------|
 | Small | 1-3 | 0-1 | None | implementation -> inline test |
 | Medium | 4-10 | 1-3 | Existing section patch | feature-draft -> implementation, or on the expanded path feature-draft -> implementation-plan -> phase-iterative implementation loop |
-| Large | 10+ | 3+ | New section addition possible | feature-draft -> (conditional spec-update-todo) -> implementation-plan -> phase-iterative implementation loop -> final integration review |
+| Large | 10+ | 3+ | New section addition possible | feature-draft -> (conditional spec-sync) -> implementation-plan -> phase-iterative implementation loop -> final integration review |
 
 When quantitative criteria and qualitative criteria (complexity, dependencies, test scope) point to different scales, sdd-autopilot **selects the larger scale**.
 
@@ -68,7 +68,7 @@ Additional rules:
 
 - The default planning entry for non-trivial changes is `feature-draft`.
 - `implementation-plan` is not a peer alternative to `feature-draft`; it is a follow-up expansion stage used when Part 2 is not sufficient or a multi-phase gate is needed.
-- `spec-update-todo` is added only when planned persistent global alignment is actually needed.
+- `spec-sync` is added only when planned persistent global alignment is actually needed (the same skill handles pre-implementation planned alignment and post-implementation evidence sync, adapting to evidence).
 - Even on medium-scale work, if a multi-phase plan is produced, the default review-fix scope becomes `per-phase`, followed by one mandatory `final integration review`.
 - On every small/medium/large path that includes review, `implementation` and `implementation-review` always remain agent execution units. The parent sdd-autopilot does not replace them with local inline implementation or local review.
 
@@ -100,7 +100,7 @@ feature-draft agent
                      Testing (inline or ralph-loop-init)
                          |
                          v
-                     spec-update-done agent
+                     spec-sync agent
                          | Output: _sdd/spec/ updated
 ```
 
@@ -205,7 +205,7 @@ sdd-autopilot uses different agent combinations depending on the scale determine
 implementation agent -> inline test -> (done)
 ```
 
-Skips feature-draft, implementation-plan, and spec-update-done. Applies to single function/class modifications, bug fixes, minor UI adjustments, etc.
+Skips feature-draft, implementation-plan, and spec-sync. Applies to single function/class modifications, bug fixes, minor UI adjustments, etc.
 
 The default small path may not include review. If review is included, however, the path still uses `implementation agent -> implementation-review agent -> implementation agent (fix) -> implementation-review agent`, and the parent autopilot does not implement or review inline by itself.
 
@@ -221,7 +221,7 @@ Medium-scale work splits into two paths.
 
 ```text
 feature-draft agent -> implementation agent
--> global review-fix loop (max 3 rounds) -> inline test -> spec-update-done agent
+-> global review-fix loop (max 3 rounds) -> inline test -> spec-sync agent
 ```
 
 - The global review-fix loop runs as `implementation-review agent -> implementation agent re-invocation -> implementation-review agent`
@@ -236,7 +236,7 @@ feature-draft agent -> implementation-plan agent
 -> phase-iterative implementation loop
 -> Phase 1: implementation -> review-fix -> validation
 -> Phase 2..N: implementation -> review-fix -> validation
--> final integration review -> inline test -> spec-update-done agent
+-> final integration review -> inline test -> spec-sync agent
 ```
 
 - Each phase closes its review-fix loop as `implementation-review agent -> implementation agent re-invocation -> implementation-review agent`
@@ -254,16 +254,16 @@ feature-draft agent -> implementation-plan agent
 **Pipeline**:
 
 ```text
-feature-draft agent -> (conditional) spec-update-todo agent -> implementation-plan agent
+feature-draft agent -> (conditional) spec-sync agent -> implementation-plan agent
 -> phase-iterative implementation loop
 -> Phase 1: implementation -> review-fix -> validation
 -> Phase 2..N: implementation -> review-fix -> validation
 -> final integration review
--> testing (inline or ralph-loop-init) -> spec-update-done agent
+-> testing (inline or ralph-loop-init) -> spec-sync agent
 -> spec-review agent (optional)
 ```
 
-Applies to architecture-level changes, large-scale features affecting the entire system, and tasks requiring E2E testing. `spec-update-todo` is added only when planned persistent global spec alignment is actually needed.
+Applies to architecture-level changes, large-scale features affecting the entire system, and tasks requiring E2E testing. `spec-sync` is added only when planned persistent global spec alignment is actually needed.
 
 On this expanded path as well, the phase count and boundaries are not materialized during orchestrator generation; they are resolved at runtime by reading the `implementation-plan` output via `Phase Source`.
 
@@ -334,7 +334,7 @@ User: "Looks good -- go ahead"
 [sdd-autopilot] Review-Fix Round 1/3: 1 critical, 1 high -- fixing...
 [sdd-autopilot] Review-Fix Round 2/3: 0 critical, 0 high, 0 medium -- review passed
 [sdd-autopilot] Tests passed (18/18)
-[sdd-autopilot] Step 4/4: spec-update-done complete -- _sdd/spec/main.md updated
+[sdd-autopilot] Step 4/4: spec-sync complete -- _sdd/spec/main.md updated
 [sdd-autopilot] Done -- Total elapsed time: 20 min
 ```
 
@@ -359,7 +359,7 @@ User: /sdd-autopilot Implement the entire payment system. Include Stripe API int
 User: "Looks good -- go ahead"
 
 [sdd-autopilot] Step 1/5: feature-draft complete
-[sdd-autopilot] Step 2/5: spec-update-todo complete -- payment system section added to spec
+[sdd-autopilot] Step 2/5: spec-sync complete -- payment system section added to spec
 [sdd-autopilot] Step 3/5: implementation-plan complete -- split into 3 phases
 [sdd-autopilot] Phase Gate 1/3: implementation complete -- payment domain + Stripe client
 [sdd-autopilot] Phase Gate 1/3 Review-Fix 1/3: 2 medium issues -- phase exit blocked
@@ -368,7 +368,7 @@ User: "Looks good -- go ahead"
 [sdd-autopilot] Phase Gate 3/3: implementation + review-fix complete -- refund/reconciliation flow passed
 [sdd-autopilot] Final Integration Review: 0 cross-phase regressions
 [sdd-autopilot] Step 4/5: Tests passed (32/32)
-[sdd-autopilot] Step 5/5: spec-update-done complete
+[sdd-autopilot] Step 5/5: spec-sync complete
 [sdd-autopilot] Done -- Total elapsed time: 45 min
 ```
 
@@ -396,11 +396,10 @@ In Codex, this orchestrator directly spawns custom agents from `.codex/agents/`.
 | Agent | Output Path | Content |
 |-------|-------------|---------|
 | feature-draft | `_sdd/drafts/<YYYY-MM-DD>_feature_draft_<topic>.md` | Temporary spec + implementation input draft |
-| spec-update-todo | `_sdd/spec/main.md` (updated) | Pre-reflect planned features in spec |
+| spec-sync | `_sdd/spec/main.md` (updated) | Pre-reflect planned features (pre-implementation) / synchronize implementation results (post-implementation), adapting to evidence |
 | implementation-plan | `_sdd/implementation/<YYYY-MM-DD>_implementation_plan_<topic>.md` | Detailed implementation plan + phase metadata later consumed as `Phase Source` |
 | implementation | Code files | Implemented source code + test files |
 | implementation-review | Text output | Review report (critical/high/medium/low issues) |
-| spec-update-done | `_sdd/spec/main.md` (updated) | Synchronize implementation results to spec |
 | spec-review | `_sdd/spec/SPEC_REVIEW_REPORT.md` | Spec quality/drift report (optional) |
 
 ### 6.3 Directory Structure Example
@@ -414,8 +413,7 @@ project_root/
 │       ├── implementation-plan.toml
 │       ├── implementation.toml
 │       ├── implementation-review.toml
-│       ├── spec-update-todo.toml
-│       ├── spec-update-done.toml
+│       ├── spec-sync.toml
 │       ├── spec-review.toml
 │       └── ralph-loop-init.toml
 └── _sdd/
@@ -455,7 +453,7 @@ sdd-autopilot **retries up to 3 times** on agent failure. If retries also fail:
 
 - **Critical steps** (`feature-draft`, `implementation-plan`, `implementation`) failure: The pipeline is halted and partial artifacts along with recommended follow-up actions are reported.
 - **Conditionally critical steps** (`implementation-review`) failure: In pipelines that include review, this is treated as a critical step. If the review-fix loop cannot be completed, the pipeline is halted.
-- **Non-critical steps** (`spec-update-done`, `spec-review`, `ralph-loop-init`) failure: Skipped or an alternative strategy is used; the failure reason and manual follow-up actions are recorded in the log.
+- **Non-critical steps** (`spec-sync`, `spec-review`, `ralph-loop-init`) failure: Skipped or an alternative strategy is used; the failure reason and manual follow-up actions are recorded in the log.
 
 When the pipeline is halted:
 1. Check the failure cause in `_sdd/pipeline/log_*.md`.
@@ -481,7 +479,7 @@ When reviewing the pipeline summary at Step 6, if you feel the scale is incorrec
 
 ### Q5. Can I use sdd-autopilot on a project without specs?
 
-Yes. However, sdd-autopilot adjusts the pipeline based on the presence of `_sdd/spec/`. If no spec exists, the `spec-update-todo` and `spec-update-done` steps may be skipped. To fully benefit from the spec-based workflow, it is recommended to first create a spec using `/spec-create`.
+Yes. However, sdd-autopilot adjusts the pipeline based on the presence of `_sdd/spec/`. If no spec exists, the `spec-sync` step may be skipped. To fully benefit from the spec-based workflow, it is recommended to first create a spec using `/spec-create`.
 
 ---
 
@@ -518,9 +516,9 @@ In Codex, it is important to verify through manual dry-runs that `sdd-autopilot`
 - Small scenario:
   - Simple change requiring only `implementation`
 - Medium single-phase scenario:
-  - `feature_draft -> implementation -> global review-fix loop (implementation_review -> implementation fix -> implementation_review) -> spec_update_done`
+  - `feature_draft -> implementation -> global review-fix loop (implementation_review -> implementation fix -> implementation_review) -> spec_sync`
 - Medium/large expanded scenario:
-  - `feature_draft -> implementation_plan -> phase-iterative implementation loop -> final integration review -> spec_update_done`
+  - `feature_draft -> implementation_plan -> phase-iterative implementation loop -> final integration review -> spec_sync`
 
 Verify:
 
@@ -588,8 +586,7 @@ The agents that sdd-autopilot invokes internally can also be used directly as in
 | `/implementation-plan` | `/implementation-plan` | Create the phase-by-phase follow-up plan after `feature-draft`, or refine an existing draft/plan in the standalone exception path |
 | `/implementation` | `/implementation` | TDD-based code implementation |
 | `/implementation-review` | `/implementation-review` | Verify implementation against plan |
-| `/spec-update-todo` | `/spec-update-todo` | Pre-reflect planned features in spec |
-| `/spec-update-done` | `/spec-update-done` | Synchronize spec after implementation completion |
+| `/spec-sync` | `/spec-sync` | Pre-reflect planned features / synchronize spec after implementation (adapts to evidence) |
 | `/spec-review` | `/spec-review` | Spec quality/drift verification (report only) |
 | `/ralph-loop-init` | `/ralph-loop-init` | Create automated debugging loop for long-running tests |
 | `/discussion` | `/discussion "topic"` | Pre-implementation decision-making discussion |

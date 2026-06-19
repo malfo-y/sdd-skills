@@ -34,12 +34,12 @@
 **Action:**
 ```bash
 /feature-draft           # non-trivial change의 기본 planning entry
-/spec-update-todo        # planned persistent truth가 실제로 필요할 때만
+/spec-sync               # (구현 전) planned persistent truth가 실제로 필요할 때만
 /implementation-plan     # Part 2만으로 부족하거나 phase/task breakdown이 필요할 때만
 /plan-review             # optional: 구현 전 계획 품질/과잉 설계 점검
 /implementation          # TDD 기반 코드 작성
 /implementation-review   # 계획 대비 검증
-/spec-update-done        # 코드 변경사항을 스펙에 동기화
+/spec-sync               # (구현 후) 코드 변경사항을 스펙에 동기화
 ```
 
 **Expected Result:**
@@ -59,7 +59,7 @@
 **Expected Result:**
 - Phase 1: sdd-autopilot이 SDD reference를 로딩하고, 인라인 discussion으로 요구사항을 구체화하고, 코드베이스를 탐색한 뒤, reasoning 기반으로 오케스트레이터를 생성하고 구조/철학 12항목을 자동 검증
 - Phase 1.5: 검증된 오케스트레이터 + Pre-flight Check 결과를 사용자에게 제시 → 확인 후 실행
-- Phase 2: `feature-draft`를 기본 planning entry로 사용하고, 해당 producer output은 downstream 소비 전 `plan-review` gate를 통과한다. 필요 시 `(optional) spec-update-todo -> (required if multi-phase) implementation-plan -> plan-review`로 확장한다. implementation 단계는 `implementation-agent`를 feature/phase 전체 단일 leaf로 호출하지 않고 task-level dispatch controller로 실행한다. multi-phase plan이면 `implementation-plan`의 phase `Checkpoint` 필드로 결정된 group 단위로 `implementation -> review -> fix -> validation` gate를 닫고 (group 내 phase는 light validation만), adaptive `final integration review`(group 1개면 마지막 group gate가 겸함, 2개 이상이면 별도 1회)를 처리한 뒤 인라인 테스트와 `spec-update-done`까지 자율 실행한다
+- Phase 2: `feature-draft`를 기본 planning entry로 사용하고, 해당 producer output은 downstream 소비 전 `plan-review` gate를 통과한다. 필요 시 `(optional) spec-sync -> (required if multi-phase) implementation-plan -> plan-review`로 확장한다. implementation 단계는 `implementation-agent`를 feature/phase 전체 단일 leaf로 호출하지 않고 task-level dispatch controller로 실행한다. multi-phase plan이면 `implementation-plan`의 phase `Checkpoint` 필드로 결정된 group 단위로 `implementation -> review -> fix -> validation` gate를 닫고 (group 내 phase는 light validation만), adaptive `final integration review`(group 1개면 마지막 group gate가 겸함, 2개 이상이면 별도 1회)를 처리한 뒤 인라인 테스트와 `spec-sync`까지 자율 실행한다
 - `_sdd/pipeline/orchestrators/orchestrator_<topic>.md` — 실행 중 authoritative orchestrator contract
 - `_sdd/pipeline/log_<topic>_<ts>.md` — 파이프라인 실행 로그 (Meta + Status 테이블 + 각 에이전트 시작/완료, 결정사항, 에러)
 - `_sdd/pipeline/report_<topic>_<ts>.md` — 최종 실행/검증 요약과 잔여 이슈 보고
