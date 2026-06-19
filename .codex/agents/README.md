@@ -30,7 +30,7 @@
 
 ## Inline Writing
 
-장문 산출물은 별도 writing helper agent에 넘기지 않는다. caller가 같은 흐름에서 skeleton -> fill -> finalize를 수행하고, 필요할 때만 `default` 또는 `worker`를 bounded helper로 사용한다.
+장문 산출물은 별도 writing helper agent에 넘기지 않는다. caller가 같은 흐름에서 skeleton -> fill -> finalize를 수행한다.
 
 - `feature-draft-agent`
 - `implementation-plan-agent`

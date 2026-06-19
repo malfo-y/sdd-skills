@@ -46,7 +46,7 @@
 | Surface | What To Remember | Source |
 |---------|------------------|--------|
 | Claude skill/agent split | leaf dispatch가 필요한 skill은 orchestrator(skill) + producer/leaf(agent)로 둔다 — `implementation`(fan-out + Step 6 외부 review loop), `feature-draft`·`implementation-plan`(producer dispatch + `plan-review-agent` review-fix loop), `investigate`(조건부 explore fan-out). 단순 위임 skill은 thin wrapper가 entrypoint를 지키고 agent가 전체 계약을 단일 소스로 보유한다 | `.claude/skills/`, `.claude/agents/` |
-| Codex custom agent runtime | Codex는 `.codex/agents/`와 `.codex/config.toml`의 nested-agent 설정이 중요하다 | `.codex/agents/`, `.codex/config.toml` |
+| Codex custom agent runtime | Codex는 `.codex/agents/`의 custom agent를 parent orchestrator가 직접 dispatch한다. agent는 leaf로 동작하며 사용자 전역 config 값을 workflow 전제로 삼지 않는다 | `.codex/agents/` |
 | Artifact path convention | 신규 temporary artifact는 lowercase canonical 경로를 기본으로 하고, skill-defined output surface는 dated slug naming을 사용한다. reader는 legacy uppercase/fixed-name path를 fallback으로 읽는다 | 관련 `SKILL.md`, `_sdd/implementation/implementation_progress.md` |
 | Full-skill exceptions | `sdd-autopilot`, `discussion`처럼 사용자 상호작용이 핵심인 surface는 풀 스킬로 유지된다 | 관련 `SKILL.md` |
 | Platform-only features | `git`, `second-opinion`은 Claude Code 전용이며, Codex parity 대상이 아니다 | 관련 `SKILL.md` |
@@ -71,7 +71,7 @@
 | Claude reusable execution | `.claude/agents/` | wrapper-backed skill의 single-source agent 본문을 찾는 위치다 |
 | Implementation orchestrator/leaf | `.claude/skills/implementation/SKILL.md`<br>`.claude/agents/implementation-agent.md` | fan-out 책임이 orchestrator(skill)에, 단일 task TDD가 leaf(agent)에 어떻게 나뉘는지 확인한다 |
 | Codex reusable execution | `.codex/agents/` | custom agent spawn 대상과 parity 확인 지점이다 |
-| Codex runtime prerequisite | `.codex/config.toml` | nested agent depth와 concurrency 전제가 고정된다 |
+| Codex bundle installer | `tools/install-codex-skill-bundle.py` | skills와 agents만 설치하며 사용자 `~/.codex/config.toml`은 수정하지 않는다 |
 | Environment/pre-flight | `_sdd/env.md` | 로컬 작업, PR verification, pre-flight assumption의 기준이다 |
 | Spec creation contract | `.claude/skills/spec-create/SKILL.md`<br>`.codex/skills/spec-create/SKILL.md` | primary navigation axis와 `Strategic Code Map` placement rule을 확인한다 |
 | Harness layer template | `.claude/skills/spec-create/references/agents-harness-template.md` | `AGENTS.md` 작업 진입·작업 규약 레이어의 정본 §0~§4 골격. 4곳(`spec-create`/`spec-upgrade` × `.claude`/`.codex`) byte-identical 미러의 source다 |

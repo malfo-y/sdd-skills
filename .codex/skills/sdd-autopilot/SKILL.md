@@ -83,7 +83,7 @@ User Request
 5. **Review-Fix 사이클 필수**: review 포함 파이프라인에서는 correctness(`implementation-review-agent`) ∥ simplicity(`simplicity-review-agent`) 2-reviewer를 병렬 dispatch해 review를 수행하고(exit는 두 report의 합집합), 이슈 수정이 필요하면 `implementation-agent`를 다시 호출해 fix를 적용한 뒤, 다시 두 reviewer를 병렬 dispatch해 re-review를 수행해야 한다. 리뷰만 하고 끝나는 것은 불허한다.
 6. **Implementation 직후 즉시 Gate**: 각 `implementation` 실행 단위는 단독으로 완료 처리하지 않는다. single-phase면 해당 `implementation` 직후, multi-phase면 각 phase의 `implementation` 직후 같은 범위의 review-fix gate를 즉시 닫아야 하며, 종료 전까지 다음 phase나 downstream step으로 진행할 수 없다.
 7. **Execute → Verify 필수**: 모든 단계는 실행(Execute) + 검증(Verify) 두 페이즈를 거친다. 에이전트 호출만으로 완료 간주 금지. Exit Criteria 미충족 시 다음 단계 진행 불가.
-8. **Pre-flight + approval 필수**: Phase 2 진입 전 `_sdd/env.md`와 `.codex/config.toml`을 읽고 실행 가능성을 점검한 뒤 explicit approval을 받아야 한다.
+8. **Pre-flight + approval 필수**: Phase 2 진입 전 `_sdd/env.md`와 현재 Codex 런타임에서 custom agent 실행 가능성을 점검한 뒤 explicit approval을 받아야 한다.
 9. **Agent lifecycle 수집/정리 필수**: `spawn_agent({agent_type: ..., message: <framed payload>})`로 시작한 실행 단위는 `wait_agent(...)`로 반드시 final status를 수집하고, 결과를 로그/보고서에 기록한 직후 `close_agent({target: <agent_id>})`로 닫아 병렬 slot을 반납한다. 보완 지시가 필요하면 닫기 전에 `send_input({target: <agent_id>, message: ...})`을 사용하고, 이미 닫은 뒤 추가 작업이 필요하면 새로 `spawn_agent({agent_type: ..., message: <framed payload>})` 한다. `wait_agent` timeout은 수집 완료가 아니므로 더 기다리거나 controlled stop/abandon을 기록한 뒤에만 닫는다. 여러 agent를 병렬 spawn한 단계는 remaining agent ids를 유지하고, final status가 반환된 handle만 기록·닫은 뒤 remaining이 빌 때까지 `wait_agent({targets: remaining, ...})`를 반복한다.
 10. **로그 기반 상태 관리**: 오케스트레이터는 `_sdd/pipeline/orchestrators/`에 유지. 활성/완료 구분은 로그 파일 status로 판단한다.
 11. 한국어를 기본으로 하되 사용자 언어를 따른다.
@@ -210,8 +210,8 @@ planning precedence 메모:
 
 Pre-flight Check:
 - `_sdd/env.md`와 대조하여 테스트/리소스 갭 분석
-- `.codex/config.toml`에서 `agents.max_depth`, `agents.max_threads` 확인
-- nested writing / 병렬 fan-out 가능 여부 점검
+- `.codex/agents/` custom agent 사용 가능 여부와 병렬 fan-out 리소스 점검
+- 사용자 전역 `~/.codex/config.toml`의 agent depth/concurrency 값은 전제하거나 수정하지 않는다
 
 Gate 4→5: 오케스트레이터 저장 완료 → Step 5.
 
@@ -250,7 +250,7 @@ Phase 1 마지막 단계다. 아래를 사용자에게 짧게 공유한다.
 - 시작점 / 종료점
 - 주요 산출물
 - 검증 결과
-- pre-flight 결과 (`_sdd/env.md`, `.codex/config.toml`, 테스트/리소스 갭)
+- pre-flight 결과 (`_sdd/env.md`, custom agent 사용 가능성, 테스트/리소스 갭)
 - 주된 리스크나 가정
 
 확인 규칙:

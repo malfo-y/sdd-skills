@@ -186,7 +186,7 @@ planning precedence 메모:
 
 Pre-flight Check:
 - `_sdd/env.md`와 대조하여 테스트/리소스 갭 분석
-- nested subagent / 병렬 fan-out 가능 여부 점검
+- subagent dispatch / 병렬 fan-out 가능 여부 점검
 
 Gate 4→5: 오케스트레이터 저장 완료 → Step 5.
 

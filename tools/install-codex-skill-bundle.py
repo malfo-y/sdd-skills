@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Install the Codex skill bundle (skills + agents + config) from a GitHub repo."""
+"""Install the Codex skill bundle (skills + agents) from a GitHub repo."""
 
 from __future__ import annotations
 
@@ -8,7 +8,6 @@ from dataclasses import dataclass
 import hashlib
 import json
 import os
-import re
 import shutil
 import subprocess
 import sys
@@ -22,7 +21,6 @@ DEFAULT_REF = "main"
 DEFAULT_REPO = "malfo-y/sdd-skills"
 DEFAULT_SKILLS_ROOT = ".codex/skills"
 DEFAULT_AGENTS_ROOT = ".codex/agents"
-DEFAULT_CONFIG_PATH = ".codex/config.toml"
 MANIFEST_NAME = ".sdd-skill-bundle-manifest.json"
 # "sdd" substring도 "_sdd"를 포섭
 PRUNE_KEYWORDS = ("sdd",)
@@ -50,7 +48,6 @@ class Source:
     ref: str
     skills_root: str
     agents_root: str
-    config_path: str
 
 
 @dataclass
@@ -58,7 +55,6 @@ class Destinations:
     codex_home: str
     skills_root: str
     agents_root: str
-    config_path: str
 
 
 class InstallError(Exception):
@@ -206,7 +202,7 @@ def _git_sparse_checkout(repo_url: str, ref: str, sparse_paths: list[str], dest_
 
 
 def _prepare_repo(source: Source, method: str, tmp_dir: str) -> str:
-    sparse_paths = [source.skills_root, source.agents_root, source.config_path]
+    sparse_paths = [source.skills_root, source.agents_root]
     if method in ("download", "auto"):
         try:
             return _download_repo_zip(source.owner, source.repo, source.ref, tmp_dir)
@@ -245,7 +241,6 @@ def _resolve_source(args: Args) -> Source:
             ref=ref,
             skills_root=_validate_relative_path(skills_root),
             agents_root=_validate_relative_path(DEFAULT_AGENTS_ROOT),
-            config_path=_validate_relative_path(DEFAULT_CONFIG_PATH),
         )
     repo = args.repo or DEFAULT_REPO
     repo_parts = [part for part in repo.split("/") if part]
@@ -257,7 +252,6 @@ def _resolve_source(args: Args) -> Source:
         ref=args.ref,
         skills_root=_validate_relative_path(skills_root or DEFAULT_SKILLS_ROOT),
         agents_root=_validate_relative_path(DEFAULT_AGENTS_ROOT),
-        config_path=_validate_relative_path(DEFAULT_CONFIG_PATH),
     )
 
 
@@ -273,7 +267,6 @@ def _resolve_destinations(dest: str | None) -> Destinations:
         codex_home=codex_home,
         skills_root=skills_root,
         agents_root=os.path.join(codex_home, "agents"),
-        config_path=os.path.join(codex_home, "config.toml"),
     )
 
 
@@ -496,71 +489,6 @@ def _install_agent(
     return "installed"
 
 
-def _extract_agents_section(config_text: str) -> dict[str, int]:
-    match = re.search(r"(?ms)^\[agents\]\s*(.*?)(?=^\[|\Z)", config_text)
-    if not match:
-        return {}
-    body = match.group(1)
-    values: dict[str, int] = {}
-    for key in ("max_threads", "max_depth"):
-        key_match = re.search(rf"(?m)^{key}\s*=\s*(\d+)\s*$", body)
-        if key_match:
-            values[key] = int(key_match.group(1))
-    return values
-
-
-def _merge_config(existing_text: str | None, incoming_text: str) -> tuple[str, str]:
-    incoming_agents = _extract_agents_section(incoming_text)
-    if not incoming_agents:
-        raise InstallError("Incoming config.toml is missing an [agents] section.")
-
-    if not existing_text:
-        return incoming_text, "installed"
-
-    existing_agents = _extract_agents_section(existing_text)
-    merged_agents = dict(existing_agents)
-    changed = False
-    for key, value in incoming_agents.items():
-        if existing_agents.get(key) != value:
-            merged_agents[key] = value
-            changed = True
-
-    if not existing_agents:
-        block_lines = ["[agents]"] + [f"{key} = {merged_agents[key]}" for key in sorted(merged_agents)]
-        suffix = "" if existing_text.endswith("\n") or not existing_text else "\n"
-        merged_text = existing_text + suffix + "\n".join(block_lines) + "\n"
-        return merged_text, "updated" if changed else "unchanged"
-
-    def repl(match: re.Match[str]) -> str:
-        body = "\n".join(f"{key} = {merged_agents[key]}" for key in sorted(merged_agents))
-        return f"[agents]\n{body}\n\n"
-
-    merged_text = re.sub(r"(?ms)^\[agents\]\s*.*?(?=^\[|\Z)", repl, existing_text, count=1)
-    return merged_text, "updated" if changed else "unchanged"
-
-
-def _install_config(
-    config_path: str,
-    dest_path: str,
-    dry_run: bool,
-) -> str:
-    incoming_text = open(config_path, "r", encoding="utf-8").read()
-    existing_text = None
-    if os.path.exists(dest_path):
-        existing_text = open(dest_path, "r", encoding="utf-8").read()
-    merged_text, status = _merge_config(existing_text, incoming_text)
-    if dry_run:
-        if status == "installed":
-            return "would install"
-        if status == "updated":
-            return "would update"
-        return "unchanged"
-    os.makedirs(os.path.dirname(dest_path), exist_ok=True)
-    with open(dest_path, "w", encoding="utf-8") as handle:
-        handle.write(merged_text)
-    return status
-
-
 def _confirm_prune() -> bool:
     answer = input("Prune these orphaned entries? [y/N] ").strip().lower()
     return answer in ("y", "yes")
@@ -612,7 +540,6 @@ def _prune_orphans(
 def _print_summary(
     skill_results: list[tuple[str, str]],
     agent_results: list[tuple[str, str]],
-    config_result: tuple[str, str],
     destinations: Destinations,
     dry_run: bool,
     prune_result: dict[str, object] | None = None,
@@ -625,9 +552,6 @@ def _print_summary(
     print(f"Agents root: {destinations.agents_root}")
     for agent_name, status in agent_results:
         print(f"- {agent_name}: {status}")
-    label, status = config_result
-    print(f"Config: {destinations.config_path}")
-    print(f"- {label}: {status}")
     if prune_result is not None:
         _print_prune_result(prune_result)
 
@@ -659,7 +583,7 @@ def _print_prune_result(prune_result: dict[str, object]) -> None:
 
 def _parse_args(argv: list[str]) -> Args:
     parser = argparse.ArgumentParser(
-        description="Install the Codex skill bundle (skills + agents + config) into CODEX_HOME."
+        description="Install the Codex skill bundle (skills + agents) into CODEX_HOME."
     )
     parser.add_argument(
         "--repo",
@@ -725,9 +649,6 @@ def main(argv: list[str]) -> int:
             repo_root = _prepare_repo(source, args.method, tmp_dir)
             discovered = _discover_skills(repo_root, source.skills_root, args.include_hidden)
             discovered_agents = _discover_agents(repo_root, source.agents_root)
-            config_source = os.path.join(repo_root, source.config_path)
-            if not os.path.isfile(config_source):
-                raise InstallError(f"Config file not found: {source.config_path}")
             skill_results: list[tuple[str, str]] = []
             for skill_name, skill_dir in discovered:
                 status = _install_skill(
@@ -748,14 +669,6 @@ def main(argv: list[str]) -> int:
                     dry_run=args.dry_run,
                 )
                 agent_results.append((agent_name, status))
-            config_result = (
-                os.path.basename(destinations.config_path),
-                _install_config(
-                    config_path=config_source,
-                    dest_path=destinations.config_path,
-                    dry_run=args.dry_run,
-                ),
-            )
         finally:
             shutil.rmtree(tmp_dir, ignore_errors=True)
         source_skill_names = {name for name, _ in discovered}
@@ -795,7 +708,6 @@ def main(argv: list[str]) -> int:
         _print_summary(
             skill_results,
             agent_results,
-            config_result,
             destinations,
             args.dry_run,
             prune_result,

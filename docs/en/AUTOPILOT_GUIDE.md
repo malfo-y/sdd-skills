@@ -389,7 +389,7 @@ sdd-autopilot generates the following files during pipeline execution. The Step 
 - `<topic>`: Feature name converted to English snake_case (e.g., "auth system" -> `auth_system`)
 - `<timestamp>`: `YYYYMMDD_HHmmss` format
 
-In Codex, this orchestrator directly spawns custom agents from `.codex/agents/`. Before approval, it reads both `_sdd/env.md` and `.codex/config.toml` to check `agents.max_depth`, `agents.max_threads`, and test/execution resource gaps.
+In Codex, this orchestrator directly spawns custom agents from `.codex/agents/`. Before approval, it checks `_sdd/env.md`, current Codex custom-agent availability, and test/execution resource gaps.
 
 ### 6.2 Per-Agent Output
 
@@ -407,7 +407,6 @@ In Codex, this orchestrator directly spawns custom agents from `.codex/agents/`.
 ```
 project_root/
 ├── .codex/
-│   ├── config.toml
 │   └── agents/
 │       ├── feature-draft.toml
 │       ├── implementation-plan.toml
@@ -487,7 +486,7 @@ Yes. However, sdd-autopilot adjusts the pipeline based on the presence of `_sdd/
 
 In Codex, it is important to verify through manual dry-runs that `sdd-autopilot` and the custom agent backbone work together not just in documentation/design but also in actual runtime.
 
-> This section is the operational checklist for confirming the `sdd-autopilot` contract in Codex runtime. Use it when checking the wrapper -> custom agent -> nested `write_phased` -> autopilot dry-run path.
+> This section is the operational checklist for confirming the `sdd-autopilot` contract in Codex runtime. Use it when checking the wrapper -> custom agent -> inline 2-phase writing -> autopilot dry-run path.
 
 ### 8.1 Wrapper -> Agent Smoke Test
 
@@ -504,12 +503,12 @@ In Codex, it is important to verify through manual dry-runs that `sdd-autopilot`
   - Does `developer_instructions` contain a self-contained workflow without depending on local skill file paths?
   - Are hard rules, input/output contract, process, and fallback rules included within the agent?
 
-### 8.3 Nested `write_phased` Check
+### 8.3 Inline 2-Phase Writing Check
 
 - Targets: `feature_draft`, `implementation_plan`, `implementation_review`, `spec_review`
 - Verify:
-  - Are nested `write_phased` usage rules reflected in both skill and agent?
-  - Is `agents.max_depth >= 2` set in `.codex/config.toml`?
+  - Are long artifacts organized with skeleton -> fill or an equivalent 2-phase writing strategy?
+  - Does the flow avoid assuming helper-agent nesting or a specific global agent-depth setting?
 
 ### 8.4 Autopilot Dry-Run
 
@@ -533,9 +532,9 @@ Verify:
 ### 8.5 Pre-flight Check
 
 - Does `_sdd/env.md` exist?
-- Does `.codex/config.toml` exist?
-- Do `agents.max_threads` and `agents.max_depth` match the pipeline requirements?
-- If nested writing is needed but `max_depth < 2`, is this reported as a risk before approval?
+- Do the required `.codex/agents/*.toml` custom agents exist?
+- Can the current runtime dispatch custom agents and run parallel fan-out?
+- Does the pipeline avoid treating or editing user-level `~/.codex/config.toml` values as prerequisites?
 
 ### 8.6 Quick Dry-Run Checklist (5-10 min)
 
@@ -550,7 +549,7 @@ If you want to quickly perform a minimum execution check in the actual Codex app
   - Does the result description match the wrapper skill contract?
   - Does the artifact structure follow the Part 1 / Part 2 format?
 
-#### B. Nested `write_phased`
+#### B. Inline 2-Phase Writing
 
 - Execution example:
   - `$implementation-plan Create an implementation plan for a medium-scale feature that requires a lengthy plan`
@@ -559,14 +558,14 @@ If you want to quickly perform a minimum execution check in the actual Codex app
 - Verify:
   - Is the long output organized using skeleton -> fill or an equivalent 2-phase writing strategy?
   - Does the result remain a complete document without being excessively truncated?
-  - If needed, does it not conflict with the `max_depth = 2` prerequisite in `.codex/config.toml`?
+  - Does it complete without helper-agent nesting or a specific global agent-depth setting?
 
 #### C. Autopilot Medium Run
 
 - Execution example:
   - `$sdd-autopilot Run user profile editing feature from spec organization through implementation review and spec sync`
 - Verify:
-  - Does the pre-flight before approval read both `_sdd/env.md` and `.codex/config.toml` and summarize risks?
+  - Does the pre-flight before approval summarize `_sdd/env.md`, custom-agent availability, and test/resource gaps?
   - Does the generated orchestrator describe using custom agent names rather than skill names?
   - Is `_sdd/pipeline/orchestrators/orchestrator_<topic>.md` maintained in active state?
   - Does the orchestrator generation stage avoid creating downstream artifacts ahead of time?
