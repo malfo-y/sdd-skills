@@ -45,13 +45,12 @@
 아래 canonical `sdd-skills:<agent>-agent` invocation 이름만 허용한다.
 
 - `sdd-skills:feature-draft-agent`
-- `sdd-skills:spec-update-todo-agent`
+- `sdd-skills:spec-sync-agent`
 - `sdd-skills:implementation-plan-agent`
 - `sdd-skills:plan-review-agent`
 - `sdd-skills:implementation-agent`
 - `sdd-skills:implementation-review-agent`
 - `sdd-skills:simplicity-review-agent`
-- `sdd-skills:spec-update-done-agent`
 - `sdd-skills:spec-review-agent`
 - `sdd-skills:ralph-loop-init-agent`
 
@@ -77,7 +76,7 @@ task-level `sdd-skills:implementation-agent` leaf는 **단일 task만 TDD로 수
 
 - **초기 구현 step**: autopilot이 phase의 task를 dependency 기반으로 **병렬 dispatch 그룹**으로 파생하고("같은 phase + dependency edge 없음 + Target Files disjoint → 병렬"; planner가 의미적 충돌을 dependency로 인코딩하므로 trivial 규칙), 그룹 내 task마다 `implementation-agent` leaf를 **task당 dispatch**한다. 병렬 불가·저확신이면 순차로 하나씩 dispatch한다(file-disjoint 가드레일 + "확신 없으면 순차").
 - **용어 구분 (2-group 중첩)**: 여기서 **병렬 dispatch 그룹**(phase 내부, task 단위 동시 dispatch)은 §6의 **Checkpoint 리뷰 그룹**(phase 경계, review-fix gate 단위)과 다른 개념이다 — 병렬 dispatch 그룹은 "무엇을 동시에 dispatch하나", Checkpoint 리뷰 그룹은 "언제 review-fix gate를 닫나"를 정한다. 둘은 중첩 관계다.
-- **progress/report 소유**: leaf는 결과(SUCCESS/PARTIAL/FAILED·TDD표·파일·테스트·UNPLANNED_DEPENDENCY·발견)만 반환한다. **실행 주체인 autopilot**이 `_sdd/implementation/<YYYY-MM-DD>_implementation_progress_<slug>.md`·`*_implementation_report_<slug>.md`를 canonical 경로·소비 필드로 작성·소유한다(downstream `spec-update-done`·`spec-summary` 호환 유지).
+- **progress/report 소유**: leaf는 결과(SUCCESS/PARTIAL/FAILED·TDD표·파일·테스트·UNPLANNED_DEPENDENCY·발견)만 반환한다. **실행 주체인 autopilot**이 `_sdd/implementation/<YYYY-MM-DD>_implementation_progress_<slug>.md`·`*_implementation_report_<slug>.md`를 canonical 경로·소비 필드로 작성·소유한다(downstream `spec-sync`·`spec-summary` 호환 유지).
 
 ### Planning Producer Review Gate
 
@@ -99,7 +98,7 @@ planning producer step은 `sdd-skills:feature-draft-agent`와 `sdd-skills:implem
 - global spec은 장기적 SoT다.
 - temporary spec은 실행 청사진이다.
 - `feature-draft`는 slim `Part 1: Spec Delta`, execution-facing Part 2, top-level risk surface를 만든다.
-- `spec-update-todo`와 `spec-update-done`만 global spec을 수정한다.
+- `spec-sync`만 global spec을 수정한다. 동일 `spec-sync`는 구현 전(planned spec delta 반영, 조건부 1회)과 구현 완료 후(implemented evidence 동기화, 1회) 최대 2회 호출될 수 있으며, 같은 진입점이 evidence 차이로 동작을 적응한다.
 - temporary execution detail을 global spec 본문으로 복사하는 step은 허용되지 않는다.
 - global spec은 thin core를 유지해야 하며, feature-level usage/validation/reference를 기본 본문으로 되돌리면 안 된다.
 
@@ -182,7 +181,7 @@ planning producer step은 `sdd-skills:feature-draft-agent`와 `sdd-skills:implem
 - temporary spec이 있으면 `Validation Plan`의 `V*` 항목과 테스트 전략의 대응 관계를 설명해야 한다.
 - 테스트 결과는 사용자에게 명시적으로 보고한다.
 
-## 8. feature-draft / implementation-plan / spec-update-* Specific Contract
+## 8. feature-draft / implementation-plan / spec-sync Specific Contract
 
 ### feature-draft
 - feature draft 파일 존재
@@ -200,16 +199,12 @@ planning producer step은 `sdd-skills:feature-draft-agent`와 `sdd-skills:implem
 - `Checkpoint=true` phase는 이유를 설명하는 `Checkpoint Reason` 한 줄을 동반함
 - downstream `implementation` step이 이 artifact를 소비할 때는 `Execution Mode: phase-iterative`와 `Phase Source`로 연결되어야 함
 
-### spec-update-todo
+### spec-sync
 - global spec 업데이트 완료
-- planned persistent information만 반영됨
+- 같은 진입점이 evidence 차이로 동작을 적응한다. 구현 전 planned 호출(조건부)은 planned persistent information만 반영하고, 구현 후 sync 호출은 implemented + verified information만 반영한다.
 - temporary execution detail이 global spec 본문으로 누수되지 않음
-
-### spec-update-done
-- global spec 업데이트 완료
-- implemented + verified information만 반영됨
 - 미구현/미검증 delta는 deferred로 남음
-- 실행 시점은 모든 required implementation-scoped review-fix gate, required validation/test, 필요한 경우 final integration review가 끝난 뒤여야 함
+- 구현 후 sync 호출의 실행 시점은 모든 required implementation-scoped review-fix gate, required validation/test, 필요한 경우 final integration review가 끝난 뒤여야 함
 
 ## 9. Error Handling Contract
 

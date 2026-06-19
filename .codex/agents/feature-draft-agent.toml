@@ -15,7 +15,7 @@ developer_instructions = '''
 
 이 agent는 `_sdd/drafts/<YYYY-MM-DD>_feature_draft_<slug>.md` 한 파일에 다음 두 파트를 함께 생성한다.
 
-- Part 1: `spec-update-todo` 호환 spec delta
+- Part 1: `spec-sync` 호환 spec delta
 - Part 2: `implementation`이 바로 사용할 수 있는 Target Files 기반 구현/검증 계획
 
 Part 1은 persistent spec에 반영할 최소 delta만 담고, Part 2는 그 delta를 contract coverage, touchpoint, task, validation, parallel execution plan으로 전개한다.
@@ -54,7 +54,7 @@ Part 1은 persistent spec에 반영할 최소 delta만 담고, Part 2는 그 del
     - **Rule 3 (Vocabulary Grounding)**: 프로젝트 고유 용어·개념은 최초 사용 시 1줄 정의 또는 Rule 2 준수 참조를 동반한다.
     - **Rule 4 (No Intra-Document Restatement)**: 같은 산출물(draft) 안에서 이미 정의·설명된 용어·결정·내용은 다시 풀어쓰지 않고 섹션/ID 참조로 갈음한다. 용어 정의는 문서 전체에서 1회이며, risks/open questions는 Part 1 항목을 재진술하지 않고 실행을 차단하는 것만 ID로 가리킨다. (Rule 1~3은 외부 참조 grounding, Rule 4는 내부 중복 억제 — 상보적이다.)
     - **Thinness 축과의 관계**: grounding은 재진술·요약이지 복사가 아니므로 `SDD_SPEC_DEFINITION.md`의 Thinness/Anti-duplication 축과 층위가 다르다 (Thinness는 "복사하지 마라", 본 원칙은 "쓴다면 이렇게"). 상보적으로 적용한다.
-    - **Part 1 ↔ Part 2 Carve-out**: 이 원칙은 Part 2에만 적용된다. Part 1 (spec delta)은 `spec-update-todo`를 통해 canonical spec으로 머지되므로 적용 대상이 아니다. Part 2가 Part 1의 결정·계약을 참조할 때는 같은 파일 내 공존이므로 **ID + inline purpose** (예: "Contract C3 반영 -- 세션 토큰 HMAC 검증")만으로 Rule 2 준수로 인정한다. Part 1 전체를 Part 2에 재진술할 필요는 없다.
+    - **Part 1 ↔ Part 2 Carve-out**: 이 원칙은 Part 2에만 적용된다. Part 1 (spec delta)은 `spec-sync`를 통해 canonical spec으로 머지되므로 적용 대상이 아니다. Part 2가 Part 1의 결정·계약을 참조할 때는 같은 파일 내 공존이므로 **ID + inline purpose** (예: "Contract C3 반영 -- 세션 토큰 HMAC 검증")만으로 Rule 2 준수로 인정한다. Part 1 전체를 Part 2에 재진술할 필요는 없다.
 12. **Minimum-Code Mandate (Part 2 대상)**: Part 2 task의 description과 acceptance criteria는 요청된 동작을 만드는 데 필요한 최소 코드만 명세한다.
     - 요청되지 않은 기능·옵션·설정 가능성 추가 금지.
     - 한 곳에서만 쓰이는 코드에 추상화 도입 금지.
@@ -195,7 +195,7 @@ Part 2 필수 요소:
 
 ### Step 5: Generate Part 1
 
-Part 1은 `spec-update-todo` 입력으로 바로 사용할 수 있어야 한다.
+Part 1은 `spec-sync` 입력으로 바로 사용할 수 있어야 한다.
 
 필수 규칙:
 
@@ -355,7 +355,7 @@ fix mode 동작:
 제약:
 
 - finding이 지목하지 않는 한 기존 결정·구조·번호 체계를 보존한다.
-- **Part 1의 `<!-- spec-update-todo-input-start -->` / `<!-- spec-update-todo-input-end -->` 마커를 반드시 보존한다** — Part 1 surgical 수정이 이 마커를 유실·이동시키면 downstream `spec-update-todo` 입력 파싱이 깨진다(AC: Part 1 마커 포함과 정합).
+- **Part 1의 `<!-- spec-update-todo-input-start -->` / `<!-- spec-update-todo-input-end -->` 마커를 반드시 보존한다** — Part 1 surgical 수정이 이 마커를 유실·이동시키면 downstream `spec-sync` 입력 파싱이 깨진다(AC: Part 1 마커 포함과 정합).
 - loop orchestration(review 호출·반복·exit 판정)은 호출 스킬(orchestrator)이 소유한다 — 이 agent는 자기 산출물 수정만 수행한다.
 
 ## Error Handling
@@ -370,10 +370,10 @@ fix mode 동작:
 
 ## Integration
 
-- `spec-update-todo`: Part 1 spec delta를 마커 내부에서 global spec planned update 입력으로 사용한다.
+- `spec-sync` (planned 호출): Part 1 spec delta를 마커 내부에서 global spec planned update 입력으로 사용한다.
 - `implementation`: Part 2가 task 25개 이하, delta coverage complete, phase/dependency가 명확하면 바로 읽고 실행 가능해야 한다.
 - `implementation-plan`: Part 2가 지나치게 크거나(task 25개 초과), unresolved dependency가 많거나, phase 전략이 불명확할 때만 별도 plan으로 확장한다.
-- `spec-update-done`: 구현 완료 후 Part 1/2와 실제 변경을 비교해 global spec을 동기화한다.
+- `spec-sync` (post-implementation 호출): 구현 완료 후 Part 1/2와 실제 변경을 비교해 global spec을 동기화한다.
 
 ## Optional Nested Writing
 

@@ -40,7 +40,7 @@ Part 1은 persistent spec에 반영할 최소 delta만 담고, Part 2는 그 del
 9. `Target Files`에서 경로를 확정할 수 없으면 `[TBD] <reason>`를 사용한다.
 10. Part 1과 Part 2는 같은 delta 범위를 다뤄야 하며, Part 1의 `<!-- spec-update-todo-input-start -->` / `<!-- spec-update-todo-input-end -->` 마커와 Part 2의 validation linkage를 잃으면 안 된다.
 11. **Self-Contained Authoring (Part 2 대상)**: Part 2는 작성 대화·외부 문서 없이 reader 단독으로 의도·근거·참조를 따라갈 수 있어야 한다.
-    - **외부**(작성 대화·타 문서) 결정·가정·참조·고유 용어는 inline grounding 한다 (재진술+출처, bare path / 대명사적 지시 금지). Part 1↔Part 2 참조는 `ID + inline purpose` (예: "Contract C3 반영 -- 세션 토큰 HMAC 검증")로 충족하며 Part 1 자체는 적용 대상이 아니다 (`spec-update-todo`로 canonical spec에 머지되므로).
+    - **외부**(작성 대화·타 문서) 결정·가정·참조·고유 용어는 inline grounding 한다 (재진술+출처, bare path / 대명사적 지시 금지). Part 1↔Part 2 참조는 `ID + inline purpose` (예: "Contract C3 반영 -- 세션 토큰 HMAC 검증")로 충족하며 Part 1 자체는 적용 대상이 아니다 (`spec-sync`로 canonical spec에 머지되므로).
     - **같은 산출물 안에서 재진술 금지**: 한 draft 안에서 이미 정의·설명된 용어·결정·내용은 다시 풀어쓰지 않고 섹션/ID 참조로 갈음한다. 용어 정의는 문서 전체에서 1회, Part 1에서 설명한 것을 Part 2에서 재서술하지 않으며, risks/open questions는 Part 1 항목을 재진술하지 않고 실행을 차단하는 것만 ID로 가리킨다.
     - 검증: Pass 1 (외부 참조의 inline purpose 동반 확인) + Pass 2 (생초 독자 readthrough)를 **수행한다**. 검증 과정·갭 목록·"보완 완료" 흔적은 산출물에 기록하지 않는다 (보완 불가능한 잔여 갭만 1줄 명시).
 12. **Minimum-Code Mandate (Part 2 대상)**: Part 2 task의 description과 acceptance criteria는 요청된 동작을 만드는 데 필요한 최소 코드만 명세한다.
@@ -321,7 +321,7 @@ fix mode 동작:
 제약:
 
 - finding이 지목하지 않는 한 기존 결정·구조·번호 체계를 보존한다.
-- Part 1의 `<!-- spec-update-todo-input-start -->` / `<!-- spec-update-todo-input-end -->` 마커를 유실하지 않는다 -- surgical 수정이 이 마커 경계를 파괴하면 downstream `spec-update-todo` 입력 파싱이 깨진다.
+- Part 1의 `<!-- spec-update-todo-input-start -->` / `<!-- spec-update-todo-input-end -->` 마커를 유실하지 않는다 -- surgical 수정이 이 마커 경계를 파괴하면 downstream `spec-sync` 입력 파싱이 깨진다.
 - loop orchestration(review 호출·반복·exit 판정)은 호출 스킬(orchestrator)이 소유한다 — 이 agent는 sub-agent를 spawn하지 않으며 자기 산출물 수정만 수행한다.
 
 ## Error Handling
@@ -336,10 +336,10 @@ fix mode 동작:
 
 ## Integration
 
-- `spec-update-todo`: Part 1 spec delta를 마커 내부에서 global spec planned update 입력으로 사용한다.
+- `spec-sync` (planned 호출): Part 1 spec delta를 마커 내부에서 global spec planned update 입력으로 사용한다.
 - `implementation`: Part 2가 task 25개 이하, delta coverage complete, phase/dependency가 명확하면 바로 읽고 실행 가능해야 한다.
 - `implementation-plan`: Part 2가 지나치게 크거나(task 25개 초과), unresolved dependency가 많거나, phase 전략이 불명확할 때만 별도 plan으로 확장한다.
-- `spec-update-done`: 구현 완료 후 Part 1/2와 실제 변경을 비교해 global spec을 동기화한다.
+- `spec-sync` (post-implementation 호출): 구현 완료 후 Part 1/2와 실제 변경을 비교해 global spec을 동기화한다.
 
 ## Final Check
 

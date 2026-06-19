@@ -18,13 +18,12 @@ AGENT_PREFIX = "sdd-skills:"
 
 ALLOWED_BASE_AGENTS = {
     "feature-draft-agent",
-    "spec-update-todo-agent",
+    "spec-sync-agent",
     "implementation-plan-agent",
     "plan-review-agent",
     "implementation-agent",
     "implementation-review-agent",
     "simplicity-review-agent",
-    "spec-update-done-agent",
     "spec-review-agent",
     "ralph-loop-init-agent",
 }

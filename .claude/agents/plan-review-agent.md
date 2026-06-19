@@ -86,7 +86,7 @@ stale 판단 예시:
   - 각 implementation step 직후 review-fix gate가 immediate completion gate로 해석 가능한가, dispatch controller semantics가 명시되는가
   - 산출물 handoff 정합성 — 각 step의 입력이 upstream step의 출력 또는 실존 artifact와 연결되는가
   - Generation Boundary — future artifact를 미리 materialize하도록 지시하는 step이 없는가
-  - `_sdd/spec/` 직접 수정 step이 없는가 (spec-update-* 위임 준수)
+  - `_sdd/spec/` 직접 수정 step이 없는가 (spec-sync 위임 준수)
   - step 프롬프트가 사용자 원문 의도를 보존하는가 (과축약/의미 변형 없음)
   - 입출력 파일 목록이 전수 나열로 비대하지 않은가 (전략적 hotspot 또는 draft 참조 권장)
 - 6-smell 중 `Scope Creep`, `Task Boundary Drift`, `Verification Weakness`는 이 모드에도 그대로 적용한다. 나머지 smell은 해당 사항이 있을 때만 점검한다.

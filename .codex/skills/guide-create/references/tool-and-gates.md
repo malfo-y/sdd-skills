@@ -57,7 +57,7 @@ AFTER Step 2:
     -> Step 3
   ELSE IF spec_found AND NOT feature_grounded:
     -> request_user_input으로 사용자에게 선택지 제공:
-       1) spec-update-todo를 실행하여 스펙에 기능을 추가한 뒤 다시 시도
+       1) spec-sync를 실행하여 스펙에 기능을 추가한 뒤 다시 시도
        2) 스펙 근거 없이 Low 신뢰도로 가이드 생성 계속
   ELSE:
     -> request_user_input으로 사용자에게 선택지 제공:

@@ -178,8 +178,8 @@ decision 예시:
 
 후속 스킬 연결:
 
-- 계획 변경 전 반영: `spec-update-todo`
-- 구현 완료 후 동기화: `spec-update-done`
+- 계획 변경 전 반영: `spec-sync` (planned 호출)
+- 구현 완료 후 동기화: `spec-sync` (post-implementation 호출)
 - 구현 검증: `implementation-review`
 
 ## Output Format
@@ -237,8 +237,8 @@ decision 예시:
 
 ## Integration
 
-- `spec-update-todo`: 계획 요구사항 반영
-- `spec-update-done`: 구현 후 스펙 동기화
+- `spec-sync` (planned 호출): 계획 요구사항 반영
+- `spec-sync` (post-implementation 호출): 구현 후 스펙 동기화
 - `implementation-review`: 구현 상태 검증과 교차 참조
 
 ## Final Check

@@ -20,7 +20,7 @@ version: 2.4.0
 - [ ] AC4: E2E 테스트/검증이 실제 실행되어 PASS/FAIL 판정이 결과 파일(`_sdd/implementation/test_results/` 또는 `ralph/state.md`)에 존재한다. 테스트 건너뛰기 금지 — 실행 불가 시 사유와 수동 검증 방법이 보고서에 있다
 - [ ] AC5: 테스트/검증 결과가 통과/실패 건수, 실패 원인 요약, 수동 확인 필요 항목과 함께 사용자에게 보고되었다
 - [ ] AC6: `_sdd/pipeline/report_<topic>_<timestamp>.md`가 Step 8 필수 항목을 갖춰 존재한다
-- [ ] AC7: 이번 실행의 `_sdd/spec/` 변경이 모두 `sdd-skills:spec-update-done-agent` / `sdd-skills:spec-update-todo-agent` 출력으로만 발생했다 (autopilot 직접 수정 0건)
+- [ ] AC7: 이번 실행의 `_sdd/spec/` 변경이 모두 `sdd-skills:spec-sync-agent` 출력으로만 발생했다 (autopilot 직접 수정 0건)
 - [ ] AC8: Phase 2 진입 전 Step 6 checkpoint의 explicit approval이 로그에 기록되어 있다
 
 ## Workflow Position
@@ -50,7 +50,7 @@ User Request
 
 ## Hard Rules
 
-1. **Discussion 인라인 실행 + `_sdd/spec/` 직접 수정 금지**: Step 2 대화는 autopilot 본문에서 직접 수행한다. global spec 수정은 반드시 `sdd-skills:spec-update-done-agent` / `sdd-skills:spec-update-todo-agent` 에이전트에 위임한다.
+1. **Discussion 인라인 실행 + `_sdd/spec/` 직접 수정 금지**: Step 2 대화는 autopilot 본문에서 직접 수행한다. global spec 수정은 반드시 `sdd-skills:spec-sync-agent` 에이전트에 위임한다.
 2. **Phase 2 무중단 + 파일 기반 상태 전달**: Phase 2 진입 후 `request_user_input` 금지. 에이전트에는 파일 경로만 전달하며, 전체 출력을 부모 컨텍스트에 누적하지 않는다. Phase 2의 subagent step은 기본적으로 `Interaction Mode: autonomous-no-input`로 해석하며, 사용자 입력 요청 없이 권장안을 선택해 진행한다.
 3. **오케스트레이터 저장 + 공유 로그 필수**: 오케스트레이터는 `_sdd/pipeline/orchestrators/orchestrator_<topic>.md`에 저장한다. 실행 시 `_sdd/pipeline/log_<topic>_<timestamp>.md`를 생성하고 각 단계 완료 후 핵심 결정사항을 기록한다.
 4. **에이전트 호출 시 원문 전달**: 사용자의 원래 요청과 관련 컨텍스트 파일 경로를 포함한다. 의미를 잃을 정도로 축약하지 않는다.
@@ -63,7 +63,7 @@ User Request
 11. 한국어를 기본으로 하되 사용자 언어를 따른다.
 12. `_sdd/` artifact 경로는 lowercase canonical을 기본으로 하되, 입력을 읽을 때는 legacy uppercase fallback도 허용한다.
 13. spec-less repo에서도 중단하지 않는다. `_sdd/spec/`가 없으면 `_sdd/` workspace bootstrap + code-first fallback reasoning으로 계속 진행하고, 적절한 시점에 `sdd-skills:spec-create` 또는 spec sync 단계를 파이프라인에 포함한다.
-14. **에이전트/스킬 호출 시 `sdd-skills:` prefix 필수**: plugin으로 설치된 스킬이므로, 모든 SDD 에이전트 호출은 `sdd-skills:<agent_name>` 형식을 사용한다 (예: `sdd-skills:feature-draft-agent`, `sdd-skills:implementation-agent`, `sdd-skills:spec-update-done-agent` 등). prefix 없이 bare name으로 호출하면 안 된다.
+14. **에이전트/스킬 호출 시 `sdd-skills:` prefix 필수**: plugin으로 설치된 스킬이므로, 모든 SDD 에이전트 호출은 `sdd-skills:<agent_name>` 형식을 사용한다 (예: `sdd-skills:feature-draft-agent`, `sdd-skills:implementation-agent`, `sdd-skills:spec-sync-agent` 등). prefix 없이 bare name으로 호출하면 안 된다.
 15. **계약 우선순위**: 규칙의 canonical home은 `references/orchestrator-contract.md`다. 이 SKILL.md 또는 example과 contract가 충돌하면 contract가 우선한다.
 
 ## Process
@@ -160,7 +160,7 @@ planning precedence 메모:
 - **`sdd-skills:feature-draft-agent`는 기본 포함이다.** 다음 두 조건 중 하나를 만족할 때만 스킵할 수 있다: (1) 정말 간단한 디버깅 수준의 수정(typo fix, config 값 변경, 로그 한 줄 추가 등)이거나, (2) 해당 주제의 feature-draft artifact가 `_sdd/drafts/`에 이미 존재하는 경우. 그 외에는 small/medium/large 무관하게 `sdd-skills:feature-draft-agent`를 반드시 거친다.
 - non-trivial change의 기본 planning entry는 `sdd-skills:feature-draft-agent`다. single-phase medium path에서 Part 2가 충분히 명확하면 그대로 `sdd-skills:implementation-agent` 입력으로 사용한다.
 - `sdd-skills:implementation-plan-agent`은 **multi-phase 실행으로 판단되면 반드시 포함한다.** feature-draft → implementation 직행은 single-phase 경로에 한정한다. large/complex 변경, medium이라도 multi-phase execution gate가 필요한 경우 모두 해당한다.
-- `sdd-skills:spec-update-todo-agent`는 planned persistent global alignment가 실제로 필요한 경우에만 `sdd-skills:feature-draft-agent`와 `sdd-skills:implementation-plan-agent` 사이에 조건부로 넣는다.
+- `sdd-skills:spec-sync-agent`(planned 호출)는 planned persistent global alignment가 실제로 필요한 경우에만 `sdd-skills:feature-draft-agent`와 `sdd-skills:implementation-plan-agent` 사이에 조건부로 넣는다. 동일 `sdd-skills:spec-sync-agent`는 구현 전 planned 반영(조건부 1회)과 구현 완료 후 sync(1회)로 최대 2회 호출될 수 있으며, 같은 진입점이 evidence 차이로 동작을 적응한다.
 - standalone `sdd-skills:implementation-plan-agent`은 기존 feature draft/temporary spec/기존 plan artifact가 이미 있고, 이를 phase/task 수준으로 보강하거나 재개해야 하는 예외 상황에서만 사용한다.
 
 오케스트레이터 생성 규칙:
@@ -258,7 +258,7 @@ Phase 2 진입 후 `request_user_input`은 호출하지 않는다. 마일스톤 
 - review 포함 path에서는 `sdd-skills:implementation-agent`와 correctness(`sdd-skills:implementation-review-agent`) ∥ simplicity(`sdd-skills:simplicity-review-agent`) 2-reviewer 병렬 호출을 항상 subagent 호출로 실행한다(exit는 두 report의 합집합). 부모 autopilot이 local implementation/review로 대체하지 않는다.
 - `sdd-skills:implementation-agent` step은 generic single subagent call이 아니라 Implementation Dispatch Controller로 우선 해석한다. autopilot이 phase/task metadata를 읽고 task당 leaf를 dispatch한다.
 - `implementation` step은 단독 완료가 아니다. 같은 범위의 `Review-Fix Loop` exit condition과 required validation이 닫혀야만 해당 step을 `completed`로 기록할 수 있다.
-- single-phase path이거나 `Review-Fix Loop.scope = global`이면 `implementation` step 직후 즉시 global review-fix loop를 수행한다. 이 gate가 닫히기 전에는 `spec-update-done`을 포함한 다음 downstream step으로 진행할 수 없다.
+- single-phase path이거나 `Review-Fix Loop.scope = global`이면 `implementation` step 직후 즉시 global review-fix loop를 수행한다. 이 gate가 닫히기 전에는 `spec-sync`(post-implementation 호출)를 포함한 다음 downstream step으로 진행할 수 없다.
 - `sdd-skills:implementation-plan-agent` output을 downstream `implementation`이 소비하고 해당 step이 `Execution Mode: phase-iterative`로 선언되어 있으면, autopilot은 `Phase Source`를 읽어 phase count와 boundary를 runtime-resolved metadata로 해석한다. Step 4가 추측한 flat phase list로 실행하지 않는다.
 - `scope = per-group`이면 `Phase Source`의 각 phase `Checkpoint` 필드를 읽어 group boundary를 결정한다. `Checkpoint=true` phase가 group의 마지막 phase이며, 해당 phase 직후 같은 group 범위의 review-fix gate를 닫는다. `Checkpoint=false` phase는 light validation(test/typecheck/exit criteria)만 수행하고 다음 phase로 진행한다. 마지막 phase는 explicit 값과 무관하게 implicit `Checkpoint=true`로 처리한다. 마지막 phase를 제외한 phase에 `Checkpoint` 필드가 없으면 plan schema violation으로 보고 downstream 구현을 시작하지 않으며, producer review gate/Step 5 verification에서 `sdd-skills:implementation-plan-agent` 산출물을 reject/regenerate한다.
 - group 내 phase의 light validation이 `critical` 이슈를 잡으면 group boundary forced early로 즉시 review-fix gate를 트리거한다 (mid-group emergency).
@@ -278,7 +278,7 @@ Phase 2 진입 후 `request_user_input`은 호출하지 않는다. 마일스톤 
   - `fix = sdd-skills:implementation-agent`
 - `low` finding은 advisory/logged follow-up이다. 기본 fix 대상에 포함하지 않으며, critical/high/medium 종료 조건을 만족한 gate를 막지 않는다.
 - `scope = global`이든 `scope = per-group`이든 review/fix/re-review를 local inline work로 대체하지 않는다.
-- `spec-update-done`은 모든 required implementation-scoped review-fix gate, required validation, 그리고 필요한 경우 final integration review가 닫힌 뒤에만 실행할 수 있다.
+- `spec-sync`의 post-implementation 호출은 모든 required implementation-scoped review-fix gate, required validation, 그리고 필요한 경우 final integration review가 닫힌 뒤에만 실행할 수 있다.
 - 이 섹션에서 별도 loop 규칙이나 테스트 규칙을 다시 정의하지 않는다.
 
 #### 7.4 에러 핸들링
