@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 from dataclasses import dataclass
 import hashlib
+import json
 import os
 import re
 import shutil
@@ -22,6 +23,9 @@ DEFAULT_REPO = "malfo-y/sdd-skills"
 DEFAULT_SKILLS_ROOT = ".codex/skills"
 DEFAULT_AGENTS_ROOT = ".codex/agents"
 DEFAULT_CONFIG_PATH = ".codex/config.toml"
+MANIFEST_NAME = ".sdd-skill-bundle-manifest.json"
+# "sdd" substring도 "_sdd"를 포섭
+PRUNE_KEYWORDS = ("sdd",)
 
 
 @dataclass
@@ -35,6 +39,8 @@ class Args:
     force: bool = False
     include_hidden: bool = False
     dry_run: bool = False
+    prune: bool = True
+    prune_yes: bool = False
 
 
 @dataclass
@@ -352,6 +358,94 @@ def _remove_existing_path(path: str) -> None:
     os.remove(path)
 
 
+def _manifest_path(codex_home: str) -> str:
+    return os.path.join(codex_home, MANIFEST_NAME)
+
+
+def _load_manifest(codex_home: str) -> dict[str, list[str]] | None:
+    path = _manifest_path(codex_home)
+    if not os.path.isfile(path):
+        return None
+    try:
+        with open(path, "r", encoding="utf-8") as handle:
+            data = json.load(handle)
+    except (json.JSONDecodeError, OSError):
+        return None
+    skills = data.get("skills") if isinstance(data, dict) else None
+    agents = data.get("agents") if isinstance(data, dict) else None
+    return {
+        "skills": list(skills) if isinstance(skills, list) else [],
+        "agents": list(agents) if isinstance(agents, list) else [],
+    }
+
+
+def _write_manifest(codex_home: str, skill_names: list[str], agent_names: list[str]) -> None:
+    os.makedirs(codex_home, exist_ok=True)
+    payload = {"skills": sorted(skill_names), "agents": sorted(agent_names)}
+    with open(_manifest_path(codex_home), "w", encoding="utf-8") as handle:
+        json.dump(payload, handle, indent=2)
+        handle.write("\n")
+
+
+def _contains_keyword(text: str) -> bool:
+    lowered = text.lower()
+    return any(keyword in lowered for keyword in PRUNE_KEYWORDS)
+
+
+def _file_has_keyword(path: str) -> bool:
+    if not os.path.isfile(path):
+        return False
+    try:
+        with open(path, "r", encoding="utf-8", errors="ignore") as handle:
+            return _contains_keyword(handle.read())
+    except OSError:
+        return False
+
+
+def _find_skill_orphans(
+    skills_root: str,
+    source_names: set[str],
+    manifest: dict[str, list[str]] | None,
+) -> list[str]:
+    if not os.path.isdir(skills_root):
+        return []
+    orphans: list[str] = []
+    for entry in sorted(os.listdir(skills_root)):
+        path = os.path.join(skills_root, entry)
+        if not os.path.isdir(path):
+            continue
+        if entry in source_names:
+            continue
+        if manifest is not None:
+            if entry in manifest["skills"]:
+                orphans.append(entry)
+        elif _file_has_keyword(os.path.join(path, "SKILL.md")):
+            orphans.append(entry)
+    return orphans
+
+
+def _find_agent_orphans(
+    agents_root: str,
+    source_names: set[str],
+    manifest: dict[str, list[str]] | None,
+) -> list[str]:
+    if not os.path.isdir(agents_root):
+        return []
+    orphans: list[str] = []
+    for entry in sorted(os.listdir(agents_root)):
+        path = os.path.join(agents_root, entry)
+        if os.path.isdir(path) or not entry.endswith(".toml"):
+            continue
+        if entry in source_names:
+            continue
+        if manifest is not None:
+            if entry in manifest["agents"]:
+                orphans.append(entry)
+        elif _file_has_keyword(path):
+            orphans.append(entry)
+    return orphans
+
+
 def _install_skill(
     skill_name: str,
     skill_dir: str,
@@ -467,12 +561,61 @@ def _install_config(
     return status
 
 
+def _confirm_prune() -> bool:
+    answer = input("Prune these orphaned entries? [y/N] ").strip().lower()
+    return answer in ("y", "yes")
+
+
+def _prune_orphans(
+    destinations: Destinations,
+    source_skill_names: set[str],
+    source_agent_names: set[str],
+    args: Args,
+) -> dict[str, object]:
+    manifest = _load_manifest(destinations.codex_home)
+    skill_orphans = _find_skill_orphans(destinations.skills_root, source_skill_names, manifest)
+    agent_orphans = _find_agent_orphans(destinations.agents_root, source_agent_names, manifest)
+    candidates = skill_orphans + agent_orphans
+    result: dict[str, object] = {
+        "skills": skill_orphans,
+        "agents": agent_orphans,
+        "pruned": [],
+        "status": "none",
+    }
+    if not candidates:
+        return result
+    if args.dry_run:
+        result["status"] = "would-prune"
+        return result
+    proceed: bool
+    if sys.stdin.isatty():
+        for name in candidates:
+            print(f"Orphan candidate: {name}")
+        proceed = _confirm_prune()
+    elif args.prune_yes:
+        proceed = True
+    else:
+        result["status"] = "held-non-tty"
+        return result
+    if not proceed:
+        result["status"] = "declined"
+        return result
+    for name in skill_orphans:
+        _remove_existing_path(os.path.join(destinations.skills_root, name))
+    for name in agent_orphans:
+        _remove_existing_path(os.path.join(destinations.agents_root, name))
+    result["pruned"] = candidates
+    result["status"] = "pruned"
+    return result
+
+
 def _print_summary(
     skill_results: list[tuple[str, str]],
     agent_results: list[tuple[str, str]],
     config_result: tuple[str, str],
     destinations: Destinations,
     dry_run: bool,
+    prune_result: dict[str, object] | None = None,
 ) -> None:
     action_word = "Planned" if dry_run else "Completed"
     print(f"{action_word} bundle install into {destinations.codex_home}")
@@ -485,6 +628,33 @@ def _print_summary(
     label, status = config_result
     print(f"Config: {destinations.config_path}")
     print(f"- {label}: {status}")
+    if prune_result is not None:
+        _print_prune_result(prune_result)
+
+
+def _print_prune_result(prune_result: dict[str, object]) -> None:
+    status = prune_result["status"]
+    candidates = list(prune_result["skills"]) + list(prune_result["agents"])
+    print("Prune:")
+    if status == "none":
+        print("- no orphaned entries")
+        return
+    if status == "would-prune":
+        for name in candidates:
+            print(f"- would prune: {name}")
+        return
+    if status == "held-non-tty":
+        print("- held: non-interactive shell; pass --prune-yes to prune")
+        for name in candidates:
+            print(f"- candidate: {name}")
+        return
+    if status == "declined":
+        print("- declined by user")
+        for name in candidates:
+            print(f"- candidate: {name}")
+        return
+    for name in prune_result["pruned"]:
+        print(f"- pruned: {name}")
 
 
 def _parse_args(argv: list[str]) -> Args:
@@ -530,6 +700,17 @@ def _parse_args(argv: list[str]) -> Args:
         "--dry-run",
         action="store_true",
         help="Print what would be installed without copying files",
+    )
+    parser.add_argument(
+        "--prune",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Remove orphaned bundle skills/agents no longer in the source (default: on)",
+    )
+    parser.add_argument(
+        "--prune-yes",
+        action="store_true",
+        help="Prune orphans without confirmation in non-interactive shells",
     )
     return parser.parse_args(argv, namespace=Args())
 
@@ -577,7 +758,48 @@ def main(argv: list[str]) -> int:
             )
         finally:
             shutil.rmtree(tmp_dir, ignore_errors=True)
-        _print_summary(skill_results, agent_results, config_result, destinations, args.dry_run)
+        source_skill_names = {name for name, _ in discovered}
+        source_agent_names = {name for name, _ in discovered_agents}
+        prune_result: dict[str, object] | None = None
+        if args.prune:
+            prune_result = _prune_orphans(
+                destinations,
+                source_skill_names,
+                source_agent_names,
+                args,
+            )
+        if not args.dry_run:
+            manifest_skills = set(source_skill_names)
+            manifest_agents = set(source_agent_names)
+            if prune_result is not None:
+                pruned = set(prune_result["pruned"])
+                manifest_skills |= {n for n in prune_result["skills"] if n not in pruned}
+                manifest_agents |= {n for n in prune_result["agents"] if n not in pruned}
+            else:
+                prev = _load_manifest(destinations.codex_home) or {"skills": [], "agents": []}
+                manifest_skills |= {
+                    n for n in prev["skills"]
+                    if n not in source_skill_names
+                    and os.path.isdir(os.path.join(destinations.skills_root, n))
+                }
+                manifest_agents |= {
+                    n for n in prev["agents"]
+                    if n not in source_agent_names
+                    and os.path.isfile(os.path.join(destinations.agents_root, n))
+                }
+            _write_manifest(
+                destinations.codex_home,
+                sorted(manifest_skills),
+                sorted(manifest_agents),
+            )
+        _print_summary(
+            skill_results,
+            agent_results,
+            config_result,
+            destinations,
+            args.dry_run,
+            prune_result,
+        )
         if not args.dry_run:
             print("Restart Codex to pick up new skills.")
         return 0
