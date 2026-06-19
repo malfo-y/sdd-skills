@@ -1,0 +1,6 @@
+{
+  "name": "spec-sync",
+  "description": "This skill should be used when the user asks to \"update spec with features\", \"add features to spec\", \"add to-do to spec\", \"add to-implement to spec\", \"add requirements to spec\", \"update spec from input\", \"spec update\", \"expand spec\", \"update spec from code\", \"sync spec with implementation\", \"apply implementation changes to spec\", \"reflect completed work in spec\", \"refresh spec after implementation\", \"implementation done sync\", or mentions adding new features/requirements/planned improvements to a specification document, or maintaining the spec document tied to completed code changes.",
+  "instruction_file": "SKILL.md",
+  "version": "3.0.0"
+}
