@@ -154,9 +154,9 @@ global spec core는 항상 유지한다.
 
 #### 3a. AGENTS.md 하네스 생성
 
-하네스 템플릿 `references/agents-harness-template.md`의 `SDD-HARNESS:START`~`SDD-HARNESS:END` 마커 블록을 본문으로 사용한다. 템플릿 상단의 관리용 주석(`<!-- 이 파일은 … -->`)은 산출물로 복사하지 않는다.
+하네스 템플릿 `references/agents-harness-template.md`를 **Read**한다. `SDD-HARNESS:START`~`SDD-HARNESS:END` 마커 블록을 **글자 그대로(verbatim) 복사**해 `AGENTS.md` 본문으로 쓴다 — 템플릿 상단의 관리용 주석(`<!-- 이 파일은 … -->`)만 제외한다. 블록의 어떤 줄도 추가·삭제·재배열·요약하지 않는다. 기억이나 이 SKILL 본문으로 **재구성하지 않는다** — 재구성하면 템플릿 변경(새 §·경고 줄 등)이 산출물에 누락된다.
 
-§0~§5 슬롯을 repo 맥락으로 채운다.
+그다음 아래 `<…>` 꺾쇠 슬롯만 repo 맥락으로 치환한다(슬롯 없는 줄은 글자 그대로 유지).
 
 - `<repo-name>` — repo 이름
 - `<test command>` — 테스트 실행 명령 (없으면 해당 줄 삭제)
