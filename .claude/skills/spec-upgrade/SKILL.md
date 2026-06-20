@@ -22,7 +22,7 @@ version: 1.10.1
 - [ ] old feature-level usage/validation/reference/CIV 의존성을 적절한 surface로 내렸다.
 - [ ] 단순 implementation inventory는 줄이고, 필요한 supporting note만 남겼다.
 - [ ] 멀티파일 spec이면 index와 supporting file의 역할이 더 명확해졌다.
-- [ ] `AGENTS.md`가 하네스 템플릿(§0~§4) 기준으로 존재한다 (부재/부분존재 시 SDD-HARNESS 마커 멱등 병합으로 생성/보강).
+- [ ] `AGENTS.md`가 하네스 템플릿(§0~§5) 기준으로 존재한다 (부재/부분존재 시 SDD-HARNESS 마커 멱등 병합으로 생성/보강).
 - [ ] `CLAUDE.md`가 `→ AGENTS.md 참조` 마커 포인터 블록을 가진다 (부재 시 생성, 기존 파일이면 prepend).
 - [ ] 병합 결과 `AGENTS.md`·`CLAUDE.md`에 하네스와 별개의 중복 `## SDD란` 블록이 남지 않는다 (기존 산출물 흡수·제거, SDD 무관 사용자 내용은 보존).
 
@@ -116,7 +116,7 @@ version: 1.10.1
 
 `AGENTS.md` 병합 규칙:
 
-- **부재** → 하네스 템플릿의 `<!-- SDD-HARNESS:START -->` ... `<!-- SDD-HARNESS:END -->` 마커 블록을 생성하고, §0~§4 `<…>` 슬롯을 repo 맥락(`<repo-name>`, `<test command>`, `<lint command>`, spec §`<…>` 등)으로 채운다.
+- **부재** → 하네스 템플릿의 `<!-- SDD-HARNESS:START -->` ... `<!-- SDD-HARNESS:END -->` 마커 블록을 생성하고, §0~§5 `<…>` 슬롯을 repo 맥락(`<repo-name>`, `<test command>`, `<lint command>`, spec §`<…>` 등)으로 채운다.
 - **존재(마커 없음)** → 마커 블록을 파일 **맨 위에 prepend**한다. 마커 밖 기존 내용은 아래에 그대로 보존한다.
 - **마커 블록 존재** → **그 마커 블록만 교체**한다(마커-only 교체). 마커 밖 내용은 건드리지 않는다. 재실행해도 블록이 중복 적층되지 않는다(멱등).
 - **중복 흡수**: 기존 `AGENTS.md`에 하네스 슬롯과 겹치는 항목(테스트 명령 등)이나 과거 spec-create 부트스트랩으로 생긴 legacy `## SDD란` 블록이 있으면, 그 정보를 하네스 슬롯(§2 검증 표준 / §3 워크플로우 / §4 판단 기준)으로 흡수하고 마커 밖 중복본은 제거한다. SDD와 무관한 사용자 고유 내용은 보존한다.
@@ -137,7 +137,7 @@ version: 1.10.1
 - feature-level detail을 global 본문에서 걷어냈는가
 - implementation inventory를 그대로 옮겨 적지 않았는가
 - Step 1 경계 판정을 어기고 rewrite 문제를 upgrade로 덮지 않았는가
-- `AGENTS.md`가 하네스(§0~§4) 마커 블록을 가지고, `CLAUDE.md`가 포인터 마커 블록을 가지며, 하네스와 별개의 중복 `## SDD란` 블록이 남지 않았는가
+- `AGENTS.md`가 하네스(§0~§5) 마커 블록을 가지고, `CLAUDE.md`가 포인터 마커 블록을 가지며, 하네스와 별개의 중복 `## SDD란` 블록이 남지 않았는가
 
 ## Output Contract
 

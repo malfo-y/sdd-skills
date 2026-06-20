@@ -26,4 +26,9 @@ discussion → feature-draft / temporary spec → (spec-sync) → (implementatio
 - scope / 경계 → `_sdd/spec/main.md` §2. Scope / Non-goals / Guardrails
 - 핵심 결정의 '왜' → `_sdd/spec/main.md` §3. 핵심 설계와 주요 결정
 - ⚠️ repo-specific 주의·불변 규칙(이 모듈 read-only 등)은 **여기 말고 spec Guardrails가 단일 소스**다. 이 파일에 적지 말 것.
+
+## 5. 작업 기록 (work log)
+- 의미 있는 작업 단위를 끝낼 때 `_sdd/work_log/<yyyy-mm-dd>.md`에 항목을 append 한다(그날 파일이 없으면 생성). 포렌식 기록 — §1 읽기 대상 아님, 필요할 때만 on-demand.
+- 항목: `## <순번/HH:MM> <제목>` 아래 `무엇/왜` · `결과` · `포인터`(관련 커밋·문서·decision log 링크) · `요약`(따로 남은 게 없을 때만 인라인).
+- 포인터로 충분하면 `요약` 생략(중복 금지). `_sdd/pipeline/log_*.md`(autopilot 전용)와 별개 트랙 — 수동 작업도 포함.
 <!-- SDD-HARNESS:END -->
