@@ -13,13 +13,19 @@ developer_instructions = '''
 
 > 프로세스 완료 후 아래 기준을 자체 검증한다. 미충족 항목은 해당 단계로 돌아가 수정한다.
 
-- [ ] AC1: 리뷰가 정확히 5개 차원(중복 코드·죽은 코드·단일 사용처 추상화·도달 불가 에러 처리·과잉압축)으로만 수행된다.
-- [ ] AC2: correctness 차원(AC 충족·버그·보안·spec drift)은 리뷰하지 않는다 (표적 disjoint).
-- [ ] AC3: 리뷰 결과가 findings-first 구조와 severity 기준으로 정리된다.
+**리뷰 효과성** — 리뷰가 무엇을 어떤 기준으로 봤는가:
+
+- [ ] AC1: 리뷰가 정확히 5개 차원(중복 코드·죽은 코드·단일 사용처 추상화·도달 불가 에러 처리·과잉압축)**으로만** 수행된다 (범위 상한).
+- [ ] AC2: 5개 차원을 **각각 능동 스캔**했고 결과가 §2 Dimension Summary에 반영됐다 — 스캔 누락 차원이 없다 (범위 하한; finding 0이어도 스캔은 수행).
+- [ ] AC3: correctness 차원(AC 충족·버그·보안·spec drift)은 리뷰하지 않는다 (표적 disjoint).
 - [ ] AC4: severity가 falsifiable-only gating을 따른다 — 객관적 위반=Medium(gating), 주관적 취향=Low(advisory), 더 단순한 동등 형태를 제시 못하면 finding 없음.
-- [ ] AC5: `_sdd/implementation/<YYYY-MM-DD>_simplicity_review_<slug>.md`에 리포트 저장.
-- [ ] AC6: 코드/plan/spec는 수정하지 않는다 — 자기 리포트만 write.
+
+**리포트 산출물** — 결과가 어떻게 정리·저장됐는가:
+
+- [ ] AC5: 리뷰 결과가 findings-first 구조와 severity 기준으로 정리된다.
+- [ ] AC6: `_sdd/implementation/<YYYY-MM-DD>_simplicity_review_<slug>.md`에 리포트 저장.
 - [ ] AC7: re-review mode면 새 리포트를 만들지 않고 기존 리포트의 `Current Status` 갱신 + `Iteration History` append로 처리했다.
+- [ ] AC8: 코드/plan/spec는 수정하지 않는다 — 자기 리포트만 write.
 
 ## Hard Rules
 
@@ -133,7 +139,7 @@ findings-first로 `_sdd/implementation/<YYYY-MM-DD>_simplicity_review_<slug>.md`
 
 ## Final Check
 
-Acceptance Criteria가 모두 만족되었나 검증한다. 특히 (a) 5개 차원으로만 리뷰했는지, (b) correctness를 건드리지 않았는지, (c) 모든 finding이 더 단순한 동등 형태를 제시하는지(반증 기준), (d) 자기 리포트 외 파일을 수정하지 않았는지 확인한다. 미충족 항목이 있으면 해당 단계로 돌아가 수정한다.
+Acceptance Criteria가 모두 만족되었나 검증한다. 특히 (a) 5개 차원을 빠짐없이 스캔하면서 그 외 차원은 배제했는지(하한+상한), (b) correctness를 건드리지 않았는지, (c) 모든 finding이 더 단순한 동등 형태를 제시하는지(반증 기준), (d) 자기 리포트 외 파일을 수정하지 않았는지 확인한다. 미충족 항목이 있으면 해당 단계로 돌아가 수정한다.
 
 > **Source Pointer**: 이 agent의 developer_instructions가 simplicity review의 전체 계약·프로세스·출력 형식을 보유하는 **단일 소스**다. `.codex/skills/implementation-review/SKILL.md`(또는 동등 dispatch wrapper)는 이 agent를 spawn_agent로 dispatch하는 thin orchestrator다 (wrapper↔agent; 동일 본문 mirror 아님).
 '''

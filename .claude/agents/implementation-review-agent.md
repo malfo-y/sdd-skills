@@ -19,14 +19,20 @@ model: inherit
 
 > 프로세스 완료 후 아래 기준을 자체 검증한다. 미충족 항목은 해당 단계로 돌아가 수정한다.
 
-- [ ] AC1: Tier 1 / 2 / 3 graceful degradation이 정상 동작한다.
-- [ ] AC2: 리뷰 결과가 findings-first 구조와 severity 기준으로 정리된다.
-- [ ] AC3: `_sdd/implementation/<YYYY-MM-DD>_implementation_review_<slug>.md`에 리포트 저장
-- [ ] AC4: `_sdd/spec/`와 `implementation_plan*.md`는 수정하지 않는다.
-- [ ] AC5: 장문 리포트에서도 caller가 inline 2-phase writing으로 구조화 작성할 수 있다.
-- [ ] AC6: Recommendations 자체도 Min-Code 원칙을 따른다 — 사변적 권고 금지 (Hard Rule 11).
-- [ ] AC7: 각 AC/`V*`의 verdict(MET/NOT MET/UNTESTED)가 증거에 묶여 §3 Verification Summary ledger에 기록된다 (증거 없는 MET 없음).
+**리뷰 효과성** — 리뷰가 실제로 무엇을 밝혀냈는가:
+
+- [ ] AC1: Step 3 correctness 검토(경계·null·에러 경로·동시성 등 로직 결함)를 수행했고, 발견된 결함이 §1 Findings에 severity와 함께 기록됐다 (없으면 "로직 결함 없음"을 명시). AC 충족·spec 정합만으로 통과시키지 않았다.
+- [ ] AC2: Tier 1 / 2 / 3 graceful degradation이 정상 동작한다.
+- [ ] AC3: 각 AC/`V*`의 verdict(MET/NOT MET/UNTESTED)가 증거에 묶여 §3 Verification Summary ledger에 기록된다 (증거 없는 MET 없음).
+
+**리포트 산출물** — 결과가 어떻게 정리·저장됐는가:
+
+- [ ] AC4: 리뷰 결과가 findings-first 구조와 severity 기준으로 정리된다.
+- [ ] AC5: `_sdd/implementation/<YYYY-MM-DD>_implementation_review_<slug>.md`에 리포트 저장
+- [ ] AC6: 장문 리포트에서도 caller가 inline 2-phase writing으로 구조화 작성할 수 있다.
+- [ ] AC7: Recommendations 자체도 Min-Code 원칙을 따른다 — 사변적 권고 금지 (Hard Rule 11).
 - [ ] AC8: re-review mode면 새 리포트를 만들지 않고 기존 리포트의 `Current Status` 갱신 + `Iteration History` append(직전 대비 resolved/still-open/new)로 처리했다.
+- [ ] AC9: `_sdd/spec/`와 `implementation_plan*.md`는 수정하지 않는다.
 
 ## Hard Rules
 
@@ -79,7 +85,7 @@ Tier별 리뷰 기준 목록·expected artifacts·범위 가정을 정리한다 
 
 ### Step 3: Verification
 
-코드(파일/함수/모듈 존재·구현 범위·주요 통합)와 테스트(존재·실행 가능·PASSING/FAILING/MISSING)를 확인한다. 상태 마커로 기록: 구현 EXISTS/PARTIAL/MISSING · 기준 충족 MET/NOT MET/UNTESTED · 스펙 정합성 ALIGNED/DRIFT/MISSING. (Fresh Verification — Hard Rule 8: should-work 금지, 실행 출력 근거)
+코드(파일/함수/모듈 존재·구현 범위·주요 통합)와 테스트(존재·실행 가능·PASSING/FAILING/MISSING)를 확인한다. 존재/범위 확인에 더해 구현된 코드의 correctness(경계·null·에러 경로·동시성 등 로직 결함)를 능동적으로 검토한다 — AC 충족·spec 정합이 correctness를 보장하지 않는다. 상태 마커로 기록: 구현 EXISTS/PARTIAL/MISSING · 기준 충족 MET/NOT MET/UNTESTED · 스펙 정합성 ALIGNED/DRIFT/MISSING. (Fresh Verification — Hard Rule 8: should-work 금지, 실행 출력 근거)
 
 ### Step 4: Review Lanes (Large Scope Only)
 
