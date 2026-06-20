@@ -74,6 +74,6 @@
 | Codex bundle installer | `tools/install-codex-skill-bundle.py` | skills와 agents만 설치하며 사용자 `~/.codex/config.toml`은 수정하지 않는다 |
 | Environment/pre-flight | `_sdd/env.md` | 로컬 작업, PR verification, pre-flight assumption의 기준이다 |
 | Spec creation contract | `.claude/skills/spec-create/SKILL.md`<br>`.codex/skills/spec-create/SKILL.md` | primary navigation axis와 `Strategic Code Map` placement rule을 확인한다 |
-| Harness layer template | `.claude/skills/spec-create/references/agents-harness-template.md` | `AGENTS.md` 작업 진입·작업 규약 레이어의 정본 §0~§4 골격. 4곳(`spec-create`/`spec-upgrade` × `.claude`/`.codex`) byte-identical 미러의 source다 |
+| Harness layer template | `.claude/skills/spec-create/references/agents-harness-template.md` | `AGENTS.md` 작업 진입·작업 규약 레이어의 정본 §0~§5 골격(§5 = on-demand work log 규약). 4곳(`spec-create`/`spec-upgrade` × `.claude`/`.codex`) byte-identical 미러의 source다 |
 | Feature planning map consumer | `.claude/agents/feature-draft-agent.md`<br>`.codex/agents/feature-draft-agent.toml` | code map을 hint로 읽되 `Touchpoints`와 `Target Files`를 현재 코드로 재확인하는 규칙을 확인한다 |
 | Spec sync map promotion | `.claude/agents/spec-sync-agent.md`<br>`.codex/agents/spec-sync-agent.toml` | temporary touchpoint 중 어떤 항목이 persistent navigation hint로 승격될 수 있는지 확인한다 |

@@ -1,5 +1,23 @@
 # Decision Log
 
+## 2026-06-20 - Harness(`AGENTS.md`)에 §5 작업 기록(work log) 레이어 추가
+
+### Context
+
+harness 템플릿은 §0~§4(작업 원칙 / 읽는 순서 / 작업 규약·검증 표준 / SDD 워크플로우 순서 / 판단 기준)로 고정돼 있었고, "언제 무엇을 했는지"의 사후 포렌식 추적 surface가 없었다. `_sdd/pipeline/log_*.md`는 sdd-autopilot 자동 실행 전용이라 수동 작업 이력은 어디에도 누적되지 않았다.
+
+### Decision
+
+1. **§5 작업 기록(work log) 슬롯 신설**: 의미 있는 작업 단위 종료 시 `_sdd/work_log/<yyyy-mm-dd>.md`에 항목을 append한다(그날 파일 없으면 생성). 항목 포맷은 `## <순번/HH:MM> <제목>` 아래 `무엇/왜` · `결과` · `포인터`(관련 커밋·문서·decision log 링크) · `요약`(따로 남은 게 없을 때만 인라인, 포인터로 충분하면 생략)이다.
+2. **on-demand 포렌식 트랙으로 한정**: work log는 §1 읽기 순서에 포함하지 않는다(관리/조회 대상 아님, 필요할 때만 조회). `_sdd/pipeline/log_*.md`(autopilot 전용)와 별개 트랙으로, 수동 작업도 포함한다.
+3. **인라인 단일화(별도 TEMPLATE 없음)**: 포맷을 §5 인라인으로 단일화하고 별도 `_sdd/work_log/TEMPLATE.md`는 만들지 않는다(복사 금지 원칙).
+
+### Consequences
+
+- harness 정본 템플릿 4곳 byte-identical 미러(`spec-create`/`spec-upgrade` × `.claude`/`.codex`)와 이 repo의 `AGENTS.md`에 §5가 인라인 추가됐다. SKILL.md 14곳의 하네스 범위 표현이 §0~§4 → §0~§5로 갱신됐다.
+- global spec surface(components.md Strategic Code Map, usage-guide.md Scenario 1 expected result)가 §0~§5로 정렬됐다. main.md L103 harness layer 서술은 section 수를 열거하지 않는 thin 서술이라 무변경.
+- 과거 §0~§4 entry(이 파일 §0~§4 고정 결정, changelog v4.1.16)는 당시 사실로 보존했다(역사 왜곡 금지).
+
 ## 2026-06-19 - spec-update-todo + spec-update-done 단일 `spec-sync` 진입점으로 통합
 
 ### Context

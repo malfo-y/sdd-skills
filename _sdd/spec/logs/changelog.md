@@ -2,6 +2,13 @@
 
 > 이 파일은 `_sdd/spec/main.md`의 버전별 변경 기록이다.
 
+#### v4.3.1 (2026-06-20)
+
+- **Harness §5 작업 기록(work log) 레이어를 supporting surface에 동기화**: harness 템플릿이 §0~§4 → §0~§5로 확장(§5 = `_sdd/work_log/<yyyy-mm-dd>.md`에 작업 단위를 append하는 on-demand 포렌식 규약, §1 읽기 순서 미포함, `_sdd/pipeline/log_*.md` autopilot 트랙과 별개)된 것을 spec surface에 반영. `components.md` Strategic Code Map의 Harness layer template 행을 §0~§5로, `usage-guide.md` Scenario 1의 AGENTS.md expected result를 §0~§5(+§5 work log 설명)로 갱신.
+- **decision_log 신규 entry**: "Harness(`AGENTS.md`)에 §5 작업 기록(work log) 레이어 추가" 결정 기록. 과거 §0~§4 고정 결정 entry(L105/L118)와 v4.1.16 changelog는 당시 사실로 무손상 보존(역사 왜곡 금지).
+- **범위 경계**: 구현 surface(harness 템플릿 4곳 미러 + 이 repo `AGENTS.md`에 §5 인라인 추가, SKILL.md 14곳 §0~§4→§0~§5)는 이미 working tree에 적용됨(evidence). 본 sync는 global spec surface lag만 보정하며 work log 항목 포맷 detail을 main 본문에 옮기지 않는다(thin 유지). main.md L103 harness layer 서술은 section 수를 열거하지 않아 무변경. 별도 `_sdd/work_log/TEMPLATE.md`는 만들지 않음(복사 금지).
+- 입력: working tree diff(`AGENTS.md`, 하네스 템플릿 4곳, SKILL.md 4곳), `_sdd/discussion/2026-06-20_discussion_agents_md_work_log_harness.md`, 사용자 동기화 지침.
+
 #### v4.3.0 (2026-06-17)
 
 - **직교 2-렌즈 review를 PR review 진입점으로 확장(surgical 절 추가)**: review/validation guardrail에, simplicity 렌즈가 implementation-scoped review-gate에 더해 PR review(`pr-review` 스킬)에도 적용됨을 새 sub-bullet으로 명시. `pr-review`는 자체 correctness 검증 ∥ `simplicity-review-agent` 병렬 dispatch의 PR 차원 직교 2-렌즈 review이며, 표적 disjoint(correctness=PR/spec 정합·보안·테스트·verdict + 정확성-중복, simplicity=동작-불변 형태 + 형태-중복), 단일 작성자 경로 분리(pr-review→`_sdd/pr/`, simplicity→`_sdd/implementation/`)를 담음. 기존 L71 `spec-review` 비확장 종속 절은 무손상 유지(교체·재작성 없음).
