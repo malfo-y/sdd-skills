@@ -1,5 +1,24 @@
 # Decision Log
 
+## 2026-06-20 - 소비 repo 워크스페이스 commit 정책(process artifact gitignore + env.md 비밀값 경고)
+
+### Context
+
+부트스트랩 스킬(spec-create / spec-upgrade)이 만든 소비 repo의 `_sdd` 트리에는 spec/guides 같은 영속 자산과 discussion/drafts/implementation/pipeline/pr/work_log 같은 process artifact가 섞여 있었고, 무엇을 커밋하고 무엇을 로컬 전용으로 둘지에 대한 명시 정책이 없었다. 또한 `_sdd/env.md`는 커밋되는 파일임에도 비밀값 작성 위험에 대한 경고가 없었다.
+
+### Decision
+
+1. **워크스페이스 commit 경계 고정**: 소비 repo에서 커밋되는 `_sdd`는 `spec/`·`guides/`·`env.md`뿐이고, process artifact 6종(`_sdd/{discussion,drafts,implementation,pipeline,pr,work_log}/`)은 `.gitignore`로 로컬 전용이다.
+2. **`.gitignore` 멱등 보강**: 두 부트스트랩 스킬이 소비 repo `.gitignore`에 `SDD-WORKSPACE` 마커 블록을 멱등 병합한다 — 부재→생성, 마커 없음→파일 끝 append(기존 규칙 보존), 마커 블록 존재→그 블록만 교체. 마커 밖 사용자 규칙은 건드리지 않는다.
+3. **env.md 비밀값 금지**: `_sdd/env.md`는 커밋되므로 비밀값(API 키·토큰·비밀번호)을 적지 않는다(환경변수/secret manager로 관리). 하네스 템플릿 §2에 경고 1줄을 추가하고 spec-create는 env.md 생성 시 상단에 경고 헤더를 포함한다(spec-upgrade는 하네스 §2 병합으로 자동 반영).
+4. **이 sdd_skills repo 예외**: 본 repo는 스킬 개발 메타 repo라 process artifact를 history 가치로 계속 커밋한다. 위 정책은 소비 repo 생성물 대상이며 본 repo에는 적용하지 않는다.
+
+### Consequences
+
+- 소비 repo는 노이즈/비밀 누출 위험이 줄고, 커밋되는 `_sdd` 표면이 영속 자산으로 좁혀진다.
+- 마커 기반 멱등 병합이라 spec-create 부트스트랩과 spec-upgrade 마이그레이션이 동일 정책으로 수렴하며 재실행이 안전하다.
+- 메타 repo 예외를 명시했으므로 본 repo에 process artifact가 커밋돼 있는 사실이 정책 위반으로 오인되지 않는다.
+
 ## 2026-06-20 - Harness(`AGENTS.md`)에 §5 작업 기록(work log) 레이어 추가
 
 ### Context

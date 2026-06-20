@@ -2,6 +2,15 @@
 
 > 이 파일은 `_sdd/spec/main.md`의 버전별 변경 기록이다.
 
+#### v4.3.2 (2026-06-20)
+
+- **소비 repo 워크스페이스 commit 정책을 spec surface에 동기화**: 부트스트랩 스킬(spec-create / spec-upgrade)이 소비 repo `.gitignore`에 `SDD-WORKSPACE` 마커 블록을 멱등 병합해 process artifact 6종(`_sdd/{discussion,drafts,implementation,pipeline,pr,work_log}/`)을 로컬 전용으로 두고, 커밋되는 `_sdd`를 `spec/`·`guides/`·`env.md`로 좁히며, `_sdd/env.md`에 비밀값 금지 경고를 다는 변경(이미 working tree에 적용됨)을 spec surface에 반영.
+- **main.md guardrail 신설(Repo-wide Invariant Test 통과)**: artifact-path guardrail 뒤에 commit-vs-ignore 경계 + env.md 비밀값 금지 + 이 sdd_skills repo의 메타 repo 예외를 한 줄 guardrail로 추가. feature-level 멱등 병합 detail(마커 교체 규칙 등)은 supporting surface와 SKILL 본문에만 두고 main 본문은 thin 유지.
+- **supporting surface 갱신**: `components.md` — spec-create 행 Notes에 `.gitignore` 멱등 병합·env.md 경고 추가, Platform Notes에 "Workspace commit 정책(소비 repo)" 행 신설. `usage-guide.md` Scenario 1 expected result에 `.gitignore` 생성/멱등 병합과 env.md 비밀값 경고 헤더 추가.
+- **decision_log 신규 entry**: "소비 repo 워크스페이스 commit 정책(process artifact gitignore + env.md 비밀값 경고)" 결정 기록. 과거 entry는 무손상 보존.
+- **범위 경계**: 구현 surface(하네스 템플릿 4곳 §2 미러 + 이 repo `AGENTS.md`·`_sdd/env.md` 인라인, spec-create/spec-upgrade SKILL.md ×(claude/codex))는 이미 working tree에 적용됨(evidence: `git diff`). 본 sync는 global spec surface lag만 보정한다.
+- 입력: working tree diff(spec-create/spec-upgrade SKILL.md, 하네스 템플릿 4곳, `AGENTS.md`, `_sdd/env.md`), 사용자 동기화 지침.
+
 #### v4.3.1 (2026-06-20)
 
 - **Harness §5 작업 기록(work log) 레이어를 supporting surface에 동기화**: harness 템플릿이 §0~§4 → §0~§5로 확장(§5 = `_sdd/work_log/<yyyy-mm-dd>.md`에 작업 단위를 append하는 on-demand 포렌식 규약, §1 읽기 순서 미포함, `_sdd/pipeline/log_*.md` autopilot 트랙과 별개)된 것을 spec surface에 반영. `components.md` Strategic Code Map의 Harness layer template 행을 §0~§5로, `usage-guide.md` Scenario 1의 AGENTS.md expected result를 §0~§5(+§5 work log 설명)로 갱신.
