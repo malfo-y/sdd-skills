@@ -1,7 +1,7 @@
 ---
 name: simplicity-review-agent
 description: "Internal agent. Called explicitly by other agents or skills via Agent(subagent_type=simplicity-review-agent)."
-tools: ["Read", "Glob", "Grep"]
+tools: ["Read", "Write", "Glob", "Grep"]
 model: inherit
 ---
 

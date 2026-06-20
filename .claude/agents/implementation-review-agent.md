@@ -1,7 +1,7 @@
 ---
 name: implementation-review-agent
 description: "Internal agent. Called explicitly by other agents or skills via Agent(subagent_type=implementation-review-agent)."
-tools: ["Read", "Glob", "Grep"]
+tools: ["Read", "Write", "Glob", "Grep", "Bash"]
 model: inherit
 ---
 

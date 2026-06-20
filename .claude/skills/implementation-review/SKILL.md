@@ -17,7 +17,7 @@ version: 6.0.0
 
 ## 병렬 안전성 근거
 
-두 reviewer는 모두 **read-only leaf**다 (`tools: ["Read", "Glob", "Grep"]`, sub-agent를 spawn하지 않음). 코드·plan·spec를 수정하지 않고 각자 자기 리포트만 쓴다. 그리고 두 리포트가 **서로 다른 경로**(`*_implementation_review_*` vs `*_simplicity_review_*`)에 저장돼 write 충돌이 없다. 따라서 한 메시지에서 동시 dispatch해도 안전하다.
+두 reviewer는 sub-agent를 spawn하지 않는 leaf이고 **입력 코드·plan·spec를 수정하지 않는다** — 각자 자기 리포트만 쓴다. correctness reviewer는 테스트 실행을 위해 `Bash`를, 두 reviewer 모두 자기 리포트 저장을 위해 `Write`를 갖지만(`implementation-review-agent`: `["Read","Write","Glob","Grep","Bash"]`, `simplicity-review-agent`: `["Read","Write","Glob","Grep"]`), 그 write 대상은 각자의 리포트뿐이다. 그리고 두 리포트가 **서로 다른 경로**(`*_implementation_review_*` vs `*_simplicity_review_*`)에 저장돼 write 충돌이 없다. 따라서 한 메시지에서 동시 dispatch해도 안전하다.
 
 ## 실행
 
