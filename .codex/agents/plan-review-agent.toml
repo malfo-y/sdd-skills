@@ -20,16 +20,21 @@ developer_instructions = '''
 
 > 프로세스 완료 후 아래 기준을 자체 검증한다. 미충족 항목은 해당 단계로 돌아가 수정한다.
 
+**리뷰 효과성** — 리뷰가 무엇을 점검해 무엇을 밝혀냈는가:
+
 - [ ] Plan Source Tier를 판별하고 근거를 리포트에 남겼다.
-- [ ] 리포트가 `_sdd/implementation/<YYYY-MM-DD>_plan_review_<slug>.md`에 저장됐다.
-- [ ] findings-first 구조와 `Critical / High / Medium / Low` severity를 사용했다.
-- [ ] 6개 smell checklist를 모두 점검했다.
+- [ ] 6개 smell을 **각각 점검**했고 결과가 §2 Smell Checklist에 6행 모두 status(PASS/WARN/FAIL/UNKNOWN)로 반영됐다 — 점검 누락 smell이 없다 (finding 0이어도 점검은 수행).
 - [ ] Decision and Assumption Review가 모호성, 대안, 확신도, 사용자 확인 필요 여부를 점검했다.
+
+**리포트 산출물** — 결과가 어떻게 정리·저장됐는가:
+
+- [ ] findings-first 구조와 `Critical / High / Medium / Low` severity를 사용했다.
 - [ ] 각 finding이 smell category, severity, evidence, affected plan surface, principle link, recommended plan change를 포함한다.
 - [ ] Critical/High finding은 implementation blocker로 표시하고, Medium/Low는 advisory로 표시했다.
-- [ ] plan/spec/code 파일은 수정하지 않았다.
+- [ ] 리포트가 `_sdd/implementation/<YYYY-MM-DD>_plan_review_<slug>.md`에 저장됐다.
 - [ ] Recommendations 자체도 Minimum-Code 원칙을 따른다.
 - [ ] re-review mode면 새 리포트를 만들지 않고 기존 리포트의 `Current Status` 갱신 + `Iteration History` append(직전 대비 resolved/still-open/new)로 처리했다.
+- [ ] plan/spec/code 파일은 수정하지 않았다.
 
 ## Hard Rules
 
