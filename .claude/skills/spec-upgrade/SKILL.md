@@ -25,6 +25,7 @@ version: 1.10.1
 - [ ] `AGENTS.md`가 하네스 템플릿(§0~§5) 기준으로 존재한다 (부재/부분존재 시 SDD-HARNESS 마커 멱등 병합으로 생성/보강).
 - [ ] `CLAUDE.md`가 `→ AGENTS.md 참조` 마커 포인터 블록을 가진다 (부재 시 생성, 기존 파일이면 prepend).
 - [ ] 병합 결과 `AGENTS.md`·`CLAUDE.md`에 하네스와 별개의 중복 `## SDD란` 블록이 남지 않는다 (기존 산출물 흡수·제거, SDD 무관 사용자 내용은 보존).
+- [ ] `.gitignore`에 `SDD-WORKSPACE` 마커 블록이 존재한다 (부재/부분존재 시 process artifact ignore를 멱등 병합).
 
 ## SDD Lens
 
@@ -110,7 +111,7 @@ version: 1.10.1
 - truly useful guide/reference/Strategic Code Map만 조건부로 남김
 - stale하거나 exhaustive한 file tree / component catalog는 global 본문으로 보존하지 않음
 
-### Step 6: Harness Merge (AGENTS.md / CLAUDE.md)
+### Step 6: Harness Merge (AGENTS.md / CLAUDE.md / .gitignore)
 
 작업 하네스(`AGENTS.md`)가 하네스 템플릿(`references/agents-harness-template.md`) 기준으로 존재하도록 SDD-HARNESS 마커 기반 멱등 병합을 적용한다. spec-upgrade 자체에는 `## SDD란` 같은 삽입 로직이 없다. 여기서 만나는 기존 `## SDD란` 블록은 spec-upgrade가 만든 게 아니라 **과거 spec-create 부트스트랩으로 생긴 소비 repo의 산출물**이며, 이 step은 그것을 삭제 로직 제거가 아니라 **병합 시 하네스 슬롯으로 흡수**한다.
 
@@ -128,6 +129,23 @@ version: 1.10.1
 
 병합 후 `AGENTS.md`·`CLAUDE.md` 어디에도 하네스와 별개의 중복 `## SDD란` 블록이 남지 않아야 한다.
 
+`.gitignore` 병합 규칙:
+
+process artifact 디렉토리는 커밋하지 않는다(커밋되는 `_sdd`는 `spec/`·`guides/`·`env.md`). `.gitignore`에 아래 `SDD-WORKSPACE` 마커 블록을 멱등 병합한다 — 부재면 생성, 마커 없으면 파일 끝에 append(기존 규칙 보존), 마커 블록 존재면 그 블록만 교체(멱등). 마커 밖 사용자 규칙은 건드리지 않는다.
+
+```gitignore
+# SDD-WORKSPACE:START — process artifact는 로컬 전용(커밋 제외)
+_sdd/discussion/
+_sdd/drafts/
+_sdd/implementation/
+_sdd/pipeline/
+_sdd/pr/
+_sdd/work_log/
+# SDD-WORKSPACE:END
+```
+
+env.md 비밀값 경고는 하네스 §2에 포함돼 있어 AGENTS.md 병합으로 함께 반영된다(별도 처리 불필요).
+
 ### Step 7: Validate
 
 아래를 확인한다.
@@ -138,6 +156,7 @@ version: 1.10.1
 - implementation inventory를 그대로 옮겨 적지 않았는가
 - Step 1 경계 판정을 어기고 rewrite 문제를 upgrade로 덮지 않았는가
 - `AGENTS.md`가 하네스(§0~§5) 마커 블록을 가지고, `CLAUDE.md`가 포인터 마커 블록을 가지며, 하네스와 별개의 중복 `## SDD란` 블록이 남지 않았는가
+- `.gitignore`가 `SDD-WORKSPACE` 마커 블록으로 process artifact를 ignore하는가
 
 ## Output Contract
 
@@ -148,7 +167,7 @@ version: 1.10.1
 - thin global model gap과 조치
 - global에 남긴 판단과 밖으로 내린 정보
 - 축약 또는 supporting surface 이동된 old inventory 항목
-- 하네스 병합 결과(AGENTS.md/CLAUDE.md 생성·prepend·마커 교체 여부, 흡수·제거된 legacy `## SDD란`/중복 항목)
+- 하네스 병합 결과(AGENTS.md/CLAUDE.md/.gitignore 생성·prepend·마커 교체 여부, 흡수·제거된 legacy `## SDD란`/중복 항목)
 - 남은 구조 문제와 후속 추천
 
 ## Error Handling

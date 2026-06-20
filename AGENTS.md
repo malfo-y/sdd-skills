@@ -16,6 +16,7 @@
 - 이 저장소는 전통적 테스트/빌드 프레임워크가 없다(마크다운·SKILL 자산 repo). 검증은 슬래시 커맨드 실제 호출 + 문서/스킬 변경은 `git diff --check`·diff·grep·review가 유효한 검증이다
 - Execute → Verify 필수 (review-only로 닫지 않고 fix/re-review 또는 잔여 이슈 보고로 마무리)
 - 커밋/PR: Conventional Commits(`/git` 스킬) · 코드/스킬이 global spec과 어긋나면 코드보다 spec을 먼저 갱신
+- ⚠️ `_sdd/env.md`는 커밋되는 파일이다 — 비밀값(API 키·토큰·비밀번호)을 적지 말 것(환경변수/secret manager로 관리).
 
 ## 3. SDD 워크플로우
 이 repo는 SDD를 따른다. 단계 순서:
