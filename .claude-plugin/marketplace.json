@@ -18,6 +18,7 @@
         "./.claude/skills/discussion",
         "./.claude/skills/feature-draft",
         "./.claude/skills/git",
+        "./.claude/skills/goal-init",
         "./.claude/skills/guide-create",
         "./.claude/skills/implementation",
         "./.claude/skills/implementation-plan",
