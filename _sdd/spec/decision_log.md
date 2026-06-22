@@ -1,5 +1,25 @@
 # Decision Log
 
+## 2026-06-22 - `goal-init` 스킬 추가(`/goal` 조건 + 4파일 실행 하네스 생성기)
+
+### Context
+
+네이티브 `/goal` 루프(조건 충족까지 매 턴 자동 반복하는 평가자 기반 루프)를 잘 쓰려면 (1) 도구 없이 transcript만으로 판정 가능한 자족적 완료조건, (2) 가설 발산·실험·검증 메커니즘, (3) 검증 흔적을 대화에 surface, (4) 종료 후 회고가 필요한데 사용자가 수동으로 갖추기 어려웠다. 가장 가까운 선례 `ralph-loop-init`은 외부 bash `while-true` 루프 + 컨테이너 격리 + exit-code 머신 판정 모델이라 `/goal`의 네이티브 턴 루프와 실행 모델이 근본적으로 다르다.
+
+### Decision
+
+1. **신규 스킬 `goal-init` 추가**: discussion식 대화형 단일 스킬(신규 agent 없음)로 Claude(`.claude/skills/goal-init/`)·Codex(`.codex/skills/goal-init/`) 두 디렉토리에 작성하고 `marketplace.json` `plugins[0].skills` 배열에 Claude 경로를 등록한다(`agents` 배열 불변).
+2. **산출물 경로 계약**: 실행 시 `_sdd/goal/<YYYY-MM-DD>_<slug>/`에 4파일(`goal.md`/`experiments.md`/`journal.md`/`report.md`)을 생성하고, 사용자가 검토 후 직접 걸 조건 문자열을 제시한다.
+3. **불변식 고정**: (a) 평가자 자족성 — 조건 완료부(`DONE WHEN`/`CONSTRAINTS`/`STOP`)는 도구 없이 transcript만으로 판정 가능·4,000자 이하, 루프 행동(HOW)은 `goal.md`의 `Loop Protocol`로 분리, (b) 비발동 — 스킬은 `/goal`을 직접 발동하지 않는다, (c) 런타임 분리 — 조건 본문은 런타임 독립이고 실행법만 각 스킬이 자기 런타임 것을 기재(구조까지만 미러, 실행법 미러 강제 없음), (d) ralph 잔재 부재 — 하네스에 bash 루프/`run.sh`/state phase머신/컨테이너/별도 verification 파일이 없다(`/goal` 네이티브 턴 루프 스코프).
+4. **ralph 정신만 차용**: append-only journal·conclusion-first report·적합성 hard gate 정신만 차용하고 bash 루프·`run.sh`·컨테이너 격리는 차용하지 않는다. `ralph-loop-init`은 건드리지 않는다.
+5. **ralph-loop 대체 deferred**: `/goal` 기반 ralph 대체는 v1 스코프 밖 장기 과제로 보류한다(`/goal`은 턴 기반·평가자 도구 미사용이라 컨테이너 장시간 비대화형 머신검증을 메커니즘상 대체하기 어렵다).
+
+### Consequences
+
+- 사용자가 `/goal`에 걸 자족적 조건과 실행 하네스를 한 번의 대화로 셋업할 수 있어 무인 루프 토큰 낭비(영원히 미충족 판정) 위험이 줄어든다.
+- 신규 agent가 없어 `agents` 배열·nesting 모델은 불변이고, 카탈로그 표면만 한 항목 늘어난다.
+- ralph 실행 모델을 차용하지 않으므로 `ralph-loop-init`과 독립적으로 유지되며, 둘의 대체/브리지는 별도 결정으로 남는다.
+
 ## 2026-06-20 - 소비 repo 워크스페이스 commit 정책(process artifact gitignore + env.md 비밀값 경고)
 
 ### Context

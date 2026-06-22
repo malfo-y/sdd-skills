@@ -36,6 +36,7 @@
 | Component | Purpose | Why | Primary Source | Notes |
 |-----------|---------|-----|----------------|-------|
 | `discussion` | 구조화된 의사결정 토론을 진행한다 | 설계 선택과 open question을 추적 가능하게 만든다 | `.claude/skills/discussion/SKILL.md`<br>`.codex/skills/discussion/SKILL.md` | 풀 스킬. 양 플랫폼 모두 대화형 입력 사용. 결과는 `_sdd/discussion/<YYYY-MM-DD>_discussion_<slug>.md`에 저장한다 |
+| `goal-init` | 네이티브 `/goal` 루프에 걸 자족적 조건 문자열과 4파일 실행 하네스를 한 번의 대화로 셋업한다 | `/goal`을 잘 쓰려면 평가자 자족 완료조건·발산 메커니즘·검증 surface·회고가 필요한데 수동 셋업이 어렵다 | `.claude/skills/goal-init/SKILL.md`<br>`.codex/skills/goal-init/SKILL.md` | discussion식 대화형 단일 스킬(신규 agent 없음). 실행 시 `_sdd/goal/<YYYY-MM-DD>_<slug>/`에 4파일(`goal.md`/`experiments.md`/`journal.md`/`report.md`)을 생성하고 사용자가 검토 후 직접 걸 조건 문자열을 제시한다(스킬은 `/goal`을 직접 발동하지 않음). 조건 완료부(`DONE WHEN`/`CONSTRAINTS`/`STOP`)는 도구 없이 transcript만으로 판정 가능·4,000자 이하이고 루프 행동(HOW)은 `goal.md`의 `Loop Protocol`로 분리한다. 조건 본문은 런타임 독립, 실행법만 각 스킬이 자기 런타임 것을 기재. 하네스에 bash 루프·`run.sh`·state머신·컨테이너는 없다(`/goal` 네이티브 턴 루프 스코프). ralph-loop 대체는 deferred |
 | `ralph-loop-init` | 장기 실행 프로세스용 자동화 디버그 루프를 만든다 | 반복 실험/테스트 환경을 표준화한다 | `.claude/agents/ralph-loop-init-agent.md`<br>`.claude/skills/ralph-loop-init/SKILL.md` | wrapper -> agent 패턴 |
 | `git` | 변경을 의미 단위로 정리해 커밋/브랜치 작업을 돕는다 | AI가 만든 변경을 의도 단위로 정리해야 한다 | `.claude/skills/git/SKILL.md` | Claude Code 전용 |
 | `spec-snapshot` | 스펙 상태를 타임스탬프 스냅샷으로 보존한다 | 원본을 건드리지 않고 특정 시점 상태나 번역본을 관리한다 | `.claude/skills/spec-snapshot/SKILL.md`<br>`.codex/skills/spec-snapshot/SKILL.md` | snapshot/export 성격 |

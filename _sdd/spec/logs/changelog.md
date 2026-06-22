@@ -2,6 +2,14 @@
 
 > 이 파일은 `_sdd/spec/main.md`의 버전별 변경 기록이다.
 
+#### v4.3.3 (2026-06-22)
+
+- **신규 스킬 `goal-init`을 컴포넌트 카탈로그에 동기화**: `components.md` Discussion & Utilities 테이블에 `goal-init` 행을 신설(discussion 행 바로 뒤). Purpose/Why/Source/Notes에 계약·불변식만 compact하게 반영 — discussion식 대화형 단일 스킬(신규 agent 없음), 산출물 경로 `_sdd/goal/<YYYY-MM-DD>_<slug>/` 4파일(`goal.md`/`experiments.md`/`journal.md`/`report.md`), 평가자 자족성(완료부 transcript-only 판정·4,000자 이하, HOW는 `goal.md` Loop Protocol 분리), 비발동(스킬은 `/goal` 직접 발동 안 함), 런타임 분리, ralph 잔재 부재(bash 루프/run.sh/state머신/컨테이너 없음), ralph-loop 대체 deferred. feature-level execution detail(조건 슬롯 포맷·하네스 필드·self-check 절차)은 SKILL.md/references 원문에 두고 카탈로그엔 옮기지 않음(thin 유지).
+- **main 본문·Guardrail 무변경**: 단일 스킬 추가는 Repo-wide Invariant Test(2+ feature 공통·코드로 복구 불가·repo-level reasoning 오류 유발)를 통과하지 못하므로 Guardrails/Key Decisions에 반영하지 않고 카탈로그 surface에만 등재. `agents` 배열 불변이라 nesting/dispatch 모델 서술도 무변경.
+- **decision_log 신규 entry**: "`goal-init` 스킬 추가(`/goal` 조건 + 4파일 실행 하네스 생성기)" 결정 기록(존재·산출물 경로 계약·4불변식·ralph 정신만 차용·ralph 대체 deferred). 과거 entry는 무손상 보존.
+- **범위 경계**: 구현 surface(8 신규 + 1 수정 파일: Claude/Codex SKILL.md·skill.json·references·examples + `marketplace.json` 등록)는 이미 working tree에 적용됨(evidence: implementation report V1~V6 전부 MET, 코드 직접 확인). 본 sync는 global spec surface lag만 보정한다.
+- 입력: `_sdd/drafts/2026-06-22_feature_draft_goal_init_skill.md` Part 1(`spec-update-todo-input` 마커), `_sdd/implementation/2026-06-22_implementation_report_goal_init_skill.md`(evidence), 코드 직접 확인.
+
 #### v4.3.2 (2026-06-20)
 
 - **소비 repo 워크스페이스 commit 정책을 spec surface에 동기화**: 부트스트랩 스킬(spec-create / spec-upgrade)이 소비 repo `.gitignore`에 `SDD-WORKSPACE` 마커 블록을 멱등 병합해 process artifact 6종(`_sdd/{discussion,drafts,implementation,pipeline,pr,work_log}/`)을 로컬 전용으로 두고, 커밋되는 `_sdd`를 `spec/`·`guides/`·`env.md`로 좁히며, `_sdd/env.md`에 비밀값 금지 경고를 다는 변경(이미 working tree에 적용됨)을 spec surface에 반영.
