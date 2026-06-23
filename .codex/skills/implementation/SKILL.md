@@ -123,26 +123,9 @@ task-set 확보 직후, 사용자에게 다음을 채팅으로 알림한다 (질
 | 일부만 있음 | 있는 태스크만 병렬 후보, 나머지 순차 |
 | 없음 | 추론 시도 → 저확신 시 순차 fallback |
 
-#### 3.2 그룹 파생 알고리즘
+#### 3.2 그룹 파생 규칙
 
-unblocked task에 대해 dependency 기반 규칙 + file-disjoint 가드레일을 적용한다:
-
-```
-function deriveGroups(unblockedTasks):   # 모두 같은 phase
-    groups = []
-    remaining = sort(unblockedTasks, by=[priority DESC, id ASC])
-    while remaining not empty:
-        group = []
-        usedFiles = {}
-        for task in remaining:
-            # dependency edge 없음 (planner가 의미적 충돌을 dep로 인코딩)
-            # AND Target Files disjoint (file-disjoint 가드레일)
-            if no dependency edge between task and group
-               AND task.targetFiles ∩ usedFiles == ∅:
-                group.append(task); usedFiles ∪= task.targetFiles
-        groups.append(group); remaining -= group
-    return groups
-```
+unblocked task를 `priority DESC, id ASC`로 정렬한 뒤, 앞에서부터 한 그룹(wave)에 greedy로 담는다. 이미 담긴 task와 **(a) dependency edge가 없고 (b) Target Files가 disjoint**한 task만 추가한다 — planner가 의미적 충돌을 dependency로 인코딩하므로 dependency edge가 권위 있는 신호다. 한 패스에서 못 담은 나머지는 다음 그룹에 같은 규칙으로 반복한다.
 
 > 대규모 Phase (10+ unblocked tasks): 그룹 크기를 최대 5로 제한.
 
