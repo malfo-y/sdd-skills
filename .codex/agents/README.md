@@ -27,6 +27,7 @@
 - `spec-review-agent`
 - `spec-sync-agent`
 - `ralph-loop-init-agent`
+- `test-author-agent`
 
 ## Inline Writing
 

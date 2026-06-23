@@ -20,6 +20,12 @@
 
 ## 2. Step Contract
 
+step은 세 종류다.
+
+- **custom-agent step**: `Claude subagent_type` 단일 호출. autopilot이 leaf 하나를 spawn하고 결과를 수거한다.
+- **dispatch-controller step**: `Step kind: implementation-dispatch-controller`로 선언한다. 단일 호출이 아니라 autopilot이 task 단위로 fan-out하는 dispatch controller이며, wave별 3단계(Stage A/B/C) 실행으로 전개된다. 상세는 아래 `Implementation Dispatch Controller`를 따른다.
+- **로컬 step**: autopilot 부모가 직접 실행하는 skill 또는 명령. 별도 agent를 spawn하지 않는다.
+
 각 custom-agent step은 아래 4개 필드를 반드시 가진다.
 
 - `Claude subagent_type`
@@ -48,6 +54,7 @@
 - `sdd-skills:spec-sync-agent`
 - `sdd-skills:implementation-plan-agent`
 - `sdd-skills:plan-review-agent`
+- `sdd-skills:test-author-agent`
 - `sdd-skills:implementation-agent`
 - `sdd-skills:implementation-review-agent`
 - `sdd-skills:simplicity-review-agent`
@@ -60,7 +67,7 @@
 - legacy alias는 canonical 이름으로 normalize하지 않는다. Step verification은 해당 orchestrator를 reject하고 canonical `subagent_type`으로 regenerate하도록 요구해야 한다.
 - `implementation` step은 단독 완료 step이 아니다. 같은 범위의 `Review-Fix Loop`와 required validation gate가 즉시 뒤따르며, gate가 닫히기 전에는 다음 downstream step으로 진행할 수 없다.
 - review가 포함된 path에서는 `implementation`과 `implementation-review`를 항상 subagent step으로 사용한다. autopilot 부모가 local inline implementation/review로 대체하면 안 된다.
-- downstream `implementation` step이 `implementation-plan` output을 소비하면, 해당 step은 `Execution Mode: phase-iterative`와 `Phase Source`를 함께 선언해야 한다.
+- downstream `implementation` step(`Step kind: implementation-dispatch-controller`)이 `implementation-plan` output을 소비하면, 해당 step은 `Execution Mode: phase-iterative`와 `Phase Source`를 함께 선언해야 한다.
 - 오케스트레이터의 `출력 파일`에 적힌 future artifact는 planned output이며, 현재 실행 중인 step만 자신의 출력물을 materialize할 수 있다.
 - **Invariant (Phase Source 출처)**: `Execution Mode: phase-iterative`가 선언된 step의 `Phase Source`는 반드시 `implementation-plan` output이어야 한다. `feature-draft` 산출물을 `Phase Source`로 사용하면 Step 5 verification에서 reject하고 `implementation-plan` step을 파이프라인에 삽입한다.
 - **Invariant (multi-phase ⇒ implementation-plan 의무)**: 오케스트레이터 생성 시 multi-phase 실행으로 판단되면, planning precedence에서 `implementation-plan`을 반드시 포함한다. feature-draft → implementation 직행은 single-phase 경로에 한정한다.
@@ -70,13 +77,23 @@
 
 ### Implementation Dispatch Controller
 
-오케스트레이터의 `sdd-skills:implementation-agent` step은 feature 또는 phase 전체를 한 leaf에 넘기는 단일 호출이 아니라, autopilot이 실행할 **dispatch controller contract**로 해석한다. controller는 task 단위 `sdd-skills:implementation-agent` leaf 호출을 파생한다.
+구현 step은 `Step kind: implementation-dispatch-controller`로 선언한다(단일 custom-agent step으로 선언하지 않는다). 이 kind는 단일 leaf 호출이 아니라 autopilot이 task 단위로 fan-out하는 dispatch controller이며, 선언 자체가 controller 의미를 담는다(재해석 불필요). controller는 task 단위 leaf 호출을 파생한다.
 
-task-level `sdd-skills:implementation-agent` leaf는 **단일 task만 TDD로 수행**하며 sub-agent를 spawn하지 않는다. 따라서 autopilot은 phase를 한 leaf에 통째로 넘기지 않고, autopilot 자신이 orchestrator로서 task 단위로 fan-out한다.
+이 kind는 **Stage agents** 3단계로 전개된다.
 
-- **초기 구현 step**: autopilot이 phase의 task를 dependency 기반으로 **병렬 dispatch 그룹**으로 파생하고("같은 phase + dependency edge 없음 + Target Files disjoint → 병렬"; planner가 의미적 충돌을 dependency로 인코딩하므로 trivial 규칙), 그룹 내 task마다 `implementation-agent` leaf를 **task당 dispatch**한다. 병렬 불가·저확신이면 순차로 하나씩 dispatch한다(file-disjoint 가드레일 + "확신 없으면 순차").
+- **Stage A** = `sdd-skills:test-author-agent` (테스트만 작성, 구현 금지)
+- **Stage B** = orchestrator 소유 RED 게이트 (agent 없음 — autopilot 자신이 테스트를 실행해 RED 증거 캡처·falsifiability 점검)
+- **Stage C** = `sdd-skills:implementation-agent` (고정 실패 테스트를 입력으로 GREEN→REFACTOR만 수행 — **impl-agent는 RED를 자체 수행하지 않는다**)
+
+task-level leaf는 sub-agent를 spawn하지 않는다. 따라서 autopilot은 phase를 한 leaf에 통째로 넘기지 않고, autopilot 자신이 orchestrator로서 task 단위로 fan-out한다.
+
+- **초기 구현 step**: autopilot이 phase의 task를 dependency 기반으로 **병렬 dispatch 그룹(wave)**으로 파생하고("같은 phase + dependency edge 없음 + Target Files disjoint → 병렬"; planner가 의미적 충돌을 dependency로 인코딩하므로 trivial 규칙), 각 wave를 다음 **3단계**로 dispatch한다:
+  - (a) **test-author 병렬 dispatch**: wave 내 task마다 `sdd-skills:test-author-agent` leaf를 동시 dispatch한다 (테스트만 작성, 구현 금지).
+  - (b) **RED 게이트 (orchestrator 소유)**: test-author가 작성한 테스트를 실제 실행해 실패(RED) 증거를 캡처하고 falsifiability를 점검한다(AC 관찰 동작 assertion 실패여야 함; import/collection-only 실패는 RED 미충족으로 test-author 재dispatch). 이 게이트를 닫기 전에는 (c)를 dispatch하지 않는다.
+  - (c) **impl 병렬 dispatch**: RED 게이트를 통과한 task마다 `sdd-skills:implementation-agent` leaf를 동시 dispatch한다. 입력으로 고정 실패 테스트 + RED 증거를 전달하며, leaf는 GREEN→REFACTOR만 수행한다.
+- **cross-wave 중첩 없음**: wave G의 (c) impl과 wave H의 (a) test-author를 동시에 돌리는 cross-wave 중첩은 도입하지 않는다. 3단계 파이프라인은 wave **내부**에만 적용하고, wave끼리는 한 wave가 GREEN 게이트를 닫은 뒤 다음 wave를 시작하는 순차다. 병렬 불가·저확신이면 동일 3단계 흐름을 task별로 하나씩 순차 dispatch한다(file-disjoint 가드레일 + "확신 없으면 순차").
 - **용어 구분 (2-group 중첩)**: 여기서 **병렬 dispatch 그룹**(phase 내부, task 단위 동시 dispatch)은 §6의 **Checkpoint 리뷰 그룹**(phase 경계, review-fix gate 단위)과 다른 개념이다 — 병렬 dispatch 그룹은 "무엇을 동시에 dispatch하나", Checkpoint 리뷰 그룹은 "언제 review-fix gate를 닫나"를 정한다. 둘은 중첩 관계다.
-- **progress/report 소유**: leaf는 결과(SUCCESS/PARTIAL/FAILED·TDD표·파일·테스트·UNPLANNED_DEPENDENCY·발견)만 반환한다. **실행 주체인 autopilot**이 `_sdd/implementation/<YYYY-MM-DD>_implementation_progress_<slug>.md`·`*_implementation_report_<slug>.md`를 canonical 경로·소비 필드로 작성·소유한다(downstream `spec-sync`·`spec-summary` 호환 유지).
+- **progress/report 소유**: leaf는 결과(SUCCESS/PARTIAL/FAILED·TDD표·파일·테스트·UNPLANNED_DEPENDENCY·CONTRACT_MISMATCH·발견)만 반환한다. `CONTRACT_MISMATCH`는 impl-agent가 고정 실패 테스트의 가정 인터페이스 계약이 틀렸다고 보면(테스트를 수정하지 않고) 보고하는 항목으로, autopilot이 test-author 재dispatch 여부를 판정한다. **실행 주체인 autopilot**이 `_sdd/implementation/<YYYY-MM-DD>_implementation_progress_<slug>.md`·`*_implementation_report_<slug>.md`를 canonical 경로·소비 필드로 작성·소유한다(downstream `spec-sync`·`spec-summary` 호환 유지).
 
 ### Planning Producer Review Gate
 
@@ -131,6 +148,7 @@ planning producer step은 `sdd-skills:feature-draft-agent`와 `sdd-skills:implem
   - `re-review = sdd-skills:implementation-review-agent`
   - `re-review = sdd-skills:simplicity-review-agent`
   - `fix = sdd-skills:implementation-agent`
+  - **fix 정책 (finding 종류별 분기)**: correctness finding(동작 버그)은 test-first로 처리한다 — 먼저 그 버그를 노출하는 실패 테스트를 작성(`sdd-skills:test-author-agent` dispatch + orchestrator RED 게이트로 실패 확인)한 뒤 고정 실패 테스트 + RED 증거를 입력으로 `sdd-skills:implementation-agent` leaf를 재dispatch해 fix한다. simplicity/refactor finding은 실패 테스트 없이 `sdd-skills:implementation-agent` leaf로 직접 fix한다. 어느 경우든 `fix = sdd-skills:implementation-agent` 순차 매핑은 유지된다.
 
 추가 규칙:
 

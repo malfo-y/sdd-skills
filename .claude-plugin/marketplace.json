@@ -47,7 +47,8 @@
         "./.claude/agents/implementation-agent.md",
         "./.claude/agents/ralph-loop-init-agent.md",
         "./.claude/agents/spec-review-agent.md",
-        "./.claude/agents/spec-sync-agent.md"
+        "./.claude/agents/spec-sync-agent.md",
+        "./.claude/agents/test-author-agent.md"
       ]
     }
   ]

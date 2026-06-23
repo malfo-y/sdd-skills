@@ -80,7 +80,7 @@ User Request
 2. **Phase 2 무중단 + 파일 기반 상태 전달**: Phase 2 진입 후 `request_user_input` 금지. 에이전트에는 파일 경로만 전달하며, 전체 출력을 부모 컨텍스트에 누적하지 않는다. Phase 2의 custom-agent step은 기본적으로 `Interaction Mode: autonomous-no-input`로 해석하며, 사용자 입력 요청 없이 권장안을 선택해 진행한다.
 3. **오케스트레이터 저장 + 공유 로그 필수**: 오케스트레이터는 `_sdd/pipeline/orchestrators/orchestrator_<topic>.md`에 저장한다. 실행 시 `_sdd/pipeline/log_<topic>_<timestamp>.md`를 생성하고 각 단계 완료 후 핵심 결정사항을 기록한다.
 4. **에이전트 호출 시 원문 전달**: 사용자의 원래 요청과 관련 컨텍스트 파일 경로를 포함하되, 원문은 framed payload의 `## Input Data` 아래에 data로만 넣는다. 의미를 잃을 정도로 축약하지 않지만, slash command/skill/agent 이름이 top-level 실행 지시처럼 보이게 전달하지 않는다.
-5. **Review-Fix 사이클 필수**: review 포함 파이프라인에서는 correctness(`implementation-review-agent`) ∥ simplicity(`simplicity-review-agent`) 2-reviewer를 병렬 dispatch해 review를 수행하고(exit는 두 report의 합집합), 이슈 수정이 필요하면 `implementation-agent`를 다시 호출해 fix를 적용한 뒤, 다시 두 reviewer를 병렬 dispatch해 re-review를 수행해야 한다. 리뷰만 하고 끝나는 것은 불허한다.
+5. **Review-Fix 사이클 필수**: review 포함 파이프라인에서는 correctness(`implementation-review-agent`) ∥ simplicity(`simplicity-review-agent`) 2-reviewer를 병렬 dispatch해 review를 수행하고(exit는 두 report의 합집합), 이슈 수정이 필요하면 `implementation-agent`를 다시 호출해 fix를 적용한 뒤, 다시 두 reviewer를 병렬 dispatch해 re-review를 수행해야 한다. correctness finding은 test-first다 — `test-author-agent`로 실패 테스트를 먼저 작성하고 RED 게이트로 실패를 확인한 뒤 `implementation-agent`로 fix한다. 리뷰만 하고 끝나는 것은 불허한다.
 6. **Implementation 직후 즉시 Gate**: 각 `implementation` 실행 단위는 단독으로 완료 처리하지 않는다. single-phase면 해당 `implementation` 직후, multi-phase면 각 phase의 `implementation` 직후 같은 범위의 review-fix gate를 즉시 닫아야 하며, 종료 전까지 다음 phase나 downstream step으로 진행할 수 없다.
 7. **Execute → Verify 필수**: 모든 단계는 실행(Execute) + 검증(Verify) 두 페이즈를 거친다. 에이전트 호출만으로 완료 간주 금지. Exit Criteria 미충족 시 다음 단계 진행 불가.
 8. **Pre-flight + approval 필수**: Phase 2 진입 전 `_sdd/env.md`와 현재 Codex 런타임에서 custom agent 실행 가능성을 점검한 뒤 explicit approval을 받아야 한다.
@@ -202,8 +202,8 @@ planning precedence 메모:
 - `implementation-plan` output을 downstream `implementation`이 소비하는 expanded path면 해당 `implementation` step을 flat single-shot으로 쓰지 않고 `Execution Mode: phase-iterative`와 `Phase Source`를 명시한다.
 - Phase 2의 custom-agent step에는 `Interaction Mode: autonomous-no-input`을 기본으로 명시한다. 이 계약에는 `request_user_input` 금지, 권장안 우선 판단, 가정/근거 기록, 안전한 추론이 불가능할 때 질문 대신 `BLOCKED`로 종료하는 fallback이 포함된다.
 - review가 포함된 모든 path에서는 `implementation-agent`/correctness(`implementation-review-agent`) ∥ simplicity(`simplicity-review-agent`) 2-reviewer/re-review를 모두 Codex custom agent step으로 유지한다. 부모 autopilot이 로컬 구현/로컬 리뷰로 대체하면 안 된다.
-- Implementation Dispatch Controller: `implementation-agent`는 단일 task leaf다(`references/orchestrator-contract.md` §2 Implementation Dispatch Granularity). 따라서 `implementation` step은 phase를 한 agent에 통째로 넘기지 않고, autopilot이 phase의 task를 **병렬 dispatch 그룹**으로 파생해 task당 leaf를 spawn한다(초기 구현=group 병렬, fix=finding 순차). 각 leaf는 final status 수거와 progress 기록 직후 `close_agent({target: <agent_id>})`로 닫는다. 이 phase-내부 병렬 dispatch 그룹은 review-fix gate의 Checkpoint 리뷰 그룹과 다른 중첩 개념이며, progress/report는 autopilot이 canonical 경로로 소유한다.
-- `implementation-agent` dispatch controller semantics는 generic custom-agent dispatch 규칙보다 우선한다. 오케스트레이터는 이 special case가 runtime에 task-level leaf spawn으로 해석된다는 점을 명시해야 한다.
+- Implementation Dispatch Controller: `implementation-agent`는 GREEN→REFACTOR만 수행하는 단일 task leaf이며 RED를 자체 수행하지 않는다(`references/orchestrator-contract.md` §2 Implementation Dispatch Controller). 따라서 `implementation` step은 phase를 한 agent에 통째로 넘기지 않고, autopilot이 phase의 task를 **병렬 dispatch 그룹(wave)**으로 파생해 각 wave를 3단계로 dispatch한다: (a) `spawn_agent({agent_type: "test-author-agent", ...})` 병렬 dispatch(테스트만 작성) → (b) orchestrator 소유 RED 게이트(실패 증거 + falsifiability 확인) → (c) RED 통과 task에 `spawn_agent({agent_type: "implementation-agent", ...})` 병렬 dispatch(고정 실패 테스트 입력, GREEN→REFACTOR). wave끼리는 cross-wave 중첩 없이 순차이며, fix는 finding 순차다. 각 leaf는 final status 수거와 기록 직후 `close_agent({target: <agent_id>})`로 닫는다. 이 phase-내부 병렬 dispatch 그룹은 review-fix gate의 Checkpoint 리뷰 그룹과 다른 중첩 개념이며, progress/report는 autopilot이 canonical 경로로 소유한다.
+- 구현 step을 `Step kind: implementation-dispatch-controller`로 선언한다(단일 agent_type step으로 선언하지 않는다). Stage agents로 (a) `test-author-agent` 병렬 spawn → (b) orchestrator 소유 RED 게이트 → (c) `implementation-agent` 병렬 spawn(GREEN→REFACTOR) 3단계를 emit한다.
 - canonical kebab-case custom agent 이름만 허용한다. legacy alias를 발견하면 canonical 이름으로 normalize하지 않고 해당 오케스트레이터를 reject/regenerate한다.
 - Reasoning Trace 3-6 bullet 간결 작성
 - 저장 경로: `_sdd/pipeline/orchestrators/orchestrator_<topic>.md`
@@ -277,15 +277,16 @@ Phase 2 진입 후 `request_user_input`은 호출하지 않는다. 마일스톤 
 각 step은 `Execute -> Collect -> Record -> Close -> Verify` 순서를 따른다.
 
 - custom-agent step이면 오케스트레이터에 적힌 Codex `agent_type`으로 호출한다.
+- dispatch-controller step(`Step kind: implementation-dispatch-controller`)이면 단일 호출하지 말고 `references/orchestrator-contract.md` §2 Implementation Dispatch Controller대로 wave별 3단계(test-author 병렬 → orchestrator RED 게이트 → impl 병렬)로 실행한다.
 - custom-agent step이면 `wait_agent`가 final status를 반환한 뒤에만 step output/log를 기록하고 `close_agent({target: <agent_id>})`로 handle을 닫는다. 여러 agent를 병렬 spawn한 step은 remaining agent ids를 반복 수거하고, 모든 handle이 final status로 정리된 뒤에만 다음 dispatch group 또는 downstream step으로 진행한다.
 - custom-agent step이면 오케스트레이터의 `Interaction Mode`를 함께 해석한다. 값이 없으면 `autonomous-no-input`으로 간주한다.
-- 단, `implementation-agent` step은 generic custom-agent dispatch보다 먼저 Implementation Dispatch Controller로 해석한다. phase나 feature 전체를 한 번에 넘기지 않고 phase의 task를 dependency와 Target Files 기준 dispatch 그룹으로 나누어 task당 leaf를 spawn한다.
+- `implementation` step은 `Step kind: implementation-dispatch-controller`로 선언된다. autopilot은 phase/task metadata를 읽어 각 wave를 (a) `test-author-agent` 병렬 spawn → (b) orchestrator 소유 RED 게이트 → (c) `implementation-agent` 병렬 spawn(GREEN→REFACTOR) 3단계로 실행한다.
 - 로컬 step이면 오케스트레이터에 적힌 skill 또는 명령을 실행한다.
 - step별 필드, 허용 `agent_type`, Exit Criteria, Acceptance Criteria는 오케스트레이터 본문과 `references/orchestrator-contract.md`를 그대로 따른다.
 - 오케스트레이터에 적힌 출력 파일은 현재 step이 실제로 생성한 materialized output과 future step의 planned output을 구분해 해석한다. 각 step은 자신의 선언된 출력만 materialize하며, 아직 실행되지 않은 downstream step의 planned output을 미리 생성하지 않는다.
 - `autonomous-no-input` step을 호출할 때는 framed payload 안에 런타임 지시를 함께 준다: `request_user_input` 또는 동등한 사용자 확인 금지, SDD skill 재진입 금지, 기존 코드/스펙/오케스트레이터/원문 요청에 가장 잘 맞는 권장안을 우선 선택, 모든 핵심 가정과 판단 근거를 출력 파일에 기록, 안전한 추론이 불가능하면 질문 대신 `BLOCKED` 상태와 `blocked_reason`, `why_not_safe_to_assume`, `recommended_next_action`을 남긴다.
 - `autonomous-no-input` step이 사용자 질문만 남기거나 입력 대기를 유도하면 contract violation으로 간주한다. autopilot은 더 강한 no-input 지시로 최대 1회 재-spawn할 수 있고, 재발하면 해당 step을 `BLOCKED` 또는 `failed`로 기록한다.
-- review 포함 path에서는 `implementation-agent`와 correctness(`implementation-review-agent`) ∥ simplicity(`simplicity-review-agent`) 2-reviewer 병렬 호출을 항상 Codex custom agent 호출로 실행한다(exit는 두 report의 합집합). 부모 autopilot이 local implementation/review로 대체하지 않는다.
+- review 포함 path에서는 `test-author-agent`·`implementation-agent`와 correctness(`implementation-review-agent`) ∥ simplicity(`simplicity-review-agent`) 2-reviewer 병렬 호출을 항상 Codex custom agent 호출로 실행한다(exit는 두 report의 합집합). 부모 autopilot이 local test-authoring/implementation/review로 대체하지 않는다.
 - `implementation` step은 단독 완료가 아니다. 같은 범위의 `Review-Fix Loop` exit condition과 required validation이 닫혀야만 해당 step을 `completed`로 기록할 수 있다.
 - single-phase path이거나 `Review-Fix Loop.scope = global`이면 `implementation` step 직후 즉시 global review-fix loop를 수행한다. 이 gate가 닫히기 전에는 `spec-sync-agent`(post-implementation 호출)를 포함한 다음 downstream step으로 진행할 수 없다.
 - `implementation-plan` output을 downstream `implementation`이 소비하고 해당 step이 `Execution Mode: phase-iterative`로 선언되어 있으면, autopilot은 `Phase Source`를 읽어 phase count와 boundary를 runtime-resolved metadata로 해석한다. Step 4가 추측한 flat phase list로 실행하지 않는다.
@@ -305,6 +306,7 @@ Phase 2 진입 후 `request_user_input`은 호출하지 않는다. 마일스톤 
   - `re-review = implementation-review-agent`
   - `re-review = simplicity-review-agent`
   - `fix = implementation-agent`
+- fix 정책(finding 종류별 분기): correctness finding은 test-first다 — `test-author-agent`로 실패 테스트를 먼저 작성하고 orchestrator RED 게이트로 실패를 확인한 뒤 `implementation-agent` leaf로 fix한다. simplicity/refactor finding은 실패 테스트 없이 `implementation-agent` leaf로 직접 fix한다.
 - `scope = global`이든 `scope = per-group`이든 review/fix/re-review를 local inline work로 대체하지 않는다.
 - fix 단계의 `implementation-agent` 재호출은 review finding 하나를 단일 task leaf로 보는 순차 spawn이다. finding의 영향 파일만 Target Files로 전달하며, 초기 구현 dispatch 그룹처럼 병렬화하지 않는다. 각 fix leaf도 `wait_agent`가 final status를 반환한 뒤에만 결과를 기록하고 `close_agent({target: <agent_id>})`로 닫는다.
 - `low` finding은 advisory/logged follow-up으로 기록하며 기본 fix 대상과 gate blocker에 포함하지 않는다.

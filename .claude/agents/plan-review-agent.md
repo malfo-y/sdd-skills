@@ -88,7 +88,7 @@ stale 판단 예시:
   - Acceptance Criteria가 프로세스 완료가 아니라 **기능 동작 기준**인가
   - Reasoning Trace가 규모 판단, 스킬 조합, spec 전략, 테스트 전략 선택을 실제로 정당화하는가 (형식적 나열이 아닌가)
   - planning precedence 준수 — feature-draft 스킵에 유효한 근거가 있는가, multi-phase면 implementation-plan이 포함되는가
-  - 각 implementation step 직후 review-fix gate가 immediate completion gate로 해석 가능한가, dispatch controller semantics가 명시되는가
+  - 각 implementation step 직후 review-fix gate가 immediate completion gate로 해석 가능한가, 구현 step이 `Step kind: implementation-dispatch-controller`로 선언되는가(단일 subagent_type/agent_type step으로 선언되지 않는가)
   - 산출물 handoff 정합성 — 각 step의 입력이 upstream step의 출력 또는 실존 artifact와 연결되는가
   - Generation Boundary — future artifact를 미리 materialize하도록 지시하는 step이 없는가
   - `_sdd/spec/` 직접 수정 step이 없는가 (spec-sync 위임 준수)
