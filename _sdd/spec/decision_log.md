@@ -1,5 +1,33 @@
 # Decision Log
 
+## 2026-06-23 - test-first를 orchestrator 소유 RED 게이트로 falsifiable 실행 불변식화(test-author/impl 분리 + group-pipeline)
+
+### Context
+
+`implementation` 경로는 문서상 100% test-first(RED→GREEN→REFACTOR)를 지시했지만, 유일한 hard-gate인 Verification Gate가 "코드 변경 후 테스트 재실행+통과 출력"에만 걸려 있어 test-after로도 완벽히 통과됐다. RED 단계의 실패 증거를 아무도 요구하지 않았고, leaf의 TDD표는 자기보고라 구현 완료 후 backfill 가능했다. 결과적으로 test-first가 falsifiable 산출물로 못박혀 있지 않아 모델이 저항 최소 경로(구현→테스트→통과→TDD표 backfill)로 새어나갔다.
+
+### Decision
+
+1. **test/impl 분리 + orchestrator 소유 RED 게이트**: 테스트 작성과 구현을 별도 leaf로 분리한다 — 신규 `test-author-agent`(테스트만)와 GREEN 전용으로 재정의된 `implementation-agent`(고정 실패 테스트를 최소코드로 통과, RED 자체 수행 안 함). 그 사이에 orchestrator가 소유하는 RED 게이트(새 테스트 실행→실패 확인→RED 증거 캡처 + falsifiability 점검)를 강제로 끼워 test-first를 검증 가능한 실행 불변식으로 만든다. RED 증거는 leaf 자기보고 TDD표가 아니라 orchestrator가 캡처한 외부 산출물이다(I1 집행 지점).
+2. **상류 결정/하류 실행 분리**: 설계 결정(Contract/Invariant Delta·Validation Plan `V*`)은 plan에서 상류로 확정되고, test-author와 impl-agent는 같은 pinned 계약을 실행만 한다. plan 포맷은 무변경(test-author가 기존 산출물을 입력으로 소비하고 테스트 경로는 자체 추론).
+3. **테스트는 impl에 대해 고정 + CONTRACT_MISMATCH**: impl-agent는 고정 실패 테스트를 수정하지 않고, 가정 계약이 틀렸다고 보면 `CONTRACT_MISMATCH: {test} - {문제} - {제안 계약}`으로 보고하며 orchestrator가 test-author 재dispatch를 판정한다(기존 `UNPLANNED_DEPENDENCY` 보고 구조 차용, 새 메커니즘 미도입). 약한 테스트 통과로 퇴화하는 것을 막는 안전장치. 입력에 고정 테스트/RED 증거가 없으면 자체 RED 작성을 금지하고 `BLOCKED`로 보고(orchestrated-only, test-after 재개방 방지).
+4. **RED 게이트 falsifiability 관찰 규칙**: AC 관찰 동작에 대한 assertion/check 단계 실패만 유효한 RED로 인정하고, 순수 import/collection/syntax 단계 실패로만 빨간 테스트는 RED 미충족으로 test-author 재작성으로 돌린다. 구분 불가 언어/프레임워크는 그 사실을 RED 증거에 기록하고 리뷰 판정으로 강등.
+5. **wave 내부 파이프라인, wave 간 순차**: 2-stage 파이프라인은 wave 내부에 한정하고 cross-wave 중첩은 도입하지 않는다(prose orchestration 스케줄러 복잡도 회피 — YAGNI 기각). graceful degradation의 canonical surface는 `implementation` SKILL RED 게이트 서술이며 다른 surface는 이를 참조한다(I4 drift 방지).
+6. **agent 등록 + autopilot 1급 Step kind**: canonical agent set에 `test-author-agent`를 추가(`implementation-agent`는 GREEN 전용)하고, autopilot 구현 step을 1급 Step kind `implementation-dispatch-controller`로 선언한다(subagent_type 오버로드 아님). controller는 wave별 3단계(test-author 병렬 → RED 게이트 → impl 병렬)로 fan out한다. review-fix gate fix 정책은 correctness finding=test-first, simplicity/refactor finding=직접 fix.
+
+### Consequences
+
+- global spec main.md Guardrails에 test-first 실행 불변식·RED 게이트·테스트 고정·CONTRACT_MISMATCH·wave 파이프라인·graceful degradation이 thin하게 고정되고, 결정 테이블에 `implementation test-first` 행이 추가됐다. dispatch controller 서술이 1급 Step kind로 갱신됐다(v4.4.1→4.5.0).
+- components.md에 `test-author-agent` 행 신설, `implementation` 행이 2-stage + RED/GREEN 게이트로, `sdd-autopilot` 행이 dispatch-controller Step kind로 갱신됐고 Strategic Code Map/Platform Notes가 정렬됐다.
+- claude/codex 6쌍 미러 정합, autopilot 계약 정합, marketplace agents 9→10 등록 완료.
+
+### References
+
+- feature draft: `_sdd/drafts/2026-06-23_feature_draft_test_first_group_pipeline.md` (Part 1)
+- implementation report: `_sdd/implementation/2026-06-23_implementation_report_test_first_group_pipeline.md` (READY — 10 task, V1~V9 MET, 2-reviewer gate 통과)
+- commit: `aa9c328` "feat(skills): test-first group-pipeline orchestration", `6cdbb48` "refactor(implementation): deriveGroups 의사코드를 규칙 지시문으로 슬림화"
+- validation: 코드 직접 확인 — `test-author-agent`(.md/.toml) 존재, `implementation-agent` GREEN 전용(RED 자체수행 0건), `implementation/SKILL.md` v3.4.0 RED 게이트, autopilot orchestrator-contract `implementation-dispatch-controller` Step kind, marketplace agents=10
+
 ## 2026-06-22 - `goal-init` 스킬 추가(`/goal` 조건 + 4파일 실행 하네스 생성기)
 
 ### Context

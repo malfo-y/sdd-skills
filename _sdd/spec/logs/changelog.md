@@ -2,6 +2,17 @@
 
 > 이 파일은 `_sdd/spec/main.md`의 버전별 변경 기록이다.
 
+#### v4.5.0 (2026-06-23)
+
+- **test-first를 falsifiable 실행 불변식으로 Guardrails에 반영**: implementation-scoped 구현의 test-first가 leaf 자기보고가 아니라 orchestrator가 집행하는 실행 불변식임을 review/validation guardrail에 새 불릿 그룹으로 명시. 테스트 작성(`test-author-agent`)과 구현(`implementation-agent` GREEN→REFACTOR 전용)을 분리하고 그 사이에 orchestrator 소유 RED 게이트(실패 증거 캡처 + falsifiability 점검)를 닫은 뒤에만 구현을 dispatch함을 담음. RED 증거는 orchestrator가 캡처한 외부 산출물(자기보고 TDD표 아님). falsifiability 관찰 규칙(assertion/check 단계 실패만 유효 RED, import/collection-only 실패는 미충족→재작성), 테스트 고정 + `CONTRACT_MISMATCH`(약한 테스트 통과 퇴화 방지), 상류 결정/하류 실행 분리, wave 내부 파이프라인·wave 간 순차(cross-wave 중첩 없음), graceful degradation canonical surface(=`implementation` SKILL RED 게이트)를 thin하게 고정.
+- **review-fix gate fix 정책 명시**: correctness finding(동작 버그)=test-first, simplicity/refactor finding=직접 fix로 처리(모든 finding을 test-first 파이프라인에 강제하지 않음)를 기존 fix 경로 불릿에 추가.
+- **결정 테이블 `implementation test-first` 행 신설**: test-author/impl 분리 + orchestrator 소유 RED 게이트 + 테스트 고정(CONTRACT_MISMATCH) + wave 파이프라인을 유지 결정으로 고정.
+- **dispatch controller 서술 1급 Step kind로 갱신**: generated orchestrator 구현 step을 `implementation-dispatch-controller` 1급 Step kind로 선언(subagent_type 오버로드 아님)하고 wave별 3단계(test-author 병렬 → RED 게이트 → impl 병렬)로 fan out함을 "운영상 반드시 유지할 구조적 판단"에 반영.
+- **supporting surface 갱신**: `components.md` — `test-author-agent` 행 신설, `implementation` 행을 2-stage + RED/GREEN 게이트(v3.4.0)로, `sdd-autopilot` 행을 dispatch-controller Step kind로 갱신, Strategic Code Map의 Implementation orchestrator/leaf 행과 Platform Notes split을 2-stage로 정렬.
+- **decision_log 신규 entry**: "test-first를 orchestrator 소유 RED 게이트로 falsifiable 실행 불변식화" 결정 기록(6개 결정·근거). 과거 entry는 무손상 보존.
+- **범위 경계**: 구현 surface(`test-author-agent` 신규 + `implementation-agent` GREEN 전용 재정의 + `implementation` SKILL v3.4.0 + autopilot 계약/SKILL/sample + marketplace registry, claude/codex 6쌍 미러)는 이미 머지됨(commit `aa9c328`/`6cdbb48`, report READY V1~V9 MET, 코드 직접 확인). 본 sync는 global spec surface lag만 보정하며 RED 게이트 판정 규칙 상세·Stage 입력 필드 같은 feature-level execution detail은 SKILL/agent 원문에 두고 main 본문은 thin 유지(canonical surface 단일성 유지).
+- 입력: `_sdd/drafts/2026-06-23_feature_draft_test_first_group_pipeline.md` Part 1(`spec-update-todo-input` 마커), `_sdd/implementation/2026-06-23_implementation_report_test_first_group_pipeline.md`(evidence), 코드 직접 확인(commit `aa9c328`/`6cdbb48`).
+
 #### v4.3.3 (2026-06-22)
 
 - **신규 스킬 `goal-init`을 컴포넌트 카탈로그에 동기화**: `components.md` Discussion & Utilities 테이블에 `goal-init` 행을 신설(discussion 행 바로 뒤). Purpose/Why/Source/Notes에 계약·불변식만 compact하게 반영 — discussion식 대화형 단일 스킬(신규 agent 없음), 산출물 경로 `_sdd/goal/<YYYY-MM-DD>_<slug>/` 4파일(`goal.md`/`experiments.md`/`journal.md`/`report.md`), 평가자 자족성(완료부 transcript-only 판정·4,000자 이하, HOW는 `goal.md` Loop Protocol 분리), 비발동(스킬은 `/goal` 직접 발동 안 함), 런타임 분리, ralph 잔재 부재(bash 루프/run.sh/state머신/컨테이너 없음), ralph-loop 대체 deferred. feature-level execution detail(조건 슬롯 포맷·하네스 필드·self-check 절차)은 SKILL.md/references 원문에 두고 카탈로그엔 옮기지 않음(thin 유지).

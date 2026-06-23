@@ -2,8 +2,8 @@
 
 > Markdown 기반 skill bundle로 AI 에이전트의 Spec-Driven Development 워크플로우를 Claude Code와 Codex에서 공통 계약으로 실행한다.
 
-**Spec Version**: 4.4.1
-**Last Updated**: 2026-06-22
+**Spec Version**: 4.5.0
+**Last Updated**: 2026-06-23
 **Status**: Approved
 **Canonical Role**: current thin global spec
 
@@ -72,7 +72,11 @@ SDD Skills는 이 문제를 `SKILL.md = 실행 가능한 프롬프트`라는 관
   - implementation-scoped review-gate(`implementation` 스킬 phase/final gate, autopilot global/per-group/final-integration gate)는 단일 reviewer가 아니라 표적이 disjoint한 두 read-only leaf reviewer를 병렬 dispatch한다: correctness(`implementation-review-agent` — 정확성/AC/버그/보안/spec drift)와 simplicity(`simplicity-review-agent` — 동작-불변 형태: 중복·죽은 코드·단일 사용처 추상화·도달 불가 에러 처리·과잉압축). gating exit는 두 report의 합집합 `critical=high=medium=0`이다. simplicity 렌즈는 `spec-review`로 확장하지 않는다(코드 형태 품질이라 spec 문서 품질에 부적합)
   - simplicity finding은 falsifiable-only gating을 따른다: 동작 변화 없이 더 단순한 동등 형태를 구체적으로 제시할 수 있는 객관적 위반만 Medium 이상(gating)이고, 주관적 취향은 Low(advisory)다. 병렬화는 벽시계만 줄이고 수렴은 보장하지 않으므로 gating을 falsifiable finding으로 한정하는 규칙이 수렴성의 핵심이다
   - simplicity 렌즈는 implementation-scoped review-gate에 더해 PR review(`pr-review` 스킬)에도 적용한다 — `pr-review`는 자체 correctness 검증 ∥ `simplicity-review-agent` 병렬 dispatch의 PR 차원 직교 2-렌즈 review이며, 표적은 disjoint하다(correctness=PR/spec 정합·보안·테스트·verdict + 정확성-중복, simplicity=동작-불변 형태 + 형태-중복). simplicity reviewer는 read-only leaf로 자기 리포트(`_sdd/implementation/...`)만 write하고 pr-review는 자기 리포트(`_sdd/pr/...`)만 write한다. simplicity finding은 verdict를 자동 강제하지 않고 falsifiable gating finding(Medium+)이 REQUEST CHANGES rationale에 기여하며 주관(Low)은 Suggested Improvements로 흐른다 — pr-review는 인간 리뷰 보조이므로 implementation gate의 합집합 자동 exit를 적용하지 않는다. Medium=gating/Low=advisory 분류는 위 falsifiable-only gating 규칙을 그대로 재사용한다
-  - fix는 producer/leaf agent 재dispatch로 수행하고 orchestrator 스킬은 산출물을 직접 rewrite하지 않는다(산출물 단일 작성자). 두 reviewer의 finding은 합산되어 기존 단일 fix 경로(`implementation-agent` 순차 재dispatch)로 처리되며, simplicity reviewer도 코드/리포트 외 산출물을 직접 수정하지 않는다
+  - fix는 producer/leaf agent 재dispatch로 수행하고 orchestrator 스킬은 산출물을 직접 rewrite하지 않는다(산출물 단일 작성자). 두 reviewer의 finding은 합산되어 기존 단일 fix 경로(`implementation-agent` 순차 재dispatch)로 처리되며, simplicity reviewer도 코드/리포트 외 산출물을 직접 수정하지 않는다. review-fix gate에서 correctness finding(동작 버그)은 test-first(실패 테스트 먼저→fix)로, simplicity/refactor finding은 직접 fix로 처리한다(모든 finding을 test-first 파이프라인에 강제하지 않는다)
+- implementation-scoped 구현의 test-first는 leaf 자기보고가 아니라 orchestrator가 집행하는 실행 불변식이다. 테스트 작성과 구현을 별도 leaf로 분리하고(`test-author-agent`가 테스트만, `implementation-agent`는 GREEN→REFACTOR 전용), 그 사이에 orchestrator가 소유하는 RED 게이트를 닫은 뒤에만 구현을 dispatch한다
+  - RED 게이트는 새 테스트 실행→실패 확인→RED 증거 캡처 + falsifiability 점검을 수행한다. RED 증거는 leaf 자기보고 TDD표가 아니라 orchestrator가 캡처한 외부 산출물이다. falsifiability는 관찰 규칙으로 한정한다 — AC 관찰 동작에 대한 assertion/check 단계 실패만 유효한 RED로 인정하고, 순수 import/collection/syntax 단계 실패로만 빨간 테스트는 RED 미충족으로 test-author 재작성으로 돌린다(통과 전 구현 leaf 미dispatch)
+  - 테스트는 impl에 대해 고정된다 — 구현 leaf는 주어진 실패 테스트를 최소코드로 통과시키며 테스트를 수정하지 않고, 가정 계약이 틀렸다고 보면 `CONTRACT_MISMATCH`로 보고해 orchestrator가 test-author 재dispatch를 판정한다(약한 테스트 통과로 퇴화 방지). 설계 결정(Contract/Invariant Delta·Validation Plan `V*`)은 plan에서 상류로 확정되고 두 leaf는 같은 pinned 계약을 실행만 한다
+  - 2-stage 파이프라인은 wave 내부에 한정하고 cross-wave 중첩은 도입하지 않는다(wave 간은 순차). 테스트 프레임워크 부재 자산은 grep/구조 점검 acceptance check를 RED artifact로 쓰고 프레임워크/`_sdd/env.md` 부재 시 `UNTESTED` 표기 경로를 유지한다. 이 graceful-degradation 분기 기준의 canonical surface는 `implementation` 스킬의 RED 게이트 서술이며 다른 surface는 이를 참조한다
 - `sdd-autopilot`이 생성하는 orchestrator는 planning producer output을 downstream 입력으로 소비하기 전에 `plan-review` gate를 통과시켜야 한다
   - `feature-draft-agent` / `implementation-plan-agent` output이 gate를 통과하지 못하면 finding을 implementation fix task로 변환하지 않고 producer output을 reject/regenerate 대상으로 돌린다
 - `sdd-autopilot` 생성 orchestrator의 agent invocation은 canonical 이름만 사용한다
@@ -119,6 +123,7 @@ SDD Skills의 설계는 다음 층으로 나뉜다.
 | producer 스킬 자체 품질 gate | `feature-draft`/`implementation-plan`/`implementation`이 review→fix→re-review loop를 직접 소유(orchestrator). fix=producer/leaf agent 재dispatch, 산출물 단일 작성자 | autopilot 없이 직접 호출되는 경로에서도 산출물이 reviewer gate를 통과하도록 보장한다. producer/reviewer agent는 sub-agent를 spawn하지 못하므로 loop orchestration은 메인 루프(스킬)가 소유해야 한다 |
 | autopilot producer handoff gate | generated orchestrator가 `feature-draft-agent` / `implementation-plan-agent` output을 `plan-review-agent`로 검증한 뒤 downstream 소비 | autopilot이 wrapper skill을 우회해 custom agent를 직접 호출해도 직접 호출 경로와 같은 planning quality gate를 유지한다 |
 | multi-phase quality gate | `per-group` review-fix (Checkpoint boundary) + adaptive `final integration review`; missing non-final `Checkpoint`는 reject/regenerate | 의미 있는 group 단위로 review depth를 높이고, review 비용과 latency를 줄이면서 cross-group regression은 adaptive final review로 커버한다 |
+| implementation test-first | 테스트 작성(`test-author-agent`)과 구현(`implementation-agent` GREEN→REFACTOR 전용)을 분리하고 그 사이에 orchestrator 소유 RED 게이트(실패 증거 캡처 + falsifiability 점검)를 둔다. 테스트는 impl에 대해 고정(이의는 `CONTRACT_MISMATCH`로만). 2-stage는 wave 내부 한정, wave 간 순차 | test-first를 leaf 자기보고가 아니라 falsifiable 실행 불변식으로 못박아 test-after 새는 경로를 차단하고, 약한 테스트 통과 퇴화를 막는다 |
 | 직교 2-렌즈 review 렌즈 | correctness ∥ simplicity(`simplicity-review-agent`) 직교 2-reviewer 병렬 dispatch를 두 진입점에 적용: implementation review-gate(correctness=`implementation-review-agent`, gating exit는 두 report 합집합 `critical=high=medium=0`)와 PR review(`pr-review` 자체 correctness 렌즈, verdict 자동 강제 없이 Medium+ → REQUEST CHANGES rationale 기여). 양쪽 모두 simplicity는 falsifiable-only gating | 정확성과 동작-불변 형태 품질을 disjoint 표적으로 분리해 한 reviewer에 과부하 없이 검출 범위를 넓히고, 벽시계는 병렬로 유지하면서 falsifiable 한정으로 수렴성을 보장한다. PR review는 인간 보조라 합집합 자동 exit 대신 rationale 기여로 합류시킨다 |
 | spec 구조 | thin global spec + execution-focused temporary spec | 장기 기준과 일회성 실행 정보를 분리해 drift를 줄인다 |
 | spec sync 진입점 | 단일 `spec-sync` 스킬 + `spec-sync-agent`. 구현 전/후 구분은 별도 스킬이 아니라 evidence-driven status 분류로 처리 | 두 진입점(`spec-update-todo`/`spec-update-done`) 이분 진입을 제거해 운영 표면을 줄이면서, 코드+validation evidence 유무로 동작이 자동 적응한다 |
@@ -131,7 +136,7 @@ SDD Skills의 설계는 다음 층으로 나뉜다.
 - draft/plan/review skill chain은 `_sdd/` 산출물을 다음 단계 입력 계약으로 사용한다
 - temporary delta는 global truth를 반복 복사하지 않고, 변경 범위와 검증 정보만 다룬다
 - multi-phase implementation plan은 review-fix scope와 phase exit 기준을 실제 execution control로 제공해야 한다
-- generated orchestrator에서 `implementation-agent` / `sdd-skills:implementation-agent` step은 feature/phase 전체 leaf call이 아니라 autopilot이 task-level leaf calls로 fan out하는 dispatch controller다
+- generated orchestrator에서 구현 step은 1급 Step kind `implementation-dispatch-controller`로 선언한다(단일 custom-agent step / subagent_type 오버로드 아님). 이 controller는 feature/phase 전체 leaf call이 아니라 autopilot이 wave별 3단계(test-author 병렬 dispatch → orchestrator 소유 RED 게이트 → impl 병렬 dispatch)로 task-level leaf calls를 fan out한다
 - skill-defined output artifact는 dated slug + glob-based discovery를 canonical로 사용하고, legacy uppercase/fixed-name artifact는 transition fallback으로만 읽는다
 - canonical model 변경은 definition 문서와 workflow 문서에서 먼저 선언하고, 이후 generator/consumer/docs가 따라간다
 - supporting docs는 global decision-bearing truth를 복제하지 않고, reference 역할만 수행한다
