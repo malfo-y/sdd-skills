@@ -1,5 +1,24 @@
 # Decision Log
 
+## 2026-07-01 - drafts/work_log를 소비 repo 커밋 자산으로 승격(process artifact 6종→4종)
+
+### Context
+
+2026-06-20 정책은 `_sdd/drafts/`(feature draft)와 `_sdd/work_log/`를 process artifact로 묶어 `.gitignore`로 로컬 전용에 뒀다. 그러나 운영 중 feature draft가 사실상 소비 repo의 구현 로그(무엇을·왜 바꿨는지의 영속 기록) 역할을 하는 것이 관찰됐고, work_log도 같은 진행 기록 성격이라 로컬에만 두면 이력 가치가 소실된다.
+
+### Decision
+
+1. **커밋 경계 재조정**: 소비 repo에서 커밋되는 `_sdd`를 `spec/`·`guides/`·`env.md`에 더해 `drafts/`·`work_log/`까지로 넓힌다. 로컬 전용 process artifact는 4종(`_sdd/{discussion,implementation,pipeline,pr}/`)으로 좁힌다.
+2. **`SDD-WORKSPACE` 마커 블록 갱신**: 두 부트스트랩 스킬(spec-create 3d / spec-upgrade Step 6)과 harness 템플릿 §2의 marker block에서 `_sdd/drafts/`·`_sdd/work_log/` 줄을 제거한다. 멱등 병합 메커니즘 자체는 불변이라, 재실행 시 마커 블록만 새 4종으로 교체된다.
+3. **메타 repo 예외 유지**: 본 sdd_skills repo는 여전히 process artifact 전부를 history 가치로 커밋하는 예외다(소비 repo 정책과 별개).
+4. **2026-06-20 결정 #1 대체**: 커밋 경계 재조정으로 2026-06-20 결정 #1을 본 entry가 대체한다(같은 entry의 #2 멱등 병합·#3 env.md 경고·#4 메타 repo 예외는 그대로 유효).
+
+### Consequences
+
+- 소비 repo의 feature draft/work log가 영속 이력으로 남아 구현 근거 추적이 가능해진다.
+- env.md 비밀값 경고(2026-06-20 #3)와 멱등 병합 규칙(#2)은 그대로 유효하다.
+- harness 템플릿 4개 미러가 byte-identical을 유지하도록 §2 한 줄을 동일 편집했다.
+
 ## 2026-06-23 - test-first를 orchestrator 소유 RED 게이트로 falsifiable 실행 불변식화(test-author/impl 분리 + group-pipeline)
 
 ### Context
@@ -56,7 +75,7 @@
 
 ### Decision
 
-1. **워크스페이스 commit 경계 고정**: 소비 repo에서 커밋되는 `_sdd`는 `spec/`·`guides/`·`env.md`뿐이고, process artifact 6종(`_sdd/{discussion,drafts,implementation,pipeline,pr,work_log}/`)은 `.gitignore`로 로컬 전용이다.
+1. **워크스페이스 commit 경계 고정**: 소비 repo에서 커밋되는 `_sdd`는 `spec/`·`guides/`·`env.md`뿐이고, process artifact 6종(`_sdd/{discussion,drafts,implementation,pipeline,pr,work_log}/`)은 `.gitignore`로 로컬 전용이다. *(2026-07-01 결정으로 대체됨: `drafts/`·`work_log/`는 커밋 자산으로 승격, process artifact는 4종으로 축소.)*
 2. **`.gitignore` 멱등 보강**: 두 부트스트랩 스킬이 소비 repo `.gitignore`에 `SDD-WORKSPACE` 마커 블록을 멱등 병합한다 — 부재→생성, 마커 없음→파일 끝 append(기존 규칙 보존), 마커 블록 존재→그 블록만 교체. 마커 밖 사용자 규칙은 건드리지 않는다.
 3. **env.md 비밀값 금지**: `_sdd/env.md`는 커밋되므로 비밀값(API 키·토큰·비밀번호)을 적지 않는다(환경변수/secret manager로 관리). 하네스 템플릿 §2에 경고 1줄을 추가하고 spec-create는 env.md 생성 시 상단에 경고 헤더를 포함한다(spec-upgrade는 하네스 §2 병합으로 자동 반영).
 4. **이 sdd_skills repo 예외**: 본 repo는 스킬 개발 메타 repo라 process artifact를 history 가치로 계속 커밋한다. 위 정책은 소비 repo 생성물 대상이며 본 repo에는 적용하지 않는다.

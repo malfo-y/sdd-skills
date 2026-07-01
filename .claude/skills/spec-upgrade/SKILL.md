@@ -133,16 +133,14 @@ version: 1.10.1
 
 `.gitignore` 병합 규칙:
 
-process artifact 디렉토리는 커밋하지 않는다(커밋되는 `_sdd`는 `spec/`·`guides/`·`env.md`). `.gitignore`에 아래 `SDD-WORKSPACE` 마커 블록을 멱등 병합한다 — 부재면 생성, 마커 없으면 파일 끝에 append(기존 규칙 보존), 마커 블록 존재면 그 블록만 교체(멱등). 마커 밖 사용자 규칙은 건드리지 않는다.
+커밋되는 `_sdd`는 `spec/`·`guides/`·`env.md`·`drafts/`·`work_log/`다(`drafts/`·`work_log/`는 구현 로그 자산). 나머지 process artifact 디렉토리는 커밋하지 않으므로 `.gitignore`에 아래 `SDD-WORKSPACE` 마커 블록을 멱등 병합한다 — 부재면 생성, 마커 없으면 파일 끝에 append(기존 규칙 보존), 마커 블록 존재면 그 블록만 교체(멱등). 마커 밖 사용자 규칙은 건드리지 않는다.
 
 ```gitignore
 # SDD-WORKSPACE:START — process artifact는 로컬 전용(커밋 제외)
 _sdd/discussion/
-_sdd/drafts/
 _sdd/implementation/
 _sdd/pipeline/
 _sdd/pr/
-_sdd/work_log/
 # SDD-WORKSPACE:END
 ```
 

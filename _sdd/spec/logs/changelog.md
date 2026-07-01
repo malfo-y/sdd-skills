@@ -2,6 +2,20 @@
 
 > 이 파일은 `_sdd/spec/main.md`의 버전별 변경 기록이다.
 
+#### v4.5.2 (2026-07-01)
+
+- **`drafts/`·`work_log/`를 소비 repo 커밋 자산으로 승격**: feature draft가 사실상 구현 로그 역할을 하고 work_log도 같은 진행 기록 성격이라, 두 디렉토리를 로컬 전용 process artifact에서 커밋 자산으로 옮겼다. 소비 repo에서 커밋되는 `_sdd`는 `spec/`·`guides/`·`env.md`·`drafts/`·`work_log/`가 되고, 로컬 전용 process artifact는 4종(`_sdd/{discussion,implementation,pipeline,pr}/`)으로 좁혀졌다.
+- **`SDD-WORKSPACE` 마커 블록에서 두 줄 제거**: spec-create(3d)·spec-upgrade(Step 6)의 gitignore marker block과 harness 템플릿 §2 문구에서 `_sdd/drafts/`·`_sdd/work_log/`를 제거했다. 멱등 병합 메커니즘은 불변이라 재실행 시 마커 블록만 새 4종으로 교체된다. harness 템플릿 4개 미러는 byte-identical 유지.
+- **메타 repo 예외 불변**: 본 sdd_skills repo는 여전히 process artifact 전부를 커밋하는 예외이며, 이 repo의 `.gitignore`는 변경 대상이 아니다.
+- **정책 대체 관계**: 이 변경으로 2026-06-20 결정 #1(커밋 경계)이 2026-07-01 결정으로 대체된다(같은 entry의 멱등 병합·env.md 경고·메타 예외는 유효).
+
+#### v4.5.1 (2026-07-01)
+
+- **planning/implementation skill group subagent model override 반영**: Claude Code 쪽 `feature-draft` / `implementation-plan` / `implementation-review` / `implementation` / `plan-review` / `pr-review`는 `--model <sonnet|opus|haiku|fable>`로 `Agent(...)` 호출 model을 override하고, Codex matching skill 6개는 `--model <gpt-5.5|gpt-5.4|gpt-5.4-mini>`와 `--effort <low|medium|high|xhigh>` 분리 옵션으로 `spawn_agent(...)`의 `model` / `reasoning_effort`를 override한다.
+- **기본값 상속 규칙 명시**: model/effort 옵션을 생략하면 세션/agent 기본값을 상속하고 persistent custom agent 정의를 수정하지 않는 per-call override로 고정했다. Codex에서는 `gpt-5.5-high` 같은 결합형 값을 canonical syntax로 받지 않고 `--model gpt-5.5 --effort high` 형태를 사용한다.
+- **README 사용법 추가**: 설치 섹션 뒤에 플랫폼별 subagent model override 예시와 적용 대상 스킬 목록을 추가했다.
+- **범위 경계**: 구현 surface는 이미 커밋됨(commit `67c6b99`, `5b40460`). 본 sync는 global spec과 README surface lag만 보정하며 개별 `spawn_agent` / `Agent` 호출 예시 전체를 중복 확장하지 않는다.
+
 #### v4.5.0 (2026-06-23)
 
 - **test-first를 falsifiable 실행 불변식으로 Guardrails에 반영**: implementation-scoped 구현의 test-first가 leaf 자기보고가 아니라 orchestrator가 집행하는 실행 불변식임을 review/validation guardrail에 새 불릿 그룹으로 명시. 테스트 작성(`test-author-agent`)과 구현(`implementation-agent` GREEN→REFACTOR 전용)을 분리하고 그 사이에 orchestrator 소유 RED 게이트(실패 증거 캡처 + falsifiability 점검)를 닫은 뒤에만 구현을 dispatch함을 담음. RED 증거는 orchestrator가 캡처한 외부 산출물(자기보고 TDD표 아님). falsifiability 관찰 규칙(assertion/check 단계 실패만 유효 RED, import/collection-only 실패는 미충족→재작성), 테스트 고정 + `CONTRACT_MISMATCH`(약한 테스트 통과 퇴화 방지), 상류 결정/하류 실행 분리, wave 내부 파이프라인·wave 간 순차(cross-wave 중첩 없음), graceful degradation canonical surface(=`implementation` SKILL RED 게이트)를 thin하게 고정.

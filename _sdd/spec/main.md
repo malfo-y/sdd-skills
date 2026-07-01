@@ -2,8 +2,8 @@
 
 > Markdown 기반 skill bundle로 AI 에이전트의 Spec-Driven Development 워크플로우를 Claude Code와 Codex에서 공통 계약으로 실행한다.
 
-**Spec Version**: 4.5.0
-**Last Updated**: 2026-06-23
+**Spec Version**: 4.5.2
+**Last Updated**: 2026-07-01
 **Status**: Approved
 **Canonical Role**: current thin global spec
 
@@ -62,7 +62,7 @@ SDD Skills는 이 문제를 `SKILL.md = 실행 가능한 프롬프트`라는 관
   - 직접 호출 경로에서도 자기 산출물 품질 gate가 필요한 producer 스킬(`feature-draft`, `implementation-plan`, `implementation`)은 review-fix loop를 직접 소유하는 orchestrator다
 - persistent handoff는 `_sdd/spec/`, `_sdd/drafts/`, `_sdd/implementation/`, `_sdd/pipeline/`, `_sdd/discussion/`의 canonical 경로를 통해 이뤄진다
 - 새 temporary artifact는 가능한 한 lowercase canonical 경로를 사용하고, skill contract가 dated slug 패턴을 정의한 output surface는 그 형식을 따라야 한다. reader는 legacy uppercase/fixed-name artifact를 fallback으로 읽을 수 있어야 한다
-- 소비 repo에서 커밋되는 `_sdd`는 `spec/`·`guides/`·`env.md`뿐이고, process artifact(`_sdd/{discussion,drafts,implementation,pipeline,pr,work_log}/`)는 `.gitignore`(`SDD-WORKSPACE` 마커 블록)로 로컬 전용이다. `_sdd/env.md`는 커밋되므로 비밀값(API 키·토큰·비밀번호)을 적지 않는다. 단 이 sdd_skills repo는 스킬 개발 메타 repo라 process artifact를 history 가치로 계속 커밋하는 예외다(소비 repo 정책과 별개)
+- 소비 repo에서 커밋되는 `_sdd`는 `spec/`·`guides/`·`env.md`·`drafts/`·`work_log/`이고(`drafts/`·`work_log/`는 구현 로그 자산), 나머지 process artifact(`_sdd/{discussion,implementation,pipeline,pr}/`)는 `.gitignore`(`SDD-WORKSPACE` 마커 블록)로 로컬 전용이다. `_sdd/env.md`는 커밋되므로 비밀값(API 키·토큰·비밀번호)을 적지 않는다. 단 이 sdd_skills repo는 스킬 개발 메타 repo라 process artifact를 history 가치로 계속 커밋하는 예외다(소비 repo 정책과 별개)
 - wrapper-backed skill은 사용자 entrypoint와 artifact contract를 유지해야 하며, 지원하지 않는 동작을 조용히 흉내내지 않는다
   - wrapper는 thin entrypoint로 두고 전체 계약·프로세스는 agent를 단일 소스로 유지한다
   - 입력이 대화에서 태어나는 wrapper는 그 대화 맥락을 agent에 forwarding해야 한다(agent는 파일은 read하지만 대화는 읽지 못한다)
@@ -82,6 +82,9 @@ SDD Skills는 이 문제를 `SKILL.md = 실행 가능한 프롬프트`라는 관
 - `sdd-autopilot` 생성 orchestrator의 agent invocation은 canonical 이름만 사용한다
   - Codex와 Claude 모두 kebab-case agent invocation을 canonical으로 사용한다(Codex `feature-draft-agent`, Claude `sdd-skills:<agent>-agent`)
   - Legacy alias와 Codex underscore custom agent ID는 normalize하지 않고 reject/regenerate한다
+- 계획/구현 계열 스킬의 subagent 모델 override는 런타임별 explicit per-call option으로만 취급한다. 옵션을 생략하면 세션/agent 기본값을 상속하며, persistent custom agent 정의를 수정하지 않는다
+  - Claude Code planning/implementation skill group은 `--model <sonnet|opus|haiku|fable>`로 `Agent(...)` 호출의 model만 override한다
+  - Codex matching skill group은 `--model <gpt-5.5|gpt-5.4|gpt-5.4-mini>`와 `--effort <low|medium|high|xhigh>`를 분리해 `spawn_agent(...)`의 `model` / `reasoning_effort`를 override한다. `gpt-5.5-high` 같은 결합형 값은 canonical syntax가 아니다
 - non-trivial planning은 기본적으로 `feature-draft`에서 시작하고, `implementation-plan`은 phase/task 세분화가 필요할 때만 follow-up expansion으로 붙인다
 - 구현 전 계획 품질 점검이 필요하면 `plan-review`를 review-only gate로 사용한다. 이 gate는 plan을 직접 수정하지 않고 Critical/High finding만 implementation blocker로 표시한다
 - multi-phase plan은 문서 장식이 아니라 execution gate다
@@ -125,6 +128,7 @@ SDD Skills의 설계는 다음 층으로 나뉜다.
 | multi-phase quality gate | `per-group` review-fix (Checkpoint boundary) + adaptive `final integration review`; missing non-final `Checkpoint`는 reject/regenerate | 의미 있는 group 단위로 review depth를 높이고, review 비용과 latency를 줄이면서 cross-group regression은 adaptive final review로 커버한다 |
 | implementation test-first | 테스트 작성(`test-author-agent`)과 구현(`implementation-agent` GREEN→REFACTOR 전용)을 분리하고 그 사이에 orchestrator 소유 RED 게이트(실패 증거 캡처 + falsifiability 점검)를 둔다. 테스트는 impl에 대해 고정(이의는 `CONTRACT_MISMATCH`로만). 2-stage는 wave 내부 한정, wave 간 순차 | test-first를 leaf 자기보고가 아니라 falsifiable 실행 불변식으로 못박아 test-after 새는 경로를 차단하고, 약한 테스트 통과 퇴화를 막는다 |
 | 직교 2-렌즈 review 렌즈 | correctness ∥ simplicity(`simplicity-review-agent`) 직교 2-reviewer 병렬 dispatch를 두 진입점에 적용: implementation review-gate(correctness=`implementation-review-agent`, gating exit는 두 report 합집합 `critical=high=medium=0`)와 PR review(`pr-review` 자체 correctness 렌즈, verdict 자동 강제 없이 Medium+ → REQUEST CHANGES rationale 기여). 양쪽 모두 simplicity는 falsifiable-only gating | 정확성과 동작-불변 형태 품질을 disjoint 표적으로 분리해 한 reviewer에 과부하 없이 검출 범위를 넓히고, 벽시계는 병렬로 유지하면서 falsifiable 한정으로 수렴성을 보장한다. PR review는 인간 보조라 합집합 자동 exit 대신 rationale 기여로 합류시킨다 |
+| subagent model override | planning/implementation skill group의 subagent 호출은 필요할 때만 런타임별 per-call option으로 모델/추론 강도를 override한다. Claude는 `--model` 단일 옵션, Codex는 `--model`과 `--effort` 분리 옵션을 canonical로 둔다 | 기본 세션/agent 설정 상속을 보존하면서 특정 실행만 강도·비용·속도에 맞게 조절할 수 있고, 플랫폼별 tool schema 차이를 숨기지 않아 잘못된 결합형 모델 ID 파싱을 피한다 |
 | spec 구조 | thin global spec + execution-focused temporary spec | 장기 기준과 일회성 실행 정보를 분리해 drift를 줄인다 |
 | spec sync 진입점 | 단일 `spec-sync` 스킬 + `spec-sync-agent`. 구현 전/후 구분은 별도 스킬이 아니라 evidence-driven status 분류로 처리 | 두 진입점(`spec-update-todo`/`spec-update-done`) 이분 진입을 제거해 운영 표면을 줄이면서, 코드+validation evidence 유무로 동작이 자동 적응한다 |
 | Strategic Code Map | optional compact navigation surface | global spec을 inventory로 되돌리지 않으면서 사람과 LLM agent가 entrypoint, contract source, invariant hotspot, extension point, validation surface를 빠르게 찾게 한다 |

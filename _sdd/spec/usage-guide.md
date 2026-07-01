@@ -25,7 +25,8 @@
 - 필요할 때만 supporting file 또는 appendix 분리 — 기본값은 single-file이며, multi-file은 structure rationale이 있을 때만 연다
 - 코드베이스가 있으면 optional `Strategic Code Map` 생성 — 짧으면 `main.md` appendix, 길거나 설명이 필요하면 `components.md` 또는 `code-map.md` 같은 supporting surface에 둔다
 - `_sdd/env.md` 생성 — 환경 설정/실행 방법 가이드. 상단에 비밀값 금지 경고 헤더 포함(커밋되는 파일이므로 API 키·토큰·비밀번호 금지)
-- `.gitignore` 생성 또는 멱등 병합 — `SDD-WORKSPACE` 마커 블록으로 process artifact(`_sdd/{discussion,drafts,implementation,pipeline,pr,work_log}/`)를 ignore한다(커밋되는 `_sdd`는 `spec/`·`guides/`·`env.md`뿐). 부재면 생성, 마커 없으면 파일 끝에 append(기존 규칙 보존), 마커 블록 존재면 그 블록만 교체(멱등)
+- `.gitignore` 생성 또는 멱등 병합 — `SDD-WORKSPACE` 마커 블록으로 process artifact(`_sdd/{discussion,implementation,pipeline,pr}/`)를 ignore한다. 커밋되는 `_sdd`는 `spec/`·`guides/`·`env.md`·`drafts/`·`work_log/`이다(`drafts/`·`work_log/`는 구현 로그 자산).
+  - 병합: 부재면 생성 / 마커 없으면 파일 끝에 append(기존 규칙 보존) / 마커 블록 존재면 그 블록만 교체(멱등)
 - `AGENTS.md` 생성 또는 멱등 병합 — harness 템플릿(§0~§5: 작업 원칙 / 읽는 순서 / 작업 규약·검증 표준 / SDD 워크플로우 순서 / 판단 기준 / 작업 기록(work log)) 기반으로 작업 진입·작업 규약 레이어를 생성한다. §5 work log는 `_sdd/work_log/<yyyy-mm-dd>.md`에 작업 단위를 append하는 on-demand 포렌식 규약이며 §1 읽기 순서에는 포함되지 않는다. 기존 파일이 있으면 `SDD-HARNESS` 마커 블록만 멱등 교체하고 마커 밖 내용은 보존한다
 - `CLAUDE.md` 생성 또는 업데이트 — `→ AGENTS.md 참조` 포인터로 harness를 단일 소스로 가리킨다
 - 사용자에게 요약 테이블 제시 후 전체 스펙 출력
