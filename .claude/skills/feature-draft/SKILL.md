@@ -1,7 +1,8 @@
 ---
 name: feature-draft
 description: This skill should be used when the user asks to "feature draft", "draft feature", "feature plan", "plan feature", "draft and plan", "feature draft parallel", "parallel feature draft", "병렬 기능 초안", "parallel feature plan", or wants to combine requirements gathering, spec patch drafting, and implementation planning with Target Files for parallel execution support.
-version: 4.0.0
+version: 4.1.0
+argument-hint: ["[--model <sonnet|opus|haiku|fable>]"]
 ---
 
 # Feature Draft (Orchestrator)
@@ -11,6 +12,8 @@ version: 4.0.0
 feature-draft는 **입력이 대화에서 태어나는** 스킬이다. agent는 파일은 read하나 이번 세션의 대화는 못 읽으므로, orchestrator가 대화 맥락 digest를 정리해 **생성·fix 라운드 모두에** 전달한다.
 
 ## Process
+
+> **Model override**: `$ARGUMENTS`에 `--model <name>`이 있으면 이 스킬의 모든 `Agent(...)` 호출(생성·fix mode·review 포함)에 `model=<name>`을 추가한다. `<name>`은 `sonnet`·`opus`·`haiku`·`fable` 중 하나여야 하며, 그 외 값이면 dispatch하지 않고 사용자에게 허용값을 안내한다. 미지정 시 model을 생략한다(세션 기본값 상속).
 
 ### Step 1: 맥락 digest 수집
 

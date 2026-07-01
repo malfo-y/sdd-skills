@@ -1,7 +1,8 @@
 ---
 name: implementation-plan
 description: This skill should be used when the user asks to "create an implementation plan", "plan the implementation", "break down this spec", "create a development roadmap", "analyze requirements and create tasks", "create a parallel implementation plan", "plan parallel implementation", "병렬 구현 계획", "create parallel development roadmap", or wants a structured implementation plan with Target Files for parallel execution support.
-version: 4.0.0
+version: 4.1.0
+argument-hint: ["[--model <sonnet|opus|haiku|fable>]"]
 ---
 
 # Implementation Plan (Orchestrator)
@@ -11,6 +12,8 @@ version: 4.0.0
 implementation-plan은 입력이 파일/경로에서 태어난다. 대화 맥락 digest forwarding을 두지 않는다 — agent가 입력 경로를 자체 read한다.
 
 ## Process
+
+> **Model override**: `$ARGUMENTS`에 `--model <name>`이 있으면 이 스킬의 모든 `Agent(...)` 호출(생성·fix mode·review 포함)에 `model=<name>`을 추가한다. `<name>`은 `sonnet`·`opus`·`haiku`·`fable` 중 하나여야 하며, 그 외 값이면 dispatch하지 않고 사용자에게 허용값을 안내한다. 미지정 시 model을 생략한다(세션 기본값 상속).
 
 ### Step 1: 입력 수집
 

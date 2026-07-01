@@ -1,7 +1,8 @@
 ---
 name: implementation
 description: "Use this skill when the user wants to execute an implementation plan, start implementing tasks from a plan, work through a development roadmap, says \"implement the plan\", \"start implementation\", \"execute the plan\", \"work on the tasks\", or explicitly asks for \"implement parallel\", \"parallel implementation\", \"병렬 구현\", \"병렬로 구현\". Uses conflict-aware parallel execution when Target Files are available."
-version: 3.4.0
+version: 3.5.0
+argument-hint: ["[--model <sonnet|opus|haiku|fable>]"]
 ---
 
 # Implementation Orchestrator (Parallel Test-First)
@@ -29,6 +30,7 @@ version: 3.4.0
 - **Regression Iron Rule**: 기존 테스트 실패 시 (1) 테스트 업데이트 + (2) 회귀 방지 테스트 추가를 사용자 확인 없이 자동 수행한다.
 - **Artifact Naming Transition**: 결과 파일은 lowercase canonical 경로에 저장하고, transition 기간에는 plan/progress/report의 legacy uppercase 경로를 입력 fallback으로 허용한다.
 - **Minimum-Code Mandate**: leaf와 후속 검증은 AC가 요구하는 동작만 구현·검증한다. 요청되지 않은 옵션·설정·추상화·에러 처리 추가 금지. 사변적 형용사("future-proof / extensible / configurable")는 task의 Technical Notes에 근거가 명시될 때만 허용. **REFACTOR 단계도 단일 사용처 추상화 도입은 금지한다.**
+- **Subagent Model Override**: `$ARGUMENTS`에 `--model <name>`이 있으면 이 스킬의 모든 `Agent(...)` 호출(test-author·implementation·correctness/simplicity reviewer 포함)에 `model=<name>`을 추가한다. `<name>`은 `sonnet`·`opus`·`haiku`·`fable` 중 하나여야 하며, 그 외 값이면 dispatch하지 않고 사용자에게 허용값을 안내한다. 미지정 시 model을 생략한다(세션 기본값 상속).
 
 ### Target Files 규격
 

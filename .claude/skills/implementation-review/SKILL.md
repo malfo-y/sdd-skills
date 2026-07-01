@@ -1,7 +1,8 @@
 ---
 name: implementation-review
 description: "Use this skill to review implementation progress against the plan, verify acceptance criteria, identify issues, and determine next steps. Triggered by \"review implementation\", \"check progress\", \"verify implementation\", \"what's done\", \"implementation status\", or \"audit the code\". Works with or without an implementation plan (Graceful Degradation)."
-version: 6.0.0
+version: 6.1.0
+argument-hint: ["[--model <sonnet|opus|haiku|fable>]"]
 ---
 
 # Implementation Review (2-Reviewer Orchestrator, Review-only)
@@ -20,6 +21,8 @@ version: 6.0.0
 두 reviewer는 sub-agent를 spawn하지 않는 leaf이고 **입력 코드·plan·spec를 수정하지 않는다** — 각자 자기 리포트만 쓴다. correctness reviewer는 테스트 실행을 위해 `Bash`를, 두 reviewer 모두 자기 리포트 저장을 위해 `Write`를 갖지만(`implementation-review-agent`: `["Read","Write","Glob","Grep","Bash"]`, `simplicity-review-agent`: `["Read","Write","Glob","Grep"]`), 그 write 대상은 각자의 리포트뿐이다. 그리고 두 리포트가 **서로 다른 경로**(`*_implementation_review_*` vs `*_simplicity_review_*`)에 저장돼 write 충돌이 없다. 따라서 한 메시지에서 동시 dispatch해도 안전하다.
 
 ## 실행
+
+> **Model override**: `$ARGUMENTS`에 `--model <name>`이 있으면 두 reviewer `Agent(...)` 호출 모두에 `model=<name>`을 추가한다. `<name>`은 `sonnet`·`opus`·`haiku`·`fable` 중 하나여야 하며, 그 외 값이면 dispatch하지 않고 사용자에게 허용값을 안내한다. 미지정 시 model을 생략한다(세션 기본값 상속).
 
 plan 파일이 있으면 agent가 그것으로 범위를 잡지만(Tier 1), **plan 없이 "방금 구현한 거 리뷰"처럼 호출되면 무엇을·왜 구현했는지·리뷰 범위가 대화에 산다**. agent는 파일은 read하지만 **이번 세션의 대화는 못 읽으므로**, orchestrator가 그 맥락을 정리해 전달한다.
 
