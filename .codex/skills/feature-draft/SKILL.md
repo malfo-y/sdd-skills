@@ -1,7 +1,8 @@
 ---
 name: feature-draft
 description: This skill should be used when the user asks to "feature draft", "draft feature", "feature plan", "plan feature", "draft and plan", "feature draft parallel", "parallel feature draft", "병렬 기능 초안", "parallel feature plan", or wants to combine requirements gathering, spec patch drafting, and implementation planning with Target Files for parallel execution support.
-version: 4.0.0
+version: 4.1.0
+argument-hint: "[--model <gpt-5.5|gpt-5.4|gpt-5.4-mini>] [--effort <low|medium|high|xhigh>]"
 ---
 
 # Feature Draft (Orchestrator)
@@ -15,6 +16,8 @@ feature-draft는 **입력이 대화에서 태어나는** 스킬이다. agent는 
 런타임이 skill-internal agent dispatch를 허용하는 경우, 이 스킬의 직접 호출은 이 스킬 내부의 `feature-draft-agent` / `plan-review-agent` dispatch 범위에 대한 사용자 요청으로 처리한다. dispatch 전에 `spawn_agent`, `wait_agent`, `close_agent`가 active tools에 없으면 `tool_search` query `spawn_agent wait_agent close_agent multi-agent sub-agent`로 multi-agent tools를 먼저 로드한다. 현재 런타임 정책이 명시적 sub-agent 허가를 추가로 요구하면, dispatch 전에 사용자에게 위임 허가를 요청한다.
 
 실제 Codex 호출은 `prompt`가 아니라 `message`를 사용한다. 아래는 호출 형태 예시이며, 실제 실행 순서는 Process를 따른다:
+
+> **Subagent model override**: `$ARGUMENTS`에 `--model <name>`이 있으면 이 스킬의 모든 `spawn_agent(...)` 호출(생성·fix mode·review 포함)에 `model="<name>"`을 추가한다. 허용값은 `gpt-5.5`·`gpt-5.4`·`gpt-5.4-mini`다. `$ARGUMENTS`에 `--effort <level>`이 있으면 모든 `spawn_agent(...)` 호출에 `reasoning_effort="<level>"`을 추가한다. 허용값은 `low`·`medium`·`high`·`xhigh`다. 미지정 필드는 생략해 세션/agent 기본값을 상속한다. `gpt-5.5-high`처럼 model과 effort를 합친 값은 받지 말고 `--model gpt-5.5 --effort high`로 안내한다. 허용값 밖이면 dispatch하지 않고 사용자에게 허용값을 안내한다.
 
 ```text
 spawn_agent({agent_type: "feature-draft-agent", message: "<framed payload: Runtime Boundary + Mode + Input Data>"})

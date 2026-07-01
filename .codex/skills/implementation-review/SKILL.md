@@ -1,7 +1,8 @@
 ---
 name: implementation-review
 description: Use this skill to review implementation progress against the plan, verify acceptance criteria, identify issues, and determine next steps. Triggered by "review implementation", "check progress", "verify implementation", "what's done", "implementation status", or "audit the code". Works with or without an implementation plan (Graceful Degradation).
-version: 6.0.0
+version: 6.1.0
+argument-hint: "[--model <gpt-5.5|gpt-5.4|gpt-5.4-mini>] [--effort <low|medium|high|xhigh>]"
 ---
 
 # Implementation Review (2-Reviewer Orchestrator, Review-only)
@@ -20,6 +21,8 @@ version: 6.0.0
 런타임이 skill-internal agent dispatch를 허용하는 경우, 이 스킬의 직접 호출은 아래 내부 dispatch 범위에 대한 사용자 요청으로 처리한다. dispatch 전에 `spawn_agent`, `wait_agent`, `close_agent`가 active tools에 없으면 `tool_search` query `spawn_agent wait_agent close_agent multi-agent sub-agent`로 multi-agent tools를 먼저 로드한다. 현재 런타임 정책이 명시적 sub-agent 허가를 추가로 요구하면, dispatch 전에 사용자에게 위임 허가를 요청한다.
 
 실제 Codex 호출은 `prompt`가 아니라 `message`를 사용한다. 두 reviewer를 한 번에 spawn한 뒤 `wait_agent`로 둘 다 수거한다:
+
+> **Subagent model override**: `$ARGUMENTS`에 `--model <name>`이 있으면 두 reviewer `spawn_agent(...)` 호출 모두에 `model="<name>"`을 추가한다. 허용값은 `gpt-5.5`·`gpt-5.4`·`gpt-5.4-mini`다. `$ARGUMENTS`에 `--effort <level>`이 있으면 두 reviewer `spawn_agent(...)` 호출 모두에 `reasoning_effort="<level>"`을 추가한다. 허용값은 `low`·`medium`·`high`·`xhigh`다. 미지정 필드는 생략해 세션/agent 기본값을 상속한다. `gpt-5.5-high`처럼 model과 effort를 합친 값은 받지 말고 `--model gpt-5.5 --effort high`로 안내한다. 허용값 밖이면 dispatch하지 않고 사용자에게 허용값을 안내한다.
 
 ```text
 spawn_agent({agent_type: "implementation-review-agent", message: "<framed payload: Runtime Boundary + Mode + Input Data>"})

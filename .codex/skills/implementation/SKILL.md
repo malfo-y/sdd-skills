@@ -1,7 +1,8 @@
 ---
 name: implementation
 description: Use this skill when the user wants to execute an implementation plan, start implementing tasks from a plan, work through a development roadmap, says "implement the plan", "start implementation", "execute the plan", "work on the tasks", or explicitly asks for "implement parallel", "parallel implementation", "병렬 구현", "병렬로 구현". Uses conflict-aware parallel execution when Target Files are available.
-version: 3.4.0
+version: 3.5.0
+argument-hint: "[--model <gpt-5.5|gpt-5.4|gpt-5.4-mini>] [--effort <low|medium|high|xhigh>]"
 ---
 
 # Implementation Orchestrator (Parallel Test-First)
@@ -13,6 +14,8 @@ version: 3.4.0
 런타임이 skill-internal agent dispatch를 허용하는 경우, 이 스킬의 직접 호출은 이 스킬 내부의 `test-author-agent` / `implementation-agent` / `implementation-review-agent` / `simplicity-review-agent` dispatch 범위에 대한 사용자 요청으로 처리한다. dispatch 전에 `spawn_agent`, `wait_agent`, `close_agent`가 active tools에 없으면 `tool_search` query `spawn_agent wait_agent close_agent multi-agent sub-agent`로 multi-agent tools를 먼저 로드한다. 현재 런타임 정책이 명시적 sub-agent 허가를 추가로 요구하면, dispatch 전에 사용자에게 위임 허가를 요청한다.
 
 실제 Codex 호출은 `prompt`가 아니라 `message`를 사용한다. wave 내 Stage A(test-author)와 Stage B(impl)는 각 stage의 leaf를 한 번에 spawn한 뒤 함께 수거한다. review gate는 두 reviewer를 한 번에 spawn한 뒤 함께 수거한다:
+
+> **Subagent model override**: `$ARGUMENTS`에 `--model <name>`이 있으면 이 스킬의 모든 `spawn_agent(...)` 호출(test-author·implementation·correctness/simplicity reviewer 포함)에 `model="<name>"`을 추가한다. 허용값은 `gpt-5.5`·`gpt-5.4`·`gpt-5.4-mini`다. `$ARGUMENTS`에 `--effort <level>`이 있으면 모든 `spawn_agent(...)` 호출에 `reasoning_effort="<level>"`을 추가한다. 허용값은 `low`·`medium`·`high`·`xhigh`다. 미지정 필드는 생략해 세션/agent 기본값을 상속한다. `gpt-5.5-high`처럼 model과 effort를 합친 값은 받지 말고 `--model gpt-5.5 --effort high`로 안내한다. 허용값 밖이면 dispatch하지 않고 사용자에게 허용값을 안내한다.
 
 ```text
 spawn_agent({agent_type: "test-author-agent", message: "<framed payload: Runtime Boundary + Mode + Input Data>"})
