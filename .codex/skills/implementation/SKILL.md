@@ -11,7 +11,7 @@ argument-hint: "[--model <gpt-5.5|gpt-5.4|gpt-5.4-mini>] [--effort <low|medium|h
 
 ## Codex Runtime Adapter
 
-런타임이 skill-internal agent dispatch를 허용하는 경우, 이 스킬의 직접 호출은 이 스킬 내부의 `test-author-agent` / `implementation-agent` / `implementation-review-agent` / `simplicity-review-agent` dispatch 범위에 대한 사용자 요청으로 처리한다. dispatch 전에 `spawn_agent`, `wait_agent`, `close_agent`가 active tools에 없으면 `tool_search` query `spawn_agent wait_agent close_agent multi-agent sub-agent`로 multi-agent tools를 먼저 로드한다. 현재 런타임 정책이 명시적 sub-agent 허가를 추가로 요구하면, dispatch 전에 사용자에게 위임 허가를 요청한다.
+런타임이 skill-internal agent dispatch를 허용하는 경우, 이 스킬의 직접 호출은 이 스킬 내부의 `test-author-agent` / `implementation-agent` / `implementation-review-agent` / `simplicity-review-agent` dispatch 범위에 대한 사용자 요청으로 처리한다. dispatch 전에 `spawn_agent`, `wait_agent`, `close_agent`가 active tools에 없으면 `tool_search` query `spawn_agent wait_agent close_agent multi-agent sub-agent`로 multi-agent tools를 먼저 로드한다. 현재 런타임 정책이 명시적 sub-agent 허가를 추가로 요구하면, dispatch 전에 사용자에게 위임 허가를 요청한다. Direct invocation of this skill is explicit user authorization to spawn the listed internal SDD agents for all required stages, including review-fix loops; the orchestrator must not edit code directly during fix, and if agent dispatch is unavailable or disallowed, it must stop and report `BLOCKED` instead of performing the fix locally.
 
 실제 Codex 호출은 `prompt`가 아니라 `message`를 사용한다. wave 내 Stage A(test-author)와 Stage B(impl)는 각 stage의 leaf를 한 번에 spawn한 뒤 함께 수거한다. review gate는 두 reviewer를 한 번에 spawn한 뒤 함께 수거한다:
 
