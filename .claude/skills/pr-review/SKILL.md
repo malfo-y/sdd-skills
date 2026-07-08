@@ -1,7 +1,7 @@
 ---
 name: pr-review
 description: "Use this skill when the user asks to \"review PR\", \"PR review\", \"PR 리뷰\", \"PR 검증\", \"PR spec patch\", \"PR 스펙 패치\", \"PR 리뷰 준비\", or wants to verify a pull request against the specification or codebase."
-version: 3.2.0
+version: 3.2.1
 argument-hint: ["[--model <sonnet|opus|haiku|fable>]"]
 ---
 
@@ -88,6 +88,7 @@ Agent(subagent_type="sdd-skills:simplicity-review-agent")
 
 - Step 1에서 수집한 `gh pr diff [PR] --name-only` **변경 파일 목록**을 리뷰 대상 경로로 명시 전달한다. 이는 각 agent의 Scope 입력으로 진입해 리뷰 범위를 PR 변경분으로 **고정**한다 (glob/legacy fallback 회피).
 - PR metadata(title/body/commits/SHA)와 `gh pr diff [PR]` 본문.
+- **PR 코멘트·review 코멘트(디스커션 내용)** — Step 1에서 `gh pr view ... comments,reviews`로 수집한 것을 두 agent 모두에 전달한다. 저자 해명·기지(旣知) 이슈·리뷰어 우려가 리뷰 컨텍스트가 된다. review 승인/verdict **상태 자체는 전달하지 않는다** (리뷰어는 verdict를 독립 판정한다).
 - Step 2의 from-branch spec 컨텍스트 (code-only 모드면 생략).
 - Step 1에서 정한 공유 `slug`.
 
