@@ -2,6 +2,14 @@
 
 > 이 파일은 `_sdd/spec/main.md`의 버전별 변경 기록이다.
 
+#### v4.5.3 (2026-07-08)
+
+- **pr-review correctness를 dispatched agent로 추출**: `pr-review`가 자체 inline으로 수행하던 correctness 검증을 신규 `pr-review-agent`(read-only leaf)로 분리했다. `pr-review`는 이제 correctness(`pr-review-agent`) ∥ simplicity(`simplicity-review-agent`) 두 렌즈를 병렬 dispatch하고 verdict를 합성하는 orchestrator이며, `implementation-review` 2-reviewer 구조와 동형이다.
+- **model override 균일화**: correctness가 inline이 아닌 agent로 이동해 subagent model override(`--model`, Codex `--effort`)가 correctness·simplicity 두 렌즈에 균일 적용된다(기존 비대칭 해소).
+- **대칭 리포트 형태**: correctness도 simplicity처럼 자기 리포트(`_sdd/pr/..._pr_correctness_<slug>.md`)를 write하고, orchestrator 통합 리포트(`_sdd/pr/..._pr_review_<slug>.md`)는 두 렌즈 요약 + 두 detail 경로 참조 + verdict를 담는다. 세 리포트는 공유 slug로 정렬. 단일 작성자 불변식 유지.
+- **spec surface 반영**: guardrail sub-bullet(PR review 직교 2-렌즈), 결정 테이블 `직교 2-렌즈 review 렌즈` 행, `components.md` `pr-review` 행을 "correctness=`pr-review-agent` dispatch"로 갱신. `pr-review-agent`를 claude marketplace.json + codex agents README에 등록.
+- **정책 무변경 재사용**: 표적 disjoint, Medium=gating/Low=advisory falsifiable 분류, verdict 자동 강제 없음, fix→re-review loop 미도입, `simplicity-review-agent`는 그대로. `pr-review` claude+codex SKILL v3.1.0→3.2.0.
+
 #### v4.5.2 (2026-07-01)
 
 - **`drafts/`·`work_log/`를 소비 repo 커밋 자산으로 승격**: feature draft가 사실상 구현 로그 역할을 하고 work_log도 같은 진행 기록 성격이라, 두 디렉토리를 로컬 전용 process artifact에서 커밋 자산으로 옮겼다. 소비 repo에서 커밋되는 `_sdd`는 `spec/`·`guides/`·`env.md`·`drafts/`·`work_log/`가 되고, 로컬 전용 process artifact는 4종(`_sdd/{discussion,implementation,pipeline,pr}/`)으로 좁혀졌다.

@@ -1,5 +1,26 @@
 # Decision Log
 
+## 2026-07-08 - pr-review correctness를 dispatched agent로 추출(model override가 두 렌즈에 균일 적용)
+
+### Context
+
+2026-06-17 결정으로 `pr-review`는 자체 correctness 검증(inline) ∥ `simplicity-review-agent` 병렬 dispatch의 PR 차원 직교 2-렌즈 review가 됐다. 그러나 correctness가 메인 스킬 inline이라 subagent model override(`--model`, Codex `--effort`)가 simplicity 레인에만 걸리고, 정작 무게가 실리는 correctness 검증은 세션 기본 모델로 고정되는 비대칭이 있었다. `implementation-review`(correctness=`implementation-review-agent` ∥ simplicity 둘 다 agent)와도 구조가 어긋났다.
+
+### Decision
+
+1. **`pr-review-agent` 신설**: PR correctness review 계약(code-only 검증 + spec 존재 시 spec-based 검증)을 보유하는 read-only leaf agent를 신설한다(claude `.claude/agents/pr-review-agent.md`, codex `.codex/agents/pr-review-agent.toml`). `simplicity-review-agent`의 형제로 표적 disjoint를 유지하고, verdict는 내지 않고 correctness 신호만 반환한다.
+2. **`pr-review` orchestrator 전환**: 스킬은 PR 데이터·spec 수집 → 두 reviewer 병렬 dispatch → verdict 합성 → 통합 리포트만 소유한다. `implementation-review` 2-reviewer orchestrator와 동형이되, PR review는 통합 verdict 리포트가 존재 이유라 relay가 아닌 synthesis를 추가로 소유한다.
+3. **대칭 리포트 형태**: correctness도 simplicity처럼 자기 리포트(`_sdd/pr/..._pr_correctness_<slug>.md`)를 직접 write하고, orchestrator 통합 리포트(`_sdd/pr/..._pr_review_<slug>.md`)는 두 렌즈 요약 + 두 detail 리포트 경로 참조 + verdict를 담는다. 단일 작성자 불변식 유지, correctness 내용 이중 작성(출력 낭비) 회피. 세 리포트는 공유 slug로 정렬한다.
+4. **model override 균일화**: `--model`(Codex `--effort` 포함)이 correctness·simplicity 두 dispatch 모두에 적용된다 — inline이던 correctness 검증이 agent로 이동해 override가 무게 실리는 검증에 닿는다.
+5. **정책 재사용(무변경)**: 표적 disjoint(correctness=정확성-중복 잔존, simplicity=형태-중복 위임), Medium=gating/Low=advisory falsifiable 분류, verdict 자동 강제 없음(correctness Critical/High→blocker, simplicity Medium+→rationale 기여), fix→re-review loop 미도입은 기존 계약 그대로다. `simplicity-review-agent`는 무변경.
+
+### Consequences
+
+- `pr-review-agent`는 claude marketplace.json agents 배열 + codex `.codex/agents/README.md`(Agent Set·Inline Writing) 양쪽에 등록됐다([[plugin-agent-registration-gap]] 회피).
+- `pr-review` claude+codex SKILL 두 surface가 동형 orchestrator로 전환되고 v3.1.0→3.2.0 bump됐다.
+- global spec은 이 변경을 guardrail sub-bullet + 결정 테이블 `직교 2-렌즈 review 렌즈` 행 + components.md `pr-review` 행에 반영했다("자체 correctness" → "correctness=`pr-review-agent` dispatch, model override 균일").
+- 사용자 대면 산출물이 통합 verdict 리포트 1개 → verdict 리포트 + correctness detail + simplicity detail 3개 참조 구조로 바뀐다(simplicity가 이미 별도 리포트를 참조하던 것과 대칭).
+
 ## 2026-07-01 - drafts/work_log를 소비 repo 커밋 자산으로 승격(process artifact 6종→4종)
 
 ### Context

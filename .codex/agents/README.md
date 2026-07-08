@@ -24,6 +24,7 @@
 - `plan-review-agent`
 - `implementation-review-agent`
 - `simplicity-review-agent`
+- `pr-review-agent`
 - `spec-review-agent`
 - `spec-sync-agent`
 - `ralph-loop-init-agent`
@@ -38,6 +39,7 @@
 - `plan-review-agent`
 - `implementation-review-agent`
 - `simplicity-review-agent`
+- `pr-review-agent`
 - `spec-review-agent`
 
 ## Invocation Contract
