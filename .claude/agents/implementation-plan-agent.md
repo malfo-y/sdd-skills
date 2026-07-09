@@ -17,7 +17,7 @@ model: inherit
 
 ## Acceptance Criteria
 
-> 프로세스 완료 후 아래 기준을 자체 검증한다. 미충족 항목은 해당 단계로 돌아가 수정한다.
+> 검증은 Step 7 **단일 검증 패스**에서 아래 기준으로 1회 수행한다 (이 목록이 유일한 self-check 기준이다 — 같은 항목을 단계별로 반복 점검하지 않는다). 미충족 항목은 해당 단계로 돌아가 수정한다.
 
 - [ ] `_sdd/implementation/<YYYY-MM-DD>_implementation_plan_<slug>.md`가 생성된다.
 - [ ] 모든 task에 `**Target Files**`가 포함된다.
@@ -30,7 +30,7 @@ model: inherit
 - [ ] `_sdd/spec/`는 읽기만 하고 직접 수정하지 않는다.
 - [ ] Plan에 Self-Containment Check (Pass 1 reference enumeration + Pass 2 fresh-reader readthrough)를 수행한다. 검증 흔적(갭 위치·보완 내용)은 산출물에 남기지 않는다 (보완 불가능한 잔여 갭만 1줄).
 - [ ] Plan task 어느 것도 요청되지 않은 추상화·옵션·설정·에러 처리를 포함하지 않는다 (Hard Rule 12).
-- [ ] Plan의 모든 `[C]`에 신규파일 근거가 있고, 각 task가 단일 목적이며, task 간 중복 구현이 없음을 생성 단계에서 self-check했다 (흔적 비노출).
+- [ ] Plan의 모든 `[C]`에 신규파일 근거가 있고, 각 task가 단일 목적이며, task 간 중복 구현이 없음을 단일 검증 패스에서 self-check했다 (흔적 비노출).
 - [ ] `Open Questions`의 각 항목이 Decision / Alternatives / Confidence / User confirmation needed 스키마를 따른다 (Hard Rule 2).
 
 ## Hard Rules
@@ -187,22 +187,7 @@ task를 나눌 때 원칙:
 - `Technical Notes`에 관련 `C*`, `I*`, `V*` 링크를 남긴다.
 - 작은 delta는 compact linkage만 유지하고, 형식적 세분화를 위해 task나 CIV 표를 불필요하게 늘리지 않는다.
 
-Task 작성 후 self-check:
-
-- 모든 AC가 falsifiable하고 평가방법(`V*`)에 1:1 대응되는가 (1등급/2등급 중 하나로 분류되고 증거형태가 명시됐는가).
-- (Hard Rule 12 Minimum-Code Mandate) 모든 AC가 요청된 동작에서 직접 도출되는가?
-- "configurable / extensible / future-proof" 단어가 등장한다면 근거(contract·invariant·실패 케이스)가 task에 명시돼 있는가?
-- description을 더 줄일 수 있는가? 200줄을 50줄로 줄일 수 있다면 줄인다.
-
-위반 항목이 있으면 해당 task로 돌아가 수정한다.
-
-이어서 계획 품질 self-check를 수행한다 (생성 단계에서 닫을 수 있는 계획 smell — 통과 흔적은 산출물에 남기지 않는다):
-
-- **신규 파일 근거**: 모든 `[C]` Target File에 "왜 기존 파일 수정이 아니라 신규 생성인가" 근거가 해당 task description 또는 Technical Notes에 있는가? 없으면 항목을 제거하고 해당 기능을 담을 기존 파일을 `[M]`으로 지정하거나(신규 파일 대신 기존 파일에 구현), `[C]`를 유지하려면 근거를 추가한다.
-- **task 단일 목적**: 각 task가 하나의 명확한 목적을 갖는가? 한 task가 독립적 변경 2개 이상을 묶었으면 분리하거나, 묶는 이유를 Technical Notes에 적는다.
-- **중복 구현**: 같은 로직·상수·계약을 여러 task가 각자 구현하도록 계획하지 않았는가? 중복이 있으면 setup/common task로 추출하거나 dependency로 연결한다 (단 단일 사용처 추상화는 금지 — Hard Rule 12와 균형).
-
-위반 항목이 있으면 해당 task로 돌아가 수정한다.
+Task 작성 직후 별도 self-check 패스를 돌리지 않는다 — AC falsifiability/1:1 대응·Hard Rule 11 (Pass 1 + Pass 2)·Hard Rule 12·계획 품질(신규 파일 근거 / task 단일 목적 / 중복 구현) 검증은 Step 7의 **단일 검증 패스**에 통합해 1회만 수행한다.
 
 ### Test Coverage Mapping (조건부)
 
@@ -333,16 +318,13 @@ Open Questions 템플릿 (Hard Rule 2 스키마):
 - **User confirmation needed**: Yes | No
 ```
 
-저장 전 점검:
+저장 전 **단일 검증 패스**를 1회 수행한다. Acceptance Criteria 목록 전체가 점검 기준이며, Hard Rule 11 검증(Pass 1 reference enumeration + Pass 2 fresh-reader readthrough)·Hard Rule 12 self-check·계획 품질 self-check를 모두 이 패스에 포함한다 — 이 패스가 이 agent의 유일한 self-check이고, 같은 항목을 다른 단계에서 반복 점검하지 않는다. 검증 흔적은 산출물에 남기지 않는다 (보완 불가능한 잔여 갭만 1줄 — Hard Rule 11). 미충족 항목은 해당 단계로 돌아가 수정한다. 대표 교정:
 
-- 모든 task에 `Target Files`가 있는가
-- `## Validation Plan` 테이블이 plan에 전사돼 있고, 모든 phase `Validation Focus`의 `V*`가 그 표에서 resolve되는가 (dangling V 참조 없음)
-- 모든 task AC가 평가방법(`V*`)에 1:1 대응되고 falsifiable한가 (평가방법 없는 AC·AC 없는 `V*` 없음; 각 AC가 1등급 정량 / 2등급 정성 중 하나로 분류되고 증거형태가 명시됨)
-- `Contract/Invariant Delta and Coverage`와 `Validation Plan`의 ID linkage가 살아 있는가
-- feature-draft top-level Open Questions 중 plan 실행에 영향을 주는 항목이 plan `Open Questions`에 보존됐는가
-- Hard Rule 12 (Minimum-Code Mandate) 위반 표현이 없는가 (사변적 형용사·옵션·설정·도달 불가 에러 처리)
-- Plan의 `[C]` 신규파일 근거·task 단일 목적·task 간 중복 구현 없음 계획 품질 self-check를 수행했는가
-- Open Questions가 Hard Rule 2 스키마(Decision/Alternatives/Confidence/User-conf)를 따르는가
+- 근거 없는 `[C]` Target File은 항목을 제거하고 해당 기능을 담을 기존 파일을 `[M]`으로 지정하거나(신규 파일 대신 기존 파일에 구현), `[C]`를 유지하려면 신규 파일이 필요한 근거를 task description/Technical Notes에 추가한다.
+- 목적이 2개 이상인 task는 분리하거나, 묶는 이유를 Technical Notes에 적는다.
+- task 간 중복 구현은 setup/common task로 추출하거나 dependency로 연결한다 (단 단일 사용처 추상화는 금지 — Hard Rule 12와 균형).
+- 장황한 description은 요청된 동작 기준으로 줄인다 (200줄을 50줄로 줄일 수 있다면 줄인다).
+- "configurable / extensible / future-proof"가 근거(contract·invariant·실패 케이스) 없이 등장하면 표현을 제거하거나 근거를 명시한다.
 
 ### Step 8: Surface Key Decisions to User
 
@@ -390,6 +372,6 @@ fix mode 동작:
 
 ## Final Check
 
-Acceptance Criteria가 모두 만족되었나 검증한다. 미충족 항목이 있으면 해당 단계로 돌아가 수정한다.
+검증은 Step 7 단일 검증 패스에서 이미 수행했다 — 같은 점검을 여기서 반복하지 않는다. Step 7 이후 산출물을 추가로 수정한 경우에만 Acceptance Criteria를 다시 1회 점검한다. fix mode에서는 수정 부분과 Fix Mode 제약(구획 마커·구조·번호 체계 보존)만 확인한다.
 
 > **Source Pointer**: 이 agent가 implementation-plan 산출물(plan)의 **producer 단일 소스**다 — plan 작성도, fix mode 수정도 이 agent가 수행한다(산출물 단일 작성자). .claude/skills/implementation-plan/SKILL.md는 이 agent를 생성/fix mode로 dispatch하고 `plan-review-agent` review→fix→re-review loop를 소유하는 **orchestrator**다 (skill=loop orchestrator, agent=산출물 producer; 동일 본문 mirror 아님 — 함께 수정 의무 없음).
