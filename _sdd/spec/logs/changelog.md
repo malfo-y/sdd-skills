@@ -2,6 +2,15 @@
 
 > 이 파일은 `_sdd/spec/main.md`의 버전별 변경 기록이다.
 
+#### v4.5.4 (2026-07-10)
+
+- **pr-review 통합 리포트를 finding-본문 중심으로 재설계**: 통계 표(Metrics Summary·렌즈별 severity 카운트 표)와 Recommendations 표를 제거하고, 행동 대상 finding을 위치(`file:line`)·문제·수정 블록 전문으로 통합 리포트에 승격한다. 표 셀 압축으로 "뭘 고쳐야 하는지"가 소실되던 문제의 해소가 목적. 배치: correctness Critical/High + simplicity Medium+ → §1 Pre-merge 블록, correctness Medium → §2 non-blocking 상세 블록, Low → §2 위치 포함 한 문장. 분포는 Verdict `Signals` 한 줄로 대체, 통과 신호는 §3 산문 2-3줄.
+- **승격 재료 반환 계약**: `pr-review-agent`는 Critical~Medium finding을 각각 위치·문제·수정 블록으로 반환(Step 5)하고, simplicity 레인은 dispatch message로 동일 상세를 요구한다(agent 무변경). 부족하면 orchestrator가 detail 리포트 §1을 Read해 보충. 2026-07-08 결정 #3("통합 리포트 = 요약 + 경로 참조")을 부분 대체 — 검증 ledger·차원별 스캔·iteration history는 여전히 detail 참조.
+- **pr-review-agent detail 리포트 §1 Findings 블록화**: `- [finding]` 한 줄 불릿 → ID(C#/H#/M#/L#)·제목 + 위치·문제·수정 블록(Low는 한 문장). Iteration History delta가 참조하던 finding ID가 이로써 실제 정의됨.
+- **적용 surface**: `pr-review` claude+codex SKILL v3.2.1→3.3.0, `pr-review-agent` claude md+codex toml, codex `examples/sample-review.md` 2개 예시 재작성. verdict 정책(자동 강제 없음)·단일 작성자 불변식은 무변경.
+- **동일 원칙을 plan/implementation review로 확장**: `implementation-review-agent` §1 Findings를 같은 ID 블록(C#/H#/M# = 위치·문제·수정, Low = 한 문장)으로 교체(review-fix loop의 fix task 변환 재료), §4 Recommendations는 finding ID 참조 갈음, §5 Conclusion 삭제(Current Status와 중복), §2 Progress Overview는 task/AC 상태로 제약. `plan-review-agent`는 finding ID 부여 + Low 한 문장 축약만(이미 블록·재진술 금지 보유). 각 claude md+codex toml 4개 surface.
+- **simplicity·implementation report 확장**: `simplicity-review-agent` §1도 ID 블록(H#/M#=차원·위치·현재 형태·제안 형태, Low=한 문장)으로 통일(차원·falsifiable severity 정책 무변경). `implementation` SKILL(v3.5.0→3.6.0) 최종 implementation_report의 Quality Assessment/Cross-Phase Review/Issues Found 표를 Review Gates 한 줄 ledger + Open Issues(잔존분만, reviewer finding ID 참조 + 위치 포함 한 문장)로 교체, Recommendations ID 참조 갈음, Conclusion은 verdict+한 문장 근거 유지(`spec-sync`·`spec-summary` 경로/글롭 소비 호환).
+
 #### v4.5.3 (2026-07-08)
 
 - **pr-review correctness를 dispatched agent로 추출**: `pr-review`가 자체 inline으로 수행하던 correctness 검증을 신규 `pr-review-agent`(read-only leaf)로 분리했다. `pr-review`는 이제 correctness(`pr-review-agent`) ∥ simplicity(`simplicity-review-agent`) 두 렌즈를 병렬 dispatch하고 verdict를 합성하는 orchestrator이며, `implementation-review` 2-reviewer 구조와 동형이다.
