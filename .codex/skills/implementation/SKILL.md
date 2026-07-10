@@ -1,7 +1,7 @@
 ---
 name: implementation
 description: Use this skill when the user wants to execute an implementation plan, start implementing tasks from a plan, work through a development roadmap, says "implement the plan", "start implementation", "execute the plan", "work on the tasks", or explicitly asks for "implement parallel", "parallel implementation", "병렬 구현", "병렬로 구현". Uses conflict-aware parallel execution when Target Files are available.
-version: 3.5.0
+version: 3.6.0
 argument-hint: "[--model <gpt-5.5|gpt-5.4|gpt-5.4-mini>] [--effort <low|medium|high|xhigh>]"
 ---
 
@@ -318,21 +318,20 @@ Phase Review 종료 시, 그 phase에서 발생한 다음 이벤트를 채팅으
 ### Completed Tasks
 - [x] Task 1: ... (N tests) [parallel: group 1]
 
-### Quality Assessment
-| Phase | Critical | Quality | Improvements | Groups | Status |
-|-------|----------|---------|--------------|--------|--------|
+### Review Gates
+<!-- gate당 한 줄: iteration 수 + exit 충족(합집합 critical=high=medium=0) 또는 MAX 도달 + 두 reviewer 리포트 경로. cross-phase 이슈는 final gate 줄에 요약 -->
+- Phase N gate: exit 충족 (iteration K) — reports: `<correctness>`, `<simplicity>`
+- Final cross-phase gate: exit 충족 (iteration K) | 스킵 (single-phase — Step 6이 전체 범위 커버)
 
-### Cross-Phase Review
-- Integration / Security / Performance / Parallel Consistency
-
-### Issues Found
-| # | Severity | Description | Phase | Status |
+### Open Issues
+<!-- review-fix loop 후 잔존분만: MAX 도달 잔존 medium, Low advisory, 범위 밖 발견. 항목당 reviewer 리포트 finding ID 참조 + 위치 포함 한 문장. 없으면 "없음." -->
+- M2 (correctness report): `file:line` — <잔존 사유와 권고 한 문장>
 
 ### Recommendations
-1. ...
+<!-- Open Issues 재진술 금지 — finding ID 참조로 갈음. finding에 대응되지 않는 신규 권고만 본문 1줄 (사변적 권고 금지) -->
 
 ### Conclusion
-[READY / NEEDS WORK / BLOCKED]
+[READY / NEEDS WORK / BLOCKED] — <한 문장 근거>
 ```
 
 ## Autonomous Decision-Making
