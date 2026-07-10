@@ -36,11 +36,11 @@ step은 세 종류다.
 선택 필드:
 
 - `Execution Mode`
-  - `phase-iterative`는 downstream `implementation` step이 `implementation-plan` output을 소비할 때 사용한다.
+  - `phase-iterative`는 downstream `implementation-dispatch-controller` step이 `task-ordering` output을 소비할 때 사용한다.
   - 이 값이 있으면 phase count와 boundary를 Step 4 generation 시점에 precompute하지 않고 runtime metadata로 해석한다.
 - `Phase Source`
-  - `Execution Mode: phase-iterative` implementation step일 때 필수다.
-  - 값은 runtime에 읽을 `implementation-plan` output 경로다.
+  - `Execution Mode: phase-iterative` `implementation-dispatch-controller` step일 때 필수다.
+  - 값은 runtime에 읽을 `task-ordering` output 경로다.
 - `Interaction Mode`
   - `autonomous-no-input` 또는 `interactive-ok`를 허용한다.
   - `sdd-autopilot`의 Phase 2 subagent step은 명시가 없으면 `autonomous-no-input`으로 간주한다.
@@ -52,7 +52,7 @@ step은 세 종류다.
 
 - `sdd-skills:feature-draft-agent`
 - `sdd-skills:spec-sync-agent`
-- `sdd-skills:implementation-plan-agent`
+- `sdd-skills:task-ordering-agent`
 - `sdd-skills:plan-review-agent`
 - `sdd-skills:test-author-agent`
 - `sdd-skills:implementation-agent`
@@ -67,10 +67,10 @@ step은 세 종류다.
 - legacy alias는 canonical 이름으로 normalize하지 않는다. Step verification은 해당 orchestrator를 reject하고 canonical `subagent_type`으로 regenerate하도록 요구해야 한다.
 - `implementation` step은 단독 완료 step이 아니다. 같은 범위의 `Review-Fix Loop`와 required validation gate가 즉시 뒤따르며, gate가 닫히기 전에는 다음 downstream step으로 진행할 수 없다.
 - review가 포함된 path에서는 `implementation`과 `implementation-review`를 항상 subagent step으로 사용한다. autopilot 부모가 local inline implementation/review로 대체하면 안 된다.
-- downstream `implementation` step(`Step kind: implementation-dispatch-controller`)이 `implementation-plan` output을 소비하면, 해당 step은 `Execution Mode: phase-iterative`와 `Phase Source`를 함께 선언해야 한다.
+- downstream `implementation-dispatch-controller` step이 `task-ordering` output을 소비하면, 해당 step은 `Execution Mode: phase-iterative`와 `Phase Source`를 함께 선언해야 한다.
 - 오케스트레이터의 `출력 파일`에 적힌 future artifact는 planned output이며, 현재 실행 중인 step만 자신의 출력물을 materialize할 수 있다.
-- **Invariant (Phase Source 출처)**: `Execution Mode: phase-iterative`가 선언된 step의 `Phase Source`는 반드시 `implementation-plan` output이어야 한다. `feature-draft` 산출물을 `Phase Source`로 사용하면 Step 5 verification에서 reject하고 `implementation-plan` step을 파이프라인에 삽입한다.
-- **Invariant (multi-phase ⇒ implementation-plan 의무)**: 오케스트레이터 생성 시 multi-phase 실행으로 판단되면, planning precedence에서 `implementation-plan`을 반드시 포함한다. feature-draft → implementation 직행은 single-phase 경로에 한정한다.
+- **Invariant (Phase Source 출처)**: `Execution Mode: phase-iterative`가 선언된 step의 `Phase Source`는 반드시 `task-ordering` output이어야 한다. `feature-draft`의 flat task-set을 `Phase Source`로 직접 사용하면 Step 5 verification에서 reject하고 `task-ordering` step을 파이프라인에 삽입한다.
+- **Invariant (task-ordering 항상 경유)**: autopilot은 single/multi-phase 무관하게 구현 직전 항상 `task-ordering` step을 소유·경유한다. `task-ordering-agent`가 `feature-draft`의 flat task-set을 입력으로 dependency edge·실행 순서·phase 분할·multi/single 판정·Checkpoint를 산출하고, autopilot이 그 산출(ordered task-set + phase + Checkpoint)을 downstream `implementation-dispatch-controller` step의 `Phase Source`로 hand-off한다. `feature-draft` → implementation 직행(task-ordering 생략)은 허용되지 않는다.
 - `Interaction Mode: autonomous-no-input` step은 `request_user_input` 또는 동등한 사용자 확인을 호출하면 안 된다. 모호성은 기존 코드/스펙/오케스트레이터/사용자 원문 요청에 가장 잘 맞는 권장안으로 해소하고, 그 근거와 가정을 출력 파일에 기록해야 한다.
 - `Interaction Mode: autonomous-no-input` step은 안전한 추론이 불가능하면 질문으로 멈추지 말고 `BLOCKED` 상태로 종료한다. 최소 출력은 `blocked_reason`, `why_not_safe_to_assume`, `recommended_next_action`를 포함해야 한다.
 - interactive-only skill 또는 사용자 입력이 Hard Rule인 로컬 step은 autopilot Phase 2 step으로 배치하면 안 된다.
@@ -87,7 +87,7 @@ step은 세 종류다.
 
 task-level leaf는 sub-agent를 spawn하지 않는다. 따라서 autopilot은 phase를 한 leaf에 통째로 넘기지 않고, autopilot 자신이 orchestrator로서 task 단위로 fan-out한다.
 
-- **초기 구현 step**: autopilot이 phase의 task를 dependency 기반으로 **병렬 dispatch 그룹(wave)**으로 파생하고("같은 phase + dependency edge 없음 + Target Files disjoint → 병렬"; planner가 의미적 충돌을 dependency로 인코딩하므로 trivial 규칙), 각 wave를 다음 **3단계**로 dispatch한다:
+- **초기 구현 step**: autopilot이 `task-ordering output`(`Phase Source`)의 각 phase 내 wave를 소비하고(`task-ordering-agent`가 선언(Target Files) 기반으로 파생한 `Parallel Execution Summary` — "dependency 없음 + Target Files disjoint → 같은 wave"; autopilot은 fan-out 직전 file-disjoint 실측으로 검증), 각 wave를 다음 **3단계**로 dispatch한다:
   - (a) **test-author 병렬 dispatch**: wave 내 task마다 `sdd-skills:test-author-agent` leaf를 동시 dispatch한다 (테스트만 작성, 구현 금지).
   - (b) **RED 게이트 (orchestrator 소유)**: test-author가 작성한 테스트를 실제 실행해 실패(RED) 증거를 캡처하고 falsifiability를 점검한다(AC 관찰 동작 assertion 실패여야 함; import/collection-only 실패는 RED 미충족으로 test-author 재dispatch). 이 게이트를 닫기 전에는 (c)를 dispatch하지 않는다.
   - (c) **impl 병렬 dispatch**: RED 게이트를 통과한 task마다 `sdd-skills:implementation-agent` leaf를 동시 dispatch한다. 입력으로 고정 실패 테스트 + RED 증거를 전달하며, leaf는 GREEN→REFACTOR만 수행한다.
@@ -97,14 +97,14 @@ task-level leaf는 sub-agent를 spawn하지 않는다. 따라서 autopilot은 ph
 
 ### Planning Producer Review Gate
 
-planning producer step은 `sdd-skills:feature-draft-agent`와 `sdd-skills:implementation-plan-agent`다. 두 producer의 output은 downstream 소비 전에 `sdd-skills:plan-review-agent` gate를 통과해야 한다.
+planning producer step은 `sdd-skills:feature-draft-agent` 하나다. producer output은 downstream 소비 전에 `sdd-skills:plan-review-agent` gate를 통과해야 한다.
 
 - `sdd-skills:feature-draft-agent` 직후 `sdd-skills:plan-review-agent`를 호출해 다음을 검증한다:
   - `Part 1: Spec Delta`의 marker/3-section slim shape
   - `Part 2: Implementation and Validation Plan`의 `Contract/Invariant Delta and Coverage`/`Validation Plan` linkage
   - top-level `Risks/Mitigations and Open Questions`
   - downstream planning 입력 적합성
-- `sdd-skills:implementation-plan-agent` 직후 `sdd-skills:plan-review-agent`를 호출해 `Contract/Invariant Delta and Coverage`, task/Target Files, dependency/checkpoint/carry-over 필드, downstream implementation controller 입력 적합성을 검증한다.
+- `sdd-skills:task-ordering-agent`는 planning producer가 아니라 `feature-draft`의 flat task-set에서 dependency edge·실행 순서·phase 분할·Checkpoint를 파생하는 ordering step이다. self-check만 수행하며 `sdd-skills:plan-review-agent` producer review gate를 요구하지 않는다(review-fix gate 면제). 그 산출은 downstream `implementation-dispatch-controller` step의 `Phase Source`로 hand-off된다.
 - gate가 fail이면 producer output을 소비하지 않는다. autopilot은 같은 producer step을 regenerate하도록 요구하고, review finding을 normalize해서 통과 처리하면 안 된다.
 - gate는 canonical `subagent_type` 정책도 검증한다. legacy alias가 발견되면 reject/regenerate 대상이다.
 - **Regenerate 상한**: 같은 producer step의 reject/regenerate는 최대 2회다. 상한 도달 시 gate를 통과 처리하지 않고 `BLOCKED`로 종료해 잔존 finding과 함께 사용자 결정을 받는다.
@@ -152,7 +152,7 @@ planning producer step은 `sdd-skills:feature-draft-agent`와 `sdd-skills:implem
 
 추가 규칙:
 
-- multi-phase `implementation-plan`을 소비하면 기본값은 `scope = per-group`이다. single-phase path나 direct path만 `scope = global`을 기본으로 둘 수 있다.
+- multi-phase `task-ordering` output을 소비하면 기본값은 `scope = per-group`이다. single-phase path나 direct path만 `scope = global`을 기본으로 둘 수 있다.
 - review-fix loop는 파이프라인 후처리 섹션이 아니라 각 group의 immediate completion gate다.
 - autopilot은 review-fix loop를 추상 단계로 두지 않는다. small/medium/large review path 모두 review step은 반드시 correctness(`sdd-skills:implementation-review-agent`) ∥ simplicity(`sdd-skills:simplicity-review-agent`) 2-reviewer 병렬 subagent 호출이고(exit는 두 report의 합집합), fix step은 반드시 `sdd-skills:implementation-agent` 재호출이다. local inline fallback은 허용되지 않는다.
 - **fix step dispatch granularity**: `fix = sdd-skills:implementation-agent` 재호출은 review finding을 fix-task로 보고 **finding 하나씩 순차로** `sdd-skills:implementation-agent` leaf를 dispatch하는 것이다(finding의 영향 파일 = 그 leaf의 Target Files). 별도 fix 분해 기계장치는 없으며, fix step에는 병렬을 도입하지 않는다(finding 수가 적고 상호작용 가능 → 순차 안전). 초기 구현 step의 병렬 dispatch 그룹(§2)과 달리 fix는 순차다.
@@ -165,10 +165,10 @@ planning producer step은 `sdd-skills:feature-draft-agent`와 `sdd-skills:implem
   - fix 재호출 조건과 fix 프롬프트 계약
   - re-review 재호출 조건과 re-review 프롬프트 계약 (correctness ∥ simplicity 각 reviewer에 해당 lens의 기존 review 리포트 경로를 전달해 re-review mode로 진입시킨다 — 새 리포트 생성이 아니라 각 lens 기존 리포트의 `Current Status` 갱신 + `Iteration History` append)
 - `scope = per-group`이면 아래 조건을 함께 충족해야 한다.
-  - **Group 경계**: `implementation-plan` output의 각 phase에 `Checkpoint: true/false` 필드가 있다. `Checkpoint=true` phase 직후에 review-fix gate를 닫는다. 마지막 phase는 explicit 값과 무관하게 implicit `Checkpoint=true`로 처리한다.
+  - **Group 경계**: `task-ordering` output의 각 phase에 `Checkpoint: true/false` 필드가 있다. `Checkpoint=true` phase 직후에 review-fix gate를 닫는다. 마지막 phase는 explicit 값과 무관하게 implicit `Checkpoint=true`로 처리한다.
   - **Group 내 phase**(Checkpoint=false)는 light validation(test/typecheck/exit criteria)만 수행한다. review-fix gate 없이 다음 phase로 진행한다.
   - **Mid-group emergency**: group 내 phase의 light validation이 `critical` 이슈를 잡으면 group boundary forced early로 즉시 review-fix gate를 트리거한다.
-  - downstream `implementation` step에 `Execution Mode: phase-iterative`와 `Phase Source`가 선언되어 있어야 한다.
+  - downstream `implementation-dispatch-controller` step에 `Execution Mode: phase-iterative`와 `Phase Source`가 선언되어 있어야 한다.
   - Review-Fix Loop에 아래 필드를 함께 명시해야 한다.
     - `group exit criteria`
     - `carry-over policy`
@@ -199,23 +199,23 @@ planning producer step은 `sdd-skills:feature-draft-agent`와 `sdd-skills:implem
 - temporary spec이 있으면 `Validation Plan`의 `V*` 항목과 테스트 전략의 대응 관계를 설명해야 한다.
 - 테스트 결과는 사용자에게 명시적으로 보고한다.
 
-## 8. feature-draft / implementation-plan / spec-sync Specific Contract
+## 8. feature-draft / task-ordering / spec-sync Specific Contract
 
 ### feature-draft
 - feature draft 파일 존재
 - `Part 1: Spec Delta` 존재, `<!-- spec-update-todo-input-start -->` / `<!-- spec-update-todo-input-end -->` 마커 포함
 - Part 1 필수 섹션은 `Change Summary`, `Scope Delta`, `Persistent Spec Implications`뿐임
 - `Part 2: Implementation and Validation Plan` 존재, `Contract/Invariant Delta and Coverage`와 `Validation Plan` linkage 포함
+- `Part 2`는 flat task-set(각 task 정의 + `Target Files`)을 산출한다. dependency edge·phase 분할·실행 순서·Checkpoint는 포함하지 않는다(그것은 `task-ordering` 소관)
 - top-level `Risks/Mitigations and Open Questions` 존재
 
-### implementation-plan
-- implementation plan 존재
-- `Contract/Invariant Delta and Coverage` 존재
-- task와 `Target Files`가 정의됨
-- `feature-draft` 이후 확장 단계인지, 또는 standalone 예외인지가 드러남
+### task-ordering
+- task-ordering output 존재
+- `feature-draft`의 flat task-set을 입력으로 dependency edge·실행 순서·phase 분할·multi/single 판정·Checkpoint를 산출함 (task 정의 자체는 `feature-draft` 소관이며 여기서 재산출하지 않음)
 - 각 phase에 `goal`, `task set / dependency closure`, `validation focus`, `exit criteria`, `carry-over policy`, `checkpoint`가 포함됨
 - `Checkpoint=true` phase는 이유를 설명하는 `Checkpoint Reason` 한 줄을 동반함
-- downstream `implementation` step이 이 artifact를 소비할 때는 `Execution Mode: phase-iterative`와 `Phase Source`로 연결되어야 함
+- downstream `implementation-dispatch-controller` step이 이 artifact를 소비할 때는 `Execution Mode: phase-iterative`와 `Phase Source`로 연결되어야 함
+- planning producer가 아니라 ordering 파생 step이므로 self-check만 수행하고 `plan-review` producer review gate를 요구하지 않음
 
 ### spec-sync
 - global spec 업데이트 완료

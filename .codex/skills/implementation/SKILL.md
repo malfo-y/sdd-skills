@@ -7,7 +7,7 @@ argument-hint: "[--model <gpt-5.5|gpt-5.4|gpt-5.4-mini>] [--effort <low|medium|h
 
 # Implementation Orchestrator (Parallel Test-First)
 
-이 스킬은 **orchestrator**다. 메인 루프에서 실행되어 fan-out이 가능하다. task-set을 확보하고(plan 파싱 또는 plan 없으면 경량 분해), dependency 기반으로 병렬 그룹(wave)을 파생해 **wave별 2-stage 파이프라인**으로 leaf를 spawn한다: (Stage A) `test-author-agent` leaf가 테스트만 작성 → (RED 게이트) orchestrator가 실패 증거를 캡처하고 falsifiability를 점검 → (Stage B) `implementation-agent` leaf가 고정 실패 테스트를 최소코드로 통과(GREEN→REFACTOR) → (GREEN 게이트). 통합·회귀·phase review·report를 소유한다. RED는 test-author leaf + orchestrator RED 게이트가 흡수하고, GREEN→REFACTOR만 impl leaf가 수행한다 — leaf는 RED를 자체 수행하지 않는다. 병렬화는 최적화 토글일 뿐 — 불가하면 동일 흐름으로 순차 실행한다.
+이 스킬은 **orchestrator**다. 메인 루프에서 실행되어 fan-out이 가능하다. task-set을 확보하고(plan 파싱 또는 plan 없으면 경량 분해), `task-ordering-agent`가 파생한 wave(병렬 그룹)를 소비해(실행 직전 file-disjoint 실측 검증 후) **wave별 2-stage 파이프라인**으로 leaf를 spawn한다: (Stage A) `test-author-agent` leaf가 테스트만 작성 → (RED 게이트) orchestrator가 실패 증거를 캡처하고 falsifiability를 점검 → (Stage B) `implementation-agent` leaf가 고정 실패 테스트를 최소코드로 통과(GREEN→REFACTOR) → (GREEN 게이트). 통합·회귀·phase review·report를 소유한다. RED는 test-author leaf + orchestrator RED 게이트가 흡수하고, GREEN→REFACTOR만 impl leaf가 수행한다 — leaf는 RED를 자체 수행하지 않는다. 병렬화는 최적화 토글일 뿐 — 불가하면 동일 흐름으로 순차 실행한다.
 
 ## Codex Runtime Adapter
 
@@ -44,7 +44,7 @@ You are already running as <agent_type>. Do not invoke or re-enter SDD skills fr
 > 프로세스 완료 후 아래 기준을 자체 검증한다. 미충족 항목은 해당 단계로 돌아가 수정한다.
 
 - [ ] AC1: task-set을 확보한다 — plan 파싱(있을 때) 또는 plan 없으면 요청을 task로 경량 분해
-- [ ] AC2: dependency 기반 병렬 그룹 파생("같은 phase + dependency edge 없음 + Target Files disjoint → 병렬") + file-disjoint 가드레일 + 순차 fallback
+- [ ] AC2: `task-ordering-agent`가 파생한 wave 소비(wave 정보 없는 구식 plan만 자체 파생 fallback) + file-disjoint 실측 가드레일 + 순차 강등
 - [ ] AC3: wave별 2-stage로 leaf를 spawn — Stage A는 `test-author-agent`에 입력(task AC + Validation Plan `V*` + Contract/Invariant Delta + 환경/테스트)을 전달하고, RED 게이트 통과 후 Stage B는 `implementation-agent`에 입력(task 필드 + Target Files + 환경/테스트 + 선행 보장 + 고정 실패 테스트 + RED 증거)을 전달하며, final status 수거 직후 `close_agent({target: <agent_id>})`로 handle을 반납
 - [ ] AC4: post-group 통합·회귀·phase review를 orchestrator가 수행하고 leaf 출력(UNPLANNED_DEPENDENCY 등)을 처리
 - [ ] AC5: `_sdd/implementation/<YYYY-MM-DD>_implementation_report_<slug>.md` 및 progress artifact를 canonical 경로·필드로 생성(orchestrator 소유)
@@ -70,7 +70,7 @@ You are already running as <agent_type>. Do not invoke or re-enter SDD skills fr
 
 ### 그룹 파생과 file-disjoint 가드레일
 
-orchestrator는 **dependency를 그룹화의 권위 있는 신호로 신뢰**한다. 의미적 충돌(모델 import, 동시 마이그레이션, 동일 config, API 생산-소비, 상수 충돌)은 planner(`feature-draft`/`implementation-plan`)가 task `Dependencies` edge로 인코딩하므로(무방향 mutex도 임의 방향 dep로 흡수), orchestrator는 이를 재검출하지 않는다.
+orchestrator는 **dependency를 그룹화의 권위 있는 신호로 신뢰**한다. 의미적 충돌은 `task-ordering-agent`(Step 1에서 dispatch)가 task `Dependencies` edge로 인코딩하므로(무방향 mutex도 임의 방향 dep로 흡수), orchestrator는 이를 재검출하지 않는다.
 
 병렬 판단 규칙:
 
@@ -82,22 +82,30 @@ orchestrator는 **dependency를 그룹화의 권위 있는 신호로 신뢰**한
 
 ## Process
 
-### Step 1: Secure the Task-Set
+### Step 1: Secure the Ordered Task-Set
 
-**경로 A — plan 파싱** (plan이 있을 때). 탐색 순서:
+implementation은 상위 orchestrator가 없는 **사용자 직접 실행 전용** 진입점이다 — autopilot 등 상위 orchestrator는 implementation SKILL을 경유하지 않고 자체 dispatch-controller로 실행하며 ordering도 스스로 소유한다. 따라서 implementation은 Phase Source를 hand-off 받는 경로가 없고, task-set 확보 후 dependency·phase가 아직 없으면 **항상 `task-ordering-agent`를 dispatch해 ordering을 파생**한다(ordering은 정확히 1회).
+
+**1a. 입력 확보.** 탐색 순서:
 1. 사용자 지정 경로
-2. `_sdd/implementation/*_implementation_plan_*.md` (slug 기반 glob)
-3. `_sdd/implementation/implementation_plan.md` (legacy 고정 경로)
-4. `_sdd/implementation/implementation_plan_phase_<n>.md`
-5. legacy uppercase fallback: `_sdd/implementation/IMPLEMENTATION_PLAN.md`, `_sdd/implementation/IMPLEMENTATION_PLAN_PHASE_<N>.md`
-6. `_sdd/drafts/*_feature_draft_*.md` (slug 기반 glob, Part 2: 구현 계획)
-7. `_sdd/drafts/feature_draft_<name>.md` (legacy 고정 경로)
+2. `_sdd/implementation/*_implementation_plan_*.md` (이미 ordering된 plan — 재개/직접 제공, slug 기반 glob)
+3. legacy fallback: `_sdd/implementation/implementation_plan.md`, `_sdd/implementation/implementation_plan_phase_<n>.md`, uppercase `IMPLEMENTATION_PLAN.md`·`IMPLEMENTATION_PLAN_PHASE_<N>.md`
+4. `_sdd/drafts/*_feature_draft_*.md` (slug 기반 glob, Part 2: **flat task-set** — dependency·phase 없음)
+5. `_sdd/drafts/feature_draft_<name>.md` (legacy 고정 경로)
+6. 입력 없음 → 사용자 요청을 flat task-set으로 **경량 분해**(각 조각에 Target Files를 best-effort 부여)
 
-복수 파일 존재 시 사용자에게 확인. plan에서 추출: Phases, Tasks (Target Files·Dependencies 포함), top-level Open Questions. feature draft Part 2에서는 `Components`를 요구하지 않는다. Open Questions는 최선의 판단으로 해결하고, 판단 불가 항목은 리포트에 기록.
+> 경량 분해는 **소규모·순차 실행**용 fallback이다(순차라 얕은 task 정의도 안전 — file 충돌이 없으므로). 대규모거나 병렬 최적화가 중요한 요청이면 경량 분해로 강행하지 말고 `feature-draft`(제대로 된 flat task-set 생성) 또는 `sdd-autopilot`(feature-draft→task-ordering→implementation 전체 조율)을 사용하도록 안내한다.
 
-**경로 B — no-plan 경량 분해** (plan이 없을 때). plan 작성 스킬로 되돌리지 않고, 사용자 요청을 직접 task로 **경량 분해**한다(충돌분석 rigor 불필요 — 순차 실행이므로). 각 조각에 Target Files를 best-effort로 부여하고, 저확신이면 순차 실행한다. 분해 가정을 리포트에 기록한다.
+복수 파일 존재 시 사용자에게 확인.
 
-> 두 경로 모두 동일한 후속 흐름(Step 2~7)을 탄다. 차이는 task-set의 출처뿐이며, plan 유무·병렬/순차와 무관하게 정확한 결과를 낸다(병렬은 최적화).
+**1b. Ordering (항상 경유).**
+- 입력이 **flat task-set**(feature-draft Part 2 또는 경량 분해 결과 — dependency·phase 미포함)이면 `spawn_agent({agent_type: "task-ordering-agent", message: <flat task-set 경로 + 요청>})`로 dispatch하고 `wait_agent`로 수거해 ordered plan(`_sdd/implementation/<YYYY-MM-DD>_implementation_plan_<slug>.md`: dependency edge·phase·Checkpoint 포함)을 받은 뒤 `close_agent`로 handle을 닫는다.
+- 입력이 이미 **ordered plan**(dependency·phase를 담은 implementation_plan — 재개/직접 제공)이면 task-ordering을 생략하고 그대로 파싱한다.
+- `task-ordering-agent`가 `BLOCKED`를 반환하면(task 정의만으로 dependency 복원 불가) 사용자에게 보고하고 중단한다.
+
+ordered plan에서 추출: Phases, Tasks (Target Files·Dependencies 포함), top-level Open Questions. feature draft 유래 task-set에서는 `Components`를 요구하지 않는다. Open Questions는 최선의 판단으로 해결하고, 판단 불가 항목은 리포트에 기록.
+
+> 구 "경로 B — no-plan 경량 분해"는 1a-6 + 1b(task-ordering dispatch)로 정식 승격됐다 — 분해 결과도 task-ordering을 거쳐 dependency·phase를 갖춘다. 모든 경로가 ordered plan을 거쳐 동일한 후속 흐름(Step 2~7)을 탄다.
 
 #### Surface Plan Assumptions
 
@@ -126,11 +134,11 @@ task-set 확보 직후, 사용자에게 다음을 채팅으로 알림한다 (질
 | 일부만 있음 | 있는 태스크만 병렬 후보, 나머지 순차 |
 | 없음 | 추론 시도 → 저확신 시 순차 fallback |
 
-#### 3.2 그룹 파생 규칙
+#### 3.2 wave 소비 (+ fallback)
 
-unblocked task를 `priority DESC, id ASC`로 정렬한 뒤, 앞에서부터 한 그룹(wave)에 greedy로 담는다. 이미 담긴 task와 **(a) dependency edge가 없고 (b) Target Files가 disjoint**한 task만 추가한다 — planner가 의미적 충돌을 dependency로 인코딩하므로 dependency edge가 권위 있는 신호다. 한 패스에서 못 담은 나머지는 다음 그룹에 같은 규칙으로 반복한다.
+wave(병렬 그룹) 파생은 `task-ordering-agent`가 각 phase 내에서 이미 수행해 `Parallel Execution Summary`에 명시했다(`priority DESC, id ASC` 정렬 greedy, dependency 없음 + Target Files disjoint → 같은 wave, 대규모 phase는 크기 5 제한). orchestrator는 그 wave를 **그대로 소비**한다.
 
-> 대규모 Phase (10+ unblocked tasks): 그룹 크기를 최대 5로 제한.
+> wave 정보가 없는 구식 plan(재개 등)에서만 fallback으로 자체 파생한다: unblocked task를 `priority DESC, id ASC`로 정렬해 dependency 없음 + Target Files disjoint 기준으로 greedy하게 wave에 담는다.
 
 #### 3.3 병렬 실행 계획 표시
 
@@ -332,7 +340,7 @@ Phase Review 종료 시, 그 phase에서 발생한 다음 이벤트를 채팅으
 다음 상황에서는 사용자에게 묻지 않고 최선의 판단으로 자율 진행:
 
 - **Target Files 불명확**: 최선의 추론 후 진행, 저확신 시 순차 fallback
-- **plan 부재**: 경량 분해(경로 B)로 순차 진행, 가정을 리포트에 기록
+- **plan 부재**: flat task-set으로 경량 분해 후 `task-ordering-agent`로 ordering 파생, 저확신 dependency는 순차 fallback, 가정을 리포트에 기록
 - **모호한 요구사항**: 합리적 해석으로 진행, 가정을 리포트에 명시
 - **범위 결정**: 계획 범위 내에서만 작업, 범위 밖 발견사항은 리포트에 기록
 - **기술 선택**: 기존 코드베이스 패턴 준수, 판단 근거를 리포트에 기록
@@ -340,7 +348,7 @@ Phase Review 종료 시, 그 phase에서 발생한 다음 이벤트를 채팅으
 
 ## Prerequisites
 
-1. **task-set 확보** (Step 1: plan 파싱 또는 no-plan 경량 분해)
+1. **ordered task-set 확보** (Step 1: ordered plan 파싱, 또는 flat task-set → `task-ordering-agent` dispatch로 ordering 파생)
 2. **환경 로드**: `_sdd/env.md` 존재 시 setup을 orchestrator가 1회 로드해 leaf dispatch 시 전달 (leaf는 재탐색 안 함)
 3. **코드베이스 이해**: Grep/Glob으로 기존 패턴, 테스트 프레임워크, 테스트 파일 위치 파악
 

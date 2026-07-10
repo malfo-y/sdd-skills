@@ -40,7 +40,7 @@
       ],
       "agents": [
         "./.claude/agents/feature-draft-agent.md",
-        "./.claude/agents/implementation-plan-agent.md",
+        "./.claude/agents/task-ordering-agent.md",
         "./.claude/agents/plan-review-agent.md",
         "./.claude/agents/implementation-review-agent.md",
         "./.claude/agents/simplicity-review-agent.md",

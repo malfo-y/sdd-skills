@@ -54,4 +54,4 @@ feature-draft는 **입력이 대화에서 태어나는** 스킬이다. agent는 
 - 산출물(draft) 작성·수정은 `feature-draft-agent`만 한다(산출물 단일 작성자 — orchestrator는 직접 rewrite하지 않는다). 스킬은 loop만 소유한다.
 - review·findings 분류는 `plan-review-agent`가 수행한다(중복 금지).
 
-> **Role Pointer**: 이 스킬은 review-fix loop를 소유하는 **orchestrator**다. `feature-draft-agent`는 draft producer 단일 소스(생성·fix mode 수정), `plan-review-agent`는 reviewer다. (구 entrypoint 형태에서 orchestrator로 승격됨 — 더 이상 단순 위임이 아니다.)
+> **Role Pointer**: 이 스킬은 review-fix loop를 소유하는 **orchestrator**다. `feature-draft-agent`는 draft producer 단일 소스(생성·fix mode 수정), `plan-review-agent`는 reviewer다.

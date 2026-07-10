@@ -19,7 +19,7 @@ AGENT_PREFIX = ""
 ALLOWED_BASE_AGENTS = {
     "feature-draft-agent",
     "spec-sync-agent",
-    "implementation-plan-agent",
+    "task-ordering-agent",
     "plan-review-agent",
     "implementation-agent",
     "implementation-review-agent",
@@ -88,9 +88,12 @@ def check(text):
                     findings.append(
                         f"{header}: Phase Source must not be a feature-draft artifact: {src}"
                     )
+                # task-ordering-agent writes its ordered plan to the canonical
+                # `_sdd/implementation/<date>_implementation_plan_<slug>.md` path,
+                # so the filename token stays `implementation_plan`.
                 elif "implementation_plan" not in src:
                     findings.append(
-                        f"{header}: Phase Source must be an implementation-plan output: {src}"
+                        f"{header}: Phase Source must be a task-ordering output: {src}"
                     )
 
         for mode_match in re.finditer(

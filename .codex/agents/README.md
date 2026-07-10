@@ -19,7 +19,7 @@
 ## Agent Set
 
 - `feature-draft-agent`
-- `implementation-plan-agent`
+- `task-ordering-agent`
 - `implementation-agent`
 - `plan-review-agent`
 - `implementation-review-agent`
@@ -35,7 +35,7 @@
 장문 산출물은 별도 writing helper agent에 넘기지 않는다. caller가 같은 흐름에서 skeleton -> fill -> finalize를 수행한다.
 
 - `feature-draft-agent`
-- `implementation-plan-agent`
+- `task-ordering-agent`
 - `plan-review-agent`
 - `implementation-review-agent`
 - `simplicity-review-agent`
