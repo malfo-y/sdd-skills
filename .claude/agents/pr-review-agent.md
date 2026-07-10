@@ -102,7 +102,7 @@ orchestrator가 verdict를 합성할 수 있도록 다음을 반환한다 (verdi
 - AC 충족 현황: 총 N, MET/NOT MET/PARTIAL/UNTESTED 개수
 - spec 위반 개수 (spec-based 모드)
 - test pass rate (또는 UNTESTED 사유)
-- severity별 findings 요약과 **blocker findings**(Critical/High) 목록
+- findings: Critical/High/Medium은 각각 위치(`file:line`)·문제·수정을 갖춘 블록(리포트 §1과 동일 재료 — orchestrator가 통합 리포트에 재조회 없이 승격 복사할 수 있게), Low는 위치 포함 한 문장. **blocker**는 Critical/High다.
 
 ## Re-review Mode (simplicity reviewer와 대칭)
 
@@ -129,17 +129,21 @@ orchestrator가 verdict를 합성할 수 있도록 다음을 반환한다 (verdi
 > 최신 re-review 회차 결론. 매 회차 이 섹션을 갱신한다 (생성 시 Iteration 1).
 - **Iteration**: N
 - **Status**: 핵심 blocker 유무 + 미해결 finding 요약
-- **Open findings**: Critical#.. / High#.. (없으면 none)
+- **Open findings**: C#.. / H#.. (없으면 none)
 
 ## 1. Findings
+> Critical/High/Medium은 finding당 블록(ID·제목 + 위치·문제·수정), Low는 위치 포함 한 문장. ID(C#/H#/M#/L#)는 Iteration History delta가 참조한다.
 ### Critical
-- [finding]
+#### C1. <finding 제목>
+- **위치**: `file:line`
+- **문제**: 무엇이 어떻게 잘못됐고 어떤 결과를 낳는가 — 증거 포함
+- **수정**: 구체적 수정 방향
 ### High
-- [finding]
+#### H1. <finding 제목> (블록 형식 동일)
 ### Medium
-- [finding]
+#### M1. <finding 제목> (블록 형식 동일)
 ### Low
-- [finding]
+- L1. `file:line` — <finding과 수정 방향 한 문장>
 
 ## 2. Acceptance Criteria Verification
 검증 ledger — 각 AC마다 한 행. 모든 verdict는 증거에 묶인다 (증거 없는 MET 금지).

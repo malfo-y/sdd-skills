@@ -1,7 +1,7 @@
 ---
 name: pr-review
 description: "Use this skill when the user asks to \"review PR\", \"PR review\", \"PR 리뷰\", \"PR 검증\", \"PR spec patch\", \"PR 스펙 패치\", \"PR 리뷰 준비\", or wants to verify a pull request against the specification or codebase."
-version: 3.2.1
+version: 3.3.0
 argument-hint: "[--model <gpt-5.5|gpt-5.4|gpt-5.4-mini>] [--effort <low|medium|high|xhigh>]"
 ---
 
@@ -22,7 +22,7 @@ argument-hint: "[--model <gpt-5.5|gpt-5.4|gpt-5.4-mini>] [--effort <low|medium|h
 - [ ] AC2: Verdict(APPROVE / REQUEST CHANGES / NEEDS DISCUSSION)가 두 렌즈 요약을 근거로 부여되었다
 - [ ] AC3: `pr-review-agent`를 PR 변경 파일 컨텍스트로 dispatch했고, correctness 검증(코드 품질·에러 처리·테스트·보안, spec 존재 시 spec AC·compliance·gap)이 그 리포트에서 수행되었다
 - [ ] AC4: `simplicity-review-agent`를 같은 PR 변경 파일 컨텍스트로 dispatch했다
-- [ ] AC5: 두 agent의 finding이 verdict 정책(correctness Critical/High → blocker, simplicity Medium+ → rationale 기여, Low → Suggested Improvements, 자동 강제 없음)대로 통합 리포트에 합류했다
+- [ ] AC5: 두 agent의 finding이 verdict 정책(correctness Critical/High + simplicity Medium+ → §1 Pre-merge 블록 전문, correctness Medium → §2 상세 블록, Low → §2 한 문장, 자동 강제 없음)대로 통합 리포트에 합류했다
 - [ ] AC6: `--model`/`--effort` 인자가 있으면 두 agent dispatch **모두**에 적용했다
 
 ## Hard Rules
@@ -127,9 +127,9 @@ spawn_agent({agent_type: "simplicity-review-agent", message: <framed payload: Ru
 
 반환된 두 agent ids를 `wait_agent({targets: [<correctness_id>, <simplicity_id>], timeout_ms: 600000})`로 수거한다. 두 handle 모두 final status가 반환된 뒤에만 결과를 기록하고 `close_agent`로 닫는다. `wait_agent`가 timeout이면 완료로 간주하지 말고 더 기다리거나, controlled stop/blocked 상태를 사용자에게 보고한 뒤에만 handle 정리를 결정한다.
 
-각 agent는 자기 경로에 findings-first 리포트를 저장하고 요약을 반환한다:
-- `pr-review-agent` → `_sdd/pr/<YYYY-MM-DD>_pr_correctness_<slug>.md` + correctness 신호(AC 충족 현황·spec 위반·test pass rate·blocker findings). **verdict는 내지 않는다.**
-- `simplicity-review-agent` → `_sdd/implementation/<YYYY-MM-DD>_simplicity_review_<slug>.md` + severity별 finding 요약(High/Medium gating/Low advisory).
+각 agent는 자기 경로에 findings-first 리포트를 저장하고 요약을 반환한다. 통합 리포트가 finding 전문을 승격 게재하므로(Step 5), 반환 요약은 finding당 승격 재료를 담아야 한다:
+- `pr-review-agent` → `_sdd/pr/<YYYY-MM-DD>_pr_correctness_<slug>.md` + correctness 신호(AC 충족 현황·spec 위반·test pass rate) + finding 상세(Critical~Medium은 각각 위치·문제·수정, Low는 위치 포함 한 문장 — 계약은 agent Step 5가 보유). **verdict는 내지 않는다.**
+- `simplicity-review-agent` → `_sdd/implementation/<YYYY-MM-DD>_simplicity_review_<slug>.md` + severity별 finding 요약. `message`의 `## Input Data`에 **Medium+ finding당 위치(`file:line`)·현재 형태·제안된 더 단순한 형태, Low는 위치 포함 한 문장**으로 반환하도록 명시한다 (agent 리포트 §1이 이미 이 필드를 담는다).
 
 ### Step 4: Verdict
 
@@ -143,15 +143,16 @@ spawn_agent({agent_type: "simplicity-review-agent", message: <framed payload: Ru
 
 **Finding 합류 규칙** (자동 강제 아님 — 인간 리뷰 보조):
 
-- **correctness Critical/High**: REQUEST CHANGES rationale의 주 근거. Pre-merge Blockers에 귀속.
-- **simplicity Medium+ (falsifiable gating)**: REQUEST CHANGES rationale에 **기여**한다 (correctness 신호와 함께 인간 리뷰어가 판단). 단독으로 verdict를 강제하지 않는다.
-- **simplicity Low (주관) / correctness 권고**: Suggested Improvements에 귀속.
+- **correctness Critical/High**: REQUEST CHANGES rationale의 주 근거. §1 Pre-merge에 블록 전문으로 귀속.
+- **simplicity Medium+ (falsifiable gating)**: REQUEST CHANGES rationale에 **기여**한다 (correctness 신호와 함께 인간 리뷰어가 판단). 단독으로 verdict를 강제하지 않는다. §1 Pre-merge에 블록 전문으로 귀속.
+- **correctness Medium**: §2 개선 제안에 블록 전문으로 귀속 (non-blocking이지만 상세히).
+- **correctness Low / simplicity Low (주관)**: §2 개선 제안에 위치 포함 한 문장으로 귀속.
 
 implementation gate의 `critical=high=medium=0` 합집합 자동 exit는 **PR review에 적용하지 않는다** — PR review는 verdict 권고이지 자동 게이트가 아니다.
 
 ### Step 5: Report Generation
 
-`_sdd/pr/<YYYY-MM-DD>_pr_review_<slug>.md`를 Output Format에 맞게 생성한다. 이 통합 리포트는 verdict + 두 렌즈 **요약** + 두 detail 리포트 **경로 참조**를 담는다 (correctness/simplicity detail은 각 agent 리포트에 있으므로 여기서는 재작성하지 않는다).
+`_sdd/pr/<YYYY-MM-DD>_pr_review_<slug>.md`를 Output Format에 맞게 생성한다. 이 통합 리포트는 독자가 detail 리포트를 열지 않고 행동할 수 있어야 한다 — **행동 대상 finding은 전문으로 승격**한다: §1 Pre-merge와 §2의 correctness Medium은 위치·문제·수정을 갖춘 블록으로, Low는 위치 포함 한 문장으로 싣는다. finding 개수·AC 충족률 통계 표는 만들지 않는다 (분포는 Verdict의 Signals 한 줄로 충분). 검증 ledger·차원별 스캔·iteration history 등 나머지 detail은 두 agent 리포트 경로 참조로 남긴다(재작성 금지). 반환 요약에 승격 재료가 빠졌으면 해당 detail 리포트 §1을 Read해 보충한다.
 
 현재 콘텍스트에서 skeleton을 먼저 기록한 뒤, 같은 흐름에서 내용을 채운다.
 
@@ -173,77 +174,37 @@ implementation gate의 `critical=high=medium=0` 합집합 자동 exit는 **PR re
 **[APPROVE / REQUEST CHANGES / NEEDS DISCUSSION]**
 
 **Rationale**: <1-2 sentence rationale — 두 렌즈 신호 종합>
-**Key Findings**:
-- <finding 1>
-- <finding 2>
+**Signals**: correctness Crit N·High N·Med N·Low N / simplicity High N·Med N·Low N / AC MET X of N / test pass F% (또는 UNTESTED) — 한 줄, 표 없음
 
 ---
 
-## Metrics Summary
+## 1. Pre-merge (고쳐야 할 것)
 
-| Item | Count |
-|------|-------|
-| Acceptance criteria | N (inferred) or N (from spec) |
-| Met (✓) | X (Y%) |
-| Not met (✗) | A (B%) |
-| Partially met (△) | C (D%) |
-| Spec violations | E |
-| Test pass rate | F% |
-| Correctness findings (Crit/High/Med/Low) | .. |
-| Simplicity findings (High/Med/Low) | .. |
+<!-- correctness Critical/High + simplicity Medium+. severity 내림차순. 없으면 "없음." 한 줄 -->
+
+### 1. [<Critical|High|Medium> · <correctness|simplicity>] <finding 제목>
+- **위치**: `file:line`
+- **문제**: 무엇이 어떻게 잘못됐고 어떤 결과를 낳는가 — 증거 포함 (simplicity면 현재 형태)
+- **수정**: 구체적 수정 방향 (simplicity면 더 단순한 동등 형태)
 
 ---
 
-## Correctness (pr-review-agent)
-<!-- pr-review-agent 리포트 통합 요약. 상세는 리포트 참조 -->
-**Report**: `_sdd/pr/<YYYY-MM-DD>_pr_correctness_<slug>.md`
-**Mode**: code-only / spec-based
+## 2. 개선 제안 (non-blocking)
 
-| Severity | Count | Findings (요약) |
-|----------|-------|-----------------|
-| Critical | N | |
-| High | N | |
-| Medium | N | |
-| Low | N | |
+<!-- correctness Medium — §1과 같은 블록 형식으로 상세히 -->
+### 1. [Medium · correctness] <finding 제목>
+- **위치**: `file:line`
+- **문제**: <증거 포함>
+- **수정**: <구체적 방향>
 
-- **AC 충족 현황**: MET X / NOT MET A / PARTIAL C / UNTESTED U
-- **Spec 위반**: E (spec-based 모드)
-- **Test pass rate**: F%
+<!-- correctness Low + simplicity Low — 위치 포함 한 문장씩 -->
+- `file:line` — <finding과 수정 방향 한 문장>
 
 ---
 
-## Simplicity (simplicity-review-agent)
-<!-- simplicity-review-agent 리포트 통합 요약. 상세는 리포트 참조 -->
-**Report**: `_sdd/implementation/<YYYY-MM-DD>_simplicity_review_<slug>.md`
+## 3. 확인된 것
 
-| Severity | Count | Findings (요약) |
-|----------|-------|-----------------|
-| High | N | |
-| Medium (gating) | N | |
-| Low (advisory) | N | |
-
-> correctness Critical/High + simplicity Medium+ finding은 REQUEST CHANGES rationale에 기여(자동 강제 아님), Low는 Suggested Improvements에 귀속.
-
----
-
-## Recommendations
-
-### Pre-merge Blockers
-<!-- correctness Critical/High + simplicity Medium+ finding(rationale 기여) -->
-| Priority | Item | Severity | Lens | Action |
-|----------|------|----------|------|--------|
-
-### Suggested Improvements
-<!-- correctness 권고 + simplicity Low finding -->
-| Priority | Item | Lens | Benefit |
-|----------|------|------|---------|
-
----
-
-## Next Steps
-
-1. [ ] Take action based on Verdict
-2. [ ] (if Approve) After merge, run `$spec-sync` if spec updates needed
+<!-- 통과 신호를 산문 2-3줄로: AC 충족 현황과 증거 위치(correctness 리포트 §2 ledger), 테스트 결과, spec compliance. 표·퍼센트 없음 -->
 
 ---
 
@@ -252,8 +213,8 @@ implementation gate의 `critical=high=medium=0` 합집합 자동 exit는 **PR re
 **Review version**: <count>
 **PR commit SHA**: <sha>
 **Spec source**: from-branch / none
-**Correctness report**: `_sdd/pr/<YYYY-MM-DD>_pr_correctness_<slug>.md`
-**Simplicity report**: `_sdd/implementation/<YYYY-MM-DD>_simplicity_review_<slug>.md`
+**Correctness report**: `_sdd/pr/<YYYY-MM-DD>_pr_correctness_<slug>.md` — AC 검증 ledger·verification 상세
+**Simplicity report**: `_sdd/implementation/<YYYY-MM-DD>_simplicity_review_<slug>.md` — 차원별 스캔 상세
 **Generated at**: YYYY-MM-DD HH:MM:SS
 ```
 

@@ -91,87 +91,38 @@ Codex:
 **REQUEST CHANGES**
 
 **Rationale**: refresh 토큰 경로의 핵심 acceptance criterion이 미충족이고, 인증 컨텍스트 주입 테스트가 비어 있어 머지 전 보완이 필요하다.
-**Key Findings**:
-- refresh 시 새 만료 시간이 생성되지 않아 테스트가 실패함
-- 인증 컨텍스트 주입 경로에 테스트가 없음
-- CORS 설정 변경은 spec update 후보로 기록 필요
+**Signals**: correctness High 1·Med 1·Low 1 / simplicity Med 1 / AC MET 2 of 4 / test pass 95%
 
 ---
 
-## Metrics Summary
+## 1. Pre-merge (고쳐야 할 것)
 
-| Item | Count |
-|------|-------|
-| Acceptance criteria | 4 (from spec) |
-| Met (✓) | 2 (50%) |
-| Not met (✗) | 1 (25%) |
-| Partially met (△) | 1 (25%) |
-| Spec violations | 0 |
-| Test pass rate | 95% |
+### 1. [High · correctness] refresh 시 새 만료 시간이 생성되지 않음
+- **위치**: `src/services/auth_service.py:89-102`
+- **문제**: refresh 분기가 기존 `exp` 클레임을 그대로 복사해 새 토큰이 원 토큰과 같은 시점에 만료된다. spec AC #3 위반이고 `test_refresh_token`이 실패한다.
+- **수정**: refresh 시 현재 시각 기준으로 `exp`를 재계산해 토큰을 발급한다.
 
----
-
-## Code-only Verification
-
-### Inferred Acceptance Criteria
-| # | Criterion (from PR description) | Implementation | Test | Status | Notes |
-|---|--------------------------------|----------------|------|--------|-------|
-| 1 | JWT 기반 인증 추가 | auth routes + services | 관련 테스트 존재 | ✓ | |
-| 2 | 세션 갱신 버그 수정 | refresh flow | test_refresh_token | ✗ | exp 갱신 누락 |
-
-### Code Quality
-- 서비스/미들웨어 구조는 기존 프로젝트 패턴과 일치한다.
-- `auth_service.py`의 refresh 분기에서 새 만료 시간 계산이 빠져 있다.
-
-### Security & Performance
-- hardcoded secret 없음
-- 인증/인가 흐름은 기존 규칙과 일치
+### 2. [Medium · simplicity] 토큰 검증 로직이 두 곳에 중복
+- **위치**: `src/middleware/auth.py:30-45`, `src/services/auth_service.py:70-84`
+- **문제**: 서명 검증 + 만료 확인 로직이 미들웨어와 서비스에 동일하게 복제돼 있다 (중복 코드 차원).
+- **수정**: `verify_token()` 하나로 합치고 두 호출처에서 재사용한다 — 동작 동일.
 
 ---
 
-## Spec-based Verification
+## 2. 개선 제안 (non-blocking)
 
-### Spec AC Verification
-| # | Acceptance Criterion (from spec) | Implementation | Test | Status | Notes |
-|---|----------------------------------|----------------|------|--------|-------|
-| 1 | 회원가입 지원 | `src/routes/auth.py:25-42` | test_register_valid | ✓ | |
-| 2 | JWT 토큰 발급 | `src/services/auth_service.py:45-67` | test_login_returns_tokens | ✓ | |
-| 3 | refresh 시 새 만료 시간 생성 | `src/services/auth_service.py:89-102` | test_refresh_token | ✗ | exp 갱신 누락 |
-| 4 | 인증 컨텍스트 주입 | `src/middleware/auth.py:47-55` | - | △ | 테스트 없음 |
+### 1. [Medium · correctness] 인증 컨텍스트 주입 경로에 테스트 없음
+- **위치**: `src/middleware/auth.py:47-55`
+- **문제**: spec AC #4의 구현은 있으나 테스트가 없어 회귀를 감지할 수 없다 (PARTIAL).
+- **수정**: 미들웨어 통과 후 request context에 user가 실리는지 검증하는 테스트를 추가한다.
 
-### Spec Compliance
-None
-
-### Gap Analysis
-#### In spec but not in PR
-- refresh 만료 시간 갱신 보완 필요
-
-#### In PR but not in spec
-- CORS Authorization 헤더 허용
+- `src/config/cors.py:12` — CORS Authorization 헤더 허용은 spec에 없는 변경이므로 머지 후 `$spec-sync`로 spec 반영을 검토한다.
 
 ---
 
-## Recommendations
+## 3. 확인된 것
 
-### Pre-merge Blockers
-| Priority | Item | Severity | Action |
-|----------|------|----------|--------|
-| 1 | refresh 만료 시간 갱신 누락 | High | refresh 시 새 exp 클레임 생성 |
-| 2 | 인증 컨텍스트 주입 테스트 없음 | Medium | 테스트 추가 |
-
-### Suggested Improvements
-| Priority | Item | Benefit |
-|----------|------|---------|
-| 3 | CORS 변경을 후속 spec update 후보로 기록 | Drift 감소 |
-
----
-
-## Next Steps
-
-1. [ ] refresh 경로 수정
-2. [ ] 미들웨어 테스트 추가
-3. [ ] 수정 후 `$pr-review` 재실행
-4. [ ] 머지 후 `$spec-sync`로 스펙 반영 검토
+회원가입(AC #1)과 JWT 발급(AC #2)은 구현·테스트 모두 확인됐다 (증거는 correctness 리포트 §2 ledger). 테스트는 40개 중 38개 통과(95%)이고 실패 2건은 모두 위 refresh 결함에 기인한다. JWT secret은 환경변수로 관리되며 spec 보안 요구사항 위반은 없다.
 
 ---
 
@@ -180,6 +131,8 @@ None
 **Review version**: 1
 **PR commit SHA**: abc1234
 **Spec source**: from-branch
+**Correctness report**: `_sdd/pr/2026-04-02_pr_correctness_auth_system.md` — AC 검증 ledger·verification 상세
+**Simplicity report**: `_sdd/implementation/2026-04-02_simplicity_review_auth_system.md` — 차원별 스캔 상세
 **Generated at**: 2026-04-02 17:40:00
 ```
 
@@ -225,60 +178,25 @@ Codex:
 **APPROVE**
 
 **Rationale**: PR 설명에서 추론한 acceptance criteria가 구현과 테스트로 모두 뒷받침되며, 보안상 명백한 회귀는 보이지 않는다.
-**Key Findings**:
-- 만료 토큰 차단 로직이 추가되었음
-- 관련 테스트가 모두 통과함
-- spec은 없어 code-only 기준으로 검토함
+**Signals**: correctness Low 1 / simplicity 없음 / AC MET 3 of 3 (inferred) / test pass 100%
 
 ---
 
-## Metrics Summary
+## 1. Pre-merge (고쳐야 할 것)
 
-| Item | Count |
-|------|-------|
-| Acceptance criteria | 3 (inferred) |
-| Met (✓) | 3 (100%) |
-| Not met (✗) | 0 (0%) |
-| Partially met (△) | 0 (0%) |
-| Spec violations | 0 |
-| Test pass rate | 100% |
+없음.
 
 ---
 
-## Code-only Verification
+## 2. 개선 제안 (non-blocking)
 
-### Inferred Acceptance Criteria
-| # | Criterion (from PR description) | Implementation | Test | Status | Notes |
-|---|--------------------------------|----------------|------|--------|-------|
-| 1 | 만료 토큰 거부 | `src/services/password_service.py:34-42` | test_expired_token_rejected | ✓ | |
-| 2 | 유효 토큰 정상 처리 | `src/services/password_service.py:28-33` | test_valid_token_reset | ✓ | |
-| 3 | 에러 응답 반환 | `src/services/password_service.py:40` | test_expired_token_error_response | ✓ | |
-
-### Code Quality
-- 기존 서비스 패턴과 일치한다.
-
-### Security & Performance
-- 보안 버그 수정 목적과 구현이 일관된다.
+- `src/services/password_service.py:34` — 추후 spec 도입 시 비밀번호 재설정 보안 규칙(토큰 만료 정책)을 문서화하면 운영 추적성이 좋아진다 (`$spec-create` 검토).
 
 ---
 
-## Recommendations
+## 3. 확인된 것
 
-### Pre-merge Blockers
-| Priority | Item | Severity | Action |
-|----------|------|----------|--------|
-
-### Suggested Improvements
-| Priority | Item | Benefit |
-|----------|------|---------|
-| 1 | 추후 spec 도입 시 비밀번호 재설정 보안 규칙 문서화 | 운영 추적성 향상 |
-
----
-
-## Next Steps
-
-1. [ ] 머지 진행
-2. [ ] 필요 시 `$spec-create` 또는 `$spec-sync` 검토
+추론 AC 3건(만료 토큰 거부·유효 토큰 정상 처리·일관된 에러 응답) 모두 구현과 테스트로 확인됐다 (증거는 correctness 리포트 §2 ledger). 테스트 전체 통과(100%). simplicity 5개 차원 스캔에서 finding 없음.
 
 ---
 
@@ -287,5 +205,7 @@ Codex:
 **Review version**: 1
 **PR commit SHA**: def5678
 **Spec source**: none
+**Correctness report**: `_sdd/pr/2026-04-02_pr_correctness_password_reset_expiry.md` — AC 검증 ledger·verification 상세
+**Simplicity report**: `_sdd/implementation/2026-04-02_simplicity_review_password_reset_expiry.md` — 차원별 스캔 상세
 **Generated at**: 2026-04-02 18:00:00
 ```
