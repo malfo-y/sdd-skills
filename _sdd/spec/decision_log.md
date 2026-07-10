@@ -1,5 +1,27 @@
 # Decision Log
 
+## 2026-07-10 - pr-review 통합 리포트를 통계 표에서 finding-본문 중심으로 재설계
+
+### Context
+
+`pr-review` 통합 리포트가 Metrics Summary(AC 충족 %·finding 개수 분포)·렌즈별 severity 카운트 표·Recommendations 표로 구성돼, 같은 finding이 세 곳(Key Findings 불릿·severity 표 셀·Recommendations 행)에 한 줄씩 중복 등장하면서 정작 "어디가, 왜, 어떻게 고쳐야 하는지"는 어디에도 온전히 실리지 않았다. 2026-07-08 결정 #3("통합 리포트 = 두 렌즈 요약 + detail 경로 참조, 재작성 금지")이 실행 가능한 내용이 통합 리포트에 실릴 수 없는 구조를 만든 원인이었다.
+
+### Decision
+
+1. **finding이 1급 단위**: 통합 리포트는 행동 대상 finding을 위치(`file:line`)·문제(증거)·수정(구체 방향) 블록 전문으로 싣는다. 상세도는 severity 계단을 따른다 — Pre-merge(correctness Critical/High + simplicity Medium+)와 correctness Medium은 블록 전문, Low는 위치 포함 한 문장.
+2. **통계 제거**: Metrics Summary·렌즈별 severity 카운트 표·Recommendations 표·Next Steps 보일러플레이트를 삭제한다. 분포는 Verdict `Signals` 한 줄, 통과 신호는 §3 "확인된 것" 산문 2-3줄로 대체한다.
+3. **2026-07-08 결정 #3 부분 대체**: "재작성 금지"를 "행동 대상 finding은 승격 복사, 검증 ledger·차원별 스캔·iteration history는 detail 경로 참조"로 완화한다. blocker는 통상 0~5개라 이중 작성 비용이 낮고 사용성 이득이 크다.
+4. **승격 재료 공급**: `pr-review-agent`는 Step 5 반환에 Critical~Medium finding당 위치·문제·수정 블록을 포함하고, 리포트 §1도 같은 블록 형식(ID C#/H#/M#/L#)으로 바꾼다. simplicity 레인은 공유 agent를 수정하는 대신 dispatch message에 동일 상세 반환을 명시한다(리포트 §1이 이미 해당 필드를 요구). 반환이 부족하면 orchestrator가 detail 리포트 §1을 Read해 보충한다.
+5. **정책 무변경**: verdict 합성 규칙(자동 강제 없음)·표적 disjoint·단일 작성자 불변식·simplicity 차원/falsifiable severity 정책은 그대로다.
+6. **동일 원칙을 나머지 review detail 리포트에 확장**: `implementation-review-agent`는 §1 Findings를 같은 ID 블록(C#/H#/M# = 위치·문제·수정, Low = 한 문장)으로 교체하고 — finding이 review-fix loop에서 fix task로 변환되므로 승격 재료가 직접 필요 — §4 Recommendations를 finding ID 참조 갈음으로(plan-review §5 규칙 이식), §5 Conclusion을 삭제(Current Status와 중복), §2 Progress Overview를 task/AC 상태로 제약한다. `plan-review-agent`는 이미 finding 블록·재진술 금지 규칙을 갖춰 finding ID 부여(C#/H#/M#/L# — Current Status·§2/§5·Iteration History가 참조만 하고 정의가 없던 갭 해소)와 Low 한 문장 축약만 반영한다. reviewer들의 Current Status `Open findings` 표기도 ID 체계로 통일.
+7. **simplicity §1 블록화 + implementation_report 재설계**: `simplicity-review-agent`도 High/Medium을 ID 블록(H#/M# = 차원·위치·현재 형태·제안 형태), Low를 한 문장으로 통일한다(차원·severity 정책 무변경). `implementation` SKILL의 최종 implementation_report는 Quality Assessment/Cross-Phase Review/Issues Found 표를 **Review Gates**(gate당 한 줄: iteration·exit/MAX·reviewer 리포트 경로)와 **Open Issues**(review-fix loop 후 잔존분만, reviewer finding ID 참조 + 위치 포함 한 문장)로 교체하고, Recommendations는 ID 참조 갈음, Conclusion은 verdict + 한 문장 근거로 유지한다 (`spec-sync`·`spec-summary`는 경로/글롭 소비라 호환).
+
+### Consequences
+
+- `pr-review` claude+codex SKILL v3.2.1→3.3.0, `implementation` claude+codex SKILL v3.5.0→3.6.0, reviewer agent 4종(pr-review·plan-review·implementation-review·simplicity-review) claude md + codex toml 8개 surface, codex/claude `examples/sample-review.md` 갱신. global spec guardrail sub-bullet의 finding 흐름 서술을 새 배치로 교체.
+- 리포트 독자는 통합/detail 리포트만으로 수정 작업을 시작할 수 있고, Iteration History·Current Status가 참조하던 finding ID가 네 reviewer 모두에서 실제 정의된다.
+- 출력 토큰도 감소한다(표 3개 + 중복 3중 게재 + Conclusion 사족 제거) — 출력 다이어트 방향과 정합.
+
 ## 2026-07-08 - pr-review correctness를 dispatched agent로 추출(model override가 두 렌즈에 균일 적용)
 
 ### Context

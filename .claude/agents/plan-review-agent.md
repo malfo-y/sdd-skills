@@ -29,7 +29,7 @@ model: inherit
 **리포트 산출물** — 결과가 어떻게 정리·저장됐는가:
 
 - [ ] findings-first 구조와 `Critical / High / Medium / Low` severity를 사용했다.
-- [ ] 각 finding이 smell category, severity, evidence, affected plan surface, principle link, recommended plan change를 포함한다.
+- [ ] 각 finding이 ID(C#/H#/M#/L#), smell category, severity(§1 섹션 배치), evidence, affected plan surface, principle link, recommended plan change를 포함한다 (Low는 affected surface 포함 한 문장으로 갈음).
 - [ ] Critical/High finding은 implementation blocker로 표시하고, Medium/Low는 advisory로 표시했다.
 - [ ] 리포트가 `_sdd/implementation/<YYYY-MM-DD>_plan_review_<slug>.md`에 저장됐다.
 - [ ] Recommendations 자체도 Minimum-Code 원칙을 따른다.
@@ -147,24 +147,24 @@ stale 판단 예시:
 > 최신 re-review 회차 결론. 매 회차 이 섹션을 갱신한다 (생성 시 Iteration 1).
 - **Iteration**: N
 - **Blocker**: BLOCKED | CLEAR
-- **Open findings**: Critical#.. / High#.. / Medium#.. (없으면 none)
+- **Open findings**: C#.. / H#.. / M#.. (없으면 none)
 
 ## 1. Findings
+> Critical/High/Medium은 finding당 블록(ID·제목 + 아래 필드), Low는 affected surface 포함 한 문장. ID(C#/H#/M#/L#)는 Current Status·§2/§5 참조·Iteration History delta가 사용한다. severity는 섹션 배치로 표현한다.
 ### Critical
-- **[Smell] Title**
-  - **Severity**: Critical
-  - **Evidence**: ...
-  - **Affected Plan Surface**: ...
-  - **Principle Link**: ...
-  - **Recommended Plan Change**: ...
-  - **Implementation Blocker**: Yes
+#### C1. [Smell] Title
+- **Evidence**: ...
+- **Affected Plan Surface**: ...
+- **Principle Link**: ...
+- **Recommended Plan Change**: ...
+- **Implementation Blocker**: Yes
 
 ### High
-...
+#### H1. [Smell] Title (블록 형식 동일)
 ### Medium
-...
+#### M1. [Smell] Title (블록 형식 동일)
 ### Low
-...
+- L1. <affected plan surface> — <finding과 권고 한 문장>
 
 ## 2. Smell Checklist
 > 섹션 1 finding으로 이미 기록된 항목은 `Evidence / Reference`에 finding 참조만 적는다 (재진술 금지). finding 없는 PASS/WARN만 근거 1줄.
@@ -180,7 +180,7 @@ stale 판단 예시:
 > 리뷰 대상 plan을 재진술하지 않는다. 리뷰 판단에 실제로 사용한 surface 특이점(비표준 구조·규모·병렬성·linkage 등)만 최대 3줄. 특이점이 없으면 "표준 구조, 특이점 없음" 1줄.
 
 ## 5. Recommendations
-> finding의 `Recommended Plan Change`를 재진술하지 않는다 — Must/Should/Could 항목은 finding 참조로 갈음한다 (예: `Must: Critical #1`, `Should: Medium #2`). Must는 Critical/High finding에만 대응하며, finding에 대응되지 않는 신규 권고만 본문 1줄로 적는다.
+> finding의 `Recommended Plan Change`를 재진술하지 않는다 — Must/Should/Could 항목은 finding 참조로 갈음한다 (예: `Must: C1`, `Should: M2`). Must는 Critical/High finding에만 대응하며, finding에 대응되지 않는 신규 권고만 본문 1줄로 적는다.
 
 ## 6. Limitations and Assumptions
 [Tier 3 또는 stale plan 한계]
@@ -230,7 +230,7 @@ Tier 3에서는 이 섹션을 input-readiness 중심으로 작성한다. plan이
 - `FAIL`: Critical/High blocker 가능
 - `UNKNOWN`: 근거 부족. Tier limitation에 기록
 
-각 smell row는 `Status`를 가진다. **이미 섹션 1 finding으로 기록된 smell은 `Evidence / Reference`에 finding 참조(예: "Critical #1")만 적고 evidence를 재진술하지 않는다.** finding으로 승격되지 않은 `PASS`/`WARN`만 plan section/task/Target Files/AC/Part 2 coverage/Part 2 Validation Plan 중 최소 하나를 근거로 1줄 둔다. `UNKNOWN`은 limitation 근거를 적는다.
+각 smell row는 `Status`를 가진다. **이미 섹션 1 finding으로 기록된 smell은 `Evidence / Reference`에 finding 참조(예: "C1")만 적고 evidence를 재진술하지 않는다.** finding으로 승격되지 않은 `PASS`/`WARN`만 plan section/task/Target Files/AC/Part 2 coverage/Part 2 Validation Plan 중 최소 하나를 근거로 1줄 둔다. `UNKNOWN`은 limitation 근거를 적는다.
 
 Tier 3에서는 6-smell checklist를 정상 PASS/FAIL로 채우지 않는다. plan 없음 또는 stale 때문에 리뷰할 수 없는 항목은 `UNKNOWN`으로 두고 input-readiness limitation을 기록한다.
 

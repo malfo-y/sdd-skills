@@ -103,16 +103,20 @@ findings-first로 `_sdd/implementation/<YYYY-MM-DD>_simplicity_review_<slug>.md`
 > 최신 re-review 회차 결론. 매 회차 이 섹션을 갱신한다 (생성 시 Iteration 1).
 - **Iteration**: N
 - **Status**: 미해결 finding 요약 (없으면 clean)
-- **Open findings**: Medium#.. / High#.. (없으면 none)
+- **Open findings**: H#.. / M#.. (없으면 none)
 
 ## 1. Findings
-> findings-first. 각 finding: 차원 · `file:line` · 현재 형태 · 더 단순한 동등 형태.
+> High/Medium은 finding당 블록(ID·제목 + 차원·위치·현재 형태·제안 형태), Low는 위치 포함 한 문장. ID(H#/M#/L#)는 Current Status·Iteration History delta가 참조한다.
 ### High
-- [finding]
+#### H1. <finding 제목>
+- **차원**: <5개 차원 중 하나>
+- **위치**: `file:line`
+- **현재 형태**: <인용/요약>
+- **제안 형태**: <더 단순한 동등 형태 — 동작 불변, 구체 코드/변형>
 ### Medium (gating)
-- [finding]
+#### M1. <finding 제목> (블록 형식 동일)
 ### Low (advisory)
-- [finding]
+- L1. `file:line` — <finding과 권고 한 문장>
 
 ## 2. Dimension Summary
 | Dimension | Findings | Notes |

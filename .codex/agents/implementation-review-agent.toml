@@ -83,20 +83,24 @@ stale 판단 예시:
 > 최신 re-review 회차 결론. 매 회차 이 섹션을 갱신한다 (생성 시 Iteration 1).
 - **Iteration**: N
 - **Status**: 핵심 blocker 유무 + 미해결 finding 요약
-- **Open findings**: Critical#.. / High#.. (없으면 none)
+- **Open findings**: C#.. / H#.. (없으면 none)
 
 ## 1. Findings
+> Critical/High/Medium은 finding당 블록(ID·제목 + 위치·문제·수정), Low는 위치 포함 한 문장. ID(C#/H#/M#/L#)는 Current Status·Iteration History delta가 참조하고, review-fix loop이 fix task 변환에 그대로 쓴다.
 ### Critical
-- [finding]
+#### C1. <finding 제목>
+- **위치**: `file:line`
+- **문제**: 무엇이 어떻게 잘못됐고 어떤 결과를 낳는가 — 증거 포함
+- **수정**: 구체적 수정 방향
 ### High
-- [finding]
+#### H1. <finding 제목> (블록 형식 동일)
 ### Medium
-- [finding]
+#### M1. <finding 제목> (블록 형식 동일)
 ### Low
-- [finding]
+- L1. `file:line` — <finding과 수정 방향 한 문장>
 
 ## 2. Progress Overview
-[요약]
+> task/AC 단위 상태(완료/부분/미완료)만 몇 줄로. plan 재진술 금지.
 
 ## 3. Verification Summary
 [구현/테스트/정합성]
@@ -109,15 +113,12 @@ stale 판단 예시:
 | AC2 / V2 | review (2등급 정성) | `<file:line>` 인용 — 위반 사례 유무 | MET / NOT MET / UNTESTED |
 
 ## 4. Recommendations
-[Must / Should / Could — 모두 발견된 결함 또는 측정 위험에 직접 연결돼야 한다. 사변적 'future-proof' 권고 금지 (Hard Rule 10)]
+> finding을 재진술하지 않는다 — Must/Should/Could 항목은 finding ID 참조로 갈음한다 (예: `Must: C1`, `Should: M2`). finding에 대응되지 않는 신규 권고만 본문 1줄, 발견된 결함 또는 측정 위험에 직접 연결 (사변적 권고 금지 — Hard Rule 10).
 
-## 5. Conclusion
-[한 단락 요약]
-
-## 6. Assumptions
+## 5. Assumptions
 [Tier 3에서만 추가]
 
-## 7. Iteration History
+## 6. Iteration History
 > 각 re-review 회차를 append한다 (재진술 없이 직전 대비 delta만).
 ### Iteration N (YYYY-MM-DD)
 - **resolved**: 직전 회차 finding 중 이번에 해소된 ID
@@ -180,7 +181,7 @@ findings-first로 저장하고 Review Output 섹션(findings·progress·verifica
 1. 기존 리포트와 현재 코드/구현 상태를 Read·확인한다.
 2. **전체 재검증**한다 (Fresh Verification — Hard Rule 8: 실행 출력 근거, should-work 금지).
 3. 직전 회차 finding 대비 **delta를 판정**한다: resolved / still-open / new.
-4. 기존 리포트를 **surgical 갱신**한다: `## Current Status`(Iteration·Status·Open) 교체, `## 1. Findings`와 `## 3. Verification Summary` ledger 최신화, `## 7. Iteration History`에 `### Iteration N` **append**(직전 보존).
+4. 기존 리포트를 **surgical 갱신**한다: `## Current Status`(Iteration·Status·Open) 교체, `## 1. Findings`와 `## 3. Verification Summary` ledger 최신화, `## 6. Iteration History`에 `### Iteration N` **append**(직전 보존).
 5. 산출물 단일 작성자 불변식 — reviewer는 자기 리포트만 쓰고 plan/spec/code는 수정하지 않는다.
 
 ## Error Handling
