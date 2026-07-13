@@ -2,8 +2,8 @@
 
 > Markdown 기반 skill bundle로 AI 에이전트의 Spec-Driven Development 워크플로우를 Claude Code와 Codex에서 공통 계약으로 실행한다.
 
-**Spec Version**: 4.5.7
-**Last Updated**: 2026-07-13
+**Spec Version**: 4.5.8
+**Last Updated**: 2026-07-14
 **Status**: Approved
 **Canonical Role**: current thin global spec
 
@@ -76,7 +76,7 @@ SDD Skills는 이 문제를 `SKILL.md = 실행 가능한 프롬프트`라는 관
 - implementation-scoped 구현의 test-first는 leaf 자기보고가 아니라 orchestrator가 집행하는 실행 불변식이다. 테스트 작성과 구현을 별도 leaf로 분리하고(`test-author-agent`가 테스트만, `implementation-agent`는 GREEN→REFACTOR 전용), 그 사이에 orchestrator가 소유하는 RED 게이트를 닫은 뒤에만 구현을 dispatch한다
   - RED 게이트는 새 테스트 실행→실패 확인→RED 증거 캡처 + falsifiability 점검을 수행한다. RED 증거는 leaf 자기보고 TDD표가 아니라 orchestrator가 캡처한 외부 산출물이다. falsifiability는 관찰 규칙으로 한정한다 — AC 관찰 동작에 대한 assertion/check 단계 실패만 유효한 RED로 인정하고, 순수 import/collection/syntax 단계 실패로만 빨간 테스트는 RED 미충족으로 test-author 재작성으로 돌린다(통과 전 구현 leaf 미dispatch)
   - 테스트는 impl에 대해 고정된다 — 구현 leaf는 주어진 실패 테스트를 최소코드로 통과시키며 테스트를 수정하지 않고, 가정 계약이 틀렸다고 보면 `CONTRACT_MISMATCH`로 보고해 orchestrator가 test-author 재dispatch를 판정한다(약한 테스트 통과로 퇴화 방지). 설계 결정(Contract/Invariant Delta·Validation Plan `V*`)은 plan에서 상류로 확정되고 두 leaf는 같은 pinned 계약을 실행만 한다
-  - 2-stage 파이프라인은 wave 내부에 한정하고 cross-wave 중첩은 도입하지 않는다(wave 간은 순차). 테스트 프레임워크 부재 자산은 grep/구조 점검 acceptance check를 RED artifact로 쓰고 프레임워크/`_sdd/env.md` 부재 시 `UNTESTED` 표기 경로를 유지한다. 이 graceful-degradation 분기 기준의 canonical surface는 `implementation` 스킬의 RED 게이트 서술이며 다른 surface는 이를 참조한다
+  - 2-stage 파이프라인은 wave 내부에 한정하고 cross-wave 중첩은 도입하지 않는다(wave 간은 순차). RED 게이트는 wave의 Stage A dispatch 직전에 task AC 성격을 3-way로 triage한다 — (a) test: 관찰 가능한 코드 동작은 실패 테스트로 RED 캡처, (b) structural-check: 프레임워크 부재 자산이라도 함수·심볼·config 키·계약 토큰 등 실질 구조·존재를 강제하면 grep/구조 acceptance check를 RED artifact로 캡처, (c) test-free: 산문·설명 문서·주석 같은 non-falsifiable content(단순 문구·존재 확인 동어반복만 가능)는 Stage A 스킵·RED artifact 없음. (b)/(c) 경계는 acceptance check가 실질 구조를 검증하면 (b), 단순 문구 존재만 확인하면 (c)이며, test/structural check가 기술적으로 가능하면 (a)/(b)로 간다 — "간단한 구현이라서"는 (c) 자격이 아니다. (c) 분류는 명시 근거(왜 non-falsifiable인지)를 RED 증거와 동일한 orchestrator 소유 progress 홈에 기록하고 Step 6 checkpoint 리뷰 dispatch 입력에 전달해야 하며(무근거 강등 금지), test만 면제될 뿐 Step 5 회귀 스윕·Step 6 리뷰 게이트는 불면제다. (a)/(b)의 falsifiable 집행 성격은 불변이다(test-after 새는 경로 차단). 프레임워크/`_sdd/env.md` 부재 시 `UNTESTED` 표기 경로를 유지한다. 이 3-way triage와 graceful-degradation 분기 기준의 canonical surface는 `implementation` 스킬의 RED 게이트 서술이며 다른 surface는 이를 참조한다
 - `sdd-autopilot`이 생성하는 orchestrator는 planning producer output을 downstream 입력으로 소비하기 전에 `plan-review` gate를 통과시켜야 한다
   - `feature-draft-agent` / `implementation-plan-agent` output이 gate를 통과하지 못하면 finding을 implementation fix task로 변환하지 않고 producer output을 reject/regenerate 대상으로 돌린다
 - `sdd-autopilot` 생성 orchestrator의 agent invocation은 canonical 이름만 사용한다
@@ -128,7 +128,7 @@ SDD Skills의 설계는 다음 층으로 나뉜다.
 | producer 스킬 자체 품질 gate | `feature-draft`/`implementation-plan`/`implementation`이 review→fix→re-review loop를 직접 소유(orchestrator). fix=producer/leaf agent 재dispatch, 산출물 단일 작성자 | autopilot 없이 직접 호출되는 경로에서도 산출물이 reviewer gate를 통과하도록 보장한다. producer/reviewer agent는 sub-agent를 spawn하지 못하므로 loop orchestration은 메인 루프(스킬)가 소유해야 한다 |
 | autopilot producer handoff gate | generated orchestrator가 `feature-draft-agent` / `implementation-plan-agent` output을 `plan-review-agent`로 검증한 뒤 downstream 소비 | autopilot이 wrapper skill을 우회해 custom agent를 직접 호출해도 직접 호출 경로와 같은 planning quality gate를 유지한다 |
 | multi-phase quality gate | 별도 `Checkpoints` 목록 기반 `per-group` review-fix + 마지막 phase implicit checkpoint + adaptive `final integration review` | 의미 있는 group 단위로 review depth를 높이고, review 비용과 latency를 줄이면서 cross-group regression은 adaptive final review로 커버한다 |
-| implementation test-first | 테스트 작성(`test-author-agent`)과 구현(`implementation-agent` GREEN→REFACTOR 전용)을 분리하고 그 사이에 orchestrator 소유 RED 게이트(실패 증거 캡처 + falsifiability 점검)를 둔다. 테스트는 impl에 대해 고정(이의는 `CONTRACT_MISMATCH`로만). 2-stage는 wave 내부 한정, wave 간 순차 | test-first를 leaf 자기보고가 아니라 falsifiable 실행 불변식으로 못박아 test-after 새는 경로를 차단하고, 약한 테스트 통과 퇴화를 막는다 |
+| implementation test-first | 테스트 작성(`test-author-agent`)과 구현(`implementation-agent` GREEN→REFACTOR 전용)을 분리하고 그 사이에 orchestrator 소유 RED 게이트(실패 증거 캡처 + falsifiability 점검)를 둔다. RED 게이트는 task AC 성격을 (a) test / (b) structural-check / (c) test-free 3-way로 triage하며, (c) non-falsifiable content는 Stage A/RED artifact를 면제하되 명시 근거 기록·리뷰 게이트는 유지한다. 테스트는 impl에 대해 고정(이의는 `CONTRACT_MISMATCH`로만). 2-stage는 wave 내부 한정, wave 간 순차 | test-first를 leaf 자기보고가 아니라 falsifiable 실행 불변식으로 못박아 test-after 새는 경로를 차단하고, 약한 테스트 통과 퇴화를 막는다. (c) 예외로 non-falsifiable content의 동어반복 acceptance check 강제를 제거하되 판정 주체는 런타임 RED 게이트로 두어 무원칙 opt-out을 막는다 |
 | 직교 2-렌즈 review 렌즈 | correctness ∥ simplicity(`simplicity-review-agent`) 직교 2-reviewer 병렬 dispatch를 두 진입점에 적용: implementation review-gate(correctness=`implementation-review-agent`, gating exit는 두 report 합집합 `critical=high=medium=0`)와 PR review(correctness=`pr-review-agent`, orchestrator가 verdict 합성, 자동 강제 없이 correctness Critical/High → blocker·simplicity Medium+ → REQUEST CHANGES rationale 기여). 양쪽 모두 두 렌즈가 dispatched agent라 subagent model override가 균일 적용되고 simplicity는 falsifiable-only gating | 정확성과 동작-불변 형태 품질을 disjoint 표적으로 분리해 한 reviewer에 과부하 없이 검출 범위를 넓히고, 벽시계는 병렬로 유지하면서 falsifiable 한정으로 수렴성을 보장한다. 두 진입점 모두 correctness를 inline이 아닌 agent로 두어 model override가 무게 실리는 검증에 닿는다. PR review는 인간 보조라 합집합 자동 exit 대신 rationale 기여로 합류시킨다 |
 | subagent model override | planning/implementation skill group의 subagent 호출은 필요할 때만 런타임별 per-call option으로 모델/추론 강도를 override한다. Claude는 `--model` 단일 옵션, Codex는 `--model`과 `--effort` 분리 옵션을 canonical로 둔다 | 기본 세션/agent 설정 상속을 보존하면서 특정 실행만 강도·비용·속도에 맞게 조절할 수 있고, 플랫폼별 tool schema 차이를 숨기지 않아 잘못된 결합형 모델 ID 파싱을 피한다 |
 | spec 구조 | thin global spec + execution-focused temporary spec | 장기 기준과 일회성 실행 정보를 분리해 drift를 줄인다 |
