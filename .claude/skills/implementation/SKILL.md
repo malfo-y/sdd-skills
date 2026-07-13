@@ -1,22 +1,22 @@
 ---
 name: implementation
 description: "Use this skill when the user wants to execute an implementation plan, start implementing tasks from a plan, work through a development roadmap, says \"implement the plan\", \"start implementation\", \"execute the plan\", \"work on the tasks\", or explicitly asks for \"implement parallel\", \"parallel implementation\", \"병렬 구현\", \"병렬로 구현\". Uses conflict-aware parallel execution when Target Files are available."
-version: 3.6.0
+version: 3.7.0
 argument-hint: ["[--model <sonnet|opus|haiku|fable>]"]
 ---
 
 # Implementation Orchestrator (Parallel Test-First)
 
-이 스킬은 **orchestrator**다. 메인 루프에서 실행되어 fan-out이 가능하다. task-set을 확보하고(plan 파싱 또는 plan 없으면 경량 분해), `task-ordering-agent`가 파생한 wave(병렬 그룹)를 소비해(실행 직전 file-disjoint 실측 검증 후) **wave별 2-stage 파이프라인**으로 leaf를 dispatch한다: (Stage A) `test-author-agent` leaf가 테스트만 작성 → (RED 게이트) orchestrator가 실패 증거를 캡처하고 falsifiability를 점검 → (Stage B) `implementation-agent` leaf가 고정 실패 테스트를 최소코드로 통과(GREEN→REFACTOR) → (GREEN 게이트). 통합·회귀·phase review·report를 소유한다. RED는 test-author leaf + orchestrator RED 게이트가 흡수하고, GREEN→REFACTOR만 impl leaf가 수행한다 — leaf는 RED를 자체 수행하지 않는다. 병렬화는 최적화 토글일 뿐 — 불가하면 동일 흐름으로 순차 실행한다.
+이 스킬은 **orchestrator**다. 메인 루프에서 실행되어 fan-out이 가능하다. flat task-set이면 `task-ordering-agent`의 transient ordering response를 받아 원본 task 본문과 결합하고, 명시적으로 제공된 legacy ordered plan이면 그대로 파싱한다. `Execution` phase(topological wave)를 실행 직전 file-disjoint 실측 검증한 뒤 **wave별 2-stage 파이프라인**으로 leaf를 dispatch한다. progress·통합·회귀·checkpoint review·report는 이 orchestrator가 소유한다.
 
 ## Acceptance Criteria
 
 > 프로세스 완료 후 아래 기준을 자체 검증한다. 미충족 항목은 해당 단계로 돌아가 수정한다.
 
-- [ ] AC1: task-set을 확보한다 — plan 파싱(있을 때) 또는 plan 없으면 요청을 task로 경량 분해
-- [ ] AC2: `task-ordering-agent`가 파생한 wave 소비(wave 정보 없는 구식 plan만 자체 파생 fallback) + file-disjoint 실측 가드레일 + 순차 강등
+- [ ] AC1: task-set을 확보한다 — 명시적으로 제공된 legacy ordered plan 파싱 또는 flat task-set/source 확보
+- [ ] AC2: flat task-set이면 `task-ordering-agent` 최종 응답을 직접 소비하고, 원본의 task 본문·AC·`V*`·Target Files·Open Questions와 결합한다. `Execution` phase를 wave source로 사용하며 file-disjoint 실측 후 필요 시 순차 강등한다
 - [ ] AC3: wave별 2-stage로 leaf를 dispatch(claude는 `sdd-skills:` prefix 필수) — Stage A는 `sdd-skills:test-author-agent`에 입력(task AC + Validation Plan `V*` + Contract/Invariant Delta + 환경/테스트)을 전달하고, RED 게이트 통과 후 Stage B는 `sdd-skills:implementation-agent`에 입력(task 필드 + Target Files + 환경/테스트 + 선행 보장 + 고정 실패 테스트 + RED 증거)을 전달
-- [ ] AC4: post-group 통합·회귀·phase review를 orchestrator가 수행하고 leaf 출력(UNPLANNED_DEPENDENCY 등)을 처리
+- [ ] AC4: post-group 통합·회귀·checkpoint review를 orchestrator가 수행하고 leaf 출력(UNPLANNED_DEPENDENCY 등)을 처리
 - [ ] AC5: `_sdd/implementation/<YYYY-MM-DD>_implementation_report_<slug>.md` 및 progress artifact를 canonical 경로·필드로 생성(orchestrator 소유)
 - [ ] AC6: leaf 출력이 AC 외 추가 코드(옵션·설정·추상화·에러 처리)를 포함하지 않으며, 발견 시 Phase Review에서 Quality 또는 Critical로 분류 (Minimum-Code Mandate)
 - [ ] AC7: 시작 전 Plan Assumptions와 Phase별 Surprises가 사용자에게 노출됐다 (해당 항목이 없으면 생략 가능)
@@ -30,7 +30,7 @@ argument-hint: ["[--model <sonnet|opus|haiku|fable>]"]
 - **Regression Iron Rule**: 기존 테스트 실패 시 (1) 테스트 업데이트 + (2) 회귀 방지 테스트 추가를 사용자 확인 없이 자동 수행한다.
 - **Artifact Naming Transition**: 결과 파일은 lowercase canonical 경로에 저장하고, transition 기간에는 plan/progress/report의 legacy uppercase 경로를 입력 fallback으로 허용한다.
 - **Minimum-Code Mandate**: leaf와 후속 검증은 AC가 요구하는 동작만 구현·검증한다. 요청되지 않은 옵션·설정·추상화·에러 처리 추가 금지. 사변적 형용사("future-proof / extensible / configurable")는 task의 Technical Notes에 근거가 명시될 때만 허용. **REFACTOR 단계도 단일 사용처 추상화 도입은 금지한다.**
-- **Subagent Model Override**: `$ARGUMENTS`에 `--model <name>`이 있으면 이 스킬의 모든 `Agent(...)` 호출(test-author·implementation·correctness/simplicity reviewer 포함)에 `model=<name>`을 추가한다. `<name>`은 `sonnet`·`opus`·`haiku`·`fable` 중 하나여야 하며, 그 외 값이면 dispatch하지 않고 사용자에게 허용값을 안내한다. 미지정 시 model을 생략한다(세션 기본값 상속).
+- **Subagent Model Override**: `$ARGUMENTS`에 `--model <name>`이 있으면 이 스킬의 모든 `Agent(...)` 호출(task-ordering·test-author·implementation·correctness/simplicity reviewer 포함)에 `model=<name>`을 추가한다. `<name>`은 `sonnet`·`opus`·`haiku`·`fable` 중 하나여야 하며, 그 외 값이면 dispatch하지 않고 사용자에게 허용값을 안내한다. 미지정 시 model을 생략한다(세션 기본값 상속).
 
 ### Target Files 규격
 
@@ -41,7 +41,7 @@ argument-hint: ["[--model <sonnet|opus|haiku|fable>]"]
 
 ### 그룹 파생과 file-disjoint 가드레일
 
-orchestrator는 **dependency를 그룹화의 권위 있는 신호로 신뢰**한다. 의미적 충돌은 `task-ordering-agent`(Step 1에서 dispatch)가 task `Dependencies` edge로 인코딩하므로(무방향 mutex도 임의 방향 dep로 흡수), orchestrator는 이를 재검출하지 않는다.
+orchestrator는 transient ordering response의 `Dependencies`와 `Execution`을 그룹화의 권위 있는 신호로 신뢰한다. 의미적 충돌은 `task-ordering-agent`가 dependency edge 또는 보수적 순차 phase로 인코딩하므로 orchestrator는 이를 재검출하지 않는다.
 
 병렬 판단 규칙:
 
@@ -53,30 +53,27 @@ orchestrator는 **dependency를 그룹화의 권위 있는 신호로 신뢰**한
 
 ## Process
 
-### Step 1: Secure the Ordered Task-Set
+### Step 1: Secure the Task-Set and Ordering
 
-implementation은 상위 orchestrator가 없는 **사용자 직접 실행 전용** 진입점이다 — autopilot 등 상위 orchestrator는 implementation SKILL을 경유하지 않고 자체 dispatch-controller로 실행하며 ordering도 스스로 소유한다. 따라서 implementation은 Phase Source를 hand-off 받는 경로가 없고, task-set 확보 후 dependency·phase가 아직 없으면 **항상 `task-ordering-agent`를 dispatch해 ordering을 파생**한다(ordering은 정확히 1회).
+implementation은 상위 orchestrator가 없는 **사용자 직접 실행 전용** 진입점이다. flat task-set을 확보하면 `task-ordering-agent`를 정확히 1회 dispatch하고 그 최종 응답을 메모리에서 직접 소비한다. ordering 파일은 만들지 않는다.
 
 **1a. 입력 확보.** 탐색 순서:
-1. 사용자 지정 경로
-2. `_sdd/implementation/*_implementation_plan_*.md` (이미 ordering된 plan — 재개/직접 제공, slug 기반 glob)
-3. legacy fallback: `_sdd/implementation/implementation_plan.md`, `_sdd/implementation/implementation_plan_phase_<n>.md`, uppercase `IMPLEMENTATION_PLAN.md`·`IMPLEMENTATION_PLAN_PHASE_<N>.md`
-4. `_sdd/drafts/*_feature_draft_*.md` (slug 기반 glob, Part 2: **flat task-set** — dependency·phase 없음)
-5. `_sdd/drafts/feature_draft_<name>.md` (legacy 고정 경로)
-6. 입력 없음 → 사용자 요청을 flat task-set으로 **경량 분해**(각 조각에 Target Files를 best-effort 부여)
+1. 사용자 지정 feature-draft/flat task-set 경로
+2. 사용자가 명시적으로 지정한 legacy ordered implementation plan 경로(재개 호환)
+3. `_sdd/drafts/*_feature_draft_*.md`, legacy `_sdd/drafts/feature_draft_<name>.md`
+4. 입력 없음 → 사용자 요청을 inline flat task-set으로 **경량 분해**(각 조각에 Target Files를 best-effort 부여)
 
 > 경량 분해는 **소규모·순차 실행**용 fallback이다(순차라 얕은 task 정의도 안전 — file 충돌이 없으므로). 대규모거나 병렬 최적화가 중요한 요청이면 경량 분해로 강행하지 말고 `feature-draft`(제대로 된 flat task-set 생성) 또는 `sdd-autopilot`(feature-draft→task-ordering→implementation 전체 조율)을 사용하도록 안내한다.
 
 복수 파일 존재 시 사용자에게 확인.
 
-**1b. Ordering (항상 경유).**
-- 입력이 **flat task-set**(feature-draft Part 2 또는 경량 분해 결과 — dependency·phase 미포함)이면 `Agent(subagent_type="sdd-skills:task-ordering-agent", prompt=<flat task-set 경로 + 요청>)`를 dispatch해 ordered plan(`_sdd/implementation/<YYYY-MM-DD>_implementation_plan_<slug>.md`: dependency edge·phase·Checkpoint 포함)을 받는다.
-- 입력이 이미 **ordered plan**(dependency·phase를 담은 implementation_plan — 재개/직접 제공)이면 task-ordering을 생략하고 그대로 파싱한다.
-- `task-ordering-agent`가 `BLOCKED`를 반환하면(task 정의만으로 dependency 복원 불가) 사용자에게 보고하고 중단한다.
+**1b. Ordering과 결합.**
+- **flat task-set 파일**이면 명시 경로를 `Agent(subagent_type="sdd-skills:task-ordering-agent", prompt=<source path>)`에 전달한다. **inline fallback**이면 부모가 만든 flat task-set 전문을 전달한다.
+- `READY` 응답의 `Execution`·`Dependencies`·`Checkpoints`·`Notes`를 transient ordering overlay로 사용한다. `Source`의 task 본문·AC·Validation Plan `V*`·Target Files·Open Questions와 결합하여 Step 2~7 입력을 구성한다. task 정의는 응답에서 찾거나 전사하지 않는다.
+- `BLOCKED`는 source 누락/읽기 실패 또는 식별 가능한 `Task Details` 부재일 때만 기대한다. 반환되면 사유를 보고하고 중단한다.
+- 사용자가 명시적으로 제공한 legacy ordered plan은 compatibility input이다. task-ordering을 생략하고 기존 task/phase/dependency를 그대로 파싱한다.
 
-ordered plan에서 추출: Phases, Tasks (Target Files·Dependencies 포함), top-level Open Questions. feature draft 유래 task-set에서는 `Components`를 요구하지 않는다. Open Questions는 최선의 판단으로 해결하고, 판단 불가 항목은 리포트에 기록.
-
-> 구 "경로 B — no-plan 경량 분해"는 1a-6 + 1b(task-ordering dispatch)로 정식 승격됐다 — 분해 결과도 task-ordering을 거쳐 dependency·phase를 갖춘다. 모든 경로가 ordered plan을 거쳐 동일한 후속 흐름(Step 2~7)을 탄다.
+Open Questions는 최선의 판단으로 해결하고, 판단 불가 항목은 orchestrator-owned progress/report에 기록한다.
 
 #### Surface Plan Assumptions
 
@@ -108,9 +105,9 @@ Plan ID → System Task ID 매핑과 progress row 매핑을 함께 유지한다.
 
 #### 3.2 wave 소비 (+ fallback)
 
-wave(병렬 그룹) 파생은 `task-ordering-agent`가 각 phase 내에서 이미 수행해 `Parallel Execution Summary`에 명시했다(`priority DESC, id ASC` 정렬 greedy, dependency 없음 + Target Files disjoint → 같은 wave, 대규모 phase는 크기 5 제한). orchestrator는 그 wave를 **그대로 소비**한다.
+`task-ordering-agent` 응답의 각 `Execution` phase가 곧 하나의 topological wave다. 별도 `Parallel Execution Summary` artifact를 찾거나 만들지 않는다.
 
-> wave 정보가 없는 구식 plan(재개 등)에서만 fallback으로 자체 파생한다: unblocked task를 `priority DESC, id ASC`로 정렬해 dependency 없음 + Target Files disjoint 기준으로 greedy하게 wave에 담는다.
+> phase/wave 정보가 없는 명시적 legacy ordered plan에서만 fallback으로 자체 파생한다: unblocked task를 priority와 ID로 안정 정렬해 dependency 없음 + Target Files disjoint 기준으로 wave에 담는다.
 
 #### 3.3 병렬 실행 계획 표시
 
@@ -132,7 +129,7 @@ For each phase:
               (입력에 고정 실패 테스트 + RED 증거 포함) → 전원 완료 대기
      GREEN 게이트: 테스트 실행→통과 확인→GREEN 증거 캡처 (Post-group 통합·회귀, Step 5)
               → CONTRACT_MISMATCH / Unplanned Dependency 처리
-  3. 전체 wave 완료 → Phase Review (Step 6)
+  3. ordering의 Checkpoint 경계 또는 마지막 phase 완료 → Checkpoint Review (Step 6)
 ```
 
 #### Stage A — test-author Dispatch (테스트만)
@@ -228,17 +225,17 @@ Stage B 완료 후 테스트를 실제 실행해 **통과(GREEN)** 를 확인하
 | 파일 경계 위반 | 미승인 변경 롤백 → 순차 재실행 |
 | 태스크 상태 | 성공 → completed, 실패 → in_progress (재시도용), 부분 → 미완료 기준 기록 |
 
-### Step 6: Phase Review-Fix Gate (외부 reviewer loop)
+### Step 6: Checkpoint Review-Fix Gate (외부 reviewer loop)
 
-Phase 내 모든 태스크 완료 후, orchestrator는 **외부 2-reviewer review→fix→re-review loop**를 닫는다. 각 review/re-review 단계는 correctness(`implementation-review-agent`) ∥ simplicity(`simplicity-review-agent`)를 **병렬 dispatch**한다. 이 gate는 인라인 경량 self-review를 대체한다 — orchestrator가 직접 품질을 판정하지 않고 독립 reviewer agent를 호출한다.
+ordering response의 explicit Checkpoint 경계와 마지막 phase(implicit checkpoint)에서, orchestrator는 **외부 2-reviewer review→fix→re-review loop**를 닫는다. 각 review/re-review 단계는 correctness(`implementation-review-agent`) ∥ simplicity(`simplicity-review-agent`)를 **병렬 dispatch**한다.
 
-**loop scope**: **실행분(phase) 단위 1 gate**. 각 phase 완료 직후 이 gate를 1회 닫고 다음 phase로 진행한다. autopilot의 global/per-group·Checkpoint 메타 개념은 도입하지 않는다(직접 호출 경로엔 Checkpoint 신호를 줄 상위 오케스트레이터가 없음). multi-phase plan이면 phase마다 이 gate가 1회씩 닫힌다.
+**loop scope**: 직전 checkpoint 이후 완료한 `Execution` phase 전체. checkpoint는 phase와 별개의 review boundary이며 마지막 phase 뒤에는 implicit checkpoint가 있다.
 
 **공통 loop 정책** (autopilot `references/orchestrator-contract.md` §6 Review-Fix Contract 차용):
 
 - **exit 조건**: **두 report 합집합** `critical=0 AND high=0 AND medium=0` (= `critical=high=medium=0`). correctness·simplicity 두 리포트의 finding을 합산해 판정한다.
 - **MAX**: 기본 3 iteration.
-- **re-review scope**: loop 범위(이 phase) **전체 재리뷰** (변경분만 아님).
+- **re-review scope**: loop 범위(checkpoint group) **전체 재리뷰** (변경분만 아님).
 - **1 iteration 경계**: `review/re-review → finding>0이면 fix → 산출물 갱신`.
 - **MAX 도달 분기**: critical/high 잔존 → 중단·사용자 보고. medium만 잔존 → 로그 후 진행(advisory degrade).
 
@@ -268,7 +265,7 @@ Phase Review 종료 시, 그 phase에서 발생한 다음 이벤트를 채팅으
 
 모든 Phase 완료 후, orchestrator는 **cross-phase 범위로 외부 2-reviewer review→fix→re-review loop를 1회 닫는다**. Step 6과 동일하게 각 review/re-review 단계는 correctness(`implementation-review-agent`) ∥ simplicity(`simplicity-review-agent`)를 병렬 dispatch하며, orchestrator가 직접 품질을 판정하지 않고 독립 reviewer agent를 호출한다.
 
-- **single-phase 가드**: phase가 1개뿐이면 Step 6 gate가 이미 전체 구현분을 동일 범위로 리뷰했으므로 이 gate를 **스킵하고 곧장 report 생성으로 진행**한다(중복 회피). multi-phase plan일 때만 이 gate를 닫는다.
+- **single-group 가드**: `Checkpoints` 해석 결과 review group이 1개뿐이면 Step 6의 마지막 gate가 이미 전체 구현분을 동일 범위로 리뷰했으므로 이 gate를 **스킵하고 곧장 report 생성으로 진행**한다(phase 수와 무관). review group이 2개 이상일 때만 이 gate를 닫는다.
 - **loop scope**: 전체 구현분(all phases). phase별 gate에서 phase-local 품질은 이미 닫혔으므로, 이 gate는 **phase 경계를 넘는 이슈**(모듈 간 연동, 보안 경계, 전체 규모 성능, cross-phase 통합 일관성)에 초점을 둔다.
 - **loop 정책**: Step 6의 공통 loop 정책을 그대로 재사용한다 (exit는 **두 report 합집합** `critical=high=medium=0`, MAX 3 iteration, re-review는 loop 범위 전체 재리뷰, MAX 도달 분기 동일).
 - **단계**: Step 6의 review→fix→re-review와 동일. review는 `Agent(subagent_type="sdd-skills:implementation-review-agent")`(correctness) ∥ `Agent(subagent_type="sdd-skills:simplicity-review-agent")`(simplicity)를 병렬 dispatch해 전체 변경 파일 + cross-phase 통합 관점 + 최종 테스트 결과를 전달하고, 두 report finding을 합산해 finding은 하나씩 fix-task로 처리한다 — Step 6과 동일한 fix 정책(correctness finding=test-first[test-author + RED 게이트 → impl], simplicity/refactor finding=직접 fix)을 그대로 재사용한다.
@@ -294,8 +291,8 @@ Phase Review 종료 시, 그 phase에서 발생한 다음 이벤트를 채팅으
 
 ### Review Gates
 <!-- gate당 한 줄: iteration 수 + exit 충족(합집합 critical=high=medium=0) 또는 MAX 도달 + 두 reviewer 리포트 경로. cross-phase 이슈는 final gate 줄에 요약 -->
-- Phase N gate: exit 충족 (iteration K) — reports: `<correctness>`, `<simplicity>`
-- Final cross-phase gate: exit 충족 (iteration K) | 스킵 (single-phase — Step 6이 전체 범위 커버)
+- Checkpoint group N gate: exit 충족 (iteration K) — reports: `<correctness>`, `<simplicity>`
+- Final cross-group gate: exit 충족 (iteration K) | 스킵 (single-group — Step 6이 전체 범위 커버)
 
 ### Open Issues
 <!-- review-fix loop 후 잔존분만: MAX 도달 잔존 medium, Low advisory, 범위 밖 발견. 항목당 reviewer 리포트 finding ID 참조 + 위치 포함 한 문장. 없으면 "없음." -->
@@ -321,7 +318,7 @@ Phase Review 종료 시, 그 phase에서 발생한 다음 이벤트를 채팅으
 
 ## Prerequisites
 
-1. **ordered task-set 확보** (Step 1: ordered plan 파싱, 또는 flat task-set → `task-ordering-agent` dispatch로 ordering 파생)
+1. **실행 입력 확보** (Step 1: 명시적 legacy ordered plan 파싱, 또는 flat task-set 원본 + `task-ordering-agent` transient response 결합)
 2. **환경 로드**: `_sdd/env.md` 존재 시 setup을 orchestrator가 1회 로드해 leaf dispatch 시 전달 (leaf는 재탐색 안 함)
 3. **코드베이스 이해**: Grep/Glob으로 기존 패턴, 테스트 프레임워크, 테스트 파일 위치 파악
 
