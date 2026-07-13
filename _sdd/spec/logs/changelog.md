@@ -2,6 +2,11 @@
 
 > 이 파일은 `_sdd/spec/main.md`의 버전별 변경 기록이다.
 
+#### v4.5.6 (2026-07-13)
+
+- **하네스 §3 화살표에서 implementation-plan 제거**: planning precedence 결정(feature-draft 기본, implementation-plan은 phase/task 세분화 필요시 follow-up)을 하네스에 반영. 화살표를 `feature-draft → (spec-sync) → implementation`로 정리하고, 괄호 optional 설명·"단계 = 동명 스킬" 규칙 예시에서도 implementation-plan을 뺐다. 모델이 implementation-plan을 default planning으로 오인하고 feature-draft를 건너뛰던 여지 차단이 목적. 하네스 §3은 얇은 기본 흐름만 소유하고 조건부 상세는 spec이 소유하는 계층 분리라, spec의 "필요시 붙인다" 결정과 모순 아님.
+- **적용 surface**: 하네스 템플릿 4개 미러(claude·codex × spec-create·spec-upgrade references) byte-identical + 이 repo dogfooding `AGENTS.md` §3. `implementation-plan` 스킬(version 5.0.0)·planning precedence 결정·정책 무변경.
+
 #### v4.5.5 (2026-07-13)
 
 - **하네스 §3에 "단계 = 동명 SDD 스킬 호출" 규칙 추가**: AGENTS.md 템플릿 §3의 `discussion → feature-draft → … → implementation` 화살표 각 단계 이름이 동명 SDD 스킬이며, 진입 시 그 스킬을 호출하고 직접 재구현하지 않는다(미설치 환경에서만 수동)는 규칙을 추가했다. 소비 repo에서 모델이 `feature-draft` 등을 스킬 대신 자작하던 문제 차단이 목적. 스킬 카탈로그는 여전히 비복사(rename·추가 시 stale 회피) — 매핑 테이블 대신 행동 규칙 한 줄.

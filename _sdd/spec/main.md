@@ -2,7 +2,7 @@
 
 > Markdown 기반 skill bundle로 AI 에이전트의 Spec-Driven Development 워크플로우를 Claude Code와 Codex에서 공통 계약으로 실행한다.
 
-**Spec Version**: 4.5.5
+**Spec Version**: 4.5.6
 **Last Updated**: 2026-07-13
 **Status**: Approved
 **Canonical Role**: current thin global spec

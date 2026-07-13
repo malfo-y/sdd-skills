@@ -1,5 +1,22 @@
 # Decision Log
 
+## 2026-07-13 - 하네스 §3 화살표에서 implementation-plan 제거 (planning precedence 반영)
+
+### Context
+
+2026-07-13 planning precedence 결정(main.md §Decisions)으로 `feature-draft`가 기본 planning entry가 되고 `implementation-plan`은 "phase/task 세분화가 필요할 때만 follow-up expansion"으로 격하됐다. 그러나 AGENTS.md 하네스 §3 화살표는 여전히 `feature-draft → (spec-sync) → (implementation-plan) → implementation`로 implementation-plan을 feature-draft 뒤 순차 optional 단계처럼 나열해, 모델이 "planning = implementation-plan 호출"로 오해하고 feature-draft를 건너뛸 여지가 있었다(사용자 관찰). 직전 커밋에서 §3에 추가한 "단계 = 동명 스킬 호출" 규칙 예시에도 implementation-plan이 포함돼 이 오해를 강화했다.
+
+### Decision
+
+1. **화살표에서 제거**: §3 단계 순서 화살표에서 `(implementation-plan)`을 뺀다 — `discussion → feature-draft / temporary spec → (spec-sync) → implementation → review-fix → verify → spec-sync`. 괄호 optional 단계 설명도 `(spec-sync)`만 남기고, 규칙 예시 나열에서도 implementation-plan을 제거한다.
+2. **계층 분리 근거**: 하네스 §3은 얇은 기본 흐름만 소유하고 조건부 상세(implementation-plan을 언제 붙이는지)는 spec이 소유한다(§4가 "판단 기준은 spec 참조"로 명시). 따라서 화살표 제거는 spec의 "필요시 붙인다" 결정과 모순이 아니라 계층 분리다. `implementation-plan` 스킬 자체는 무변경 유지(version 5.0.0, spec 결정·autopilot Checkpoint gate에서 1급).
+
+### Consequences
+
+- 하네스 템플릿 4개 미러(claude·codex × spec-create·spec-upgrade references) byte-identical 갱신, 이 repo dogfooding `AGENTS.md` §3 동반 갱신.
+- 소비 repo가 생성하는 AGENTS.md의 기본 워크플로우가 feature-draft를 planning entry로 제시 → implementation-plan을 default로 오인하지 않는다.
+- spec planning precedence 결정·implementation-plan 스킬·정책은 무변경.
+
 ## 2026-07-13 - 하네스 §3에 "단계 이름 = 동명 SDD 스킬 호출" 규칙 추가
 
 ### Context
