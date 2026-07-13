@@ -83,7 +83,7 @@ step은 세 종류다.
 이 kind는 **Stage agents** 3단계로 전개된다.
 
 - **Stage A** = `sdd-skills:test-author-agent` (테스트만 작성, 구현 금지)
-- **Stage B** = orchestrator 소유 RED 게이트 (agent 없음 — autopilot 자신이 테스트를 실행해 RED 증거 캡처·falsifiability 점검)
+- **Stage B** = orchestrator 소유 RED 게이트 (agent 없음 — autopilot 자신이 테스트를 실행해 RED 증거 캡처·falsifiability 점검). Stage A dispatch 직전 wave당 1회 **3-way triage**로 각 task를 (a) test / (b) structural-check / (c) test-free로 분류한다 — **(c) test-free**는 acceptance check가 단순 문구·동어반복으로 귀결돼 falsifiable RED artifact를 만들 수 없는 task로, Stage A/RED를 **스킵**하되 (1) 분류 **근거 기록** 의무(RED 증거와 동일 progress 위치에 triage 근거 남김), (2) **GREEN 증거 면제**(RED artifact 부재), (3) Step 5 회귀 스윕·Step 6 리뷰 게이트는 **불면제**다. triage 경계 기준·판정 규칙 상세는 implementation SKILL **RED 게이트(canonical surface)**를 참조한다(복제하지 않음).
 - **Stage C** = `sdd-skills:implementation-agent` (고정 실패 테스트를 입력으로 GREEN→REFACTOR만 수행 — **impl-agent는 RED를 자체 수행하지 않는다**)
 
 task-level leaf는 sub-agent를 spawn하지 않는다. 따라서 autopilot은 phase를 한 leaf에 통째로 넘기지 않고, autopilot 자신이 orchestrator로서 task 단위로 fan-out한다.
@@ -91,7 +91,7 @@ task-level leaf는 sub-agent를 spawn하지 않는다. 따라서 autopilot은 ph
 - **초기 구현 step**: autopilot이 `task_ordering.response`의 `Execution` 각 phase를 topological parallel wave로 소비하고, `Source`가 가리키는 feature draft에서 phase의 task ID별 본문·Target Files·AC·Validation linkage를 가져온다. autopilot은 fan-out 직전 file-disjoint를 실측 검증한 뒤 각 wave를 다음 **3단계**로 dispatch한다:
   - (a) **test-author 병렬 dispatch**: wave 내 task마다 `sdd-skills:test-author-agent` leaf를 동시 dispatch한다 (테스트만 작성, 구현 금지).
   - (b) **RED 게이트 (orchestrator 소유)**: test-author가 작성한 테스트를 실제 실행해 실패(RED) 증거를 캡처하고 falsifiability를 점검한다(AC 관찰 동작 assertion 실패여야 함; import/collection-only 실패는 RED 미충족으로 test-author 재dispatch). 이 게이트를 닫기 전에는 (c)를 dispatch하지 않는다.
-  - (c) **impl 병렬 dispatch**: RED 게이트를 통과한 task마다 `sdd-skills:implementation-agent` leaf를 동시 dispatch한다. 입력으로 고정 실패 테스트 + RED 증거를 전달하며, leaf는 GREEN→REFACTOR만 수행한다.
+  - (c) **impl 병렬 dispatch**: RED 게이트를 통과한 task마다 `sdd-skills:implementation-agent` leaf를 동시 dispatch한다. 입력으로 고정 실패 테스트 + RED 증거를 전달하며, leaf는 GREEN→REFACTOR만 수행한다. **(c) test-free로 분류된 task**는 Stage A/RED를 거치지 않아 고정 테스트·RED 증거가 없으므로, 그 자리에 **triage 근거**를 입력으로 전달해 함께 dispatch한다.
 - **cross-wave 중첩 없음**: wave G의 (c) impl과 wave H의 (a) test-author를 동시에 돌리는 cross-wave 중첩은 도입하지 않는다. 3단계 파이프라인은 wave **내부**에만 적용하고, wave끼리는 한 wave가 GREEN 게이트를 닫은 뒤 다음 wave를 시작하는 순차다. 병렬 불가·저확신이면 동일 3단계 흐름을 task별로 하나씩 순차 dispatch한다(file-disjoint 가드레일 + "확신 없으면 순차").
 - **용어 구분**: `Execution` phase는 task 단위 병렬 dispatch wave이고, 별도 `Checkpoints` 목록은 review-fix boundary다. 전자는 "무엇을 동시에 dispatch하나", 후자는 "언제 gate를 닫나"를 정한다.
 - **progress/report 소유**: leaf는 결과(SUCCESS/PARTIAL/FAILED·TDD표·파일·테스트·UNPLANNED_DEPENDENCY·CONTRACT_MISMATCH·발견)만 반환한다. `CONTRACT_MISMATCH`는 impl-agent가 고정 실패 테스트의 가정 인터페이스 계약이 틀렸다고 보면(테스트를 수정하지 않고) 보고하는 항목으로, autopilot이 test-author 재dispatch 여부를 판정한다. **실행 주체인 autopilot**이 `_sdd/implementation/<YYYY-MM-DD>_implementation_progress_<slug>.md`·`*_implementation_report_<slug>.md`를 canonical 경로·소비 필드로 작성·소유한다(downstream `spec-sync`·`spec-summary` 호환 유지).
@@ -162,6 +162,7 @@ planning producer step은 `sdd-skills:feature-draft-agent` 하나다. producer o
 - review가 포함된 path의 review-fix gate(single-phase global / per-group의 group gate / final integration review 모두 포함)에는 gate 직후 실행되는 invocation contract가 명시되어야 한다. 최소한 아래를 포함한다.
   - autopilot이 correctness(`sdd-skills:implementation-review-agent`) ∥ simplicity(`sdd-skills:simplicity-review-agent`) 2-reviewer subagent를 즉시 병렬 호출한다는 사실 (exit는 두 report의 합집합)
   - review 입력에 포함할 파일/증거 (해당 gate 범위의 변경 파일 전체 + 관련 테스트 결과)
+  - 리뷰 범위에 (c)/test-free task가 있으면 그 triage 근거를 review/re-review dispatch 입력에 함께 전달한다(리뷰 불면제 — reviewer가 근거 타당성을 점검).
   - review 프롬프트 계약
   - fix 재호출 조건과 fix 프롬프트 계약
   - re-review 재호출 조건과 re-review 프롬프트 계약 (correctness ∥ simplicity 각 reviewer에 해당 lens의 기존 review 리포트 경로를 전달해 re-review mode로 진입시킨다 — 새 리포트 생성이 아니라 각 lens 기존 리포트의 `Current Status` 갱신 + `Iteration History` append)
