@@ -2,6 +2,12 @@
 
 > 이 파일은 `_sdd/spec/main.md`의 버전별 변경 기록이다.
 
+#### v4.5.7 (2026-07-13)
+
+- **task-ordering을 transient ordering overlay로 축소**: `task-ordering-agent`가 full implementation-plan을 생성·저장하던 계약을 폐기하고, feature draft를 read-only로 읽어 `Status·Source·Mode·Execution·Dependencies·Checkpoints·Notes`만 담은 짧은 Markdown을 부모 orchestrator에 직접 반환하는 얇은 overlay로 환원했다. `_sdd/implementation/*_implementation_plan_*.md` artifact를 더 이상 만들지 않는다 — ordering은 원본 task-set에서 재계산 가능한 파생값이므로 독립 persistent artifact로 복제하지 않는다. agent tools `["Read","Write","Glob"]`→`["Read"]`, 본문 177/178줄→70/67줄. task 정의 전사·6-field phase metadata·`Parallel Execution Summary` artifact·review loop 서술을 제거했다.
+- **Checkpoint 모델 변경**: phase별 `Checkpoint: true/false` 필드 → transient response의 별도 `Checkpoints` 목록(중간 review boundary만 기재, 마지막 phase는 implicit checkpoint). §2 Guardrails·결정 테이블·§Constraints 반영.
+- **적용 surface**: `task-ordering-agent` claude md+codex toml, 소비자 `implementation` SKILL(v3.6.0→3.7.0) claude+codex, `sdd-autopilot` SKILL·`orchestrator-contract.md`·`sdd-reasoning-reference.md`·`examples/sample-orchestrator.md`·`scripts/validate_orchestrator.py` 각 claude+codex 미러, `plan-review-agent`(표현 정정 1줄) md+toml, codex `agents/README.md`(Inline Writing 목록에서 제거). validator에 `출력 파일=없음 (transient final response)`·`Phase Source==task_ordering.response`·controller↔ordering step 짝 검사를 추가하고 양쪽 실행 PASS 확인.
+
 #### v4.5.6 (2026-07-13)
 
 - **하네스 §3 화살표에서 implementation-plan 제거**: planning precedence 결정(feature-draft 기본, implementation-plan은 phase/task 세분화 필요시 follow-up)을 하네스에 반영. 화살표를 `feature-draft → (spec-sync) → implementation`로 정리하고, 괄호 optional 설명·"단계 = 동명 스킬" 규칙 예시에서도 implementation-plan을 뺐다. 모델이 implementation-plan을 default planning으로 오인하고 feature-draft를 건너뛰던 여지 차단이 목적. 하네스 §3은 얇은 기본 흐름만 소유하고 조건부 상세는 spec이 소유하는 계층 분리라, spec의 "필요시 붙인다" 결정과 모순 아님.
