@@ -1,5 +1,28 @@
 # Decision Log
 
+## 2026-07-14 - RED 게이트를 2-way에서 non-falsifiable content의 test-free 예외를 포함한 3-way triage로 확장 (v4.5.7 → v4.5.8)
+
+### Context
+
+`implementation` 스킬(및 `sdd-autopilot`의 동형 RED 게이트)의 test-first 파이프라인은 모든 task를 무조건 2-stage(Stage A test-author → RED 게이트 → Stage B impl)로 태웠다. 테스트 프레임워크 부재 자산의 graceful degradation도 면제가 아니라 형태 변경(grep/구조 acceptance check)이라, 문서 산문·설명·주석 같은 non-falsifiable content 작업에도 "파일에 이 문구 있나" 수준의 동어반복(tautology) grep 체크를 RED artifact로 억지 생성하게 됐다 — 검증 가치는 낮고 파이프라인만 무거웠다. 이 repo는 문서/스킬 자산이 지배적이라 이 마찰이 반복 발생했다.
+
+### Decision
+
+1. **3-way triage 확장**: RED 게이트가 task AC 성격을 (a) test(관찰 가능한 코드 동작 → 실패 테스트), (b) structural-check(함수·심볼·config 키·계약 토큰 등 실질 구조·존재 → grep/구조 acceptance check, 기존 graceful degradation의 명명), (c) test-free(non-falsifiable content → Stage A 스킵·RED artifact 없음) 3분기로 판정한다.
+2. **(c) 자격 제한 + 안전망**: (c)는 오직 falsifiable하게 검증할 관찰 대상이 실제로 없을 때만 허용한다("간단한 구현이라서"는 자격 아님 — 간단 opt-out은 `should work` 자기보고 차단이라는 RED 게이트 존재 이유를 침식). (c) 분류는 명시 근거(왜 non-falsifiable인지)를 RED 증거와 동일한 orchestrator 소유 progress 홈에 기록하고 Step 6 checkpoint 리뷰 dispatch 입력에 전달해야 한다(무근거 강등 금지). test만 면제되고 Step 5 회귀 스윕·Step 6 리뷰 게이트(correctness ∥ simplicity)는 불면제다.
+3. **판정 주체 = 런타임 RED 게이트**: triage는 이미 falsifiability를 판정하는 RED 게이트의 자연 확장이다. feature-draft task별 Verification 필드 안(스키마 팽창+남발 위험)과 사용자 `--no-tdd` 플래그 안(원칙 부재 opt-out)은 기각했다. (a)/(b)의 기존 falsifiability 집행 성격은 불변(test-after 새는 경로 차단).
+
+### Rationale
+
+- non-falsifiable content에 강제되던 동어반복 acceptance check는 검증 가치 없이 파이프라인만 무겁게 만든다 — 이를 제거하되, 판정을 런타임 게이트에 두어 무원칙 opt-out과 test-after 재개방을 동시에 막는다.
+- (c) 근거 기록·리뷰 게이트 불면제·"간단한 구현" 자격 부정을 falsifiable 문장으로 못박아 (c) 남용으로 RED 게이트가 침식되는 것을 방지한다.
+- graceful-degradation 분기 기준의 canonical surface(`implementation` 스킬 RED 게이트 서술)를 단일 소스로 유지하고 나머지 표면은 참조만 두어 경계 기준 drift를 막는다.
+
+### Changes
+
+- `_sdd/spec/main.md` -- §2 Guardrails test-first 불변식 bullet + §3 결정 테이블 "implementation test-first" 행을 2-way→3-way triage로 갱신 (v4.5.7 → v4.5.8)
+- 구현 코드(선행 완료, 본 결정의 evidence): 6개 미러 짝 claude·codex — `.claude/.codex/skills/implementation/SKILL.md`(canonical), `test-author-agent`, `implementation-agent`, `sdd-autopilot` orchestrator-contract·SKILL·examples/sample-orchestrator. draft `2026-07-13_feature_draft_red_gate_test_free_triage`, 구현 report READY(acceptance check 10개 GREEN)
+
 ## 2026-07-13 - task-ordering을 persistent implementation-plan에서 transient ordering overlay로 축소
 
 ### Context

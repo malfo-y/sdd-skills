@@ -89,9 +89,9 @@ gate 실패 시 finding을 fix task로 normalize하지 말고 `feature-draft-age
 - `test/services/auth-service.test.js`
 
 **프롬프트**:
-`task_ordering.response`의 `Execution` phase를 wave로 사용하고, `Source` feature draft에서 해당 task의 AC·Target Files·Validation Plan을 읽으세요. autopilot이 닫은 RED 게이트가 넘긴 고정 실패 테스트 + RED 증거를 입력으로 GREEN→REFACTOR만 수행하세요(RED는 자체 수행하지 않습니다).
+`task_ordering.response`의 `Execution` phase를 wave로 사용하고, `Source` feature draft에서 해당 task의 AC·Target Files·Validation Plan을 읽으세요. (a)/(b) task는 autopilot이 닫은 RED 게이트가 넘긴 고정 실패 테스트 + RED 증거를 입력으로, (c) test-free로 triage된 task는 고정 테스트·RED 증거 대신 triage 근거를 입력으로 받아 GREEN→REFACTOR만 수행하세요(RED는 자체 수행하지 않습니다).
 
-**Step kind 실행 방식 (`implementation-dispatch-controller`)**: autopilot은 `task_ordering.response`의 각 `Execution` phase를 병렬 wave로 소비하고 `Source`에서 task 본문을 결합한다. fan-out 직전 file-disjoint를 검증한 뒤 각 wave를 test-author 병렬 spawn → orchestrator RED gate → implementation 병렬 spawn 순서로 실행한다. `Checkpoints`는 wave와 별개의 review boundary이며 progress/report는 autopilot이 소유한다.
+**Step kind 실행 방식 (`implementation-dispatch-controller`)**: autopilot은 `task_ordering.response`의 각 `Execution` phase를 병렬 wave로 소비하고 `Source`에서 task 본문을 결합한다. fan-out 직전 file-disjoint를 검증한 뒤 각 wave를 3-way triage(test/structural-check/test-free 분류) → test-author 병렬 spawn → orchestrator RED gate → implementation 병렬 spawn 순서로 실행한다. test-free로 분류된 task는 test-author/RED를 스킵하고 triage 근거를 입력으로 곧장 implementation spawn으로 넘긴다. `Checkpoints`는 wave와 별개의 review boundary이며 progress/report는 autopilot이 소유한다.
 
 **Immediate review-fix gate (must finish before Step 5)**:
 - `scope`: `global`
@@ -251,7 +251,7 @@ temporary execution detail은 넣지 말고, 이후 `task-ordering-agent`와 `im
 **프롬프트**:
 `task_ordering.response`의 `Execution` phase를 wave로 사용하고, `Source` feature draft에서 해당 task의 AC·Target Files·Validation Plan을 읽으세요. response의 `Checkpoints`에 지정된 phase와 마지막 implicit checkpoint에서 review-fix gate를 닫으세요.
 
-**Step kind 실행 방식 (`implementation-dispatch-controller`)**: autopilot은 `task_ordering.response`의 각 `Execution` phase를 topological parallel wave로 소비하고 `Source` feature draft에서 task 본문을 결합한다. fan-out 직전 file-disjoint를 검증한 뒤 각 wave를 test-author 병렬 spawn → orchestrator RED gate → implementation 병렬 spawn 순서로 실행한다. wave끼리는 순차이며 cross-wave 중첩은 없다. 별도 `Checkpoints` 목록은 review boundary로만 해석하고 progress/report는 autopilot이 소유한다.
+**Step kind 실행 방식 (`implementation-dispatch-controller`)**: autopilot은 `task_ordering.response`의 각 `Execution` phase를 topological parallel wave로 소비하고 `Source` feature draft에서 task 본문을 결합한다. fan-out 직전 file-disjoint를 검증한 뒤 각 wave를 3-way triage(test/structural-check/test-free 분류) → test-author 병렬 spawn → orchestrator RED gate → implementation 병렬 spawn 순서로 실행한다. test-free로 분류된 task는 test-author/RED를 스킵하고 triage 근거를 입력으로 곧장 implementation spawn으로 넘긴다. wave끼리는 순차이며 cross-wave 중첩은 없다. 별도 `Checkpoints` 목록은 review boundary로만 해석하고 progress/report는 autopilot이 소유한다.
 
 **Per-group review-fix gate (must finish before Step 6)**:
 - `scope`: `per-group`

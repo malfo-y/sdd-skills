@@ -46,7 +46,7 @@ You are already running as <agent_type>. Do not invoke or re-enter SDD skills fr
 
 - [ ] AC1: task-set을 확보한다 — 명시적으로 제공된 legacy ordered plan 파싱 또는 flat task-set/source 확보
 - [ ] AC2: flat task-set이면 `task-ordering-agent` 최종 응답을 직접 소비하고, 원본의 task 본문·AC·`V*`·Target Files·Open Questions와 결합한다. `Execution` phase를 wave source로 사용하며 file-disjoint 실측 후 필요 시 순차 강등한다
-- [ ] AC3: wave별 2-stage로 leaf를 spawn — Stage A는 `test-author-agent`에 입력(task AC + Validation Plan `V*` + Contract/Invariant Delta + 환경/테스트)을 전달하고, RED 게이트 통과 후 Stage B는 `implementation-agent`에 입력(task 필드 + Target Files + 환경/테스트 + 선행 보장 + 고정 실패 테스트 + RED 증거)을 전달하며, final status 수거 직후 `close_agent({target: <agent_id>})`로 handle을 반납
+- [ ] AC3: wave별 2-stage로 leaf를 spawn — Stage A는 `test-author-agent`에 입력(task AC + Validation Plan `V*` + Contract/Invariant Delta + 환경/테스트)을 전달하고, RED 게이트 통과 후 Stage B는 `implementation-agent`에 입력(task 필드 + Target Files + 환경/테스트 + 선행 보장 + 고정 실패 테스트 + RED 증거)을 전달하며, final status 수거 직후 `close_agent({target: <agent_id>})`로 handle을 반납. 단 RED 게이트가 **(c) test-free**로 triage한 task는 Stage A를 스킵하고, 고정 실패 테스트/RED 증거 대신 triage 근거를 Stage B 입력으로 전달
 - [ ] AC4: post-group 통합·회귀·checkpoint review를 orchestrator가 수행하고 leaf 출력(UNPLANNED_DEPENDENCY 등)을 처리
 - [ ] AC5: `_sdd/implementation/<YYYY-MM-DD>_implementation_report_<slug>.md` 및 progress artifact를 canonical 경로·필드로 생성(orchestrator 소유)
 - [ ] AC6: leaf 출력이 AC 외 추가 코드(옵션·설정·추상화·에러 처리)를 포함하지 않으며, 발견 시 Phase Review에서 Quality 또는 Critical로 분류 (Minimum-Code Mandate)
@@ -55,7 +55,7 @@ You are already running as <agent_type>. Do not invoke or re-enter SDD skills fr
 ## Hard Rules
 
 1. **Spec 파일 불가침**: `_sdd/spec/` 하위 파일을 생성/수정/삭제하지 않는다. Spec drift 발견 시 리포트에 기록하고 사용자에게 `spec-sync` 사용을 안내한다.
-2. **Test-first는 2-stage로 분리**: RED는 `test-author-agent` leaf(테스트 작성) + orchestrator 소유 RED 게이트(실패 증거 캡처 + falsifiability 점검)가 담당하고, GREEN→REFACTOR는 `implementation-agent` leaf가 고정 실패 테스트를 최소코드로 통과시켜 담당한다. impl leaf는 RED를 자체 수행하지 않으며 테스트를 수정하지 않는다(이의는 CONTRACT_MISMATCH로만). orchestrator는 per-task GREEN/REFACTOR 절차를 복제하지 않는다.
+2. **Test-first는 2-stage로 분리**: RED는 `test-author-agent` leaf(테스트 작성) + orchestrator 소유 RED 게이트(실패 증거 캡처 + falsifiability 점검)가 담당하고, GREEN→REFACTOR는 `implementation-agent` leaf가 고정 실패 테스트를 최소코드로 통과시켜 담당한다. impl leaf는 RED를 자체 수행하지 않으며 테스트를 수정하지 않는다(이의는 CONTRACT_MISMATCH로만). orchestrator는 per-task GREEN/REFACTOR 절차를 복제하지 않는다. **예외 — (c) test-free**: acceptance check가 동어반복이라 falsifiable RED artifact를 만들 수 없는 task는 RED 게이트가 (c)로 triage해 Stage A(test-author)를 스킵한다(triage 근거 기록 + Step 6 리뷰 게이트 불면제).
 3. **파일 경계 준수**: leaf는 할당된 Target Files만 생성/수정/삭제한다. 그 외 파일은 읽기 전용이며, leaf가 `UNPLANNED_DEPENDENCY`로 보고하면 orchestrator가 유효성을 판단해 처리한다.
 4. **Verification Gate**: "should work" 금지. post-group 검증에서 테스트를 실제 재실행하고 출력을 근거로 제시한다. 이전 실행 결과 재사용 금지. `_sdd/env.md` 미존재 시 코드 분석 기반 검증을 허용하되, 리포트에 `UNTESTED` 표기.
 5. **Regression Iron Rule**: 기존 테스트 실패 시 (1) 테스트 업데이트 + (2) 회귀 방지 테스트 추가를 사용자 확인 없이 자동 수행한다.
@@ -150,7 +150,9 @@ task-set 확보 직후, 사용자에게 다음을 채팅으로 알림한다 (질
 For each phase:
   1. Unblocked 태스크에서 wave(group) 파생 (Step 3)
   2. For each wave (순차 — 이전 wave의 GREEN 게이트 통과 후 다음 wave 시작):
-     Stage A: wave 내 task마다 test-author-agent leaf를 동시 spawn (테스트만)
+     Triage (Stage A spawn 직전 1회, RED 게이트 소유): wave 내 task를 (a) test / (b) structural-check / (c) test-free로 3-way triage
+              → (c)는 Stage A 스킵 + RED artifact 없음, triage 근거만 기록해 Stage B로 직행
+     Stage A: (a)/(b) task마다 test-author-agent leaf를 동시 spawn (테스트만)
               → 모든 handle이 final status로 정리될 때까지 wait_agent → close_agent
      RED 게이트 (orchestrator 소유): 새 테스트 실행→실패 확인→RED 증거 캡처 + falsifiability 점검
               → 미충족 task는 test-author 재spawn (RED 게이트 통과 전 Stage B 미spawn)
@@ -174,7 +176,7 @@ test-author 입력(`message`의 `## Input Data`)에 다음을 전달한다 (leaf
 - Acceptance Criteria  # 테스트가 검증할 관찰 동작의 원천
 
 ## Validation Plan (V*)
-{validation_plan}      # 각 테스트가 1:1 대응
+{validation_plan}      # 각 RED artifact의 AC/`V*` coverage mapping
 
 ## Contract/Invariant Delta
 {contract_invariant_delta}   # 테스트가 실행할 인터페이스 계약 (발명 금지)
@@ -191,15 +193,23 @@ test-author는 각 AC의 관찰 동작을 검증하는 실패(RED) 테스트만 
 
 #### RED 게이트 (orchestrator 소유)
 
-Stage A 완료 후, orchestrator가 다음을 수행한다. **이 게이트가 falsifiable test-first 불변식(I1)의 집행 지점이다** — RED 증거는 leaf 자기보고 TDD표가 아니라 orchestrator가 캡처한 외부 산출물이다.
+**Stage A spawn 직전 — 3-way triage (wave당 1회, RED 게이트 소유):** orchestrator는 wave 내 각 task를 세 갈래로 분류한다.
+
+- **(a) test**: 테스트 프레임워크로 falsifiable 실패 테스트를 쓸 수 있는 task → Stage A에서 test-author가 RED 테스트를 작성한다.
+- **(b) structural-check**: 프레임워크 부재 자산(문서·스킬 등)이되 **실질 구조**·존재가 계약을 강제하는 task → grep/구조 점검 acceptance check를 RED artifact로 쓴다. 문서 중간 사례: 문서 내 토큰이 실제 계약·구조를 강제하면 (b).
+- **(c) test-free**: acceptance check가 **단순 문구**·존재 확인 **동어반복**(tautology)으로 귀결돼 falsifiable RED artifact를 만들 수 없는 task. "간단한 구현이라서"는 (c) 자격이 아니다 — 기준은 구현 난이도가 아니라 acceptance check의 동어반복 여부다. 문서 중간 사례: 단순 문구 존재만 확인하면 (c).
+
+(b)와 (c)의 경계는 acceptance check가 **실질 구조**를 검증하면 (b), **단순 문구** 존재만 확인하면 (c)로 가른다. test/structural check가 기술적으로 가능하면 (a)/(b)로 간다. (c)로 분류하면 orchestrator는 (1) 분류 **근거 기록** 의무 — RED 증거와 동일한 progress 위치에 `triage 근거`를 남기고, (2) Stage A(test-author) spawn을 **스킵**해 RED artifact를 만들지 않으며, (3) 그럼에도 Step 5 회귀 스윕·Step 6 리뷰 게이트는 **불면제**다. (a)/(b) task는 아래 게이트를 그대로 탄다.
+
+(a)/(b) task에 대해 Stage A 완료 후, orchestrator가 다음을 수행한다. **이 게이트가 falsifiable test-first 불변식(I1)의 집행 지점이다** — RED 증거는 leaf 자기보고 TDD표가 아니라 orchestrator가 캡처한 외부 산출물이다.
 
 1. **새 테스트 실행 → 실패 확인**: test-author가 작성한 테스트를 실제 실행해 현재 빨간지 확인한다.
 2. **RED 증거 캡처**: 실패 출력(메시지·스택·실패 단계)을 캡처해 보존한다. 이 증거가 Stage B impl 입력으로 그대로 전달된다.
-3. **falsifiability 점검** — 각 테스트가 (a) 해당 task AC의 **관찰 동작**을 검증하는지, (b) Validation Plan `V*`에 **1:1 대응**하는지, (c) **단순 import/collection 에러로만 빨간 게 아닌지**를 점검한다. 아래 판정 규칙으로 못박는다:
+3. **falsifiability 점검** — 각 테스트/acceptance check가 (i) 해당 task AC의 **관찰 동작**을 검증하는지, (ii) Validation Plan `V*`와 커버리지 매핑이 명시됐는지, (iii) **단순 import/collection 에러로만 빨간 게 아닌지**를 점검한다. 아래 판정 규칙으로 못박는다:
    - **관찰 가능한 판정 규칙**: 각 테스트의 실패가 **AC 관찰 동작에 대한 assertion/check 단계 실패**(예: `AssertionError` 계열 — 동작은 실행됐으나 기대값 불일치)여야 RED 통과로 인정한다. **순수 collection/import/syntax 단계 실패**(예: `ImportError`·`ModuleNotFoundError`·collection error·syntax error — 동작에 도달조차 못함)로만 빨간 테스트는 RED 미충족으로 분류해 **test-author 재작성으로 돌린다**(통과 전 Stage B 미spawn).
-   - **실패 단계 기록**: 각 테스트가 **어느 단계에서 실패했는지**(assertion 단계 vs collection/import/syntax 단계)를 RED 증거에 기록한다.
+   - **실패 단계 기록**: 각 테스트/acceptance check가 **어느 단계에서 실패했는지**(assertion/check 단계 vs collection/import/syntax 단계)를 RED 증거에 기록한다.
    - **구분 불가 시 강등**: 해당 언어/프레임워크가 collection 에러와 assertion 실패를 출력상 구분하지 못하면 그 사실을 RED 증거에 기록하고 falsifiability 점검을 **리뷰 판정으로 강등**한다(자동 판정 대신 orchestrator가 테스트 본문을 읽어 관찰 동작 검증 여부를 판단).
-   - **graceful degradation (I4)**: 테스트 프레임워크 부재 자산(문서·스킬 등)은 grep/구조 점검 acceptance check를 RED artifact로 쓰고, 그 acceptance check의 **현재 미충족**을 **명령 exit code(비0) 또는 diff(기대 부재)**로 RED 캡처한다. 프레임워크/`_sdd/env.md` 부재로 실행 자체가 불가하면 코드/구조 분석 기반 점검을 허용하되 RED 증거에 `UNTESTED` + 사유를 표기한다. **이 RED 게이트 서술이 I4 graceful-degradation 분기 기준의 canonical surface다** — 다른 surface(test-author-agent AC 등)는 이를 참조한다.
+   - **graceful degradation (I4)**: 테스트 프레임워크 부재 자산(문서·스킬 등)은 grep/구조 점검 acceptance check를 RED artifact로 쓰고, 그 acceptance check의 **현재 미충족**을 **명령 exit code(비0) 또는 diff(기대 부재)**로 RED 캡처한다. 프레임워크/`_sdd/env.md` 부재로 실행 자체가 불가하면 코드/구조 분석 기반 점검을 허용하되 RED 증거에 `UNTESTED` + 사유를 표기한다. **이 RED 게이트 서술이 I4 graceful-degradation 분기 기준 + 3-way triage(test/structural-check/test-free) 기준의 canonical surface다** — 다른 surface(test-author-agent AC 등)는 이를 참조한다.
 4. **게이트 통과 전 Stage B 미spawn**: RED 게이트(실패 확인 + falsifiability 통과)를 닫기 전에는 Stage B impl을 spawn하지 않는다(C5, I1). 미충족 task는 test-author 재spawn으로 돌리고, 통과한 task만 Stage B로 넘긴다.
 
 #### Stage B — impl Dispatch (GREEN→REFACTOR)
@@ -229,11 +239,13 @@ impl 입력(`message`의 `## Input Data`)에 다음을 전달한다 (leaf는 재
 {red_evidence}         # RED 게이트가 캡처한 실패 출력
 ```
 
+**(c) test-free** task는 Stage A를 거치지 않아 고정 실패 테스트·RED 증거가 없다 — 그 자리에 triage 근거를 전달하고, impl leaf는 이를 근거로 최소 편집한다.
+
 impl leaf는 고정 실패 테스트를 최소코드로 통과(GREEN→REFACTOR)시키고 구조화된 결과(SUCCESS/PARTIAL/FAILED/BLOCKED·GREEN 진행표·파일·테스트·UNPLANNED_DEPENDENCY·CONTRACT_MISMATCH·발견)를 반환한다. **고정 테스트의 가정 계약이 틀렸다/구현 불가**라고 보면 테스트를 수정하지 않고 `CONTRACT_MISMATCH`로 보고하며, **orchestrator가 test-author 재spawn 여부를 판정한다**(C3 — 기존 UNPLANNED_DEPENDENCY 처리와 동결: 계약 오류면 test-author 재spawn, Target Files 밖 의존이면 경계 확장).
 
 #### GREEN 게이트
 
-Stage B 완료 후 테스트를 실제 실행해 **통과(GREEN)** 를 확인하고 GREEN 증거(통과 출력)를 캡처한다. 이어 Step 5 post-group 통합·회귀 스윕을 수행한다(기존 흐름 유지).
+Stage B 완료 후 테스트를 실제 실행해 **통과(GREEN)** 를 확인하고 GREEN 증거(통과 출력)를 캡처한다. 이어 Step 5 post-group 통합·회귀 스윕을 수행한다(기존 흐름 유지). **(c) test-free** task는 고정 테스트가 없어 GREEN 증거(테스트 통과 출력)를 면제하되, Step 5 회귀 스윕과 Step 6 리뷰는 그대로 유지한다.
 
 #### Sequential Fallback
 
@@ -268,7 +280,7 @@ ordering response의 explicit Checkpoint 경계와 마지막 phase(implicit chec
 
 **단계**:
 
-1. **review**: 두 reviewer를 한 번에 spawn한다 — `spawn_agent({agent_type: "implementation-review-agent", message: <framed payload: Runtime Boundary + review mode + Input Data(phase 범위 변경 파일 전체, 테스트 결과)>})`(correctness)와 `spawn_agent({agent_type: "simplicity-review-agent", message: <framed payload: Runtime Boundary + review mode + Input Data(phase 범위 변경 파일 전체, 테스트 결과)>})`(simplicity)로 이 phase 범위의 변경 파일 전체 + 테스트 결과를 각각 전달하고, 두 agent ids를 `wait_agent({targets: [<correctness_id>, <simplicity_id>], timeout_ms: 600000})`로 함께 수거한다. 두 handle 모두 final status가 반환된 뒤에만 각 severity별 finding을 기록하고 두 reviewer handle을 `close_agent({target: <agent_id>})`로 닫는다.
+1. **review**: 두 reviewer를 한 번에 spawn한다 — `spawn_agent({agent_type: "implementation-review-agent", message: <framed payload: Runtime Boundary + review mode + Input Data(phase 범위 변경 파일 전체, 테스트 결과)>})`(correctness)와 `spawn_agent({agent_type: "simplicity-review-agent", message: <framed payload: Runtime Boundary + review mode + Input Data(phase 범위 변경 파일 전체, 테스트 결과)>})`(simplicity)로 이 phase 범위의 변경 파일 전체 + 테스트 결과를 각각 전달하고(phase에 (c) test-free task가 있으면 그 triage 근거도 dispatch 입력에 함께 전달 — 리뷰 불면제, reviewer가 근거 타당성을 점검), 두 agent ids를 `wait_agent({targets: [<correctness_id>, <simplicity_id>], timeout_ms: 600000})`로 함께 수거한다. 두 handle 모두 final status가 반환된 뒤에만 각 severity별 finding을 기록하고 두 reviewer handle을 `close_agent({target: <agent_id>})`로 닫는다.
 2. **fix**: 두 report의 critical/high/medium finding을 **합산**해, finding이 있으면 **하나씩 순차** fix-task로 변환한다. finding 종류에 따라 경로가 갈린다(C6 — 모든 finding을 파이프라인 태우지 않음):
    - **correctness finding(동작 버그)**: test-first로 처리한다 — 먼저 그 버그를 노출하는 **실패 테스트**를 작성(`spawn_agent({agent_type: "test-author-agent", ...})` + RED 게이트로 실패 확인)한 뒤, 고정 실패 테스트 + RED 증거를 `## Input Data`로 `spawn_agent({agent_type: "implementation-agent", message: <framed payload: Runtime Boundary + fix-task mode + Input Data>})` leaf를 재spawn해 fix한다. `wait_agent`로 final status 수거 후 `close_agent`로 닫는다.
    - **simplicity/refactor finding**: 직접 fix한다 — 새 실패 테스트 없이 finding을 task로 받아 `spawn_agent({agent_type: "implementation-agent", message: <framed payload: Runtime Boundary + fix-task mode + Input Data>})` leaf를 재spawn한다(중복 제거·명확성·speculative code 제거는 새 동작이 아니라 새 테스트가 불필요). `wait_agent`로 수거 후 `close_agent`로 닫는다.

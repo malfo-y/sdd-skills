@@ -2,6 +2,11 @@
 
 > 이 파일은 `_sdd/spec/main.md`의 버전별 변경 기록이다.
 
+#### v4.5.8 (2026-07-14)
+
+- **RED 게이트를 2-way에서 3-way triage로 확장**: `implementation` 스킬(및 `sdd-autopilot` 동형 게이트)의 test-first 불변식을 갱신했다. RED 게이트가 wave의 Stage A dispatch 직전에 task AC 성격을 (a) test / (b) structural-check / (c) test-free 3-way로 triage하며, (c) non-falsifiable content(산문·설명 문서·주석)는 Stage A 스킵·RED artifact 면제로 동어반복 acceptance check 강제를 제거한다. (c)는 오직 falsifiable 관찰 대상이 없을 때만 허용("간단한 구현이라서"는 자격 아님)하고, 명시 근거를 RED 증거와 동일한 progress 홈에 기록해 Step 6 리뷰 dispatch 입력에 전달하며(무근거 강등 금지), test만 면제되고 Step 5 회귀 스윕·Step 6 리뷰 게이트는 불면제다. (a)/(b)의 falsifiable 집행 성격은 불변(test-after 차단). graceful-degradation 분기 기준의 canonical surface(`implementation` 스킬 RED 게이트 서술)를 3-way triage 기준까지 포괄하도록 확장.
+- **적용 surface**: §2 Guardrails test-first 불변식 bullet + §3 결정 테이블 "implementation test-first" 행. 구현 코드(6개 미러 짝: `implementation` SKILL·`test-author-agent`·`implementation-agent`·`sdd-autopilot` orchestrator-contract·SKILL·sample-orchestrator, claude·codex)는 draft `2026-07-13_feature_draft_red_gate_test_free_triage`로 선행 구현 완료(구현 report READY, acceptance check 10개 GREEN). 본 엔트리는 그 구현을 spec으로 동기화(post-implementation sync).
+
 #### v4.5.7 (2026-07-13)
 
 - **task-ordering을 transient ordering overlay로 축소**: `task-ordering-agent`가 full implementation-plan을 생성·저장하던 계약을 폐기하고, feature draft를 read-only로 읽어 `Status·Source·Mode·Execution·Dependencies·Checkpoints·Notes`만 담은 짧은 Markdown을 부모 orchestrator에 직접 반환하는 얇은 overlay로 환원했다. `_sdd/implementation/*_implementation_plan_*.md` artifact를 더 이상 만들지 않는다 — ordering은 원본 task-set에서 재계산 가능한 파생값이므로 독립 persistent artifact로 복제하지 않는다. agent tools `["Read","Write","Glob"]`→`["Read"]`, 본문 177/178줄→70/67줄. task 정의 전사·6-field phase metadata·`Parallel Execution Summary` artifact·review loop 서술을 제거했다.
