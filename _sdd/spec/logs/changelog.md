@@ -2,6 +2,11 @@
 
 > 이 파일은 `_sdd/spec/main.md`의 버전별 변경 기록이다.
 
+#### v4.5.5 (2026-07-13)
+
+- **하네스 §3에 "단계 = 동명 SDD 스킬 호출" 규칙 추가**: AGENTS.md 템플릿 §3의 `discussion → feature-draft → … → implementation` 화살표 각 단계 이름이 동명 SDD 스킬이며, 진입 시 그 스킬을 호출하고 직접 재구현하지 않는다(미설치 환경에서만 수동)는 규칙을 추가했다. 소비 repo에서 모델이 `feature-draft` 등을 스킬 대신 자작하던 문제 차단이 목적. 스킬 카탈로그는 여전히 비복사(rename·추가 시 stale 회피) — 매핑 테이블 대신 행동 규칙 한 줄.
+- **적용 surface**: 하네스 템플릿 4개 미러(claude·codex × spec-create·spec-upgrade references) byte-identical + 이 repo dogfooding `AGENTS.md` §3. 단계 순서·optional·정책 무변경.
+
 #### v4.5.4 (2026-07-10)
 
 - **pr-review 통합 리포트를 finding-본문 중심으로 재설계**: 통계 표(Metrics Summary·렌즈별 severity 카운트 표)와 Recommendations 표를 제거하고, 행동 대상 finding을 위치(`file:line`)·문제·수정 블록 전문으로 통합 리포트에 승격한다. 표 셀 압축으로 "뭘 고쳐야 하는지"가 소실되던 문제의 해소가 목적. 배치: correctness Critical/High + simplicity Medium+ → §1 Pre-merge 블록, correctness Medium → §2 non-blocking 상세 블록, Low → §2 위치 포함 한 문장. 분포는 Verdict `Signals` 한 줄로 대체, 통과 신호는 §3 산문 2-3줄.

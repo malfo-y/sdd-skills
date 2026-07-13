@@ -1,5 +1,22 @@
 # Decision Log
 
+## 2026-07-13 - 하네스 §3에 "단계 이름 = 동명 SDD 스킬 호출" 규칙 추가
+
+### Context
+
+AGENTS.md 하네스 템플릿 §3(SDD 워크플로우)이 `discussion → feature-draft → … → implementation` 화살표 체인을 단계(phase) 이름으로만 제시하고, "각 단계의 구체 스킬은 설치된 SDD 스킬을 사용한다"는 추상 지시만 두었다. 단계 이름이 동명 스킬의 호출이라는 연결과 "직접 재구현 금지"가 명시되지 않아, 소비 repo에서 모델이 `feature-draft` 등을 스킬이 아니라 자기가 수행할 작업으로 읽고 자작하는 사례가 발생했다(사용자 관찰).
+
+### Decision
+
+1. **규칙 한 줄 추가**: §3에 "화살표의 각 단계 이름(discussion·feature-draft·implementation-plan·implementation·spec-sync 등)은 동명의 SDD 스킬이며, 해당 단계 진입 시 그 스킬을 **호출**하고 로직을 직접 재구현하지 않는다(스킬이 단일 소스). 스킬 미설치 환경에서만 SDD 개념으로 수동 수행"을 추가한다.
+2. **카탈로그-비복사 원칙 유지**: 스킬 목록/설명을 나열하지 않고 "동명 스킬 호출" 행동 규칙만 얹는다 — 스킬 추가·rename 시 stale 되지 않고, "최신 스킬셋이 단일 소스" 설계와 정합. 매핑 테이블 대신 규칙 한 줄을 택한 이유다.
+
+### Consequences
+
+- 하네스 템플릿 4개 미러(claude·codex × spec-create·spec-upgrade references) byte-identical 갱신, 이 repo dogfooding `AGENTS.md` §3 동반 갱신.
+- 소비 repo가 생성하는 모든 AGENTS.md가 단계별 스킬 호출을 명시적으로 지시 → 자작 재발 차단.
+- 단계 순서·optional 규칙·정책은 무변경.
+
 ## 2026-07-10 - pr-review 통합 리포트를 통계 표에서 finding-본문 중심으로 재설계
 
 ### Context
