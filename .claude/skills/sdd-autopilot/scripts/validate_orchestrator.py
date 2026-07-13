@@ -59,8 +59,12 @@ def check(text):
         r"^### Step[^\n]*\n(?:(?!^### ).*\n?)*", text, re.M
     )
     phase_iterative_declared = False
+    task_ordering_declared = False
+    implementation_controller_declared = False
     for block in step_blocks:
         header = block.splitlines()[0]
+        if "implementation-dispatch-controller" in block:
+            implementation_controller_declared = True
         agent_match = re.search(
             r"\*\*" + re.escape(AGENT_FIELD) + r"\*\*:\s*`([^`]+)`", block
         )
@@ -74,6 +78,16 @@ def check(text):
             for field in ("입력 파일", "출력 파일", "프롬프트"):
                 if f"**{field}**" not in block:
                     findings.append(f"{header}: required field missing: '{field}'")
+            if agent == AGENT_PREFIX + "task-ordering-agent":
+                task_ordering_declared = True
+                if not re.search(
+                    r"\*\*출력 파일\*\*:\s*`없음 \(transient final response\)`",
+                    block,
+                ):
+                    findings.append(
+                        f"{header}: task-ordering output must be exactly "
+                        "'없음 (transient final response)'"
+                    )
 
         if re.search(r"\*\*Execution Mode\*\*:\s*`?phase-iterative`?", block):
             phase_iterative_declared = True
@@ -84,16 +98,9 @@ def check(text):
                 )
             else:
                 src = src_match.group(1)
-                if "feature_draft" in src:
+                if src != "task_ordering.response":
                     findings.append(
-                        f"{header}: Phase Source must not be a feature-draft artifact: {src}"
-                    )
-                # task-ordering-agent writes its ordered plan to the canonical
-                # `_sdd/implementation/<date>_implementation_plan_<slug>.md` path,
-                # so the filename token stays `implementation_plan`.
-                elif "implementation_plan" not in src:
-                    findings.append(
-                        f"{header}: Phase Source must be a task-ordering output: {src}"
+                        f"{header}: Phase Source must be the transient task-ordering response: {src}"
                     )
 
         for mode_match in re.finditer(
@@ -102,6 +109,11 @@ def check(text):
             mode = mode_match.group(1).strip()
             if mode not in VALID_INTERACTION_MODES:
                 findings.append(f"{header}: invalid Interaction Mode '{mode}'")
+
+    if implementation_controller_declared and not task_ordering_declared:
+        findings.append(
+            "implementation-dispatch-controller requires a task-ordering-agent step"
+        )
 
     # 3. Review-fix gate fields (searched document-wide: gates may be inline in steps)
     scope_match = re.search(r"`?scope`?\s*[:=]\s*`?(global|per-group)`?", text)
@@ -140,7 +152,7 @@ def check(text):
     fix_mapped = mapped_agents("fix")
     if not fix_mapped:
         findings.append("agent_mapping: 'fix = ...' not found")
-    elif fix_mapped != [AGENT_PREFIX + "implementation-agent"]:
+    elif set(fix_mapped) != {AGENT_PREFIX + "implementation-agent"}:
         findings.append(
             f"agent_mapping: 'fix' must map only to "
             f"'{AGENT_PREFIX}implementation-agent', got {fix_mapped}"

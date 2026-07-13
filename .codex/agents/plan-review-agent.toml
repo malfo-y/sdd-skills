@@ -272,7 +272,7 @@ Tier 3에서는 6-smell checklist를 정상 PASS/FAIL로 채우지 않는다. pl
 ## Integration
 
 - `feature-draft`: Part 2 implementation plan 초안 리뷰 대상
-- `task-ordering-agent` output(ordered plan)은 review-fix gate 면제라 자동 리뷰 대상이 아니다 — feature-draft Part 2(flat task-set)가 주 리뷰 대상이다
+- `task-ordering-agent`의 transient ordering result는 review-fix gate 면제라 자동 리뷰 대상이 아니다 — feature-draft Part 2(flat task-set)가 주 리뷰 대상이다
 - `sdd-autopilot`: Step 5에서 Orchestrator Review Mode로 이 agent를 required gate로 호출
 - `implementation`: Critical/High blocker가 없을 때 후속 실행
 - `implementation-review`: 구현 후 별도 검증

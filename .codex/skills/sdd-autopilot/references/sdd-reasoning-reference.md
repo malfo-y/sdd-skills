@@ -64,7 +64,7 @@ canonical shape:
 
 - `Part 1: Spec Delta`는 `<!-- spec-update-todo-input-start -->` / `<!-- spec-update-todo-input-end -->` 마커를 포함하고, 필수 섹션은 `Change Summary`, `Scope Delta`, `Persistent Spec Implications`뿐이다.
 - `Persistent Spec Implications`는 persistent spec에 남아야 하는 repo-wide contract/invariant/validation 의도 후보를 compact하게 적는다. feature-level table, 상세 ID linkage, task plan, validation execution detail은 Part 1에 요구하지 않는다.
-- `Part 2: Implementation and Validation Plan`은 execution-facing 섹션을 둔다: `Contract/Invariant Delta and Coverage`, `Touchpoints`, `Implementation Phases`, `Task Details`, `Validation Plan`, `Parallel Execution Summary`.
+- `Part 2: Implementation and Validation Plan`은 execution-facing 섹션을 둔다: `Contract/Invariant Delta and Coverage`, `Touchpoints`, `Task Details`, `Validation Plan`. dependency·phase·parallel summary는 여기서 만들지 않는다.
 - Part 2의 `Contract/Invariant Delta and Coverage`는 `C*`, `I*`, `V*` ID와 task/validation coverage를 보존한다.
 - `Risks/Mitigations and Open Questions`는 top-level 섹션이며, `Risks and Mitigations`는 `Risk / Impact / Mitigation` 표를 따르고 `Open Questions`는 Decision / Alternatives / Confidence / User confirmation needed 스키마를 따른다.
 - feature draft의 실행 정보는 global spec에 그대로 병합하지 않는다.
@@ -84,7 +84,7 @@ canonical shape:
 2. **Delta-first for non-trivial changes**: `feature-draft`는 기본 포함이다. 정말 간단한 디버깅 수준의 수정(typo fix, config 값 변경, 로그 한 줄 추가 등)이거나 해당 주제의 feature-draft artifact가 `_sdd/drafts/`에 이미 존재하는 경우에만 스킵할 수 있다.
 3. **Review-fix 필수**: review만 하고 끝나지 않는다.
 4. **Execute -> Verify**: 에이전트 호출 != 완료. evidence까지 확인해야 한다.
-5. **파일 기반 handoff**: 상태 전달은 artifact 파일 경로 중심.
+5. **지속성은 필요할 때만**: 장기 handoff는 artifact 파일 경로 중심으로 두되, 구현 직전 즉시 소비되고 원본에서 재계산 가능한 task ordering은 compact final response로 전달한다.
 6. **Global spec 직접 수정 금지**: spec 변경은 `spec-sync`에 위임.
 
 ---
@@ -101,7 +101,7 @@ canonical shape:
 feature-draft
   -> plan-review [producer gate]
   -> (optional) spec-sync [planned]
-  -> task-ordering-agent [always, pre-implementation; ordering/phase/Checkpoint; self-check only, no producer gate]
+  -> task-ordering-agent [always, pre-implementation; transient ordering response; self-check only, no producer gate]
   -> implementation
 
 [Immediate gate after each implementation unit]
@@ -124,7 +124,7 @@ validation / final integration review
 - 그래프는 "항상 이 순서로 모두 지난다"는 뜻이 아니다. `optional` 표시는 조건부 삽입 단계다.
 - `implementation-review`는 `implementation` 다음의 별도 downstream step이 아니라, 각 `implementation` 실행 단위 직후 즉시 닫는 gate다.
 - `plan-review`는 planning producer output gate다. producer는 `feature-draft`뿐이며, 그 output은 `spec-sync`, `task-ordering-agent`, `implementation` 어느 downstream step으로 소비되기 전에도 먼저 `plan-review`를 통과해야 한다.
-- `task-ordering-agent`는 구현 직전 항상 경유하는 ordering 파생 step이며 producer가 아니다. review-fix gate가 면제되어 self-check만 수행하고 별도 `plan-review` producer gate를 요구하지 않는다.
+- `task-ordering-agent`는 구현 직전 항상 경유하는 ordering 파생 step이며 producer가 아니다. review-fix gate가 면제되어 self-check만 수행하고 별도 `plan-review` producer gate를 요구하지 않는다. 파일을 만들지 않고 final Markdown을 반환하며 autopilot이 이를 `task_ordering.response`로 보존한다.
 - producer gate가 fail이면 finding을 implementation fix task로 normalize하지 않는다. 해당 producer 산출물을 reject/regenerate한다.
 - `spec-sync`의 post-implementation 호출은 review-fix gate, required validation/test, 필요한 경우 `final integration review`가 모두 끝난 뒤에만 온다.
 - `ralph-loop-init`은 구현 본선 뒤에 무조건 붙는 단계가 아니라, 장시간 검증이 필요할 때 validation surface에 붙는 선택지다.
@@ -138,9 +138,9 @@ validation / final integration review
 ### 2.1.1 Planning precedence by scale
 
 - **Small direct path**: 바로 `implementation`으로 간다. 정말 간단한 디버깅 수준의 수정(typo fix, config 값 변경, 로그 한 줄 추가 등)이거나 해당 주제의 feature-draft artifact가 `_sdd/drafts/`에 이미 존재하는 경우에만 `feature-draft`를 생략할 수 있다. review가 포함되면 규모와 무관하게 `implementation-agent -> (implementation-review-agent ∥ simplicity-review-agent) -> implementation-agent -> (implementation-review-agent ∥ simplicity-review-agent)` custom-agent mapping을 사용하고(review/re-review는 correctness ∥ simplicity 2-reviewer 병렬, exit는 두 report 합집합), 부모 autopilot이 로컬 구현/로컬 리뷰로 대체하지 않는다.
-- **Single-phase medium path**: 기본 진입은 `feature-draft`다. `feature-draft`(flat task-set) 다음 구현 직전 `task-ordering-agent`를 항상 경유하며(single-phase여도 예외 없이 경유; 구 '직행' precedence 폐기), `task-ordering-agent`가 single-phase로 판정하면 `implementation`은 단일 pass로 연결한다. 해당 `implementation` 직후 global review-fix gate를 즉시 닫아야 하며, 그 전에는 downstream step으로 진행할 수 없다. review가 있으면 실행 주체는 항상 `implementation-agent`/review 2-reviewer(`implementation-review-agent` ∥ `simplicity-review-agent`) custom-agent mapping이고, gate exit는 두 report의 합집합이다.
-- **Multi-phase medium / large expanded path**: `feature-draft`로 slim Part 1과 execution-facing Part 2(flat task-set)를 고정한 뒤, planned persistent global alignment가 필요할 때만 `spec-sync`(planned 호출)를 조건부로 추가하고, 구현 직전 `task-ordering-agent`를 경유한다. multi-phase 여부는 별도 skill 선택이 아니라 `task-ordering-agent`가 전체를 조망해 late-binding으로 판정한다. `task-ordering-agent`가 multi-phase로 판정하면 downstream `implementation` step(`implementation-dispatch-controller`)은 flat single-shot step이 아니라 `Execution Mode: phase-iterative`와 `Phase Source`(= `task-ordering-agent` output)를 선언하는 runtime control-flow unit이어야 하며, phase count와 boundary는 Step 4가 아니라 runtime에 그 output을 읽어 해석한다.
-- **Group-gated execution rule**: medium 이상에서 `task-ordering-agent`가 multi-phase로 판정하면 `Review-Fix Loop.scope = per-group`을 기본값으로 본다. `Phase Source`의 `Checkpoint` 필드가 group boundary를 결정하며, Checkpoint phase 직후 같은 group 범위의 review-fix gate와 validation을 닫는다. 그룹 2개 이상이면 마지막 group gate 후 cross-group regression 전용 `final integration review`를 1회 더 수행한다.
+- **Single-phase medium path**: 기본 진입은 `feature-draft`다. `feature-draft`(flat task-set) 다음 구현 직전 `task-ordering-agent`를 항상 경유하며(single-phase여도 예외 없이 경유; 구 '직행' precedence 폐기), autopilot은 final response를 `task_ordering.response`로 보존한다. `Mode: single-phase`이면 `implementation`은 단일 pass로 연결한다. 해당 `implementation` 직후 global review-fix gate를 즉시 닫아야 하며, 그 전에는 downstream step으로 진행할 수 없다. review가 있으면 실행 주체는 항상 `implementation-agent`/review 2-reviewer(`implementation-review-agent` ∥ `simplicity-review-agent`) custom-agent mapping이고, gate exit는 두 report의 합집합이다.
+- **Multi-phase medium / large expanded path**: `feature-draft`로 slim Part 1과 execution-facing Part 2(flat task-set)를 고정한 뒤, planned persistent global alignment가 필요할 때만 `spec-sync`(planned 호출)를 조건부로 추가하고, 구현 직전 `task-ordering-agent`를 경유한다. multi-phase 여부는 별도 skill 선택이 아니라 `task-ordering-agent`가 전체를 조망해 late-binding으로 판정한다. downstream `implementation-dispatch-controller`는 `Execution Mode: phase-iterative`와 `Phase Source: task_ordering.response`를 선언하고, response의 `Execution` phase를 topological parallel wave로 소비한다. task 본문은 response의 `Source` feature draft에서 읽는다.
+- **Group-gated execution rule**: medium 이상에서 `task_ordering.response`의 `Mode`가 `multi-phase`이면 `Review-Fix Loop.scope = per-group`을 기본값으로 본다. 별도 `Checkpoints` 목록이 group boundary를 결정하며, 지정 phase 직후 같은 group 범위의 review-fix gate와 validation을 닫는다. 마지막 phase는 implicit checkpoint다. 그룹 2개 이상이면 마지막 group gate 후 cross-group regression 전용 `final integration review`를 1회 더 수행한다.
 - **Spec sync ordering rule**: `spec-sync`의 post-implementation 호출은 모든 required implementation-scoped review-fix gate, required validation/test, 필요한 경우 `final integration review`가 끝난 뒤 최종 단계에서만 수행한다.
 - **Carry-over default**: `medium` 이슈도 기본적으로 phase exit blocker다. carry-over는 plan과 orchestrator에 정책과 근거가 명시된 경우에만 허용한다.
 ### 2.2 오케스트레이션 대상 실행 유닛
@@ -159,8 +159,8 @@ validation / final integration review
 - Reasoning note: 구현 전 planned 호출은 planned persistent global change만 반영하고, 구현 후 호출은 구현/검증 완료 후 persistent truth만 남긴다. temporary execution detail은 global에 올리지 않는다. planned 호출은 complex planned global alignment가 실제로 필요할 때만 조건부로 사용한다.
 
 #### task-ordering-agent
-- Role: `feature-draft`의 flat task-set을 입력받아 dependency edge·실행 순서·phase 분할·multi/single 판정·Checkpoint를 파생 (late-binding, 전체 조망)
-- Reasoning note: 구현 직전 항상 경유한다(single/multi 무관, 조건 분기 없음 — 구 implementation-plan precedence 폐기). producer가 아니라 ordering 파생 step이므로 review-fix gate가 면제되고 self-check만 수행한다. phase/Checkpoint 결정은 이제 이 step이 담당하며, 각 phase에 `goal`, `task set / dependency closure`, `validation focus`, `exit criteria`, `carry-over policy`, `Checkpoint`를 제공한다. autopilot이 이 step을 소유해 산출(ordered task-set + phase + Checkpoint)을 downstream `implementation-dispatch-controller` step의 `Phase Source`로 hand-off하며, 해당 step은 이 output을 `Execution Mode: phase-iterative`와 `Phase Source`로 참조한다.
+- Role: `feature-draft`의 flat task-set을 입력받아 dependency edge·topological parallel wave·multi/single 판정·review checkpoint를 compact final Markdown으로 반환 (late-binding, 전체 조망)
+- Reasoning note: 구현 직전 항상 경유한다(single/multi 무관, 조건 분기 없음 — 구 implementation-plan precedence 폐기). producer가 아니라 ordering 파생 step이므로 review-fix gate가 면제되고 self-check만 수행한다. 파일이나 task 본문 사본을 만들지 않는다. autopilot은 `Status/Source/Mode/Execution/Dependencies/Checkpoints/Notes` 응답을 `task_ordering.response`로 보존하고, controller는 `Source` feature draft의 task 본문과 `Execution`/`Checkpoints` 제어 신호를 결합한다.
 
 #### implementation
 - Role: actual code generation/modification 단계

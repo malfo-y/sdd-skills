@@ -1,5 +1,23 @@
 # Decision Log
 
+## 2026-07-13 - task-ordering을 persistent implementation-plan에서 transient ordering overlay로 축소
+
+### Context
+
+`task-ordering-agent`는 `feature-draft`의 flat task-set을 dependency·phase·Checkpoint·병렬 wave가 포함된 ordered plan으로 변환하는 ordering step이다. 그러나 이 agent가 최초 커밋부터 177/178줄로 비대했다(work_log 2026-07-13 항목4 진단). 원인은 삭제된 `implementation-plan-agent`의 dependency·phase strategy·6-field phase metadata·Checkpoint·full-plan artifact 계약을 "기존 서술 이동" 명목으로 보존 이관하면서 ordering overlay가 full implementation-plan 재생성기로 바뀐 것 + AC/Hard Rules/Process 반복을 house style로 인정한 리뷰가 중복 제거를 막은 것이다. 또한 ordering 결과를 별도 `_sdd/implementation/*_implementation_plan_*.md`로 저장했으나, 이는 부모 orchestrator가 agent 완료 직후 즉시 소비하고 원본 task-set에서 재계산 가능한 control data라 persistent artifact가 불필요했다.
+
+### Decision
+
+1. **transient handoff로 축소**: agent 책임을 지정된 feature draft read → dependency·parallel wave·phase·checkpoint 판단 → 고정 Markdown 응답(`Status·Source·Mode·Execution·Dependencies·Checkpoints·Notes`) 반환으로 제한한다. 파일 write·task 정의 전사·full plan schema·phase 6-field metadata·validation/risk 복사·review loop를 제거한다. 입력 부재/판정 불가만 `BLOCKED`로 반환한다. tools `["Read","Write","Glob"]`→`["Read"]`.
+2. **artifact 미생성**: `_sdd/implementation/*_implementation_plan_*.md`를 만들지 않는다. 부모가 `Source` feature draft의 task 본문과 응답을 결합해 실행하고, 영속 실행 이력은 기존 progress/report의 단일 작성자인 orchestrator가 소유한다. autopilot은 final Markdown을 `task_ordering.response`로 보존해 downstream `implementation-dispatch-controller`에 hand-off한다.
+3. **Checkpoint 모델 단순화**: phase별 `Checkpoint: true/false` 필드를 폐기하고 transient response의 별도 `Checkpoints` 목록(중간 review boundary만, 마지막 phase implicit)으로 통일한다. legacy `implementation-plan` 입력은 phase `Checkpoint` 필드를 같은 의미로 해석하는 compatibility fallback으로만 남긴다.
+
+### Consequences
+
+- `task-ordering-agent`(md+toml)·소비자(`implementation` SKILL v3.6.0→3.7.0, `sdd-autopilot` SKILL·contract·reasoning·sample)·validator를 각 claude+codex 미러로 동기화, spec v4.5.6→4.5.7.
+- validator가 transient 계약(`출력 파일=없음`, `Phase Source==task_ordering.response`, controller↔ordering step 짝)을 강제 — 양쪽 실행 PASS.
+- late-binding 이득(전체 조망 기반 ordering)은 보존. task 정의 품질 검증은 `plan-review`(feature-draft Part 2 대상) 소관 그대로.
+
 ## 2026-07-13 - 하네스 §3 화살표에서 implementation-plan 제거 (planning precedence 반영)
 
 ### Context
