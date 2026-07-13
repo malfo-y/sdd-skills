@@ -2,7 +2,7 @@
 
 > Markdown 기반 skill bundle로 AI 에이전트의 Spec-Driven Development 워크플로우를 Claude Code와 Codex에서 공통 계약으로 실행한다.
 
-**Spec Version**: 4.5.6
+**Spec Version**: 4.5.7
 **Last Updated**: 2026-07-13
 **Status**: Approved
 **Canonical Role**: current thin global spec
@@ -88,10 +88,10 @@ SDD Skills는 이 문제를 `SKILL.md = 실행 가능한 프롬프트`라는 관
 - non-trivial planning은 기본적으로 `feature-draft`에서 시작하고, `implementation-plan`은 phase/task 세분화가 필요할 때만 follow-up expansion으로 붙인다
 - 구현 전 계획 품질 점검이 필요하면 `plan-review`를 review-only gate로 사용한다. 이 gate는 plan을 직접 수정하지 않고 Critical/High finding만 implementation blocker로 표시한다
 - `feature-draft` 산출물은 Part 2에서 정보 단일 홈 배치를 따른다: 각 정보 유형은 canonical 홈 하나만 가진다 — `Touchpoints`=코드 지점·변경 이유·탐색 증거(census와 line number의 유일 허용처), `Description`=의도+비자명 근거, `Acceptance Criteria`=충족 checklist(content anchor로 지목), `V*`=판정 조건. 다른 섹션은 산문 재서술 대신 참조로 갈음하고, AC/Description은 line number 대신 content anchor(heading·문구·토큰)로 코드 지점을 지목한다. `plan-review`는 intra-draft 재진술(Description↔AC 미러링·census 다중 서술)과 AC/Description의 line number stale anchor를 plan smell(`DRY Risk`·`Verification Weakness`)로 감사한다. 이 다이어트는 AC falsifiability·`V*` 1:1 linkage·Target Files 계약·census 요구 수위를 낮추지 않는다(서술 위치만 고정)
-- multi-phase plan은 문서 장식이 아니라 execution gate다
-  - `implementation-plan`의 phase `Checkpoint` 필드가 group boundary를 결정하며, `Checkpoint=true` phase 직후에만 review-fix gate를 닫는다. group 내 phase는 light validation만 수행한다
+- multi-phase ordering은 문서 장식이 아니라 execution gate다
+  - `task_ordering.response`의 별도 `Checkpoints` 목록이 중간 group boundary를 결정하며, 마지막 phase는 implicit checkpoint다. legacy `implementation-plan` 입력은 phase `Checkpoint` 필드를 같은 의미로 해석한다. group 내 phase는 light validation만 수행한다
   - final integration review는 그룹 수에 따라 adaptive하게 처리한다(1개 그룹이면 마지막 group gate가 겸함, 2개+ 이상이면 별도 1회 추가)
-  - 마지막 phase를 제외한 phase에 `Checkpoint` metadata가 없으면 schema violation으로 보고 single late gate로 fallback하지 않는다
+  - transient response에서 중간 checkpoint가 없으면 `Checkpoints: 없음`으로 표현하며 마지막 phase gate만 실행한다
 - skill-defined output artifact의 이력 관리는 `prev/` 백업 체인보다 append-only artifact와 git history를 기본으로 사용한다
 - spec mutation은 target file을 식별한 뒤에만 수행한다
 - current spec model과 workflow semantics의 기준은 [docs/SDD_SPEC_DEFINITION.md](../../docs/SDD_SPEC_DEFINITION.md)와 [docs/SDD_WORKFLOW.md](../../docs/SDD_WORKFLOW.md)에 둔다
@@ -119,6 +119,7 @@ SDD Skills의 설계는 다음 층으로 나뉜다.
 | 런타임 구조 | Claude/Codex dual bundle | 동일한 SDD 철학을 유지하면서 플랫폼별 실행 차이를 흡수한다 |
 | 실행 분리 | skill entrypoint + reusable agent. leaf dispatch가 필요한 execution(`implementation` fan-out, `feature-draft`/`implementation-plan` review-fix loop)은 `orchestrator skill + producer/leaf agent`, 단순 위임 execution은 `wrapper skill + single-source agent` | direct invocation과 autopilot 재사용성을 확보하면서 nesting 1단계 제한 안에서 dispatch를 메인 루프 skill로 올린다 |
 | 상태 전달 | `_sdd/` 파일 아티팩트 중심 | 세션 메모리 의존을 줄이고 재현성과 git 추적성을 높인다 |
+| task ordering handoff | `task-ordering-agent`는 지정된 feature draft를 읽고 `Status`·`Source`·`Mode`·`Execution`·`Dependencies`·`Checkpoints`·`Notes`만 담은 짧은 Markdown을 부모 orchestrator에 직접 반환하며 `_sdd/implementation/*_implementation_plan_*.md`를 생성하지 않는다. 부모는 `Source`의 task 본문과 이 반환값을 결합해 실행하고, 영속 실행 이력은 orchestrator 소유 progress/report에 남긴다 | ordering은 즉시 소비되고 원본 task-set에서 다시 계산할 수 있는 파생값이므로 독립 persistent artifact로 복제하지 않아도 된다 |
 | 품질 게이트 | AC-First + explicit verification | "should work" 식 추측을 줄이고 종료 조건을 명확히 한다 |
 | 장문 산출물 작성 | producer-owned inline 2-phase writing | skeleton/fill/finalize를 같은 문맥에서 처리해 품질 저하를 줄인다 |
 | 오케스트레이션 | reasoning-based `sdd-autopilot` + generated orchestrator contract | 고정 템플릿보다 현재 맥락에 맞는 pipeline을 구성하되, producer review gate와 implementation dispatch controller 같은 실행 불변조건은 생성물에 명시해야 한다 |
@@ -126,7 +127,7 @@ SDD Skills의 설계는 다음 층으로 나뉜다.
 | plan quality gate | optional `plan-review` review-only gate | 구현 전 Target Files, task boundary, verification weakness, overengineering smell을 findings-first로 드러내되 plan 자체는 수정하지 않는다 |
 | producer 스킬 자체 품질 gate | `feature-draft`/`implementation-plan`/`implementation`이 review→fix→re-review loop를 직접 소유(orchestrator). fix=producer/leaf agent 재dispatch, 산출물 단일 작성자 | autopilot 없이 직접 호출되는 경로에서도 산출물이 reviewer gate를 통과하도록 보장한다. producer/reviewer agent는 sub-agent를 spawn하지 못하므로 loop orchestration은 메인 루프(스킬)가 소유해야 한다 |
 | autopilot producer handoff gate | generated orchestrator가 `feature-draft-agent` / `implementation-plan-agent` output을 `plan-review-agent`로 검증한 뒤 downstream 소비 | autopilot이 wrapper skill을 우회해 custom agent를 직접 호출해도 직접 호출 경로와 같은 planning quality gate를 유지한다 |
-| multi-phase quality gate | `per-group` review-fix (Checkpoint boundary) + adaptive `final integration review`; missing non-final `Checkpoint`는 reject/regenerate | 의미 있는 group 단위로 review depth를 높이고, review 비용과 latency를 줄이면서 cross-group regression은 adaptive final review로 커버한다 |
+| multi-phase quality gate | 별도 `Checkpoints` 목록 기반 `per-group` review-fix + 마지막 phase implicit checkpoint + adaptive `final integration review` | 의미 있는 group 단위로 review depth를 높이고, review 비용과 latency를 줄이면서 cross-group regression은 adaptive final review로 커버한다 |
 | implementation test-first | 테스트 작성(`test-author-agent`)과 구현(`implementation-agent` GREEN→REFACTOR 전용)을 분리하고 그 사이에 orchestrator 소유 RED 게이트(실패 증거 캡처 + falsifiability 점검)를 둔다. 테스트는 impl에 대해 고정(이의는 `CONTRACT_MISMATCH`로만). 2-stage는 wave 내부 한정, wave 간 순차 | test-first를 leaf 자기보고가 아니라 falsifiable 실행 불변식으로 못박아 test-after 새는 경로를 차단하고, 약한 테스트 통과 퇴화를 막는다 |
 | 직교 2-렌즈 review 렌즈 | correctness ∥ simplicity(`simplicity-review-agent`) 직교 2-reviewer 병렬 dispatch를 두 진입점에 적용: implementation review-gate(correctness=`implementation-review-agent`, gating exit는 두 report 합집합 `critical=high=medium=0`)와 PR review(correctness=`pr-review-agent`, orchestrator가 verdict 합성, 자동 강제 없이 correctness Critical/High → blocker·simplicity Medium+ → REQUEST CHANGES rationale 기여). 양쪽 모두 두 렌즈가 dispatched agent라 subagent model override가 균일 적용되고 simplicity는 falsifiable-only gating | 정확성과 동작-불변 형태 품질을 disjoint 표적으로 분리해 한 reviewer에 과부하 없이 검출 범위를 넓히고, 벽시계는 병렬로 유지하면서 falsifiable 한정으로 수렴성을 보장한다. 두 진입점 모두 correctness를 inline이 아닌 agent로 두어 model override가 무게 실리는 검증에 닿는다. PR review는 인간 보조라 합집합 자동 exit 대신 rationale 기여로 합류시킨다 |
 | subagent model override | planning/implementation skill group의 subagent 호출은 필요할 때만 런타임별 per-call option으로 모델/추론 강도를 override한다. Claude는 `--model` 단일 옵션, Codex는 `--model`과 `--effort` 분리 옵션을 canonical로 둔다 | 기본 세션/agent 설정 상속을 보존하면서 특정 실행만 강도·비용·속도에 맞게 조절할 수 있고, 플랫폼별 tool schema 차이를 숨기지 않아 잘못된 결합형 모델 ID 파싱을 피한다 |
@@ -140,7 +141,7 @@ SDD Skills의 설계는 다음 층으로 나뉜다.
 
 - draft/plan/review skill chain은 `_sdd/` 산출물을 다음 단계 입력 계약으로 사용한다
 - temporary delta는 global truth를 반복 복사하지 않고, 변경 범위와 검증 정보만 다룬다
-- multi-phase implementation plan은 review-fix scope와 phase exit 기준을 실제 execution control로 제공해야 한다
+- transient task ordering response는 `Execution`과 별도 `Checkpoints`로 병렬 wave와 review-fix scope를 실제 execution control로 제공해야 한다
 - generated orchestrator에서 구현 step은 1급 Step kind `implementation-dispatch-controller`로 선언한다(단일 custom-agent step / subagent_type 오버로드 아님). 이 controller는 feature/phase 전체 leaf call이 아니라 autopilot이 wave별 3단계(test-author 병렬 dispatch → orchestrator 소유 RED 게이트 → impl 병렬 dispatch)로 task-level leaf calls를 fan out한다
 - skill-defined output artifact는 dated slug + glob-based discovery를 canonical로 사용하고, legacy uppercase/fixed-name artifact는 transition fallback으로만 읽는다
 - canonical model 변경은 definition 문서와 workflow 문서에서 먼저 선언하고, 이후 generator/consumer/docs가 따라간다
