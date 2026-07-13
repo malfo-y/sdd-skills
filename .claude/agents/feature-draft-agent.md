@@ -24,6 +24,7 @@ Part 1은 persistent spec에 반영할 최소 delta만 담고, Part 2는 그 del
 - [ ] Part 2의 모든 task가 `**Target Files**`를 가진다.
 - [ ] `Strategic Code Map` 또는 supporting surface가 있으면 context로 읽었고, `Touchpoints`와 `Target Files`는 현재 코드 기준으로 재검증했다.
 - [ ] Part 2는 Self-Contained Authoring (Hard Rule 11)을 따른다. Pass 1 + Pass 2 검증은 수행하되 검증 흔적은 산출물에 남기지 않는다 (보완 불가능한 잔여 갭이 있을 때만 1줄).
+- [ ] Part 2가 정보 단일 홈 배치를 지킨다 (Hard Rule 11): Description은 의도+근거만·열거형 편집 목록은 AC에만·census는 Touchpoints 1회·V*는 판정 조건만이며, AC/Description은 line number 대신 content anchor로 지목한다.
 - [ ] `Risks and Mitigations`는 `Risk / Impact / Mitigation` 표를 따르고, `Open Questions`의 각 항목은 Decision / Alternatives / Confidence / User confirmation needed 스키마를 따른다 (Hard Rule 4).
 - [ ] Part 2의 어느 task도 요청되지 않은 추상화·옵션·설정 가능성·에러 처리를 포함하지 않는다 (Hard Rule 12).
 - [ ] Part 2의 모든 `[C]`에 신규파일 근거가 있고, 각 task가 단일 목적이며, task 간 중복 구현이 없음을 단일 검증 패스에서 self-check했다 (흔적 비노출).
@@ -43,6 +44,12 @@ Part 1은 persistent spec에 반영할 최소 delta만 담고, Part 2는 그 del
 11. **Self-Contained Authoring (Part 2 대상)**: Part 2는 작성 대화·외부 문서 없이 reader 단독으로 의도·근거·참조를 따라갈 수 있어야 한다.
     - **외부**(작성 대화·타 문서) 결정·가정·참조·고유 용어는 inline grounding 한다 (재진술+출처, bare path / 대명사적 지시 금지). Part 1↔Part 2 참조는 `ID + inline purpose` (예: "Contract C3 반영 -- 세션 토큰 HMAC 검증")로 충족하며 Part 1 자체는 적용 대상이 아니다 (`spec-sync`로 canonical spec에 머지되므로).
     - **같은 산출물 안에서 재진술 금지**: 한 draft 안에서 이미 정의·설명된 용어·결정·내용은 다시 풀어쓰지 않고 섹션/ID 참조로 갈음한다. 용어 정의는 문서 전체에서 1회, Part 1에서 설명한 것을 Part 2에서 재서술하지 않으며, risks/open questions는 Part 1 항목을 재진술하지 않고 실행을 차단하는 것만 ID로 가리킨다.
+    - **Part 2 섹션 간 정보 단일 홈 배치**: 같은 정보를 Touchpoints·Description·AC·V* 여러 섹션에 나눠 중복 서술하지 않고, 각 정보를 한 홈에만 둔다 — 다음 세 배치로 고정한다.
+        - ① Description은 task의 의도와 비자명한 근거만 소유한다 (의도까지 지운 빈 Description 금지 — 의도가 사라지면 leaf 구현 품질이 떨어진다). "무엇을 어디에 넣는지"의 열거형 편집 목록은 AC에만 두고, Description이 AC를 산문으로 미러링하지 않는다.
+        - ② census(대상 지점 열거·배경)는 Touchpoints에 1회만 서술하고, Description은 "Touchpoints의 <대상> census 참조"로 갈음한다. census 요구 자체는 불가침이며 배경 서술 위치만 Touchpoints 한 곳으로 모은다.
+        - ③ V*는 판정 조건(검증 토큰·기대 hit/0-hit·실행 명령·rubric)만 담고, census 배경이나 Description 의도를 재서술하지 않는다.
+    - **line number 지목 금지**: line number는 작성 시점 탐색 증거라 stale 되므로 Touchpoints에만 허용한다. AC와 Description은 line number 대신 content anchor(heading·문구·토큰)로 지점을 지목한다.
+    - **census 기반 AC 압축형**: AC는 census 배경을 재서술하지 않고 "Touchpoints census가 확정한 N곳 전체 + 잔존 0" 형태로 범위만 참조하며, 세부 판정은 대응 V*에 위임한다.
     - 검증: Pass 1 (외부 참조의 inline purpose 동반 확인) + Pass 2 (생초 독자 readthrough)를 **Step 8 단일 검증 패스에서 1회 수행한다**. 검증 과정·갭 목록·"보완 완료" 흔적은 산출물에 기록하지 않는다 (보완 불가능한 잔여 갭만 1줄 명시).
 12. **Minimum-Code Mandate (Part 2 대상)**: Part 2 task의 description과 acceptance criteria는 요청된 동작을 만드는 데 필요한 최소 코드만 명세한다.
     - 요청되지 않은 기능·옵션·설정 가능성 추가 금지.
@@ -265,6 +272,7 @@ Part 1과 Part 2를 모두 작성한 뒤, top-level `Risks/Mitigations and Open 
 - 근거 없는 `[C]` Target File은 항목을 제거하고 해당 기능을 담을 기존 파일을 `[M]`으로 지정하거나(신규 파일 대신 기존 파일에 구현), `[C]`를 유지하려면 신규 파일이 필요한 근거를 task description/Technical Notes에 추가한다.
 - 목적이 2개 이상인 task는 분리하거나, 묶는 이유를 Technical Notes에 적는다.
 - task 간 중복 구현은 shared setup task로 추출한다 (단 단일 사용처 추상화는 금지 — Hard Rule 12와 균형).
+- Description이 AC를 미러링하거나 census 배경을 재서술하면 단일 홈으로 되돌리고 (열거형 편집 목록은 AC로, census 배경은 Touchpoints로), AC·Description의 line number 지목은 content anchor로 치환한다.
 - 장황한 description은 요청된 동작 기준으로 줄인다 (200줄을 50줄로 줄일 수 있다면 줄인다).
 - "configurable / extensible / future-proof"가 근거(contract·invariant·실패 케이스) 없이 등장하면 표현을 제거하거나 근거를 명시한다.
 

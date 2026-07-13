@@ -87,6 +87,7 @@ SDD Skills는 이 문제를 `SKILL.md = 실행 가능한 프롬프트`라는 관
   - Codex matching skill group은 `--model <gpt-5.5|gpt-5.4|gpt-5.4-mini>`와 `--effort <low|medium|high|xhigh>`를 분리해 `spawn_agent(...)`의 `model` / `reasoning_effort`를 override한다. `gpt-5.5-high` 같은 결합형 값은 canonical syntax가 아니다
 - non-trivial planning은 기본적으로 `feature-draft`에서 시작하고, `implementation-plan`은 phase/task 세분화가 필요할 때만 follow-up expansion으로 붙인다
 - 구현 전 계획 품질 점검이 필요하면 `plan-review`를 review-only gate로 사용한다. 이 gate는 plan을 직접 수정하지 않고 Critical/High finding만 implementation blocker로 표시한다
+- `feature-draft` 산출물은 Part 2에서 정보 단일 홈 배치를 따른다: 각 정보 유형은 canonical 홈 하나만 가진다 — `Touchpoints`=코드 지점·변경 이유·탐색 증거(census와 line number의 유일 허용처), `Description`=의도+비자명 근거, `Acceptance Criteria`=충족 checklist(content anchor로 지목), `V*`=판정 조건. 다른 섹션은 산문 재서술 대신 참조로 갈음하고, AC/Description은 line number 대신 content anchor(heading·문구·토큰)로 코드 지점을 지목한다. `plan-review`는 intra-draft 재진술(Description↔AC 미러링·census 다중 서술)과 AC/Description의 line number stale anchor를 plan smell(`DRY Risk`·`Verification Weakness`)로 감사한다. 이 다이어트는 AC falsifiability·`V*` 1:1 linkage·Target Files 계약·census 요구 수위를 낮추지 않는다(서술 위치만 고정)
 - multi-phase plan은 문서 장식이 아니라 execution gate다
   - `implementation-plan`의 phase `Checkpoint` 필드가 group boundary를 결정하며, `Checkpoint=true` phase 직후에만 review-fix gate를 닫는다. group 내 phase는 light validation만 수행한다
   - final integration review는 그룹 수에 따라 adaptive하게 처리한다(1개 그룹이면 마지막 group gate가 겸함, 2개+ 이상이면 별도 1회 추가)
