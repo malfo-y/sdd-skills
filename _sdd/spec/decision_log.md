@@ -1,5 +1,33 @@
 # Decision Log
 
+## 2026-07-14 - feature-draft Part 2를 "상세는 task, 문서 전역은 index"로 재배치 (v4.5.8 → v4.5.9)
+
+### Context
+
+feature-draft Part 2의 `Contract/Invariant Delta and Coverage`·`Touchpoints`·`Validation Plan`이 문서 전역 섹션이라, task를 읽다가 C#/V# ID를 표로 점프하는 간접참조와 관계의 양방향 이중 저장(표의 Covered By/Validated By ↔ task Technical Notes의 "Covers.../validated by...")이 작성 비용·읽기 동선을 해쳤다. exemplar 실측(2026-07-09 task_ordering draft)에서 V1~V7이 T1~T7과 1:1이었고, global 섹션이 있는데도 Description이 census를 재열거하는 등 global↔per-task 재진술이 반복됐다. 구조화 토론(`_sdd/discussion/2026-07-14_discussion_feature_draft_output_diet.md`, 6라운드 D1~D6)으로 재배치를 확정했다.
+
+### Decision
+
+1. **상세의 단일 홈 = task**: 각 task에 `Contracts` 필드(구현/보존하는 C/I 계약 실체 — test-author "계약 발명 금지"의 앵커)와 `Validation` 블록(AC 바로 아래 1:1 병치, 등급/판정조건/증거형태) 신설. 문서 전역 `Validation Plan` 표는 삭제.
+2. **문서 전역 = thin index**: `Contract/Invariant Delta and Coverage`는 `ID|1줄 요약|Covered By`만 — 고아 delta(task를 못 받은 계약) 감사 자리이자 spec-sync delta 입력. delta↔task 관계는 index가 단방향 소유(task Technical Notes의 역방향 기록 삭제).
+3. **Touchpoints 역할 축소**: 둘 이상 task가 참조하는 공유 census·전역 변형형 census 전용(line number 유일 허용처 유지). task-국소 탐색 근거는 Target Files `-- 사유` 주석으로.
+4. **cross-cutting 이원화**: 분해형 invariant는 각 task Validation이 자기 슬라이스 커버(index가 coverers 나열). sweep형 검증(parity census류)은 마지막 검증 task(Type: Test, Target Files `없음 (read-only 검증)`)로 승격 — task-ordering이 마지막 배치, RED 게이트 structural-check 분기가 실행. 기존 기계 재사용으로 신규 소비 계약 불필요.
+
+기각: 전면 병합(coverage 감사 소실 — 빠진 delta 반증 불가), 구조 유지+셀 다이어트(읽기 동선 미개선), 계약의 Description 흡수(단일 홈 규칙 충돌·test-author 앵커 약화), sweep V의 index 실체 유지(신규 소비 계약 필요).
+
+### Rationale
+
+- 병합 자체는 내용을 이동시킬 뿐 — 절감은 ID 배관(전역 V 정의·양방향 관계 기록)과 재진술(V셀의 AC 재진술·census 재열거) 삭제에서 나온다.
+- coverage index를 남긴 유일한 이유는 감사 가능성: per-task로 흩어지면 task를 못 받은 delta는 어디에도 존재하지 않아 plan-review가 scope hole을 잡을 수 없다.
+- AC 작성 위계(목표→AC→평가방법)·falsifiability·2등급 rubric·1:1 대응의 rubric 사슬은 불가침 — 거처만 이동(닻: SDD_SPEC_DEFINITION §6).
+- 미검증 가정: "thin index만으로 orphan delta 감사가 현행과 동등하게 동작한다"는 구현 후 실측 대상.
+
+### Changes
+
+- `docs/SDD_SPEC_DEFINITION.md` §6 — 검증 정의 지점의 실행 단위 병치 + task 단위 배치 규칙 선언 (definition-first)
+- `_sdd/spec/main.md` §2 Guardrails 단일 홈 배치 bullet 갱신 (v4.5.8 → v4.5.9)
+- producer: `feature-draft-agent` claude·codex 짝 / consumers: `implementation` SKILL(dispatch 슬라이스), `spec-sync-agent`(Input Sources), `plan-review-agent`(Verification Weakness·DRY Risk), `task-ordering-agent`(sweep task 마지막 배치), `spec-review-agent`(temporary rubric), autopilot 표면(orchestrator-contract·sdd-reasoning-reference·sample-orchestrator) — 각 claude·codex 짝
+
 ## 2026-07-14 - RED 게이트를 2-way에서 non-falsifiable content의 test-free 예외를 포함한 3-way triage로 확장 (v4.5.7 → v4.5.8)
 
 ### Context

@@ -162,12 +162,19 @@ canonical 7섹션:
 
 temporary spec의 목적은 이번 변경이 무엇을 바꾸고, 어디를 건드리며, 무엇으로 검증할지를 직접 다루는 것이다.
 
-`Validation Plan`은 검증의 단일 정의 지점이다. 각 검증 항목(`V*`)은 delta(`C*`/`I*`)와 AC를 잇고 다음 rubric을 따른다 — 이 규범의 닻은 여기이며, planning/implementation/review 스킬이 이를 구현한다.
+검증의 단일 정의 지점은 실행 단위에 병치된다 — task 단위가 있는 temporary spec(feature-draft Part 2)에서는 **각 task의 `Validation` 블록**(AC 바로 아래, 1:1 병치)이, task 구획이 없는 standalone temporary spec에서는 `Validation Plan` 섹션이 그 지점이다. 각 검증 항목(`V*`)은 delta(`C*`/`I*`)와 AC를 잇고 다음 rubric을 따른다 — 이 규범의 닻은 여기이며, planning/implementation/review 스킬이 이를 구현한다.
 
 - **AC falsifiability**: 모든 AC는 충족/미충족이 증거로 닫혀야 한다. "미충족"을 말할 관찰/증거가 없는 AC는 두지 않는다.
 - **평가방법 2등급**: 기준은 "측정 가능"이 아니라 "증거 기반 판정 가능"이다. 1등급(정량 측정형: metric+임계, 재현 가능한 출력)과 2등급(정성 rubric 판정형: 명시 기준+리뷰어 판정, 인용 근거)을 허용하되, 두 등급 모두 (a) 이진 판정으로 닫히고 (b) 외부 증거에 묶이고 (c) 제3자가 반박 가능해야 한다. 품질·가독성은 2등급으로 받는다.
 - **AC↔`V*` 완전 대응**: 평가방법 없는 AC, AC 없는 `V*`를 두지 않는다.
 - **증거 기반 결과**: 실행 후 각 `V*`의 verdict는 증거(재현 가능한 출력 또는 인용 근거)에 묶여 기록된다. 증거 없는 "충족"은 인정하지 않는다.
+
+task 단위 temporary spec(feature-draft Part 2)의 정보 배치는 "상세는 task, 문서 전역은 index"를 따른다:
+
+- `Contract/Invariant Delta and Coverage`는 `ID | 1줄 요약 | Covered By`의 **thin index**로 유지한다 — 고아 delta(task를 못 받은 계약)를 가시화하는 감사 자리이자 `spec-sync`의 delta 입력이다. delta↔task 관계는 이 index의 `Covered By`가 단방향으로 소유한다(task 쪽 역방향 기록 금지).
+- 계약의 정밀 서술(인터페이스/불변식 실체)은 각 task의 **`Contracts` 필드**가 단일 소유한다 — downstream 테스트가 "발명 없이 실행"할 계약의 앵커.
+- `Touchpoints`는 둘 이상 task가 참조하는 **공유 census**·전역 변형형 census 전용이다(line number의 유일 허용처 유지). task-국소 탐색 근거는 해당 task의 Target Files 주석이 소유한다.
+- 여러 task에 걸친 **sweep형 검증**(전 task 완료 후 전역 1회 실행 — parity census류)은 개별 task에 쪼개지 않고 마지막 검증 task(Type: Test, Target Files `없음 (read-only 검증)`)로 승격하며, 대응 invariant의 계약 실체는 그 task의 `Contracts`가 소유한다.
 
 ## 7. 정보 배치 원칙
 
