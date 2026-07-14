@@ -64,8 +64,8 @@ canonical shape:
 
 - `Part 1: Spec Delta`는 `<!-- spec-update-todo-input-start -->` / `<!-- spec-update-todo-input-end -->` 마커를 포함하고, 필수 섹션은 `Change Summary`, `Scope Delta`, `Persistent Spec Implications`뿐이다.
 - `Persistent Spec Implications`는 persistent spec에 남아야 하는 repo-wide contract/invariant/validation 의도 후보를 compact하게 적는다. feature-level table, 상세 ID linkage, task plan, validation execution detail은 Part 1에 요구하지 않는다.
-- `Part 2: Implementation and Validation Plan`은 execution-facing 섹션을 둔다: `Contract/Invariant Delta and Coverage`, `Touchpoints`, `Task Details`, `Validation Plan`. dependency·phase·parallel summary는 여기서 만들지 않는다.
-- Part 2의 `Contract/Invariant Delta and Coverage`는 `C*`, `I*`, `V*` ID와 task/validation coverage를 보존한다.
+- `Part 2: Implementation and Validation Plan`은 execution-facing 섹션을 둔다: `Contract/Invariant Delta and Coverage`(thin index), `Touchpoints`(공유 census 전용), `Task Details`(각 task가 `Contracts`·AC·`Validation`을 소유). dependency·phase·parallel summary는 여기서 만들지 않는다.
+- Part 2의 `Contract/Invariant Delta and Coverage`는 `C*`/`I*` ID와 `Covered By`만 담는 thin index다(고아 delta 금지). 계약 실체는 task `Contracts`가, 검증(AC와 1:1)은 task `Validation`이 소유하며, sweep형 cross-task 검증은 마지막 검증 task(Type: Test, Target Files `없음 (read-only 검증)`)로 승격한다.
 - `Risks/Mitigations and Open Questions`는 top-level 섹션이며, `Risks and Mitigations`는 `Risk / Impact / Mitigation` 표를 따르고 `Open Questions`는 Decision / Alternatives / Confidence / User confirmation needed 스키마를 따른다.
 - feature draft의 실행 정보는 global spec에 그대로 병합하지 않는다.
 

@@ -99,7 +99,7 @@ implementation은 상위 orchestrator가 없는 **사용자 직접 실행 전용
 
 **1b. Ordering과 결합.**
 - **flat task-set 파일**이면 명시 경로를 `spawn_agent({agent_type: "task-ordering-agent", message: <source path>})`에 전달한다. **inline fallback**이면 부모가 만든 flat task-set 전문을 전달한다. final status를 수거한 뒤 응답을 기록하고 handle을 닫는다.
-- `READY` 응답의 `Execution`·`Dependencies`·`Checkpoints`·`Notes`를 transient ordering overlay로 사용한다. `Source`의 task 본문·AC·Validation Plan `V*`·Target Files·Open Questions와 결합하여 Step 2~7 입력을 구성한다. task 정의는 응답에서 찾거나 전사하지 않는다.
+- `READY` 응답의 `Execution`·`Dependencies`·`Checkpoints`·`Notes`를 transient ordering overlay로 사용한다. `Source`의 task 본문(AC·`Contracts`·`Validation`·Target Files)·Open Questions와 결합하여 Step 2~7 입력을 구성한다. task 정의는 응답에서 찾거나 전사하지 않는다.
 - `BLOCKED`는 source 누락/읽기 실패 또는 식별 가능한 `Task Details` 부재일 때만 기대한다. 반환되면 사유를 보고하고 중단한다.
 - 사용자가 명시적으로 제공한 legacy ordered plan은 compatibility input이다. task-ordering을 생략하고 기존 task/phase/dependency를 그대로 파싱한다.
 
@@ -131,6 +131,8 @@ task-set 확보 직후, 사용자에게 다음을 채팅으로 알림한다 (질
 | 모든 태스크에 Target Files 있음 | 전체 그룹 파생 |
 | 일부만 있음 | 있는 태스크만 병렬 후보, 나머지 순차 |
 | 없음 | 추론 시도 → 저확신 시 순차 fallback |
+
+> Target Files가 `없음 (read-only 검증)`인 sweep 검증 task는 파일 충돌이 없는 정의된 상태로 취급한다 (ordering이 마지막 phase에 배치).
 
 #### 3.2 wave 소비 (+ fallback)
 
@@ -176,10 +178,10 @@ test-author 입력(`message`의 `## Input Data`)에 다음을 전달한다 (leaf
 - Acceptance Criteria  # 테스트가 검증할 관찰 동작의 원천
 
 ## Validation Plan (V*)
-{validation_plan}      # 각 RED artifact의 AC/`V*` coverage mapping
+{validation_plan}      # 해당 task의 `Validation` 블록 (AC와 1:1) — 각 RED artifact의 AC/`V*` coverage mapping
 
 ## Contract/Invariant Delta
-{contract_invariant_delta}   # 테스트가 실행할 인터페이스 계약 (발명 금지)
+{contract_invariant_delta}   # 해당 task의 `Contracts` 필드 — 테스트가 실행할 인터페이스 계약 (발명 금지)
 
 ## 환경/테스트 (orchestrator가 로드해 전달)
 {test_command}

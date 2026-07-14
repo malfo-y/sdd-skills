@@ -77,7 +77,7 @@ Negative example:
 
 1. 실제 코드 변경
 2. `_sdd/implementation/*` — plan / progress / review / report (slug 기반 glob: `*_implementation_plan_*.md`, `*_implementation_progress_*.md`, `*_implementation_review_*.md`, `*_implementation_report_*.md`; legacy fallback: `implementation_plan.md`, `implementation_progress.md`, `implementation_review.md`, `implementation_report*.md`)
-3. feature draft Part 1 `Persistent Spec Implications` 및 Part 2 `Contract/Invariant Delta and Coverage` (slug 기반 glob: `_sdd/drafts/*_feature_draft_*.md`; legacy fallback: `_sdd/drafts/feature_draft_<name>.md`)
+3. feature draft Part 1 `Persistent Spec Implications` 및 Part 2 `Contract/Invariant Delta and Coverage` index + 각 task의 `Contracts`/`Validation` (계약 실체·검증 evidence는 task 블록에 있음; slug 기반 glob: `_sdd/drafts/*_feature_draft_*.md`; legacy fallback: `_sdd/drafts/feature_draft_<name>.md`)
 4. 사용자 대화
 5. `_sdd/spec/user_spec.md`, `_sdd/spec/user_draft.md`
 6. lowercase canonical `_sdd/spec/decision_log.md`, legacy uppercase `_sdd/spec/DECISION_LOG.md` fallback
@@ -92,7 +92,7 @@ Negative example:
 
 ## Status 분류 (Routing)
 
-각 delta 항목(Part 1 `Persistent Spec Implications`, Part 2 `Contract/Invariant Delta and Coverage`, 또는 정규화된 user input)을 실제 코드 + validation evidence 기준으로 아래 4분류 중 하나로 라우팅한다. 임시 실행 메모는 반영 대상이 아니며, global spec에 올리지 않을 항목도 명시적으로 제외/보류 판단한다.
+각 delta 항목(Part 1 `Persistent Spec Implications`, Part 2 coverage index의 `C*`/`I*` — 계약 실체와 검증 evidence는 `Covered By`가 가리키는 task의 `Contracts`/`Validation`에서 확인, 또는 정규화된 user input)을 실제 코드 + validation evidence 기준으로 아래 4분류 중 하나로 라우팅한다. 임시 실행 메모는 반영 대상이 아니며, global spec에 올리지 않을 항목도 명시적으로 제외/보류 판단한다.
 
 - **IMPLEMENTED / VERIFIED** (코드 + evidence 있음): 현재 사실로 **무표식 승격**. 가장 맞는 global surface에 current truth로 반영한다.
 - **PARTIAL** (일부 구현 + evidence): 구현·검증된 분은 current 사실로 승격하고, 잔여 미구현분은 `🚧 Planned`로 분리한다.
@@ -114,7 +114,7 @@ Negative example:
 다음을 읽는다.
 
 - 현재 global spec (`_sdd/spec/*.md`)
-- feature draft Part 1 `Persistent Spec Implications`, Part 2 `Contract/Invariant Delta and Coverage`
+- feature draft Part 1 `Persistent Spec Implications`, Part 2 coverage index + 해당 task의 `Contracts`/`Validation`
 - 구현 관련 `_sdd/implementation/*` (있으면)
 - 실제 코드/테스트/설정 (있으면)
 - lowercase canonical `_sdd/spec/decision_log.md`, legacy uppercase fallback

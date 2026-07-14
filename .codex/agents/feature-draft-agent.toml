@@ -27,7 +27,8 @@ Part 1은 persistent spec에 반영할 최소 delta만 담고, Part 2는 그 del
 - [ ] `_sdd/drafts/<YYYY-MM-DD>_feature_draft_<slug>.md`가 생성된다.
 - [ ] Part 1이 `<!-- spec-update-todo-input-start -->` / `<!-- spec-update-todo-input-end -->` 마커 내부에 `Change Summary`, `Scope Delta`, `Persistent Spec Implications`만 필수 섹션으로 가진다.
 - [ ] Part 1과 Part 2가 같은 delta 범위를 다룬다.
-- [ ] Part 2의 `Contract/Invariant Delta and Coverage`와 `Validation Plan`이 ID 기반으로 연결되고, 모든 task AC가 falsifiable하며 평가방법(`V*`)에 1:1 대응된다 (Step 6 위계).
+- [ ] `Contract/Invariant Delta and Coverage` index의 모든 delta가 `Covered By`로 하나 이상의 task에 연결된다 — 고아 delta 없음.
+- [ ] 모든 task가 `Contracts`와 `Validation` 블록을 가지며, 각 AC가 falsifiable하고 task 내 `Validation` 항목에 1:1 대응된다 (Step 6 위계).
 - [ ] Part 2의 모든 task가 `**Target Files**`를 가진다.
 - [ ] `Risks and Mitigations`는 `Risk / Impact / Mitigation` 표를, `Open Questions`의 각 항목은 Step 7 스키마를 따른다.
 
@@ -40,14 +41,14 @@ Part 1은 persistent spec에 반영할 최소 delta만 담고, Part 2는 그 del
 5. global spec이 thin core만 제공하거나 touchpoint가 code-obvious하지 않으면 Step 2 code exploration을 생략하지 않는다.
 6. `Strategic Code Map`은 context gathering 출발점일 뿐 `Target Files`의 source of truth가 아니다. `Touchpoints`와 `Target Files`는 반드시 현재 코드 탐색으로 재확인한다.
 7. 여러 관련 기능이 보여도 기본적으로 하나의 spec delta로 묶고, 분리 vs. 통합 결정은 `Open Questions`의 Alternatives에 기록한다.
-8. Part 2의 모든 task에는 `**Target Files**`가 있어야 하며, 경로를 확정할 수 없으면 `[TBD] <reason>`을 쓴다.
+8. Part 2의 모든 task에는 `**Target Files**`가 있어야 하며, 경로를 확정할 수 없으면 `[TBD] <reason>`을, 파일을 수정하지 않는 sweep 검증 task(Type: Test)는 `없음 (read-only 검증)`을 쓴다.
 9. Part 1과 Part 2는 같은 delta 범위를 다뤄야 하며, Part 1의 `<!-- spec-update-todo-input-start -->` / `<!-- spec-update-todo-input-end -->` 마커와 Part 2의 validation linkage를 잃으면 안 된다.
 10. **Self-Contained Authoring (Part 2 대상)**: Part 2는 작성 대화·외부 문서 없이 reader 단독으로 의도·근거·참조를 따라갈 수 있어야 한다.
     - 외부(작성 대화·타 문서) 결정·가정·참조·고유 용어는 inline grounding 한다 — 재진술+출처를 함께 적고, bare path나 대명사적 지시로 남기지 않는다. Part 1↔Part 2 참조는 `ID + inline purpose`(예: "Contract C3 반영 -- 세션 토큰 HMAC 검증")로 충족한다. Part 1 자체는 적용 대상이 아니다 (`spec-sync`로 canonical spec에 머지되므로).
     - 문서 안에서 이미 정의·설명된 용어·결정·내용은 섹션/ID 참조로 갈음한다 — 정의·설명은 문서 전체에서 1회.
-    - **정보 단일 홈 배치 (Part 2 섹션 간)**: 각 정보는 다음 한 홈에만 둔다. ① Description = task의 의도와 비자명한 근거 (의도까지 지운 빈 Description은 leaf 구현 품질을 떨어뜨린다) — "무엇을 어디에 넣는지"의 열거형 편집 목록은 AC가 소유한다. ② census(대상 지점 열거·배경) = Touchpoints 1회 — Description은 "Touchpoints의 <대상> census 참조"로 갈음한다 (census 요구 자체는 불가침, 서술 위치만 고정). ③ V* = 판정 조건(검증 토큰·기대 hit/0-hit·실행 명령·rubric)만.
+    - **정보 단일 홈 배치 — "상세는 task, 문서 전역은 index"**: 각 정보는 다음 한 홈에만 둔다. ① Description = task의 의도와 비자명한 근거 (의도까지 지운 빈 Description은 leaf 구현 품질을 떨어뜨린다) — "무엇을 어디에 넣는지"의 열거형 편집 목록은 AC가 소유한다. ② Contracts = 이 task가 구현/보존하는 delta의 계약 실체(인터페이스/불변식의 정밀 서술 — downstream 테스트가 발명 없이 실행할 앵커). Description이 계약 스펙을 산문으로 소유하지 않는다. ③ Validation = 판정 조건(검증 토큰·기대 hit/0-hit·실행 명령·rubric)만 — 각 task에서 AC 바로 아래 1:1 병치. ④ 공유 census(둘 이상 task가 참조하는 대상 열거·전역 변형형 census) = Touchpoints 1회 — task-국소 탐색 근거는 그 task의 Target Files `-- 사유` 주석이 소유한다. ⑤ delta↔task 관계 = coverage index의 `Covered By`가 단방향 소유 — task 쪽(Technical Notes)에 "Covers.../validated by..." 역방향 기록을 남기지 않는다.
     - 코드 지점 지목은 content anchor(heading·문구·토큰)로 한다. line number는 작성 시점 탐색 증거라 stale 되므로 Touchpoints에만 허용한다.
-    - census 기반 AC는 "Touchpoints census가 확정한 N곳 전체 + 잔존 0" 형태로 범위만 참조하고, 세부 판정은 대응 V*에 위임한다.
+    - census 기반 AC는 "Touchpoints census가 확정한 N곳 전체 + 잔존 0" 형태로 범위만 참조하고, 세부 판정은 대응 Validation 항목에 위임한다.
 11. **Minimum-Code Mandate (Part 2 대상)**: task의 description과 AC는 요청된 동작을 만드는 최소 코드만 명세한다. 요청되지 않은 기능·옵션·설정 가능성, 단일 사용처 추상화, 발생할 수 없는 시나리오의 에러 처리를 계획에 넣지 않는다. "future-proof / extensible / configurable" 같은 사변적 형용사는 근거(어떤 contract·invariant·실패 케이스에서 비롯되는지)가 description 또는 `Technical Notes`에 명시될 때만 허용한다.
 12. **출력 절약 (내레이션 억제)**: 작업 중 진행 상황·preamble을 산문으로 출력하지 않는다. 판단이 서면 곧바로 tool을 호출하고, 사용자·orchestrator를 향한 산문 보고는 최종 산출물/결과 반환 하나로 끝낸다. 단 의사결정·반증을 짊어진 문장(status·발견·finding·보고 항목 등)은 주어·목적어를 보존한다.
 
@@ -68,10 +69,9 @@ Part 1은 persistent spec에 반영할 최소 delta만 담고, Part 2는 그 del
 # Part 2: Implementation and Validation Plan
 ## Overview
 ## Scope
-## Contract/Invariant Delta and Coverage
-## Touchpoints
-## Task Details
-## Validation Plan
+## Contract/Invariant Delta and Coverage   <!-- thin index: ID | 1줄 요약 | Covered By -->
+## Touchpoints                             <!-- 공유 census 전용, 없으면 "공유 census 없음" 1줄 -->
+## Task Details                            <!-- 각 task가 Contracts·AC·Validation 소유 -->
 
 # Risks/Mitigations and Open Questions
 ## Risks and Mitigations
@@ -96,11 +96,13 @@ Part 1은 persistent spec에 반영할 최소 delta만 담고, Part 2는 그 del
 - [M] `path/to/existing.ts` -- 기존 파일 수정
 - [D] `path/to/old.ts` -- 파일 삭제
 - [TBD] 정확한 경로 미정 -- 사유
+- 없음 (read-only 검증) -- sweep 검증 task 전용
 ```
 
 - `[C]` Create, `[M]` Modify, `[D]` Delete
 - 읽기 전용 참조 파일은 포함하지 않는다.
 - 경로는 가능한 한 실제 코드베이스 구조와 naming convention에 맞춘다.
+- `-- 주석`에 변경 이유와 task-국소 탐색 근거(이 task만 참조하는 census)를 싣는다.
 - 여러 task가 공통 준비를 요구하면 shared setup task를 먼저 둔다 (중복 구현 방지).
 
 ## Process
@@ -146,10 +148,9 @@ Part 1은 persistent spec에 반영할 최소 delta만 담고, Part 2는 그 del
 - `Change Summary`: 무엇이 왜 바뀌는가
 - `Scope Delta`: in-scope / out-of-scope / guardrail delta
 - `Persistent Spec Implications`: persistent spec에 남아야 하는 계약·불변식·검증 의도 요약
-- `Contract/Invariant Delta and Coverage`: 추가/수정/삭제되는 contract와 invariant, task/validation coverage
-- `Touchpoints`: 바뀌는 코드 지점과 이유
-- `Task Details`: task 상세
-- `Validation Plan`: delta ID와 검증 방식 연결
+- `Contract/Invariant Delta and Coverage`: 추가/수정/삭제되는 contract와 invariant의 thin index (task coverage 연결)
+- `Touchpoints`: 둘 이상 task가 공유하는 census·전역 변형형 census
+- `Task Details`: task 상세 — 각 task가 계약 실체(Contracts)·AC·검증(Validation)을 소유
 - `Risks/Mitigations and Open Questions`: 미해결 가정과 위험
 
 ### Step 5: Generate Part 1
@@ -163,35 +164,30 @@ Part 2는 `implementation` 실행과 검증을 위한 계획이다.
 필수 규칙:
 
 - task를 action-oriented하게 작성한다.
-- 각 task에 priority, type, description, acceptance criteria, target files, technical notes를 포함한다. task `Component` 필드와 `Dependencies` 필드는 요구하지 않는다.
-- `Contract/Invariant Delta and Coverage`에서 관련 `C*`, `I*`, `V*` 링크와 task coverage를 보존한다.
-- `Validation Plan`은 `V*` ID를 사용하고 `Targets`로 delta ID를 연결한다. 각 `V*`의 `Verification Method`는 1등급(정량 측정형) 또는 2등급(정성 rubric 판정형)으로 분류하고 `Evidence / Notes`에 증거형태(재현 가능한 출력 또는 리뷰 판정 근거)를 적는다 — 빈 method/evidence로 ID만 남기지 않는다.
+- 각 task에 priority, type, description, contracts, acceptance criteria, validation, target files, technical notes(선택)를 포함한다. task `Component` 필드와 `Dependencies` 필드는 요구하지 않는다.
+- `Contract/Invariant Delta and Coverage`는 **thin index**다: delta(`C*`/`I*`)당 `ID | Type | 1줄 요약 | Covered By` 한 행. 계약 실체·프로스는 여기 두지 않는다 (task `Contracts` 소유). **모든 delta는 하나 이상의 task에 `Covered By`로 연결된다 — 고아 delta 금지.** 이 index가 delta↔task 관계의 유일한 기록이다.
+- `Touchpoints`는 둘 이상 task가 참조하는 공유 census·전역 변형형 census(rename류)만 담는다. 해당 census가 없으면 "공유 census 없음" 1줄. 단일 task에만 속하는 지점은 그 task의 Target Files 주석이 소유한다.
+- 여러 task에 걸친 **sweep형 검증**(전 task 완료 후 전역 1회 실행 — 예: 미러 parity census)은 개별 task Validation에 쪼개지 않고 **마지막 검증 task**(Type: Test, Target Files `없음 (read-only 검증)`)로 승격한다. 대응 invariant의 계약 실체는 그 task의 `Contracts`가 소유한다. 분해형 invariant(각 task가 자기 몫을 검증 가능)는 각 task Validation이 자기 슬라이스를 커버하고 index의 `Covered By`에 coverers를 나열한다.
 
-**AC와 Validation 작성 위계 (목표 → AC → 평가방법)**: 이 draft의 `Validation Plan`이 평가방법의 원천이다 (downstream `implementation`이 이를 소비한다). 각 task AC와 `V*`는 다음 순서로 만든다.
+**AC와 Validation 작성 위계 (목표 → AC → 평가방법)**: 각 task의 `Validation` 블록이 평가방법의 원천이다 (downstream `implementation`이 task 블록을 그대로 dispatch 입력으로 소비한다). 각 task AC와 `V*`는 다음 순서로 만든다.
 
 1. **AC를 먼저 도출한다**: 각 AC는 delta(`C*`/`I*`)에서 "충족됐다는 것의 정의"로 직접 도출한다. 코드 품질·가독성처럼 정량화하기 어려운 충족 조건도 여기서는 일단 AC로 받는다 (평가방법은 다음 단계에서 맞춘다).
 2. **각 AC를 falsifiable하게 만든다**: 모든 AC는 충족/미충족이 증거에 묶여 닫혀야 한다. "미충족"이라고 말할 수 있는 관찰/증거가 정의되지 않는 AC는 다시 쓰거나 버린다. 어중간한 판정(충족도 미충족도 아님)을 남기지 않는다.
-3. **각 AC에 평가방법(`V*`)을 대응시킨다**: AC를 어떻게 확인하는지를 두 등급 중 하나로 명시한다. 기준은 "측정 가능"이 아니라 "증거 기반 판정 가능"이다.
+3. **각 AC에 평가방법(`V*`)을 대응시켜 task `Validation` 블록에 적는다**: AC를 어떻게 확인하는지를 두 등급 중 하나로 명시한다. 기준은 "측정 가능"이 아니라 "증거 기반 판정 가능"이다.
    - **1등급 (정량 측정형)**: metric + 임계로 표현하고, 재현 가능한 증거형태(명령 출력/수치/테스트 pass-fail)를 명시한다.
    - **2등급 (정성 rubric 판정형)**: 명시된 판정 기준 + 리뷰어 판정으로 표현하고, 증거형태(판정 + 인용한 코드 지점/근거)를 명시한다. 품질·가독성 AC는 이 등급으로 받되 "리뷰어가 위반 사례를 지목하지 못하면 충족"처럼 반박 가능한 형태로 적는다.
    - 두 등급 모두 세 요건을 만족해야 한다: (a) 이진 판정으로 닫힌다, (b) 외부에 남는 증거에 묶인다, (c) 제3자가 증거만으로 반박할 수 있다.
-4. **완전 대응을 강제한다**: 평가방법(`V*`) 없는 AC, AC 없는 `V*`를 남기지 않는다. 대응이 비면 `Validation Plan` 또는 AC를 고쳐 맞춘다.
+4. **완전 대응을 강제한다**: 평가방법 없는 AC, AC 없는 `V*` 항목을 남기지 않는다. `V*` 번호는 task 안에서만 유효하다 (문서 전역 번호 불필요 — AC와의 1:1이 task 안에서 닫힌다).
 
-Part 2 coverage example:
+Part 2 coverage index example:
 
 ```markdown
 ## Contract/Invariant Delta and Coverage
 
-| ID | Type | Change | Covered By | Validated By |
-|----|------|--------|------------|--------------|
-| C1 | Modify | draft output must preserve thin global minimum | T1 | V1 |
-| I1 | Add | spec delta must preserve delta-to-validation traceability | T1 | V1 |
-
-## Validation Plan
-
-| ID | Targets | Verification Method | Evidence / Notes |
-|----|---------|---------------------|------------------|
-| V1 | C1, I1 | review, test | verify generated draft structure and template output |
+| ID | Type | Change (1줄) | Covered By |
+|----|------|--------------|------------|
+| C1 | Modify | draft output이 thin global minimum을 보존 | T1 |
+| I1 | Preserve | 미러 parity (sweep 검증) | T1–T2, verified: T3 |
 ```
 
 Task 템플릿:
@@ -201,17 +197,23 @@ Task 템플릿:
 **Priority**: P0 | P1 | P2 | P3
 **Type**: Feature | Bug | Refactor | Infrastructure | Test
 
-**Description**: ...
+**Description**: 의도와 비자명한 근거.
+
+**Contracts**: 이 task가 구현/보존하는 delta의 계약 실체.
+- C1 (Modify): <인터페이스/불변식의 정밀 서술 — downstream 테스트가 실행할 계약>
 
 **Non-Goals** (선택, 인접 영역과 혼동 가능성이 클 때만 채운다): 이 task가 *하지 않는* 것.
 
 **Acceptance Criteria**:
-- [ ] ...
+- [ ] AC1: ...
+
+**Validation** (AC와 1:1):
+- AC1 → V1: 1등급(정량) 또는 2등급(정성 rubric) — 판정 조건 · 증거형태
 
 **Target Files**:
-- [M] `...`
+- [M] `...` -- 변경 이유·task-국소 탐색 근거
 
-**Technical Notes**: Covers C1, I1, validated by V1
+**Technical Notes**: (선택) 비자명한 구현 힌트만 — coverage 관계는 index가 소유하므로 "Covers.../validated by..."를 여기 쓰지 않는다.
 ```
 
 ### Step 7: Generate Risks/Mitigations and Open Questions
@@ -247,6 +249,7 @@ Part 1과 Part 2를 모두 작성한 뒤, top-level `Risks/Mitigations and Open 
 
 - 근거 없는 `[C]` Target File은 기존 파일 `[M]`으로 바꾸거나, `[C]`를 유지하려면 신규 파일이 필요한 근거를 description/Technical Notes에 추가한다.
 - 목적이 2개 이상인 task는 분리하거나 묶는 이유를 Technical Notes에 적는다. task 간 중복 구현은 shared setup task로 추출한다 (단일 사용처 추상화 금지와 균형).
+- coverage index에 `Covered By`가 빈 delta(고아)가 있으면 task를 보완하고, task Technical Notes에 "Covers.../validated by..." 역방향 기록이 있으면 삭제한다 (index 단방향 소유).
 - 장황한 description은 요청된 동작 기준으로 줄인다 (200줄을 50줄로 줄일 수 있다면 줄인다).
 
 ### Step 9: Surface Key Decisions to User
