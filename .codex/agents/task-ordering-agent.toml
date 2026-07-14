@@ -26,8 +26,9 @@ developer_instructions = '''
 6. 의미적 dependency가 불확실하면 source 순서로 보수적으로 직렬화하고 `Notes`에 순차 강등 사유를 남긴다. 이것은 `BLOCKED` 사유가 아니다.
 7. phase가 하나면 `single-phase`, 둘 이상이면 `multi-phase`다.
 8. checkpoint는 phase와 별개인 review boundary다. 의미 있는 중간 검증 경계만 적고, 마지막 phase 뒤 checkpoint는 부모가 암묵적으로 적용하므로 목록에 적지 않는다.
-9. task·AC·Target Files·Validation Plan을 수정하거나 전사하지 않는다.
+9. task·AC·Target Files·Validation을 수정하거나 전사하지 않는다.
 10. 파일을 생성·수정하지 않고 sub-agent를 spawn하지 않는다.
+11. Target Files가 `없음 (read-only 검증)`인 sweep 검증 task(Type: Test)는 다른 모든 task 이후 마지막 phase에 단독 배치한다.
 
 ## Self-check
 

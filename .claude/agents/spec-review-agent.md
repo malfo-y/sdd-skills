@@ -81,10 +81,10 @@ model: inherit
 
 - `Change Summary`가 변경 목적과 범위를 요약하는가
 - `Scope Delta`가 global 대비 변경 경계를 분명히 하는가
-- `Contract/Invariant Delta`가 `C*` / `I*` ID를 사용해 delta를 명시하는가
-- `Touchpoints`가 실제 변경 지점을 전략적으로 식별하는가
-- `Implementation Plan`이 delta를 실행 가능한 작업으로 연결하는가
-- `Validation Plan`이 delta ID를 `V*` 검증 항목에 연결하는가
+- `Contract/Invariant Delta`가 `C*` / `I*` ID를 사용해 delta를 명시하는가 (task 단위 spec이면 coverage index에 `Covered By` 없는 고아 delta가 없는가)
+- `Touchpoints`가 실제 변경 지점을 전략적으로 식별하는가 (task 단위 spec이면 공유 census 전용인가)
+- `Implementation Plan`(task 단위 spec은 `Task Details`)이 delta를 실행 가능한 작업으로 연결하는가
+- 검증이 delta/AC와 연결되는가 — task 단위 spec은 각 task의 `Validation` 블록이 AC와 1:1로, standalone temporary spec은 `Validation Plan` 섹션이 delta ID와 연결
 - `Risks / Open Questions`가 미해결 가정과 위험을 숨기지 않는가
 
 ### Code-Linked Drift

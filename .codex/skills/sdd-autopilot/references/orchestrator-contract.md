@@ -122,7 +122,7 @@ planning producer step은 `feature-draft-agent` 하나다. producer output은 do
 
 - `feature-draft-agent` 직후 `plan-review-agent`를 호출해 다음을 검증한다:
   - `Part 1: Spec Delta`의 marker/3-section slim shape
-  - `Part 2: Implementation and Validation Plan`의 `Contract/Invariant Delta and Coverage`/`Validation Plan` linkage
+  - `Part 2: Implementation and Validation Plan`의 `Contract/Invariant Delta and Coverage` index coverage(고아 delta 없음)와 task별 `Contracts`/`Validation` linkage
   - top-level `Risks/Mitigations and Open Questions`
   - downstream planning 입력 적합성
 - `task-ordering-agent`는 planning producer가 아니라 `feature_draft`의 flat task-set에서 dependency edge·topological parallel wave·review checkpoint를 파생하는 ordering step이다. self-check만 수행하며 `plan-review-agent` producer review gate를 요구하지 않는다(review-fix gate 면제). final Markdown은 artifact로 저장하지 않고 `task_ordering.response`로 downstream `implementation-dispatch-controller`에 hand-off된다.
@@ -144,7 +144,7 @@ planning producer step은 `feature-draft-agent` 하나다. producer output은 do
 
 - 각 요구사항을 검증 가능한 조건 1개 이상으로 변환한다.
 - 프로세스 완료 여부가 아니라 기능 동작 여부를 검증한다.
-- feature draft가 있으면 Part 2 `Contract/Invariant Delta and Coverage`와 `Validation Plan`을 AC와 연결한다.
+- feature draft가 있으면 Part 2 coverage index(`Contract/Invariant Delta and Coverage`)와 각 task의 `Validation` 블록을 AC와 연결한다.
 
 ## 5. Reasoning Trace
 
@@ -229,7 +229,7 @@ planning producer step은 `feature-draft-agent` 하나다. producer output은 do
 필수 규칙:
 
 - 테스트/검증 단계는 건너뛸 수 없다.
-- temporary spec이 있으면 `Validation Plan`의 `V*` 항목과 테스트 전략의 대응 관계를 설명해야 한다.
+- temporary spec이 있으면 각 task `Validation` 블록의 `V*` 항목과 테스트 전략의 대응 관계를 설명해야 한다.
 - 테스트 결과는 사용자에게 명시적으로 보고한다.
 
 ## 8. feature_draft / task_ordering / spec_sync Specific Contract
@@ -238,8 +238,8 @@ planning producer step은 `feature-draft-agent` 하나다. producer output은 do
 - feature draft 파일 존재
 - `Part 1: Spec Delta` 존재, `<!-- spec-update-todo-input-start -->` / `<!-- spec-update-todo-input-end -->` 마커 포함
 - Part 1 필수 섹션은 `Change Summary`, `Scope Delta`, `Persistent Spec Implications`뿐임
-- `Part 2: Implementation and Validation Plan` 존재, `Contract/Invariant Delta and Coverage`와 `Validation Plan` linkage 포함
-- `Part 2`는 flat task-set(각 task 정의 + `Target Files`)을 산출한다. dependency edge·phase 분할·실행 순서·Checkpoint는 포함하지 않는다(그것은 `task_ordering` 소관)
+- `Part 2: Implementation and Validation Plan` 존재, `Contract/Invariant Delta and Coverage` thin index(고아 delta 없음)와 task별 `Contracts`/`Validation` 포함
+- `Part 2`는 flat task-set(각 task 정의 + `Target Files`; sweep 검증 task는 `없음 (read-only 검증)` 허용)을 산출한다. dependency edge·phase 분할·실행 순서·Checkpoint는 포함하지 않는다(그것은 `task_ordering` 소관)
 - top-level `Risks/Mitigations and Open Questions` 존재
 
 ### task_ordering
@@ -249,7 +249,7 @@ planning producer step은 `feature-draft-agent` 하나다. producer output은 do
 - `Execution`의 각 phase는 dependency를 만족하는 topological parallel wave이며 모든 task ID를 정확히 한 번 포함함
 - `Dependencies`는 `dependent ← prerequisites` 방향으로 표기함
 - `Checkpoints`는 phase별 metadata가 아닌 별도 review-boundary 목록이며 이유를 함께 적음. 마지막 phase는 implicit checkpoint이므로 생략 가능함
-- task 정의·AC·Validation Plan을 복사하거나 재산출하지 않음
+- task 정의·AC·Validation을 복사하거나 재산출하지 않음
 - autopilot이 final response를 `task_ordering.response`로 보존하고 downstream `implementation-dispatch-controller`를 `Execution Mode: phase-iterative`, `Phase Source: task_ordering.response`로 연결함
 - planning producer가 아니라 ordering 파생 step이므로 self-check만 수행하고 `plan-review` producer review gate를 요구하지 않음
 
