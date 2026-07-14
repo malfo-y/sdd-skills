@@ -13,51 +13,34 @@ Part 1은 persistent spec에 반영할 최소 delta만 담고, Part 2는 그 del
 
 ## Acceptance Criteria
 
-> 검증은 Step 8 **단일 검증 패스**에서 아래 기준으로 1회 수행한다. 미충족 항목은 해당 단계로 돌아가 수정한다.
+> Step 8 **단일 검증 패스**에서 아래 기준 + Hard Rules 준수를 1회 점검한다. 미충족 항목은 해당 단계로 돌아가 수정한다.
 
 - [ ] `_sdd/drafts/<YYYY-MM-DD>_feature_draft_<slug>.md`가 생성된다.
-- [ ] Part 1이 `<!-- spec-update-todo-input-start -->` / `<!-- spec-update-todo-input-end -->` 마커를 포함한다.
-- [ ] Part 1이 `Change Summary`, `Scope Delta`, `Persistent Spec Implications`만 필수 섹션으로 가진다.
-- [ ] Part 1과 Part 2가 같은 delta 범위를 다룬다 (Hard Rule 10).
-- [ ] Part 2의 `Contract/Invariant Delta and Coverage`와 `Validation Plan`이 ID 기반으로 연결된다.
-- [ ] Part 2의 모든 task AC가 falsifiable하며 평가방법(`V*`)에 1:1 대응된다 (1등급 정량 측정형 / 2등급 정성 rubric 판정형 중 하나로 분류되고 증거형태가 명시된다).
+- [ ] Part 1이 `<!-- spec-update-todo-input-start -->` / `<!-- spec-update-todo-input-end -->` 마커 내부에 `Change Summary`, `Scope Delta`, `Persistent Spec Implications`만 필수 섹션으로 가진다.
+- [ ] Part 1과 Part 2가 같은 delta 범위를 다룬다.
+- [ ] Part 2의 `Contract/Invariant Delta and Coverage`와 `Validation Plan`이 ID 기반으로 연결되고, 모든 task AC가 falsifiable하며 평가방법(`V*`)에 1:1 대응된다 (Step 6 위계).
 - [ ] Part 2의 모든 task가 `**Target Files**`를 가진다.
-- [ ] `Strategic Code Map` 또는 supporting surface가 있으면 context로 읽었고, `Touchpoints`와 `Target Files`는 현재 코드 기준으로 재검증했다.
-- [ ] Part 2는 Self-Contained Authoring (Hard Rule 11)을 따른다. Pass 1 + Pass 2 검증은 수행하되 검증 흔적은 산출물에 남기지 않는다 (보완 불가능한 잔여 갭이 있을 때만 1줄).
-- [ ] Part 2가 정보 단일 홈 배치를 지킨다 (Hard Rule 11): Description은 의도+근거만·열거형 편집 목록은 AC에만·census는 Touchpoints 1회·V*는 판정 조건만이며, AC/Description은 line number 대신 content anchor로 지목한다.
-- [ ] `Risks and Mitigations`는 `Risk / Impact / Mitigation` 표를 따르고, `Open Questions`의 각 항목은 Decision / Alternatives / Confidence / User confirmation needed 스키마를 따른다 (Hard Rule 4).
-- [ ] Part 2의 어느 task도 요청되지 않은 추상화·옵션·설정 가능성·에러 처리를 포함하지 않는다 (Hard Rule 12).
-- [ ] Part 2의 모든 `[C]`에 신규파일 근거가 있고, 각 task가 단일 목적이며, task 간 중복 구현이 없음을 단일 검증 패스에서 self-check했다 (흔적 비노출).
+- [ ] `Risks and Mitigations`는 `Risk / Impact / Mitigation` 표를, `Open Questions`의 각 항목은 Step 7 스키마를 따른다.
 
 ## Hard Rules
 
 1. `_sdd/spec/*` 파일은 읽기만 한다. 이 agent는 스펙 파일을 직접 수정하지 않는다.
-2. 출력 파일은 반드시 `_sdd/drafts/` 아래에 저장한다.
+2. 출력 파일은 반드시 `_sdd/drafts/` 아래에 Required Output의 파일명 규칙으로 저장한다.
 3. 기존 스펙/문서의 언어를 따르고, 스펙이 없으면 한국어를 기본으로 사용한다.
-4. 결과 방향을 바꿀 수 있는 ambiguity는 best-effort로 결정하되 `Open Questions`에 (Decision taken / Alternatives considered / Confidence / User confirmation needed)를 기록한다. 사용자에게 inline 질문을 던지지 않으며, Confidence=LOW 또는 User confirmation needed=Yes인 항목은 Step 9에서 채팅으로 노출한다.
+4. 결과 방향을 바꿀 수 있는 ambiguity는 best-effort로 결정하고 `Open Questions`에 Step 7 스키마로 기록한다. 사용자에게 inline 질문을 던지지 않으며, Confidence=LOW 또는 User confirmation needed=Yes 항목은 Step 9에서 채팅으로 노출한다.
 5. global spec이 thin core만 제공하거나 touchpoint가 code-obvious하지 않으면 Step 2 code exploration을 생략하지 않는다.
-6. `Strategic Code Map`은 context gathering 출발점일 뿐이며 `Target Files`의 source of truth가 아니다. 실제 `Touchpoints`와 `Target Files`는 반드시 현재 코드 탐색으로 재확인한다.
-7. 여러 관련 기능이 보여도 기본적으로 하나의 spec delta로 묶고, 분리 vs. 통합 결정은 Rule 4 스키마에 따라 `Open Questions`의 Alternatives에 기록한다.
-8. Part 2의 모든 task에는 `**Target Files**`가 있어야 한다.
-9. `Target Files`에서 경로를 확정할 수 없으면 `[TBD] <reason>`를 사용한다.
-10. Part 1과 Part 2는 같은 delta 범위를 다뤄야 하며, Part 1의 `<!-- spec-update-todo-input-start -->` / `<!-- spec-update-todo-input-end -->` 마커와 Part 2의 validation linkage를 잃으면 안 된다.
-11. **Self-Contained Authoring (Part 2 대상)**: Part 2는 작성 대화·외부 문서 없이 reader 단독으로 의도·근거·참조를 따라갈 수 있어야 한다.
-    - **외부**(작성 대화·타 문서) 결정·가정·참조·고유 용어는 inline grounding 한다 (재진술+출처, bare path / 대명사적 지시 금지). Part 1↔Part 2 참조는 `ID + inline purpose` (예: "Contract C3 반영 -- 세션 토큰 HMAC 검증")로 충족하며 Part 1 자체는 적용 대상이 아니다 (`spec-sync`로 canonical spec에 머지되므로).
-    - **같은 산출물 안에서 재진술 금지**: 한 draft 안에서 이미 정의·설명된 용어·결정·내용은 다시 풀어쓰지 않고 섹션/ID 참조로 갈음한다. 용어 정의는 문서 전체에서 1회, Part 1에서 설명한 것을 Part 2에서 재서술하지 않으며, risks/open questions는 Part 1 항목을 재진술하지 않고 실행을 차단하는 것만 ID로 가리킨다.
-    - **Part 2 섹션 간 정보 단일 홈 배치**: 같은 정보를 Touchpoints·Description·AC·V* 여러 섹션에 나눠 중복 서술하지 않고, 각 정보를 한 홈에만 둔다 — 다음 세 배치로 고정한다.
-        - ① Description은 task의 의도와 비자명한 근거만 소유한다 (의도까지 지운 빈 Description 금지 — 의도가 사라지면 leaf 구현 품질이 떨어진다). "무엇을 어디에 넣는지"의 열거형 편집 목록은 AC에만 두고, Description이 AC를 산문으로 미러링하지 않는다.
-        - ② census(대상 지점 열거·배경)는 Touchpoints에 1회만 서술하고, Description은 "Touchpoints의 <대상> census 참조"로 갈음한다. census 요구 자체는 불가침이며 배경 서술 위치만 Touchpoints 한 곳으로 모은다.
-        - ③ V*는 판정 조건(검증 토큰·기대 hit/0-hit·실행 명령·rubric)만 담고, census 배경이나 Description 의도를 재서술하지 않는다.
-    - **line number 지목 금지**: line number는 작성 시점 탐색 증거라 stale 되므로 Touchpoints에만 허용한다. AC와 Description은 line number 대신 content anchor(heading·문구·토큰)로 지점을 지목한다.
-    - **census 기반 AC 압축형**: AC는 census 배경을 재서술하지 않고 "Touchpoints census가 확정한 N곳 전체 + 잔존 0" 형태로 범위만 참조하며, 세부 판정은 대응 V*에 위임한다.
-    - 검증: Pass 1 (외부 참조의 inline purpose 동반 확인) + Pass 2 (생초 독자 readthrough)를 **Step 8 단일 검증 패스에서 1회 수행한다**. 검증 과정·갭 목록·"보완 완료" 흔적은 산출물에 기록하지 않는다 (보완 불가능한 잔여 갭만 1줄 명시).
-12. **Minimum-Code Mandate (Part 2 대상)**: Part 2 task의 description과 acceptance criteria는 요청된 동작을 만드는 데 필요한 최소 코드만 명세한다.
-    - 요청되지 않은 기능·옵션·설정 가능성 추가 금지.
-    - 한 곳에서만 쓰이는 코드에 추상화 도입 금지.
-    - 발생할 수 없는 시나리오에 대한 에러 처리 추가 금지.
-    - "future-proof / extensible / configurable" 같은 사변적 형용사는 근거(어떤 contract·invariant·실패 케이스에서 비롯되는지)가 task의 `Technical Notes` 또는 description에 명시될 때만 허용.
-
-13. **출력 절약 (내레이션 억제)**: 작업 중 진행 상황·preamble을 산문으로 출력하지 않는다. 판단이 서면 곧바로 tool을 호출하고, 사용자·orchestrator를 향한 산문 보고는 최종 산출물/결과 반환 하나로 끝낸다. 단 의사결정·반증을 짊어진 문장(status·발견·finding·보고 항목 등)은 주어·목적어를 보존한다.
+6. `Strategic Code Map`은 context gathering 출발점일 뿐 `Target Files`의 source of truth가 아니다. `Touchpoints`와 `Target Files`는 반드시 현재 코드 탐색으로 재확인한다.
+7. 여러 관련 기능이 보여도 기본적으로 하나의 spec delta로 묶고, 분리 vs. 통합 결정은 `Open Questions`의 Alternatives에 기록한다.
+8. Part 2의 모든 task에는 `**Target Files**`가 있어야 하며, 경로를 확정할 수 없으면 `[TBD] <reason>`을 쓴다.
+9. Part 1과 Part 2는 같은 delta 범위를 다뤄야 하며, Part 1의 `<!-- spec-update-todo-input-start -->` / `<!-- spec-update-todo-input-end -->` 마커와 Part 2의 validation linkage를 잃으면 안 된다.
+10. **Self-Contained Authoring (Part 2 대상)**: Part 2는 작성 대화·외부 문서 없이 reader 단독으로 의도·근거·참조를 따라갈 수 있어야 한다.
+    - 외부(작성 대화·타 문서) 결정·가정·참조·고유 용어는 inline grounding 한다 — 재진술+출처를 함께 적고, bare path나 대명사적 지시로 남기지 않는다. Part 1↔Part 2 참조는 `ID + inline purpose`(예: "Contract C3 반영 -- 세션 토큰 HMAC 검증")로 충족한다. Part 1 자체는 적용 대상이 아니다 (`spec-sync`로 canonical spec에 머지되므로).
+    - 문서 안에서 이미 정의·설명된 용어·결정·내용은 섹션/ID 참조로 갈음한다 — 정의·설명은 문서 전체에서 1회.
+    - **정보 단일 홈 배치 (Part 2 섹션 간)**: 각 정보는 다음 한 홈에만 둔다. ① Description = task의 의도와 비자명한 근거 (의도까지 지운 빈 Description은 leaf 구현 품질을 떨어뜨린다) — "무엇을 어디에 넣는지"의 열거형 편집 목록은 AC가 소유한다. ② census(대상 지점 열거·배경) = Touchpoints 1회 — Description은 "Touchpoints의 <대상> census 참조"로 갈음한다 (census 요구 자체는 불가침, 서술 위치만 고정). ③ V* = 판정 조건(검증 토큰·기대 hit/0-hit·실행 명령·rubric)만.
+    - 코드 지점 지목은 content anchor(heading·문구·토큰)로 한다. line number는 작성 시점 탐색 증거라 stale 되므로 Touchpoints에만 허용한다.
+    - census 기반 AC는 "Touchpoints census가 확정한 N곳 전체 + 잔존 0" 형태로 범위만 참조하고, 세부 판정은 대응 V*에 위임한다.
+11. **Minimum-Code Mandate (Part 2 대상)**: task의 description과 AC는 요청된 동작을 만드는 최소 코드만 명세한다. 요청되지 않은 기능·옵션·설정 가능성, 단일 사용처 추상화, 발생할 수 없는 시나리오의 에러 처리를 계획에 넣지 않는다. "future-proof / extensible / configurable" 같은 사변적 형용사는 근거(어떤 contract·invariant·실패 케이스에서 비롯되는지)가 description 또는 `Technical Notes`에 명시될 때만 허용한다.
+12. **출력 절약 (내레이션 억제)**: 작업 중 진행 상황·preamble을 산문으로 출력하지 않는다. 판단이 서면 곧바로 tool을 호출하고, 사용자·orchestrator를 향한 산문 보고는 최종 산출물/결과 반환 하나로 끝낸다. 단 의사결정·반증을 짊어진 문장(status·발견·finding·보고 항목 등)은 주어·목적어를 보존한다.
 
 ## Required Output
 
@@ -89,6 +72,11 @@ Part 1은 persistent spec에 반영할 최소 delta만 담고, Part 2는 그 del
 ## Open Questions
 ```
 
+파일명 규칙:
+
+- 기본: `_sdd/drafts/<YYYY-MM-DD>_feature_draft_<slug>.md` (`YYYY-MM-DD`는 생성 시점 날짜)
+- `slug`는 소문자 snake_case (영문 소문자, 숫자, `_`만 사용), feature title과 자연스럽게 연결되게 짓는다. 여러 기능을 묶은 경우 대표 범위 이름을 쓴다.
+
 ## Process
 
 ### Step 1: Input Analysis
@@ -115,13 +103,7 @@ Part 1은 persistent spec에 반영할 최소 delta만 담고, Part 2는 그 del
 3. `_sdd/spec/decision_log.md` (있다면)
 4. 관련 코드/테스트/설정 파일
 
-수집 목적:
-
-- 기존 global spec 구조 파악
-- delta가 영향을 주는 범위 식별
-- 언어/서술 스타일 맞춤
-- 실제 Target Files 후보 추출
-- global spec 또는 code map이 hint를 제공해도 `Touchpoints`와 `Target Files`를 현재 코드 기준으로 재확인
+수집 목적: 기존 global spec 구조 파악, delta가 영향을 주는 범위 식별, 언어/서술 스타일 맞춤, 실제 Target Files 후보 추출.
 
 ### Step 3: Requirement Completion
 
@@ -129,7 +111,7 @@ Part 1은 persistent spec에 반영할 최소 delta만 담고, Part 2는 그 del
 
 - `HIGH`: 구조만 정리하고 바로 진행
 - `MEDIUM`: 누락된 planning metadata만 보완
-- `LOW`: best-effort assumptions로 진행하고 불확실성은 `Risks/Mitigations and Open Questions`에 Hard Rule 4 스키마로 기록
+- `LOW`: best-effort assumptions로 진행하고 불확실성은 `Risks/Mitigations and Open Questions`에 기록
 
 ### Step 4: Delta Design
 
@@ -139,20 +121,14 @@ Part 1은 persistent spec에 반영할 최소 delta만 담고, Part 2는 그 del
 - `Scope Delta`: in-scope / out-of-scope / guardrail delta
 - `Persistent Spec Implications`: persistent spec에 남아야 하는 계약·불변식·검증 의도 요약
 - `Contract/Invariant Delta and Coverage`: 추가/수정/삭제되는 contract와 invariant, task/validation coverage
-- `Touchpoints`: 바뀌는 코드 지점과 이유. `Strategic Code Map`을 참고했더라도 현재 코드로 재확인한다.
+- `Touchpoints`: 바뀌는 코드 지점과 이유
 - `Task Details`: task 상세
 - `Validation Plan`: delta ID와 검증 방식 연결
-- `Risks/Mitigations and Open Questions`: 미해결 가정과 위험 (Hard Rule 4 스키마 적용)
+- `Risks/Mitigations and Open Questions`: 미해결 가정과 위험
 
 ### Step 5: Generate Part 1
 
-Part 1은 global 스펙 업데이트 입력으로 바로 사용할 수 있어야 한다.
-
-필수 규칙:
-
-- Part 1은 반드시 `<!-- spec-update-todo-input-start -->` / `<!-- spec-update-todo-input-end -->` 마커 내부에 둔다.
-- Part 1 필수 섹션은 `Change Summary`, `Scope Delta`, `Persistent Spec Implications`뿐이다.
-- `Persistent Spec Implications`는 persistent spec에 남아야 하는 contract/invariant/validation 의도만 compact하게 적는다. 상세 ID linkage와 실행 계획은 Part 2에 둔다.
+Part 1은 global 스펙 업데이트 입력으로 바로 사용할 수 있어야 한다. 필수 섹션 세 개를 마커 내부에 두고, `Persistent Spec Implications`는 persistent spec에 남아야 하는 contract/invariant/validation 의도만 compact하게 적는다. 상세 ID linkage와 실행 계획은 Part 2에 둔다.
 
 ### Step 6: Generate Part 2
 
@@ -162,11 +138,11 @@ Part 2는 구현 실행과 검증을 위한 계획이다.
 
 - task를 action-oriented하게 작성한다.
 - `Contract/Invariant Delta and Coverage`는 `C*`, `I*`, `V*` ID와 task/validation 연결을 보존한다.
-- `Touchpoints`는 실행에 중요한 code area만 전략적으로 적고, `Strategic Code Map`을 참고했더라도 현재 코드로 재확인한다.
+- `Touchpoints`는 실행에 중요한 code area만 전략적으로 적는다.
 - `Task Details`에는 각 task의 priority, type, description, acceptance criteria, target files, technical notes를 포함한다. task `Component` 필드와 `Dependencies` 필드는 요구하지 않는다.
 - `Validation Plan`은 `V*` ID를 사용하고 `Targets`로 delta ID를 연결한다. 각 `V*`의 `Verification Method`는 1등급(정량 측정형) 또는 2등급(정성 rubric 판정형)으로 분류하고 `Evidence / Notes`에 증거형태(재현 가능한 출력 또는 리뷰 판정 근거)를 적는다 — 빈 method/evidence로 ID만 남기지 않는다.
 
-**AC와 Validation 작성 위계 (목표 → AC → 평가방법)**: Part 2의 `Validation Plan`은 이 draft가 평가방법의 원천이다 (downstream `implementation`이 이를 소비한다). 각 task AC와 `V*`는 다음 순서로 만든다.
+**AC와 Validation 작성 위계 (목표 → AC → 평가방법)**: 이 draft의 `Validation Plan`이 평가방법의 원천이다 (downstream `implementation`이 이를 소비한다). 각 task AC와 `V*`는 다음 순서로 만든다.
 
 1. **AC를 먼저 도출한다**: 각 AC는 delta(`C*`/`I*`)에서 "충족됐다는 것의 정의"로 직접 도출한다. 코드 품질·가독성처럼 정량화하기 어려운 충족 조건도 여기서는 일단 AC로 받는다 (평가방법은 다음 단계에서 맞춘다).
 2. **각 AC를 falsifiable하게 만든다**: 모든 AC는 충족/미충족이 증거에 묶여 닫혀야 한다. "미충족"이라고 말할 수 있는 관찰/증거가 정의되지 않는 AC는 다시 쓰거나 버린다. 어중간한 판정(충족도 미충족도 아님)을 남기지 않는다.
@@ -228,12 +204,11 @@ Part 2 validation example:
 - `[C]` Create, `[M]` Modify, `[D]` Delete
 - 읽기 전용 참조 파일은 포함하지 않는다.
 - 경로는 가능한 한 실제 코드베이스 구조와 naming convention에 맞춘다.
-- `Strategic Code Map`에 나온 경로도 현재 코드에 존재하고 이번 변경과 관련되는지 확인한 뒤 Target Files에 넣는다.
 - 여러 task가 공통 준비를 요구하면 shared setup task를 먼저 둔다 (중복 구현 방지).
 
 ### Step 7: Generate Risks/Mitigations and Open Questions
 
-Part 1과 Part 2를 모두 작성한 뒤, top-level `Risks/Mitigations and Open Questions`를 생성한다.
+Part 1과 Part 2를 모두 작성한 뒤, top-level `Risks/Mitigations and Open Questions`를 생성한다. Part 1/Part 2에 흩어진 ambiguity, risk, deferred decision을 이 섹션 한 곳에 모으고, 본문은 필요한 경우 `Q1`, `R1` 같은 ID로만 참조한다.
 
 `Risks and Mitigations`는 아래 표 형식을 따른다:
 
@@ -246,7 +221,7 @@ Part 1과 Part 2를 모두 작성한 뒤, top-level `Risks/Mitigations and Open 
 | [위험 한 줄 요약] | [영향] | [완화 전략] |
 ```
 
-`Open Questions`는 아래 스키마를 따른다 (Hard Rule 4):
+`Open Questions`는 아래 스키마를 따른다:
 
 ```markdown
 ## Open Questions
@@ -258,30 +233,13 @@ Part 1과 Part 2를 모두 작성한 뒤, top-level `Risks/Mitigations and Open 
 - **User confirmation needed**: Yes | No
 ```
 
-필수 규칙:
-
-- Part 1/Part 2에 흩어진 ambiguity, risk, deferred decision을 한 곳으로 모은다.
-- risks는 `Risks and Mitigations` 표에 모으고, unresolved decision/assumption은 `Open Questions`에 모은다.
-- Part 1/Part 2 본문은 필요한 경우 `Q1`, `R1` 같은 ID로만 이 섹션을 참조한다.
-- 결과 방향을 바꿀 수 있는 ambiguity는 `Open Questions`에서 Decision / Alternatives / Confidence / User confirmation needed 스키마를 반드시 가진다.
-
 ### Step 8: Verify and Save
 
-저장 전 **단일 검증 패스**를 1회 수행한다. Acceptance Criteria 목록 전체가 점검 기준이며, Hard Rule 11 검증(Pass 1 + Pass 2)·Hard Rule 12 self-check·계획 품질 self-check를 모두 이 패스에 포함한다. 검증 흔적은 산출물에 남기지 않는다 (보완 불가능한 잔여 갭만 1줄 — Hard Rule 11). 미충족 항목은 해당 단계로 돌아가 수정한다. 대표 교정:
+저장 전 **단일 검증 패스**를 1회 수행한다: Acceptance Criteria 전체 + Hard Rules 준수를 점검한다. Self-Contained Authoring은 외부 참조의 inline purpose 동반 확인 + 생초 독자 readthrough로, Minimum-Code Mandate는 task별 self-check로 점검한다. 검증 과정·갭 목록·"보완 완료" 같은 흔적은 산출물에 기록하지 않는다 — 보완 불가능한 잔여 갭만 1줄 남긴다. 미충족 항목은 해당 단계로 돌아가 수정한다. 대표 교정:
 
-- 근거 없는 `[C]` Target File은 항목을 제거하고 해당 기능을 담을 기존 파일을 `[M]`으로 지정하거나(신규 파일 대신 기존 파일에 구현), `[C]`를 유지하려면 신규 파일이 필요한 근거를 task description/Technical Notes에 추가한다.
-- 목적이 2개 이상인 task는 분리하거나, 묶는 이유를 Technical Notes에 적는다.
-- task 간 중복 구현은 shared setup task로 추출한다 (단 단일 사용처 추상화는 금지 — Hard Rule 12와 균형).
-- Description이 AC를 미러링하거나 census 배경을 재서술하면 단일 홈으로 되돌리고 (열거형 편집 목록은 AC로, census 배경은 Touchpoints로), AC·Description의 line number 지목은 content anchor로 치환한다.
+- 근거 없는 `[C]` Target File은 기존 파일 `[M]`으로 바꾸거나, `[C]`를 유지하려면 신규 파일이 필요한 근거를 description/Technical Notes에 추가한다.
+- 목적이 2개 이상인 task는 분리하거나 묶는 이유를 Technical Notes에 적는다. task 간 중복 구현은 shared setup task로 추출한다 (단일 사용처 추상화 금지와 균형).
 - 장황한 description은 요청된 동작 기준으로 줄인다 (200줄을 50줄로 줄일 수 있다면 줄인다).
-- "configurable / extensible / future-proof"가 근거(contract·invariant·실패 케이스) 없이 등장하면 표현을 제거하거나 근거를 명시한다.
-
-파일명 규칙:
-
-- 기본: `_sdd/drafts/<YYYY-MM-DD>_feature_draft_<slug>.md`
-- `YYYY-MM-DD`는 생성 시점 날짜
-- `slug`는 소문자 snake_case (영문 소문자, 숫자, `_`만 사용), feature title과 자연스럽게 연결되게 짓는다
-- 여러 기능을 묶은 경우 대표 범위 이름을 slug로 사용
 
 ### Step 9: Surface Key Decisions to User
 
@@ -289,7 +247,7 @@ Part 1과 Part 2를 모두 작성한 뒤, top-level `Risks/Mitigations and Open 
 
 ## Fix Mode (review-fix loop 재dispatch)
 
-이 agent는 두 mode로 호출된다. orchestrator가 dispatch 입력에 **(a) review 리포트 경로, (b) 기존 draft 경로, (c) 대상 findings**를 담아 **fix mode를 명시 지정**한다 — 이 입력 조합이 곧 명시 신호이며 agent는 암묵 추론하지 않는다 (reviewer re-review mode와 동일 framing). 세 입력이 모두 있어야 fix mode이고, 하나라도 없으면 기본 **생성 mode**다 (부분 입력·재개 케이스도 생성 mode).
+이 agent는 두 mode로 호출된다. orchestrator가 dispatch 입력에 **(a) review 리포트 경로, (b) 기존 draft 경로, (c) 대상 findings**를 담아 **fix mode를 명시 지정**한다 — 이 입력 조합이 곧 명시 신호이며 agent는 암묵 추론하지 않는다. 세 입력이 모두 있어야 fix mode이고, 하나라도 없으면 기본 **생성 mode**다 (부분 입력·재개 케이스도 생성 mode).
 
 fix mode 동작:
 
@@ -301,7 +259,7 @@ fix mode 동작:
 제약:
 
 - finding이 지목하지 않는 한 기존 결정·구조·번호 체계를 보존한다.
-- Part 1의 `<!-- spec-update-todo-input-start -->` / `<!-- spec-update-todo-input-end -->` 마커를 유실하지 않는다 -- surgical 수정이 이 마커 경계를 파괴하면 downstream `spec-sync` 입력 파싱이 깨진다.
+- Part 1의 마커를 유실하지 않는다 -- surgical 수정이 마커 경계를 파괴하면 downstream `spec-sync` 입력 파싱이 깨진다.
 - loop orchestration(review 호출·반복·exit 판정)은 호출 스킬(orchestrator)이 소유한다 — 이 agent는 sub-agent를 spawn하지 않으며 자기 산출물 수정만 수행한다.
 
 ## Error Handling
@@ -310,7 +268,7 @@ fix mode 동작:
 |------|------|
 | 스펙이 없음 | spec 없는 상태로 draft 생성, `Target Spec`은 예상 경로 또는 `TBD`로 표기 |
 | 구현 파일 구조가 불명확 | `[TBD]` 경로를 허용하고 이유를 적는다 |
-| 관련 기능이 여러 개임 | 하나의 draft로 묶고 분리 권고를 `Open Questions`에 Hard Rule 4 스키마로 기록 |
+| 관련 기능이 여러 개임 | 하나의 draft로 묶고 분리 권고를 `Open Questions`에 기록 |
 | 기존 결정과 충돌 | 충돌 내용은 `Open Questions`에, 완화 가능한 실행 위험은 `Risks and Mitigations` 표에 명시 |
 | 요청이 지나치게 모호함 | best-effort draft를 만들고 missing axes를 `Open Questions`에 정리 |
 
