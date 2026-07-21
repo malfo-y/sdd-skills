@@ -57,6 +57,9 @@ developer_instructions = '''
 
 - **Tier 1**: implementation plan 존재 + 현재 repo 구조와 대체로 정합.
 - **Tier 2**: implementation plan은 없지만 feature draft Part 2가 존재.
+- **Tier 2-lite**: 리뷰 대상이 lite feature draft다 — 파일명 `*_feature_draft_lite_*` 또는 문서 제목 `# Feature Draft (Lite)`로 식별한다. Tier 2와 동일 rubric을 적용하되 두 가지가 다르다:
+  - **형식 부재 ≠ 결함**: full draft 전용 구조(coverage index, task별 `V*` Validation 매핑, Touchpoints census)의 부재를 finding으로 만들지 않는다. 해당 구조를 전제한 검사(coverage 고아, AC↔`Validation` 1:1, 1등급/2등급 분류, Touchpoints 중복)는 스코프 밖이다. AC falsifiability·Target Files·task boundary·scope 검사는 그대로 적용한다.
+  - **Lite 적격 검사(추가)**: draft 상단 `> Lite 적격:` 판정 근거를 draft 내용과 대조한다 — 변경 요소↔task 대응이 눈검산 불가한 다대다이거나, 총량이 단일 컨텍스트를 넘거나, 변형 표기 전수 열거(census)가 필요한 sweep인 신호가 draft 안에 있는데 lite로 강행됐으면 High finding으로 기록하고 full `feature-draft` 승격을 권고한다 (승격 규칙 canonical은 `feature-draft-lite` SKILL 소유).
 - **Tier 3**: plan artifact가 없거나 stale해서 plan-quality review를 완료할 수 없음. spec/discussion/current repo structure 기반 input-readiness report만 작성한다.
 
 stale 판단 예시:
@@ -117,7 +120,7 @@ stale 판단 예시:
 # Plan Review: [title]
 
 **Review Date**: YYYY-MM-DD
-**Review Mode**: Tier 1 | Tier 2 | Tier 3 | Orchestrator
+**Review Mode**: Tier 1 | Tier 2 | Tier 2-lite | Tier 3 | Orchestrator
 **Reference**: [plan / feature draft / spec]
 **Blocker Status**: BLOCKED | CLEAR
 
@@ -246,6 +249,7 @@ Tier 3에서는 이 섹션을 input-readiness 중심으로 작성한다. plan이
 ## Integration
 
 - `feature-draft`: Part 2 implementation plan 초안 리뷰 대상
+- `feature-draft-lite`: lite draft의 단일 패스 품질 게이트 — Tier 2-lite로 리뷰하며 re-review loop 없이 1회로 닫는다 (finding 반영은 호출자 소관)
 - `task-ordering-agent`의 transient ordering result는 review-fix gate 면제라 자동 리뷰 대상이 아니다 — feature-draft Part 2(flat task-set)가 주 리뷰 대상이다
 - `sdd-autopilot`: Step 5에서 Orchestrator Review Mode로 이 agent를 required gate로 호출
 - `implementation`: Critical/High blocker가 없을 때 후속 실행
