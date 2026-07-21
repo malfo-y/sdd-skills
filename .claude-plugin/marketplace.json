@@ -17,6 +17,7 @@
       "skills": [
         "./.claude/skills/discussion",
         "./.claude/skills/feature-draft",
+        "./.claude/skills/feature-draft-lite",
         "./.claude/skills/git",
         "./.claude/skills/goal-init",
         "./.claude/skills/guide-create",
