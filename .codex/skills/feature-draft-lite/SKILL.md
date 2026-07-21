@@ -6,7 +6,7 @@ version: 1.0.0
 
 # Feature Draft Lite
 
-**메인 루프가 직접 작성하는** 경량 feature draft. 별도 작성 agent를 부르지 않고 작성 단계 review loop도 없다 — 품질 게이트는 구현 후 리뷰 1회로 몬다. 단일 컨텍스트로 감당되는 변경의 기본 경로다. 산출물의 정의는 아래 Required Output이 전부다.
+구현에 필요한 기능 명세 및 계획 작성. 단일 컨텍스트로 감당되는 변경의 기본 경로다. 산출물의 정의는 아래 Required Output이 전부다.
 
 ## 승격 규칙 (작성 전 판정 + 작성 중 상시 감시)
 
@@ -70,12 +70,13 @@ version: 1.0.0
 - **Target Files는 실측**: 현재 코드 탐색으로 확인한 경로만 적는다. 확정 불가면 `[TBD] <사유>`. 마커는 `[C]` Create / `[M]` Modify / `[D]` Delete.
 - **마커 보존**: `spec-update-todo-input` 마커 쌍을 유실하지 않는다 — `spec-sync` 입력 호환의 조건이다.
 - **품질 게이트**: 작성 후 `plan-review` 스킬 1회로 draft를 점검한다 — **단일 패스**로, review loop는 돌리지 않고 finding은 작성자인 메인 루프가 직접 반영한다.
-- **실행 인계**: 기본은 메인 루프 직접 순차 구현이다. `implementation` 스킬로 인계할 수도 있다 — Part 2가 task별 AC·Target Files를 갖춘 flat task-set이라 그대로 입력이 된다. 병렬 sub-agent 실행이 필요해지면 승격 규칙으로 돌아간다.
+- **실행 인계**: 기본은 `implementation-lite` 스킬(메인 루프 직접 RED→GREEN 구현)이다. `implementation`(full) 스킬로 인계할 수도 있다 — Part 2가 task별 AC·Target Files를 갖춘 flat task-set이라 그대로 입력이 된다. 구현 작성을 여러 sub-agent로 나눠야 할 규모면 승격 규칙으로 돌아간다.
 - **출력 절약**: 산출물에 작성 과정·검증 내레이션을 남기지 않는다.
 
 ## Integration
 
 - `plan-review`: draft 품질 게이트 — 작성 후 단일 패스 점검 (위 규칙 참조).
-- `implementation`: 실행 인계 대상 — Part 2를 flat task-set 입력으로 소비한다 (task별 AC·Target Files 보유, 검증 상세는 실행 측이 AC에서 도출).
+- `implementation-lite`: 기본 실행 인계 대상 — Part 2 task를 RED→GREEN으로 구현한다.
+- `implementation` (full): 대안 실행 인계 대상 — Part 2를 flat task-set 입력으로 소비한다 (task별 AC·Target Files 보유, 검증 상세는 실행 측이 AC에서 도출).
 - `spec-sync`: Part 1 마커 내부를 global spec 반영 입력으로 소비한다 (파일명이 기존 `*_feature_draft_*` glob에 매칭된다).
 - `feature-draft` (full): 승격 대상 — 승격 시 이 draft 내용과 대화 맥락을 호출 입력으로 전달한다.
