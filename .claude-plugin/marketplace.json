@@ -22,6 +22,7 @@
         "./.claude/skills/goal-init",
         "./.claude/skills/guide-create",
         "./.claude/skills/implementation",
+        "./.claude/skills/implementation-lite",
         "./.claude/skills/implementation-plan",
         "./.claude/skills/plan-review",
         "./.claude/skills/implementation-review",
