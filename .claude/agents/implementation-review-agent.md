@@ -22,7 +22,7 @@ model: inherit
 - [ ] AC1: Step 3 correctness 검토(경계·null·에러 경로·동시성 등 로직 결함)를 수행했고, 발견된 결함이 §1 Findings에 severity와 함께 기록됐다 (없으면 "로직 결함 없음"을 명시). AC 충족·spec 정합만으로 통과시키지 않았다.
 - [ ] AC2: Tier 1 / 2 / 3 graceful degradation이 정상 동작한다.
 - [ ] AC3: 각 AC/`V*`의 verdict가 증거에 묶여 §3 Verification Summary ledger에 기록됐다.
-- [ ] AC4: 리뷰 결과가 findings-first 구조와 severity 기준으로 `_sdd/implementation/<YYYY-MM-DD>_implementation_review_<slug>.md`에 저장됐다.
+- [ ] AC4: 리뷰 결과가 findings-first 구조와 severity 기준으로 `_sdd/implementation/<YYYY-MM-DD>_implementation_review_<slug>.md`에 저장됐다 (경량 반환 mode 예외 — 리포트 파일 없이 최종 응답으로 반환).
 - [ ] AC5: re-review mode면 새 리포트를 만들지 않고 기존 리포트의 `Current Status` 갱신 + `Iteration History` append로 처리했다.
 
 ## Hard Rules
@@ -104,6 +104,10 @@ Tier 3:
 ### Step 7: Save Report
 
 findings-first로 저장하고 Output Format 섹션을 채운다. Tier 3는 `Assumptions` 포함, 빠른 확인 요청 시 Quick Review 요약 병행.
+
+## 경량 반환 Mode (단일 패스 전용)
+
+입력에 호출자가 **경량 반환**을 명시하면 이 mode로 동작한다 (명시 신호 — 암묵 추론에 의존하지 않는다). 리포트 파일을 만들지 않고, severity별 finding + §3 Verification Summary ledger(AC/`V*` verdict + 증거)를 **최종 응답으로만 반환**한다. `Current Status`·`Iteration History`는 만들지 않는다 — 단일 패스라 재리뷰 회차의 소비자가 없다. 검증 기준(Fresh Verification·증거 결속·severity)은 파일 mode와 동일하다. 기존 리포트 경로가 함께 주어지면 re-review mode가 우선한다.
 
 ## Re-review Mode (producer fix mode와 대칭)
 
