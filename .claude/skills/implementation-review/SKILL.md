@@ -34,10 +34,11 @@ plan 파일이 있으면 agent가 그것으로 범위를 잡지만(Tier 1), **pl
    - `Agent(subagent_type="sdd-skills:implementation-review-agent", prompt=<요청 + 경로 + 대화 맥락 digest>)`
    - `Agent(subagent_type="sdd-skills:simplicity-review-agent", prompt=<요청 + 경로 + 대화 맥락 digest>)`
    - 대상 경로가 불명확하면 각 agent가 자체 Input 우선순위로 탐색하도록 위임한다.
+   - **경량 반환 기본**: 이 스킬 경유 호출은 fix loop 없는 단일 패스이므로, dispatch 입력에 **경량 반환 mode**를 명시한다 (agent가 리포트 파일 없이 finding을 최종 응답으로 반환). 예외 — (i) 기존 리포트 경로가 주어진 re-review, (ii) 사용자가 리포트 파일을 명시 요청: 이때는 경량 반환을 지정하지 않는다.
 3. 두 agent의 반환을 모아 사용자에게 relay한다:
-   - correctness 리포트 경로 `_sdd/implementation/<YYYY-MM-DD>_implementation_review_<slug>.md` (+ Tier, findings 요약, blocker)
-   - simplicity 리포트 경로 `_sdd/implementation/<YYYY-MM-DD>_simplicity_review_<slug>.md` (+ findings 요약)
-   - **합산 severity 요약**: 두 리포트의 Critical/High/Medium findings를 합쳐 한눈에 보이게 정리한다 (판정은 하지 않고 합산만).
+   - correctness: Tier, AC/`V*` verdict ledger, findings 요약, blocker (경량 반환이면 응답 내용, 파일 mode면 리포트 경로 `_sdd/implementation/<YYYY-MM-DD>_implementation_review_<slug>.md`)
+   - simplicity: 5개 차원 판정, findings 요약 (경량 반환이면 응답 내용, 파일 mode면 리포트 경로 `_sdd/implementation/<YYYY-MM-DD>_simplicity_review_<slug>.md`)
+   - **합산 severity 요약**: 두 결과의 Critical/High/Medium findings를 합쳐 한눈에 보이게 정리한다 (판정은 하지 않고 합산만).
 
 > **경계**: orchestrator는 *대화 맥락을 모아 전달*하고 *두 리포트를 relay*까지만 한다. Tier 판별·검증·findings 분류·리포트 작성은 각 agent의 Process가 수행한다(중복 금지). 합집합 exit 판정·fix loop는 하지 않는다.
 

@@ -14,7 +14,7 @@ model: inherit
 > 프로세스 완료 후 아래 기준 + Hard Rules 준수를 자체 검증한다. 미충족 항목은 해당 단계로 돌아가 수정한다.
 
 - [ ] AC1: 5개 차원을 **각각 능동 스캔**했고 결과가 §2 Dimension Summary에 반영됐다 — 스캔 누락 차원이 없다 (finding 0이어도 스캔은 수행).
-- [ ] AC2: 리뷰 결과가 findings-first 구조와 severity 기준으로 `_sdd/implementation/<YYYY-MM-DD>_simplicity_review_<slug>.md`에 저장됐다.
+- [ ] AC2: 리뷰 결과가 findings-first 구조와 severity 기준으로 `_sdd/implementation/<YYYY-MM-DD>_simplicity_review_<slug>.md`에 저장됐다 (경량 반환 mode 예외 — 리포트 파일 없이 최종 응답으로 반환).
 - [ ] AC3: re-review mode면 새 리포트를 만들지 않고 기존 리포트의 `Current Status` 갱신 + `Iteration History` append로 처리했다.
 
 ## Hard Rules
@@ -68,6 +68,10 @@ severity는 `Critical / High / Medium / Low` 네 단계 표기를 쓰되, simpli
 ### Step 5: Save Report
 
 findings-first로 `_sdd/implementation/<YYYY-MM-DD>_simplicity_review_<slug>.md`에 저장한다. 장문이면 caller가 skeleton/헤더를 먼저 기록한 뒤 의존성 없는 섹션부터 채운다. `slug`는 소문자 snake_case다.
+
+## 경량 반환 Mode (단일 패스 전용, correctness reviewer와 대칭)
+
+입력에 호출자가 **경량 반환**을 명시하면 이 mode로 동작한다 (명시 신호 — 암묵 추론에 의존하지 않는다). 리포트 파일을 만들지 않고, severity별 finding + 5개 차원 1줄 판정을 **최종 응답으로만 반환**한다. `Current Status`·`Iteration History`는 만들지 않는다 — 단일 패스라 재리뷰 회차의 소비자가 없다. 리뷰 기준(5개 차원·falsifiability gate·severity)은 파일 mode와 동일하다. 기존 리포트 경로가 함께 주어지면 re-review mode가 우선한다.
 
 ## Re-review Mode (correctness reviewer와 대칭)
 
