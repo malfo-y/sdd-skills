@@ -59,6 +59,8 @@ version: 1.0.0
 
 **Target Files**:
 - [M] `path/to/file` -- 변경 이유
+- [C] `path/to/new_file` -- 생성 이유
+- ...
 
 # Open Questions
 [없으면 섹션 생략. 항목당 1-2줄: 내린 결정 + 사용자 확인 필요 여부.]
@@ -71,6 +73,7 @@ version: 1.0.0
 - **마커 보존**: `spec-update-todo-input` 마커 쌍을 유실하지 않는다 — `spec-sync` 입력 호환의 조건이다.
 - **품질 게이트**: 작성 후 `plan-review` 스킬 1회로 draft를 점검한다 — **단일 패스**로, review loop는 돌리지 않고 finding은 작성자인 메인 루프가 직접 반영한다.
 - **실행 인계**: 기본은 `implementation-lite` 스킬(메인 루프 직접 RED→GREEN 구현)이다. `implementation`(full) 스킬로 인계할 수도 있다 — Part 2가 task별 AC·Target Files를 갖춘 flat task-set이라 그대로 입력이 된다. 구현 작성을 여러 sub-agent로 나눠야 할 규모면 승격 규칙으로 돌아간다.
+- **Minimum-Code Mandate**: task의 description과 AC는 요청된 동작을 만드는 최소 코드만 명세한다. 요청되지 않은 기능·옵션·설정 가능성, 단일 사용처 추상화, 발생할 수 없는 시나리오의 에러 처리를 계획에 넣지 않는다.
 - **출력 절약**: 산출물에 작성 과정·검증 내레이션을 남기지 않는다.
 
 ## Integration
