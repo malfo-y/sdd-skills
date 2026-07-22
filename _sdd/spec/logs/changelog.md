@@ -2,6 +2,11 @@
 
 > 이 파일은 `_sdd/spec/main.md`의 버전별 변경 기록이다.
 
+#### v4.6.6 (2026-07-22)
+
+- **F5 완료 — `-lite` 개명 승격, F1~F5 전체 완결 (post-implementation sync)**: 스킬 `feature-draft-lite`→`feature-draft`·`implementation-lite`→`implementation`(git mv 4디렉토리, name·version 2.0.0, marketplace 갱신, 미러 identical), 개념 어휘 ~40파일 교체("lite 체인"→"SDD 체인", `> Lite 적격:`→`> 규모 판정:` 소비자 3곳 동시, autopilot Step L→Step 2·AC-L→AC, lite 트리거 별칭 제거), draft 파일명 glob `*_feature_draft_*` 통일(구 lite 파일명 substring 호환), `docs/SDD_SPEC_DEFINITION.md` ko·en 현행 draft 형식 재작성(검증 rubric 사슬 유지, full 구조 어휘 legacy 한정). 개명 census live 표면 잔존 0, 리뷰 게이트 통과(correctness 전 AC MET, simplicity M2 fix).
+- **적용 surface**: `main.md` §1~§3 — F5 todo 완결 승격 + lite 어휘·구명 전면 트림(F2 서술은 "당시 이름"으로 동명 현행 스킬과 구분). `components.md` — 개명 행·Strategic Code Map 경로·마커 앵커 갱신. `usage-guide.md` — Scenario 2/2b 커맨드·체인 서술 개명. F5 draft·분할 계획 원본 draft `_processed_` 마감.
+
 #### v4.6.5 (2026-07-22)
 
 - **F4 완료 — full 레인 삭제 완결을 current truth로 승격 + F5 개명 planned 등록 (post-implementation sync)**: 잔재 폐기(`_sdd/tests/` 20 check 스크립트, test-free triage 확대 draft), 이월 advisory sweep(fdl 쌍 description v1.2.0, impl-review description, AGENTS+하네스 템플릿 4미러 spec-sync 문장 5곳 동일, implementation-review-agent 쌍 Quick Review 섹션 소거, spec-sync·spec-review agent 쌍 입력/감사 계약 lite 기준 재서술 + legacy full 구조는 기록물 fallback 한정), codex pr-review sample 2-reviewer spawn 흐름 재작성, repo 전체 full 어휘 census 2계층(엄격 계층 live 표면 잔존 0 — AGENTS.md:17 re-review 잔재 적발·즉시 fix / 판정 계층 35파일 spot 판정). 리뷰 게이트 통과(correctness H1+M3·simplicity M3 합집합 fix). F5(`-lite` 개명 — 이름+개념 전부, 사용자 확정)를 새 🚧 Planned todo로 등록 — 구현 evidence 없음, PLANNED만.

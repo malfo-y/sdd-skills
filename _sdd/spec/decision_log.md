@@ -1,5 +1,24 @@
 # Decision Log
 
+## 2026-07-22 - F5 완료: `-lite` 개명 승격 — F1~F5 전체 완결 (v4.6.5 → v4.6.6, post-implementation sync)
+
+### Context
+
+분할 todo F5(자체 draft: `_sdd/drafts/_processed_2026-07-22_feature_draft_lite_rename_drop_lite.md`)가 구현·리뷰 게이트(correctness C/H/M 0 전 AC MET·simplicity M2 fix 완료)를 통과했다. 실측: 스킬 디렉토리 `feature-draft`·`implementation` 존재(-lite 부재, git mv 4디렉토리), name·version 2.0.0 동기, marketplace JSON 유효 + lite 참조 0, 개명 스킬 미러 identical, live 표면(`.claude/`·`.codex/`·`.claude-plugin/`·`docs/`·`README.md`·`AGENTS.md`) 개명 census 잔존 0, autopilot Step 0→1→2, `> 규모 판정:` 마커 소비자 3곳 교체 확인.
+
+### Decision
+
+1. **F5 개명을 current truth로 승격, F1~F5 전체 완결 기록**: 🚧 Planned F5 todo를 소거하고 완결 서술로 대체한다. full 레인 삭제 + `-lite` 개명이 모두 끝나 분할 계획 원본 draft를 `_processed_` 마감한다.
+2. **`_sdd/spec/` 3파일 lite 어휘·구명 트림** (F5 draft가 spec-sync 소관으로 명시): 구명 → 새 스킬명, "lite 체인"→"SDD 체인"/"체인", "lite draft"→"draft", "Lite 적격 검사"→"규모 판정 검사", components.md의 실존하지 않는 `-lite` 경로 → 새 경로. F2 서술의 full 스킬 쌍 3종은 "당시 이름 `feature-draft`·`implementation`·`implementation-plan`"으로 한정해 F5 개명 후 동명 현행 스킬과 구분한다. 구 "Tier 2-lite" 명칭 소멸 서술은 legacy 이름 인용이라 유지한다.
+3. **어휘 계약 확정**: 마커 `> Lite 적격:` → `> 규모 판정:`(값 "적격"/"분할 필요 — 분할 계획 포함"), 검사명 "규모 판정 검사", draft 파일명 glob `*_feature_draft_*` 통일(기존 lite 파일명 substring 하위호환), lite 트리거 별칭 제거.
+
+### Changes
+
+- `main.md` 4.6.6 — §1 entrypoint 예시 개명. §2: F5 todo 소거·F1~F5 완결 승격, F2 서술 동명 구분, 체인·마커 어휘 전면 교체. §3: 실행 분리·오케스트레이션·규모 초과 대응·planning precedence·implementation test-first·code map 행 갱신
+- `components.md` — `feature-draft`·`implementation` 행 개명(경로·버전 포함), autopilot·plan-review·spec-sync·spec-review 행 어휘 교체, Strategic Code Map 경로 갱신
+- `usage-guide.md` — Scenario 2/2b 커맨드·체인 서술 개명
+- F5 draft·분할 계획 원본 draft `_processed_` 이동 (F1~F5 완결로 분할 계획 마감)
+
 ## 2026-07-22 - F4 완료: full 레인 삭제 완결 승격 + F5 개명 planned 등록 (v4.6.4 → v4.6.5, post-implementation sync)
 
 ### Context
