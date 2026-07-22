@@ -1,9 +1,11 @@
 # SDD-Autopilot 사용 가이드
 
-**버전**: 1.2.1
-**날짜**: 2026-04-15
+**버전**: 1.3.0
+**날짜**: 2026-07-22
 
 SDD 파이프라인을 자동으로 실행하는 sdd-autopilot 메타스킬 가이드
+
+> **2.6.0 레인 변경**: autopilot의 기본 레인은 이제 **lite fast-path**입니다 — 단일 컨텍스트로 감당되는 변경은 오케스트레이터·승인 checkpoint 없이 `feature-draft-lite → plan-review(경량 반환) → fix 1회 → implementation-lite → implementation-review(경량 반환) → fix 1회 → spec-sync` 체인을 메인 루프에서 무승인 실행합니다. 승격 신호(단일 컨텍스트 초과, census형 sweep 등 — canonical은 lite 스킬들 소유)가 있는 변경만 이 가이드가 서술하는 오케스트레이터 기반 full 레인을 탑니다. 이하 본문은 full 레인 기준입니다.
 
 ---
 

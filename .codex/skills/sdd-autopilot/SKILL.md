@@ -1,14 +1,14 @@
 ---
 name: sdd-autopilot
 description: "적응형 오케스트레이터 메타스킬. /sdd-autopilot으로 호출하여 요구사항 분석부터 스펙 동기화까지 end-to-end SDD 파이프라인을 자율 실행한다."
-version: 2.5.0
+version: 2.6.0
 ---
 
 # SDD Autopilot
 
 ## Goal
 
-사용자 요청을 SDD 파이프라인으로 해석하고, 적절한 오케스트레이터를 만든 뒤 실행과 검증까지 끝내는 최상위 메타스킬이다. global spec은 장기적 SoT로, temporary spec은 실행 청사진으로 취급하며 `_sdd/` 아티팩트를 중심으로 discussion, planning, implementation, review, spec sync를 연결한다.
+사용자 요청을 SDD 파이프라인으로 해석하고, 실행과 검증까지 끝내는 최상위 메타스킬이다. global spec은 장기적 SoT로, temporary spec은 실행 청사진으로 취급하며 `_sdd/` 아티팩트를 중심으로 discussion, planning, implementation, review, spec sync를 연결한다. 기본 레인은 orchestrator 없이 lite 스킬 체인을 메인 컨텍스트에서 직접 실행하는 **lite fast-path**(Step L)이고, 승격 신호가 있는 변경만 orchestrator 기반 **full 레인**(Step 1, 3~8)을 탄다.
 
 ## Codex Runtime Adapter
 
@@ -39,6 +39,7 @@ You are already running as <agent_type>. Do not invoke or re-enter SDD skills fr
 ## Acceptance Criteria
 
 > 완료 전 아래 기준을 자체 검증한다. 미충족 항목이 있으면 해당 단계로 돌아가 수정한다.
+> AC1·AC2·AC3·AC4·AC6·AC8은 full 레인 전용이다. lite fast-path 실행은 대신 AC-L1~L4를 검증한다. AC5·AC7은 두 레인 공통이다.
 
 - [ ] AC1: 사용자 요청이 검증 통과 orchestrator로 변환되어 `_sdd/pipeline/orchestrators/orchestrator_<topic>.md`에 저장되었다 — 구조 검증 스크립트 PASS + plan-review gate Critical/High 0
 - [ ] AC2: orchestrator의 모든 step이 Execute → Verify로 닫혔고(final status 수거 + `close_agent` 정리 포함), 각 step이 선언한 materialized output이 실제로 존재한다. `task_ordering.response`는 artifact가 아니라 런타임에 보존된 final response로 검증한다
@@ -48,6 +49,10 @@ You are already running as <agent_type>. Do not invoke or re-enter SDD skills fr
 - [ ] AC6: `_sdd/pipeline/report_<topic>_<timestamp>.md`가 Step 8 필수 항목을 갖춰 존재한다
 - [ ] AC7: 이번 실행의 `_sdd/spec/` 변경이 모두 `spec-sync-agent` 출력으로만 발생했다 (autopilot 직접 수정 0건)
 - [ ] AC8: Phase 2 진입 전 Step 6 checkpoint의 explicit approval이 로그에 기록되어 있다
+- [ ] AC-L1: lane 판정 근거가 draft 상단 `> Lite 적격:` 1줄로 존재한다 (autopilot의 별도 판정 기록 없음)
+- [ ] AC-L2: plan-review 단일 패스와 implementation-review(경량 반환)가 각각 수행되었고, Critical/High/Medium finding이 fix 1회로 반영되었거나 잔존 finding이 최종 보고에 남았다
+- [ ] AC-L3: implementation-lite의 AC→증거 테이블과 fix 후 회귀 테스트 1회 결과가 최종 보고에 포함되었다
+- [ ] AC-L4: spec sync가 수행되었거나 스킵 사유가 최종 보고에 명시되었다
 
 ## Workflow Position
 
@@ -55,19 +60,27 @@ You are already running as <agent_type>. Do not invoke or re-enter SDD skills fr
 User Request
     |
     v
-[sdd-autopilot] -----> Phase 1 (Interactive)
-    |                 |- Reference Loading
-    |                 |- Task Analysis + Inline Discussion
-    |                 |- Explore agent / local exploration
-    |                 |- Reasoning -> Orchestrator Generation
-    |                 `- Orchestrator Verification
+[sdd-autopilot] -----> 공통 진입
+    |                 |- Pipeline State Detection
+    |                 `- Task Analysis + Lane 판정 (기본: lite)
     |
-    v
-[sdd-autopilot] -----> Phase 1.5 (Checkpoint)
-    |                 `- 검증 결과 + 파이프라인 요약 + pre-flight -> 사용자 확인
+    |-- lite ---------> Step L: Lite Fast-path (무승인 로컬 체인)
+    |                 |- feature-draft-lite
+    |                 |- plan-review (Tier 2-lite, 경량 반환) -> fix 1회
+    |                 |- implementation-lite
+    |                 |- implementation-review (경량 반환) -> fix 1회
+    |                 `- (persistent 변경 시) spec-sync -> 최종 응답 요약
+    |                     * 승격 신호 발생 시 full 레인으로 전환
     |
-    v
-[sdd-autopilot] -----> Phase 2 (Autonomous Execution)
+    `-- 승격 ---------> Full 레인
+                      Phase 1 (Interactive)
+                      |- Reference Loading
+                      |- Explore agent / local exploration
+                      |- Reasoning -> Orchestrator Generation
+                      `- Orchestrator Verification
+                      Phase 1.5 (Checkpoint)
+                      `- 검증 결과 + 파이프라인 요약 + pre-flight -> 사용자 확인
+                      Phase 2 (Autonomous Execution)
                       |- 파이프라인 단계 순차 실행
                       |- implementation-scoped review-fix gate 즉시 실행
                       |- 테스트 (인라인 or Ralph)
@@ -75,6 +88,8 @@ User Request
 ```
 
 ## Hard Rules
+
+> **레인 스코프**: 기본 레인은 Step L lite fast-path다 — orchestrator·checkpoint·pipeline log를 만들지 않으며, 그 계약은 Step L이 소유한다. 아래 규칙 중 orchestrator·Phase 2를 전제하는 2·3·5·6·8·10·13은 full 레인 전용이고, 나머지는 두 레인 공통이다.
 
 1. **Discussion 인라인 실행 + `_sdd/spec/` 직접 수정 금지**: Step 2 대화는 autopilot 본문에서 직접 수행한다. global spec 수정은 반드시 `spec-sync-agent`에 위임한다.
 2. **Phase 2 무중단 + 최소 상태 전달**: Phase 2 진입 후 `request_user_input` 금지. 일반 산출물은 파일 경로로 전달한다. 단, artifact를 만들지 않는 `task-ordering-agent`의 compact final response는 autopilot이 `task_ordering.response`로 런타임에 보존해 바로 다음 implementation controller에 전달한다. Phase 2의 custom-agent step은 기본적으로 `Interaction Mode: autonomous-no-input`로 해석하며, 사용자 입력 요청 없이 권장안을 선택해 진행한다.
@@ -103,15 +118,17 @@ autopilot 호출 시 기존 파이프라인 상태를 확인한다.
 | `_sdd/drafts/`, `_sdd/implementation/` 스캔 | 기존 산출물 활용 여부 판단 |
 
 상태별 분기:
-- 미완료 로그 0건 + `_sdd/spec/` 없음 → spec-less mode로 Step 1
-- 미완료 로그 0건 + 산출물 없음 → Step 1
+- 미완료 로그 0건 + `_sdd/spec/` 없음 → spec-less mode로 Step 2
+- 미완료 로그 0건 + 산출물 없음 → Step 2
 - 미완료 로그 1건 → 재개 후보 제시
 - 미완료 로그 2건 이상 → 목록 제시 + 선택
-- 미완료 로그 0건 + 산출물 있음 → Step 1에서 활용 여부 판단
+- 미완료 로그 0건 + 산출물 있음 → Step 2에서 활용 여부 판단
 
 재개를 선택하면 `references/orchestrator-contract.md`의 Resume Contract를 따른다: orchestrator를 현행 계약으로 재검증 → completed step의 출력 artifact 실존 확인 → 미완료/실패 step만 재실행.
 
 ### Step 1: Reference Loading (레퍼런스 로딩)
+
+> **Full 레인 전용** — Step 2의 lane 판정이 승격일 때만 수행한다. 실행 순서는 Step 0 → Step 2 → (lite면 Step L / 승격이면 Step 1 → Step 3~8)이다. lite fast-path는 이 reference들을 로딩하지 않는다.
 
 아래 companion asset을 읽고 내재화한다.
 
@@ -126,7 +143,7 @@ autopilot 호출 시 기존 파이프라인 상태를 확인한다.
 - 테스트 전략 판단 기준
 - review-fix 및 final report 규칙
 
-Gate 1→2: reference 로딩 성공 시 Step 2 진행.
+Gate 1→3: reference 로딩 성공 시 Step 3 진행.
 
 ### Step 2: Task Analysis + Inline Discussion (요청 분석 + 인라인 토론)
 
@@ -146,9 +163,38 @@ Gate 1→2: reference 로딩 성공 시 Step 2 진행.
 - 항상 `충분합니다 -- 진행해주세요` 옵션을 둔다
 - 최대 5회 이내로 정리한다
 
-Gate 2→3: 핵심 요구사항이 확정되면 Step 3.
+#### Lane 판정 (기본: lite)
+
+핵심 요구사항이 확정되면 레인을 정한다. 기본은 lite다. 다음의 **명백한** 신호가 있을 때만 full 레인으로 직행한다:
+
+- 사용자가 full 파이프라인·오케스트레이터·명시적 병렬 fan-out을 요청했다
+- 요청 규모가 리트머스 "머리 하나에 다 안 담기는가"에 명백히 해당한다 (repo-wide census형 sweep, 단일 컨텍스트를 넘는 규모 — 정밀 기준은 `feature-draft-lite` SKILL의 승격 규칙이 canonical이며 autopilot은 재정의하지 않는다)
+
+애매하면 lite로 진입한다 — lite draft 작성(~1분)이 곧 판정 비용이고, 승격되어도 lite 산출물이 full 레인 입력으로 재사용된다.
+
+Gate: lite → Step L. 승격 → Step 1(레퍼런스 로딩) 후 Step 3.
+
+### Step L: Lite Fast-path (기본 레인)
+
+단일 컨텍스트로 감당되는 변경의 기본 실행 경로다. orchestrator·pipeline log·report 파일·승인 checkpoint를 만들지 않고, 아래 체인을 메인 컨텍스트에서 스킬 단위로 순서대로 실행한다 (각 스킬은 `.codex/skills/<name>/SKILL.md` 본문을 로드해 수행한다). 산출물의 정의는 체인의 각 스킬이 소유한다.
+
+1. **Draft**: `feature-draft-lite` 스킬을 실행해 lite draft를 작성한다. 스킬의 Lite 적격 판정이 승격이면 아래 승격 전환을 따른다.
+2. **Plan gate + fix 1회**: `plan-review` 스킬로 draft를 단일 패스 리뷰한다 (lite draft는 reviewer가 자가 식별해 Tier 2-lite·경량 반환으로 동작한다). 반환된 Critical/High/Medium finding을 메인 컨텍스트가 draft에 직접 반영한다. re-review는 하지 않는다. "full 승격 권고" finding이면 승격 전환한다.
+3. **구현**: `implementation-lite` 스킬을 실행한다 (RED→GREEN, AC→증거 테이블 마감). 스킬의 승격 규칙이 트리거되면 승격 전환한다.
+4. **Impl gate + fix 1회**: `implementation-review` 스킬을 실행한다 (스킬 경유 호출은 경량 반환이 기본 — correctness ∥ simplicity 2-reviewer; reviewer dispatch는 해당 스킬의 Codex Runtime Adapter가 소유한다). 반환된 Critical/High/Medium finding을 메인 컨텍스트가 직접 수정하고 회귀 테스트 1회로 마감한다. re-review는 하지 않는다. Low finding은 advisory로 최종 보고에만 남긴다.
+5. **Spec sync**: persistent spec 변경이 있으면 `spec-sync` 스킬(post-implementation)을 실행한다. spec-less이거나 persistent 변경이 없으면 스킵하고 사유를 보고에 남긴다.
+6. **최종 보고**: report 파일 없이 최종 응답으로 요약한다 — 수행 단계, finding/fix 내역, 테스트 결과, spec sync 여부, 잔존 항목.
+
+규칙:
+
+- **Fix는 게이트당 1회다.** fix로 닫히지 않는 finding이 남으면 loop를 돌지 않고 잔존 finding과 권고를 최종 보고에 남긴다. 같은 finding이 반복 재발하면 그것 자체를 승격 신호로 본다.
+- **승격 판정의 canonical은 lite 표면들이 소유한다** (feature-draft-lite: 승격 규칙 3 / implementation-lite: 승격 규칙 2 / plan-review Tier 2-lite: Lite 적격 검사). autopilot은 신호를 소비만 한다.
+- **승격 전환**: 어느 단계에서든 승격 신호가 뜨면 사용자에게 사유를 알리고, 지금까지의 lite 산출물(draft 등)을 입력으로 Step 1부터 full 레인을 진행한다.
+- **사용자 개입**: 승인 게이트는 없다. 단 draft `Open Questions`에 진행을 막는 항목이 있으면 일반 대화로 질문할 수 있다 — Phase 2 무중단 규칙은 full 레인 전용이다.
 
 ### Step 3: Codebase Exploration (코드베이스 탐색)
+
+> Step 3~8은 full 레인 전용이다.
 
 `explorer` 에이전트 또는 로컬 탐색으로 다음을 수집한다.
 
