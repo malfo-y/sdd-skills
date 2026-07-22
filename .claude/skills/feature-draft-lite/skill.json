@@ -1,6 +1,6 @@
 {
   "name": "feature-draft-lite",
-  "description": "This skill should be used when the user asks for \"feature draft lite\", \"lite draft\", \"draft lite\", \"라이트 초안\", \"경량 기능 초안\", \"간단 draft\", \"가볍게 계획\", or wants a lightweight feature draft for a change that fits in a single context — task breakdown with Target Files and AC, without the full coverage-index/validation ceremony. For scale-proven changes use feature-draft (full) instead.",
+  "description": "This skill should be used when the user asks for \"feature draft lite\", \"lite draft\", \"draft lite\", \"라이트 초안\", \"경량 기능 초안\", \"간단 draft\", \"가볍게 계획\", or wants a lightweight feature draft for a change that fits in a single context — task breakdown with Target Files and AC, without the full coverage-index/validation ceremony. Oversized changes are split into multiple lite features via a rolling split plan instead of escalating.",
   "instruction_file": "SKILL.md",
-  "version": "1.0.0"
+  "version": "1.1.0"
 }

@@ -97,6 +97,8 @@ Negative example:
 - **PLANNED / NOT_IMPLEMENTED** (evidence 없음): `🚧 Planned` 표식으로 반영한다. **evidence가 없으면 이것이 기본 routing이다.**
 - **UNVERIFIED** (코드는 있으나 검증이 약함 — Part 2 coverage / validation evidence와 연결 안 됨): 승격을 **보류**하고 `Open Questions`에 남긴다.
 
+lite 분할 draft의 마커 내부에 분할 feature 목록이 있으면, feature 하나당 **개별** `🚧 Planned` 항목으로 반영한다 — 단일 todo로 뭉치지 않는다. 이후 각 feature가 구현·sync될 때 해당 항목만 승격/소거된다.
+
 ## Process
 
 ### Step 1: Identify Input Source and Pipeline Position

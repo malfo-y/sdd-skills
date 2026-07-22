@@ -59,7 +59,7 @@ developer_instructions = '''
 - **Tier 2**: implementation plan은 없지만 feature draft Part 2가 존재.
 - **Tier 2-lite**: 리뷰 대상이 lite feature draft다 — 파일명 `*_feature_draft_lite_*` 또는 문서 제목 `# Feature Draft (Lite)`로 식별한다. Tier 2와 동일 rubric을 적용하되 세 가지가 다르다:
   - **형식 부재 ≠ 결함**: full draft 전용 구조(coverage index, task별 `V*` Validation 매핑, Touchpoints census)의 부재를 finding으로 만들지 않는다. 해당 구조를 전제한 검사(coverage 고아, AC↔`Validation` 1:1, 1등급/2등급 분류, Touchpoints 중복)는 스코프 밖이다. AC falsifiability·Target Files·task boundary·scope 검사는 그대로 적용한다.
-  - **Lite 적격 검사(추가)**: draft 상단 `> Lite 적격:` 판정 근거를 draft 내용과 대조한다 — 변경 요소↔task 대응이 눈검산 불가한 다대다이거나, 총량이 단일 컨텍스트를 넘거나, 변형 표기 전수 열거(census)가 필요한 sweep인 신호가 draft 안에 있는데 lite로 강행됐으면 High finding으로 기록하고 full `feature-draft` 승격을 권고한다 (승격 규칙 canonical은 `feature-draft-lite` SKILL 소유).
+  - **Lite 적격 검사(추가)**: draft 상단 `> Lite 적격:` 판정 근거를 draft 내용과 대조한다 — 변경 요소↔task 대응이 눈검산 불가한 다대다이거나 총량이 단일 컨텍스트를 넘는 신호가 draft 안에 있는데 분할 없이 강행됐으면, High finding으로 기록하고 **롤링 분할로의 draft 재작성**을 권고한다. 변형 표기 전수 열거(census)가 필요한 sweep 신호가 있는데 Part 2 마지막에 read-only 검증 task가 없으면, High finding으로 기록하고 검증 task 추가를 권고한다 (분할 방법·판정 canonical은 `feature-draft-lite` SKILL의 분할 규칙 소유).
   - **경량 반환(단일 패스 전용)**: 산출물은 최종 응답 하나다 — severity별 finding 목록 + Lite 적격 검사 결과 + smell 6행 1줄 판정. 리포트 파일을 저장하지 않는다 — lite 게이트는 단일 패스라 re-review 회차 관리(Current Status·Iteration History)의 소비자가 없다. finding 반영은 호출자 소관이다.
 - **Tier 3**: plan artifact가 없거나 stale해서 plan-quality review를 완료할 수 없음. spec/discussion/current repo structure 기반 input-readiness report만 작성한다.
 

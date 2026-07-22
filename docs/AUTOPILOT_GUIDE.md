@@ -5,7 +5,7 @@
 
 SDD 파이프라인을 자동으로 실행하는 sdd-autopilot 메타스킬 가이드
 
-> **2.6.0 레인 변경**: autopilot의 기본 레인은 이제 **lite fast-path**입니다 — 단일 컨텍스트로 감당되는 변경은 오케스트레이터·승인 checkpoint 없이 `feature-draft-lite → plan-review(경량 반환) → fix 1회 → implementation-lite → implementation-review(경량 반환) → fix 1회 → spec-sync` 체인을 메인 루프에서 무승인 실행합니다. 승격 신호(단일 컨텍스트 초과, census형 sweep 등 — canonical은 lite 스킬들 소유)가 있는 변경만 이 가이드가 서술하는 오케스트레이터 기반 full 레인을 탑니다. 이하 본문은 full 레인 기준입니다.
+> **2.7.0 레인 변경**: autopilot의 기본 레인은 이제 **lite fast-path**입니다 — 단일 컨텍스트로 감당되는 변경은 오케스트레이터·승인 checkpoint 없이 `feature-draft-lite → plan-review(경량 반환) → fix 1회 → implementation-lite → implementation-review(경량 반환) → fix 1회 → spec-sync` 체인을 메인 루프에서 무승인 실행합니다. 규모가 단일 컨텍스트를 넘는 변경은 여러 lite feature로 분할되어(분할 규칙 canonical은 lite 스킬 소유, spec-sync planned todo로 고정) feature별 체인을 순차 실행합니다. 이 가이드가 서술하는 오케스트레이터 기반 full 레인은 사용자가 명시적으로 요청할 때만 동작하며, 삭제 예정입니다. 이하 본문은 full 레인 기준입니다.
 
 ---
 

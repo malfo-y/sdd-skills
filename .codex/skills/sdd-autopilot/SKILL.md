@@ -1,14 +1,14 @@
 ---
 name: sdd-autopilot
 description: "적응형 오케스트레이터 메타스킬. /sdd-autopilot으로 호출하여 요구사항 분석부터 스펙 동기화까지 end-to-end SDD 파이프라인을 자율 실행한다."
-version: 2.6.0
+version: 2.7.0
 ---
 
 # SDD Autopilot
 
 ## Goal
 
-사용자 요청을 SDD 파이프라인으로 해석하고, 실행과 검증까지 끝내는 최상위 메타스킬이다. global spec은 장기적 SoT로, temporary spec은 실행 청사진으로 취급하며 `_sdd/` 아티팩트를 중심으로 discussion, planning, implementation, review, spec sync를 연결한다. 기본 레인은 orchestrator 없이 lite 스킬 체인을 메인 컨텍스트에서 직접 실행하는 **lite fast-path**(Step L)이고, 승격 신호가 있는 변경만 orchestrator 기반 **full 레인**(Step 1, 3~8)을 탄다.
+사용자 요청을 SDD 파이프라인으로 해석하고, 실행과 검증까지 끝내는 최상위 메타스킬이다. global spec은 장기적 SoT로, temporary spec은 실행 청사진으로 취급하며 `_sdd/` 아티팩트를 중심으로 discussion, planning, implementation, review, spec sync를 연결한다. 기본 레인은 orchestrator 없이 lite 스킬 체인을 메인 컨텍스트에서 직접 실행하는 **lite fast-path**(Step L)이고, 사용자가 명시적으로 요청한 경우에만 orchestrator 기반 **full 레인**(Step 1, 3~8)을 탄다. 규모 초과는 full로 올리지 않고 분할로 해소한다.
 
 ## Codex Runtime Adapter
 
@@ -70,9 +70,9 @@ User Request
     |                 |- implementation-lite
     |                 |- implementation-review (경량 반환) -> fix 1회
     |                 `- (persistent 변경 시) spec-sync -> 최종 응답 요약
-    |                     * 승격 신호 발생 시 full 레인으로 전환
+    |                     * 분할 신호 발생 시 분할 규칙으로 처리 (Step L)
     |
-    `-- 승격 ---------> Full 레인
+    `-- full 명시 요청 -> Full 레인
                       Phase 1 (Interactive)
                       |- Reference Loading
                       |- Explore agent / local exploration
@@ -128,7 +128,7 @@ autopilot 호출 시 기존 파이프라인 상태를 확인한다.
 
 ### Step 1: Reference Loading (레퍼런스 로딩)
 
-> **Full 레인 전용** — Step 2의 lane 판정이 승격일 때만 수행한다. 실행 순서는 Step 0 → Step 2 → (lite면 Step L / 승격이면 Step 1 → Step 3~8)이다. lite fast-path는 이 reference들을 로딩하지 않는다.
+> **Full 레인 전용** — 사용자가 full 레인을 명시 요청했을 때만 수행한다. 실행 순서는 Step 0 → Step 2 → (기본 Step L / full 명시 요청 시 Step 1 → Step 3~8)이다. lite fast-path는 이 reference들을 로딩하지 않는다.
 
 아래 companion asset을 읽고 내재화한다.
 
@@ -165,31 +165,26 @@ Gate 1→3: reference 로딩 성공 시 Step 3 진행.
 
 #### Lane 판정 (기본: lite)
 
-핵심 요구사항이 확정되면 레인을 정한다. 기본은 lite다. 다음의 **명백한** 신호가 있을 때만 full 레인으로 직행한다:
+핵심 요구사항이 확정되면 레인을 정한다. 기본은 lite다. **사용자가 full 파이프라인·오케스트레이터를 명시적으로 요청한 경우에만** full 레인으로 간다. 규모가 커 보이는 요청은 full 사유가 아니다 — 규모 초과는 draft 단계의 분할 규칙(canonical: `feature-draft-lite` SKILL — autopilot은 재정의하지 않는다)이 여러 lite feature로의 분할로 해소한다.
 
-- 사용자가 full 파이프라인·오케스트레이터·명시적 병렬 fan-out을 요청했다
-- 요청 규모가 리트머스 "머리 하나에 다 안 담기는가"에 명백히 해당한다 (repo-wide census형 sweep, 단일 컨텍스트를 넘는 규모 — 정밀 기준은 `feature-draft-lite` SKILL의 승격 규칙이 canonical이며 autopilot은 재정의하지 않는다)
-
-애매하면 lite로 진입한다 — lite draft 작성(~1분)이 곧 판정 비용이고, 승격되어도 lite 산출물이 full 레인 입력으로 재사용된다.
-
-Gate: lite → Step L. 승격 → Step 1(레퍼런스 로딩) 후 Step 3.
+Gate: 기본 → Step L. 사용자 명시 full 요청 → Step 1(레퍼런스 로딩) 후 Step 3.
 
 ### Step L: Lite Fast-path (기본 레인)
 
 단일 컨텍스트로 감당되는 변경의 기본 실행 경로다. orchestrator·pipeline log·report 파일·승인 checkpoint를 만들지 않고, 아래 체인을 메인 컨텍스트에서 스킬 단위로 순서대로 실행한다 (각 스킬은 `.codex/skills/<name>/SKILL.md` 본문을 로드해 수행한다). 산출물의 정의는 체인의 각 스킬이 소유한다.
 
-1. **Draft**: `feature-draft-lite` 스킬을 실행해 lite draft를 작성한다. 스킬의 Lite 적격 판정이 승격이면 아래 승격 전환을 따른다.
-2. **Plan gate + fix 1회**: `plan-review` 스킬로 draft를 단일 패스 리뷰한다 (lite draft는 reviewer가 자가 식별해 Tier 2-lite·경량 반환으로 동작한다). 반환된 Critical/High/Medium finding을 메인 컨텍스트가 draft에 직접 반영한다. re-review는 하지 않는다. "full 승격 권고" finding이면 승격 전환한다.
-3. **구현**: `implementation-lite` 스킬을 실행한다 (RED→GREEN, AC→증거 테이블 마감). 스킬의 승격 규칙이 트리거되면 승격 전환한다.
+1. **Draft**: `feature-draft-lite` 스킬을 실행해 lite draft를 작성한다. 스킬의 판정이 분할 필요면 아래 분할 규칙을 따른다.
+2. **Plan gate + fix 1회**: `plan-review` 스킬로 draft를 단일 패스 리뷰한다 (lite draft는 reviewer가 자가 식별해 Tier 2-lite·경량 반환으로 동작한다). 반환된 Critical/High/Medium finding을 메인 컨텍스트가 draft에 직접 반영한다. re-review는 하지 않는다. "분할 권고" finding이면 아래 분할 규칙을 따른다.
+3. **구현**: `implementation-lite` 스킬을 실행한다 (RED→GREEN, AC→증거 테이블 마감). 스킬의 중단·분할 규칙이 트리거되면 그 규칙대로 처리한다 (잔여 분할 마감 또는 draft 복귀).
 4. **Impl gate + fix 1회**: `implementation-review` 스킬을 실행한다 (스킬 경유 호출은 경량 반환이 기본 — correctness ∥ simplicity 2-reviewer; reviewer dispatch는 해당 스킬의 Codex Runtime Adapter가 소유한다). 반환된 Critical/High/Medium finding을 메인 컨텍스트가 직접 수정하고 회귀 테스트 1회로 마감한다. re-review는 하지 않는다. Low finding은 advisory로 최종 보고에만 남긴다.
 5. **Spec sync**: persistent spec 변경이 있으면 `spec-sync` 스킬(post-implementation)을 실행한다. spec-less이거나 persistent 변경이 없으면 스킵하고 사유를 보고에 남긴다.
 6. **최종 보고**: report 파일 없이 최종 응답으로 요약한다 — 수행 단계, finding/fix 내역, 테스트 결과, spec sync 여부, 잔존 항목.
 
 규칙:
 
-- **Fix는 게이트당 1회다.** fix로 닫히지 않는 finding이 남으면 loop를 돌지 않고 잔존 finding과 권고를 최종 보고에 남긴다. 같은 finding이 반복 재발하면 그것 자체를 승격 신호로 본다.
-- **승격 판정의 canonical은 lite 표면들이 소유한다** (feature-draft-lite: 승격 규칙 3 / implementation-lite: 승격 규칙 2 / plan-review Tier 2-lite: Lite 적격 검사). autopilot은 신호를 소비만 한다.
-- **승격 전환**: 어느 단계에서든 승격 신호가 뜨면 사용자에게 사유를 알리고, 지금까지의 lite 산출물(draft 등)을 입력으로 Step 1부터 full 레인을 진행한다.
+- **Fix는 게이트당 1회다.** fix로 닫히지 않는 finding이 남으면 loop를 돌지 않고 잔존 finding과 권고를 최종 보고에 남긴다. 같은 finding이 반복 재발하면 그것 자체를 분할·draft 재설계 신호로 본다.
+- **분할 판정의 canonical은 lite 표면들이 소유한다** (feature-draft-lite: 분할 규칙 / implementation-lite: 중단·분할 규칙 / plan-review Tier 2-lite: Lite 적격 검사). autopilot은 신호를 소비만 한다.
+- **분할 규칙**: 어느 단계에서든 분할 신호가 뜨면 사용자에게 사유를 알리고, draft를 분할 계획으로 만든 뒤(롤링 — 방법의 canonical은 `feature-draft-lite` 분할 규칙) `spec-sync` 스킬로 분할 todo를 spec에 고정하고, 첫 feature부터 이 체인을 순차 실행한다. 나머지 feature는 각자 차례에 자기 draft부터 다시 이 체인을 탄다.
 - **사용자 개입**: 승인 게이트는 없다. 단 draft `Open Questions`에 진행을 막는 항목이 있으면 일반 대화로 질문할 수 있다 — Phase 2 무중단 규칙은 full 레인 전용이다.
 
 ### Step 3: Codebase Exploration (코드베이스 탐색)
