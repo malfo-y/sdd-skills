@@ -1,6 +1,23 @@
 # Decision Log
 
-## 2026-07-22 - F3 완료: reviewer 경량 반환 유일화를 current truth로 승격 (v4.6.3 → v4.6.4, post-implementation sync)
+## 2026-07-22 - F4 완료: full 레인 삭제 완결 승격 + F5 개명 planned 등록 (v4.6.4 → v4.6.5, post-implementation sync)
+
+### Context
+
+분할 todo F4(자체 draft: `_sdd/drafts/2026-07-22_feature_draft_lite_residue_cleanup.md`)가 구현·리뷰 게이트(correctness H1+M3·simplicity M3 — 합집합 fix 완료)를 통과했다. 실측: `_sdd/tests/` 20 스크립트·test-free triage 확대 draft 부재, 이월 advisory sweep(fdl 쌍 description v1.2.0·impl-review description·AGENTS+템플릿 4미러 spec-sync 문장 5곳 동일·Quick Review 섹션 소거·spec-sync/spec-review agent 쌍 lite 기준 재서술) grep 확인, codex pr-review sample 2-reviewer spawn 흐름 재작성, census 2계층 — 엄격 계층 live 표면 full 고유 식별자 잔존 0(AGENTS.md:17 re-review 잔재 1건 적발·즉시 fix), 판정 계층 35파일 spot 판정 완료. 동시에 분할 계획 원본 Part 1 마커에 F5(개명)가 사용자 확정으로 추가됐다 — 미구현.
+
+### Decision
+
+1. **full 레인 실체 삭제 완결을 current truth로 승격**: F1~F4 전부 구현·sync 완료. 🚧 Planned F4 todo(umbrella 포함)를 소거하고 완결 서술로 대체한다. census 허용 예외는 `_sdd/` 기록물·AUTOPILOT_GUIDE tag 복구 안내·`docs/SDD_SPEC_DEFINITION.md`(F5 소관)다.
+2. **F5 개명을 새 🚧 Planned todo로 등록 (사용자 확정)**: v4.6.1에서 "삭제 완료 후 별도 판단"으로 유보했던 `-lite` 접미사 개명이 이름+개념 전부 교체로 확정됐다 — 스킬 `feature-draft-lite`→`feature-draft`·`implementation-lite`→`implementation`, 개념 어휘("lite 체인"→"SDD 체인"·"lite draft"→"draft"·`> Lite 적격:` 마커), `docs/SDD_SPEC_DEFINITION.md` 정합, `_sdd/spec/` 잔여 full 서술·lite 개념 어휘 트림, draft 파일명 glob 양쪽 호환, 자체 census. 구현 evidence 없음 — PLANNED로만 반영.
+3. **spec-sync·spec-review 입력/감사 계약의 lite 기준화 승격**: 입력 draft는 lite 구조(Part 1 마커 + task AC) 기준이고, full draft 구조(coverage index·`Covered By`·`Touchpoints` census)는 legacy 기록물 fallback/감사 시에만 적용된다.
+
+### Changes
+
+- `main.md` 4.6.5 — §2: 🚧 Planned F4 블록을 완결 서술로 승격·소거, 🚧 Planned F5 신설, "삭제 범위 밖"에서 개명 유보 문구 해소. §3: 오케스트레이션 행(F1~F4 완결 + F5 planned)·lite 규모 초과 대응 행(F1~F4 완료) 갱신
+- `components.md` — `sdd-autopilot` 행의 "잔여 full 표면 정리 todo F4" 참조 소거, `spec-sync`·`spec-review` 행에 lite 기준 입력/감사 계약 반영
+- `usage-guide.md` — 무효화 서술 없음(변경 없음)
+- F4 draft `_processed_` 이동. 분할 계획 원본은 F5 입력으로 유지(F5 완료 시 처리)
 
 ### Context
 

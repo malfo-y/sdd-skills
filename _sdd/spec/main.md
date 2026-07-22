@@ -2,7 +2,7 @@
 
 > Markdown 기반 skill bundle로 AI 에이전트의 Spec-Driven Development 워크플로우를 Claude Code와 Codex에서 공통 계약으로 실행한다.
 
-**Spec Version**: 4.6.4
+**Spec Version**: 4.6.5
 **Last Updated**: 2026-07-22
 **Status**: Approved
 **Canonical Role**: current thin global spec
@@ -81,9 +81,9 @@ SDD Skills는 이 문제를 `SKILL.md = 실행 가능한 프롬프트`라는 관
   - census형 sweep(같은 대상의 변형 표기가 여러 파일에 흩어진 rename/전파류)은 분할 신호가 아니라 검증 대상이다 — 해당 draft는 마지막 read-only 검증 task(변형 표기 전수 grep census를 AC로)를 필수로 둔다
   - 분할 판정의 canonical은 lite 표면이 소유한다(`feature-draft-lite` 분할 규칙 / `implementation-lite` 중단·분할 규칙 / `plan-review` Lite 적격 검사). autopilot은 신호를 소비만 하고 재정의하지 않는다
 - full 전용 실행 유닛은 삭제 완료다(F2): agent 쌍 4종(`feature-draft-agent`·`task-ordering-agent`·`test-author-agent`·`implementation-agent`)과 스킬 쌍 3종(`feature-draft`·`implementation`·`implementation-plan`)은 존재하지 않으며, 등록 표면(marketplace.json skills 21·agents 7, `.codex/agents/README.md`, 루트 README Subagent Model Override 목록)은 lite 체인 기준이다. 일반 구현 요청 트리거("implement the plan"·"start implementation"·"execute the plan"·"구현해줘" 계열)는 `implementation-lite`(v1.2.0)가 유일 수신 경로로 흡수했고 "병렬 구현" 계열 트리거는 폐기됐다
-- 🚧 Planned: full 레인 실체 삭제 잔여분(F4) — 롤링 분할 draft(`_sdd/drafts/2026-07-22_feature_draft_lite_full_lane_removal.md`)로 확정된 4-feature 순차 todo 중 F1(`sdd-autopilot` full 파트 제거)·F2(full 전용 agent·스킬 삭제 + 등록 표면 정리)·F3(reviewer full 기계장치 트림 — 경량 반환 유일화, 위 review guardrails에 승격)은 구현·승격 완료(복구 보험 git tag `full-lane-final`). 근거 요약: lite 품질이 full 대비 동등하면서 훨씬 빠르고, full급 복잡도는 분할로 해소하며, 분기 제거로 하네스 전파 표면이 준다(상세는 decision_log 2026-07-22 entry). 각 feature가 구현·sync되면 해당 항목만 승격·소거한다
-  - 🚧 Planned F4: 잔재 정리 + 최종 census — 미구현 test-free triage 확대 draft·`_sdd/tests/` RED baseline 폐기, advisory 잔존 sweep, spec의 full 서술 트림(main.md §2 orchestrator guardrails·components.md·usage-guide.md), repo 전체 full 어휘 최종 census
-  - 삭제 범위 밖(불변): lite 체인 자체의 기능 변경, 레인 무관 스킬(spec 파이프라인·pr-review·ralph·discussion 등), `-lite` 접미사 개명(삭제 완료 후 별도 판단)
+- full 레인 실체 삭제는 완결됐다(F1~F4 — 롤링 분할 draft `_sdd/drafts/2026-07-22_feature_draft_lite_full_lane_removal.md` 순차 실행). F4에서 잔재 정리와 최종 census를 마쳤다: `_sdd/tests/` check 스크립트·무의미화된 test-free triage 확대 draft 폐기, F1~F3 이월 advisory sweep(spec-sync·spec-review agent 입력/감사 계약의 lite 기준 재서술 포함), repo 전체 full 어휘 census — live 표면(`.claude/`·`.codex/`·`.claude-plugin/`·`docs/`·`README.md`·`AGENTS.md`)의 full 고유 식별자 잔존 0(허용 예외: `_sdd/` 기록물, AUTOPILOT_GUIDE tag 복구 안내, `docs/SDD_SPEC_DEFINITION.md` = F5 소관). 복구 보험은 git tag `full-lane-final`. 근거 요약: lite 품질이 full 대비 동등하면서 훨씬 빠르고, full급 복잡도는 분할로 해소하며, 분기 제거로 하네스 전파 표면이 준다(상세는 decision_log 2026-07-22 entry)
+  - 🚧 Planned F5: `-lite` 개명 — 이름+개념 전부(사용자 확정, F2의 이름 충돌 해소로 가능해짐). 스킬 `feature-draft-lite`→`feature-draft`·`implementation-lite`→`implementation`(디렉토리·name 필드·marketplace·전체 호출 참조), 개념 어휘 교체("lite 체인"→"SDD 체인"·"lite draft"→"draft"·`> Lite 적격:` 마커 재명명), `docs/SDD_SPEC_DEFINITION.md` 정합, `_sdd/spec/`의 잔여 full 서술·lite 개념 어휘 트림, 기존 draft 파일명 glob 양쪽 호환 유지, 자체 개명 census
+  - 삭제 범위 밖(불변): lite 체인 자체의 기능 변경, 레인 무관 스킬(spec 파이프라인·pr-review·ralph·discussion 등)
 - subagent를 dispatch하는 review 계열 스킬(`plan-review`·`implementation-review`·`pr-review`)의 subagent 모델 override는 런타임별 explicit per-call option으로만 취급한다. 옵션을 생략하면 세션/agent 기본값을 상속하며, persistent custom agent 정의를 수정하지 않는다. lite 구현·planning 스킬은 메인 루프 직접 작성이라 override 비대상이다
   - Claude Code는 `--model <sonnet|opus|haiku|fable>`로 `Agent(...)` 호출의 model만 override한다
   - Codex는 `--model <gpt-5.5|gpt-5.4|gpt-5.4-mini>`와 `--effort <low|medium|high|xhigh>`를 분리해 `spawn_agent(...)`의 `model` / `reasoning_effort`를 override한다. `gpt-5.5-high` 같은 결합형 값은 canonical syntax가 아니다
@@ -118,8 +118,8 @@ SDD Skills의 설계는 다음 층으로 나뉜다.
 | 상태 전달 | `_sdd/` 파일 아티팩트 중심 | 세션 메모리 의존을 줄이고 재현성과 git 추적성을 높인다 |
 | 품질 게이트 | AC-First + explicit verification | "should work" 식 추측을 줄이고 종료 조건을 명확히 한다 |
 | 장문 산출물 작성 | producer-owned inline 2-phase writing | skeleton/fill/finalize를 같은 문맥에서 처리해 품질 저하를 줄인다 |
-| 오케스트레이션 | reasoning-based `sdd-autopilot` v3.0.0 — lite 체인 전용(메인 루프 스킬 체인, orchestrator·pipeline artifact 없음). generated orchestrator full 레인과 full 전용 agent·스킬은 제거됨(복구는 git tag `full-lane-final`, spec·잔재 정리는 §2 분할 todo F4) | 소규모~단일 컨텍스트 변경이 지배적인 흐름에서 orchestrator 생성 비용을 없애고, 규모 초과는 full 승격이 아니라 분할로 해소한다 |
-| lite 레인 규모 초과 대응 | 승격이 아니라 분할 — lite 표면들은 full 전환을 안내하지 않고, 단일 컨텍스트 초과는 롤링 분할 draft + `spec-sync` planned todo 고정 + feature별 순차 lite 체인으로 해소한다. 분할 판정 canonical은 lite 표면 소유(autopilot은 신호 소비만) | 규모 초과를 더 큰 파이프라인으로 올리면 full 레인 의존이 재생산된다. 분할은 lite의 "단일 컨텍스트 = 품질 전제"를 유지하는 해소 수단이며 full 레인 삭제(F1~F3 완료, 잔여 F4 🚧 Planned)의 선행 조각이다 |
+| 오케스트레이션 | reasoning-based `sdd-autopilot` v3.0.0 — lite 체인 전용(메인 루프 스킬 체인, orchestrator·pipeline artifact 없음). generated orchestrator full 레인과 full 전용 agent·스킬은 제거됨 — 잔재 정리·census까지 완결(F1~F4, 복구는 git tag `full-lane-final`; `-lite` 개명은 §2 분할 todo F5 🚧 Planned) | 소규모~단일 컨텍스트 변경이 지배적인 흐름에서 orchestrator 생성 비용을 없애고, 규모 초과는 full 승격이 아니라 분할로 해소한다 |
+| lite 레인 규모 초과 대응 | 승격이 아니라 분할 — lite 표면들은 full 전환을 안내하지 않고, 단일 컨텍스트 초과는 롤링 분할 draft + `spec-sync` planned todo 고정 + feature별 순차 lite 체인으로 해소한다. 분할 판정 canonical은 lite 표면 소유(autopilot은 신호 소비만) | 규모 초과를 더 큰 파이프라인으로 올리면 full 레인 의존이 재생산된다. 분할은 lite의 "단일 컨텍스트 = 품질 전제"를 유지하는 해소 수단이며 full 레인 삭제(F1~F4 완료)의 선행 조각이었다 |
 | planning precedence | `feature-draft-lite`가 유일 planning entry. 후속 확장 스킬 없음 — 규모 초과는 분할 | non-trivial 변경에서 peer-choice 혼선을 없애고 "단일 컨텍스트 = 품질 전제"를 유지한다 |
 | plan quality gate | optional `plan-review` review-only gate — 단일 패스 경량 반환(리포트 파일 없음) | 구현 전 Target Files, task boundary, verification weakness, overengineering smell을 findings-first로 드러내되 plan 자체는 수정하지 않는다 |
 | implementation test-first | `implementation-lite` 메인 루프가 직접 집행: task별 (a) test / (b) structural-check / (c) test-free triage → (a)/(b)는 RED 관찰 전 구현 금지 → 최소 구현 GREEN → 테스트 불변 규칙(약화·수정 금지, 계약 오류는 선언 후 재-RED) → AC→증거 테이블 마감. leaf 분리(test-author/implementation agent)와 orchestrator RED 게이트는 F2에서 삭제됨 — 대체 안전장치는 테스트 불변 규칙 + `implementation-review` Fresh Verification | 소규모 구현에서 dispatch 오버헤드 없이 test-first 규율과 falsifiability를 유지하고, 증거 없는 "충족" 보고와 테스트 약화 퇴화를 차단한다 |

@@ -2,6 +2,11 @@
 
 > 이 파일은 `_sdd/spec/main.md`의 버전별 변경 기록이다.
 
+#### v4.6.5 (2026-07-22)
+
+- **F4 완료 — full 레인 삭제 완결을 current truth로 승격 + F5 개명 planned 등록 (post-implementation sync)**: 잔재 폐기(`_sdd/tests/` 20 check 스크립트, test-free triage 확대 draft), 이월 advisory sweep(fdl 쌍 description v1.2.0, impl-review description, AGENTS+하네스 템플릿 4미러 spec-sync 문장 5곳 동일, implementation-review-agent 쌍 Quick Review 섹션 소거, spec-sync·spec-review agent 쌍 입력/감사 계약 lite 기준 재서술 + legacy full 구조는 기록물 fallback 한정), codex pr-review sample 2-reviewer spawn 흐름 재작성, repo 전체 full 어휘 census 2계층(엄격 계층 live 표면 잔존 0 — AGENTS.md:17 re-review 잔재 적발·즉시 fix / 판정 계층 35파일 spot 판정). 리뷰 게이트 통과(correctness H1+M3·simplicity M3 합집합 fix). F5(`-lite` 개명 — 이름+개념 전부, 사용자 확정)를 새 🚧 Planned todo로 등록 — 구현 evidence 없음, PLANNED만.
+- **적용 surface**: `main.md` §2 — F4 todo 소거·완결 승격, 🚧 Planned F5 신설, 개명 유보 문구 해소. §3 — 오케스트레이션·lite 규모 초과 대응 행 갱신. `components.md` — autopilot 행 F4 참조 소거, spec-sync·spec-review 행 lite 기준 계약 반영. `usage-guide.md` 변경 없음.
+
 #### v4.6.4 (2026-07-22)
 
 - **F3 완료 — reviewer 경량 반환 유일화를 current truth로 승격 (post-implementation sync)**: reviewer 4종 쌍(plan-review·implementation-review·simplicity-review·pr-review agent) 경량 반환 유일 mode 재작성(파일 mode·re-review·Tier·Output 파일 템플릿 삭제, tools `Write` 제거 — correctness·pr만 테스트용 Bash 유지), plan-review-agent full rubric 삭제(구 Tier 2-lite 내용이 유일 rubric, 명칭 소멸) + SKILL 쌍 3.0.0, implementation-review SKILL 쌍 7.0.0(경량/파일 분기 제거), pr-review 재설계 4.0.0(agent 경량 반환 + 스킬이 통합 리포트 `_sdd/pr/*_pr_review_*` 1파일만 작성 — 3파일→1파일), autopilot 쌍·GUIDE ko/en "Tier 2-lite" 소비자 정리. census(확장 패턴, 20파일) 잔존 0, 리뷰 게이트 통과(correctness C/H 0·M1, simplicity M6 fix 완료). F4 todo는 🚧 Planned 유지.

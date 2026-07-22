@@ -13,11 +13,12 @@ full 레인(orchestrator 기반 파이프라인)을 repo에서 삭제하고 lite
 1. **F1 — sdd-autopilot full 파트 제거** (이 draft의 Part 2): SKILL을 lite 체인 전용으로 재작성(v3.0.0), 부속(references·examples·scripts) 삭제, AUTOPILOT_GUIDE 재작성, tag `full-lane-final` 선행. Scope: `.claude/.codex` autopilot 디렉토리 + docs.
 2. **F2 — full 전용 agent·스킬 삭제 + 등록 표면 정리**: feature-draft-agent·task-ordering-agent·test-author-agent·implementation-agent 쌍 8파일, 스킬 feature-draft·implementation·implementation-plan 쌍 6디렉토리, marketplace.json skills/agents 배열, `.codex/agents/README.md`, 루트 README 표. Scope: 삭제 + 등록 정리 (reviewer·spec 계열·pr-review·ralph는 유지).
 3. **F3 — reviewer full 기계장치 트림**: plan-review-agent의 full Tier 검사(coverage index·V* 1:1·Touchpoints)·Orchestrator Review Mode, correctness·simplicity reviewer의 파일 mode/re-review mode 소비자 재검토, pr-review-agent의 full 의존 확인. Scope: 판단 항목이 많아 자기 draft에서 유지/삭제를 결정한다.
-4. **F4 — 잔재 정리 + 최종 census**: 미구현 test-free triage 확대 draft·`_sdd/tests/` RED baseline 폐기, advisory 잔존 sweep(feature-draft-lite description "full ceremony" 표현 등), spec의 full 서술 트림(main.md §2 orchestrator guardrails·components·usage-guide), repo 전체 full 어휘 최종 census.
+4. **F4 — 잔재 정리 + full 어휘 census**: 미구현 test-free triage 확대 draft·`_sdd/tests/` RED baseline 폐기, advisory 잔존 sweep(feature-draft-lite description "full ceremony" 표현, codex pr-review sample 구세대 drift 등 F1~F3 이월분), repo 전체 full 어휘 census. (`docs/SDD_SPEC_DEFINITION.md` 정리는 F5로 이동 — 개명 후 참조가 저절로 유효해지는 부분이 큼.)
+5. **F5 — `-lite` 개명 (이름+개념 전부, 사용자 확정)**: 스킬 feature-draft-lite→feature-draft, implementation-lite→implementation (디렉토리·name 필드·marketplace·전체 호출 참조), 개념 어휘 "lite 체인"→"SDD 체인"·"lite draft"→"draft"·`> Lite 적격:` 마커 재명명, `docs/SDD_SPEC_DEFINITION.md` 정합 + `_sdd/spec/`의 잔여 full 서술·lite 개념 어휘 트림, 기존 draft 파일명 glob 양쪽 호환 유지, 자체 개명 census. F2에서 이름 충돌이 해소되어 가능해짐.
 
 ## Scope
-- **In**: 위 4개 feature의 합집합 — full 레인 실행 경로·산출 계약·등록·문서·spec 서술 전부
-- **Out**: lite 체인 자체의 기능 변경, spec 파이프라인(spec-create/sync/review)·pr-review·ralph·discussion 등 레인 무관 스킬, `-lite` 접미사 개명(삭제 완료 후 별도 판단)
+- **In**: 위 5개 feature의 합집합 — full 레인 실행 경로·산출 계약·등록·문서·spec 서술 전부 + 사후 개명
+- **Out**: lite 체인 자체의 기능 변경, spec 파이프라인(spec-create/sync/review)·pr-review·ralph·discussion 등 레인 무관 스킬
 <!-- spec-update-todo-input-end -->
 
 # Part 2: Tasks (F1 — sdd-autopilot full 파트 제거)
