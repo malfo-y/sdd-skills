@@ -2,6 +2,16 @@
 
 > 이 파일은 `_sdd/spec/main.md`의 버전별 변경 기록이다.
 
+#### v4.6.2 (2026-07-22)
+
+- **F1 완료 — `sdd-autopilot` full 파트 제거를 current truth로 승격 (post-implementation sync)**: autopilot SKILL 쌍 v3.0.0 lite 체인 전용 재작성(Step 0 상태 확인 → Step 1 요청 분석 → Step L, orchestrator·Lane 판정·full 레인 서술 0, skill.json 쌍 동일), 부속 references/examples/scripts 쌍 삭제, `docs/AUTOPILOT_GUIDE.md` 2.0.0 재작성, 복구 보험 git tag `full-lane-final`(407e08e) 생성. census: autopilot 표면 full 어휘 잔존 0(허용 예외: GUIDE의 tag 복구 안내 1회), 삭제 자산 참조 잔존은 F2·F3 예정 표면 8파일 + 기록물뿐. 리뷰 게이트 통과(correctness C/H/M 0 전 AC MET, simplicity M2 fix 반영). F2~F4 todo는 🚧 Planned 유지.
+- **적용 surface**: `main.md` §2 — autopilot bullet을 lite 체인 전용 current truth로 갱신, generated orchestrator guardrail 소거(plan-review handoff gate 삭제, canonical agent invocation은 skill 일반 규칙으로 재프레임), 공통 loop 정책 출처를 삭제된 `orchestrator-contract.md` §6에서 guardrail 본문 단일 소스로 이관, 🚧 Planned F1 항목 소거(umbrella todo는 F2~F4 잔여로 갱신). §3 — 오케스트레이션 행 갱신, "autopilot producer handoff gate" 행·generated orchestrator `implementation-dispatch-controller` 구조 판단 제거. `components.md` — `sdd-autopilot` 행 lite 전용 재작성, Code Map의 삭제 파일 2행(orchestrator contract·planning graph reference) 제거, stale autopilot 참조 2건 교정(implementation-plan gate source·test-author 호출 주체). `usage-guide.md` — Scenario 2b를 lite 체인 기준으로 재작성(full Expected Result·`_sdd/pipeline/` 산출물 서술 제거).
+
+#### v4.6.1 (2026-07-22)
+
+- **full 레인 삭제 확정 — 4-feature 분할 todo 고정 (pre-implementation planned sync)**: v4.6.0의 "🚧 Planned: full 레인 실체 삭제 — 다음 슬라이스" 단일 항목을 롤링 분할 draft(`2026-07-22_feature_draft_lite_full_lane_removal`) 기반의 개별 🚧 Planned todo F1~F4(F1 autopilot full 파트 제거 / F2 full 전용 agent·스킬 삭제+등록 정리 / F3 reviewer full 기계장치 트림 / F4 잔재 정리+최종 census)로 구체화·대체. 복구 보험은 삭제 직전 git tag `full-lane-final`. 구현 evidence 없음 — 전 항목 PLANNED, 승격 없음.
+- **적용 surface**: §2 Guardrails 분할 todo 블록 신설, §3 오케스트레이션 행 marker 갱신, `components.md`·`usage-guide.md` marker를 §2 todo 참조로 갱신, decision_log entry 신설.
+
 #### v4.6.0 (2026-07-22)
 
 - **lite 레인 이탈 신호를 "full 승격"에서 "분할"로 교체 (post-implementation sync)**: `sdd-autopilot` 기본 레인이 lite fast-path(`feature-draft-lite` → `plan-review` Tier 2-lite → `implementation-lite` → `implementation-review` → `spec-sync` 메인 루프 체인)임을 spec에 최초 반영. 규모 초과의 해소 수단은 오케스트레이션이 아니라 분할이다 — lite 표면들은 full 전환을 안내하지 않고, 단일 컨텍스트 초과는 롤링 분할 draft + `spec-sync` planned todo(feature별 개별 `🚧 Planned`) + feature별 순차 lite 체인으로 해소한다. 분할 판정 canonical은 lite 표면 소유(autopilot은 신호 소비만), census형 sweep은 분할 신호가 아니라 마지막 read-only 검증 task로 흡수. full 직행은 사용자 명시 요청만 한시 잔존하며 full 레인 실체 삭제는 🚧 Planned(다음 슬라이스).

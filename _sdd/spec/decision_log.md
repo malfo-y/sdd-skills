@@ -1,5 +1,23 @@
 # Decision Log
 
+## 2026-07-22 - full 레인 삭제 확정 및 4-feature 분할 todo 고정 (v4.6.0 → v4.6.1, pre-implementation planned sync)
+
+### Context
+
+v4.6.0에서 "full 레인 실체 삭제 — 다음 슬라이스"로 예고된 삭제가 롤링 분할 draft(`_sdd/drafts/2026-07-22_feature_draft_lite_full_lane_removal.md`)로 확정됐다. 구현 전 planned sync — 코드/삭제 evidence는 아직 없다.
+
+### Decision
+
+1. **full 레인(generated orchestrator 파이프라인)을 삭제하고 lite 체인을 유일 실행 경로로 만든다.** 근거: lite 품질이 full 대비 동등한데 훨씬 빠름 / full급 복잡도는 분할로 해소하는 것이 더 안전 / 분기 제거로 하네스 단순화·전파 표면 축소. 복구 보험은 삭제 직전 git tag `full-lane-final`.
+2. **단일 planned 항목을 4-feature 순차 todo로 대체 고정한다**: F1 `sdd-autopilot` full 파트 제거 / F2 full 전용 agent 4종·스킬 3종 쌍 삭제 + 등록 표면 정리 / F3 reviewer full 기계장치 트림 / F4 잔재 정리 + 최종 census. 각 feature는 자기 차례에 lite draft를 새로 만들고, 구현·sync되면 해당 todo만 승격·소거한다.
+3. **Out 고정**: lite 체인 자체의 기능 변경, 레인 무관 스킬(spec 파이프라인·pr-review·ralph·discussion 등), `-lite` 접미사 개명(삭제 완료 후 별도 판단)은 이 삭제 범위 밖이다.
+
+### Changes
+
+- `main.md` §2 Guardrails에 🚧 Planned F1~F4 분할 todo 블록 신설(기존 "다음 슬라이스" 단일 표기 대체), §3 오케스트레이션 행 marker 갱신, 헤더 4.6.1
+- `components.md` `sdd-autopilot` Notes·`usage-guide.md` Scenario 2b의 planned marker를 main.md §2 todo 참조로 갱신
+- 구현 없음 — 전 항목 PLANNED. draft 파일은 F1 구현 입력으로 유지되므로 `_processed_` 이동하지 않음(post-implementation sync 때 처리)
+
 ## 2026-07-22 - lite 레인 이탈 신호를 "full 승격"에서 "분할"로 교체 (v4.5.9 → v4.6.0)
 
 ### Context
