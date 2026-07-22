@@ -1,7 +1,7 @@
 ---
 name: spec-review
 description: This skill should be used when the user asks to "review spec", "spec drift check", "verify spec accuracy", "audit spec quality", "review spec against code", "refresh spec review", "스펙 리뷰", "스펙 검토", "스펙 드리프트 점검", or wants a review-only analysis of spec quality and code-to-spec alignment without directly editing spec files.
-version: 4.0.0
+version: 4.0.1
 ---
 
 # Spec Review
@@ -26,8 +26,6 @@ version: 4.0.0
 6. global spec의 feature-level usage, validation, reference, inventory 오염은 기본적으로 `Quality`다. 문서 타입 혼동을 일으키거나 잘못된 repo-wide truth를 서술할 때만 `Critical`로 승격한다.
 7. 구현과 spec이 불일치하면 drift를 기록하고 후속 스킬만 제안한다.
 8. 리포트는 lowercase canonical 경로에 저장한다. transition 기간에는 implementation artifact를 lowercase 우선, legacy uppercase fallback으로 읽는다.
-
-9. **출력 절약 (내레이션 억제)**: 작업 중 진행 상황·preamble을 산문으로 출력하지 않는다. 판단이 서면 곧바로 tool을 호출하고, 사용자를 향한 산문 보고는 최종 산출물/결과 반환 하나로 끝낸다. 단 의사결정·반증을 짊어진 문장(status·발견·finding·보고 항목 등)은 주어·목적어를 보존한다.
 
 ## Review Dimensions
 

@@ -1,7 +1,7 @@
 ---
 name: ralph-loop-init
 description: "Use this skill when the user asks to \"init ralph\", \"ralph loop\", \"set up ralph loop\", \"training loop\", \"training debug loop\", \"debug loop\", \"long-running test loop\", \"e2e loop\", \"create ralph\", \"set up training debug loop\", \"automated training loop\", or wants to generate a ralph/ directory for LLM-driven automated long-running process debugging."
-version: 4.0.0
+version: 4.0.1
 ---
 
 # Ralph Loop Initialization
@@ -30,7 +30,6 @@ version: 4.0.0
 3. **Debug-First**: 초기 실행은 최소 범위 (예: ML은 `MAX_STEPS="10"`, 테스트는 단일 스위트).
 4. **No Placeholders**: 생성된 파일에 `<placeholder>` 문자열이 없어야 한다.
 5. **Template Fidelity**: `run.sh`는 아래 템플릿을 거의 그대로 복사하며, 최소한의 수정만 허용한다.
-6. **출력 절약 (내레이션 억제)**: 작업 중 진행 상황·preamble을 산문으로 출력하지 않는다. 판단이 서면 곧바로 tool을 호출하고, 사용자·orchestrator를 향한 산문 보고는 최종 산출물/결과 반환 하나로 끝낸다. 단 의사결정·반증을 짊어진 문장(status·발견·finding·보고 항목 등)은 주어·목적어를 보존한다.
 
 ---
 

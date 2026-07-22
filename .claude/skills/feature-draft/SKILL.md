@@ -1,7 +1,7 @@
 ---
 name: feature-draft
 description: This skill should be used when the user asks to "feature draft", "draft feature", "기능 초안", "기능 명세", "계획 잡아줘", or wants a feature spec for a change that fits in a single context — task breakdown with Target Files and falsifiable AC. Oversized changes are split into multiple features via a rolling split plan.
-version: 2.0.0
+version: 2.0.1
 ---
 
 # Feature Draft
@@ -77,7 +77,6 @@ version: 2.0.0
 - **품질 게이트**: 작성 후 `plan-review` 스킬 1회로 draft를 점검한다 — **단일 패스**로, review loop는 돌리지 않고 finding은 작성자인 메인 루프가 직접 반영한다.
 - **실행 인계**: `implementation` 스킬(메인 루프 직접 RED→GREEN 구현)로 인계한다. 구현 작성을 여러 갈래로 나눠야 할 규모로 드러나면 분할 규칙으로 돌아간다.
 - **Minimum-Code Mandate**: task의 description과 AC는 요청된 동작을 만드는 최소 코드만 명세한다. 요청되지 않은 기능·옵션·설정 가능성, 단일 사용처 추상화, 발생할 수 없는 시나리오의 에러 처리를 계획에 넣지 않는다.
-- **출력 절약**: 산출물에 작성 과정·검증 내레이션을 남기지 않는다.
 
 ## Integration
 
