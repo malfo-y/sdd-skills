@@ -30,7 +30,7 @@
 |---|---|---|
 | Global spec anchor | `_sdd/spec/main.md`, `_sdd/spec/components.md`, `_sdd/spec/usage-guide.md` | repo-level 판단 기준과 supporting surface가 어디에 놓이는지 보여준다 |
 | Temporary execution model | `.codex/skills/feature-draft/SKILL.md`, `.codex/skills/implementation/SKILL.md`, `.codex/skills/implementation-review/SKILL.md` | 계획, 실행, 리뷰가 어떤 skill로 이어지는지 드러낸다 |
-| Orchestration layer | `.codex/skills/sdd-autopilot/SKILL.md`, `.codex/skills/sdd-autopilot/references/sdd-reasoning-reference.md` | end-to-end 파이프라인이 어떤 규칙으로 조합되는지 설명한다 |
+| Orchestration layer | `.codex/skills/sdd-autopilot/SKILL.md` | end-to-end 체인이 어떤 규칙으로 이어지는지 설명한다 |
 | Summary surface itself | `.codex/skills/spec-summary/SKILL.md`, `.codex/skills/spec-summary/references/summary-template.md` | whitepaper output contract와 section expectation의 직접 근거다 |
 
 ### Usage / Expected Results
