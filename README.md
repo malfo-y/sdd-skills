@@ -109,24 +109,21 @@ codex --enable default_mode_request_user_input
 
 적용 대상:
 
-- `feature-draft`
-- `implementation-plan`
 - `implementation-review`
-- `implementation`
 - `plan-review`
 - `pr-review`
 
 Claude Code:
 
 ```text
-/implementation --model sonnet
+/plan-review --model sonnet
 /implementation-review --model opus
 ```
 
 Codex:
 
 ```text
-/implementation --model gpt-5.5 --effort high
+/plan-review --model gpt-5.5 --effort high
 /implementation-review --model gpt-5.4 --effort medium
 /plan-review --effort high
 ```

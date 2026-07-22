@@ -189,7 +189,6 @@ findings-first로 저장하고 Review Output 섹션의 템플릿을 채운다. T
 ## Integration
 
 - `implementation-plan`: 기대 구현 항목의 기준
-- `implementation`: 후속 수정 작업의 입력
 - `write-phased`: 장문 리뷰 리포트의 inline 2-phase writing contract
 - `spec-sync`: 리뷰 결과상 스펙 변경이 필요할 때 후속 스킬로 안내 (구현 전 planned 반영·구현 후 동기화 모두 같은 진입점)
 

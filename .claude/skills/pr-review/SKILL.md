@@ -77,7 +77,7 @@ from-branch(head)의 spec을 검증 기준으로 전달한다.
 
 > **Model override**: `$ARGUMENTS`에 `--model <name>`이 있으면 아래 두 `Agent(...)` dispatch **모두**에 `model=<name>`을 추가한다. `<name>`은 `sonnet`·`opus`·`haiku`·`fable` 중 하나여야 하며, 그 외 값이면 dispatch하지 않고 사용자에게 허용값을 안내한다. 미지정 시 model을 생략한다(세션 기본값 상속).
 
-**한 메시지에서 두 reviewer를 병렬 dispatch한다** (read-only leaf라 동시 실행 안전 — 위 근거). `sdd-skills:` prefix 필수(`.claude/skills/implementation/SKILL.md`와 정합):
+**한 메시지에서 두 reviewer를 병렬 dispatch한다** (read-only leaf라 동시 실행 안전 — 위 근거). `sdd-skills:` prefix 필수(plugin 설치 스킬의 agent 호출 규약):
 
 ```
 Agent(subagent_type="sdd-skills:pr-review-agent")

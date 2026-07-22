@@ -14,7 +14,7 @@ argument-hint: "[--model <gpt-5.5|gpt-5.4|gpt-5.4-mini>] [--effort <low|medium|h
 
 전체 리뷰 프로세스·Tier·findings-first severity·리포트 형식은 각 agent가 단일 소스로 보유한다. 이 orchestrator는 맥락을 모아 전달하고 두 리포트를 relay할 뿐이다.
 
-> **Review-only 경계**: 이 스킬은 두 report를 relay만 한다. fix → re-review loop와 exit 조건 합집합 판정 같은 gating 의사결정은 이 스킬이 소유하지 않으며, 그것은 `implementation` 스킬의 review gate 소관이다.
+> **Review-only 경계**: 이 스킬은 두 report를 relay만 한다. finding 반영(fix)과 마감 판정은 이 스킬이 소유하지 않으며, 호출자 소관이다 (lite 체인에서는 메인 컨텍스트가 fix 1회로 반영).
 
 ## Codex Runtime Adapter
 

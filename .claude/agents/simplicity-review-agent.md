@@ -37,13 +37,13 @@ model: inherit
 2. **죽은 코드 (Dead Code)**: 호출되지 않는 함수·도달 불가 분기·미사용 변수/import. 제거해도 동작이 같다.
 3. **단일 사용처 추상화 (Single-use Abstraction)**: 한 곳에서만 쓰이는 wrapper·helper·indirection 레이어. 호출처에 인라인해도 동작이 같다.
 4. **도달 불가 에러 처리 (Unreachable Error Handling)**: 실제로 도달 불가능한 입력·상태에 대한 방어 코드·예외 처리. 제거해도 도달 가능한 동작이 같다.
-5. **과잉압축 (Over-compression)**: 가독성을 해치는 중첩 삼항·dense one-liner. 풀어 써도 동작이 같다 (clarity over brevity — implementation-agent REFACTOR Hard Rule과 동일 구체 사례).
+5. **과잉압축 (Over-compression)**: 가독성을 해치는 중첩 삼항·dense one-liner. 풀어 써도 동작이 같다 (clarity over brevity).
 
 ## Severity Rules
 
 severity는 `Critical / High / Medium / Low` 네 단계 표기를 쓰되, simplicity finding은 falsifiable 여부(Hard Rule 5)로 분류한다.
 
-- **Medium (gating, 기본값)**: 5개 차원의 **객관적으로 반증 가능한 위반** — 구체 사례 + 더 단순한 동등 형태를 제시할 수 있는 것. autopilot review-fix loop의 수정 대상이다.
+- **Medium (gating, 기본값)**: 5개 차원의 **객관적으로 반증 가능한 위반** — 구체 사례 + 더 단순한 동등 형태를 제시할 수 있는 것. 호출자의 fix 대상이다 (lite 체인에서는 메인 루프가 fix 1회로 반영).
 - **Low (advisory)**: **주관적 취향** — naming 호불호처럼 동작-불변 동등 형태를 객관 증거로 제시할 수 없는 것. 로그/후속 권고 대상이며 게이팅하지 않는다.
 - **High / Critical (escalation)**: 기본값은 Medium이다. 단순성 위반이 광범위하게 반복되어 유지보수를 실질적으로 위협하면 High로 escalate할 수 있다. correctness 영향(버그·보안)은 이 agent의 표적이 아니므로 escalation 사유로 쓰지 않는다.
 

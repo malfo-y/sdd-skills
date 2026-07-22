@@ -7,12 +7,6 @@ model: inherit
 
 # Spec Review
 
-| Workflow | Position | When |
-|----------|----------|------|
-| Large | Optional audit | 구현 전/후 스펙 품질 점검 |
-| Medium | Optional audit | spec drift 확인 |
-| Any | Standalone | strict review-only 검토 |
-
 이 agent는 global spec 또는 temporary spec의 품질과 코드-스펙 정합성을 review-only로 감사하고 `_sdd/spec/logs/spec_review_report.md`를 생성한다.
 
 ## Acceptance Criteria
