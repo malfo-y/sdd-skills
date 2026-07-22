@@ -1,5 +1,25 @@
 # Decision Log
 
+## 2026-07-22 - F2 완료: full 전용 agent·스킬 삭제를 current truth로 승격 (v4.6.2 → v4.6.3, post-implementation sync)
+
+### Context
+
+분할 todo F2(자체 draft: `_sdd/drafts/2026-07-22_feature_draft_lite_full_surfaces_removal.md`)가 구현·리뷰 게이트(correctness 전 AC MET, simplicity fix 반영)를 통과했다. 실측: agent 4종 쌍 8파일·스킬 3종 쌍 6디렉토리 부재, marketplace.json skills 21/agents 7(JSON 유효), implementation-lite v1.2.0 트리거 흡수, AGENTS.md + 하네스 템플릿 4미러 lite 체인, census 잔존은 F3 소관 reviewer 쌍 + `SDD_SPEC_DEFINITION.md`(F4)뿐.
+
+### Decision
+
+1. **full 전용 실행 유닛 부재를 current truth로 승격**: `feature-draft-agent`·`task-ordering-agent`·`test-author-agent`·`implementation-agent` 쌍과 `feature-draft`·`implementation`·`implementation-plan` 스킬 쌍은 존재하지 않는다. 등록 표면은 lite 체인 기준이다.
+2. **트리거 흡수 (사용자 확정)**: 일반 구현 요청 트리거("implement the plan"·"start implementation"·"execute the plan"·"구현해줘" 계열)는 `implementation-lite`가 유일 수신 경로다. "병렬 구현" 계열 트리거는 폐기.
+3. **출제자·응시자 분리의 대체 안전장치**: test-author leaf 분리 + orchestrator RED 게이트 대신, implementation-lite의 테스트 불변 규칙(RED 후 테스트 약화·수정 금지, 계약 오류는 선언 후 재-RED) + implementation-review Fresh Verification이 test-first 퇴화를 막는다.
+4. reviewer 표면의 full 기계장치 서술(plan-review-agent full Tier 등)은 F3에서 판정하므로 이번 sync에서 보존한다.
+
+### Changes
+
+- `main.md` 4.6.3 — §1 entrypoint 예시 lite 치환. §2: F2 todo 소거(승격 서술로 대체, umbrella는 F3~F4로 갱신), producer 스킬 review-fix loop guardrail을 lite gate(단일 패스 + fix 1회) 기준으로 재서술, implementation 2-reviewer gate·test-author/RED 게이트·multi-phase ordering(`Checkpoints`)·feature-draft Part 2 배치 guardrail을 삭제/lite 기준 재서술(test-first canonical surface = `implementation-lite` SKILL), 직교 2-렌즈 적용 지점을 pr-review로 한정, model override 대상을 review 계열 3종으로 축소. §3: task ordering handoff·producer 품질 gate·multi-phase quality gate 행 제거, 실행 분리·오케스트레이션·planning precedence·test-first·2-렌즈·override 행 lite 기준 갱신
+- `components.md` — `feature-draft`·`implementation-plan`·`implementation`·`test-author-agent` 행 제거, `implementation-lite` 행에 트리거 흡수 반영, Platform Notes skill/agent split 재서술, Code Map의 Implementation orchestrator/leaf 행 → Lite implementation contract, Feature planning map consumer 행 → feature-draft-lite 재지정
+- `usage-guide.md` — Scenario 2를 수동 lite 체인으로 재작성
+- F2 draft `_processed_` 이동. 분할 계획 원본은 F3·F4 입력으로 유지
+
 ## 2026-07-22 - full 레인 삭제 확정 및 4-feature 분할 todo 고정 (v4.6.0 → v4.6.1, pre-implementation planned sync)
 
 ### Context

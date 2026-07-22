@@ -31,24 +31,23 @@
 - `CLAUDE.md` 생성 또는 업데이트 — `→ AGENTS.md 참조` 포인터로 harness를 단일 소스로 가리킨다
 - 사용자에게 요약 테이블 제시 후 전체 스펙 출력
 
-### Scenario 2: 대규모 기능 추가 (수동 Full SDD Workflow)
+### Scenario 2: 기능 추가 (수동 SDD Workflow — lite 체인)
 
 **Action:**
 ```bash
-/feature-draft           # non-trivial change의 기본 planning entry
-/spec-sync               # (구현 전) planned persistent truth가 실제로 필요할 때만
-/implementation-plan     # Part 2만으로 부족하거나 phase/task breakdown이 필요할 때만
-/plan-review             # optional: 구현 전 계획 품질/과잉 설계 점검
-/implementation          # TDD 기반 코드 작성
-/implementation-review   # 계획 대비 검증
+/feature-draft-lite      # planning entry — task + Target Files(실측) + AC 중심 lite draft
+/spec-sync               # (구현 전) 분할 draft planned todo 고정 또는 planned persistent truth가 실제로 필요할 때만
+/plan-review             # optional: 구현 전 계획 품질/과잉 설계 점검 (Tier 2-lite 자가 식별)
+/implementation-lite     # 메인 루프 직접 RED→GREEN test-first 구현
+/implementation-review   # 계획 대비 fresh verification
 /spec-sync               # (구현 후) 코드 변경사항을 스펙에 동기화
 ```
 
 **Expected Result:**
-- `_sdd/drafts/<YYYY-MM-DD>_feature_draft_<slug>.md` — 스펙 패치 초안 + 구현 태스크 리스트
-- `_sdd/spec/<project>.md` 업데이트 — planned persistent truth 반영
-- `_sdd/implementation/<YYYY-MM-DD>_implementation_plan_<slug>.md` — 필요한 경우 생성되는 Target Files 기반 phase/task 실행 계획
+- `_sdd/drafts/<YYYY-MM-DD>_feature_draft_<slug>.md` — 스펙 패치 초안(Part 1 마커) + 구현 태스크 리스트(Part 2)
+- `_sdd/spec/<project>.md` 업데이트 — planned persistent truth 반영(조건부)
 - `_sdd/implementation/<YYYY-MM-DD>_plan_review_<slug>.md` — optional 구현 전 계획 리뷰. Critical/High finding이 있으면 구현 전 blocker로 취급
+- 구현은 메인 루프가 직접 작성하고 AC→증거 테이블로 마감(별도 plan artifact 없음). 단일 컨텍스트 초과면 분할 규칙(롤링 draft + planned todo 고정 + feature별 순차 체인)으로 해소한다
 - 구현 완료 후 구현 리뷰와 spec sync까지 연결돼 스펙과 코드 간 드리프트가 설명 가능한 상태
 
 ### Scenario 2b: 대규모 기능 추가 (sdd-autopilot 자동 실행)

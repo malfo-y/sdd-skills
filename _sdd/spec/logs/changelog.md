@@ -2,6 +2,11 @@
 
 > 이 파일은 `_sdd/spec/main.md`의 버전별 변경 기록이다.
 
+#### v4.6.3 (2026-07-22)
+
+- **F2 완료 — full 전용 agent·스킬 삭제를 current truth로 승격 (post-implementation sync)**: agent 쌍 4종(`feature-draft-agent`·`task-ordering-agent`·`test-author-agent`·`implementation-agent`) 8파일 + 스킬 쌍 3종(`feature-draft`·`implementation`·`implementation-plan`) 6디렉토리 삭제, 등록 표면 lite 기준 정리(marketplace.json skills 21/agents 7, `.codex/agents/README.md`, README Subagent Model Override 목록 3종 축소), `implementation-lite` v1.2.0 일반 구현 트리거 흡수("병렬 구현" 폐기), AGENTS.md + 하네스 템플릿 4미러 SDD 흐름 lite 체인 갱신, `docs/en/AUTOPILOT_GUIDE.md` 2.0.0 재작성, dangling 참조 정리. census 잔존 = F3 소관 reviewer 쌍 + `SDD_SPEC_DEFINITION.md`(F4). 리뷰 게이트 통과(correctness 전 AC MET, simplicity fix 반영). F3~F4 todo는 🚧 Planned 유지.
+- **적용 surface**: `main.md` §1 entrypoint 예시 / §2 F2 todo 소거·producer loop·test-first·2-렌즈·multi-phase ordering·feature-draft Part 2 guardrail lite 기준 재서술(test-first canonical = `implementation-lite` SKILL, 대체 안전장치 = 테스트 불변 규칙 + implementation-review Fresh Verification) / §3 삭제 컴포넌트 행 제거·갱신. `components.md` 삭제 행 4개 제거 + Code Map 재지정. `usage-guide.md` Scenario 2 수동 lite 체인 재작성.
+
 #### v4.6.2 (2026-07-22)
 
 - **F1 완료 — `sdd-autopilot` full 파트 제거를 current truth로 승격 (post-implementation sync)**: autopilot SKILL 쌍 v3.0.0 lite 체인 전용 재작성(Step 0 상태 확인 → Step 1 요청 분석 → Step L, orchestrator·Lane 판정·full 레인 서술 0, skill.json 쌍 동일), 부속 references/examples/scripts 쌍 삭제, `docs/AUTOPILOT_GUIDE.md` 2.0.0 재작성, 복구 보험 git tag `full-lane-final`(407e08e) 생성. census: autopilot 표면 full 어휘 잔존 0(허용 예외: GUIDE의 tag 복구 안내 1회), 삭제 자산 참조 잔존은 F2·F3 예정 표면 8파일 + 기록물뿐. 리뷰 게이트 통과(correctness C/H/M 0 전 AC MET, simplicity M2 fix 반영). F2~F4 todo는 🚧 Planned 유지.
