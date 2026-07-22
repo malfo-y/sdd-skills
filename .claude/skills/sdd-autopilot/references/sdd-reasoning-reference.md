@@ -81,11 +81,12 @@ canonical shape:
 ### 1.7 파이프라인 구성 원칙
 
 1. **Spec-optional**: global spec이 있으면 활용하고, 없으면 spec-less 모드로 진행한다. `spec-create`는 파이프라인 필수 선행이 아니라 사용자에게 추천하는 가이드 수준이다.
-2. **Delta-first for non-trivial changes**: `feature-draft`는 기본 포함이다. 정말 간단한 디버깅 수준의 수정(typo fix, config 값 변경, 로그 한 줄 추가 등)이거나 해당 주제의 feature-draft artifact가 `_sdd/drafts/`에 이미 존재하는 경우에만 스킵할 수 있다.
-3. **Review-fix 필수**: review만 하고 끝나지 않는다.
-4. **Execute -> Verify**: 에이전트 호출 != 완료. evidence까지 확인해야 한다.
-5. **지속성은 필요할 때만**: 장기 handoff는 artifact 파일 경로 중심으로 두되, 구현 직전 즉시 소비되고 원본에서 재계산 가능한 task ordering은 compact final response로 전달한다.
-6. **Global spec 직접 수정 금지**: spec 변경은 `spec-sync`에 위임.
+2. **Lite-first**: 단일 컨텍스트로 감당되는 변경은 orchestrator 없이 lite fast-path 체인(`feature-draft-lite` → `plan-review` → `implementation-lite` → `implementation-review` → `spec-sync`)으로 실행한다 (autopilot Step L). 이 문서의 나머지 원칙·그래프·precedence는 승격된 full 레인에 적용된다.
+3. **Delta-first for non-trivial changes**: full 레인의 기본 진입은 `feature-draft`다. 정말 간단한 디버깅 수준의 수정(typo fix, config 값 변경, 로그 한 줄 추가 등)이거나 해당 주제의 feature-draft artifact가 `_sdd/drafts/`에 이미 존재하는 경우에만 스킵할 수 있다.
+4. **Review-fix 필수**: review만 하고 끝나지 않는다.
+5. **Execute -> Verify**: 에이전트 호출 != 완료. evidence까지 확인해야 한다.
+6. **지속성은 필요할 때만**: 장기 handoff는 artifact 파일 경로 중심으로 두되, 구현 직전 즉시 소비되고 원본에서 재계산 가능한 task ordering은 compact final response로 전달한다.
+7. **Global spec 직접 수정 금지**: spec 변경은 `spec-sync`에 위임. (두 레인 공통)
 
 ---
 
@@ -94,6 +95,15 @@ canonical shape:
 ### 2.1 스킬 의존성 그래프
 
 ```text
+[Default lane: lite fast-path — orchestrator 없음, 메인 루프 로컬 체인 (autopilot Step L)]
+feature-draft-lite
+  -> plan-review [Tier 2-lite 자가 식별, 경량 반환, 단일 패스] -> fix 1회
+  -> implementation-lite
+  -> implementation-review [경량 반환, correctness ∥ simplicity] -> fix 1회 + 회귀 1회
+  -> (persistent 변경 시) spec-sync [post-implementation]
+
+[이하: 승격된 변경의 full 파이프라인]
+
 [Optional bootstrap]
 (spec-create)
 
@@ -122,6 +132,7 @@ validation / final integration review
 ```
 
 - 그래프는 "항상 이 순서로 모두 지난다"는 뜻이 아니다. `optional` 표시는 조건부 삽입 단계다.
+- lite fast-path의 fix는 게이트당 1회이며 re-review loop가 없다. 승격 신호(canonical: `feature-draft-lite` 승격 규칙 3, `implementation-lite` 승격 규칙 2, plan-review Tier 2-lite Lite 적격 검사)가 뜨면 full 파이프라인으로 전환하고, lite 산출물은 full 레인 입력으로 재사용한다.
 - `implementation-review`는 `implementation` 다음의 별도 downstream step이 아니라, 각 `implementation` 실행 단위 직후 즉시 닫는 gate다.
 - `spec-sync`의 post-implementation 호출은 review-fix gate, required validation/test, 필요한 경우 `final integration review`가 모두 끝난 뒤에만 온다.
 - `ralph-loop-init`은 구현 본선 뒤에 무조건 붙는 단계가 아니라, 장시간 검증이 필요할 때 validation surface에 붙는 선택지다.
@@ -137,6 +148,7 @@ validation / final integration review
 
 ### 2.1.1 Planning precedence by scale
 
+- **Lite fast-path (기본)**: 아래 규모 경로 판단보다 이 판정이 먼저다. 단일 컨텍스트로 감당되는 변경은 orchestrator 없이 lite 체인으로 실행한다(autopilot Step L). 아래 경로들은 승격된 변경에 적용된다.
 - **Small direct path**: 바로 `implementation`으로 간다. 정말 간단한 디버깅 수준의 수정(typo fix, config 값 변경, 로그 한 줄 추가 등)이거나 해당 주제의 feature-draft artifact가 `_sdd/drafts/`에 이미 존재하는 경우에만 `feature-draft`를 생략할 수 있다. review가 포함되면 규모와 무관하게 `implementation -> (implementation-review ∥ simplicity-review) -> implementation -> (implementation-review ∥ simplicity-review)` subagent loop를 사용하고(review/re-review는 correctness ∥ simplicity 2-reviewer 병렬, exit는 두 report 합집합), 부모 autopilot이 로컬 구현/로컬 리뷰로 대체하지 않는다.
 - **Single-phase medium path**: 기본 진입은 `feature-draft`다. `feature-draft`(flat task-set) 다음 구현 직전 `task-ordering-agent`를 항상 경유하며(single-phase여도 예외 없이 경유; 구 '직행' precedence 폐기), autopilot은 final response를 `task_ordering.response`로 보존한다. `Mode: single-phase`이면 `implementation`은 단일 pass로 연결한다. 해당 `implementation` 직후 global review-fix gate를 즉시 닫아야 하며, 그 전에는 downstream step으로 진행할 수 없다. review가 있으면 실행 주체는 항상 `implementation`/review 2-reviewer(`implementation-review` ∥ `simplicity-review`) subagent mapping이고, gate exit는 두 report의 합집합이다.
 - **Multi-phase medium / large expanded path**: `feature-draft`로 slim Part 1과 execution-facing Part 2(flat task-set)를 고정한 뒤, planned persistent global alignment가 필요할 때만 `spec-sync`(planned 호출)를 조건부로 추가하고, 구현 직전 `task-ordering-agent`를 경유한다. multi-phase 여부는 별도 skill 선택이 아니라 `task-ordering-agent`가 전체를 조망해 late-binding으로 판정한다. downstream `implementation-dispatch-controller`는 `Execution Mode: phase-iterative`와 `Phase Source: task_ordering.response`를 선언하고, response의 `Execution` phase를 topological parallel wave로 소비한다. task 본문은 response의 `Source` feature draft에서 읽는다.
@@ -149,8 +161,13 @@ validation / final integration review
 - Role: temporary spec draft + flat task-set 생성 (task 정의만; dependency·phase는 포함하지 않는다)
 - Reasoning note: non-trivial change의 기본 planning entry다. feature-level execution surface를 먼저 고정한다. global spec이 thin core면 관련 코드 탐색이 필수다. 산출은 flat task-set이며, dependency·실행 순서·phase 분할은 downstream `task-ordering-agent`가 파생한다.
 
+#### feature-draft-lite
+- Role: 단일 컨텍스트 변경의 경량 draft — Change Summary/Scope + task별 의도·AC·Target Files + Open Questions. 메인 루프가 직접 작성한다 (dispatch 없음).
+- Reasoning note: lite fast-path의 planning entry다. 승격 규칙 3의 canonical을 소유하고 판정을 draft 상단 `> Lite 적격:` 1줄로 기록한다.
+
 #### plan-review
 - Role: planning producer output gate
+- Reasoning note: lite draft 입력은 reviewer가 자가 식별해 Tier 2-lite(경량 반환·단일 패스)로 동작한다. finding 반영은 호출자 소관이다.
 - Reasoning note: producer(`feature-draft`) output을 downstream step이 소비하기 전에 검토한다. 실패하면 finding을 implementation fix task로 바꾸지 않고, 해당 producer output을 reject/regenerate 대상으로 돌린다. `task-ordering-agent`는 producer가 아니라 ordering 파생 step이라 이 gate를 요구하지 않는다(self-check만).
 - Reasoning note: 오케스트레이터 자체도 producer output이다. autopilot Step 5에서 Orchestrator Review Mode로 이 gate를 통과해야 Phase 2로 진행한다.
 
@@ -165,8 +182,13 @@ validation / final integration review
 #### implementation
 - Role: actual code generation/modification 단계
 
+#### implementation-lite
+- Role: lite draft의 실행 짝 — 메인 루프가 코드·테스트를 직접 작성한다 (RED→GREEN test-first, AC→증거 테이블 마감; read-only 보조 agent 허용, 독립 task는 메인 루프 배칭 병렬 가능).
+- Reasoning note: 승격 규칙 2(단일 세션 초과, 계약 오류 선언 반복)의 canonical을 소유한다.
+
 #### implementation-review
 - Role: 구현 결과를 계획/스펙 대비 리뷰
+- Reasoning note: 스킬 경유 호출은 fix loop 없는 단일 패스라 경량 반환이 기본이다 (correctness ∥ simplicity 2-reviewer).
 
 #### spec-review
 - Role: global/temporary spec 품질 및 drift 감사
