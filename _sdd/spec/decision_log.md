@@ -1,5 +1,25 @@
 # Decision Log
 
+## 2026-07-22 - F3 완료: reviewer 경량 반환 유일화를 current truth로 승격 (v4.6.3 → v4.6.4, post-implementation sync)
+
+### Context
+
+분할 todo F3(자체 draft: `_sdd/drafts/2026-07-22_feature_draft_lite_reviewer_trim.md`)가 구현·리뷰 게이트(correctness C/H 0·M1, simplicity M6 — 합집합 fix 완료)를 통과했다. 실측: reviewer 4종 쌍 + plan-review 3.0.0·implementation-review 7.0.0·pr-review 4.0.0 SKILL 쌍 + autopilot 쌍·GUIDE ko/en 계 22파일 working tree 변경, full 기계장치 어휘 census(Tier·re-review·Iteration·리포트 저장·`_pr_correctness_` 등, 20파일 대상) 잔존 0, 4 agent tools에 `Write` 부재 확인.
+
+### Decision
+
+1. **새 invariant — reviewer read-only leaf**: reviewer agent 4종(`plan-review-agent`·`implementation-review-agent`·`simplicity-review-agent`·`pr-review-agent`)은 판정만 반환하며 tools에 `Write`가 없다(correctness 계열 2종만 테스트 실행용 `Bash` 유지). 리포트 파일 작성은 호출자 소관이다(작성자 불변식의 reviewer 적용).
+2. **새 invariant — 단일 패스 유일**: 리뷰에 re-review·iteration 기계장치는 없고, finding 반영은 호출자 fix 1회다. v4.6.3에서 F3 판정으로 미뤄 둔 "공통 loop 정책의 reviewer-side 잔존"은 삭제로 판정 완료.
+3. **plan-review full rubric 삭제**: Tier 체계·coverage index·V* 1:1·Touchpoints census·Orchestrator Review Mode 전부 삭제, 구 Tier 2-lite 내용(AC falsifiability·Target Files 실측·task boundary·6-smell·Lite 적격 검사·분할 권고)이 유일 rubric으로 승격. "Tier 2-lite" 명칭은 소멸(유일 mode라 이름 불요), 구 Tier 3 input-readiness report는 "대상 없음 + 안내 1줄"로 대체.
+4. **pr-review 재설계 (사용자 확정)**: 두 reviewer는 경량 반환(finding별 위치·문제·수정 제안 — 통합 리포트의 유일 소스)으로 응답하고, pr-review 스킬(메인 루프)이 통합 리포트 `_sdd/pr/<YYYY-MM-DD>_pr_review_<slug>.md` 1파일만 직접 작성한다(구 3파일 구조에서 축소, 통합 리포트가 finding 전문 게재).
+
+### Changes
+
+- `main.md` 4.6.4 — §2: review guardrail을 "fix 또는 명시적 잔여 이슈 보고"로 조정하고 단일 패스 invariant·reviewer read-only leaf invariant를 승격(orchestrator 단일 작성자 guardrail과 병합), pr-review 2-렌즈 서술에서 per-agent 리포트 경로(`_pr_correctness_`·`_simplicity_review_`) 소거, "Tier 2-lite" 명칭 2곳 치환, plan-review gate에 경량 반환 명시, 🚧 Planned F3 todo 소거(umbrella는 F4 잔여로 갱신). §3: 오케스트레이션·분할·plan quality gate 행 갱신
+- `components.md` — `plan-review`·`implementation-review`·`pr-review` 행을 경량 반환 계약으로 재서술, autopilot·feature-draft-lite 행의 Tier 2-lite/F3 참조 정리
+- `usage-guide.md` — Scenario 2의 plan_review 리포트 파일 산출 서술을 경량 반환으로 교체, Tier 2-lite 표기 2곳 치환
+- F3 draft `_processed_` 이동. 분할 계획 원본은 F4 입력으로 유지
+
 ## 2026-07-22 - F2 완료: full 전용 agent·스킬 삭제를 current truth로 승격 (v4.6.2 → v4.6.3, post-implementation sync)
 
 ### Context

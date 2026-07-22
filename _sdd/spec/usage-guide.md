@@ -37,7 +37,7 @@
 ```bash
 /feature-draft-lite      # planning entry — task + Target Files(실측) + AC 중심 lite draft
 /spec-sync               # (구현 전) 분할 draft planned todo 고정 또는 planned persistent truth가 실제로 필요할 때만
-/plan-review             # optional: 구현 전 계획 품질/과잉 설계 점검 (Tier 2-lite 자가 식별)
+/plan-review             # optional: 구현 전 계획 품질/과잉 설계 점검 (단일 패스 경량 반환)
 /implementation-lite     # 메인 루프 직접 RED→GREEN test-first 구현
 /implementation-review   # 계획 대비 fresh verification
 /spec-sync               # (구현 후) 코드 변경사항을 스펙에 동기화
@@ -46,7 +46,7 @@
 **Expected Result:**
 - `_sdd/drafts/<YYYY-MM-DD>_feature_draft_<slug>.md` — 스펙 패치 초안(Part 1 마커) + 구현 태스크 리스트(Part 2)
 - `_sdd/spec/<project>.md` 업데이트 — planned persistent truth 반영(조건부)
-- `_sdd/implementation/<YYYY-MM-DD>_plan_review_<slug>.md` — optional 구현 전 계획 리뷰. Critical/High finding이 있으면 구현 전 blocker로 취급
+- optional 구현 전 계획 리뷰(`plan-review`)는 리포트 파일 없이 경량 반환으로 finding을 응답 — Critical/High finding이 있으면 구현 전 blocker로 취급하고 fix는 메인 루프가 1회 수행
 - 구현은 메인 루프가 직접 작성하고 AC→증거 테이블로 마감(별도 plan artifact 없음). 단일 컨텍스트 초과면 분할 규칙(롤링 draft + planned todo 고정 + feature별 순차 체인)으로 해소한다
 - 구현 완료 후 구현 리뷰와 spec sync까지 연결돼 스펙과 코드 간 드리프트가 설명 가능한 상태
 
@@ -61,7 +61,7 @@
 
 **Expected Result:**
 - Step 0~1: 기존 `_sdd/drafts/` 산출물 재활용·spec 유무를 확인하고 요청을 분석한다(부족한 정보만 인라인 질문, 승인 게이트 없음)
-- Step L: `feature-draft-lite → plan-review(Tier 2-lite, 단일 패스) → fix 1회 → implementation-lite → implementation-review(경량 반환) → fix 1회 → (persistent 변경 시) spec-sync` 체인을 무승인으로 실행한다. 분할 신호가 뜨면 분할 규칙(롤링 draft + planned todo 고정 + feature별 순차 체인)으로 처리한다
+- Step L: `feature-draft-lite → plan-review(단일 패스 경량 반환) → fix 1회 → implementation-lite → implementation-review(경량 반환) → fix 1회 → (persistent 변경 시) spec-sync` 체인을 무승인으로 실행한다. 분할 신호가 뜨면 분할 규칙(롤링 draft + planned todo 고정 + feature별 순차 체인)으로 처리한다
 - `_sdd/drafts/<YYYY-MM-DD>_feature_draft_<slug>.md` — 실행 청사진이 되는 lite draft
 - report 파일 없이 최종 응답 요약 — 수행 단계, finding/fix 내역, 테스트 결과, spec sync 여부, 잔존 항목
 - 구현 완료 + 스펙 동기화 완료

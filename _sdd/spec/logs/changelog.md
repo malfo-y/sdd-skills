@@ -2,6 +2,11 @@
 
 > 이 파일은 `_sdd/spec/main.md`의 버전별 변경 기록이다.
 
+#### v4.6.4 (2026-07-22)
+
+- **F3 완료 — reviewer 경량 반환 유일화를 current truth로 승격 (post-implementation sync)**: reviewer 4종 쌍(plan-review·implementation-review·simplicity-review·pr-review agent) 경량 반환 유일 mode 재작성(파일 mode·re-review·Tier·Output 파일 템플릿 삭제, tools `Write` 제거 — correctness·pr만 테스트용 Bash 유지), plan-review-agent full rubric 삭제(구 Tier 2-lite 내용이 유일 rubric, 명칭 소멸) + SKILL 쌍 3.0.0, implementation-review SKILL 쌍 7.0.0(경량/파일 분기 제거), pr-review 재설계 4.0.0(agent 경량 반환 + 스킬이 통합 리포트 `_sdd/pr/*_pr_review_*` 1파일만 작성 — 3파일→1파일), autopilot 쌍·GUIDE ko/en "Tier 2-lite" 소비자 정리. census(확장 패턴, 20파일) 잔존 0, 리뷰 게이트 통과(correctness C/H 0·M1, simplicity M6 fix 완료). F4 todo는 🚧 Planned 유지.
+- **적용 surface**: `main.md` §2 — 단일 패스 invariant·reviewer read-only leaf invariant 승격, review guardrail "fix/re-review" 표현 정리, pr-review 2-렌즈 per-agent 리포트 경로 소거, F3 todo 소거(umbrella F4 갱신), plan-review gate 경량 반환 명시. §3 — 오케스트레이션·분할·plan quality gate 행 갱신. `components.md` — reviewer 3행 경량 반환 계약 재서술 + autopilot·feature-draft-lite 행 정리. `usage-guide.md` — plan_review 리포트 파일 서술 교체 + Tier 2-lite 표기 치환.
+
 #### v4.6.3 (2026-07-22)
 
 - **F2 완료 — full 전용 agent·스킬 삭제를 current truth로 승격 (post-implementation sync)**: agent 쌍 4종(`feature-draft-agent`·`task-ordering-agent`·`test-author-agent`·`implementation-agent`) 8파일 + 스킬 쌍 3종(`feature-draft`·`implementation`·`implementation-plan`) 6디렉토리 삭제, 등록 표면 lite 기준 정리(marketplace.json skills 21/agents 7, `.codex/agents/README.md`, README Subagent Model Override 목록 3종 축소), `implementation-lite` v1.2.0 일반 구현 트리거 흡수("병렬 구현" 폐기), AGENTS.md + 하네스 템플릿 4미러 SDD 흐름 lite 체인 갱신, `docs/en/AUTOPILOT_GUIDE.md` 2.0.0 재작성, dangling 참조 정리. census 잔존 = F3 소관 reviewer 쌍 + `SDD_SPEC_DEFINITION.md`(F4). 리뷰 게이트 통과(correctness 전 AC MET, simplicity fix 반영). F3~F4 todo는 🚧 Planned 유지.
