@@ -34,7 +34,7 @@
 
 이 repo는 SDD를 따른다. 단계 순서:
 discussion → feature-draft-lite → plan-review → implementation-lite → implementation-review → spec-sync
-`spec-sync`는 단일 스킬로, 분할 draft의 planned todo 고정(조건부)과 구현 후 동기화에 같은 진입점이 evidence 차이로 동작을 적응한다. 각 단계의 구체 스킬은 **설치된 SDD 스킬**을 사용한다. ⚠️ 화살표의 각 단계 이름(discussion·feature-draft-lite·implementation-lite·spec-sync 등)은 **동명의 SDD 스킬**이다. 해당 단계 진입 시 그 스킬을 **호출**하고, 로직을 직접 재구현하지 않는다 — 스킬이 단일 소스다. 스킬 미설치 환경에서만 SDD 개념으로 수동 수행한다. (스킬 카탈로그를 여기 복사하지 않는다 — 최신 스킬셋이 단일 소스다.)
+`spec-sync`는 단일 진입점으로, 분할 draft의 planned todo 고정(조건부)과 구현 후 동기화를 evidence 유무로 구분해 수행한다. 각 단계의 구체 스킬은 **설치된 SDD 스킬**을 사용한다. ⚠️ 화살표의 각 단계 이름(discussion·feature-draft-lite·implementation-lite·spec-sync 등)은 **동명의 SDD 스킬**이다. 해당 단계 진입 시 그 스킬을 **호출**하고, 로직을 직접 재구현하지 않는다 — 스킬이 단일 소스다. 스킬 미설치 환경에서만 SDD 개념으로 수동 수행한다. (스킬 카탈로그를 여기 복사하지 않는다 — 최신 스킬셋이 단일 소스다.)
 
 ## 4. 판단 기준이 필요할 때 (가리키기, 복사 금지)
 

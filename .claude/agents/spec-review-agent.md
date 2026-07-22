@@ -67,19 +67,17 @@ model: inherit
 공통 코어 4축을 temporary rubric으로 본다.
 
 - `Thinness`: delta 실행에 필요한 정보만 남기고 있는가
-- `Decision-bearing truth`: `C*`, `I*`, `V*` linkage가 실제 판단과 검증을 바꾸는가
+- `Decision-bearing truth`: task의 `Contracts`/AC가 실제 판단과 검증을 바꾸는가
 - `Anti-duplication`: global spec이나 code를 형식적으로 중복하지 않는가
-- `Navigation + surface fit`: touchpoints, implementation, validation이 실행 surface에 잘 배치되었는가
+- `Navigation + surface fit`: task·Target Files·AC가 실행 surface에 잘 배치되었는가
 
 추가 체크:
 
 - `Change Summary`가 변경 목적과 범위를 요약하는가
-- `Scope Delta`가 global 대비 변경 경계를 분명히 하는가
-- `Contract/Invariant Delta`가 `C*` / `I*` ID를 사용해 delta를 명시하는가 (task 단위 spec이면 coverage index에 `Covered By` 없는 고아 delta가 없는가)
-- `Touchpoints`가 실제 변경 지점을 전략적으로 식별하는가 (task 단위 spec이면 공유 census 전용인가)
-- `Implementation Plan`(task 단위 spec은 `Task Details`)이 delta를 실행 가능한 작업으로 연결하는가
-- 검증이 delta/AC와 연결되는가 — task 단위 spec은 각 task의 `Validation` 블록이 AC와 1:1로, standalone temporary spec은 `Validation Plan` 섹션이 delta ID와 연결
-- `Risks / Open Questions`가 미해결 가정과 위험을 숨기지 않는가
+- `Scope`가 In/Out 경계를 분명히 하는가
+- 각 task가 단일 의도와 falsifiable AC, 실측 Target Files를 갖는가 (`Contracts`는 새 약속이 있을 때만)
+- `Open Questions`가 미해결 가정과 위험을 숨기지 않는가
+- (legacy full draft 기록물을 감사할 때만) coverage index 고아 delta·`Touchpoints` census·AC↔`Validation` 1:1 같은 구형 구조 규칙을 그 형식 기준으로 적용한다
 
 ### Code-Linked Drift
 
@@ -102,7 +100,7 @@ model: inherit
 spec type 판별 규칙:
 
 - global spec: `배경/개념`, `Scope / Non-goals / Guardrails`, `핵심 설계와 주요 결정`이 중심
-- temporary spec: canonical 7섹션이 중심
+- temporary spec: Part 1 Spec Delta 마커 + Part 2 Tasks가 중심 (legacy 7섹션 형식은 기록물)
 - 혼합/애매한 문서는 가장 지배적인 구조로 판정하고 근거를 리포트에 적는다
 
 ### Step 2: Spec Quality Audit

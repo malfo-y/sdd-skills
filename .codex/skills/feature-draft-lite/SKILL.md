@@ -1,7 +1,7 @@
 ---
 name: feature-draft-lite
-description: This skill should be used when the user asks for "feature draft lite", "lite draft", "draft lite", "라이트 초안", "경량 기능 초안", "간단 draft", "가볍게 계획", or wants a lightweight feature draft for a change that fits in a single context — task breakdown with Target Files and AC, without the full coverage-index/validation ceremony. Oversized changes are split into multiple lite features via a rolling split plan instead of escalating.
-version: 1.1.0
+description: This skill should be used when the user asks for "feature draft lite", "lite draft", "draft lite", "라이트 초안", "경량 기능 초안", "간단 draft", "가볍게 계획", or wants a lightweight feature draft for a change that fits in a single context — task breakdown with Target Files and falsifiable AC. Oversized changes are split into multiple lite features via a rolling split plan instead of escalating.
+version: 1.2.0
 ---
 
 # Feature Draft Lite
@@ -83,4 +83,4 @@ version: 1.1.0
 
 - `plan-review`: draft 품질 게이트 — 작성 후 단일 패스 점검 (위 규칙 참조).
 - `implementation-lite`: 실행 인계 대상 — Part 2 task를 RED→GREEN으로 구현한다.
-- `spec-sync`: Part 1 마커 내부를 global spec 반영 입력으로 소비한다 (파일명이 기존 `*_feature_draft_*` glob에 매칭된다). 분할 draft의 feature 목록도 같은 마커로 planned todo가 된다.
+- `spec-sync`: Part 1 마커 내부를 global spec 반영 입력으로 소비한다 (파일명이 기존 `*_feature_draft_*` glob에 매칭된다).

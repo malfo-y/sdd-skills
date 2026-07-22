@@ -1,6 +1,6 @@
 ---
 name: implementation-review
-description: "Use this skill to review implementation progress against the plan, verify acceptance criteria, identify issues, and determine next steps. Triggered by \"review implementation\", \"check progress\", \"verify implementation\", \"what's done\", \"implementation status\", or \"audit the code\". Works with or without an implementation plan (Graceful Degradation)."
+description: "Use this skill to review implementation progress against the plan, verify acceptance criteria, identify issues, and determine next steps. Triggered by \"review implementation\", \"check progress\", \"verify implementation\", \"what's done\", \"implementation status\", or \"audit the code\". Works with or without a draft/plan (graceful degradation)."
 version: 7.0.0
 argument-hint: ["[--model <sonnet|opus|haiku|fable>]"]
 ---

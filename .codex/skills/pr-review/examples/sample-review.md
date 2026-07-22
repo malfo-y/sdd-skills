@@ -1,11 +1,11 @@
 # Sample PR Review Session
 
-이 예제는 통합된 `pr-review` 스킬이 두 가지 모드로 동작하는 모습을 보여준다.
+이 예제는 `pr-review` 스킬이 두 가지 모드로 동작하는 모습을 보여준다.
 
 - from-branch에 `_sdd/spec/`가 있으면 spec-based verification 포함
 - from-branch에 spec이 없으면 code-only mode로 진행
 
-> `pr-review`는 `_sdd/spec/`를 수정하지 않는다. 스펙 반영이 필요하면 리포트에 기록하고 후속으로 `$spec-sync`를 사용한다.
+> `pr-review`는 `_sdd/spec/`를 수정하지 않는다. 스펙 반영이 필요하면 리포트에 기록하고 후속으로 `/spec-sync`를 사용한다.
 
 ## Example A: from-branch spec 기반 리뷰
 
@@ -20,57 +20,35 @@ Codex: PR 리뷰를 시작합니다.
 
 ✓ gh auth status: 인증됨
 ✓ PR: #42 - 사용자 인증 시스템 구현 및 세션 관리 버그 수정
-✓ 기존 리뷰 없음
+✓ 현재 브랜치 = headRefName (feature/auth-system)
 
-## from-branch spec 탐색
-- headRefName: feature/auth-system
-- headRefOid: abcdef123456
-- `git ls-tree -r --name-only feature/auth-system _sdd/spec` 확인
-- from-branch spec 발견:
-  - _sdd/spec/main.md
-  - _sdd/spec/auth.md
-  - _sdd/spec/security.md
-- baseline: _sdd/spec/main.md
+## from-branch spec 로드
+- gh pr diff #42 --name-only에서 _sdd/spec/ 경로 확인
+- git show origin/feature/auth-system:_sdd/spec/main.md 로드
 - linked sub-spec 로드: auth.md, security.md
 
 ## PR 데이터 수집
 - 변경 규모: +847 -123, 12개 파일
 - 상태: OPEN
 - 커밋: 2개
+- 통합 리포트 slug: auth_system
 ```
 
-### 검증 요약
+### 병렬 dispatch와 verdict 합성
 
 ```text
 Codex:
-## Code-only Verification
+## Parallel Dispatch
 
-- 코드 품질: 전반적으로 프로젝트 패턴 준수
-- 에러 처리: refresh 경로에서 만료 시간 재생성 누락
-- 테스트: 신규 기능 대부분 커버, 미들웨어 컨텍스트 주입 테스트 누락
-- 보안: JWT secret은 환경변수 사용
-- 문서화: .env.example 갱신됨
+spawn_agent({agent_type: "pr-review-agent", message: <framed payload>})         → correctness 렌즈
+spawn_agent({agent_type: "simplicity-review-agent", message: <framed payload>}) → clarity 렌즈
+wait_agent({targets: [<correctness_id>, <simplicity_id>]}) → 수거 후 close_agent
 
-## Spec-based Verification
+두 agent 반환 요약:
+- correctness: AC MET 2 / NOT MET 1 / PARTIAL 1, test pass 95%, High 1·Med 1·Low 1 (finding당 위치·문제·수정 포함)
+- simplicity: Medium 1 (위치·현재 형태·제안 형태 포함)
 
-### Spec AC Verification
-| # | Acceptance Criterion | Implementation | Test | Status | Notes |
-|---|----------------------|----------------|------|--------|-------|
-| 1 | 회원가입 지원 | `src/routes/auth.py:25-42` | test_register_valid | ✓ | |
-| 2 | JWT 토큰 발급 | `src/services/auth_service.py:45-67` | test_login_returns_tokens | ✓ | |
-| 3 | refresh 시 새 만료 시간 생성 | `src/services/auth_service.py:89-102` | test_refresh_token | ✗ | exp 갱신 누락 |
-| 4 | 인증 컨텍스트 주입 | `src/middleware/auth.py:47-55` | - | △ | 테스트 없음 |
-
-### Spec Compliance
-- 보안 요구사항: JWT secret 환경변수 사용으로 충족
-- API 구조: `/auth/*` 엔드포인트는 기존 REST 규칙 준수
-- 위반 사항: 없음
-
-### Gap Analysis
-- In spec but not in PR:
-  - refresh 토큰 만료 시간 재생성 검증이 완전하지 않음
-- In PR but not in spec:
-  - CORS 설정에 Authorization 헤더 허용 추가
+→ Verdict: REQUEST CHANGES (correctness High 1 + simplicity Medium 1이 rationale에 기여)
 ```
 
 ### 생성된 리포트 예시
@@ -81,7 +59,7 @@ Codex:
 **PR**: #42 - 사용자 인증 시스템 구현 및 세션 관리 버그 수정
 **PR Author**: developer-kim
 **Review Date**: 2026-04-02
-**Reviewer**: Codex (GPT-5)
+**Reviewer**: Codex (gpt-5.5)
 **Spec**: Found (from-branch)
 
 ---
@@ -116,7 +94,7 @@ Codex:
 - **문제**: spec AC #4의 구현은 있으나 테스트가 없어 회귀를 감지할 수 없다 (PARTIAL).
 - **수정**: 미들웨어 통과 후 request context에 user가 실리는지 검증하는 테스트를 추가한다.
 
-- `src/config/cors.py:12` — CORS Authorization 헤더 허용은 spec에 없는 변경이므로 머지 후 `$spec-sync`로 spec 반영을 검토한다.
+- `src/config/cors.py:12` — CORS Authorization 헤더 허용은 spec에 없는 변경이므로 머지 후 `/spec-sync`로 spec 반영을 검토한다.
 
 ---
 
@@ -143,18 +121,10 @@ User: 이 PR 승인해도 되는지 봐 줘
 Codex:
 ## from-branch spec 탐색
 - headRefName: fix/password-reset-expiry
-- `git ls-tree -r --name-only fix/password-reset-expiry _sdd/spec` 결과 없음
-- head ref fetch 후 재확인 결과도 없음
-- from-branch spec 부재 확인
+- gh pr diff --name-only 및 from-branch 트리에 _sdd/spec/ 없음
 
-→ code-only mode로 진행
-
-## Inferred Acceptance Criteria
-| # | Criterion | Evidence | Confidence |
-|---|-----------|----------|------------|
-| 1 | 만료된 비밀번호 재설정 토큰 거부 | PR title/body | High |
-| 2 | 유효한 토큰은 정상 처리 | diff + tests | High |
-| 3 | 실패 시 일관된 에러 응답 반환 | 구현 패턴 | Medium |
+→ code-only mode로 dispatch (spec 컨텍스트 없이)
+- correctness reviewer가 PR title/body/코멘트에서 AC를 추론해 검증
 ```
 
 ### code-only 리포트 예시
@@ -165,7 +135,7 @@ Codex:
 **PR**: #51 - fix: 비밀번호 재설정 토큰 만료 검증 누락
 **PR Author**: developer-lee
 **Review Date**: 2026-04-02
-**Reviewer**: Codex (GPT-5)
+**Reviewer**: Codex (gpt-5.5)
 **Spec**: Not Found (code-only mode)
 
 ---
@@ -187,7 +157,7 @@ Codex:
 
 ## 2. 개선 제안 (non-blocking)
 
-- `src/services/password_service.py:34` — 추후 spec 도입 시 비밀번호 재설정 보안 규칙(토큰 만료 정책)을 문서화하면 운영 추적성이 좋아진다 (`$spec-create` 검토).
+- `src/services/password_service.py:34` — 추후 spec 도입 시 비밀번호 재설정 보안 규칙(토큰 만료 정책)을 문서화하면 운영 추적성이 좋아진다 (`/spec-create` 검토).
 
 ---
 

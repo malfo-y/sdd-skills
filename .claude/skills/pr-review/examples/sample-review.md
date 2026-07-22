@@ -31,7 +31,7 @@ Claude: PR 리뷰를 시작합니다.
 - 변경 규모: +847 -123, 12개 파일
 - 상태: OPEN
 - 커밋: 2개
-- 공유 slug: auth_system
+- 통합 리포트 slug: auth_system
 ```
 
 ### 병렬 dispatch와 verdict 합성

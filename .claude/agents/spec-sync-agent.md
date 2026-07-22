@@ -32,10 +32,10 @@ model: inherit
 2. 변경 적용 전 `Spec Sync Report`를 먼저 정리한다.
 3. **evidence 없으면 승격 금지**: 실제 코드 + validation evidence가 없는 항목은 현재 사실로 승격하지 않는다. 분류와 기본 routing은 `Status 분류 (Routing)`이 소유한다.
 4. **verified와 planned 분리**: 아직 구현되지 않은 새 heading, bullet, 문장에는 반드시 `🚧 Planned`를 붙여 현재 truth와 구분하고(`## 🚧 Planned ...`, `- 🚧 Planned: ...` 또는 이에 준하는 명시 표식), 검증된 current truth와 planned/미검증 truth를 같은 문단·불릿에 표식 없이 섞어 쓰지 않는다.
-5. temporary spec의 `Touchpoints`, `Implementation Plan`, `Validation Plan`, validation detail, transient risk log를 global spec 본문에 그대로 복사하지 않는다. global spec에는 배경/개념, scope/non-goals/guardrails, key decisions 같은 지속 정보만 남긴다.
+5. draft의 task 상세(Target Files·AC·검증 실행 메모), transient risk log, legacy 산출물의 `Touchpoints`·`Implementation Plan`·`Validation Plan`을 global spec 본문에 그대로 복사하지 않는다. global spec에는 배경/개념, scope/non-goals/guardrails, key decisions 같은 지속 정보만 남긴다.
 6. repo-wide invariant는 아래 `Repo-wide Invariant Test`를 통과할 때만 guardrails 또는 key decisions에 반영한다.
 7. main / supporting / history surface 중 어디에 둘지 먼저 판단하고, 가장 맞는 global surface에만 보수적으로 반영한다.
-8. temporary `Touchpoints` 중 장기적으로 반복 사용될 entrypoint, extension point, invariant hotspot, validation surface만 `Strategic Code Map` 후보로 본다. 나머지 target file / task-level touchpoint는 global spec에 복구하지 않는다.
+8. draft Target Files(및 legacy `Touchpoints`) 중 장기적으로 반복 사용될 entrypoint, extension point, invariant hotspot, validation surface만 `Strategic Code Map` 후보로 본다. 나머지 target file / task-level touchpoint는 global spec에 복구하지 않는다.
 9. 새 sub-spec 파일 생성 시 반드시 main.md 인덱스에 링크를 추가한다. 고아 파일 금지.
 10. 기존 파일 분할 구조를 변경하지 않는다. 파일 추가만 허용, 기존 구조 재편성 금지.
 11. rationale 변화가 실제로 발생했을 때만 lowercase canonical `decision_log.md`를 최소한으로 업데이트한다. legacy uppercase `DECISION_LOG.md`는 read-only fallback으로만 취급한다.
@@ -68,12 +68,12 @@ Negative example:
 
 1. 실제 코드 변경
 2. `_sdd/implementation/*` — plan / progress / review / report (slug 기반 glob: `*_implementation_plan_*.md`, `*_implementation_progress_*.md`, `*_implementation_review_*.md`, `*_implementation_report_*.md`; legacy fallback: `implementation_plan.md`, `implementation_progress.md`, `implementation_review.md`, `implementation_report*.md`)
-3. feature draft Part 1 `Persistent Spec Implications` 및 Part 2 `Contract/Invariant Delta and Coverage` index + 각 task의 `Contracts`/`Validation` (계약 실체·검증 evidence는 task 블록에 있음; slug 기반 glob: `_sdd/drafts/*_feature_draft_*.md`; legacy fallback: `_sdd/drafts/feature_draft_<name>.md`)
+3. lite feature draft Part 1 마커 내부(Change Summary·invariant·분할 목록) + 각 task의 `Contracts`/AC (slug 기반 glob: `_sdd/drafts/*_feature_draft_*.md`; legacy full draft의 Part 2 coverage index `C*`/`I*`·`Persistent Spec Implications`는 기록물 fallback으로만 읽고, 새 planned input requirement로 승격하지 않는다)
 4. 사용자 대화
 5. `_sdd/spec/user_spec.md`, `_sdd/spec/user_draft.md`
 6. lowercase canonical `_sdd/spec/decision_log.md`, legacy uppercase `_sdd/spec/DECISION_LOG.md` fallback
 
-`_sdd/` artifact 경로는 lowercase canonical을 기본으로 하되, 입력을 읽을 때는 legacy uppercase fallback도 허용한다. legacy feature draft 형식은 read fallback으로만 사용하고, 새 planned global input requirement로 승격하지 않는다.
+`_sdd/` artifact 경로는 lowercase canonical을 기본으로 하되, 입력을 읽을 때는 legacy uppercase fallback도 허용한다.
 
 처리 후 rename:
 
@@ -83,12 +83,12 @@ Negative example:
 
 ## Status 분류 (Routing)
 
-각 delta 항목(Part 1 `Persistent Spec Implications`, Part 2 coverage index의 `C*`/`I*` — 계약 실체와 검증 evidence는 `Covered By`가 가리키는 task의 `Contracts`/`Validation`에서 확인, 또는 정규화된 user input)을 실제 코드 + validation evidence 기준으로 아래 4분류 중 하나로 라우팅한다. 임시 실행 메모는 반영 대상이 아니며, global spec에 올리지 않을 항목도 명시적으로 제외/보류 판단한다.
+각 delta 항목(lite draft Part 1 마커 내부의 항목 — 계약 실체·검증 evidence는 task의 `Contracts`/AC와 구현 산출물에서 확인; 정규화된 user input)을 실제 코드 + validation evidence 기준으로 아래 4분류 중 하나로 라우팅한다. 임시 실행 메모는 반영 대상이 아니며, global spec에 올리지 않을 항목도 명시적으로 제외/보류 판단한다.
 
 - **IMPLEMENTED / VERIFIED** (코드 + evidence 있음): 현재 사실로 **무표식 승격**. 가장 맞는 global surface에 current truth로 반영한다.
 - **PARTIAL** (일부 구현 + evidence): 구현·검증된 분은 current 사실로 승격하고, 잔여 미구현분은 `🚧 Planned`로 분리한다.
 - **PLANNED / NOT_IMPLEMENTED** (evidence 없음): `🚧 Planned` 표식으로 반영한다. **evidence가 없으면 이것이 기본 routing이다.**
-- **UNVERIFIED** (코드는 있으나 검증이 약함 — Part 2 coverage / validation evidence와 연결 안 됨): 승격을 **보류**하고 `Open Questions`에 남긴다.
+- **UNVERIFIED** (코드는 있으나 검증이 약함 — task AC·구현 산출물 evidence와 연결 안 됨): 승격을 **보류**하고 `Open Questions`에 남긴다.
 
 lite 분할 draft의 마커 내부에 분할 feature 목록이 있으면, feature 하나당 **개별** `🚧 Planned` 항목으로 반영한다 — 단일 todo로 뭉치지 않는다. 이후 각 feature가 구현·sync될 때 해당 항목만 승격/소거된다.
 
@@ -99,7 +99,7 @@ lite 분할 draft의 마커 내부에 분할 feature 목록이 있으면, featur
 입력이 어디서 왔는지, 그리고 코드/구현 산출물이 존재하는지로 호출 시점을 판단한다.
 
 - 직접 user 요청 / 구조화된 spec input file
-- feature draft Part 1 `Spec Delta` (+ 구현 후라면 Part 2 coverage)
+- feature draft Part 1 `Spec Delta` (+ 구현 후라면 task AC 충족 evidence)
 - `_sdd/implementation/*` 산출물 존재 여부 → 구현 전/후 판별
 
 ### Step 2: Gather Context
@@ -107,7 +107,7 @@ lite 분할 draft의 마커 내부에 분할 feature 목록이 있으면, featur
 다음을 읽는다.
 
 - 현재 global spec (`_sdd/spec/*.md`)
-- feature draft Part 1 `Persistent Spec Implications`, Part 2 coverage index + 해당 task의 `Contracts`/`Validation`
+- lite feature draft Part 1 마커 내부 + 해당 task의 `Contracts`/AC
 - 구현 관련 `_sdd/implementation/*` (있으면)
 - 실제 코드/테스트/설정 (있으면)
 - lowercase canonical `_sdd/spec/decision_log.md`, legacy uppercase fallback
