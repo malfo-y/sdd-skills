@@ -31,7 +31,7 @@ version: 1.0.0
 1. **비발동 (I2)**: 스킬은 `/goal`을 직접 발동하지 않는다. Handoff는 조건 문자열 + 실행법 제시까지이며, 발동은 사용자가 검토 후 직접 한다.
 2. **평가자 자족성 / 4,000자 (I1)**: 완료조건(`DONE WHEN`/`CONSTRAINTS`/`STOP`)은 도구 없이 transcript만으로 판정 가능해야 하고 4,000자 이하여야 한다. 이 두 조건을 통과하지 못하면 Handoff하지 않는다.
 3. **적합성 gate (I3)**: Goal Intake의 적합성 gate를 통과하지 못한 목표로는 Divergence를 진행하지 않는다.
-4. **ralph 불간섭**: `ralph-loop-init` 스킬/agent를 건드리지 않는다. bash `while-true` 루프·`run.sh`·컨테이너 격리를 차용하지 않는다.
+4. **ralph 불간섭**: `ralph-loop-init` 스킬을 건드리지 않는다. bash `while-true` 루프·`run.sh`·컨테이너 격리를 차용하지 않는다.
 5. **산출 경로**: 4파일은 `_sdd/goal/<YYYY-MM-DD>_<slug>/`에만 생성한다. 그 외 경로에 산출물을 만들지 않는다.
 
 ## Key Principles

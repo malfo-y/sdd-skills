@@ -1,19 +1,19 @@
 # Codex Custom Agents
 
-이 디렉토리는 Codex SDD 스킬들이 직접 spawn하는 custom agent 정의를 담는다.
+이 디렉토리는 Codex SDD 스킬 중 custom agent를 직접 spawn하는 일부 스킬의 agent 정의를 담는다. 나머지 스킬(예: `spec-review`, `ralph-loop-init`)은 agent 없이 SKILL.md 본문을 메인 루프가 직접 수행하는 직접 실행 스킬이며, 여기에 등록되지 않는다.
 
 ## Naming
 
 - 파일명은 skill 대응 관계가 바로 보이도록 `kebab-case`를 사용한다.
 - `name` 필드도 `spawn_agent({agent_type: ...})`와 일치하도록 `kebab-case`를 사용한다.
-- wrapper skill은 `.codex/skills/<skill-name>/`에 남고, 실행 backbone은 여기의 custom agent가 맡는다.
+- custom agent를 갖는 skill의 경우, wrapper skill은 `.codex/skills/<skill-name>/`에 남고 실행 backbone은 여기의 custom agent가 맡는다.
 
 ## Ownership
 
 - wrapper skill: 사용자 직접 호출 진입점 + handoff contract
 - custom agent: 상세 workflow 본문 + spawned execution unit
 
-즉, `.codex/skills/<skill-name>/SKILL.md`는 얇은 wrapper이고, 실제 동작 보장은 `.codex/agents/*.toml`의 `developer_instructions`가 담당한다.
+즉, custom agent를 spawn하는 스킬에 한해 `.codex/skills/<skill-name>/SKILL.md`는 얇은 wrapper이고 실제 동작 보장은 `.codex/agents/*.toml`의 `developer_instructions`가 담당한다. 직접 실행 스킬은 SKILL.md가 계약과 동작을 모두 보유한다.
 
 ## Agent Set
 
@@ -21,9 +21,7 @@
 - `implementation-review-agent`
 - `simplicity-review-agent`
 - `pr-review-agent`
-- `spec-review-agent`
 - `spec-sync-agent`
-- `ralph-loop-init-agent`
 
 ## Inline Writing
 
@@ -33,7 +31,6 @@
 - `implementation-review-agent`
 - `simplicity-review-agent`
 - `pr-review-agent`
-- `spec-review-agent`
 
 ## Invocation Contract
 
