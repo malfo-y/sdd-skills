@@ -123,12 +123,12 @@ Placement rules:
 
 - small repo: a short appendix inside `_sdd/spec/main.md`
 - medium or larger repo: a supporting surface such as `_sdd/spec/components.md` or `_sdd/spec/code-map.md`
-- touchpoints / target files / validation detail for a specific change: temporary spec
+- target files / validation detail for a specific change: temporary spec
 - detailed implementation or review explanation for a specific feature: guide
 
 Choose one primary navigation axis. For app, service, or product repositories, prefer feature/domain/change-path. For library, framework, or compiler repositories, prefer module/layer. For workflow or tooling repositories, prefer entrypoint/workflow. Keep secondary axes as cross-references, not parallel authoritative document systems.
 
-`Strategic Code Map` is a hint that can become stale. Feature planning and implementation must still re-check current code before finalizing `Touchpoints` and `Target Files`.
+`Strategic Code Map` is a hint that can become stale. Feature planning and implementation must still re-check current code before finalizing `Target Files`.
 
 ## 5. How repo-wide invariants are handled
 
@@ -146,28 +146,31 @@ Use this rule.
 
 ## 6. Definition of the temporary spec
 
-A temporary spec is not a compressed copy of the global spec. It is the execution blueprint for a change.
+A temporary spec (= feature draft) is not a compressed copy of the global spec. It is the execution blueprint for a change.
 
-Feature-level contract, validation, touchpoints, and task sequencing belong there.
+Feature-level contracts, ACs, and target files belong there.
 
-Canonical 7 sections:
+Canonical structure (the `feature-draft` skill's Required Output is the single source):
 
-1. `Change Summary`
-2. `Scope Delta`
-3. `Contract/Invariant Delta`
-4. `Touchpoints`
-5. `Implementation Plan`
-6. `Validation Plan`
-7. `Risks / Open Questions`
+1. A one-line `> 규모 판정:` (scale verdict) — includes the verdict rationale; value is "fit" or "split needed — split plan included"
+2. `Part 1: Spec Delta` — `Change Summary` and `Scope` (In/Out) inside the `spec-update-todo-input` marker. A split draft also lists the split features here; `spec-sync` consumes the marker contents.
+3. `Part 2: Tasks` — per task: a one-line intent, `Contracts` (only when a new promise is made), falsifiable ACs, measured Target Files. Census-style sweeps end with a read-only verification task.
+4. `Open Questions`
 
 Its purpose is to handle what changes now, what gets touched, and how the change will be verified.
 
-The `Validation Plan` is the single definition point for verification. Each item (`V*`) ties a delta (`C*`/`I*`) to its ACs and follows this rubric — this is where the norm is anchored, and the planning/implementation/review skills implement it.
+Verification is defined next to the execution unit — **each task's ACs** are the single definition point. This is where the rubric is anchored, and the planning/implementation/review skills implement it.
 
 - **AC falsifiability**: every AC must close as met/unmet against evidence. Do not keep an AC for which no observation/evidence could ever say "unmet".
-- **Two evaluation tiers**: the bar is not "measurable" but "evidence-decidable". Allow Tier 1 (quantitative: metric + threshold, reproducible output) and Tier 2 (qualitative rubric judgment: stated criteria + reviewer verdict, cited grounds), but both must (a) close as a binary verdict, (b) bind to external evidence, and (c) be refutable by a third party. Quality/readability ACs are taken as Tier 2.
-- **Full AC↔`V*` correspondence**: no AC without an evaluation method, no `V*` without an AC.
-- **Evidence-bound results**: after execution, each `V*` verdict is recorded bound to evidence (reproducible output or cited grounds). A "met" without evidence is not accepted.
+- **Two evaluation tiers**: the bar is not "measurable" but "evidence-decidable". Allow Tier 1 (quantitative: reproducible test/check output) and Tier 2 (qualitative rubric judgment: stated criteria + reviewer verdict, cited grounds), but both must (a) close as a binary verdict, (b) bind to external evidence, and (c) be refutable by a third party. Quality/readability ACs are taken as Tier 2.
+- **Evidence-bound results**: after execution, every AC verdict is recorded bound to evidence (reproducible output or cited grounds) — the implementation's AC→evidence table and the review's verification ledger are where that lives. A "met" without evidence is not accepted.
+
+Information placement follows "details live in the task":
+
+- The precise statement of a contract (interface/invariant substance) is owned solely by each task's **`Contracts` field** — the anchor downstream implementation executes "without invention".
+- Task-local exploration grounds are owned by that task's Target Files annotations.
+- **Sweep-style verification** spanning multiple tasks (one global run after all tasks — census-like) is not split across tasks; it is promoted to a final read-only verification task (Target Files `없음 (read-only 검증)`).
+- (Legacy) The old full-draft shape — canonical 7 sections, coverage index, `V*` mapping, `Touchpoints` census — is an archival format. New drafts are not required to follow it; apply its rules only when reading archived documents.
 
 ## 7. Information placement rules
 
@@ -224,18 +227,24 @@ Current primary extra axes:
 - guide links
 ```
 
-### Temporary Spec
+### Temporary Spec (Feature Draft)
 
 ```markdown
-# Feature Temporary Spec
+# Feature Draft: [title]
 
-## 1. Change Summary
-## 2. Scope Delta
-## 3. Contract/Invariant Delta
-## 4. Touchpoints
-## 5. Implementation Plan
-## 6. Validation Plan
-## 7. Risks / Open Questions
+> 규모 판정: [one-line verdict rationale — fit | split needed — split plan included]
+
+<!-- spec-update-todo-input-start -->
+# Part 1: Spec Delta
+## Change Summary
+## Scope (In / Out)
+<!-- spec-update-todo-input-end -->
+
+# Part 2: Tasks
+### Task N: [title]
+Contracts (only when present) / Acceptance Criteria / Target Files
+
+# Open Questions
 ```
 
 ## 10. What this means for skills

@@ -42,7 +42,7 @@ model: inherit
 
 severity는 `Critical / High / Medium / Low` 네 단계 표기를 쓰되, simplicity finding은 falsifiable 여부(Hard Rule 4)로 분류한다.
 
-- **Medium (gating, 기본값)**: 5개 차원의 **객관적으로 반증 가능한 위반** — 구체 사례 + 더 단순한 동등 형태를 제시할 수 있는 것. 호출자의 fix 대상이다 (lite 체인에서는 메인 루프가 fix 1회로 반영).
+- **Medium (gating, 기본값)**: 5개 차원의 **객관적으로 반증 가능한 위반** — 구체 사례 + 더 단순한 동등 형태를 제시할 수 있는 것. 호출자의 fix 대상이다 (체인에서는 메인 루프가 fix 1회로 반영).
 - **Low (advisory)**: **주관적 취향** — naming 호불호처럼 동작-불변 동등 형태를 객관 증거로 제시할 수 없는 것. 로그/후속 권고 대상이며 게이팅하지 않는다.
 - **High / Critical (escalation)**: 기본값은 Medium이다. 단순성 위반이 광범위하게 반복되어 유지보수를 실질적으로 위협하면 High로 escalate할 수 있다. correctness 영향(버그·보안)은 이 agent의 표적이 아니므로 escalation 사유로 쓰지 않는다.
 

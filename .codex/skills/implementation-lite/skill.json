@@ -1,6 +1,0 @@
-{
-  "name": "implementation-lite",
-  "description": "This skill should be used when the user asks for \"implementation lite\", \"lite implementation\", \"implement lite draft\", \"라이트 구현\", \"경량 구현\", \"간단히 구현\", \"lite draft 구현\", \"implement the plan\", \"start implementation\", \"execute the plan\", \"구현해줘\", or wants to execute a task set (typically a lite feature draft) with RED→GREEN test-first where the main loop itself writes all code and tests (read-only helper agents allowed; independent tasks may be batched in parallel). Oversized work is closed at a feasible boundary and the remainder split into follow-up lite features.",
-  "instruction_file": "SKILL.md",
-  "version": "1.2.0"
-}

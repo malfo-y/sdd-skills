@@ -112,7 +112,7 @@ User: 1 (지금까지 정리)
 ## 실행 항목 (Action Items)
 | # | 항목 | 우선순위 | 담당 |
 |---|------|---------|------|
-| 1 | JWT 구현 패턴 결정 (별도 토론 or feature-draft-lite) | High | - |
+| 1 | JWT 구현 패턴 결정 (별도 토론 or feature-draft) | High | - |
 | 2 | 마이그레이션 계획 수립 | Medium | - |
 
 ## 리서치 결과 요약 (Research Findings)

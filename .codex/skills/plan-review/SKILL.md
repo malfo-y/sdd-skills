@@ -1,6 +1,6 @@
 ---
 name: plan-review
-description: Use this skill to review a lite feature draft before coding, identify overengineering and sloppy-code risks, and return a findings-first verdict. Triggered by "plan review", "review plan", "draft review", "계획 리뷰", "플랜 리뷰", "구현 계획 리뷰", or when the user wants to check a draft against KISS/YAGNI/DRY/minimum-code principles before implementation.
+description: Use this skill to review a feature draft before coding, identify overengineering and sloppy-code risks, and return a findings-first verdict. Triggered by "plan review", "review plan", "draft review", "계획 리뷰", "플랜 리뷰", "구현 계획 리뷰", or when the user wants to check a draft against KISS/YAGNI/DRY/minimum-code principles before implementation.
 version: 3.0.0
 argument-hint: "[--model <gpt-5.5|gpt-5.4|gpt-5.4-mini>] [--effort <low|medium|high|xhigh>]"
 ---
@@ -38,9 +38,9 @@ review
 
 ## 실행
 
-1. 사용자 요청 + 리뷰 대상 lite draft 경로와 이미 아는 결정을 수집한다 (wrapper는 새 분석 read를 하지 않는다).
+1. 사용자 요청 + 리뷰 대상 draft 경로와 이미 아는 결정을 수집한다 (wrapper는 새 분석 read를 하지 않는다).
 2. `spawn_agent({agent_type: "plan-review-agent", message: <framed payload: Runtime Boundary + review mode + Input Data(사용자 요청 data, 알려진 경로/컨텍스트)>})`로 dispatch하고 `wait_agent`로 final status를 수거한다. final status가 반환된 뒤에만 결과를 기록하고 `close_agent({target: <agent_id>})`로 handle을 닫는다. `wait_agent`가 timeout이면 완료로 간주하지 말고 더 기다리거나, controlled stop/blocked 상태를 사용자에게 보고한 뒤에만 handle 정리를 결정한다. 대상 경로가 불명확하면 agent가 자체 Input 우선순위로 탐색하도록 위임한다.
-3. agent의 경량 반환(Blocker Status, severity별 finding, Lite 적격 검사 결과, smell 6행 판정)을 사용자에게 그대로 relay한다. finding 반영은 호출자(draft 작성자) 소관이다.
+3. agent의 경량 반환(Blocker Status, severity별 finding, 규모 판정 검사 결과, smell 6행 판정)을 사용자에게 그대로 relay한다. finding 반영은 호출자(draft 작성자) 소관이다.
 
 ## 계약 (entrypoint 유지, 흉내 금지)
 

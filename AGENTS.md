@@ -20,8 +20,8 @@
 
 ## 3. SDD 워크플로우
 이 repo는 SDD를 따른다. 단계 순서:
-discussion → feature-draft-lite → plan-review → implementation-lite → implementation-review → spec-sync
-`spec-sync`는 단일 진입점으로, 분할 draft의 planned todo 고정(조건부)과 구현 후 동기화를 evidence 유무로 구분해 수행한다. 각 단계의 구체 스킬은 **설치된 SDD 스킬**을 사용한다. ⚠️ 화살표의 각 단계 이름(discussion·feature-draft-lite·implementation-lite·spec-sync 등)은 **동명의 SDD 스킬**이다. 해당 단계 진입 시 그 스킬을 **호출**하고, 로직을 직접 재구현하지 않는다 — 스킬이 단일 소스다. 스킬 미설치 환경에서만 SDD 개념으로 수동 수행한다. (스킬 카탈로그를 여기 복사하지 않는다 — 최신 스킬셋이 단일 소스다.)
+discussion → feature-draft → plan-review → implementation → implementation-review → spec-sync
+`spec-sync`는 단일 진입점으로, 분할 draft의 planned todo 고정(조건부)과 구현 후 동기화를 evidence 유무로 구분해 수행한다. 각 단계의 구체 스킬은 **설치된 SDD 스킬**을 사용한다. ⚠️ 화살표의 각 단계 이름(discussion·feature-draft·implementation·spec-sync 등)은 **동명의 SDD 스킬**이다. 해당 단계 진입 시 그 스킬을 **호출**하고, 로직을 직접 재구현하지 않는다 — 스킬이 단일 소스다. 스킬 미설치 환경에서만 SDD 개념으로 수동 수행한다. (스킬 카탈로그를 여기 복사하지 않는다 — 최신 스킬셋이 단일 소스다.)
 
 ## 4. 판단 기준이 필요할 때 (가리키기, 복사 금지)
 - scope / 경계 → `_sdd/spec/main.md` §2. Scope / Non-goals / Guardrails
@@ -31,5 +31,5 @@ discussion → feature-draft-lite → plan-review → implementation-lite → im
 ## 5. 작업 기록 (work log)
 - 각 작업 단위 종료 시 예외 없이 `_sdd/work_log/<yyyy-mm-dd>.md`에 항목을 append 한다(그날 파일이 없으면 생성). 작업 단위 = SDD 단계(논의·계획·구현·리뷰) 종료, 또는 그 밖의 독립 커밋. *작성*은 항상, 과거 로그 *읽기*만 on-demand(포렌식, §1 읽기 대상 아님).
 - 항목: `## <순번/HH:MM> <제목>` 아래 `무엇/왜` · `결과` · `포인터`(관련 커밋·문서·decision log 링크) · `요약`(따로 남은 게 없을 때만 인라인).
-- 포인터로 충분하면 `요약` 생략(중복 금지). `_sdd/pipeline/log_*.md`(autopilot 전용)와 별개 트랙 — 수동 작업도 포함.
+- 포인터로 충분하면 `요약` 생략(중복 금지). 수동 작업도 포함.
 <!-- SDD-HARNESS:END -->

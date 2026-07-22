@@ -3,21 +3,21 @@
 **Version**: 2.0.0
 **Date**: 2026-07-22
 
-A guide for the sdd-autopilot meta-skill that runs the SDD lite chain end-to-end without approval steps.
+A guide for the sdd-autopilot meta-skill that runs the SDD chain end-to-end without approval steps.
 
 ---
 
 ## 1. Overview
 
-**sdd-autopilot** takes a single feature request and runs planning, quality gates, implementation, review, and spec synchronization to completion via the **lite chain**. There is no separate execution-plan artifact and no approval step: once requirements are settled, execution starts immediately. The user only answers the initial requirement questions (when needed) and any Open Questions surfaced by the draft.
+**sdd-autopilot** takes a single feature request and runs planning, quality gates, implementation, review, and spec synchronization to completion via the **SDD chain**. There is no separate execution-plan artifact and no approval step: once requirements are settled, execution starts immediately. The user only answers the initial requirement questions (when needed) and any Open Questions surfaced by the draft.
 
-## 2. The Lite Chain
+## 2. The Chain
 
 ```
 Request analysis
-  → feature-draft-lite      (lightweight spec: per-task AC + Target Files, ~1 min)
+  → feature-draft      (feature spec: per-task AC + Target Files, ~1 min)
   → plan-review             (single-pass gate, lightweight return) → fix once
-  → implementation-lite     (main loop writes RED→GREEN directly)
+  → implementation     (main loop writes RED→GREEN directly)
   → implementation-review   (correctness ∥ simplicity 2-reviewer, lightweight return) → fix once
   → spec-sync               (only when persistent spec changes exist)
   → final response summary  (no report files)
@@ -31,13 +31,13 @@ Core principles:
 
 ## 3. Splitting (handling oversized changes)
 
-When a change does not fit in a single context, it is **split into multiple lite features** instead of being escalated to a bigger pipeline:
+When a change does not fit in a single context, it is **split into multiple features** instead of being escalated to a bigger pipeline:
 
 1. The draft becomes a **rolling split draft** — the full feature list goes inside the Part 1 marker, and Part 2 holds only the first feature's tasks.
 2. `spec-sync` pins the split list into the global spec as **one planned todo per feature**.
-3. The lite chain runs for the first feature; each remaining feature later gets its own draft and runs the chain in turn.
+3. The chain runs for the first feature; each remaining feature later gets its own draft and runs the chain in turn.
 
-The canonical split criteria (coverage not eyeball-checkable / exceeds a single context) and the split method live in the `feature-draft-lite` SKILL. Census-style sweeps (renames/propagation) are handled not by splitting but by a mandatory read-only verification task at the end of the draft.
+The canonical split criteria (coverage not eyeball-checkable / exceeds a single context) and the split method live in the `feature-draft` SKILL. Census-style sweeps (renames/propagation) are handled not by splitting but by a mandatory read-only verification task at the end of the draft.
 
 ## 4. Usage
 
@@ -66,7 +66,7 @@ Examples:
 
 | Artifact | Location |
 |----------|----------|
-| lite draft | `_sdd/drafts/<date>_feature_draft_lite_<slug>.md` (renamed with a `_processed_` prefix after spec-sync) |
+| draft | `_sdd/drafts/<date>_feature_draft_<slug>.md` (renamed with a `_processed_` prefix after spec-sync) |
 | code + tests | target files listed in the draft |
 | AC→evidence table | final response (chat) |
 | spec updates | `_sdd/spec/` (via spec-sync only) |
@@ -78,8 +78,8 @@ Examples:
 
 ## 7. Related skills
 
-- `feature-draft-lite` — lightweight feature spec + canonical split rules
+- `feature-draft` — feature spec + canonical split rules
 - `plan-review` — draft quality gate (single pass, lightweight return)
-- `implementation-lite` — main-loop RED→GREEN implementation + canonical stop/split rules
+- `implementation` — main-loop RED→GREEN implementation + canonical stop/split rules
 - `implementation-review` — correctness ∥ simplicity 2-reviewer (lightweight return)
 - `spec-sync` — global spec synchronization (adapts to planned/implemented evidence)
