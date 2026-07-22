@@ -2,8 +2,8 @@
 
 > Markdown 기반 skill bundle로 AI 에이전트의 Spec-Driven Development 워크플로우를 Claude Code와 Codex에서 공통 계약으로 실행한다.
 
-**Spec Version**: 4.5.8
-**Last Updated**: 2026-07-14
+**Spec Version**: 4.6.0
+**Last Updated**: 2026-07-22
 **Status**: Approved
 **Canonical Role**: current thin global spec
 
@@ -82,6 +82,10 @@ SDD Skills는 이 문제를 `SKILL.md = 실행 가능한 프롬프트`라는 관
 - `sdd-autopilot` 생성 orchestrator의 agent invocation은 canonical 이름만 사용한다
   - Codex와 Claude 모두 kebab-case agent invocation을 canonical으로 사용한다(Codex `feature-draft-agent`, Claude `sdd-skills:<agent>-agent`)
   - Legacy alias와 Codex underscore custom agent ID는 normalize하지 않고 reject/regenerate한다
+- `sdd-autopilot`의 기본 레인은 lite fast-path다: orchestrator·pipeline artifact·승인 checkpoint 없이 메인 루프에서 `feature-draft-lite → plan-review`(Tier 2-lite 자가 식별, 단일 패스) `→ implementation-lite → implementation-review → spec-sync` 체인을 실행한다. full 레인(generated orchestrator 파이프라인) 직행은 사용자가 명시 요청한 경우에만 한시 잔존한다 — 🚧 Planned: full 레인 실체 삭제(다음 슬라이스)
+  - 규모 초과의 해소 수단은 오케스트레이션(full 전환)이 아니라 분할이다. lite 표면들은 full 전환을 안내하지 않으며, 단일 컨텍스트를 넘는 변경은 여러 lite feature로 분할한다 — 분할 draft는 롤링 형태(Part 1 마커 내부에 분할 feature 목록, Part 2는 첫 feature의 task만)로 작성하고, 분할 목록은 `spec-sync`(planned)가 feature별 개별 `🚧 Planned` todo로 global spec에 고정한 뒤 첫 feature부터 lite 체인을 순차 실행한다
+  - census형 sweep(같은 대상의 변형 표기가 여러 파일에 흩어진 rename/전파류)은 분할 신호가 아니라 검증 대상이다 — 해당 draft는 마지막 read-only 검증 task(변형 표기 전수 grep census를 AC로)를 필수로 둔다
+  - 분할 판정의 canonical은 lite 표면이 소유한다(`feature-draft-lite` 분할 규칙 / `implementation-lite` 중단·분할 규칙 / `plan-review` Tier 2-lite Lite 적격 검사). autopilot은 신호를 소비만 하고 재정의하지 않는다
 - 계획/구현 계열 스킬의 subagent 모델 override는 런타임별 explicit per-call option으로만 취급한다. 옵션을 생략하면 세션/agent 기본값을 상속하며, persistent custom agent 정의를 수정하지 않는다
   - Claude Code planning/implementation skill group은 `--model <sonnet|opus|haiku|fable>`로 `Agent(...)` 호출의 model만 override한다
   - Codex matching skill group은 `--model <gpt-5.5|gpt-5.4|gpt-5.4-mini>`와 `--effort <low|medium|high|xhigh>`를 분리해 `spawn_agent(...)`의 `model` / `reasoning_effort`를 override한다. `gpt-5.5-high` 같은 결합형 값은 canonical syntax가 아니다
@@ -122,7 +126,8 @@ SDD Skills의 설계는 다음 층으로 나뉜다.
 | task ordering handoff | `task-ordering-agent`는 지정된 feature draft를 읽고 `Status`·`Source`·`Mode`·`Execution`·`Dependencies`·`Checkpoints`·`Notes`만 담은 짧은 Markdown을 부모 orchestrator에 직접 반환하며 `_sdd/implementation/*_implementation_plan_*.md`를 생성하지 않는다. 부모는 `Source`의 task 본문과 이 반환값을 결합해 실행하고, 영속 실행 이력은 orchestrator 소유 progress/report에 남긴다 | ordering은 즉시 소비되고 원본 task-set에서 다시 계산할 수 있는 파생값이므로 독립 persistent artifact로 복제하지 않아도 된다 |
 | 품질 게이트 | AC-First + explicit verification | "should work" 식 추측을 줄이고 종료 조건을 명확히 한다 |
 | 장문 산출물 작성 | producer-owned inline 2-phase writing | skeleton/fill/finalize를 같은 문맥에서 처리해 품질 저하를 줄인다 |
-| 오케스트레이션 | reasoning-based `sdd-autopilot` + generated orchestrator contract | 고정 템플릿보다 현재 맥락에 맞는 pipeline을 구성하되, producer review gate와 implementation dispatch controller 같은 실행 불변조건은 생성물에 명시해야 한다 |
+| 오케스트레이션 | reasoning-based `sdd-autopilot`. 기본 레인은 lite fast-path(메인 루프 스킬 체인, orchestrator·pipeline artifact 없음)이고, generated orchestrator contract 경로는 사용자 명시 full 요청 시에만 한시 잔존(🚧 Planned: full 레인 삭제 — 다음 슬라이스) | 소규모~단일 컨텍스트 변경이 지배적인 흐름에서 orchestrator 생성 비용을 없애되, full 경로가 남아 있는 동안은 producer review gate와 implementation dispatch controller 같은 실행 불변조건을 생성물에 명시해야 한다 |
+| lite 레인 규모 초과 대응 | 승격이 아니라 분할 — lite 표면들은 full 전환을 안내하지 않고, 단일 컨텍스트 초과는 롤링 분할 draft + `spec-sync` planned todo 고정 + feature별 순차 lite 체인으로 해소한다. 분할 판정 canonical은 lite 표면 소유(autopilot은 신호 소비만) | 규모 초과를 더 큰 파이프라인으로 올리면 full 레인 의존이 재생산된다. 분할은 lite의 "단일 컨텍스트 = 품질 전제"를 유지하는 해소 수단이며 full 레인 삭제(🚧 Planned)의 선행 조각이다 |
 | planning precedence | small direct path 외에는 `feature-draft`를 기본 planning entry로 두고 `implementation-plan`은 후속 확장 단계로 사용 | non-trivial 변경에서 peer-choice 혼선을 줄이고 task/phase 분해 기준을 일정하게 유지한다 |
 | plan quality gate | optional `plan-review` review-only gate | 구현 전 Target Files, task boundary, verification weakness, overengineering smell을 findings-first로 드러내되 plan 자체는 수정하지 않는다 |
 | producer 스킬 자체 품질 gate | `feature-draft`/`implementation-plan`/`implementation`이 review→fix→re-review loop를 직접 소유(orchestrator). fix=producer/leaf agent 재dispatch, 산출물 단일 작성자 | autopilot 없이 직접 호출되는 경로에서도 산출물이 reviewer gate를 통과하도록 보장한다. producer/reviewer agent는 sub-agent를 spawn하지 못하므로 loop orchestration은 메인 루프(스킬)가 소유해야 한다 |

@@ -53,12 +53,14 @@
 
 ### Scenario 2b: 대규모 기능 추가 (sdd-autopilot 자동 실행)
 
+> 기본 레인은 lite fast-path다: autopilot은 orchestrator·pipeline artifact 없이 메인 루프에서 `feature-draft-lite → plan-review(Tier 2-lite) → implementation-lite → implementation-review → spec-sync` 체인을 실행하고 report 파일 없이 최종 응답으로 요약한다. 규모 초과는 full 전환이 아니라 lite feature 분할(분할 목록 `spec-sync` planned todo 고정 후 feature별 순차 lite 체인)로 해소한다. 아래 orchestrator 흐름은 사용자가 full 파이프라인을 명시 요청한 경우에만 실행된다 — 🚧 Planned: full 레인 실체 삭제(다음 슬라이스).
+
 **Action:**
 ```bash
 /sdd-autopilot "인증 시스템 구현 — JWT 기반, 로그인/로그아웃/토큰 갱신"
 ```
 
-**Expected Result:**
+**Expected Result (full 레인 — 사용자 명시 요청 시):**
 - Phase 1: sdd-autopilot이 SDD reference를 로딩하고, 인라인 discussion으로 요구사항을 구체화하고, 코드베이스를 탐색한 뒤, reasoning 기반으로 오케스트레이터를 생성하고 구조/철학 12항목을 자동 검증
 - Phase 1.5: 검증된 오케스트레이터 + Pre-flight Check 결과를 사용자에게 제시 → 확인 후 실행
 - Phase 2: `feature-draft`를 기본 planning entry로 사용하고, 해당 producer output은 downstream 소비 전 `plan-review` gate를 통과한다. 필요 시 `(optional) spec-sync -> (required if multi-phase) implementation-plan -> plan-review`로 확장한다. implementation 단계는 `implementation-agent`를 feature/phase 전체 단일 leaf로 호출하지 않고 task-level dispatch controller로 실행한다. multi-phase plan이면 `implementation-plan`의 phase `Checkpoint` 필드로 결정된 group 단위로 `implementation -> review -> fix -> validation` gate를 닫고 (group 내 phase는 light validation만), adaptive `final integration review`(group 1개면 마지막 group gate가 겸함, 2개 이상이면 별도 1회)를 처리한 뒤 인라인 테스트와 `spec-sync`까지 자율 실행한다

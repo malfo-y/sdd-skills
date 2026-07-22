@@ -2,6 +2,12 @@
 
 > 이 파일은 `_sdd/spec/main.md`의 버전별 변경 기록이다.
 
+#### v4.6.0 (2026-07-22)
+
+- **lite 레인 이탈 신호를 "full 승격"에서 "분할"로 교체 (post-implementation sync)**: `sdd-autopilot` 기본 레인이 lite fast-path(`feature-draft-lite` → `plan-review` Tier 2-lite → `implementation-lite` → `implementation-review` → `spec-sync` 메인 루프 체인)임을 spec에 최초 반영. 규모 초과의 해소 수단은 오케스트레이션이 아니라 분할이다 — lite 표면들은 full 전환을 안내하지 않고, 단일 컨텍스트 초과는 롤링 분할 draft + `spec-sync` planned todo(feature별 개별 `🚧 Planned`) + feature별 순차 lite 체인으로 해소한다. 분할 판정 canonical은 lite 표면 소유(autopilot은 신호 소비만), census형 sweep은 분할 신호가 아니라 마지막 read-only 검증 task로 흡수. full 직행은 사용자 명시 요청만 한시 잔존하며 full 레인 실체 삭제는 🚧 Planned(다음 슬라이스).
+- **적용 surface**: §2 Guardrails lite 레인 bullet 신설, §3 오케스트레이션 행 갱신 + "lite 레인 규모 초과 대응" 행 신설, `components.md` lite 스킬 2행 신설·`sdd-autopilot` Notes 갱신, `usage-guide.md` Scenario 2b 노트. 구현은 draft `2026-07-22_feature_draft_lite_escalation_to_split`로 선행 완료(correctness review AC 전부 MET, 승격 어휘 grep census 잔존 0).
+- 버전 참고: v4.5.9는 decision_log에만 기록되고 main.md 헤더·본 changelog 반영이 누락됐었다. v4.6.0에서 헤더를 정정한다.
+
 #### v4.5.8 (2026-07-14)
 
 - **RED 게이트를 2-way에서 3-way triage로 확장**: `implementation` 스킬(및 `sdd-autopilot` 동형 게이트)의 test-first 불변식을 갱신했다. RED 게이트가 wave의 Stage A dispatch 직전에 task AC 성격을 (a) test / (b) structural-check / (c) test-free 3-way로 triage하며, (c) non-falsifiable content(산문·설명 문서·주석)는 Stage A 스킵·RED artifact 면제로 동어반복 acceptance check 강제를 제거한다. (c)는 오직 falsifiable 관찰 대상이 없을 때만 허용("간단한 구현이라서"는 자격 아님)하고, 명시 근거를 RED 증거와 동일한 progress 홈에 기록해 Step 6 리뷰 dispatch 입력에 전달하며(무근거 강등 금지), test만 면제되고 Step 5 회귀 스윕·Step 6 리뷰 게이트는 불면제다. (a)/(b)의 falsifiable 집행 성격은 불변(test-after 차단). graceful-degradation 분기 기준의 canonical surface(`implementation` 스킬 RED 게이트 서술)를 3-way triage 기준까지 포괄하도록 확장.

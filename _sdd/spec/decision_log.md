@@ -1,5 +1,30 @@
 # Decision Log
 
+## 2026-07-22 - lite 레인 이탈 신호를 "full 승격"에서 "분할"로 교체 (v4.5.9 → v4.6.0)
+
+### Context
+
+lite 레인(feature-draft-lite → plan-review Tier 2-lite → implementation-lite)이 autopilot 기본 레인이 되면서, 규모 초과 시 "full 파이프라인 승격"을 안내하는 이탈 신호가 full 레인 의존을 재생산하는 문제가 드러났다. full 레인(generated orchestrator 파이프라인)은 다음 슬라이스에서 삭제 예정이다.
+
+### Decision
+
+1. **규모 초과의 해소 수단은 오케스트레이션이 아니라 분할이다**: lite 표면들은 full 전환을 안내하지 않는다. 단일 컨텍스트를 넘는 변경은 롤링 분할 draft(Part 1 마커에 분할 feature 목록, Part 2는 첫 feature task만) + `spec-sync` planned todo 고정(feature별 개별 `🚧 Planned`) + feature별 순차 lite 체인으로 해소한다. full 직행은 사용자 명시 요청만 한시 잔존한다(full 레인 삭제의 선행 조각).
+2. **분할 판정의 canonical은 lite 표면 소유**: feature-draft-lite 분할 규칙 / implementation-lite 중단·분할 규칙(단일 세션 초과=잔여 분할 마감, 계약 오류 반복=draft 복귀) / plan-review Tier 2-lite Lite 적격 검사(분할 권고). autopilot은 신호를 소비만 한다.
+3. **census형 sweep은 분할 신호에서 제외**: 변형 표기 산개형 변경은 마지막 read-only 검증 task(전수 grep census AC)로 흡수한다.
+
+### Rationale
+
+- 규모 초과를 더 큰 파이프라인으로 올리면 "단일 컨텍스트 = 품질 전제"라는 lite의 근거가 무력화되고 full 레인 삭제가 막힌다. 분할은 그 전제를 유지하는 유일한 해소 수단이다.
+- 계약이 흔들리는 것은 구현 문제가 아니라 계획 문제이므로 해결 장소는 full 전환이 아니라 draft 복귀다(남는 안전장치: 테스트 불변 규칙 + implementation-review Fresh Verification).
+
+### Changes
+
+- 구현(선행 완료, correctness review Task 1~5 AC 전부 MET, 승격 어휘 grep census 잔존 0): `feature-draft-lite`·`implementation-lite` SKILL/skill.json(+codex identical), `plan-review-agent` 쌍(Tier 2-lite 분할 권고), `sdd-autopilot` 쌍 v2.7.0(Lane 판정 축소·Step L 분할 규칙), `spec-sync-agent` 쌍(분할 feature 목록 → feature별 개별 planned todo), `docs/AUTOPILOT_GUIDE.md`
+- `_sdd/spec/main.md` §2 Guardrails lite 레인 bullet 신설 + §3 오케스트레이션 행 갱신·"lite 레인 규모 초과 대응" 행 신설 (v4.6.0)
+- `_sdd/spec/components.md` — `sdd-autopilot` Notes 갱신, `feature-draft-lite`·`implementation-lite` 행 신설
+- `_sdd/spec/usage-guide.md` — Scenario 2b에 기본 레인(lite) 노트 추가, orchestrator 흐름을 full 명시 요청 한정으로 표기
+- 참고: 직전 엔트리(v4.5.9)의 main.md 헤더 반영이 누락돼 헤더가 4.5.8에 머물러 있었다. 본 엔트리에서 4.6.0으로 정정한다.
+
 ## 2026-07-14 - feature-draft Part 2를 "상세는 task, 문서 전역은 index"로 재배치 (v4.5.8 → v4.5.9)
 
 ### Context
