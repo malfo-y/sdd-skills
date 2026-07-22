@@ -1,58 +1,25 @@
 ---
 name: sdd-autopilot
-description: "적응형 오케스트레이터 메타스킬. /sdd-autopilot으로 호출하여 요구사항 분석부터 스펙 동기화까지 end-to-end SDD 파이프라인을 자율 실행한다."
-version: 2.6.0
+description: "SDD 체인 자동 실행 메타스킬. /sdd-autopilot으로 호출하여 요구사항 분석부터 스펙 동기화까지 체인을 무승인으로 끝까지 실행한다."
+version: 3.0.0
 ---
 
 # SDD Autopilot
 
 ## Goal
 
-사용자 요청을 SDD 파이프라인으로 해석하고, 실행과 검증까지 끝내는 최상위 메타스킬이다. global spec은 장기적 SoT로, temporary spec은 실행 청사진으로 취급하며 `_sdd/` 아티팩트를 중심으로 discussion, planning, implementation, review, spec sync를 연결한다. 기본 레인은 orchestrator 없이 lite 스킬 체인을 메인 컨텍스트에서 직접 실행하는 **lite fast-path**(Step L)이고, 승격 신호가 있는 변경만 orchestrator 기반 **full 레인**(Step 1, 3~8)을 탄다.
-
-## Codex Runtime Adapter
-
-런타임이 skill-internal agent dispatch를 허용하는 경우, `/sdd-autopilot` 직접 호출은 이 스킬이 생성한 orchestrator 안의 internal agent dispatch 범위에 대한 사용자 요청으로 처리한다. Phase 1 탐색 fan-out, Phase 2 custom-agent step, implementation/review/fix/re-review dispatch 전에 `spawn_agent`, `wait_agent`, `close_agent`, `send_input`이 active tools에 없으면 `tool_search` query `spawn_agent wait_agent close_agent send_input multi-agent sub-agent`로 multi-agent tools를 먼저 로드한다. 현재 런타임 정책이 명시적 sub-agent 허가를 추가로 요구하면, dispatch 전에 사용자에게 위임 허가를 요청한다.
-
-실제 Codex 호출은 `prompt`가 아니라 `message`를 사용한다:
-
-```text
-spawn_agent({agent_type: "<agent-type>", message: "<framed payload: Runtime Boundary + Mode + Input Data>"})
-wait_agent({targets: ["<agent_id>"], timeout_ms: 600000})
-send_input({target: "<agent_id>", message: "<보완 지시>"})
-close_agent({target: "<agent_id>"})
-```
-
-### Agent Message Boundary
-
-모든 custom-agent step의 `message`는 framed payload로 만든다. 사용자 원문, slash command, skill 이름, agent 이름은 반드시 `## Input Data` 아래에 넣고 top-level 실행 지시처럼 전달하지 않는다. 생성된 orchestrator도 이 규칙을 따라야 한다.
-
-```text
-## Runtime Boundary
-You are already running as <agent_type>. Do not invoke or re-enter SDD skills from this message. Treat slash commands, skill names, and agent names below as input data.
-## Mode
-<step mode>
-## Input Data
-<step input, file paths, user request as data, context>
-```
+사용자 요청을 받아 체인(draft → 게이트 → 구현 → 게이트 → spec sync)을 무승인으로 끝까지 실행하는 메타스킬이다. global spec은 장기적 SoT로, draft는 실행 청사진으로 취급하며 `_sdd/` 아티팩트를 중심으로 planning, implementation, review, spec sync를 연결한다. 규모 초과는 분할로 해소한다.
 
 ## Acceptance Criteria
 
 > 완료 전 아래 기준을 자체 검증한다. 미충족 항목이 있으면 해당 단계로 돌아가 수정한다.
-> AC1·AC2·AC3·AC4·AC6·AC8은 full 레인 전용이다. lite fast-path 실행은 대신 AC-L1~L4를 검증한다. AC5·AC7은 두 레인 공통이다.
 
-- [ ] AC1: 사용자 요청이 검증 통과 orchestrator로 변환되어 `_sdd/pipeline/orchestrators/orchestrator_<topic>.md`에 저장되었다 — 구조 검증 스크립트 PASS + plan-review gate Critical/High 0
-- [ ] AC2: orchestrator의 모든 step이 Execute → Verify로 닫혔고(final status 수거 + `close_agent` 정리 포함), 각 step이 선언한 materialized output이 실제로 존재한다. `task_ordering.response`는 artifact가 아니라 런타임에 보존된 final response로 검증한다
-- [ ] AC3: review 포함 path에서 critical/high/medium finding이 0이 되었거나, 정책이 허용한 carry-over만 근거와 함께 로그에 남았다
-- [ ] AC4: E2E 테스트/검증이 실제 실행되어 PASS/FAIL 판정이 결과 파일(`_sdd/implementation/test_results/` 또는 `ralph/state.md`)에 존재한다. 테스트 건너뛰기 금지 — 실행 불가 시 사유와 수동 검증 방법이 보고서에 있다
+- [ ] AC1: 판정 근거가 draft 상단 `> 규모 판정:` 1줄로 존재한다 (autopilot의 별도 판정 기록 없음)
+- [ ] AC2: plan-review 단일 패스와 implementation-review(경량 반환)가 각각 수행되었고, Critical/High/Medium finding이 fix 1회로 반영되었거나 잔존 finding이 최종 보고에 남았다
+- [ ] AC3: implementation의 AC→증거 테이블과 fix 후 회귀 테스트 1회 결과가 최종 보고에 포함되었다
+- [ ] AC4: spec sync가 수행되었거나 스킵 사유가 최종 보고에 명시되었다
 - [ ] AC5: 테스트/검증 결과가 통과/실패 건수, 실패 원인 요약, 수동 확인 필요 항목과 함께 사용자에게 보고되었다
-- [ ] AC6: `_sdd/pipeline/report_<topic>_<timestamp>.md`가 Step 8 필수 항목을 갖춰 존재한다
-- [ ] AC7: 이번 실행의 `_sdd/spec/` 변경이 모두 `spec-sync-agent` 출력으로만 발생했다 (autopilot 직접 수정 0건)
-- [ ] AC8: Phase 2 진입 전 Step 6 checkpoint의 explicit approval이 로그에 기록되어 있다
-- [ ] AC-L1: lane 판정 근거가 draft 상단 `> Lite 적격:` 1줄로 존재한다 (autopilot의 별도 판정 기록 없음)
-- [ ] AC-L2: plan-review 단일 패스와 implementation-review(경량 반환)가 각각 수행되었고, Critical/High/Medium finding이 fix 1회로 반영되었거나 잔존 finding이 최종 보고에 남았다
-- [ ] AC-L3: implementation-lite의 AC→증거 테이블과 fix 후 회귀 테스트 1회 결과가 최종 보고에 포함되었다
-- [ ] AC-L4: spec sync가 수행되었거나 스킵 사유가 최종 보고에 명시되었다
+- [ ] AC6: 이번 실행의 `_sdd/spec/` 변경이 모두 `spec-sync` 스킬 경유로만 발생했다 (autopilot 직접 수정 0건)
 
 ## Workflow Position
 
@@ -60,102 +27,45 @@ You are already running as <agent_type>. Do not invoke or re-enter SDD skills fr
 User Request
     |
     v
-[sdd-autopilot] -----> 공통 진입
-    |                 |- Pipeline State Detection
-    |                 `- Task Analysis + Lane 판정 (기본: lite)
+[sdd-autopilot] --> Step 0: 상태 확인 (기존 산출물·spec 유무)
     |
-    |-- lite ---------> Step L: Lite Fast-path (무승인 로컬 체인)
-    |                 |- feature-draft-lite
-    |                 |- plan-review (Tier 2-lite, 경량 반환) -> fix 1회
-    |                 |- implementation-lite
-    |                 |- implementation-review (경량 반환) -> fix 1회
-    |                 `- (persistent 변경 시) spec-sync -> 최종 응답 요약
-    |                     * 승격 신호 발생 시 full 레인으로 전환
+    v
+[sdd-autopilot] --> Step 1: 요청 분석 + 인라인 질문 (필요 시)
     |
-    `-- 승격 ---------> Full 레인
-                      Phase 1 (Interactive)
-                      |- Reference Loading
-                      |- Explore agent / local exploration
-                      |- Reasoning -> Orchestrator Generation
-                      `- Orchestrator Verification
-                      Phase 1.5 (Checkpoint)
-                      `- 검증 결과 + 파이프라인 요약 + pre-flight -> 사용자 확인
-                      Phase 2 (Autonomous Execution)
-                      |- 파이프라인 단계 순차 실행
-                      |- implementation-scoped review-fix gate 즉시 실행
-                      |- 테스트 (인라인 or Ralph)
-                      `- 최종 요약 + 보고
+    v
+[sdd-autopilot] --> Step 2: 체인 (무승인 실행)
+                    |- feature-draft
+                    |- plan-review (단일 패스, 경량 반환) -> fix 1회
+                    |- implementation
+                    |- implementation-review (경량 반환) -> fix 1회
+                    `- (persistent 변경 시) spec-sync -> 최종 응답 요약
+                        * 분할 신호 발생 시 분할 규칙으로 처리
 ```
 
 ## Hard Rules
 
-> **레인 스코프**: 기본 레인은 Step L lite fast-path다 — orchestrator·checkpoint·pipeline log를 만들지 않으며, 그 계약은 Step L이 소유한다. 아래 규칙 중 orchestrator·Phase 2를 전제하는 2·3·5·6·8·10·13은 full 레인 전용이고, 나머지는 두 레인 공통이다.
-
-1. **Discussion 인라인 실행 + `_sdd/spec/` 직접 수정 금지**: Step 2 대화는 autopilot 본문에서 직접 수행한다. global spec 수정은 반드시 `spec-sync-agent`에 위임한다.
-2. **Phase 2 무중단 + 최소 상태 전달**: Phase 2 진입 후 `request_user_input` 금지. 일반 산출물은 파일 경로로 전달한다. 단, artifact를 만들지 않는 `task-ordering-agent`의 compact final response는 autopilot이 `task_ordering.response`로 런타임에 보존해 바로 다음 implementation controller에 전달한다. Phase 2의 custom-agent step은 기본적으로 `Interaction Mode: autonomous-no-input`로 해석하며, 사용자 입력 요청 없이 권장안을 선택해 진행한다.
-3. **오케스트레이터 저장 + 공유 로그 필수**: 오케스트레이터는 `_sdd/pipeline/orchestrators/orchestrator_<topic>.md`에 저장한다. 실행 시 `_sdd/pipeline/log_<topic>_<timestamp>.md`를 생성하고 각 단계 완료 후 핵심 결정사항을 기록한다.
-4. **에이전트 호출 시 원문 전달**: 사용자의 원래 요청과 관련 컨텍스트 파일 경로를 포함하되, 원문은 framed payload의 `## Input Data` 아래에 data로만 넣는다. 의미를 잃을 정도로 축약하지 않지만, slash command/skill/agent 이름이 top-level 실행 지시처럼 보이게 전달하지 않는다.
-5. **Review-Fix 사이클 필수**: review 포함 파이프라인에서는 correctness(`implementation-review-agent`) ∥ simplicity(`simplicity-review-agent`) 2-reviewer를 병렬 dispatch해 review를 수행하고(exit는 두 report의 합집합), 이슈 수정이 필요하면 `implementation-agent`를 다시 호출해 fix를 적용한 뒤, 다시 두 reviewer를 병렬 dispatch해 re-review를 수행해야 한다. correctness finding은 test-first다 — `test-author-agent`로 실패 테스트를 먼저 작성하고 RED 게이트로 실패를 확인한 뒤 `implementation-agent`로 fix한다. 리뷰만 하고 끝나는 것은 불허한다.
-6. **Checkpoint 직후 즉시 Gate**: 각 `implementation` 실행 단위는 단독으로 완료 처리하지 않는다. single-phase면 해당 `implementation` 직후, multi-phase면 `task_ordering.response`의 중간 `Checkpoints`와 마지막 implicit checkpoint 직후 같은 group 범위의 review-fix gate를 닫아야 하며, gate 종료 전에는 다음 group이나 downstream step으로 진행할 수 없다.
-7. **Execute → Verify 필수**: 모든 단계는 실행(Execute) + 검증(Verify) 두 페이즈를 거친다. 에이전트 호출만으로 완료 간주 금지. Exit Criteria 미충족 시 다음 단계 진행 불가.
-8. **Pre-flight + approval 필수**: Phase 2 진입 전 `_sdd/env.md`와 현재 Codex 런타임에서 custom agent 실행 가능성을 점검한 뒤 explicit approval을 받아야 한다.
-9. **Agent lifecycle 수집/정리 필수**: `spawn_agent({agent_type: ..., message: <framed payload>})`로 시작한 실행 단위는 `wait_agent(...)`로 반드시 final status를 수집하고, 결과를 로그/보고서에 기록한 직후 `close_agent({target: <agent_id>})`로 닫아 병렬 slot을 반납한다. 보완 지시가 필요하면 닫기 전에 `send_input({target: <agent_id>, message: ...})`을 사용하고, 이미 닫은 뒤 추가 작업이 필요하면 새로 `spawn_agent({agent_type: ..., message: <framed payload>})` 한다. `wait_agent` timeout은 수집 완료가 아니므로 더 기다리거나 controlled stop/abandon을 기록한 뒤에만 닫는다. 여러 agent를 병렬 spawn한 단계는 remaining agent ids를 유지하고, final status가 반환된 handle만 기록·닫은 뒤 remaining이 빌 때까지 `wait_agent({targets: remaining, ...})`를 반복한다.
-10. **로그 기반 상태 관리**: 오케스트레이터는 `_sdd/pipeline/orchestrators/`에 유지. 활성/완료 구분은 로그 파일 status로 판단한다.
-11. 한국어를 기본으로 하되 사용자 언어를 따른다.
-12. spec-less repo에서도 중단하지 않는다. `_sdd/spec/`가 없으면 `_sdd/` workspace bootstrap + code-first fallback reasoning으로 계속 진행하고, 적절한 시점에 `spec-create` 또는 spec sync 단계를 파이프라인에 포함한다.
-13. **계약 우선순위**: 규칙의 canonical home은 `references/orchestrator-contract.md`다. 이 SKILL.md 또는 example과 contract가 충돌하면 contract가 우선한다.
+1. **`_sdd/spec/` 직접 수정 금지**: global spec 수정은 반드시 `spec-sync` 스킬에 위임한다.
+2. **에이전트/스킬 호출 시 원문 전달**: 사용자의 원래 요청과 관련 컨텍스트 파일 경로를 포함하되, custom agent를 spawn하는 스킬에서는 원문을 framed payload의 `## Input Data` 아래에 data로만 넣는다 (framing 규칙은 각 스킬의 Codex Runtime Adapter가 소유).
+3. **Execute → Verify 필수**: 모든 단계는 실행(Execute) + 검증(Verify) 두 페이즈를 거친다. 스킬/에이전트 호출만으로 완료 간주 금지.
+4. **Agent lifecycle 수집/정리 필수**: 체인 스킬이 `spawn_agent(...)`로 시작한 실행 단위는 `wait_agent(...)`로 final status를 수집하고, 결과 기록 직후 `close_agent(...)`로 닫는다. `wait_agent` timeout은 수집 완료가 아니다.
+5. 한국어를 기본으로 하되 사용자 언어를 따른다.
+6. `_sdd/` artifact 경로는 lowercase canonical을 기본으로 하되, 입력을 읽을 때는 legacy uppercase fallback도 허용한다.
+7. spec-less repo에서도 중단하지 않는다. `_sdd/spec/`가 없으면 그대로 진행하고, 구현 완료 후 사용자에게 `spec-create`를 추천한다 (코드가 먼저 존재해야 spec이 실제 구조를 반영한다).
 
 ## Process
 
-### Step 0: Pipeline State Detection (파이프라인 상태 감지)
-
-autopilot 호출 시 기존 파이프라인 상태를 확인한다.
+### Step 0: 상태 확인
 
 | 체크 | 동작 |
 |------|------|
-| `_sdd/pipeline/log_*.md` 스캔 | 미완료 스텝(`pending`/`in_progress`/`failed`) 필터링 |
-| `_sdd/spec/*.md` 존재 확인 | 없으면 spec-less mode로 계속 진행하고, `_sdd/` bootstrap 및 `spec-create`/spec sync 필요성을 오케스트레이터에 기록 |
-| `_sdd/drafts/`, `_sdd/implementation/` 스캔 | 기존 산출물 활용 여부 판단 |
+| `_sdd/drafts/` 스캔 | 같은 주제의 기존 draft가 있으면 재활용 여부를 판단 |
+| `_sdd/spec/*.md` 존재 확인 | 없으면 spec-less mode로 계속 진행 (Hard Rule 7) |
 
-상태별 분기:
-- 미완료 로그 0건 + `_sdd/spec/` 없음 → spec-less mode로 Step 2
-- 미완료 로그 0건 + 산출물 없음 → Step 2
-- 미완료 로그 1건 → 재개 후보 제시
-- 미완료 로그 2건 이상 → 목록 제시 + 선택
-- 미완료 로그 0건 + 산출물 있음 → Step 2에서 활용 여부 판단
+legacy `_sdd/pipeline/` 산출물이 보이면 기록물로 무시한다.
 
-재개를 선택하면 `references/orchestrator-contract.md`의 Resume Contract를 따른다: orchestrator를 현행 계약으로 재검증 → completed step의 출력 artifact 실존 확인 → 미완료/실패 step만 재실행.
+### Step 1: 요청 분석
 
-### Step 1: Reference Loading (레퍼런스 로딩)
-
-> **Full 레인 전용** — Step 2의 lane 판정이 승격일 때만 수행한다. 실행 순서는 Step 0 → Step 2 → (lite면 Step L / 승격이면 Step 1 → Step 3~8)이다. lite fast-path는 이 reference들을 로딩하지 않는다.
-
-아래 companion asset을 읽고 내재화한다.
-
-- `references/sdd-reasoning-reference.md`
-- `references/orchestrator-contract.md`
-- `examples/sample-orchestrator.md`
-
-내재화 대상:
-- SDD 원칙 3개
-- 스킬 의존성 그래프
-- 파이프라인 구성 가이드라인
-- 테스트 전략 판단 기준
-- review-fix 및 final report 규칙
-
-Gate 1→3: reference 로딩 성공 시 Step 3 진행.
-
-### Step 2: Task Analysis + Inline Discussion (요청 분석 + 인라인 토론)
-
-요청에서 다음을 추출하고, 부족한 정보만 `request_user_input`으로 보완한다.
-
-- 기능 설명
-- 기술 키워드
-- 제약 조건
-- 기존 코드와의 관계
-- 시작점/종료점 힌트
-- 테스트 요구사항
-- 스펙 변경 여부
+요청에서 기능 설명, 제약 조건, 기존 코드와의 관계, 테스트 요구사항, 스펙 변경 여부를 추출하고, 부족한 정보만 질문으로 보완한다.
 
 질문 원칙:
 - 1회에 1개 핵심 분기만 묻는다
@@ -163,230 +73,25 @@ Gate 1→3: reference 로딩 성공 시 Step 3 진행.
 - 항상 `충분합니다 -- 진행해주세요` 옵션을 둔다
 - 최대 5회 이내로 정리한다
 
-#### Lane 판정 (기본: lite)
+Gate: 핵심 요구사항이 확정되면 Step 2.
 
-핵심 요구사항이 확정되면 레인을 정한다. 기본은 lite다. 다음의 **명백한** 신호가 있을 때만 full 레인으로 직행한다:
+### Step 2: 체인
 
-- 사용자가 full 파이프라인·오케스트레이터·명시적 병렬 fan-out을 요청했다
-- 요청 규모가 리트머스 "머리 하나에 다 안 담기는가"에 명백히 해당한다 (repo-wide census형 sweep, 단일 컨텍스트를 넘는 규모 — 정밀 기준은 `feature-draft-lite` SKILL의 승격 규칙이 canonical이며 autopilot은 재정의하지 않는다)
+아래 체인을 메인 컨텍스트에서 스킬 단위로 순서대로 실행한다 (각 스킬은 `.codex/skills/<name>/SKILL.md` 본문을 로드해 수행한다). 산출물의 정의는 체인의 각 스킬이 소유한다.
 
-애매하면 lite로 진입한다 — lite draft 작성(~1분)이 곧 판정 비용이고, 승격되어도 lite 산출물이 full 레인 입력으로 재사용된다.
-
-Gate: lite → Step L. 승격 → Step 1(레퍼런스 로딩) 후 Step 3.
-
-### Step L: Lite Fast-path (기본 레인)
-
-단일 컨텍스트로 감당되는 변경의 기본 실행 경로다. orchestrator·pipeline log·report 파일·승인 checkpoint를 만들지 않고, 아래 체인을 메인 컨텍스트에서 스킬 단위로 순서대로 실행한다 (각 스킬은 `.codex/skills/<name>/SKILL.md` 본문을 로드해 수행한다). 산출물의 정의는 체인의 각 스킬이 소유한다.
-
-1. **Draft**: `feature-draft-lite` 스킬을 실행해 lite draft를 작성한다. 스킬의 Lite 적격 판정이 승격이면 아래 승격 전환을 따른다.
-2. **Plan gate + fix 1회**: `plan-review` 스킬로 draft를 단일 패스 리뷰한다 (lite draft는 reviewer가 자가 식별해 Tier 2-lite·경량 반환으로 동작한다). 반환된 Critical/High/Medium finding을 메인 컨텍스트가 draft에 직접 반영한다. re-review는 하지 않는다. "full 승격 권고" finding이면 승격 전환한다.
-3. **구현**: `implementation-lite` 스킬을 실행한다 (RED→GREEN, AC→증거 테이블 마감). 스킬의 승격 규칙이 트리거되면 승격 전환한다.
-4. **Impl gate + fix 1회**: `implementation-review` 스킬을 실행한다 (스킬 경유 호출은 경량 반환이 기본 — correctness ∥ simplicity 2-reviewer; reviewer dispatch는 해당 스킬의 Codex Runtime Adapter가 소유한다). 반환된 Critical/High/Medium finding을 메인 컨텍스트가 직접 수정하고 회귀 테스트 1회로 마감한다. re-review는 하지 않는다. Low finding은 advisory로 최종 보고에만 남긴다.
+1. **Draft**: `feature-draft` 스킬을 실행해 draft를 작성한다. 스킬의 판정이 분할 필요면 아래 분할 규칙을 따른다.
+2. **Plan gate + fix 1회**: `plan-review` 스킬로 draft를 단일 패스 리뷰한다 (단일 패스 경량 반환 — finding을 응답으로 받는다). 반환된 Critical/High/Medium finding을 메인 컨텍스트가 draft에 직접 반영한다. "분할 권고" finding이면 아래 분할 규칙을 따른다.
+3. **구현**: `implementation` 스킬을 실행한다 (RED→GREEN, AC→증거 테이블 마감). 스킬의 중단·분할 규칙이 트리거되면 그 규칙대로 처리한다 (잔여 분할 마감 또는 draft 복귀).
+4. **Impl gate + fix 1회**: `implementation-review` 스킬을 실행한다 (경량 반환 — correctness ∥ simplicity 2-reviewer; reviewer dispatch는 해당 스킬의 Codex Runtime Adapter가 소유한다). 반환된 Critical/High/Medium finding을 메인 컨텍스트가 직접 수정하고 회귀 테스트 1회로 마감한다. Low finding은 advisory로 최종 보고에만 남긴다.
 5. **Spec sync**: persistent spec 변경이 있으면 `spec-sync` 스킬(post-implementation)을 실행한다. spec-less이거나 persistent 변경이 없으면 스킵하고 사유를 보고에 남긴다.
 6. **최종 보고**: report 파일 없이 최종 응답으로 요약한다 — 수행 단계, finding/fix 내역, 테스트 결과, spec sync 여부, 잔존 항목.
 
 규칙:
 
-- **Fix는 게이트당 1회다.** fix로 닫히지 않는 finding이 남으면 loop를 돌지 않고 잔존 finding과 권고를 최종 보고에 남긴다. 같은 finding이 반복 재발하면 그것 자체를 승격 신호로 본다.
-- **승격 판정의 canonical은 lite 표면들이 소유한다** (feature-draft-lite: 승격 규칙 3 / implementation-lite: 승격 규칙 2 / plan-review Tier 2-lite: Lite 적격 검사). autopilot은 신호를 소비만 한다.
-- **승격 전환**: 어느 단계에서든 승격 신호가 뜨면 사용자에게 사유를 알리고, 지금까지의 lite 산출물(draft 등)을 입력으로 Step 1부터 full 레인을 진행한다.
-- **사용자 개입**: 승인 게이트는 없다. 단 draft `Open Questions`에 진행을 막는 항목이 있으면 일반 대화로 질문할 수 있다 — Phase 2 무중단 규칙은 full 레인 전용이다.
-
-### Step 3: Codebase Exploration (코드베이스 탐색)
-
-> Step 3~8은 full 레인 전용이다.
-
-`explorer` 에이전트 또는 로컬 탐색으로 다음을 수집한다.
-
-- 프로젝트 구조
-- 관련 파일/모듈
-- 기존 패턴
-- 테스트 구조
-- `_sdd/spec/` 현황
-- 수정 범위와 예상 리스크
-
-필요하면 구조/도메인/테스트 관점으로 explorer를 병렬 호출한다. 각 explorer는 `wait_agent`가 final status를 반환한 뒤에만 핵심 사실을 요약하고 `close_agent({target: <agent_id>})`로 닫는다. 병렬 호출 시 remaining agent ids가 빌 때까지 반복 수거한다. 결과는 전체 로그가 아니라 핵심 사실만 요약한다.
-
-Gate 3→4: 프로젝트 구조와 관련 파일 식별 완료 → Step 4.
-
-### Step 4: Reasoning → Orchestrator Generation (추론 → 오케스트레이터 생성)
-
-Step 1 내재화 + Step 2~3 결과를 바탕으로 추론한다.
-
-| 판단 항목 | 내용 |
-|-----------|------|
-| 스펙 상태 | global spec 존재 여부와 thin-core relevance 분석. 없으면 spec-less 모드로 진행하되, 사용자에게 `spec-create`로 global spec을 만드는 것을 추천 |
-| 변경 범위 | temporary spec 필요 여부 / planned global update 필요 여부 |
-| 계획 깊이 | 아래 planning precedence 참조. feature-draft는 기본 포함이며, 스킵 조건이 엄격하다 |
-| 검증 수준 | 인라인 테스트 / Ralph / review 포함 여부 |
-| 스킬 순서 | 카탈로그 input/output/pre-condition 기반 |
-| 특수 패턴 | 부분 파이프라인, 팬아웃 병렬, 재개 |
-
-spec-less mode 참고:
-- spec이 없으면 spec-less 모드로 진행한다. `spec-create`를 파이프라인에 자동 배치하지 않고, 사용자에게 구현 완료 후 global spec을 만드는 것을 추천한다. 코드가 먼저 존재해야 spec이 실제 구조를 반영할 수 있기 때문이다.
-- spec-less인 경우에도 feature-draft의 `Part 1: Spec Delta`는 생성할 수 있다. global spec 없이도 delta 기반 reasoning은 가능하다.
-
-planning precedence 메모:
-- **`feature-draft`는 기본 포함이다.** 다음 두 조건 중 하나를 만족할 때만 스킵할 수 있다: (1) 정말 간단한 디버깅 수준의 수정(typo fix, config 값 변경, 로그 한 줄 추가 등)이거나, (2) 해당 주제의 feature-draft artifact가 `_sdd/drafts/`에 이미 존재하는 경우. 그 외에는 small/medium/large 무관하게 `feature-draft`를 반드시 거친다.
-- non-trivial change의 기본 planning entry는 `feature-draft`이며, 그 산출은 **flat task-set**(task 정의만; dependency·phase 없음)이다.
-- **`task-ordering-agent`는 구현 직전 항상 포함한다.** feature-draft flat task-set을 입력받아 dependency·topological parallel wave·multi/single 판정·review checkpoint를 파생한다(late-binding). 파일을 만들지 않고 compact final Markdown을 반환하며, autopilot은 이를 `task_ordering.response`로 런타임에 보존한다. single/multi 무관하게 경유하며 "multi-phase면 별도 plan 필수" 같은 조건 분기는 없다(구 implementation-plan precedence 폐기).
-- `spec-sync`(planned 호출)는 planned persistent global alignment가 실제로 필요한 경우에만 `feature-draft`와 `task-ordering-agent` 사이에 조건부로 넣는다. 동일 `spec-sync`는 구현 전 planned 반영(조건부 1회)과 구현 완료 후 sync(1회)로 최대 2회 호출될 수 있으며, 같은 진입점이 evidence 차이로 동작을 적응한다.
-
-오케스트레이터 생성 규칙:
-- 의존성 그래프 기반 동적 조합
-- `references/orchestrator-contract.md` 계약 준수
-- "구체화된 요구사항"에서 기능 수준 Acceptance Criteria 도출
-- feature draft가 예상되면 아래 downstream linkage를 pipeline reasoning에 반영:
-  - `Part 1: Spec Delta`
-  - `Part 2: Implementation and Validation Plan`
-  - top-level `Risks/Mitigations and Open Questions`
-- Step 4에서 실제로 materialize할 수 있는 산출물은 `_sdd/pipeline/orchestrators/orchestrator_<topic>.md` 하나뿐이다.
-- `_sdd/drafts/*`, `_sdd/implementation/*`, `_sdd/pipeline/log_*`, `_sdd/pipeline/report_*`, 코드/테스트 출력은 future step의 planned output으로 선언할 수는 있지만 이 단계에서 미리 생성하면 안 된다.
-- 각 `implementation` step에는 같은 범위의 review-fix gate가 즉시 붙어야 한다.
-- planning producer(`feature-draft-agent`) output은 downstream 소비 전에 `plan-review-agent` producer review gate를 통과해야 한다. gate 실패 시 finding을 normalize하지 않고 producer 산출물을 reject/regenerate한다. `task-ordering-agent`는 producer가 아니라 ordering 파생 step이며 review-fix gate가 면제된다(self-check만) — plan-review gate를 요구하지 않는다.
-- `task-ordering-agent` final response를 downstream `implementation-dispatch-controller`가 소비하므로 해당 step을 flat single-shot으로 쓰지 않고 `Execution Mode: phase-iterative`와 `Phase Source: task_ordering.response`를 명시한다. controller는 response의 `Source`가 가리키는 feature draft에서 task 본문을 읽고, response의 `Execution`/`Checkpoints`를 제어 신호로 결합한다.
-- Phase 2의 custom-agent step에는 `Interaction Mode: autonomous-no-input`을 기본으로 명시한다. 이 계약에는 `request_user_input` 금지, 권장안 우선 판단, 가정/근거 기록, 안전한 추론이 불가능할 때 질문 대신 `BLOCKED`로 종료하는 fallback이 포함된다.
-- review가 포함된 모든 path에서는 `implementation-agent`/correctness(`implementation-review-agent`) ∥ simplicity(`simplicity-review-agent`) 2-reviewer/re-review를 모두 Codex custom agent step으로 유지한다. 부모 autopilot이 로컬 구현/로컬 리뷰로 대체하면 안 된다.
-- Implementation Dispatch Controller: `implementation-agent`는 GREEN→REFACTOR만 수행하는 단일 task leaf이며 RED를 자체 수행하지 않는다(`references/orchestrator-contract.md` §2 Implementation Dispatch Controller). autopilot은 `task_ordering.response`의 `Execution` 각 phase를 topological parallel wave로 소비하고, `Source` feature draft에서 해당 task 본문을 가져온 뒤(fan-out 직전 file-disjoint 실측 검증) wave마다 3단계로 dispatch한다: (a) `spawn_agent({agent_type: "test-author-agent", ...})` 병렬 dispatch(테스트만 작성) → (b) orchestrator 소유 RED 게이트(실패 증거 + falsifiability 확인) → (c) RED 통과 task에 `spawn_agent({agent_type: "implementation-agent", ...})` 병렬 dispatch(고정 실패 테스트 입력, GREEN→REFACTOR). wave당 1회 3-way triage에서 **test-free**로 분류된 task는 (a)/(b)를 스킵하고 triage 근거를 입력으로 (c)에 함께 spawn한다(경계 기준은 implementation SKILL RED 게이트 canonical surface 참조). wave끼리는 cross-wave 중첩 없이 순차이며, fix는 finding 순차다. 각 leaf는 final status 수거와 기록 직후 `close_agent({target: <agent_id>})`로 닫는다. `Checkpoints`는 병렬 wave와 별개의 review-boundary 신호이며, progress/report는 autopilot이 canonical 경로로 소유한다.
-- 구현 step을 `Step kind: implementation-dispatch-controller`로 선언한다(단일 agent_type step으로 선언하지 않는다). Stage agents로 (a) `test-author-agent` 병렬 spawn → (b) orchestrator 소유 RED 게이트 → (c) `implementation-agent` 병렬 spawn(GREEN→REFACTOR) 3단계를 emit한다.
-- canonical kebab-case custom agent 이름만 허용한다. legacy alias를 발견하면 canonical 이름으로 normalize하지 않고 해당 오케스트레이터를 reject/regenerate한다.
-- Reasoning Trace 3-6 bullet 간결 작성
-- 저장 경로: `_sdd/pipeline/orchestrators/orchestrator_<topic>.md`
-
-Pre-flight Check:
-- `_sdd/env.md`와 대조하여 테스트/리소스 갭 분석
-- `.codex/agents/` custom agent 사용 가능 여부와 병렬 fan-out 리소스 점검
-- 사용자 전역 `~/.codex/config.toml`의 agent depth/concurrency 값은 전제하거나 수정하지 않는다
-
-Gate 4→5: 오케스트레이터 저장 완료 → Step 5.
-
-### Step 5: Orchestrator Verification (오케스트레이터 검증)
-
-오케스트레이터도 planning producer output이다. 구조는 스크립트로, 철학/품질은 reviewer agent로 검증한다. autopilot 본인이 인라인 자기 검증으로 대체하지 않는다.
-
-#### 5.1 구조 검증 (기계)
-
-이 스킬 디렉토리의 `scripts/validate_orchestrator.py`를 실행한다:
-
-```bash
-python3 <skill_dir>/scripts/validate_orchestrator.py _sdd/pipeline/orchestrators/orchestrator_<topic>.md
-```
-
-스크립트가 검사하는 항목(필수 섹션, canonical kebab-case agent 이름, step 필수 필드, phase-iterative ⇒ Phase Source invariant, review-fix gate 필드와 고정 agent 매핑, `fix_targets`의 `low` 미포함, per-group 필수 필드, `Interaction Mode` 값)은 스크립트가 단일 소스다.
-
-- FAIL → finding 기반으로 오케스트레이터를 수정 후 재실행 (최대 2회)
-- 2회 후에도 FAIL → Step 4로 돌아가 재생성 (최대 1회)
-- 그래도 FAIL → BLOCKED. Step 6에서 실행 불가로 보고한다
-
-#### 5.2 철학/품질 검증 (plan-review gate)
-
-구조 검증 PASS 후, `spawn_agent({agent_type: "plan-review-agent", message: <framed payload: Runtime Boundary + orchestrator-review mode + Input Data(orchestrator 경로, references/orchestrator-contract.md 경로, 사용자 원문 요청 data, "Orchestrator Review Mode로 검토")>})`로 dispatch하고 `wait_agent`로 final status를 수거한다. final status가 반환된 뒤에만 결과를 기록하고 `close_agent({target: <agent_id>})`로 닫는다. 검토 rubric(기능 수준 AC, Reasoning Trace 정당화, planning precedence, immediate gate/dispatch controller 해석 가능성, 산출물 handoff 정합성, generation boundary, spec 직접 수정 금지, 입출력 비대)은 plan-review-agent의 Orchestrator Review Mode 계약이 단일 소스다.
-
-결과 분기:
-- Critical/High 없음 → Step 6
-- Critical/High 있음 → Step 4 reject/regenerate (최대 2회). finding을 normalize해서 통과 처리하지 않는다
-- regenerate 상한 도달 → BLOCKED. Step 6에서 잔존 finding과 함께 실행 불가로 보고하고 사용자 결정을 받는다
-
-### Step 6: User Checkpoint (사용자 확인)
-
-Phase 1 마지막 단계다. 아래를 사용자에게 짧게 공유한다.
-
-- 기능 / 파이프라인 요약
-- 시작점 / 종료점
-- 주요 산출물
-- 검증 결과
-- pre-flight 결과 (`_sdd/env.md`, custom agent 사용 가능성, 테스트/리소스 갭)
-- 주된 리스크나 가정
-
-확인 규칙:
-- `request_user_input` 또는 동등한 단일 승인 질문으로 `승인 후 실행`, `파이프라인 수정`, `중단` 중 하나를 받는다
-- Step 5 검증을 통과하지 못한(BLOCKED) 오케스트레이터에는 `승인 후 실행` 옵션을 제공하지 않는다. 잔존 finding을 보여주고 `파이프라인 수정` 또는 `중단`만 제시한다
-- `승인 후 실행`일 때만 Step 7로 진행한다
-- `파이프라인 수정`이면 Step 4 또는 5로 돌아가 오케스트레이터를 조정한 뒤 Step 6을 다시 수행한다
-- `중단`이면 active orchestrator를 유지하고 현재 상태를 로그에 남긴 뒤 종료한다
-
-### Step 7: Autonomous Execution (자율 실행)
-
-Phase 2 진입 후 `request_user_input`은 호출하지 않는다. 마일스톤 텍스트와 로그만 남긴다. custom-agent step은 `Interaction Mode: autonomous-no-input`을 기본값으로 사용하며, 질문 대신 권장안 또는 `BLOCKED` 중 하나를 반환해야 한다.
-
-#### 7.1 파이프라인 초기화
-
-1. `_sdd/pipeline/log_<topic>_<timestamp>.md` 생성
-2. 오케스트레이터를 다시 읽고 파이프라인 단계 확인
-3. 상태 테이블과 step 목록 기록
-
-#### 7.2 파이프라인 실행
-
-`_sdd/pipeline/orchestrators/orchestrator_<topic>.md`를 다시 읽고, 정의된 `Pipeline Steps`를 순서대로 실행한다.
-
-각 step은 `Execute -> Collect -> Record -> Close -> Verify` 순서를 따른다.
-
-- custom-agent step이면 오케스트레이터에 적힌 Codex `agent_type`으로 호출한다.
-- dispatch-controller step(`Step kind: implementation-dispatch-controller`)이면 단일 호출하지 말고 `references/orchestrator-contract.md` §2 Implementation Dispatch Controller대로 wave별 3단계(test-author 병렬 → orchestrator RED 게이트 → impl 병렬)로 실행한다.
-- custom-agent step이면 `wait_agent`가 final status를 반환한 뒤에만 step output/log를 기록하고 `close_agent({target: <agent_id>})`로 handle을 닫는다. 여러 agent를 병렬 spawn한 step은 remaining agent ids를 반복 수거하고, 모든 handle이 final status로 정리된 뒤에만 다음 dispatch group 또는 downstream step으로 진행한다.
-- custom-agent step이면 오케스트레이터의 `Interaction Mode`를 함께 해석한다. 값이 없으면 `autonomous-no-input`으로 간주한다.
-- `implementation` step은 `Step kind: implementation-dispatch-controller`로 선언된다. autopilot은 phase/task metadata를 읽어 각 wave를 (a) `test-author-agent` 병렬 spawn → (b) orchestrator 소유 RED 게이트 → (c) `implementation-agent` 병렬 spawn(GREEN→REFACTOR) 3단계로 실행한다.
-- 로컬 step이면 오케스트레이터에 적힌 skill 또는 명령을 실행한다.
-- step별 필드, 허용 `agent_type`, Exit Criteria, Acceptance Criteria는 오케스트레이터 본문과 `references/orchestrator-contract.md`를 그대로 따른다.
-- 오케스트레이터에 적힌 출력 파일은 현재 step이 실제로 생성한 materialized output과 future step의 planned output을 구분해 해석한다. 각 step은 자신의 선언된 출력만 materialize하며, 아직 실행되지 않은 downstream step의 planned output을 미리 생성하지 않는다.
-- `autonomous-no-input` step을 호출할 때는 framed payload 안에 런타임 지시를 함께 준다: `request_user_input` 또는 동등한 사용자 확인 금지, SDD skill 재진입 금지, 기존 코드/스펙/오케스트레이터/원문 요청에 가장 잘 맞는 권장안을 우선 선택, 모든 핵심 가정과 판단 근거를 출력 파일에 기록, 안전한 추론이 불가능하면 질문 대신 `BLOCKED` 상태와 `blocked_reason`, `why_not_safe_to_assume`, `recommended_next_action`을 남긴다.
-- `autonomous-no-input` step이 사용자 질문만 남기거나 입력 대기를 유도하면 contract violation으로 간주한다. autopilot은 더 강한 no-input 지시로 최대 1회 재-spawn할 수 있고, 재발하면 해당 step을 `BLOCKED` 또는 `failed`로 기록한다.
-- review 포함 path에서는 `test-author-agent`·`implementation-agent`와 correctness(`implementation-review-agent`) ∥ simplicity(`simplicity-review-agent`) 2-reviewer 병렬 호출을 항상 Codex custom agent 호출로 실행한다(exit는 두 report의 합집합). 부모 autopilot이 local test-authoring/implementation/review로 대체하지 않는다.
-- `implementation` step은 단독 완료가 아니다. 같은 범위의 `Review-Fix Loop` exit condition과 required validation이 닫혀야만 해당 step을 `completed`로 기록할 수 있다.
-- single-phase path이거나 `Review-Fix Loop.scope = global`이면 `implementation` step 직후 즉시 global review-fix loop를 수행한다. 이 gate가 닫히기 전에는 `spec-sync-agent`(post-implementation 호출)를 포함한 다음 downstream step으로 진행할 수 없다.
-- `task-ordering-agent` final response를 downstream `implementation-dispatch-controller`가 소비하고 해당 step이 `Execution Mode: phase-iterative`로 선언되어 있으면, autopilot은 `Phase Source: task_ordering.response`의 `Execution`과 `Checkpoints`를 runtime-resolved metadata로 해석한다. Step 4가 추측한 flat phase list로 실행하지 않는다.
-- `scope = per-group`이면 response의 별도 `Checkpoints` 목록에 지정된 phase 직후 review-fix gate를 닫는다. 목록에 없는 phase는 light validation(test/typecheck/exit criteria)만 수행하고 다음 phase로 진행한다. 마지막 phase는 목록 기재 여부와 무관하게 implicit checkpoint다. `Checkpoints`가 `없음`이면 마지막 phase만 경계다.
-- group 내 phase의 light validation이 `critical` 이슈를 잡으면 group boundary forced early로 즉시 review-fix gate를 트리거한다 (mid-group emergency).
-- group review-fix gate에서는 이전 checkpoint 다음 phase부터 현재 checkpoint phase까지를 scope로 correctness(`implementation-review-agent`) ∥ simplicity(`simplicity-review-agent`) 2-reviewer 병렬 실행(exit는 두 report의 합집합) -> 필요 시 `implementation-agent` fix -> 두 reviewer 병렬 re-review 순서를 닫은 뒤 다음 group으로 간다.
-- 현재 group exit criteria가 충족되지 않으면 다음 group으로 넘어가지 않는다. `medium` 이슈도 기본적으로 exit blocker이며, carry-over는 현재 group policy가 명시적으로 허용할 때만 로그와 근거를 남기고 진행한다.
-
-#### 7.3 Review-Fix Loop 해석 + 테스트 실행
-
-오케스트레이터에 `Review-Fix Loop`와 `Test Strategy` section이 있으면, autopilot은 그 선언을 그대로 집행한다. 이 섹션은 파이프라인 마지막에 사후 정리용으로 도는 것이 아니라, 7.2에서 각 `implementation` 실행 직후 붙는 immediate completion gate의 해석 규칙이다.
-- multi-phase path에서 `scope = per-group`이면 각 Checkpoint phase 직후 해당 group 범위로 review-fix와 validation을 즉시 수행한다. **Final integration review (adaptive)**: 그룹 1개면 마지막 group gate가 final을 겸하고, 그룹 2개 이상이면 마지막 group gate 후 cross-group regression 전용으로 1회 추가 실행한다.
-- single-phase path이거나 `scope = global`이면 해당 `implementation` step 직후 즉시 global review-fix loop를 수행한다.
-- review-fix loop의 agent 매핑은 small/medium/large review path 모두 고정이다(correctness ∥ simplicity 2-reviewer 병렬, exit는 두 report의 합집합):
-  - `review = implementation-review-agent`
-  - `review = simplicity-review-agent`
-  - `re-review = implementation-review-agent`
-  - `re-review = simplicity-review-agent`
-  - `fix = implementation-agent`
-- fix 정책(finding 종류별 분기): correctness finding은 test-first다 — `test-author-agent`로 실패 테스트를 먼저 작성하고 orchestrator RED 게이트로 실패를 확인한 뒤 `implementation-agent` leaf로 fix한다. simplicity/refactor finding은 실패 테스트 없이 `implementation-agent` leaf로 직접 fix한다.
-- `scope = global`이든 `scope = per-group`이든 review/fix/re-review를 local inline work로 대체하지 않는다.
-- fix 단계의 `implementation-agent` 재호출은 review finding 하나를 단일 task leaf로 보는 순차 spawn이다. finding의 영향 파일만 Target Files로 전달하며, 초기 구현 dispatch 그룹처럼 병렬화하지 않는다. 각 fix leaf도 `wait_agent`가 final status를 반환한 뒤에만 결과를 기록하고 `close_agent({target: <agent_id>})`로 닫는다.
-- `low` finding은 advisory/logged follow-up으로 기록하며 기본 fix 대상과 gate blocker에 포함하지 않는다.
-- `spec-sync-agent`(post-implementation 호출)는 모든 required implementation-scoped review-fix gate, required validation, 그리고 필요한 경우 final integration review가 닫힌 뒤에만 실행할 수 있다.
-- 이 섹션에서 별도 loop 규칙이나 테스트 규칙을 다시 정의하지 않는다.
-
-#### 7.4 에러 핸들링
-
-에러 처리는 오케스트레이터의 `Error Handling` section과 `references/orchestrator-contract.md`를 따른다.
-`autonomous-no-input` step의 `BLOCKED` 반환은 hang이 아니라 유효한 controlled stop으로 해석하며, autopilot은 `blocked_reason`과 권장 후속 조치를 로그/보고서에 기록한 뒤 오케스트레이터의 분기 규칙에 따라 재시도 또는 중단을 결정한다.
-재시도, 중단, 건너뛰기 결정은 모두 로그에 남긴다.
-
-#### 7.5 마일스톤 보고 + 로그 관리
-
-실행 중에는 마일스톤 텍스트를 출력하고, 상태와 결과를 `_sdd/pipeline/log_<topic>_<timestamp>.md`에 기록한다.
-실행이 끝나면 `_sdd/pipeline/report_<topic>_<timestamp>.md`에 최종 결과를 정리한다.
-로그와 보고서 schema는 오케스트레이터 본문과 `references/orchestrator-contract.md`를 따른다.
-
-### Step 8: Final Summary (최종 요약)
-
-최종 산출물을 점검하고 `_sdd/pipeline/report_<topic>_<timestamp>.md`를 작성한다.
-
-필수 항목:
-1. 뭘 했는가: 실행 단계, 에이전트 목록, 산출물 경로, review-fix 횟수, 테스트 여부
-2. 어떻게 나왔는가: 각 단계 성공/실패, 이슈 해결 상태, 테스트 통과율, 스펙 동기화
-3. 뭘 더 해야 하는가: 미완료 단계, 제한사항/리스크, 후속 작업 제안
-4. Taste Decisions: 파이프라인 중 taste decision으로 분류된 자동 결정 목록
-5. 오케스트레이터 경로 및 상태 확인 (로그 기반)
-6. spec-less로 시작했다면 `spec-create` 또는 spec sync가 완료되었는지, 아니면 후속 작업으로 남는지 명시
-
-## Reference Files
-
-- `references/sdd-reasoning-reference.md`: SDD 철학, skill catalog, reasoning 기준
-- `references/orchestrator-contract.md`: 오케스트레이터/로그 최소 계약
-- `examples/sample-orchestrator.md`: 중규모 기본형 + 대규모 차이점 예시
+- **Fix는 게이트당 1회다.** fix로 닫히지 않는 finding이 남으면 loop를 돌지 않고 잔존 finding과 권고를 최종 보고에 남긴다. 같은 finding이 반복 재발하면 그것 자체를 분할·draft 재설계 신호로 본다.
+- **분할 판정의 canonical은 각 스킬이 소유한다** (feature-draft: 분할 규칙 / implementation: 중단·분할 규칙 / plan-review: 규모 판정 검사). autopilot은 신호를 소비만 한다.
+- **분할 규칙**: 어느 단계에서든 분할 신호가 뜨면 사용자에게 사유를 알리고, draft를 분할 계획으로 만든 뒤(롤링) `spec-sync` 스킬로 분할 todo를 spec에 고정하고, 첫 feature부터 이 체인을 순차 실행한다. 나머지 feature는 각자 차례에 자기 draft부터 다시 이 체인을 탄다.
+- **사용자 개입**: 승인 게이트는 없다. 단 draft `Open Questions`에 진행을 막는 항목이 있으면 일반 대화로 질문할 수 있다.
 
 ## Final Check
 

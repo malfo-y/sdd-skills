@@ -17,13 +17,10 @@
       "skills": [
         "./.claude/skills/discussion",
         "./.claude/skills/feature-draft",
-        "./.claude/skills/feature-draft-lite",
         "./.claude/skills/git",
         "./.claude/skills/goal-init",
         "./.claude/skills/guide-create",
         "./.claude/skills/implementation",
-        "./.claude/skills/implementation-lite",
-        "./.claude/skills/implementation-plan",
         "./.claude/skills/plan-review",
         "./.claude/skills/implementation-review",
         "./.claude/skills/pr-review",
@@ -41,17 +38,13 @@
         "./.claude/skills/second-opinion"
       ],
       "agents": [
-        "./.claude/agents/feature-draft-agent.md",
-        "./.claude/agents/task-ordering-agent.md",
         "./.claude/agents/plan-review-agent.md",
         "./.claude/agents/implementation-review-agent.md",
         "./.claude/agents/simplicity-review-agent.md",
         "./.claude/agents/pr-review-agent.md",
-        "./.claude/agents/implementation-agent.md",
         "./.claude/agents/ralph-loop-init-agent.md",
         "./.claude/agents/spec-review-agent.md",
-        "./.claude/agents/spec-sync-agent.md",
-        "./.claude/agents/test-author-agent.md"
+        "./.claude/agents/spec-sync-agent.md"
       ]
     }
   ]

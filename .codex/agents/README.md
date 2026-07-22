@@ -1,6 +1,6 @@
 # Codex Custom Agents
 
-이 디렉토리는 Codex `sdd-autopilot`과 generated orchestrator가 직접 spawn하는 custom agent 정의를 담는다.
+이 디렉토리는 Codex SDD 스킬들이 직접 spawn하는 custom agent 정의를 담는다.
 
 ## Naming
 
@@ -12,15 +12,11 @@
 
 - wrapper skill: 사용자 직접 호출 진입점 + handoff contract
 - custom agent: 상세 workflow 본문 + spawned execution unit
-- generated orchestrator: custom agents만 직접 spawn
 
 즉, `.codex/skills/<skill-name>/SKILL.md`는 얇은 wrapper이고, 실제 동작 보장은 `.codex/agents/*.toml`의 `developer_instructions`가 담당한다.
 
 ## Agent Set
 
-- `feature-draft-agent`
-- `task-ordering-agent`
-- `implementation-agent`
 - `plan-review-agent`
 - `implementation-review-agent`
 - `simplicity-review-agent`
@@ -28,13 +24,11 @@
 - `spec-review-agent`
 - `spec-sync-agent`
 - `ralph-loop-init-agent`
-- `test-author-agent`
 
 ## Inline Writing
 
 장문 산출물은 별도 writing helper agent에 넘기지 않는다. caller가 같은 흐름에서 skeleton -> fill -> finalize를 수행한다.
 
-- `feature-draft-agent`
 - `plan-review-agent`
 - `implementation-review-agent`
 - `simplicity-review-agent`

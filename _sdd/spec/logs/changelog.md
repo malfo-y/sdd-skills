@@ -2,6 +2,42 @@
 
 > 이 파일은 `_sdd/spec/main.md`의 버전별 변경 기록이다.
 
+#### v4.6.6 (2026-07-22)
+
+- **F5 완료 — `-lite` 개명 승격, F1~F5 전체 완결 (post-implementation sync)**: 스킬 `feature-draft-lite`→`feature-draft`·`implementation-lite`→`implementation`(git mv 4디렉토리, name·version 2.0.0, marketplace 갱신, 미러 identical), 개념 어휘 ~40파일 교체("lite 체인"→"SDD 체인", `> Lite 적격:`→`> 규모 판정:` 소비자 3곳 동시, autopilot Step L→Step 2·AC-L→AC, lite 트리거 별칭 제거), draft 파일명 glob `*_feature_draft_*` 통일(구 lite 파일명 substring 호환), `docs/SDD_SPEC_DEFINITION.md` ko·en 현행 draft 형식 재작성(검증 rubric 사슬 유지, full 구조 어휘 legacy 한정). 개명 census live 표면 잔존 0, 리뷰 게이트 통과(correctness 전 AC MET, simplicity M2 fix).
+- **적용 surface**: `main.md` §1~§3 — F5 todo 완결 승격 + lite 어휘·구명 전면 트림(F2 서술은 "당시 이름"으로 동명 현행 스킬과 구분). `components.md` — 개명 행·Strategic Code Map 경로·마커 앵커 갱신. `usage-guide.md` — Scenario 2/2b 커맨드·체인 서술 개명. F5 draft·분할 계획 원본 draft `_processed_` 마감.
+
+#### v4.6.5 (2026-07-22)
+
+- **F4 완료 — full 레인 삭제 완결을 current truth로 승격 + F5 개명 planned 등록 (post-implementation sync)**: 잔재 폐기(`_sdd/tests/` 20 check 스크립트, test-free triage 확대 draft), 이월 advisory sweep(fdl 쌍 description v1.2.0, impl-review description, AGENTS+하네스 템플릿 4미러 spec-sync 문장 5곳 동일, implementation-review-agent 쌍 Quick Review 섹션 소거, spec-sync·spec-review agent 쌍 입력/감사 계약 lite 기준 재서술 + legacy full 구조는 기록물 fallback 한정), codex pr-review sample 2-reviewer spawn 흐름 재작성, repo 전체 full 어휘 census 2계층(엄격 계층 live 표면 잔존 0 — AGENTS.md:17 re-review 잔재 적발·즉시 fix / 판정 계층 35파일 spot 판정). 리뷰 게이트 통과(correctness H1+M3·simplicity M3 합집합 fix). F5(`-lite` 개명 — 이름+개념 전부, 사용자 확정)를 새 🚧 Planned todo로 등록 — 구현 evidence 없음, PLANNED만.
+- **적용 surface**: `main.md` §2 — F4 todo 소거·완결 승격, 🚧 Planned F5 신설, 개명 유보 문구 해소. §3 — 오케스트레이션·lite 규모 초과 대응 행 갱신. `components.md` — autopilot 행 F4 참조 소거, spec-sync·spec-review 행 lite 기준 계약 반영. `usage-guide.md` 변경 없음.
+
+#### v4.6.4 (2026-07-22)
+
+- **F3 완료 — reviewer 경량 반환 유일화를 current truth로 승격 (post-implementation sync)**: reviewer 4종 쌍(plan-review·implementation-review·simplicity-review·pr-review agent) 경량 반환 유일 mode 재작성(파일 mode·re-review·Tier·Output 파일 템플릿 삭제, tools `Write` 제거 — correctness·pr만 테스트용 Bash 유지), plan-review-agent full rubric 삭제(구 Tier 2-lite 내용이 유일 rubric, 명칭 소멸) + SKILL 쌍 3.0.0, implementation-review SKILL 쌍 7.0.0(경량/파일 분기 제거), pr-review 재설계 4.0.0(agent 경량 반환 + 스킬이 통합 리포트 `_sdd/pr/*_pr_review_*` 1파일만 작성 — 3파일→1파일), autopilot 쌍·GUIDE ko/en "Tier 2-lite" 소비자 정리. census(확장 패턴, 20파일) 잔존 0, 리뷰 게이트 통과(correctness C/H 0·M1, simplicity M6 fix 완료). F4 todo는 🚧 Planned 유지.
+- **적용 surface**: `main.md` §2 — 단일 패스 invariant·reviewer read-only leaf invariant 승격, review guardrail "fix/re-review" 표현 정리, pr-review 2-렌즈 per-agent 리포트 경로 소거, F3 todo 소거(umbrella F4 갱신), plan-review gate 경량 반환 명시. §3 — 오케스트레이션·분할·plan quality gate 행 갱신. `components.md` — reviewer 3행 경량 반환 계약 재서술 + autopilot·feature-draft-lite 행 정리. `usage-guide.md` — plan_review 리포트 파일 서술 교체 + Tier 2-lite 표기 치환.
+
+#### v4.6.3 (2026-07-22)
+
+- **F2 완료 — full 전용 agent·스킬 삭제를 current truth로 승격 (post-implementation sync)**: agent 쌍 4종(`feature-draft-agent`·`task-ordering-agent`·`test-author-agent`·`implementation-agent`) 8파일 + 스킬 쌍 3종(`feature-draft`·`implementation`·`implementation-plan`) 6디렉토리 삭제, 등록 표면 lite 기준 정리(marketplace.json skills 21/agents 7, `.codex/agents/README.md`, README Subagent Model Override 목록 3종 축소), `implementation-lite` v1.2.0 일반 구현 트리거 흡수("병렬 구현" 폐기), AGENTS.md + 하네스 템플릿 4미러 SDD 흐름 lite 체인 갱신, `docs/en/AUTOPILOT_GUIDE.md` 2.0.0 재작성, dangling 참조 정리. census 잔존 = F3 소관 reviewer 쌍 + `SDD_SPEC_DEFINITION.md`(F4). 리뷰 게이트 통과(correctness 전 AC MET, simplicity fix 반영). F3~F4 todo는 🚧 Planned 유지.
+- **적용 surface**: `main.md` §1 entrypoint 예시 / §2 F2 todo 소거·producer loop·test-first·2-렌즈·multi-phase ordering·feature-draft Part 2 guardrail lite 기준 재서술(test-first canonical = `implementation-lite` SKILL, 대체 안전장치 = 테스트 불변 규칙 + implementation-review Fresh Verification) / §3 삭제 컴포넌트 행 제거·갱신. `components.md` 삭제 행 4개 제거 + Code Map 재지정. `usage-guide.md` Scenario 2 수동 lite 체인 재작성.
+
+#### v4.6.2 (2026-07-22)
+
+- **F1 완료 — `sdd-autopilot` full 파트 제거를 current truth로 승격 (post-implementation sync)**: autopilot SKILL 쌍 v3.0.0 lite 체인 전용 재작성(Step 0 상태 확인 → Step 1 요청 분석 → Step L, orchestrator·Lane 판정·full 레인 서술 0, skill.json 쌍 동일), 부속 references/examples/scripts 쌍 삭제, `docs/AUTOPILOT_GUIDE.md` 2.0.0 재작성, 복구 보험 git tag `full-lane-final`(407e08e) 생성. census: autopilot 표면 full 어휘 잔존 0(허용 예외: GUIDE의 tag 복구 안내 1회), 삭제 자산 참조 잔존은 F2·F3 예정 표면 8파일 + 기록물뿐. 리뷰 게이트 통과(correctness C/H/M 0 전 AC MET, simplicity M2 fix 반영). F2~F4 todo는 🚧 Planned 유지.
+- **적용 surface**: `main.md` §2 — autopilot bullet을 lite 체인 전용 current truth로 갱신, generated orchestrator guardrail 소거(plan-review handoff gate 삭제, canonical agent invocation은 skill 일반 규칙으로 재프레임), 공통 loop 정책 출처를 삭제된 `orchestrator-contract.md` §6에서 guardrail 본문 단일 소스로 이관, 🚧 Planned F1 항목 소거(umbrella todo는 F2~F4 잔여로 갱신). §3 — 오케스트레이션 행 갱신, "autopilot producer handoff gate" 행·generated orchestrator `implementation-dispatch-controller` 구조 판단 제거. `components.md` — `sdd-autopilot` 행 lite 전용 재작성, Code Map의 삭제 파일 2행(orchestrator contract·planning graph reference) 제거, stale autopilot 참조 2건 교정(implementation-plan gate source·test-author 호출 주체). `usage-guide.md` — Scenario 2b를 lite 체인 기준으로 재작성(full Expected Result·`_sdd/pipeline/` 산출물 서술 제거).
+
+#### v4.6.1 (2026-07-22)
+
+- **full 레인 삭제 확정 — 4-feature 분할 todo 고정 (pre-implementation planned sync)**: v4.6.0의 "🚧 Planned: full 레인 실체 삭제 — 다음 슬라이스" 단일 항목을 롤링 분할 draft(`2026-07-22_feature_draft_lite_full_lane_removal`) 기반의 개별 🚧 Planned todo F1~F4(F1 autopilot full 파트 제거 / F2 full 전용 agent·스킬 삭제+등록 정리 / F3 reviewer full 기계장치 트림 / F4 잔재 정리+최종 census)로 구체화·대체. 복구 보험은 삭제 직전 git tag `full-lane-final`. 구현 evidence 없음 — 전 항목 PLANNED, 승격 없음.
+- **적용 surface**: §2 Guardrails 분할 todo 블록 신설, §3 오케스트레이션 행 marker 갱신, `components.md`·`usage-guide.md` marker를 §2 todo 참조로 갱신, decision_log entry 신설.
+
+#### v4.6.0 (2026-07-22)
+
+- **lite 레인 이탈 신호를 "full 승격"에서 "분할"로 교체 (post-implementation sync)**: `sdd-autopilot` 기본 레인이 lite fast-path(`feature-draft-lite` → `plan-review` Tier 2-lite → `implementation-lite` → `implementation-review` → `spec-sync` 메인 루프 체인)임을 spec에 최초 반영. 규모 초과의 해소 수단은 오케스트레이션이 아니라 분할이다 — lite 표면들은 full 전환을 안내하지 않고, 단일 컨텍스트 초과는 롤링 분할 draft + `spec-sync` planned todo(feature별 개별 `🚧 Planned`) + feature별 순차 lite 체인으로 해소한다. 분할 판정 canonical은 lite 표면 소유(autopilot은 신호 소비만), census형 sweep은 분할 신호가 아니라 마지막 read-only 검증 task로 흡수. full 직행은 사용자 명시 요청만 한시 잔존하며 full 레인 실체 삭제는 🚧 Planned(다음 슬라이스).
+- **적용 surface**: §2 Guardrails lite 레인 bullet 신설, §3 오케스트레이션 행 갱신 + "lite 레인 규모 초과 대응" 행 신설, `components.md` lite 스킬 2행 신설·`sdd-autopilot` Notes 갱신, `usage-guide.md` Scenario 2b 노트. 구현은 draft `2026-07-22_feature_draft_lite_escalation_to_split`로 선행 완료(correctness review AC 전부 MET, 승격 어휘 grep census 잔존 0).
+- 버전 참고: v4.5.9는 decision_log에만 기록되고 main.md 헤더·본 changelog 반영이 누락됐었다. v4.6.0에서 헤더를 정정한다.
+
 #### v4.5.8 (2026-07-14)
 
 - **RED 게이트를 2-way에서 3-way triage로 확장**: `implementation` 스킬(및 `sdd-autopilot` 동형 게이트)의 test-first 불변식을 갱신했다. RED 게이트가 wave의 Stage A dispatch 직전에 task AC 성격을 (a) test / (b) structural-check / (c) test-free 3-way로 triage하며, (c) non-falsifiable content(산문·설명 문서·주석)는 Stage A 스킵·RED artifact 면제로 동어반복 acceptance check 강제를 제거한다. (c)는 오직 falsifiable 관찰 대상이 없을 때만 허용("간단한 구현이라서"는 자격 아님)하고, 명시 근거를 RED 증거와 동일한 progress 홈에 기록해 Step 6 리뷰 dispatch 입력에 전달하며(무근거 강등 금지), test만 면제되고 Step 5 회귀 스윕·Step 6 리뷰 게이트는 불면제다. (a)/(b)의 falsifiable 집행 성격은 불변(test-after 차단). graceful-degradation 분기 기준의 canonical surface(`implementation` 스킬 RED 게이트 서술)를 3-way triage 기준까지 포괄하도록 확장.

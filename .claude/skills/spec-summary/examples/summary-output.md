@@ -30,14 +30,14 @@
 |---|---|---|
 | Global spec anchor | `_sdd/spec/main.md`, `_sdd/spec/components.md`, `_sdd/spec/usage-guide.md` | repo-level 판단 기준과 supporting surface가 어디에 놓이는지 보여준다 |
 | Temporary execution model | `.codex/skills/feature-draft/SKILL.md`, `.codex/skills/implementation/SKILL.md`, `.codex/skills/implementation-review/SKILL.md` | 계획, 실행, 리뷰가 어떤 skill로 이어지는지 드러낸다 |
-| Orchestration layer | `.codex/skills/sdd-autopilot/SKILL.md`, `.codex/skills/sdd-autopilot/references/sdd-reasoning-reference.md` | end-to-end 파이프라인이 어떤 규칙으로 조합되는지 설명한다 |
+| Orchestration layer | `.codex/skills/sdd-autopilot/SKILL.md` | end-to-end 체인이 어떤 규칙으로 이어지는지 설명한다 |
 | Summary surface itself | `.codex/skills/spec-summary/SKILL.md`, `.codex/skills/spec-summary/references/summary-template.md` | whitepaper output contract와 section expectation의 직접 근거다 |
 
 ### Usage / Expected Results
 - how to use or read this project:
   - `/discussion`으로 방향과 개념을 정리한다.
   - `/feature-draft`로 temporary spec과 구현 범위를 고정한다.
-  - `/implementation`과 `/implementation-review`로 실행과 검증을 닫는다.
+  - `/implementation`와 `/implementation-review`로 실행과 검증을 닫는다.
   - `/spec-summary`는 현재 구조를 사람이 읽기 좋은 whitepaper로 정리한다.
 - expected result:
   - 독자는 `summary.md`만 읽어도 문제, 동기, 핵심 설계, 코드 근거, 사용 흐름을 연결해서 말할 수 있다.

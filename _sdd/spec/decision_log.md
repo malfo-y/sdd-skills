@@ -1,5 +1,124 @@
 # Decision Log
 
+## 2026-07-22 - F5 완료: `-lite` 개명 승격 — F1~F5 전체 완결 (v4.6.5 → v4.6.6, post-implementation sync)
+
+### Context
+
+분할 todo F5(자체 draft: `_sdd/drafts/_processed_2026-07-22_feature_draft_lite_rename_drop_lite.md`)가 구현·리뷰 게이트(correctness C/H/M 0 전 AC MET·simplicity M2 fix 완료)를 통과했다. 실측: 스킬 디렉토리 `feature-draft`·`implementation` 존재(-lite 부재, git mv 4디렉토리), name·version 2.0.0 동기, marketplace JSON 유효 + lite 참조 0, 개명 스킬 미러 identical, live 표면(`.claude/`·`.codex/`·`.claude-plugin/`·`docs/`·`README.md`·`AGENTS.md`) 개명 census 잔존 0, autopilot Step 0→1→2, `> 규모 판정:` 마커 소비자 3곳 교체 확인.
+
+### Decision
+
+1. **F5 개명을 current truth로 승격, F1~F5 전체 완결 기록**: 🚧 Planned F5 todo를 소거하고 완결 서술로 대체한다. full 레인 삭제 + `-lite` 개명이 모두 끝나 분할 계획 원본 draft를 `_processed_` 마감한다.
+2. **`_sdd/spec/` 3파일 lite 어휘·구명 트림** (F5 draft가 spec-sync 소관으로 명시): 구명 → 새 스킬명, "lite 체인"→"SDD 체인"/"체인", "lite draft"→"draft", "Lite 적격 검사"→"규모 판정 검사", components.md의 실존하지 않는 `-lite` 경로 → 새 경로. F2 서술의 full 스킬 쌍 3종은 "당시 이름 `feature-draft`·`implementation`·`implementation-plan`"으로 한정해 F5 개명 후 동명 현행 스킬과 구분한다. 구 "Tier 2-lite" 명칭 소멸 서술은 legacy 이름 인용이라 유지한다.
+3. **어휘 계약 확정**: 마커 `> Lite 적격:` → `> 규모 판정:`(값 "적격"/"분할 필요 — 분할 계획 포함"), 검사명 "규모 판정 검사", draft 파일명 glob `*_feature_draft_*` 통일(기존 lite 파일명 substring 하위호환), lite 트리거 별칭 제거.
+
+### Changes
+
+- `main.md` 4.6.6 — §1 entrypoint 예시 개명. §2: F5 todo 소거·F1~F5 완결 승격, F2 서술 동명 구분, 체인·마커 어휘 전면 교체. §3: 실행 분리·오케스트레이션·규모 초과 대응·planning precedence·implementation test-first·code map 행 갱신
+- `components.md` — `feature-draft`·`implementation` 행 개명(경로·버전 포함), autopilot·plan-review·spec-sync·spec-review 행 어휘 교체, Strategic Code Map 경로 갱신
+- `usage-guide.md` — Scenario 2/2b 커맨드·체인 서술 개명
+- F5 draft·분할 계획 원본 draft `_processed_` 이동 (F1~F5 완결로 분할 계획 마감)
+
+## 2026-07-22 - F4 완료: full 레인 삭제 완결 승격 + F5 개명 planned 등록 (v4.6.4 → v4.6.5, post-implementation sync)
+
+### Context
+
+분할 todo F4(자체 draft: `_sdd/drafts/2026-07-22_feature_draft_lite_residue_cleanup.md`)가 구현·리뷰 게이트(correctness H1+M3·simplicity M3 — 합집합 fix 완료)를 통과했다. 실측: `_sdd/tests/` 20 스크립트·test-free triage 확대 draft 부재, 이월 advisory sweep(fdl 쌍 description v1.2.0·impl-review description·AGENTS+템플릿 4미러 spec-sync 문장 5곳 동일·Quick Review 섹션 소거·spec-sync/spec-review agent 쌍 lite 기준 재서술) grep 확인, codex pr-review sample 2-reviewer spawn 흐름 재작성, census 2계층 — 엄격 계층 live 표면 full 고유 식별자 잔존 0(AGENTS.md:17 re-review 잔재 1건 적발·즉시 fix), 판정 계층 35파일 spot 판정 완료. 동시에 분할 계획 원본 Part 1 마커에 F5(개명)가 사용자 확정으로 추가됐다 — 미구현.
+
+### Decision
+
+1. **full 레인 실체 삭제 완결을 current truth로 승격**: F1~F4 전부 구현·sync 완료. 🚧 Planned F4 todo(umbrella 포함)를 소거하고 완결 서술로 대체한다. census 허용 예외는 `_sdd/` 기록물·AUTOPILOT_GUIDE tag 복구 안내·`docs/SDD_SPEC_DEFINITION.md`(F5 소관)다.
+2. **F5 개명을 새 🚧 Planned todo로 등록 (사용자 확정)**: v4.6.1에서 "삭제 완료 후 별도 판단"으로 유보했던 `-lite` 접미사 개명이 이름+개념 전부 교체로 확정됐다 — 스킬 `feature-draft-lite`→`feature-draft`·`implementation-lite`→`implementation`, 개념 어휘("lite 체인"→"SDD 체인"·"lite draft"→"draft"·`> Lite 적격:` 마커), `docs/SDD_SPEC_DEFINITION.md` 정합, `_sdd/spec/` 잔여 full 서술·lite 개념 어휘 트림, draft 파일명 glob 양쪽 호환, 자체 census. 구현 evidence 없음 — PLANNED로만 반영.
+3. **spec-sync·spec-review 입력/감사 계약의 lite 기준화 승격**: 입력 draft는 lite 구조(Part 1 마커 + task AC) 기준이고, full draft 구조(coverage index·`Covered By`·`Touchpoints` census)는 legacy 기록물 fallback/감사 시에만 적용된다.
+
+### Changes
+
+- `main.md` 4.6.5 — §2: 🚧 Planned F4 블록을 완결 서술로 승격·소거, 🚧 Planned F5 신설, "삭제 범위 밖"에서 개명 유보 문구 해소. §3: 오케스트레이션 행(F1~F4 완결 + F5 planned)·lite 규모 초과 대응 행(F1~F4 완료) 갱신
+- `components.md` — `sdd-autopilot` 행의 "잔여 full 표면 정리 todo F4" 참조 소거, `spec-sync`·`spec-review` 행에 lite 기준 입력/감사 계약 반영
+- `usage-guide.md` — 무효화 서술 없음(변경 없음)
+- F4 draft `_processed_` 이동. 분할 계획 원본은 F5 입력으로 유지(F5 완료 시 처리)
+
+### Context
+
+분할 todo F3(자체 draft: `_sdd/drafts/2026-07-22_feature_draft_lite_reviewer_trim.md`)가 구현·리뷰 게이트(correctness C/H 0·M1, simplicity M6 — 합집합 fix 완료)를 통과했다. 실측: reviewer 4종 쌍 + plan-review 3.0.0·implementation-review 7.0.0·pr-review 4.0.0 SKILL 쌍 + autopilot 쌍·GUIDE ko/en 계 22파일 working tree 변경, full 기계장치 어휘 census(Tier·re-review·Iteration·리포트 저장·`_pr_correctness_` 등, 20파일 대상) 잔존 0, 4 agent tools에 `Write` 부재 확인.
+
+### Decision
+
+1. **새 invariant — reviewer read-only leaf**: reviewer agent 4종(`plan-review-agent`·`implementation-review-agent`·`simplicity-review-agent`·`pr-review-agent`)은 판정만 반환하며 tools에 `Write`가 없다(correctness 계열 2종만 테스트 실행용 `Bash` 유지). 리포트 파일 작성은 호출자 소관이다(작성자 불변식의 reviewer 적용).
+2. **새 invariant — 단일 패스 유일**: 리뷰에 re-review·iteration 기계장치는 없고, finding 반영은 호출자 fix 1회다. v4.6.3에서 F3 판정으로 미뤄 둔 "공통 loop 정책의 reviewer-side 잔존"은 삭제로 판정 완료.
+3. **plan-review full rubric 삭제**: Tier 체계·coverage index·V* 1:1·Touchpoints census·Orchestrator Review Mode 전부 삭제, 구 Tier 2-lite 내용(AC falsifiability·Target Files 실측·task boundary·6-smell·Lite 적격 검사·분할 권고)이 유일 rubric으로 승격. "Tier 2-lite" 명칭은 소멸(유일 mode라 이름 불요), 구 Tier 3 input-readiness report는 "대상 없음 + 안내 1줄"로 대체.
+4. **pr-review 재설계 (사용자 확정)**: 두 reviewer는 경량 반환(finding별 위치·문제·수정 제안 — 통합 리포트의 유일 소스)으로 응답하고, pr-review 스킬(메인 루프)이 통합 리포트 `_sdd/pr/<YYYY-MM-DD>_pr_review_<slug>.md` 1파일만 직접 작성한다(구 3파일 구조에서 축소, 통합 리포트가 finding 전문 게재).
+
+### Changes
+
+- `main.md` 4.6.4 — §2: review guardrail을 "fix 또는 명시적 잔여 이슈 보고"로 조정하고 단일 패스 invariant·reviewer read-only leaf invariant를 승격(orchestrator 단일 작성자 guardrail과 병합), pr-review 2-렌즈 서술에서 per-agent 리포트 경로(`_pr_correctness_`·`_simplicity_review_`) 소거, "Tier 2-lite" 명칭 2곳 치환, plan-review gate에 경량 반환 명시, 🚧 Planned F3 todo 소거(umbrella는 F4 잔여로 갱신). §3: 오케스트레이션·분할·plan quality gate 행 갱신
+- `components.md` — `plan-review`·`implementation-review`·`pr-review` 행을 경량 반환 계약으로 재서술, autopilot·feature-draft-lite 행의 Tier 2-lite/F3 참조 정리
+- `usage-guide.md` — Scenario 2의 plan_review 리포트 파일 산출 서술을 경량 반환으로 교체, Tier 2-lite 표기 2곳 치환
+- F3 draft `_processed_` 이동. 분할 계획 원본은 F4 입력으로 유지
+
+## 2026-07-22 - F2 완료: full 전용 agent·스킬 삭제를 current truth로 승격 (v4.6.2 → v4.6.3, post-implementation sync)
+
+### Context
+
+분할 todo F2(자체 draft: `_sdd/drafts/2026-07-22_feature_draft_lite_full_surfaces_removal.md`)가 구현·리뷰 게이트(correctness 전 AC MET, simplicity fix 반영)를 통과했다. 실측: agent 4종 쌍 8파일·스킬 3종 쌍 6디렉토리 부재, marketplace.json skills 21/agents 7(JSON 유효), implementation-lite v1.2.0 트리거 흡수, AGENTS.md + 하네스 템플릿 4미러 lite 체인, census 잔존은 F3 소관 reviewer 쌍 + `SDD_SPEC_DEFINITION.md`(F4)뿐.
+
+### Decision
+
+1. **full 전용 실행 유닛 부재를 current truth로 승격**: `feature-draft-agent`·`task-ordering-agent`·`test-author-agent`·`implementation-agent` 쌍과 `feature-draft`·`implementation`·`implementation-plan` 스킬 쌍은 존재하지 않는다. 등록 표면은 lite 체인 기준이다.
+2. **트리거 흡수 (사용자 확정)**: 일반 구현 요청 트리거("implement the plan"·"start implementation"·"execute the plan"·"구현해줘" 계열)는 `implementation-lite`가 유일 수신 경로다. "병렬 구현" 계열 트리거는 폐기.
+3. **출제자·응시자 분리의 대체 안전장치**: test-author leaf 분리 + orchestrator RED 게이트 대신, implementation-lite의 테스트 불변 규칙(RED 후 테스트 약화·수정 금지, 계약 오류는 선언 후 재-RED) + implementation-review Fresh Verification이 test-first 퇴화를 막는다.
+4. reviewer 표면의 full 기계장치 서술(plan-review-agent full Tier 등)은 F3에서 판정하므로 이번 sync에서 보존한다.
+
+### Changes
+
+- `main.md` 4.6.3 — §1 entrypoint 예시 lite 치환. §2: F2 todo 소거(승격 서술로 대체, umbrella는 F3~F4로 갱신), producer 스킬 review-fix loop guardrail을 lite gate(단일 패스 + fix 1회) 기준으로 재서술, implementation 2-reviewer gate·test-author/RED 게이트·multi-phase ordering(`Checkpoints`)·feature-draft Part 2 배치 guardrail을 삭제/lite 기준 재서술(test-first canonical surface = `implementation-lite` SKILL), 직교 2-렌즈 적용 지점을 pr-review로 한정, model override 대상을 review 계열 3종으로 축소. §3: task ordering handoff·producer 품질 gate·multi-phase quality gate 행 제거, 실행 분리·오케스트레이션·planning precedence·test-first·2-렌즈·override 행 lite 기준 갱신
+- `components.md` — `feature-draft`·`implementation-plan`·`implementation`·`test-author-agent` 행 제거, `implementation-lite` 행에 트리거 흡수 반영, Platform Notes skill/agent split 재서술, Code Map의 Implementation orchestrator/leaf 행 → Lite implementation contract, Feature planning map consumer 행 → feature-draft-lite 재지정
+- `usage-guide.md` — Scenario 2를 수동 lite 체인으로 재작성
+- F2 draft `_processed_` 이동. 분할 계획 원본은 F3·F4 입력으로 유지
+
+## 2026-07-22 - full 레인 삭제 확정 및 4-feature 분할 todo 고정 (v4.6.0 → v4.6.1, pre-implementation planned sync)
+
+### Context
+
+v4.6.0에서 "full 레인 실체 삭제 — 다음 슬라이스"로 예고된 삭제가 롤링 분할 draft(`_sdd/drafts/2026-07-22_feature_draft_lite_full_lane_removal.md`)로 확정됐다. 구현 전 planned sync — 코드/삭제 evidence는 아직 없다.
+
+### Decision
+
+1. **full 레인(generated orchestrator 파이프라인)을 삭제하고 lite 체인을 유일 실행 경로로 만든다.** 근거: lite 품질이 full 대비 동등한데 훨씬 빠름 / full급 복잡도는 분할로 해소하는 것이 더 안전 / 분기 제거로 하네스 단순화·전파 표면 축소. 복구 보험은 삭제 직전 git tag `full-lane-final`.
+2. **단일 planned 항목을 4-feature 순차 todo로 대체 고정한다**: F1 `sdd-autopilot` full 파트 제거 / F2 full 전용 agent 4종·스킬 3종 쌍 삭제 + 등록 표면 정리 / F3 reviewer full 기계장치 트림 / F4 잔재 정리 + 최종 census. 각 feature는 자기 차례에 lite draft를 새로 만들고, 구현·sync되면 해당 todo만 승격·소거한다.
+3. **Out 고정**: lite 체인 자체의 기능 변경, 레인 무관 스킬(spec 파이프라인·pr-review·ralph·discussion 등), `-lite` 접미사 개명(삭제 완료 후 별도 판단)은 이 삭제 범위 밖이다.
+
+### Changes
+
+- `main.md` §2 Guardrails에 🚧 Planned F1~F4 분할 todo 블록 신설(기존 "다음 슬라이스" 단일 표기 대체), §3 오케스트레이션 행 marker 갱신, 헤더 4.6.1
+- `components.md` `sdd-autopilot` Notes·`usage-guide.md` Scenario 2b의 planned marker를 main.md §2 todo 참조로 갱신
+- 구현 없음 — 전 항목 PLANNED. draft 파일은 F1 구현 입력으로 유지되므로 `_processed_` 이동하지 않음(post-implementation sync 때 처리)
+
+## 2026-07-22 - lite 레인 이탈 신호를 "full 승격"에서 "분할"로 교체 (v4.5.9 → v4.6.0)
+
+### Context
+
+lite 레인(feature-draft-lite → plan-review Tier 2-lite → implementation-lite)이 autopilot 기본 레인이 되면서, 규모 초과 시 "full 파이프라인 승격"을 안내하는 이탈 신호가 full 레인 의존을 재생산하는 문제가 드러났다. full 레인(generated orchestrator 파이프라인)은 다음 슬라이스에서 삭제 예정이다.
+
+### Decision
+
+1. **규모 초과의 해소 수단은 오케스트레이션이 아니라 분할이다**: lite 표면들은 full 전환을 안내하지 않는다. 단일 컨텍스트를 넘는 변경은 롤링 분할 draft(Part 1 마커에 분할 feature 목록, Part 2는 첫 feature task만) + `spec-sync` planned todo 고정(feature별 개별 `🚧 Planned`) + feature별 순차 lite 체인으로 해소한다. full 직행은 사용자 명시 요청만 한시 잔존한다(full 레인 삭제의 선행 조각).
+2. **분할 판정의 canonical은 lite 표면 소유**: feature-draft-lite 분할 규칙 / implementation-lite 중단·분할 규칙(단일 세션 초과=잔여 분할 마감, 계약 오류 반복=draft 복귀) / plan-review Tier 2-lite Lite 적격 검사(분할 권고). autopilot은 신호를 소비만 한다.
+3. **census형 sweep은 분할 신호에서 제외**: 변형 표기 산개형 변경은 마지막 read-only 검증 task(전수 grep census AC)로 흡수한다.
+
+### Rationale
+
+- 규모 초과를 더 큰 파이프라인으로 올리면 "단일 컨텍스트 = 품질 전제"라는 lite의 근거가 무력화되고 full 레인 삭제가 막힌다. 분할은 그 전제를 유지하는 유일한 해소 수단이다.
+- 계약이 흔들리는 것은 구현 문제가 아니라 계획 문제이므로 해결 장소는 full 전환이 아니라 draft 복귀다(남는 안전장치: 테스트 불변 규칙 + implementation-review Fresh Verification).
+
+### Changes
+
+- 구현(선행 완료, correctness review Task 1~5 AC 전부 MET, 승격 어휘 grep census 잔존 0): `feature-draft-lite`·`implementation-lite` SKILL/skill.json(+codex identical), `plan-review-agent` 쌍(Tier 2-lite 분할 권고), `sdd-autopilot` 쌍 v2.7.0(Lane 판정 축소·Step L 분할 규칙), `spec-sync-agent` 쌍(분할 feature 목록 → feature별 개별 planned todo), `docs/AUTOPILOT_GUIDE.md`
+- `_sdd/spec/main.md` §2 Guardrails lite 레인 bullet 신설 + §3 오케스트레이션 행 갱신·"lite 레인 규모 초과 대응" 행 신설 (v4.6.0)
+- `_sdd/spec/components.md` — `sdd-autopilot` Notes 갱신, `feature-draft-lite`·`implementation-lite` 행 신설
+- `_sdd/spec/usage-guide.md` — Scenario 2b에 기본 레인(lite) 노트 추가, orchestrator 흐름을 full 명시 요청 한정으로 표기
+- 참고: 직전 엔트리(v4.5.9)의 main.md 헤더 반영이 누락돼 헤더가 4.5.8에 머물러 있었다. 본 엔트리에서 4.6.0으로 정정한다.
+
 ## 2026-07-14 - feature-draft Part 2를 "상세는 task, 문서 전역은 index"로 재배치 (v4.5.8 → v4.5.9)
 
 ### Context

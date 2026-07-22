@@ -1,6 +1,0 @@
-{
-  "name": "implementation-lite",
-  "description": "This skill should be used when the user asks for \"implementation lite\", \"lite implementation\", \"implement lite draft\", \"라이트 구현\", \"경량 구현\", \"간단히 구현\", \"lite draft 구현\", or wants to execute a small task set (typically a lite feature draft) with RED→GREEN test-first where the main loop itself writes all code and tests (read-only helper agents allowed; independent tasks may be batched in parallel). When implementation writing itself must fan out to multiple agents, use implementation (full) instead.",
-  "instruction_file": "SKILL.md",
-  "version": "1.0.0"
-}

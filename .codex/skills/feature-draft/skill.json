@@ -1,6 +1,6 @@
 {
   "name": "feature-draft",
-  "description": "This skill should be used when the user asks to \"feature draft\", \"draft feature\", \"feature plan\", \"plan feature\", \"draft and plan\", \"feature draft parallel\", \"parallel feature draft\", \"병렬 기능 초안\", \"parallel feature plan\", or wants to combine requirements gathering, spec patch drafting, and implementation planning with Target Files for parallel execution support.",
+  "description": "This skill should be used when the user asks to \"feature draft\", \"draft feature\", \"기능 초안\", \"기능 명세\", \"계획 잡아줘\", or wants a feature spec for a change that fits in a single context — task breakdown with Target Files and falsifiable AC. Oversized changes are split into multiple features via a rolling split plan.",
   "instruction_file": "SKILL.md",
-  "version": "2.1.0"
+  "version": "2.0.0"
 }

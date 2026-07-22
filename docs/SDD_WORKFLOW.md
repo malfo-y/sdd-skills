@@ -7,10 +7,8 @@
 ```text
 discussion
   -> global direction 정리
-  -> temporary spec 또는 feature draft
-  -> implementation plan
-  -> implementation
-  -> review-fix loop
+  -> feature draft (plan-review 게이트 + fix 1회)
+  -> implementation (implementation-review 게이트 + fix 1회)
   -> verification
   -> global spec sync
 ```
@@ -44,11 +42,8 @@ global spec은 모든 단계의 출발점이지만, 모든 detail의 저장소�
 여기서 다루는 것:
 
 - change summary
-- scope delta
-- contract / invariant delta
-- touchpoints
-- implementation plan
-- validation plan
+- scope (In/Out)
+- task별 contracts / AC / target files
 
 즉 구현에 가까운 질문은 temporary surface에서 해결한다.
 

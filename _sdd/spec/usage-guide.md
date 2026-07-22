@@ -31,27 +31,28 @@
 - `CLAUDE.md` 생성 또는 업데이트 — `→ AGENTS.md 참조` 포인터로 harness를 단일 소스로 가리킨다
 - 사용자에게 요약 테이블 제시 후 전체 스펙 출력
 
-### Scenario 2: 대규모 기능 추가 (수동 Full SDD Workflow)
+### Scenario 2: 기능 추가 (수동 SDD Workflow — SDD 체인)
 
 **Action:**
 ```bash
-/feature-draft           # non-trivial change의 기본 planning entry
-/spec-sync               # (구현 전) planned persistent truth가 실제로 필요할 때만
-/implementation-plan     # Part 2만으로 부족하거나 phase/task breakdown이 필요할 때만
-/plan-review             # optional: 구현 전 계획 품질/과잉 설계 점검
-/implementation          # TDD 기반 코드 작성
-/implementation-review   # 계획 대비 검증
+/feature-draft           # planning entry — task + Target Files(실측) + AC 중심 draft
+/spec-sync               # (구현 전) 분할 draft planned todo 고정 또는 planned persistent truth가 실제로 필요할 때만
+/plan-review             # optional: 구현 전 계획 품질/과잉 설계 점검 (단일 패스 경량 반환)
+/implementation          # 메인 루프 직접 RED→GREEN test-first 구현
+/implementation-review   # 계획 대비 fresh verification
 /spec-sync               # (구현 후) 코드 변경사항을 스펙에 동기화
 ```
 
 **Expected Result:**
-- `_sdd/drafts/<YYYY-MM-DD>_feature_draft_<slug>.md` — 스펙 패치 초안 + 구현 태스크 리스트
-- `_sdd/spec/<project>.md` 업데이트 — planned persistent truth 반영
-- `_sdd/implementation/<YYYY-MM-DD>_implementation_plan_<slug>.md` — 필요한 경우 생성되는 Target Files 기반 phase/task 실행 계획
-- `_sdd/implementation/<YYYY-MM-DD>_plan_review_<slug>.md` — optional 구현 전 계획 리뷰. Critical/High finding이 있으면 구현 전 blocker로 취급
+- `_sdd/drafts/<YYYY-MM-DD>_feature_draft_<slug>.md` — 스펙 패치 초안(Part 1 마커) + 구현 태스크 리스트(Part 2)
+- `_sdd/spec/<project>.md` 업데이트 — planned persistent truth 반영(조건부)
+- optional 구현 전 계획 리뷰(`plan-review`)는 리포트 파일 없이 경량 반환으로 finding을 응답 — Critical/High finding이 있으면 구현 전 blocker로 취급하고 fix는 메인 루프가 1회 수행
+- 구현은 메인 루프가 직접 작성하고 AC→증거 테이블로 마감(별도 plan artifact 없음). 단일 컨텍스트 초과면 분할 규칙(롤링 draft + planned todo 고정 + feature별 순차 체인)으로 해소한다
 - 구현 완료 후 구현 리뷰와 spec sync까지 연결돼 스펙과 코드 간 드리프트가 설명 가능한 상태
 
 ### Scenario 2b: 대규모 기능 추가 (sdd-autopilot 자동 실행)
+
+> autopilot(v3.0.0)은 SDD 체인 전용이다. 규모 초과는 feature 분할(분할 목록 `spec-sync` planned todo 고정 후 feature별 순차 체인)로 해소한다. 구 orchestrator 기반 full 파이프라인은 제거됐다 — 복구는 git tag `full-lane-final`, legacy `_sdd/pipeline/` 산출물은 기록물이다.
 
 **Action:**
 ```bash
@@ -59,12 +60,10 @@
 ```
 
 **Expected Result:**
-- Phase 1: sdd-autopilot이 SDD reference를 로딩하고, 인라인 discussion으로 요구사항을 구체화하고, 코드베이스를 탐색한 뒤, reasoning 기반으로 오케스트레이터를 생성하고 구조/철학 12항목을 자동 검증
-- Phase 1.5: 검증된 오케스트레이터 + Pre-flight Check 결과를 사용자에게 제시 → 확인 후 실행
-- Phase 2: `feature-draft`를 기본 planning entry로 사용하고, 해당 producer output은 downstream 소비 전 `plan-review` gate를 통과한다. 필요 시 `(optional) spec-sync -> (required if multi-phase) implementation-plan -> plan-review`로 확장한다. implementation 단계는 `implementation-agent`를 feature/phase 전체 단일 leaf로 호출하지 않고 task-level dispatch controller로 실행한다. multi-phase plan이면 `implementation-plan`의 phase `Checkpoint` 필드로 결정된 group 단위로 `implementation -> review -> fix -> validation` gate를 닫고 (group 내 phase는 light validation만), adaptive `final integration review`(group 1개면 마지막 group gate가 겸함, 2개 이상이면 별도 1회)를 처리한 뒤 인라인 테스트와 `spec-sync`까지 자율 실행한다
-- `_sdd/pipeline/orchestrators/orchestrator_<topic>.md` — 실행 중 authoritative orchestrator contract
-- `_sdd/pipeline/log_<topic>_<ts>.md` — 파이프라인 실행 로그 (Meta + Status 테이블 + 각 에이전트 시작/완료, 결정사항, 에러)
-- `_sdd/pipeline/report_<topic>_<ts>.md` — 최종 실행/검증 요약과 잔여 이슈 보고
+- Step 0~1: 기존 `_sdd/drafts/` 산출물 재활용·spec 유무를 확인하고 요청을 분석한다(부족한 정보만 인라인 질문, 승인 게이트 없음)
+- Step 2: `feature-draft → plan-review(단일 패스 경량 반환) → fix 1회 → implementation → implementation-review(경량 반환) → fix 1회 → (persistent 변경 시) spec-sync` 체인을 무승인으로 실행한다. 분할 신호가 뜨면 분할 규칙(롤링 draft + planned todo 고정 + feature별 순차 체인)으로 처리한다
+- `_sdd/drafts/<YYYY-MM-DD>_feature_draft_<slug>.md` — 실행 청사진이 되는 draft
+- report 파일 없이 최종 응답 요약 — 수행 단계, finding/fix 내역, 테스트 결과, spec sync 여부, 잔존 항목
 - 구현 완료 + 스펙 동기화 완료
 
 ### Scenario 3: PR 기반 스펙 동기화

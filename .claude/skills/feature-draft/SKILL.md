@@ -1,57 +1,86 @@
 ---
 name: feature-draft
-description: This skill should be used when the user asks to "feature draft", "draft feature", "feature plan", "plan feature", "draft and plan", "feature draft parallel", "parallel feature draft", "병렬 기능 초안", "parallel feature plan", or wants to combine requirements gathering, spec patch drafting, and implementation planning with Target Files for parallel execution support.
-version: 4.1.0
-argument-hint: ["[--model <sonnet|opus|haiku|fable>]"]
+description: This skill should be used when the user asks to "feature draft", "draft feature", "기능 초안", "기능 명세", "계획 잡아줘", or wants a feature spec for a change that fits in a single context — task breakdown with Target Files and falsifiable AC. Oversized changes are split into multiple features via a rolling split plan.
+version: 2.0.0
 ---
 
-# Feature Draft (Orchestrator)
+# Feature Draft
 
-이 스킬은 **메인 루프 orchestrator**다. `feature-draft-agent`를 dispatch해 draft를 생성하고, `plan-review-agent`로 **review→fix→re-review loop**를 돌려 산출물 품질 gate를 자체 소유한다. agent는 draft producer 단일 소스이고 스킬이 loop를 소유한다 — producer/reviewer agent는 sub-agent를 spawn하지 못하므로 loop orchestration은 메인 루프(스킬)의 책임이다.
+구현에 필요한 기능 명세 및 계획 작성. 단일 컨텍스트로 감당되는 변경의 기본 경로다. 산출물의 정의는 아래 Required Output이 전부다.
 
-feature-draft는 **입력이 대화에서 태어나는** 스킬이다. agent는 파일은 read하나 이번 세션의 대화는 못 읽으므로, orchestrator가 대화 맥락 digest를 정리해 **생성·fix 라운드 모두에** 전달한다.
+## 분할 규칙 (작성 전 판정 + 작성 중 상시 감시)
+
+둘 중 하나에 해당하면 하나의 draft로 강행하지 않는다 — **분할한다**. 규모 초과의 해소 수단은 더 큰 파이프라인이 아니라 분할이다.
+
+1. **coverage 눈검산 불가**: 변경 요소(계약·수정 지점)와 task의 대응이 다대다로 얽혀 "모든 변경 요소가 어느 task에서 처리되는지"를 눈으로 검산할 수 없다.
+2. **단일 컨텍스트 초과**: 작업 총량이 한 세션에서 품질 저하 없이 끝날 규모를 넘는다.
+
+리트머스: **"머리 하나에 다 안 담기는가?"** 담기면 단일 draft, 안 담기면 쪼갠다. 새 contract/invariant(다른 코드·문서·미래 작업이 새로 의지하게 될 약속)가 생겨도, 소수이고 눈검산 가능하면 단일 draft 적격이다 — 해당 task의 `Contracts`에 적는다.
+
+**분할 방법 (롤링)**: 분할 필요 판정이면 이 draft 파일이 곧 분할 계획이다. Part 1 마커 내부에 분할 feature 목록(feature당 1줄 의도 + scope)을 적는다 — `spec-sync` 스킬이 마커 내부를 소비해 feature별 planned todo로 global spec에 고정한다. Part 2에는 **첫 feature의 task만** 작성한다. 나머지 feature는 각자 차례에 자기 draft를 새로 만든다.
+
+**census형 sweep은 분할 대상이 아니라 검증 대상이다**: rename/전파류처럼 같은 대상의 변형 표기(kebab/underscore/공백/글롭)가 여러 파일에 흩어져 전수 열거 없이는 수정 잔존이 재발하는 변경은, Part 2 마지막에 read-only 검증 task(변형 표기 전수 grep census를 AC로, Target Files `없음 (read-only 검증)`)를 필수로 둔다.
+
+판정 결과와 근거를 draft 상단에 1줄 기록한다 — 값은 "적격" 또는 "분할 필요 — 분할 계획 포함".
 
 ## Process
 
-> **Model override**: `$ARGUMENTS`에 `--model <name>`이 있으면 이 스킬의 모든 `Agent(...)` 호출(생성·fix mode·review 포함)에 `model=<name>`을 추가한다. `<name>`은 `sonnet`·`opus`·`haiku`·`fable` 중 하나여야 하며, 그 외 값이면 dispatch하지 않고 사용자에게 허용값을 안내한다. 미지정 시 model을 생략한다(세션 기본값 상속).
+1. **맥락 수집**: 요구사항의 원천은 이번 대화다(메인 루프가 이미 보유). spec/코드 탐색은 Target Files와 AC를 실측으로 뒷받침할 만큼만 한다.
+2. **분할 판정**: 위 분할 규칙 점검. 판정 근거 1줄 확정 (census형 신호가 있으면 검증 task를 Part 2 마지막에 예약).
+3. **draft 작성**: Required Output 구조로 작성한다. **task는 단일 의도를 가지고 자기 AC만으로 완료 판정이 닫히는 실행 단위다** — 의도가 두 문장이면 두 task로 쪼개고, 다른 task의 결과를 봐야 완료를 판정할 수 있으면 경계를 다시 긋는다.
+4. **surface**: 저장 후 Open Questions 중 사용자 확인이 필요한 항목만 채팅에 1줄씩 노출한다. 없으면 "사용자 확인이 필요한 항목 없음" 1줄.
 
-### Step 1: 맥락 digest 수집
+## Required Output
 
-다음을 수집한다:
-- 사용자 요청 원문 + 인자
-- 이미 아는 경로·산출물(관련 `_sdd/spec/*`, 직전 draft/discussion 경로 등)
-- **대화에만 있는 맥락 digest**: 이번 세션에서 합의된 요구사항·결정·제약·기각한 대안을 주제 기준으로 정리.
+파일: `_sdd/drafts/<YYYY-MM-DD>_feature_draft_<slug>.md` (`slug`는 소문자 snake_case)
 
-### Step 2: 생성 (producer dispatch)
+```markdown
+# Feature Draft: [title]
 
-`Agent(subagent_type="sdd-skills:feature-draft-agent", prompt=<요청 + 경로 + 대화 맥락 digest>)`로 **생성 mode** dispatch한다. agent가 draft를 `_sdd/drafts/<YYYY-MM-DD>_feature_draft_<slug>.md`에 저장하고 경로 + Step 9 surface 결정을 반환한다.
+> 규모 판정: [판정 근거 1줄 — 값은 "적격" 또는 "분할 필요 — 분할 계획 포함"]
 
-### Step 3: review-fix loop
+<!-- spec-update-todo-input-start -->
+# Part 1: Spec Delta
 
-산출 직후 review→fix→re-review loop를 닫는다. **공통 loop 정책**(autopilot `references/orchestrator-contract.md` §6 Review-Fix Contract 차용):
+## Change Summary
+[무엇이 왜 바뀌는가. **새 contract/invariant 약속이 생기면 여기 1줄씩 명시한다** — `spec-sync` 스킬이 이 마커 내부를 global spec 반영 입력으로 소비한다.]
 
-- **exit 조건**: `critical=high=medium=0`.
-- **MAX**: 기본 3 iteration.
-- **re-review scope**: loop 범위(draft) **전체 재리뷰** (변경분만 아님).
-- **1 iteration 경계**: `review/re-review → finding>0이면 fix → 산출물 갱신`.
-- **MAX 도달 분기**: critical/high 잔존 → 중단·사용자 보고. medium만 잔존 → 로그 후 진행(advisory degrade).
+## Scope
+- **In**: ...
+- **Out**: ...
+<!-- spec-update-todo-input-end -->
 
-단계:
+# Part 2: Tasks
 
-1. **review**: `Agent(subagent_type="sdd-skills:plan-review-agent")`로 draft Part 2(+Part 1 delta)를 review한다(`plan-review-agent`는 feature draft Part 2를 입력으로 수용 — Tier 2). reviewer가 Blocker Status + severity별 finding을 리포트(`_sdd/implementation/<YYYY-MM-DD>_plan_review_<slug>.md`)로 낸다.
-2. **fix**: critical/high/medium finding이 있으면 `feature-draft-agent`를 **fix mode**로 재dispatch한다 — 입력: review 리포트 경로 + draft 경로 + 대상 findings + **대화 맥락 digest(유지)**. agent가 finding 부분만 surgical 수정한다.
-3. **re-review**: fix 후 loop 범위 전체를 `plan-review-agent`로 재리뷰한다.
-4. exit 충족 또는 MAX 도달까지 1~3을 반복한다. MAX 분기 적용.
+### Task 1: [action-oriented title]
+[의도 1줄 — 비자명한 근거가 있으면 함께.]
 
-> fix 라운드에도 digest를 producer에 함께 전달한다(입력이 대화에서 태어나는 특성 유지).
+**Contracts** (있을 때만): 이 task가 만드는/바꾸는 약속(인터페이스·불변식)의 정밀 서술.
 
-### Step 4: relay
+**Acceptance Criteria**:
+- [ ] AC1: ...
 
-최종 draft 경로 + Step 9 surface 결정(Confidence=LOW/User-confirmation=Yes) + loop 결과(iteration 수, 최종 Blocker Status, 잔존 advisory)를 사용자에게 relay한다.
+**Target Files**:
+- [M] `path/to/file` -- 변경 이유
+- [C] `path/to/new_file` -- 생성 이유
+- ...
 
-## 경계
+# Open Questions
+[없으면 섹션 생략. 항목당 1-2줄: 내린 결정 + 사용자 확인 필요 여부.]
+```
 
-- 산출물(draft) 작성·수정은 `feature-draft-agent`만 한다(산출물 단일 작성자 — orchestrator는 직접 rewrite하지 않는다). 스킬은 loop만 소유한다.
-- review·findings 분류는 `plan-review-agent`가 수행한다(중복 금지).
+## 규칙
 
-> **Role Pointer**: 이 스킬은 review-fix loop를 소유하는 **orchestrator**다. `feature-draft-agent`는 draft producer 단일 소스(생성·fix mode 수정), `plan-review-agent`는 reviewer다.
+- **AC가 핵심이다**: 각 AC는 falsifiable해야 한다 — "미충족"이라 말할 수 있는 관찰/증거가 정의되지 않는 AC는 다시 쓴다.
+- **Target Files는 실측**: 현재 코드 탐색으로 확인한 경로만 적는다. 확정 불가면 `[TBD] <사유>`. 마커는 `[C]` Create / `[M]` Modify / `[D]` Delete.
+- **마커 보존**: `spec-update-todo-input` 마커 쌍을 유실하지 않는다 — `spec-sync` 입력 호환의 조건이다.
+- **품질 게이트**: 작성 후 `plan-review` 스킬 1회로 draft를 점검한다 — **단일 패스**로, review loop는 돌리지 않고 finding은 작성자인 메인 루프가 직접 반영한다.
+- **실행 인계**: `implementation` 스킬(메인 루프 직접 RED→GREEN 구현)로 인계한다. 구현 작성을 여러 갈래로 나눠야 할 규모로 드러나면 분할 규칙으로 돌아간다.
+- **Minimum-Code Mandate**: task의 description과 AC는 요청된 동작을 만드는 최소 코드만 명세한다. 요청되지 않은 기능·옵션·설정 가능성, 단일 사용처 추상화, 발생할 수 없는 시나리오의 에러 처리를 계획에 넣지 않는다.
+- **출력 절약**: 산출물에 작성 과정·검증 내레이션을 남기지 않는다.
+
+## Integration
+
+- `plan-review`: draft 품질 게이트 — 작성 후 단일 패스 점검 (위 규칙 참조).
+- `implementation`: 실행 인계 대상 — Part 2 task를 RED→GREEN으로 구현한다.
+- `spec-sync`: Part 1 마커 내부를 global spec 반영 입력으로 소비한다 (파일명이 기존 `*_feature_draft_*` glob에 매칭된다).
