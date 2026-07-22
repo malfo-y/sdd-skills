@@ -79,7 +79,7 @@ Examples:
 ## 7. Related skills
 
 - `feature-draft-lite` — lightweight feature spec + canonical split rules
-- `plan-review` — draft quality gate (lite drafts are self-identified as Tier 2-lite)
+- `plan-review` — draft quality gate (single pass, lightweight return)
 - `implementation-lite` — main-loop RED→GREEN implementation + canonical stop/split rules
-- `implementation-review` — correctness ∥ simplicity 2-reviewer (lightweight return by default via the skill)
+- `implementation-review` — correctness ∥ simplicity 2-reviewer (lightweight return)
 - `spec-sync` — global spec synchronization (adapts to planned/implemented evidence)

@@ -35,7 +35,7 @@ User Request
     v
 [sdd-autopilot] --> Step L: Lite 체인 (무승인 실행)
                     |- feature-draft-lite
-                    |- plan-review (Tier 2-lite, 경량 반환) -> fix 1회
+                    |- plan-review (단일 패스, 경량 반환) -> fix 1회
                     |- implementation-lite
                     |- implementation-review (경량 반환) -> fix 1회
                     `- (persistent 변경 시) spec-sync -> 최종 응답 요약
@@ -80,16 +80,16 @@ Gate: 핵심 요구사항이 확정되면 Step L.
 아래 체인을 메인 컨텍스트에서 스킬 단위로 순서대로 실행한다 (각 스킬은 `.codex/skills/<name>/SKILL.md` 본문을 로드해 수행한다). 산출물의 정의는 체인의 각 스킬이 소유한다.
 
 1. **Draft**: `feature-draft-lite` 스킬을 실행해 lite draft를 작성한다. 스킬의 판정이 분할 필요면 아래 분할 규칙을 따른다.
-2. **Plan gate + fix 1회**: `plan-review` 스킬로 draft를 단일 패스 리뷰한다 (lite draft는 reviewer가 자가 식별해 Tier 2-lite·경량 반환으로 동작한다). 반환된 Critical/High/Medium finding을 메인 컨텍스트가 draft에 직접 반영한다. re-review는 하지 않는다. "분할 권고" finding이면 아래 분할 규칙을 따른다.
+2. **Plan gate + fix 1회**: `plan-review` 스킬로 draft를 단일 패스 리뷰한다 (단일 패스 경량 반환 — finding을 응답으로 받는다). 반환된 Critical/High/Medium finding을 메인 컨텍스트가 draft에 직접 반영한다. "분할 권고" finding이면 아래 분할 규칙을 따른다.
 3. **구현**: `implementation-lite` 스킬을 실행한다 (RED→GREEN, AC→증거 테이블 마감). 스킬의 중단·분할 규칙이 트리거되면 그 규칙대로 처리한다 (잔여 분할 마감 또는 draft 복귀).
-4. **Impl gate + fix 1회**: `implementation-review` 스킬을 실행한다 (스킬 경유 호출은 경량 반환이 기본 — correctness ∥ simplicity 2-reviewer; reviewer dispatch는 해당 스킬의 Codex Runtime Adapter가 소유한다). 반환된 Critical/High/Medium finding을 메인 컨텍스트가 직접 수정하고 회귀 테스트 1회로 마감한다. re-review는 하지 않는다. Low finding은 advisory로 최종 보고에만 남긴다.
+4. **Impl gate + fix 1회**: `implementation-review` 스킬을 실행한다 (경량 반환 — correctness ∥ simplicity 2-reviewer; reviewer dispatch는 해당 스킬의 Codex Runtime Adapter가 소유한다). 반환된 Critical/High/Medium finding을 메인 컨텍스트가 직접 수정하고 회귀 테스트 1회로 마감한다. Low finding은 advisory로 최종 보고에만 남긴다.
 5. **Spec sync**: persistent spec 변경이 있으면 `spec-sync` 스킬(post-implementation)을 실행한다. spec-less이거나 persistent 변경이 없으면 스킵하고 사유를 보고에 남긴다.
 6. **최종 보고**: report 파일 없이 최종 응답으로 요약한다 — 수행 단계, finding/fix 내역, 테스트 결과, spec sync 여부, 잔존 항목.
 
 규칙:
 
 - **Fix는 게이트당 1회다.** fix로 닫히지 않는 finding이 남으면 loop를 돌지 않고 잔존 finding과 권고를 최종 보고에 남긴다. 같은 finding이 반복 재발하면 그것 자체를 분할·draft 재설계 신호로 본다.
-- **분할 판정의 canonical은 lite 표면들이 소유한다** (feature-draft-lite: 분할 규칙 / implementation-lite: 중단·분할 규칙 / plan-review Tier 2-lite: Lite 적격 검사). autopilot은 신호를 소비만 한다.
+- **분할 판정의 canonical은 lite 표면들이 소유한다** (feature-draft-lite: 분할 규칙 / implementation-lite: 중단·분할 규칙 / plan-review: Lite 적격 검사). autopilot은 신호를 소비만 한다.
 - **분할 규칙**: 어느 단계에서든 분할 신호가 뜨면 사용자에게 사유를 알리고, draft를 분할 계획으로 만든 뒤(롤링) `spec-sync` 스킬로 분할 todo를 spec에 고정하고, 첫 feature부터 이 체인을 순차 실행한다. 나머지 feature는 각자 차례에 자기 draft부터 다시 이 체인을 탄다.
 - **사용자 개입**: 승인 게이트는 없다. 단 draft `Open Questions`에 진행을 막는 항목이 있으면 일반 대화로 질문할 수 있다.
 

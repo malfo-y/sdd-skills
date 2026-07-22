@@ -99,17 +99,14 @@ Agent(subagent_type="sdd-skills:simplicity-review-agent") → clarity 렌즈
 
 ## 3. 확인된 것
 
-회원가입(AC #1)과 JWT 발급(AC #2)은 구현·테스트 모두 확인됐다 (증거는 correctness 리포트 §2 ledger). 테스트는 40개 중 38개 통과(95%)이고 실패 2건은 모두 위 refresh 결함에 기인한다. JWT secret은 환경변수로 관리되며 spec 보안 요구사항 위반은 없다.
+회원가입(AC #1)과 JWT 발급(AC #2)은 구현·테스트 모두 확인됐다 (tests/test_auth.py 통과 출력). 테스트는 40개 중 38개 통과(95%)이고 실패 2건은 모두 위 refresh 결함에 기인한다. JWT secret은 환경변수로 관리되며 spec 보안 요구사항 위반은 없다.
 
 ---
 
 ## Metadata
 
-**Review version**: 1
 **PR commit SHA**: abc1234
 **Spec source**: from-branch
-**Correctness report**: `_sdd/pr/2026-04-02_pr_correctness_auth_system.md` — AC 검증 ledger·verification 상세
-**Simplicity report**: `_sdd/implementation/2026-04-02_simplicity_review_auth_system.md` — 차원별 스캔 상세
 **Generated at**: 2026-04-02 17:40:00
 ```
 
@@ -165,16 +162,13 @@ Claude:
 
 ## 3. 확인된 것
 
-추론 AC 3건(만료 토큰 거부·유효 토큰 정상 처리·일관된 에러 응답) 모두 구현과 테스트로 확인됐다 (증거는 correctness 리포트 §2 ledger). 테스트 전체 통과(100%). simplicity 5개 차원 스캔에서 finding 없음.
+추론 AC 3건(만료 토큰 거부·유효 토큰 정상 처리·일관된 에러 응답) 모두 구현과 테스트로 확인됐다 (tests/test_token_expiry.py 통과 출력). 테스트 전체 통과(100%). simplicity 5개 차원 스캔에서 finding 없음.
 
 ---
 
 ## Metadata
 
-**Review version**: 1
 **PR commit SHA**: def5678
 **Spec source**: none
-**Correctness report**: `_sdd/pr/2026-04-02_pr_correctness_password_reset_expiry.md` — AC 검증 ledger·verification 상세
-**Simplicity report**: `_sdd/implementation/2026-04-02_simplicity_review_password_reset_expiry.md` — 차원별 스캔 상세
 **Generated at**: 2026-04-02 18:00:00
 ```
