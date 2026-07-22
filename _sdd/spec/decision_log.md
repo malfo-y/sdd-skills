@@ -1,5 +1,24 @@
 # Decision Log
 
+## 2026-07-22 - 스탠드얼론 reviewer/generator agent를 직접 실행 skill로 흡수 (`spec-review`·`ralph-loop-init`, v4.6.6 → v4.6.7, post-implementation sync)
+
+### Context
+
+draft `_sdd/drafts/2026-07-22_feature_draft_standalone_agents_to_skills.md`가 구현·리뷰 게이트(verify.py 구조검사 18/18 PASS + correctness/simplicity blocker 0)를 통과했다. 실측: 4개 agent 파일(`.claude/agents/spec-review-agent.md`·`.codex/agents/spec-review-agent.toml`·`.claude/agents/ralph-loop-init-agent.md`·`.codex/agents/ralph-loop-init-agent.toml`) 부재, 잔존 `.claude/agents` 5종·`.codex/agents` 5종(+README), marketplace.json `agents` 배열 5원소(`plan-review`·`implementation-review`·`simplicity-review`·`pr-review`·`spec-sync`), 두 skill 4개 version 필드 모두 `4.0.0`, 흡수 skill 4파일에 wrapper 잔재(`entrypoint wrapper`·`위임`·`subagent_type`·`spawn_agent`·`Codex Runtime Adapter`) grep 0, live 표면(`.claude/`·`.codex/`·`.claude-plugin/`) 삭제 agent 식별자 census 0.
+
+### Decision
+
+1. **스탠드얼론 reviewer/generator agent를 직접 실행 skill로 흡수 (current truth 승격)**: `spec-review`·`ralph-loop-init`은 "thin wrapper skill → agent(계약 보유)" 2홉이 아니라 메인 루프가 본문을 직접 수행하는 직접 실행 skill이다. 계약·프로세스·rubric/상태 머신·출력 형식의 단일 소스는 각 SKILL.md(claude+codex)이며, 두 agent의 claude `.md`·codex `.toml` 4파일은 삭제됐다. 근거: 두 agent는 자기 wrapper만 dispatch하는 스탠드얼론 entrypoint라 프로그래밍적 재사용 대상이 없고, 자동 SDD 체인 소속이 아니라 보호할 host 컨텍스트가 없어 subagent 격리 이득이 0이다. 추가로 ralph-loop-init의 Step 2 대화형 사용자 확인 게이트는 subagent가 실행 중 대화할 수 없어 무력화 상태였는데, skill 전환으로 메인 루프가 직접 수행하며 비로소 작동한다.
+2. **등록 agent set 7 → 5**: `plan-review-agent`·`implementation-review-agent`·`simplicity-review-agent`·`pr-review-agent`·`spec-sync-agent`만 남는다.
+3. **`spec-sync`는 이 전환에서 제외 (경계 확정)**: autopilot·체인이 프로그래밍적으로 dispatch하는 체인 종결 mutator라 spec 편집 추론을 오케스트레이터 컨텍스트에서 격리하는 이득이 load-bearing이다(plan-review·implementation-review agent 유지 근거와 동일). 따라서 wrapper-backed skill + single-source agent 패턴은 잔존 agent(특히 `plan-review`·`implementation-review`·`spec-sync`)에 대해 여전히 참이다.
+4. **불변 계약**: skill trigger·산출물 경로 계약(`_sdd/spec/logs/spec_review_report.md`, `ralph/` 산출물)은 불변. codex `ralph-loop-init`은 run.sh LLM 호출·Security Notice의 CLI flag delta(`--dangerously-bypass-approvals-and-sandbox`)를 보존한다.
+
+### Changes
+
+- `components.md` — `spec-review`·`ralph-loop-init` 행의 Primary Source를 SKILL.md 쌍(claude+codex)으로 교체하고 Notes를 직접 실행 skill 계약으로 재서술(stale "wrapper -> agent 패턴"·삭제된 `.claude/agents/*-agent.md` 경로 제거). Platform Notes `Claude skill/agent split`의 직접 실행/wrapper-backed 분류를 두 skill 흡수 후 상태로 정합
+- `main.md` — 헤더 4.6.7. wrapper-backed skill 아키텍처 서술은 spec-review/ralph를 지명하지 않고 잔존 5 agent에 대해 참이라 본문 무변경
+- draft `_processed_` 이동
+
 ## 2026-07-22 - F5 완료: `-lite` 개명 승격 — F1~F5 전체 완결 (v4.6.5 → v4.6.6, post-implementation sync)
 
 ### Context
