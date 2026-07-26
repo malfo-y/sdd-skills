@@ -11,9 +11,9 @@ Codex bundle: 19 skills + 9 custom agents. Claude bundle: 21 skills + 9 agents.
 | 문서 | 내용 | 언제 읽나 |
 |------|------|----------|
 | [SDD_QUICK_START.md](docs/SDD_QUICK_START.md) | 빠른 시작 가이드. 스킬 목록과 시나리오별 사용법 | **처음 시작할 때** — 이것만 읽어도 바로 사용 가능 |
-| [SDD_WORKFLOW.md](docs/SDD_WORKFLOW.md) | 전체 워크플로우 상세 가이드. 스킬별 좋은/나쁜 입력 예시 포함 | 스킬을 더 효과적으로 쓰고 싶을 때 |
+| [SDD_WORKFLOW.md](docs/SDD_WORKFLOW.md) | 전체 워크플로우와 각 문서 레이어가 쓰이는 시점 | 스킬을 더 효과적으로 쓰고 싶을 때 |
 | [sdd.md](docs/sdd.md) | SDD 철학과 문제의식 — 왜 스펙 기반 개발인가 | SDD의 배경과 동기가 궁금할 때 |
-| [SDD_CONCEPT.md](docs/SDD_CONCEPT.md) | 핵심 컨셉: 글로벌 스펙 vs 임시 스펙의 두 단계 구조 | 스펙 구조를 이해하고 싶을 때 |
+| [SDD_CONCEPT.md](docs/SDD_CONCEPT.md) | 핵심 컨셉: 하네스 / 글로벌 스펙 / 임시 스펙 / 코드 / 보조 문서의 레이어 구조와 정보 배치 원칙 | 스펙 구조를 이해하고 싶을 때 |
 | [SDD_SPEC_DEFINITION.md](docs/SDD_SPEC_DEFINITION.md) | 스펙의 정의 — 단순 문서가 아닌 화이트페이퍼형 기준 문서 | 스펙 작성 기준이 필요할 때 |
 | [AUTOPILOT_GUIDE.md](docs/AUTOPILOT_GUIDE.md) | sdd-autopilot 메타스킬 사용 가이드 | 전체 파이프라인을 자동화하고 싶을 때 |
 
