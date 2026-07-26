@@ -1,6 +1,12 @@
 # Changelog
 
-> 이 파일은 `_sdd/spec/main.md`의 버전별 변경 기록이다.
+> 이 파일은 `_sdd/spec/main.md`의 **본문이 바뀐 버전만** 기록한다 — 본문 무변경 sync(헤더 날짜만 갱신)는 entry를 남기지 않으므로 버전 번호에 결번이 생길 수 있다.
+
+#### v4.6.9 (2026-07-26)
+
+- **SDD 체인 품질 게이트를 producer 스킬 소유로 고정 (post-implementation sync)**: `implementation`(v3.0.0)이 `implementation-review`를 "선택 — 강제 아님" 권유가 아니라 마감 강제 게이트로 소유한다(회귀 1회 → AC→증거 테이블 → 게이트 1회 + C/H/M fix 1회 + fix 후 회귀 재실행 → 게이트 finding·fix 내역을 실은 마감 요약, Low는 advisory). `sdd-autopilot`(v4.0.0) Step 2는 6항목 → 4항목(Draft / 구현 / Spec sync / 최종 보고)으로 축소돼 게이트를 재호출하지 않고 producer 반환을 최종 보고로 모은다. `plan-review-agent` 미러 2벌의 호출 주체를 `feature-draft`로 정정, 하네스 §3 5곳(`AGENTS.md` + `spec-create`·`spec-upgrade` 템플릿 claude/codex 4미러)에 게이트 예외 1줄 추가(체인 리터럴은 무변경), `docs/AUTOPILOT_GUIDE.md` ko/en 2.1.0. structural check 79 PASS/0 FAIL, 리뷰 게이트 통과(plan-review 1회 + implementation-review 1회 + fix 1회).
+- **적용 surface**: `main.md` §2 Guardrails(게이트 소유권 불변식 + 전파 표면 5곳·`implementation` 마감 순서·autopilot v4.0.0 체인·분할 canonical 목록에서 `plan-review` 제외·plan gate optional 서술 정정) / §3 결정 테이블(`plan quality gate` → `품질 게이트 소유권`, 오케스트레이션·implementation test-first 행) / 현재 운영 제약(planned 2건 등록). `components.md` — `sdd-autopilot`·`implementation`·`plan-review`·`implementation-review` 행. `usage-guide.md` — Scenario 2 커맨드 목록·기대 결과, Scenario 2b Step 2.
+- **planned 등록**: `docs/en/SDD_WORKFLOW.md`의 ko 대비 한 세대 drift(§2 누락 + full 레인 어휘 5곳), `implementation-review` version 4필드 불일치(`2.1.0`/`3.0.0` vs `7.0.0`).
 
 #### v4.6.6 (2026-07-22)
 

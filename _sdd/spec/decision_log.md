@@ -1,5 +1,24 @@
 # Decision Log
 
+## 2026-07-26 - SDD 체인 품질 게이트를 producer 스킬 소유로 고정 (v4.6.8 → v4.6.9, post-implementation sync)
+
+### Context
+
+게이트 소유자가 표면마다 어긋나 있었다: `feature-draft`는 `plan-review`를 강제 게이트로 소유하는데 `implementation`은 `implementation-review`를 "선택 — 강제 아님"으로만 권유했고, `sdd-autopilot` Step 2는 두 게이트를 자기가 다시 호출했다. 반면 `docs/SDD_WORKFLOW.md:9-11`은 이미 producer 소유 모델을 문서화하고 있었다 — 즉 이 변경은 새 설계가 아니라 스킬 본문·autopilot이 문서 모델을 따라잡는 drift 정리다. 실측: `implementation` 4필드 `3.0.0`, `sdd-autopilot` 4필드 `4.0.0`, 하네스 §3 5곳(`AGENTS.md` + `spec-create`·`spec-upgrade` 템플릿 claude/codex 4미러)에 체인 리터럴 1건 유지 + 게이트 예외 1줄 각 1건, `docs/AUTOPILOT_GUIDE.md` ko/en `2.1.0`. 검증 evidence: structural check 79항목 PASS/0 FAIL(게이트 호출자 census 2갈래 + 패턴 매치력 역검증 포함), plan-review 1회 + implementation-review(correctness ∥ simplicity) 1회 + fix 1회, `git diff --check` 무출력.
+
+### Decision
+
+1. **품질 게이트는 producer 스킬이 소유한다 (current truth 승격)**: `feature-draft`가 `plan-review`를, `implementation`이 `implementation-review`를 각각 자기 마감의 강제 게이트로 단일 패스 1회 수행하고 fix 1회도 producer가 수행한다. 호출자(autopilot·사용자)는 게이트를 별도 호출하지 않고 "선택" 해치도 두지 않는다.
+2. **`implementation` 마감은 게이트 계약이다**: 회귀 1회 → AC→증거 테이블 → `implementation-review` 1회 + Critical/High/Medium fix 1회(fix 시 회귀 재실행 + 증거 테이블 갱신, Low는 advisory) → 마감 요약(게이트 finding·fix 내역·잔존 finding 포함). 이 반환 계약은 `implementation`에만 적용한다 — `feature-draft`의 출력 다이어트(마감 노출을 Open Questions로 제한)는 의도된 설계이고 plan gate 잔여 이슈 보고 의무는 기존 review-only 금지 guardrail이 소유한다.
+3. **`sdd-autopilot`은 producer 3스킬 순차 호출 + 반환 종합 보고다**: Step 2 = `feature-draft` → `implementation` → (persistent 변경 시) `spec-sync` → 최종 보고 4항목. 분할 판정 canonical 목록에서 `plan-review: 규모 판정 검사`를 빼고 producer 두 스킬만 남긴다(plan gate의 규모 판정은 canonical을 재정의하지 않는 rubric).
+4. **하네스 §3은 체인 리터럴을 유지하고 예외를 1줄로 명시한다**: 리터럴은 SDD **단계** 순서라 무변경이되, 뒤 문장이 "해당 단계 진입 시 그 스킬을 호출한다"로 호출 주체까지 명령하므로 게이트 두 단계는 producer 내부 수행이라 별도 호출하지 않는다는 예외를 5곳(전파 표면)에 동일 적용한다.
+
+### Rationale
+
+- 게이트 소유자를 산출물 작성자로 고정하면 진입 경로(직접 호출·autopilot)에 관계없이 같은 품질 계약이 걸린다. "선택 게이트" 해치는 직접 호출 경로만 조용히 품질이 낮아지는 분기를 만든다.
+- 호출자가 게이트를 다시 도는 구조는 producer가 이미 소유한 게이트와 중복이고, finding/fix 내역의 소스가 둘로 갈린다. producer 반환을 유일 소스로 두면 autopilot은 종합 보고만 하면 된다.
+- 하네스 체인 리터럴 자체를 건드리면 단계 어휘가 흔들리고 소비 repo 전파 표면 5곳이 재작성 대상이 된다. 리터럴 유지 + 예외 1줄이 최소 변경이다.
+
 ## 2026-07-26 - `ralph-loop-init` 런타임 안전장치·자체검증 실효화 (v4.6.7 → v4.6.8, post-implementation sync)
 
 ### Context
