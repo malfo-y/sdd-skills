@@ -1,7 +1,7 @@
 ---
 name: ralph-loop-init
 description: "Use this skill when the user asks to \"init ralph\", \"ralph loop\", \"set up ralph loop\", \"training loop\", \"training debug loop\", \"debug loop\", \"long-running test loop\", \"e2e loop\", \"create ralph\", \"set up training debug loop\", \"automated training loop\", or wants to generate a ralph/ directory for LLM-driven automated long-running process debugging."
-version: 4.0.1
+version: 4.1.0
 ---
 
 # Ralph Loop Initialization
@@ -12,14 +12,18 @@ version: 4.0.1
 
 > **Security Notice**: 생성된 `run.sh`는 `--dangerously-skip-permissions`를 사용한다. **격리된 환경(컨테이너, VM, 샌드박스)에서만 실행할 것.**
 
+**언제 ralph인가**: 세션 하나의 수명을 넘겨 도는 작업, 격리 박스에서 무인으로 돌려야 하는 작업, iteration마다 fresh context가 필요한 작업(컨텍스트 고갈 방지), 단일 실행이 시간 단위인 작업 — 이럴 때 ralph가 유일한 경로다.
+
+**언제 ralph가 아닌가**: 세션 하나 안에서 닫히는 반복 작업에 ralph를 쓰면 격리 환경 준비와 skip-permissions 비용만 치른다. 단발 디버깅은 `investigate`, 조건 충족까지의 세션 내 반복은 네이티브 `/goal`(조건·하네스 셋업은 `goal-init`)을 쓴다.
+
 ## Acceptance Criteria
 
 > 프로세스 완료 후 아래 기준을 자체 검증한다. 미충족 항목은 해당 단계로 돌아가 수정한다.
 
-- [ ] AC1: `ralph/` 디렉토리에 5개 파일 생성 (`config.sh`, `PROMPT.md`, `run.sh`, `state.md`, `CHECKS.md`)
-- [ ] AC2: 상태 머신이 SETUP → SMOKE_TEST → 실행 → 분석 → DONE 으로 정상 전환
-- [ ] AC3: `run.sh`가 while-loop + LLM 진단 패턴을 정확히 구현 (아래 템플릿 그대로)
-- [ ] AC4: 생성된 파일에 `<placeholder>` 문자열 없음
+- [ ] AC1: `ralph/` 디렉토리에 6개 파일 생성 (`config.sh`, `PROMPT.md`, `run.sh`, `state.md`, `CHECKS.md`, `decisions.md`)
+- [ ] AC2: `PROMPT.md`에 7개 phase(또는 커스터마이즈된 등가 집합) 각각의 목적·실행 명령·전환 조건이 기술되고, `run.sh`의 `VALID_PHASES`가 그 집합과 일치한다
+- [ ] AC3: `run.sh`가 `bash -n`을 통과하고 실행 권한을 가진다
+- [ ] AC4: Step 8의 검사 범위에 미충전 `<...>` 슬롯이 0건이다
 - [ ] AC5: `CHECKS.md`의 모든 항목 통과
 - [ ] AC6: `PROMPT.md`가 `final_report.md`를 근거 기반의 보고서 형태로 작성하도록 강제한다
 
@@ -28,8 +32,9 @@ version: 4.0.1
 1. **격리 환경 전용**: ralph 루프는 컨테이너, VM, 샌드박스에서만 실행한다.
 2. **Spec 읽기 전용**: `_sdd/` 아래 파일을 읽을 수 있으나, 수정하지 않는다.
 3. **Debug-First**: 초기 실행은 최소 범위 (예: ML은 `MAX_STEPS="10"`, 테스트는 단일 스위트).
-4. **No Placeholders**: 생성된 파일에 `<placeholder>` 문자열이 없어야 한다.
+4. **No Placeholders**: 생성된 파일에 미충전 슬롯이 없어야 한다 — 검사 범위와 수단은 Step 8이 단일 소스다.
 5. **Template Fidelity**: `run.sh`는 아래 템플릿을 거의 그대로 복사하며, 최소한의 수정만 허용한다.
+6. **실행 가능한 run.sh**: `run.sh`는 `#!/usr/bin/env bash` shebang과 실행 권한을 가져야 한다.
 
 ---
 
@@ -42,7 +47,7 @@ Core loop:
   while true:
     LLM reads state + results -> writes action.sh
     run.sh executes action.sh (may take hours)
-    repeat until phase = DONE
+    repeat until phase = DONE (or run.sh hits a config.sh limit)
 
 State transitions:
   SETUP -> SMOKE_TEST -> EXECUTING -> CHECKING -> ANALYZING -> DONE
@@ -109,8 +114,8 @@ Generated: <current UTC timestamp>
 Project: <project name>
 
 ## config.sh
-- [ ] No `<placeholder>` strings remain
-- [ ] `LLM_TIMEOUT_SECONDS` and `MAX_LLM_FAILURES` defined
+- [ ] 미충전 슬롯 없음 (init 시 슬롯 검사 통과)
+- [ ] `LLM_TIMEOUT_SECONDS`, `MAX_LLM_FAILURES`, `MAX_RUNTIME_MINUTES`, `MAX_ITERATIONS` defined
 - [ ] PROMPT.md에서 참조하는 모든 변수가 정의됨
 
 ## PROMPT.md
@@ -126,11 +131,17 @@ Project: <project name>
 - [ ] Self-correction protocol present
 
 ## run.sh
+- [ ] claude CLI invocation present
 - [ ] `--reset` flag, `LLM_TIMEOUT_SECONDS`, DONE detection present
+- [ ] DONE detection runs after the action.sh execution block
 - [ ] `VALID_PHASES` matches the phase names defined in PROMPT.md
+- [ ] `bash -n ralph/run.sh` passes; file is executable
 
 ## state.md
 - [ ] `phase: SETUP`, `iteration: 0`, valid `initialized_at` timestamp
+
+## decisions.md
+- [ ] File exists with a header and one initial entry
 ```
 
 ### Step 4: Generate `ralph/config.sh`
@@ -145,10 +156,14 @@ Project: <project name>
 # ── Loop Safety (fixed) ──
 LLM_TIMEOUT_SECONDS=600  # max seconds for one LLM turn (0 disables timeout)
 MAX_LLM_FAILURES=3       # consecutive LLM failures before abort
+MAX_RUNTIME_MINUTES=720  # primary budget: 12h. 1 day = 1440. Per run -- resets on restart.
+                         # Soft: checked at the iteration boundary, never kills a running action.sh.
+MAX_ITERATIONS=200       # runaway backstop (fast no-progress spin burns tokens, not time).
+                         # Cumulative -- carries across restarts via state.md (--reset clears it).
 ```
 
 **프로젝트별 변수**: LLM이 Step 1 분석 결과에 따라 적절한 변수를 추가한다.
-- `LLM_TIMEOUT_SECONDS`와 `MAX_LLM_FAILURES`는 항상 포함
+- `MAX_RUNTIME_MINUTES`는 Step 1에서 파악한 1회 실행 소요에 맞춘다 (몇 시간짜리 학습이면 넉넉히, 스모크성 루프면 30~60)
 - Debug-first 접근: 초기 값은 보수적으로 설정
 - 카테고리별 주석 헤더로 그룹화
 - 프로젝트가 실제 사용하는 변수만 포함
@@ -178,7 +193,7 @@ SMOKE_TEST 실패 시 ADJUSTING → SMOKE_TEST repeat gate를 명시한다.>
 ## Iteration Protocol
 1. `ralph/config.sh` 읽기
 2. `ralph/state.md` 읽기
-3. `ralph/decisions.md` 최근 15개 읽기
+3. `ralph/decisions.md` 최근 결정 읽기 — 전체가 아니라 `tail -n 200 ralph/decisions.md`로 끝부분만
 4. `ralph/results/last_exit_code` 읽기
 5. 최신 결과 파일 읽기 (`verification_summary.md` 우선)
 6. `_sdd/env.md` 읽기 (존재 시)
@@ -222,10 +237,7 @@ SMOKE_TEST 실패 시 ADJUSTING → SMOKE_TEST repeat gate를 명시한다.>
 
 ### Step 6: Generate `ralph/run.sh`
 
-아래 템플릿을 **거의 그대로** `ralph/run.sh`에 복사한다. `chmod +x ralph/run.sh` 실행. 허용 수정은 두 가지뿐이다:
-
-1. `python3` 명령이 프로젝트에 맞지 않으면 조정한다.
-2. Step 5에서 phase 이름을 커스터마이즈했으면 `VALID_PHASES`를 PROMPT.md에 정의한 phase 집합과 동일하게 맞춘다 (불일치 시 `validate_state_file`이 정상 상태를 reject한다).
+아래 템플릿을 **거의 그대로** `ralph/run.sh`에 복사한다. `chmod +x ralph/run.sh` 실행. 허용 수정은 하나뿐이다 — Step 5에서 phase 이름을 커스터마이즈했으면 `VALID_PHASES`를 PROMPT.md에 정의한 phase 집합과 동일하게 맞춘다 (불일치 시 `validate_state_file`이 정상 상태를 reject한다).
 
 ```bash
 #!/usr/bin/env bash
@@ -236,6 +248,7 @@ SMOKE_TEST 실패 시 ADJUSTING → SMOKE_TEST repeat gate를 명시한다.>
 #   2. action.sh executes (training, validation, etc.) -- may take hours
 #   3. action.sh saves results to ralph/results/
 #   4. Loop restarts -> LLM reads new results
+#   5. Repeat until state.md reports phase: DONE
 #
 # Usage: bash ralph/run.sh [--reset]
 # Stop:  Ctrl+C or set phase to DONE in state.md
@@ -280,10 +293,14 @@ if [ ${RESET} -eq 1 ]; then
 phase: SETUP
 iteration: 0
 initialized_at: ${INIT_TS}
-errors: []
-last_checkpoint: null
-validation_results: null
 notes: Initial state. Ralph loop initialized.
+EOF
+  cat > ralph/decisions.md <<EOF
+# Ralph Decision Log
+
+Append-only. One entry per iteration: what was decided and why.
+
+- ${INIT_TS} | SETUP | Loop reset. No decisions recorded yet.
 EOF
 fi
 
@@ -294,6 +311,8 @@ fi
 
 LLM_TIMEOUT_SECONDS="${LLM_TIMEOUT_SECONDS:-600}"
 MAX_LLM_FAILURES="${MAX_LLM_FAILURES:-3}"
+MAX_RUNTIME_MINUTES="${MAX_RUNTIME_MINUTES:-720}"
+MAX_ITERATIONS="${MAX_ITERATIONS:-200}"
 
 if ! [[ "${LLM_TIMEOUT_SECONDS}" =~ ^[0-9]+$ ]]; then
   echo "[ralph] Invalid LLM_TIMEOUT_SECONDS='${LLM_TIMEOUT_SECONDS}'. Use a non-negative integer." >&2
@@ -305,11 +324,37 @@ if ! [[ "${MAX_LLM_FAILURES}" =~ ^[0-9]+$ ]] || [ "${MAX_LLM_FAILURES}" -lt 1 ];
   exit 1
 fi
 
+if ! [[ "${MAX_RUNTIME_MINUTES}" =~ ^[0-9]+$ ]] || [ "${MAX_RUNTIME_MINUTES}" -lt 1 ]; then
+  echo "[ralph] Invalid MAX_RUNTIME_MINUTES='${MAX_RUNTIME_MINUTES}'. Use a positive integer." >&2
+  exit 1
+fi
+
+if ! [[ "${MAX_ITERATIONS}" =~ ^[0-9]+$ ]] || [ "${MAX_ITERATIONS}" -lt 1 ]; then
+  echo "[ralph] Invalid MAX_ITERATIONS='${MAX_ITERATIONS}'. Use a positive integer." >&2
+  exit 1
+fi
+
+if ! command -v claude >/dev/null 2>&1; then
+  echo "[ralph] ERROR: claude CLI is not installed or not on PATH." >&2
+  exit 1
+fi
+
+if ! command -v python3 >/dev/null 2>&1; then
+  echo "[ralph] ERROR: python3 not found. It parses the stream-json output each iteration." >&2
+  exit 1
+fi
+
 if [ "${LLM_TIMEOUT_SECONDS}" -eq 0 ]; then
   echo "[ralph] LLM timeout disabled (LLM_TIMEOUT_SECONDS=0)."
 else
   echo "[ralph] LLM timeout: ${LLM_TIMEOUT_SECONDS}s per LLM step."
 fi
+
+# Wall-clock budget for THIS run (resets on restart). Soft: enforced at the
+# iteration boundary only, so a running action.sh is never killed mid-flight.
+LOOP_START="$(date +%s)"
+DEADLINE=$(( LOOP_START + MAX_RUNTIME_MINUTES * 60 ))
+echo "[ralph] Runtime budget: ${MAX_RUNTIME_MINUTES} min (soft; a running action.sh is not interrupted)."
 
 LOCK_DIR="ralph/.ralph.lock.d"
 LOCK_PID_FILE="${LOCK_DIR}/pid"
@@ -432,9 +477,34 @@ mkdir -p ralph/results
 
 # Continue iteration numbering across restarts so result files are not overwritten.
 SAVED_ITER="$(grep -m1 '^iteration:' ralph/state.md 2>/dev/null | sed 's/^iteration:[[:space:]]*//' | tr -d '[:space:]')" || true
-[[ "${SAVED_ITER}" =~ ^[0-9]+$ ]] && ITERATION="${SAVED_ITER}"
+[[ "${SAVED_ITER}" =~ ^[0-9]+$ ]] && ITERATION=$((10#${SAVED_ITER}))
 
 while :; do
+  # Already finished (e.g. rerun on a DONE state) -- stop before spending an LLM turn.
+  if grep -Eq '^phase:[[:space:]]*DONE[[:space:]]*$' ralph/state.md 2>/dev/null; then
+    echo "[ralph] State is already DONE. Nothing to do (use --reset to start over)."
+    break
+  fi
+
+  # --- Limits: wall-clock budget (primary) + iteration backstop (runaway guard) ---
+  NOW="$(date +%s)"
+  LIMIT_MSG=""
+  if [ "${NOW}" -ge "${DEADLINE}" ]; then
+    LIMIT_MSG="runtime budget reached (MAX_RUNTIME_MINUTES=${MAX_RUNTIME_MINUTES})"
+  elif [ $((ITERATION + 1)) -gt "${MAX_ITERATIONS}" ]; then
+    LIMIT_MSG="iteration backstop reached (MAX_ITERATIONS=${MAX_ITERATIONS})"
+  fi
+  if [ -n "${LIMIT_MSG}" ]; then
+    echo "[ralph] Stopping: ${LIMIT_MSG}."
+    echo "[ralph] phase is left untouched -- raise the limit in ralph/config.sh and rerun to continue."
+    if grep -q '^notes:' ralph/state.md 2>/dev/null; then
+      sed -i.bak "s/^notes:.*/notes: Stopped by run.sh -- ${LIMIT_MSG}./" ralph/state.md && rm -f ralph/state.md.bak
+    else
+      echo "notes: Stopped by run.sh -- ${LIMIT_MSG}." >> ralph/state.md
+    fi
+    exit 1
+  fi
+
   ITERATION=$((ITERATION + 1))
   # run.sh owns the iteration counter; PROMPT.md forbids the LLM from editing it.
   if grep -q '^iteration:' ralph/state.md 2>/dev/null; then
@@ -501,7 +571,7 @@ for line in sys.stdin:
     echo "[ralph] LLM step failed (exit code ${LLM_EXIT}, failure ${LLM_FAIL_COUNT}/${MAX_LLM_FAILURES})"
     if [ ${LLM_FAIL_COUNT} -ge ${MAX_LLM_FAILURES} ]; then
       echo "[ralph] ERROR: LLM step failed ${MAX_LLM_FAILURES} consecutive times. Exiting."
-      echo "[ralph] Check: claude CLI installed? API key valid? Network OK?"
+      echo "[ralph] Last raw output: ralph/results/llm_iter${ITERATION}.json"
       exit 1
     fi
     echo "[ralph] Retrying after sleep..."
@@ -521,12 +591,6 @@ for line in sys.stdin:
     continue
   fi
   LLM_FAIL_COUNT=0
-
-  # Check if state is DONE (LLM decided we're finished)
-  if grep -Eq '^phase:[[:space:]]*DONE[[:space:]]*$' ralph/state.md 2>/dev/null; then
-    echo "[ralph] State is DONE. Exiting loop."
-    break
-  fi
 
   # --- Phase 2: Execute action ---
   if [ -f ralph/action.sh ]; then
@@ -563,29 +627,50 @@ for line in sys.stdin:
 
   echo ""
   echo "--- Iteration #${ITERATION} complete ---"
+
+  # Check if state is DONE (LLM decided we're finished). Checked after the action
+  # so a DONE-transitioning iteration still gets its action.sh executed.
+  if grep -Eq '^phase:[[:space:]]*DONE[[:space:]]*$' ralph/state.md 2>/dev/null; then
+    echo "[ralph] State is DONE. Exiting loop."
+    break
+  fi
+
   sleep 3
 done
 ```
 
-### Step 7: Generate `ralph/state.md`
+### Step 7: Generate `ralph/state.md` and `ralph/decisions.md`
 
-`date -u '+%Y-%m-%dT%H:%M:%SZ'`로 현재 UTC 타임스탬프를 얻어 아래 내용으로 생성한다:
+`date -u '+%Y-%m-%dT%H:%M:%SZ'`로 현재 UTC 타임스탬프를 얻어 두 파일을 생성한다.
+
+`ralph/state.md`:
 
 ```
 phase: SETUP
 iteration: 0
 initialized_at: <current UTC timestamp>
-errors: []
-last_checkpoint: null
-validation_results: null
 notes: Initial state. Ralph loop initialized.
+```
+
+`ralph/decisions.md` — PROMPT.md의 Iteration Protocol이 매 iteration 읽고 append 하는 파일이므로 첫 iteration 전에 존재해야 한다:
+
+```
+# Ralph Decision Log
+
+Append-only. One entry per iteration: what was decided and why.
+
+- <current UTC timestamp> | SETUP | Loop initialized. No decisions recorded yet.
 ```
 
 ### Step 8: Verify Against CHECKS.md and Summarize
 
-1. `ralph/CHECKS.md`의 각 항목을 `Grep`/`Read`로 검증한다. 실패 항목은 해당 파일을 수정한 후 재검증 (최대 2회).
-2. 검증 완료 후 `CHECKS.md`의 `[ ]`를 `[x]` (통과) 또는 `[!]` (수정 후 통과)로 업데이트한다.
-3. `mkdir -p ralph/results` 후 요약을 출력한다:
+1. **문법 검사**: `bash -n ralph/run.sh`와 `bash -n ralph/config.sh`를 실행한다. 실패하면 해당 파일을 수정한 후 재실행한다 (최대 2회).
+2. **미충전 슬롯 검사**: 아래 범위에 `<...>` 형태의 미충전 슬롯이 0건인지 확인한다.
+   - `ralph/config.sh`·`ralph/run.sh`·`ralph/state.md`·`ralph/CHECKS.md`: 파일 전체를 `grep -nE '<[^>]+>'`
+   - `ralph/PROMPT.md`: **문서 시작부터 `## Iteration Protocol` 직전까지**(H1 제목의 `<project name>` 포함) + `## Known Errors` 섹션에 같은 패턴을 적용한다. 그 밖의 `<...>`(`## action.sh Rules`의 `<name>.log`, `## Final Report` 이하)는 루프 LLM을 향한 서식 지시이므로 검사하지 않는다.
+3. `ralph/CHECKS.md`의 각 항목을 `Grep`/`Read`로 검증한다. 실패 항목은 해당 파일을 수정한 후 재검증 (최대 2회).
+4. 검증 완료 후 `CHECKS.md`의 `[ ]`를 `[x]` (통과) 또는 `[!]` (수정 후 통과)로 업데이트한다.
+5. `mkdir -p ralph/results` 후 요약을 출력한다:
 
 ```
 Ralph loop initialized (TDD verified)!
@@ -596,6 +681,7 @@ Files created:
   ralph/PROMPT.md    — LLM instructions for the automation loop
   ralph/run.sh       — Loop controller script
   ralph/state.md     — Initial state (SETUP, iteration 0)
+  ralph/decisions.md — Append-only decision log
   ralph/results/     — Output directory
 
 Loop phases: SETUP -> SMOKE_TEST -> [execution] -> [checking] -> ANALYZING -> DONE
