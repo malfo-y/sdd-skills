@@ -105,8 +105,7 @@ scope, task boundary, AC, Target Files(`[C]` 신규 파일 포함), Open Questio
 
 ## Integration
 
-- `feature-draft`: 리뷰 대상 — 단일 패스 품질 게이트, finding 반영은 호출자(작성자) 소관
-- `sdd-autopilot`: Step 2 체인의 plan gate로 이 agent를 호출
+- `feature-draft`: 리뷰 대상이자 호출 주체 — 자기 품질 게이트로 이 리뷰를 1회 수행하고, finding 반영은 작성자 소관
 - `implementation`: Critical/High blocker가 없을 때 후속 실행
 
 ## Final Check
