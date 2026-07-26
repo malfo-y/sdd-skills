@@ -1,7 +1,7 @@
 ---
 name: implementation
 description: Use this skill when the user asks to "implement the plan", "start implementation", "execute the plan", "구현해줘", "구현 실행", or wants to execute a task set (typically a feature draft) with RED→GREEN test-first where the main loop itself writes all code and tests (read-only helper agents allowed; independent tasks may be batched in parallel). Oversized work is closed at a feasible boundary and the remainder split into follow-up features.
-version: 2.1.0
+version: 3.0.0
 ---
 
 # Implementation
@@ -70,11 +70,15 @@ RED 관찰 후에는 테스트를 통과시키기 위해 테스트를 약화·�
    | Task | AC | 판정 | 증거 |
    |------|----|------|------|
 
-3. 계약 오류 선언·대상 파일 밖 수정이 있었으면 함께 요약한다.
-4. 기본은 위 증거 테이블로 닫는다. 그 위에, 사용자가 추가 검증을 따로 요청하지 않았더라도 마감 시 `implementation-review` 스킬 1회로 추가 검증할 수 있음을 사용자에게 1줄로 권유한다 (선택 — 강제 아님).
+3. **품질 게이트**: `implementation-review` 스킬 1회로 구현을 점검한다.
+    - 단일 패스다 — review loop는 돌리지 않는다.
+    - 반환된 Critical/High/Medium finding은 구현자인 메인 루프가 직접 fix 1회로 반영한다.
+    - fix가 있었으면 회귀를 1회 재실행하고, 증거가 바뀐 AC는 위 증거 테이블을 갱신한다.
+    - Low finding은 fix하지 않고 아래 마감 요약에 advisory로 남긴다.
+4. **마감 요약**: 계약 오류 선언·대상 파일 밖 수정이 있었으면 요약하고, 게이트의 finding·fix 내역(fix로 닫히지 않은 잔존 finding 포함)과 fix 후 회귀 재실행 결과를 함께 남긴다.
 
 ## Integration
 
 - `feature-draft`: 주 입력 — draft Part 2의 task를 소비한다. 계약 오류 반복 시 복귀 대상이기도 하다.
-- `implementation-review`: 선택적 후속 검증 (단일 패스).
+- `implementation-review`: 마감 품질 게이트 — 이 스킬이 소유한다 (마감 3 참조).
 - `spec-sync`: 구현이 spec에 반영될 변경이면, draft Part 1 마커 내용과 실제 변경을 입력으로 global spec을 동기화한다.
