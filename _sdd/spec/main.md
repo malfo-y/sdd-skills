@@ -2,7 +2,7 @@
 
 > Markdown 기반 skill bundle로 AI 에이전트의 Spec-Driven Development 워크플로우를 Claude Code와 Codex에서 공통 계약으로 실행한다.
 
-**Spec Version**: 4.6.9
+**Spec Version**: 4.6.10
 **Last Updated**: 2026-07-26
 **Status**: Approved
 **Canonical Role**: current thin global spec
@@ -149,7 +149,7 @@ SDD Skills의 설계는 다음 층으로 나뉜다.
 - 일부 version metadata 갱신은 여전히 문서 편집 discipline에 의존한다
   - 🚧 Planned: `implementation-review`의 version 4필드가 어긋나 있다 — `.claude` skill.json `2.1.0` / `.codex` skill.json `3.0.0` vs 두 SKILL.md frontmatter `7.0.0`. 별도 이슈로 정렬한다
 - 이 저장소는 전통적인 테스트 프레임워크보다 실제 skill invocation과 리뷰 기반 검증에 크게 의존한다
-- 🚧 Planned: `docs/en/SDD_WORKFLOW.md`가 ko 짝보다 한 세대 뒤처져 있다 — ko는 10섹션(§2 Harness 포함)인데 en은 9섹션(§2 누락)이고, 삭제된 full 레인 어휘(`implementation plan`·`review-fix loop`·`touchpoints`·`validation plan`)가 5곳 잔존한다. 별도 feature 크기의 선행 drift로 분리한다
+- `docs/` ko 본문과 `docs/en/` 미러의 세대 정합도 수동 관리다 — canonical rollout 순서의 `english mirrors` 단계가 가장 누락되기 쉬운 지점이고, 레이어·섹션 추가를 ko에만 반영하고 닫으면 en 짝이 한 세대 뒤처진다(하네스 레이어 추가가 en `SDD_WORKFLOW`·`SDD_CONCEPT`에 전파되지 않아 §2 Harness 누락 + 삭제된 full 레인 어휘 잔존으로 드러난 전례). ko/en 짝을 건드리는 변경은 대칭 마감을 검증 대상으로 둔다
 
 ## Supporting Surfaces
 

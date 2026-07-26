@@ -24,7 +24,7 @@ Move additional information into supporting docs only when needed.
 Use one of these:
 
 - small change: implementation + review
-- medium or larger change: feature draft or temporary spec
+- medium or larger change: feature draft (= the temporary spec)
 - ambiguous scope: discussion first
 
 ## 4. What not to put in the global spec
@@ -37,7 +37,7 @@ Use one of these:
 
 ## 5. Where that information goes instead
 
-- execution planning: temporary spec / implementation plan
+- execution planning: the temporary spec (= the feature draft)
 - usage examples: guide / README
 - environment detail: README / env docs
 - navigation hints: appendix, review note, code comment

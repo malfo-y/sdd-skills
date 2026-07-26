@@ -24,7 +24,7 @@ global spec에는 아래 세 가지만 먼저 고정하면 된다.
 아래 중 하나를 쓴다.
 
 - 작은 변경: implementation + review
-- 중간 이상 변경: feature draft 또는 temporary spec
+- 중간 이상 변경: feature draft(= temporary spec)
 - 범위가 애매함: discussion 먼저
 
 ## 4. Global Spec에 넣지 말 것
@@ -37,7 +37,7 @@ global spec에는 아래 세 가지만 먼저 고정하면 된다.
 
 ## 5. 어디에 둘 것인가
 
-- 실행 계획: temporary spec / implementation plan
+- 실행 계획: temporary spec(= feature draft)
 - 사용 예시: guide / README
 - 환경 상세: README / env docs
 - 탐색 힌트: appendix, review note, code comment

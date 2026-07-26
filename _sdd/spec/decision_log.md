@@ -1,5 +1,31 @@
 # Decision Log
 
+## 2026-07-26 - `docs/en` 미러 세대 drift 해소 + ko/en 대칭 마감을 운영 제약으로 고정 (v4.6.9 → v4.6.10, post-implementation sync)
+
+### Context
+
+v4.6.9 sync가 planned로 고정한 en drift 항목(`docs/en/SDD_WORKFLOW.md`가 ko보다 한 세대 뒤처짐)을 draft 없는 inline task로 처리했다. census 결과 원인은 단일했다 — 2026-06-12 하네스 레이어(`AGENTS.md`) 도입이 en 미러에 전파되지 않아 `SDD_WORKFLOW` §2 Harness와 `SDD_CONCEPT` §1 Harness 행이 동시에 빠졌고, 그 세대에 정리된 full 레인 어휘도 en에만 남았다. 실측(HEAD `c4aabef` 대조): en `SDD_WORKFLOW` 섹션 9 → 10(ko와 동수), full 레인 어휘 HEAD 5곳(L11 `implementation plan`·L13 `review-fix loop`·L43 `touchpoints`·L44 `implementation plan`·L45 `validation plan`) → 0곳, 변경 6파일(ko 3 + en 3, 전부 `docs/`, +29/−25). 검증 evidence: structural check 35 PASS/0 FAIL(섹션 수·줄 수 parity, ko/en 짝 대칭 변경, 변경 파일 6개 한정 포함), 직전 feature 회귀 `check_gates.py` 79 PASS/0 FAIL, `git diff --check` 무출력, implementation-review(correctness ∥ simplicity) 1회 + fix 1회(Critical/High 0, Medium 4건 중 2건 반영).
+
+### Decision
+
+1. **en 미러 세대 drift 해소 (current truth 승격, planned 항목 종결)**: en `SDD_WORKFLOW`에 ko §2 "Harness가 쓰이는 시점" 대응 섹션을 신설하고 기존 §2~§9를 §3~§10으로 재번호했으며, §1 flow를 ko와 같은 producer 게이트 2행으로, §4 temporary spec 구성을 ko의 3항목으로 맞췄다. en `SDD_CONCEPT` §1 레이어 표에 `Harness (AGENTS.md)` 행과 경계 문단을 추가했다. ko/en 6쌍 parity 불일치 0.
+2. **ko/en 미러 대칭 마감을 운영 제약으로 고정**: 이 drift는 설계 변경이 아니라 canonical rollout 순서(`... -> docs -> english mirrors/examples -> audit`)의 `english mirrors` 단계 누락이 한 세대 누적된 형태였다. 새 guardrail을 만들지 않고 기존 rollout 결정에 대한 enforcement 제약("ko/en 짝을 건드리는 변경은 대칭 마감을 검증 대상으로 둔다")을 `현재 운영 제약`에 1줄로 남긴다 — 레이어 모델 자체의 단일 소스는 계속 `docs/SDD_CONCEPT.md`·`docs/SDD_WORKFLOW.md`이므로 global spec 본문은 키우지 않는다.
+3. **어휘 정렬 2건은 리뷰 게이트 finding 반영분이다**: (a) correctness M1 — CONCEPT ko·en의 temporary spec 행을 구세대 어휘(`delta, touchpoints, validation, plan`)에서 현행 draft 구조(`delta, scope, task별 contract/AC, target files`)로 교체, (b) simplicity M3 — `temporary spec 또는/or feature draft` alternation 6곳을 canonical 등가 표기(`docs/SDD_SPEC_DEFINITION.md:149` "temporary spec(= feature draft)")로 통일. 함께 F2에서 삭제된 `implementation-plan` 스킬 참조를 QUICK_START ko·en에서 `feature draft`로 정리했다.
+4. **계약 정정 2건**: (a) inline AC "ko 원본 무변경"은 위 두 finding이 ko·en 대칭 수정을 요구해 폐기하고 "변경 6파일 한정 + ko/en 짝 대칭" 가드로 교체했다(계약 오류가 아니라 사용자 승인 범위 확장). (b) 직전 feature Task 4 AC3의 가드가 `docs/SDD_WORKFLOW.md` **파일 단위** 무변경이라 이번 §4 1줄 변경에 오탐했으므로, 그 AC의 의도(`:9-11` producer 소유 서술 보존)대로 앵커 블록 8줄 대조로 좁혔다 — §1 flow 블록은 `540f1d5`와 byte-identical임을 확인했다.
+5. **보류 finding은 global spec에 planned로 고정하지 않는다**: simplicity M1(`SDD_WORKFLOW` §2 둘째 문단이 `SDD_CONCEPT` §1 문단과 소유권 규칙 중복 — 포인터 대체 제안)·M2(§3 "global spec은 모든 단계의 출발점"이 §2 "하네스를 먼저 읽는다"와 긴장 — ko·en 문장 재작성 제안)는 내용 정합은 유지된 supporting doc 산문 품질 이슈로, repo-wide invariant 기준(2개 이상 표면 공통 + 틀리면 repo-level 판단 어긋남)을 통과하지 못한다. Low 잔여(README:14 "예시 포함"이나 예시 0건, README:16 "두 단계 구조"이나 5레이어, `docs/agentic_coding_principle.md` en 미러 부재 — 단 README:18이 부분 커버리지를 이미 명시)도 같은 판정이다. 모두 이 entry와 work_log에만 남긴다.
+
+### Rationale
+
+- planned 항목의 종결 조건은 그 bullet이 명시한 관찰 가능한 두 조건(섹션 수 동수, full 레인 어휘 0)이었고 둘 다 fresh 검증으로 충족됐다. 종결 후 남길 지속 정보는 "무엇이 틀렸었나"가 아니라 "왜 반복되나"이므로 drift 서술을 전례 각주로 압축해 운영 제약으로 옮겼다.
+- 새 guardrail 대신 기존 rollout 결정에 enforcement 1줄만 붙인 이유는 anti-duplication이다. `english mirrors` 단계는 이미 결정 테이블에 있으므로, 같은 규칙을 guardrail로 재선언하면 판정 주체가 둘로 갈린다.
+- `touchpoints`는 이번에 CONCEPT ko·en까지 정리됐지만 repo 전역 0은 아니다 — `spec-rewrite`/`spec-upgrade` references, `spec-review`·`spec-sync-agent`, `SDD_SPEC_DEFINITION`의 legacy 기록물 서술에는 의도적으로 남아 있다(구형 full draft 형식을 읽을 때의 기준). 이 구분을 흐리면 legacy fallback 계약이 지워진다.
+
+### Changes
+
+- `main.md` — 헤더 4.6.10. `현재 운영 제약`: en drift `🚧 Planned` bullet을 소거하고 ko/en 미러 대칭 마감 운영 제약 1줄로 대체. 레이어 모델·temporary spec 구성·등가 표기는 canonical 문서가 단일 소스라 §1~§3 본문 무변경
+- `components.md`·`usage-guide.md` 변경 없음(Strategic Code Map은 ko canonical 경로만 싣는다)
+- draft 없음 — inline task 진행. 처리한 input file 없음(HEAD 대조 + 코드 evidence만 사용)
+
 ## 2026-07-26 - SDD 체인 품질 게이트를 producer 스킬 소유로 고정 (v4.6.8 → v4.6.9, post-implementation sync)
 
 ### Context
