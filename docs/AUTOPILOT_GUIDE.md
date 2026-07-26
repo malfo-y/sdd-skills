@@ -1,7 +1,7 @@
 # SDD-Autopilot 사용 가이드
 
-**버전**: 2.0.0
-**날짜**: 2026-07-22
+**버전**: 2.1.0
+**날짜**: 2026-07-26
 
 SDD 체인을 무승인으로 자동 실행하는 sdd-autopilot 메타스킬 가이드
 
@@ -9,24 +9,22 @@ SDD 체인을 무승인으로 자동 실행하는 sdd-autopilot 메타스킬 가
 
 ## 1. 개요
 
-**sdd-autopilot**은 기능 요청 하나를 받아 계획, 품질 게이트, 구현, 리뷰, 스펙 동기화까지 **체인**으로 끝까지 실행하는 메타스킬입니다. 별도의 실행 계획서나 승인 단계 없이, 요구사항이 확정되면 곧바로 실행됩니다. 사용자는 초반 요구사항 질문(필요 시)과 draft의 Open Questions에만 답하면 됩니다.
+**sdd-autopilot**은 기능 요청 하나를 받아 계획 → 구현 → 스펙 동기화를 **체인**으로 끝까지 실행하는 메타스킬입니다. 품질 게이트는 각 스킬 내부에서 돕니다. 별도의 실행 계획서나 승인 단계 없이, 요구사항이 확정되면 곧바로 실행됩니다. 사용자는 초반 요구사항 질문(필요 시)과 draft의 Open Questions에만 답하면 됩니다.
 
 ## 2. 체인
 
 ```
 요청 분석
-  → feature-draft      (기능 명세: task별 AC·Target Files, ~1분)
-  → plan-review             (단일 패스 게이트, 경량 반환) → finding fix 1회
-  → implementation     (메인 루프 직접 RED→GREEN 구현)
-  → implementation-review   (correctness ∥ simplicity 2-reviewer, 경량 반환) → fix 1회
-  → spec-sync               (persistent 변경이 있을 때만)
-  → 최종 응답 요약           (리포트 파일 없음)
+  → feature-draft   (기능 명세: task별 AC·Target Files, ~1분 — 내부 품질 게이트 + fix 1회)
+  → implementation  (메인 루프 직접 RED→GREEN 구현 — 내부 품질 게이트 + fix 1회)
+  → spec-sync       (persistent 변경이 있을 때만)
+  → 최종 응답 요약   (리포트 파일 없음)
 ```
 
 핵심 원칙:
 
-- **무승인**: 승인 단계가 없습니다. 잘못된 방향은 draft 단계(~1분)에서 싸게 드러나고, plan-review 자동 게이트가 계획 품질을 검사합니다.
-- **Fix는 게이트당 1회**: review-fix loop를 돌지 않습니다. 1회 fix로 안 닫히는 finding은 최종 보고에 남고, 반복 재발은 계획 재설계 신호로 취급됩니다.
+- **무승인**: 승인 단계가 없습니다. 잘못된 방향은 draft 단계(~1분)에서 싸게 드러나고, `feature-draft`가 자기 품질 게이트로 계획 품질을 검사합니다.
+- **게이트와 fix는 producer 스킬 소유**: 각 품질 게이트는 그 산출물을 만든 스킬(`feature-draft`·`implementation`)이 내부에서 1회 수행하고 fix도 1회입니다 — autopilot이 게이트를 다시 호출하지 않습니다. review-fix loop는 돌지 않으므로 1회 fix로 안 닫히는 finding은 최종 보고에 남고, 반복 재발은 계획 재설계·분할 신호로 취급됩니다.
 - **경량 반환**: 리뷰 결과는 리포트 파일 없이 응답으로 돌아옵니다. 산출물은 draft 파일, 코드+테스트, 채팅의 AC→증거 테이블, 갱신된 spec뿐입니다.
 
 ## 3. 분할 (규모 초과 대응)
@@ -79,7 +77,7 @@ SDD 체인을 무승인으로 자동 실행하는 sdd-autopilot 메타스킬 가
 ## 7. 관련 스킬
 
 - `feature-draft` — 기능 명세 + 분할 규칙 canonical
-- `plan-review` — draft 품질 게이트 (단일 패스, 경량 반환)
+- `plan-review` — `feature-draft`가 내부에서 1회 수행하는 draft 품질 게이트 (단일 패스, 경량 반환)
 - `implementation` — 메인 루프 직접 RED→GREEN 구현 + 중단·분할 규칙 canonical
-- `implementation-review` — correctness ∥ simplicity 2-reviewer (경량 반환)
+- `implementation-review` — `implementation`이 마감에서 1회 수행하는 구현 품질 게이트 (correctness ∥ simplicity 2-reviewer, 경량 반환)
 - `spec-sync` — global spec 동기화 (planned/implemented 적응)
