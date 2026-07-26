@@ -1,5 +1,26 @@
 # Decision Log
 
+## 2026-07-26 - `ralph-loop-init` 런타임 안전장치·자체검증 실효화 (v4.6.7 → v4.6.8, post-implementation sync)
+
+### Context
+
+draft `_sdd/drafts/_processed_2026-07-26_feature_draft_ralph_loop_init_hardening.md`(10 task)가 구현·리뷰 게이트를 통과했다. 실측: 두 미러 `SKILL.md` + 두 `skill.json` 4파일 version `4.1.0` 동기, 산출물 목록 6파일(AC1·Step 8 요약 동일), `MAX_RUNTIME_MINUTES`/`MAX_ITERATIONS`/`DEADLINE` 관련 라인 두 미러 대칭(각 16건), `decisions.md` 생성·`tail` 읽기·`--reset` 초기화 존재, 스킬 AC3가 `bash -n` + 실행 권한으로 재작성됨, dead state 필드 3종(`errors`/`last_checkpoint`/`validation_results`)과 리터럴 `<placeholder>` 잔존 0. 검증 evidence: SKILL.md에서 템플릿을 추출한 structural check 80항목 PASS/0 FAIL(`bash -n` 포함), CLI 스텁 기반 기능 검증 5건(iteration backstop / wall-clock deadline / DONE 순서 — 변경 전 템플릿으로 유실 버그 재현해 RED→GREEN 실증 / DONE 재시작 가드 / zero-padded iteration), plan-review 1회 + implementation-review(correctness ∥ simplicity) 1회 + fix 1회.
+
+### Decision
+
+1. **무인 루프에 기계적 상한을 둔다 (current truth 승격)**: 종료 압력을 LLM 자기판단에만 맡기지 않는다. 주 상한은 wall-clock(`MAX_RUNTIME_MINUTES`, 기본 720분, 실행 1회 기준으로 재실행 시 리셋)이고 `MAX_ITERATIONS`(기본 200, 누적)는 폭주 backstop이다. 축을 둘로 나눈 이유: ralph는 iteration당 소요가 5분~6시간으로 편차가 커 iteration 수가 실행 시간의 대리지표가 못 되고, 반대로 LLM이 매번 성공하면서 action.sh를 안 쓰는 무진전 공회전은 시간이 아니라 토큰을 태워 wall-clock으로 안 막힌다. wall-clock 판정은 **soft**다 — iteration 경계에서만 보므로 진행 중인 학습·빌드를 죽이지 않는 대신 총 실행 시간이 마지막 action 길이만큼 예산을 넘을 수 있다. 상한 도달 시 `phase:`를 보존하고 `notes:`만 갱신한 뒤 `exit 1`한다: 무인 실행에서 상한 도달은 정상 완료가 아니므로 비-0이어야 하고, phase를 DONE으로 강제하면 상한을 올려도 결과를 지우는 `--reset` 외엔 재개 수단이 없어진다.
+2. **DONE 판정 지점은 2곳이다 (draft 계약 정정)**: 초안은 "판정을 action.sh 실행 뒤로 이동, 판정 1곳"이었으나 구현 리뷰에서 계약 오류로 판정됐다. 이동만 하면 이미 `phase: DONE`인 state로 재실행할 때 변경 전(즉시 break)과 달리 무인 LLM 턴 1회와 그 턴이 쓴 임의 action.sh 실행을 추가로 받는다 — `--dangerously-skip-permissions` 루프에서 이번 변경 주제와 역행한다. 따라서 루프 진입 가드(LLM 호출 전, `exit 0`)와 action 실행 뒤 사후 판정은 역할이 다른 별개 지점이며 복제가 아니다. 확정된 iteration 순서는 `진입 DONE 가드 → 상한 판정 → LLM → state 검증 → action.sh 실행/archive → 사후 DONE 판정`이고, 이로써 DONE으로 전환한 iteration의 action도 실행·archive된다(ANALYZING이 action.sh로 `final_report.md`를 만드는 경로에서 리포트가 유실되던 버그 해소).
+3. **init 시점 자체검증을 falsifiable하게 바꾼다**: 리터럴 `<placeholder>` 검사는 실제로 남는 슬롯(`<project name>`·`<main execution command>`)을 못 잡아 실효가 없었다. 검사 기준을 "지정 범위에 미충전 `<...>` 슬롯 0"으로 교체하고 범위의 단일 소스를 스킬 Step 8에 둔다 — `config.sh`·`run.sh`·`state.md`·`CHECKS.md` 전 문면 + `PROMPT.md`의 문서 시작~`## Iteration Protocol` 직전(H1의 `<project name>` 포함) + `## Known Errors`. 그 밖의 `<...>`는 루프 LLM을 향한 서식 지시이므로 검사 대상이 아니다. 함께 `bash -n`(run.sh·config.sh)을 Step 8 절차로 넣고, 루프를 돌리기 전엔 판정 불가였던 스킬 AC2·AC3를 init 시점 관찰로 판정 가능한 문장으로 재작성했다.
+4. **`decisions.md`를 6번째 산출물로 승격**: PROMPT.md가 읽고 쓰는데 어떤 Step도 만들지 않던 파일이다. 생성 산출물 목록의 단일 소스는 AC1과 Step 8 요약 출력이며, 읽기는 항상 파일 끝 일부(`tail -n 200`)만 본다(로테이션 메커니즘 없음). state.md의 dead schema 3필드는 제거해 매 iteration LLM이 읽는 표면에서 잡음을 뺐다.
+5. **ralph 진입 경계를 스킬이 스스로 선언한다**: `investigate`·`goal-init`은 각자 ralph와의 경계를 선언해 뒀는데 ralph만 침묵했다. 세션 수명 초과·무인 격리 실행·iteration마다 fresh context 필요·단일 실행이 시간 단위일 때만 ralph이고, 세션 안에서 닫히는 반복은 `investigate`(단발 디버깅)와 네이티브 `/goal`(조건·하네스 셋업은 `goal-init`)로 라우팅한다. 이 경계는 컴포넌트 수준 라우팅이라 global guardrail이 아니라 `components.md` reference에 둔다.
+6. **범위 밖(불변)**: ralph 상태 머신 phase 구성, Step 1~2 discovery 로직, 생성된 `ralph/`의 실제 런타임 검증(격리 환경 필요). `sdd-autopilot`에 ralph 진입 힌트를 재도입할지는 사용자 결정 대기 항목이다.
+
+### Changes
+
+- `components.md` — `ralph-loop-init` 행을 v4.1.0 계약으로 갱신(5파일→6파일, 고정 루프 제어 변수 4개와 두 상한의 축·soft·phase 보존, iteration 순서, init 시점 `bash -n`+슬롯 0 검사와 범위 단일 소스, 진입 경계). codex CLI flag delta 보존 서술은 유지
+- `main.md` — 헤더 4.6.8. 런타임 상한·판정 순서는 단일 스킬 안에서 복구되는 컴포넌트 계약이라 repo-wide invariant 기준을 통과하지 못해 본문 무변경
+- draft `_processed_` 이동
+
 ## 2026-07-22 - 스탠드얼론 reviewer/generator agent를 직접 실행 skill로 흡수 (`spec-review`·`ralph-loop-init`, v4.6.6 → v4.6.7, post-implementation sync)
 
 ### Context
