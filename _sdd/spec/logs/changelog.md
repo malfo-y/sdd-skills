@@ -2,6 +2,12 @@
 
 > 이 파일은 `_sdd/spec/main.md`의 **본문이 바뀐 버전만** 기록한다 — 본문 무변경 sync(헤더 날짜만 갱신)는 entry를 남기지 않으므로 버전 번호에 결번이 생길 수 있다.
 
+#### v4.6.10 (2026-07-26)
+
+- **`docs/en` 미러 세대 drift 해소 (post-implementation sync)**: v4.6.9가 planned로 고정한 en drift를 종결했다. 단일 원인은 2026-06-12 하네스 레이어 도입의 en 미전파 — en `SDD_WORKFLOW`에 §2 "When the harness is used" 신설 + 기존 §2~§9 → §3~§10 재번호 + §1 flow를 producer 게이트 2행으로 + §4 temporary spec 3항목화, en `SDD_CONCEPT` §1에 `Harness (AGENTS.md)` 행·경계 문단 추가. 함께 CONCEPT ko·en temporary spec 행을 현행 draft 구조 어휘로(correctness M1), `temporary spec 또는/or feature draft` alternation 6곳을 canonical 등가 표기로(simplicity M3), QUICK_START ko·en의 죽은 `implementation plan` 참조를 `feature draft`로 정리. 변경 6파일(ko 3 + en 3, 전부 `docs/`). structural check 35 PASS/0 FAIL + 회귀 79 PASS/0 FAIL, 리뷰 게이트 1회 + fix 1회(Critical/High 0).
+- **적용 surface**: `main.md` — 헤더 4.6.10, `현재 운영 제약`의 en drift `🚧 Planned` bullet을 ko/en 미러 대칭 마감 운영 제약 1줄로 대체(새 guardrail 없음 — canonical rollout 순서 결정의 enforcement로만 표현). `components.md`·`usage-guide.md` 무변경.
+- **보류**: simplicity M1/M2(supporting doc 산문 중복·긴장)와 Low 3건은 repo-wide invariant 기준 미통과로 global spec에 planned 고정하지 않고 `decision_log`에만 남겼다.
+
 #### v4.6.9 (2026-07-26)
 
 - **SDD 체인 품질 게이트를 producer 스킬 소유로 고정 (post-implementation sync)**: `implementation`(v3.0.0)이 `implementation-review`를 "선택 — 강제 아님" 권유가 아니라 마감 강제 게이트로 소유한다(회귀 1회 → AC→증거 테이블 → 게이트 1회 + C/H/M fix 1회 + fix 후 회귀 재실행 → 게이트 finding·fix 내역을 실은 마감 요약, Low는 advisory). `sdd-autopilot`(v4.0.0) Step 2는 6항목 → 4항목(Draft / 구현 / Spec sync / 최종 보고)으로 축소돼 게이트를 재호출하지 않고 producer 반환을 최종 보고로 모은다. `plan-review-agent` 미러 2벌의 호출 주체를 `feature-draft`로 정정, 하네스 §3 5곳(`AGENTS.md` + `spec-create`·`spec-upgrade` 템플릿 claude/codex 4미러)에 게이트 예외 1줄 추가(체인 리터럴은 무변경), `docs/AUTOPILOT_GUIDE.md` ko/en 2.1.0. structural check 79 PASS/0 FAIL, 리뷰 게이트 통과(plan-review 1회 + implementation-review 1회 + fix 1회).
