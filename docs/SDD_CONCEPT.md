@@ -8,7 +8,7 @@
 |------|------|---------|
 | Harness (AGENTS.md) | repo 작업 규약(how) / 작업 진입 | 작업 원칙, 읽는 순서, 검증 표준, 워크플로우 단계 순서, 판단 기준 포인터 |
 | Global spec | repo-wide 판단 기준 | 개념, 경계, 핵심 결정 |
-| Temporary spec | 변경 실행 청사진 | delta, touchpoints, validation, plan |
+| Temporary spec | 변경 실행 청사진 | delta, scope, task별 contract/AC, target files |
 | Code/Test | 실제 동작과 세부 truth | 구현, 실행 흐름, 세부 contract |
 | Guide/README/Refs | 보조 설명 | 사용 예시, 환경 상세, 참조 정보 |
 

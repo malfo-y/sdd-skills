@@ -37,7 +37,7 @@ global spec은 모든 단계의 출발점이지만, 모든 detail의 저장소�
 
 ## 4. Temporary Spec이 쓰이는 시점
 
-중간 규모 이상 변경은 temporary spec 또는 feature draft가 중심이 된다.
+중간 규모 이상 변경은 temporary spec(= feature draft)이 중심이 된다.
 
 여기서 다루는 것:
 
