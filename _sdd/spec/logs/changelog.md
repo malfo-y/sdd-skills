@@ -2,6 +2,13 @@
 
 > 이 파일은 `_sdd/spec/main.md`의 **본문이 바뀐 버전만** 기록한다 — 본문 무변경 sync(헤더 날짜만 갱신)는 entry를 남기지 않으므로 버전 번호에 결번이 생길 수 있다.
 
+#### v4.6.11 (2026-07-27)
+
+- **죽은 사이드카 메타데이터 `skill.json` 삭제, `SKILL.md` frontmatter를 version 단일 소스로 (post-implementation sync)**: 두 런타임 어느 쪽도 읽지 않던 `skill.json` 37개(`.claude` 19 + `.codex` 18)를 삭제했다 — 바이너리 문자열 실측에서 Codex CLI 0.142.5·Claude Code 2.1.220 모두 `skill.json` 0회 / `SKILL.md` 75회·222회. 읽히지 않아 감지되지 않던 version 불일치가 삭제 직전 12건 누적돼 있었고, 값 정렬(증상)이 아니라 파일 삭제(원인)로 종결했다. 함께 `.claude/skills/spec-snapshot/SKILL.md`에 `version: 1.2.0` 추가(삭제 전에도 version 소스가 0이던 유일 스킬), `_sdd/env.md` Runtime 절 작업 대상 목록에서 `skill.json` 제거. 변경 39파일. structural check 14 PASS/0 FAIL + 회귀 `check_gates.py` 79/0·`check_en_docs.py` 39/0 + 40개 SKILL.md frontmatter 전수 파싱 실패 0, 리뷰 게이트(correctness ∥ simplicity) 1회 + fix 1회(Critical/High 0).
+- **적용 surface**: `main.md` — 헤더 4.6.11, §3 결정 테이블 `Skill 정의 형식` 행을 "frontmatter가 메타데이터 단일 소스, 사이드카 파일 없음"으로 확장(새 결정 행 없음 — 기존 결정의 실체 확정), `현재 운영 제약`의 version 불릿을 version 단일 소스 서술로 재작성하고 하위 `🚧 Planned`("`implementation-review` 4필드 불일치")를 **미러 본문 세대 격차**로 치환. `components.md`·`usage-guide.md` 무변경(`skill.json` 리터럴 0건).
+- **planned 치환**: 지목 대상(`skill.json` `2.1.0`/`3.0.0`)은 소멸했으나 상위 사실("version 갱신이 편집 discipline 의존")은 유효하고 실례가 남아 있어 삭제가 아니라 치환으로 닫았다 — 미러 쌍 전수 대조상 live version 드리프트는 `guide-create`(`2.2.0`/`2.4.0`) 1건이고, `guide-create`·`spec-snapshot`은 본문 세대까지 갈려 있다(176/159줄, 135/118줄).
+- **보류**: `version:` 필드 자체의 폐지(소비자 census 0)는 이번 sync가 고정한 "frontmatter = version 단일 소스"와 정면 충돌해 planned로 고정하지 않고 Open Question으로 남겼다. Codex 번들 검증기 허용 키 이슈도 근거가 추정 수준이라 동일 처리.
+
 #### v4.6.10 (2026-07-26)
 
 - **`docs/en` 미러 세대 drift 해소 (post-implementation sync)**: v4.6.9가 planned로 고정한 en drift를 종결했다. 단일 원인은 2026-06-12 하네스 레이어 도입의 en 미전파 — en `SDD_WORKFLOW`에 §2 "When the harness is used" 신설 + 기존 §2~§9 → §3~§10 재번호 + §1 flow를 producer 게이트 2행으로 + §4 temporary spec 3항목화, en `SDD_CONCEPT` §1에 `Harness (AGENTS.md)` 행·경계 문단 추가. 함께 CONCEPT ko·en temporary spec 행을 현행 draft 구조 어휘로(correctness M1), `temporary spec 또는/or feature draft` alternation 6곳을 canonical 등가 표기로(simplicity M3), QUICK_START ko·en의 죽은 `implementation plan` 참조를 `feature draft`로 정리. 변경 6파일(ko 3 + en 3, 전부 `docs/`). structural check 35 PASS/0 FAIL + 회귀 79 PASS/0 FAIL, 리뷰 게이트 1회 + fix 1회(Critical/High 0).

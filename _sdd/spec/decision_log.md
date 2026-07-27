@@ -1,5 +1,28 @@
 # Decision Log
 
+## 2026-07-27 - 죽은 사이드카 메타데이터 `skill.json` 삭제, `SKILL.md` frontmatter를 version 단일 소스로 (v4.6.10 → v4.6.11, post-implementation sync)
+
+### Context
+
+`skill.json`은 2026-02-14 `48bee08 add skill.json files`로 도입된 이래 **두 런타임 어느 쪽도 로드한 적이 없다**. 바이너리 문자열 실측: Codex CLI 0.142.5 네이티브 바이너리에서 `skill.json` **0회** / `SKILL.md` **75회**, Claude Code 2.1.220에서 `skill.json` **0회**(검출 2건은 별개 파일명 `.forked-skill.json`) / `SKILL.md` **222회**. `.claude-plugin/marketplace.json`은 스킬을 디렉토리 경로로 등록하고, 유일한 live 스크립트 `tools/install-codex-skill-bundle.py`는 `SKILL.md` 존재만 확인한 뒤 디렉토리를 통째로 재복사한다. 이미 `skill.json` 없이 정상 동작하던 스킬이 repo 내 3종 + `~/.codex/skills/`의 비-repo 스킬 3종 존재했다. 읽히지 않으므로 드리프트가 감지되지 않았고, 실제로 삭제 직전 40개 스킬 표면에 **12건**의 version 불일치가 조용히 누적돼 있었다(`discussion` 1.5.0/1.2.0, `implementation-review` 7.0.0/2.1.0·3.0.0, `investigate` 4.0.0/1.0.0, `pr-review` 4.0.0/2.0.0, `spec-create` 1.10.0/1.9.1 등). 변경 39파일(`.claude` 19 + `.codex` 18 삭제, `.claude/skills/spec-snapshot/SKILL.md`에 `version: 1.2.0` 추가, `_sdd/env.md` 1줄). 검증 evidence: structural check 14 PASS/0 FAIL, 회귀 `check_gates.py` 79 PASS/0 FAIL·`check_en_docs.py` 39 PASS/0 FAIL, 40개 SKILL.md frontmatter PyYAML 전수 파싱 실패 0·`version` 누락 0, `find -name skill.json` 0건, live 표면 전수 grep 0건, `git diff --check` 무출력, implementation-review(correctness ∥ simplicity) 1회 + fix 1회(Critical/High 0, Medium 9 중 4건 반영·1건 실측 기각).
+
+### Decision
+
+1. **값 정렬이 아니라 파일 삭제로 종결한다 (current truth 승격)**: 12건의 version 불일치는 증상이고 원인은 "읽히지 않는 사이드카가 존재한다"는 구조다. 값을 맞추면 다음 편집에서 같은 드리프트가 재발하고, 읽는 주체가 없어 재발이 다시 감지되지 않는다. 드리프트가 생길 자리 자체를 없앤다.
+2. **version 단일 소스 = `SKILL.md` frontmatter의 `version:` 필드**: 스킬 메타데이터를 담는 사이드카 파일은 두지 않는다. 이 판단은 새 guardrail이 아니라 §3 결정 테이블 `Skill 정의 형식` 행의 확장으로 표현했다 — "Markdown `SKILL.md`가 스킬 정의 형식"이라는 기존 결정의 실체를 확정한 것이므로, 별도 결정 행을 만들면 판정 주체가 둘로 갈린다(anti-duplication, v4.6.10과 동일 논법).
+3. **"version 4필드 lockstep" 개념 소멸**: 미러 쌍당 version 검사 대상이 4필드(SKILL.md 2 + skill.json 2)에서 2필드로 줄었다. 앞으로 draft가 version AC를 쓸 때 4필드를 요구하지 않는다.
+4. **`main.md`의 planned 항목은 삭제가 아니라 치환으로 종결한다**: 기존 `🚧 Planned`("`implementation-review` version 4필드 불일치")가 지목한 대상(`skill.json` `2.1.0`/`3.0.0`)은 물리적으로 사라졌고 남은 2필드는 이미 일치(`7.0.0`)라 항목 자체는 소멸이 맞다. 그러나 상위 불릿("일부 version metadata 갱신은 문서 편집 discipline에 의존한다")은 여전히 참이고 실재 사례가 남아 있다 — 미러 쌍 전수 대조 결과 live version 드리프트는 `guide-create`(`2.2.0`/`2.4.0`) 1건이다. 단순 삭제로 닫으면 repo에 유일하게 남은 live 드리프트가 spec 어디에도 기록되지 않으므로, 불릿을 version 단일 소스 서술로 재작성하고 하위 planned를 **미러 본문 세대 격차**로 교체했다.
+5. **`spec-snapshot` claude 미러의 `version` 결번을 같은 단위에서 보정한다**: `.claude/skills/spec-snapshot/`은 `skill.json`도 없고 frontmatter에도 `version:`이 없어 이 변경 **전에도** version 소스가 0이던 유일한 스킬이었다. frontmatter를 단일 소스로 세우는 변경에서 유일한 빈칸이라 codex 짝과 같은 `1.2.0`으로 채웠다(범위 확장 1파일).
+6. **미러 본문 세대 격차는 planned로 고정하되 canonical 방향은 미정으로 둔다**: `guide-create`(176줄/159줄)와 `spec-snapshot`(135줄/118줄, codex `:28`에만 legacy uppercase 대응 규칙)은 같은 버킷이다 — version 값이 아니라 본문 세대가 갈렸고, 어느 쪽이 구세대인지는 본문 대조가 선행되어야 근거 있게 단정할 수 있다. `spec-snapshot`은 version을 맞춘 탓에 version만으로는 격차가 보이지 않게 됐으므로 명시 기록이 특히 필요하다.
+7. **`version:` 필드 자체의 폐지는 planned로 고정하지 않는다**: 이번 census로 `version:` 값을 읽는 런타임·스크립트·문서가 0임이 확인됐고(두 바이너리 모두 name/description만 사용, `tools/`는 `SKILL.md` 존재만 확인, `marketplace.json`·`AGENTS.md`·`README.md`·`docs/` 0건), 추적 canonical은 §3 `artifact naming/history` 행이 이미 git-history-first로 선언한다 — `skill.json`과 같은 논법이 성립한다. 그럼에도 planned로 고정하지 않는 이유는 **이번 결정 2와 정면으로 충돌**하기 때문이다. 같은 sync에서 "frontmatter `version:`이 단일 소스"를 고정하면서 "그 필드를 전부 없앤다"를 planned로 박으면 spec이 자기모순 상태가 된다. 사용자 판정 사항으로 Open Question에만 남긴다.
+
+### Rationale
+
+- 삭제의 안전성은 "참조가 없다"는 소극적 근거가 아니라 **바이너리 문자열 실측 + 무-`skill.json` 스킬 6종의 정상 동작**이라는 적극적 반증으로 확인했다. 참조 census만으로는 네이티브 로더가 규약 기반으로 읽을 가능성을 배제할 수 없다.
+- planned 항목의 종결 형태(삭제 vs 치환)는 "지목 대상이 사라졌나"가 아니라 "그 항목이 대변하던 지속 사실이 사라졌나"로 판정했다. 대상은 소멸했지만 사실(version 갱신이 편집 discipline 의존)은 남았고 실례도 남았다.
+- 기록물(`decision_log`·`changelog`·`logs/prev/`)의 과거 `skill.json` 언급은 시점 고정 기록이라 갱신 대상이 아니다. live 표면(`.claude/`·`.codex/`·`.claude-plugin/`·`tools/`·`docs/`·`AGENTS.md`·`CLAUDE.md`·`README.md`·`_sdd/env.md`)만 0건을 요구했다.
+- Codex 번들 검증기의 `allowed_properties = {name, description, license, allowed-tools, metadata}`에 `version`·`argument-hint`가 없는 점은 이번 범위 밖으로 뒀다 — 같은 스크립트에 `Repo path to list (default: skills/.curated)`가 있어 큐레이션 저장소용 패키징 검증기로 보이고 런타임 로더가 아니며, 현재 스킬이 정상 로드된다. 근거가 추정 수준이라 planned로 고정하지 않는다.
+
 ## 2026-07-26 - `docs/en` 미러 세대 drift 해소 + ko/en 대칭 마감을 운영 제약으로 고정 (v4.6.9 → v4.6.10, post-implementation sync)
 
 ### Context
