@@ -6,7 +6,7 @@
 
 ## Runtime
 
-- 기본 작업 대상: Markdown 문서, `SKILL.md`, `skill.json`, 예시/참고 문서
+- 기본 작업 대상: Markdown 문서, `SKILL.md`, 예시/참고 문서
 - 주요 디렉토리: `.codex/skills/`, `.claude/skills/`, `_sdd/`, 루트 문서
 
 ## Environment Variables
