@@ -1,7 +1,6 @@
 ---
 name: sdd-autopilot
 description: "SDD 체인 자동 실행 메타스킬. /sdd-autopilot으로 호출하여 요구사항 분석부터 스펙 동기화까지 체인을 무승인으로 끝까지 실행한다."
-version: 4.0.0
 ---
 
 # SDD Autopilot

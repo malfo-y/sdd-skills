@@ -1,7 +1,6 @@
 ---
 name: goal-init
 description: This skill should be used when the user asks to set up a "/goal", "goal 조건", "goal init", "goal-init", "set up goal", "goal helper", "goal 설정", "goal 목표", wants to craft a good `/goal` completion condition, or to scaffold the 4-file goal harness for a native `/goal` loop. Conversational helper that crafts the condition string and harness; it does not invoke `/goal` itself.
-version: 1.0.0
 ---
 
 # goal-init - `/goal` 조건 + 실행 하네스 셋업

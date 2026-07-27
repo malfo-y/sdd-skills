@@ -1,7 +1,6 @@
 ---
 name: discussion
 description: This skill should be used when the user asks to "discuss", "discussion", "토론", "토론하자", "let's discuss", "brainstorm", "논의", "의견 나누기", or wants a structured iterative discussion with research support.
-version: 1.5.0
 ---
 
 # discussion

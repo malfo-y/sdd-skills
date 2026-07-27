@@ -1,7 +1,6 @@
 ---
 name: write-phased
 description: Use this skill when the user asks to write, create, or generate a document or code file. Triggers on "write-phased", "문서 작성", "작성해줘", "만들어줘", "코드 작성", "파일 생성", "구현해줘", "write a document", "create a file", "generate code", "implement", or any request to produce a markdown document, code file, config file, or technical writing. The caller writes the skeleton inline first, then fills and finalizes in the same flow.
-version: 3.0.0
 ---
 
 # write-phased — Inline 2-Phase Writing
