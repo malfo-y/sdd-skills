@@ -2,8 +2,8 @@
 
 > Markdown 기반 skill bundle로 AI 에이전트의 Spec-Driven Development 워크플로우를 Claude Code와 Codex에서 공통 계약으로 실행한다.
 
-**Spec Version**: 4.6.10
-**Last Updated**: 2026-07-26
+**Spec Version**: 4.6.11
+**Last Updated**: 2026-07-27
 **Status**: Approved
 **Canonical Role**: current thin global spec
 
@@ -114,7 +114,7 @@ SDD Skills의 설계는 다음 층으로 나뉜다.
 
 | 결정 | 현재 선택 | 유지 이유 |
 |------|-----------|-----------|
-| Skill 정의 형식 | Markdown `SKILL.md` | AI 에이전트가 직접 읽고 실행 규약을 추론하기 쉽다 |
+| Skill 정의 형식 | Markdown `SKILL.md` 단일 파일 — frontmatter가 name/description/version 등 스킬 메타데이터의 단일 소스이고, 메타데이터를 담는 사이드카 파일은 두지 않는다 | AI 에이전트가 직접 읽고 실행 규약을 추론하기 쉽다. 런타임이 읽지 않는 사이드카 메타데이터(구 `skill.json`)를 두면 드리프트가 감지되지 않는 채 누적된다 |
 | 런타임 구조 | Claude/Codex dual bundle | 동일한 SDD 철학을 유지하면서 플랫폼별 실행 차이를 흡수한다 |
 | 실행 분리 | skill entrypoint + reusable agent. leaf dispatch가 필요한 execution(`pr-review` 2-렌즈 병렬, `investigate` 조건부 explore fan-out)은 `orchestrator skill + leaf agent`, 단순 위임 execution은 `wrapper skill + single-source agent`, 구현·planning은 메인 루프 직접 작성 | direct invocation 재사용성을 확보하면서 nesting 1단계 제한 안에서 dispatch를 메인 루프 skill로 올린다 |
 | 상태 전달 | `_sdd/` 파일 아티팩트 중심 | 세션 메모리 의존을 줄이고 재현성과 git 추적성을 높인다 |
@@ -146,8 +146,8 @@ SDD Skills의 설계는 다음 층으로 나뉜다.
 ### 현재 운영 제약
 
 - Claude와 Codex 문서/skill parity는 아직 완전 자동 동기화가 아니라 유지보수자의 관리가 필요하다. wrapper-backed skill에서는 agent가 단일 소스이므로 "skill 본문과 agent 본문을 함께 미러링"하는 의무는 대부분 해소됐고, 유지보수는 agent 본문과 thin wrapper의 entrypoint/dispatch 정합으로 좁혀졌다(claude/codex 양 플랫폼 parity는 여전히 수동 관리)
-- 일부 version metadata 갱신은 여전히 문서 편집 discipline에 의존한다
-  - 🚧 Planned: `implementation-review`의 version 4필드가 어긋나 있다 — `.claude` skill.json `2.1.0` / `.codex` skill.json `3.0.0` vs 두 SKILL.md frontmatter `7.0.0`. 별도 이슈로 정렬한다
+- 스킬 version의 단일 소스는 각 `SKILL.md` frontmatter의 `version:` 필드다 — 두 런타임 어느 쪽도 읽지 않던 사이드카 `skill.json` 37개를 삭제해 미러 쌍당 version 검사 대상이 4필드(SKILL.md 2 + skill.json 2)에서 2필드로 줄었다. 값 갱신은 여전히 문서 편집 discipline에 의존하며, 삭제 시점 실측상 남은 미러 version 드리프트는 `guide-create`(`.claude` `2.2.0` / `.codex` `2.4.0`) 1건이다
+  - 🚧 Planned: `guide-create`·`spec-snapshot` 미러의 **본문 세대 격차** — `guide-create`는 version과 본문이 함께 갈렸고(176줄 / 159줄), `spec-snapshot`은 version을 `1.2.0`으로 맞췄으나 본문은 135줄 / 118줄이고 codex 쪽에만 legacy uppercase(`DECISION_LOG.md`) 대응 규칙이 있어 version만으로는 격차가 보이지 않는다. 어느 쪽이 canonical인지는 본문 대조가 선행되어야 해 별도 이슈로 해소한다
 - 이 저장소는 전통적인 테스트 프레임워크보다 실제 skill invocation과 리뷰 기반 검증에 크게 의존한다
 - `docs/` ko 본문과 `docs/en/` 미러의 세대 정합도 수동 관리다 — canonical rollout 순서의 `english mirrors` 단계가 가장 누락되기 쉬운 지점이고, 레이어·섹션 추가를 ko에만 반영하고 닫으면 en 짝이 한 세대 뒤처진다(하네스 레이어 추가가 en `SDD_WORKFLOW`·`SDD_CONCEPT`에 전파되지 않아 §2 Harness 누락 + 삭제된 full 레인 어휘 잔존으로 드러난 전례). ko/en 짝을 건드리는 변경은 대칭 마감을 검증 대상으로 둔다
 
