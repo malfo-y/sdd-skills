@@ -4,6 +4,7 @@ description: |
   Create a translated snapshot of the current spec.
   Copies _sdd/spec/ to _sdd/snapshots/<timestamp>_<lang>/ with optional translation.
   Trigger phrases: "spec snapshot", "스펙 스냅샷", "snapshot spec", "translate spec", "스펙 번역", "export spec"
+version: 1.2.0
 user_invocable: true
 ---
 
