@@ -1,7 +1,6 @@
 ---
 name: spec-summary
 description: This skill should be used when the user asks to "summarize spec", "spec summary", "show spec overview", "스펙 요약", "스펙 개요", "show spec status", "스펙 현황", "project overview", "프로젝트 개요", "what's the current state", "현재 상태는", or wants a reader-facing whitepaper of the current repo/spec with an optional appendix for planned/progress signals.
-version: 3.0.1
 ---
 
 # spec-summary

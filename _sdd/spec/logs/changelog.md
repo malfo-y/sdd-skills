@@ -2,6 +2,13 @@
 
 > 이 파일은 `_sdd/spec/main.md`의 **본문이 바뀐 버전만** 기록한다 — 본문 무변경 sync(헤더 날짜만 갱신)는 entry를 남기지 않으므로 버전 번호에 결번이 생길 수 있다.
 
+#### v4.6.12 (2026-07-27)
+
+- **`SKILL.md` frontmatter `version:` 필드 삭제, 스킬 버전 소스를 0으로 (post-implementation sync)**: 직전 sync(v4.6.11)가 Open Question으로 남긴 "필드 자체 폐지"를 사용자가 판정해 실행했다 — `version:`의 소비자가 0이기 때문이다(두 런타임 바이너리 모두 `name`·`description`만 사용, `tools/install-codex-skill-bundle.py`는 `SKILL.md` 존재만 확인 후 디렉토리 통째 교체, `marketplace.json`은 디렉토리 경로 등록, `AGENTS.md`·`README.md`·`docs/`·agent 파일 참조 0건). `.claude/skills/*/SKILL.md` 21 + `.codex/skills/*/SKILL.md` 19 = 40파일에서 frontmatter `version:` 줄만 삭제(각 diff `+0/-1`). 잔존 키는 `name`·`description` + 런타임이 읽는 선택 키(`argument-hint`·`user_invocable`). structural check 8 PASS/0 FAIL + 회귀 13/0·77/0·39/0 + 40개 frontmatter 전수 파싱 실패 0 + live 표면 `^version:` 0건, 리뷰 게이트(correctness ∥ simplicity) 1회 + fix 1회(Critical/High 0).
+- **적용 surface**: `main.md` — 헤더 4.6.12, §3 결정 테이블 `Skill 정의 형식` 행을 "스킬 버전을 담는 필드·파일은 두지 않는다(스킬 변경 이력 = git history)"로 **교체**(직전 sync가 고정한 같은 행을 다시 바꿈 — 새 결정 행·guardrail 없음), 유지 이유를 "사이드카든 frontmatter 필드든 소비자 없는 값은 두지 않는다"로 일반화하고 version lockstep 검사 대상 0을 명시. `현재 운영 제약`의 version 단일 소스 불릿은 **소멸**(치환이 아니라 삭제 — 대변하던 사실 자체가 사라짐), 하위 `🚧 Planned`(미러 본문 세대 격차)는 유지하되 version 재료를 걷어내고 본문 실측으로 재서술 + 최상위로 승격.
+- **산문 참조 정리(판정 규칙)**: live spec 3파일의 스킬 버전 10줄 11토큰을 정리했다 — (i) 현재 계약 표기는 괄호째 삭제(`sdd-autopilot`(v4.0.0) → `sdd-autopilot`), (ii) 역사 앵커는 feature/사건 앵커로 치환(`v2.0.0에서 개명(F5)` → `F5에서 개명`, `v3.0.0에서 …가 됐다` → 현재형 계약 서술). 문서 자체 버전(`Spec Version`, AUTOPILOT_GUIDE `2.1.0`, marketplace 플러그인 `1.0.0`)과 `SKILL.md` 본문 보존 2건(`guide-create` 생성 템플릿, `git` 충돌 산문)은 범위 밖이다.
+- **보류**: `user_invocable`은 삭제 대상이 아니다 — Claude Code 2.1.220 바이너리가 실제로 읽는다(문자열 2건 실측). 미러 본문 세대 격차의 canonical 방향은 여전히 미정(`🚧 Planned` 유지).
+
 #### v4.6.11 (2026-07-27)
 
 - **죽은 사이드카 메타데이터 `skill.json` 삭제, `SKILL.md` frontmatter를 version 단일 소스로 (post-implementation sync)**: 두 런타임 어느 쪽도 읽지 않던 `skill.json` 37개(`.claude` 19 + `.codex` 18)를 삭제했다 — 바이너리 문자열 실측에서 Codex CLI 0.142.5·Claude Code 2.1.220 모두 `skill.json` 0회 / `SKILL.md` 75회·222회. 읽히지 않아 감지되지 않던 version 불일치가 삭제 직전 12건 누적돼 있었고, 값 정렬(증상)이 아니라 파일 삭제(원인)로 종결했다. 함께 `.claude/skills/spec-snapshot/SKILL.md`에 `version: 1.2.0` 추가(삭제 전에도 version 소스가 0이던 유일 스킬), `_sdd/env.md` Runtime 절 작업 대상 목록에서 `skill.json` 제거. 변경 39파일. structural check 14 PASS/0 FAIL + 회귀 `check_gates.py` 79/0·`check_en_docs.py` 39/0 + 40개 SKILL.md frontmatter 전수 파싱 실패 0, 리뷰 게이트(correctness ∥ simplicity) 1회 + fix 1회(Critical/High 0).

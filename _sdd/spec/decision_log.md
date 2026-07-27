@@ -1,5 +1,29 @@
 # Decision Log
 
+## 2026-07-27 - `SKILL.md` frontmatter `version:` 필드 삭제, 스킬 버전 소스를 0으로 (v4.6.11 → v4.6.12, post-implementation sync)
+
+### Context
+
+직전 단위(v4.6.11, `skill.json` 37개 삭제)가 planned로 고정하지 않고 Open Question으로 남긴 항목 (a)를 사용자가 "지우자"로 판정해 실행했다. 그 sync는 "frontmatter `version:`이 version 단일 소스"를 고정했는데, 같은 census가 **그 단일 소스의 소비자도 0**임을 이미 보여주고 있었다 — Codex CLI 0.142.5·Claude Code 2.1.220 두 바이너리 모두 frontmatter에서 `name`·`description`만 사용하고, `tools/install-codex-skill-bundle.py`는 `SKILL.md` 존재만 확인한 뒤 디렉토리를 통째 교체하며, `.claude-plugin/marketplace.json`은 스킬을 디렉토리 경로로 등록하고, `AGENTS.md`·`README.md`·`docs/`·agent 파일(claude `.md` 5 + codex `.toml` 5)의 스킬 version 참조는 0건이다. 남은 유지 근거는 "사람이 읽는 앵커" 하나였고 그 비용은 실측된 드리프트(`guide-create` `.claude` 2.2.0 / `.codex` 2.4.0)로 계상돼 있었다. 변경 41파일 — `.claude/skills/*/SKILL.md` 21 + `.codex/skills/*/SKILL.md` 19에서 frontmatter `version:` 줄만 삭제(각 파일 diff `+0/-1`, YAML 재직렬화 없음) + `_sdd/work_log/2026-07-27.md`. 검증 evidence: structural check 8 PASS/0 FAIL, 회귀 `check_skill_json.py` 13/0·`check_gates.py` 77/0·`check_en_docs.py` 39/0, 40개 frontmatter PyYAML 전수 파싱 실패 0(잔존 키 = `name`·`description` + 선택 키), live 표면 전수에서 `^version:` 0건, `git diff --check` 무출력, 리뷰 게이트(correctness ∥ simplicity) 1회 + fix 1회(Critical/High 0, Medium 8 중 6건 반영·1건 실측 기각). correctness reviewer가 installer·marketplace·심볼릭 링크 경로를 독립 재검증해 깨지는 경로 0건을 확인했다.
+
+### Decision
+
+1. **직전 sync가 고정한 결정 행을 같은 자리에서 다시 바꾼다 (current truth 승격)**: §3 결정 테이블 `Skill 정의 형식` 행을 "frontmatter가 name/description(+ 런타임이 읽는 선택 키) 등 메타데이터의 단일 소스이고, **스킬 버전을 담는 필드·파일은 두지 않는다(스킬 변경 이력 = git history)**"로 교체했다. 새 결정 행도 새 guardrail도 만들지 않았다 — v4.6.11이 쓴 anti-duplication 논법과 동일하게, 이 사실은 "Markdown `SKILL.md`가 스킬 정의 형식"이라는 기존 결정의 실체 확정이므로 착지 지점은 이 행 하나다. Repo-wide Invariant Test #1도 미통과다(`SKILL.md` 하나를 열면 frontmatter 전체가 보인다).
+2. **논법의 일반화 — 사이드카냐 필드냐가 아니라 소비자 유무다**: v4.6.11의 유지 이유는 "런타임이 읽지 않는 **사이드카**를 두면 드리프트가 누적된다"였으나, 이번 census는 같은 병이 **frontmatter 필드**에도 성립함을 보였다(읽히지 않는 `version:` 값이 실제로 갈렸다). 유지 이유를 "사이드카 파일(구 `skill.json`)이든 frontmatter 필드(구 `version:`)든 소비자가 없는 값은 두지 않는다"로 일반화해, 다음에 같은 부류의 필드가 제안될 때 판정 기준이 파일 형태가 아니라 소비자 census가 되게 했다.
+3. **"version lockstep" 개념 완전 소멸**: 미러 쌍당 version 검사 대상이 4필드(SKILL.md 2 + skill.json 2) → 2필드(v4.6.11) → **0필드**가 됐다. 앞으로 draft는 version AC를 쓰지 않는다. 이 사실도 별도 항목이 아니라 결정 행 유지 이유의 마지막 절로만 표현했다.
+4. **운영 제약 1줄은 소멸시킨다**: "스킬 version의 단일 소스는 frontmatter의 `version:` 필드다" 불릿은 지목 대상이 물리적으로 사라졌고, v4.6.11의 치환 판정 기준("그 항목이 대변하던 지속 사실이 남았나")을 적용하면 이번에는 **사실 자체가 소멸**한다 — version 갱신 discipline도, 값 드리프트도 대상이 없다. 따라서 치환이 아니라 삭제가 맞다.
+5. **하위 `🚧 Planned`(미러 본문 세대 격차)는 남기되 version 재료를 걷어내고 재서술한다**: 격차 자체는 미해소이므로 planned 유지가 맞으나, 근거였던 version 값(`guide-create` 2.2.0/2.4.0, `spec-snapshot` 1.2.0)이 사라졌다. 재서술 재료는 본문 실측이다 — `guide-create` 175 / 158줄이고 **codex 쪽에는 claude 본문의 생성 가이드 템플릿 블록(`**Version**: X.Y.Z` 필드 줄)이 아예 없으며**, `spec-snapshot` 134 / 117줄이고 codex 쪽에만 legacy uppercase(`DECISION_LOG.md`) 대응 규칙이 있다. 또한 "버전 값 비교라는 우회 신호가 이제 없다"는 점을 명시해, 앞으로 미러 세대 판정이 본문 대조로만 가능함을 기록했다. `spec-snapshot` codex 쪽 규칙의 줄 번호는 이번 삭제로 밀렸으므로(`:28`→`:27`) 포인터를 줄 번호 대신 규칙 내용으로 고정했다.
+6. **산문 참조 정리는 열거가 아니라 판정 규칙으로 수행한다**: live spec 3파일에서 `v?\d+\.\d+\.\d+` 전수 대조 후 **스킬 버전만** 정리했다(10줄 / 11토큰: `main.md` 5줄, `components.md` 4줄 5토큰, `usage-guide.md` 1줄). rewrite는 두 갈래다 — **(i) 현재 계약 표기**는 괄호째 삭제(`` `sdd-autopilot`(v4.0.0)은 `` → `` `sdd-autopilot`은 ``), **(ii) 역사 앵커 서술**은 버전을 feature/사건 앵커로 치환(`v2.0.0에서 개명(F5)` → `F5에서 개명`). 토큰만 지우면 `에서 …가 개명(F5)`처럼 문장이 깨진다. `components.md`의 `v3.0.0에서 마감이 강제 게이트 계약이 됐다`는 대응 feature ID가 없으므로 현재형 계약 서술(`마감은 강제 게이트 계약이다`)로 바꿔 (ii)를 해소했다. 열거로 처리하면 재드리프트한다 — 실제로 draft 초안이 `components.md` 2줄을 빠뜨렸다.
+7. **문서 자체의 버전은 정리 대상이 아니다**: `main.md`의 `Spec Version`, `docs/AUTOPILOT_GUIDE.md`·`docs/en/`의 `2.1.0`, `.claude-plugin/marketplace.json`의 플러그인 metadata `1.0.0`은 스킬 버전이 아니라 그 문서/플러그인의 개정 번호다. `main.md`의 `sdd-autopilot` 불릿은 한 줄에 스킬 버전 `v4.0.0`과 문서 버전 `2.1.0`이 공존해 부분 편집으로 처리했다. `SKILL.md` 본문 보존 대상 2건(`guide-create`의 생성 가이드 템플릿 `**Version**: X.Y.Z`, `git`의 충돌 산문 `Which version?`)도 잔존을 검증 대상으로 뒀다.
+8. **`user_invocable`은 같은 부류가 아니다**: simplicity reviewer가 2라운드 연속 "소비자 0인 같은 부류"로 삭제를 제안했으나 Claude Code 2.1.220 바이너리가 `user_invocable`·`user-invocable`을 실제로 읽는다(문자열 2건 실측, Codex 바이너리는 0건이라 codex 짝에 없는 것도 설명된다). 재census 방지를 위해 근거를 draft Scope Out에 고정했고, 결정 행의 "런타임이 읽는 선택 키"가 이 부류(`argument-hint`·`user_invocable`)를 가리킨다. Codex 번들 검증기의 `allowed_properties`에 이들이 없다는 점은 그 검증기가 큐레이션 패키징용이라 런타임 근거가 아니며 별건이다.
+
+### Rationale
+
+- 같은 결정 행을 이틀 연속 뒤집는 것은 드리프트가 아니라 **census가 결론을 앞질러 나온 순서 문제**였다. v4.6.11은 사이드카 삭제라는 변경 범위 안에서 "남은 소스는 frontmatter"까지만 확정할 수 있었고, 그 sync의 Open Question (a)가 정확히 이 후속을 지목했다. 자기모순을 피하려고 planned 고정을 유보한 판단이 사용자 판정 한 번으로 닫혔으므로, 이번 교체는 예정된 다음 조각이다.
+- 삭제의 안전성은 참조 census(소극적 근거)에 더해 **바이너리 문자열 실측 + installer/marketplace/심볼릭 링크 경로의 독립 재검증**(적극적 반증)으로 확인했다. 스킬 로딩은 규약 기반이라 참조 0건만으로는 부족하다.
+- 복구 앵커는 별도 tag 없이 `git show 4e9b0c0:<path>`다. 소비자가 0인 값이라 복구 수요 자체가 가설적이고, tag를 두면 없어진 개념에 이름을 다시 부여하게 된다.
+- 기록물(`decision_log`·`changelog`·과거 draft·`work_log`)의 version 언급은 시점 고정이라 갱신 대상이 아니다. live 표면만 `^version:` 0건을 요구했다.
+
 ## 2026-07-27 - 죽은 사이드카 메타데이터 `skill.json` 삭제, `SKILL.md` frontmatter를 version 단일 소스로 (v4.6.10 → v4.6.11, post-implementation sync)
 
 ### Context

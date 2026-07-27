@@ -1,7 +1,6 @@
 ---
 name: spec-upgrade
 description: This skill should be used when the user asks to "upgrade spec", "migrate spec format", "modernize spec structure", "spec upgrade", "스펙 업그레이드", "스펙 변환", "스펙 마이그레이션", or wants to convert old-format spec documents to the current canonical SDD spec model defined in SDD_SPEC_DEFINITION.md.
-version: 1.10.1
 ---
 
 # spec-upgrade

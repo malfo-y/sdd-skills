@@ -52,7 +52,7 @@
 
 ### Scenario 2b: 대규모 기능 추가 (sdd-autopilot 자동 실행)
 
-> autopilot(v4.0.0)은 SDD 체인 전용이다. 규모 초과는 feature 분할(분할 목록 `spec-sync` planned todo 고정 후 feature별 순차 체인)로 해소한다. 구 orchestrator 기반 full 파이프라인은 제거됐다 — 복구는 git tag `full-lane-final`, legacy `_sdd/pipeline/` 산출물은 기록물이다.
+> autopilot은 SDD 체인 전용이다. 규모 초과는 feature 분할(분할 목록 `spec-sync` planned todo 고정 후 feature별 순차 체인)로 해소한다. 구 orchestrator 기반 full 파이프라인은 제거됐다 — 복구는 git tag `full-lane-final`, legacy `_sdd/pipeline/` 산출물은 기록물이다.
 
 **Action:**
 ```bash

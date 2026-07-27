@@ -1,7 +1,6 @@
 ---
 name: guide-create
 description: This skill should be used when the user asks to "guide create", "create guide", "feature guide", "write guide", "가이드 작성", "기능 가이드", "가이드 문서 만들어줘", or wants to generate an implementation/review guide document for a specific feature from spec and code context.
-version: 2.4.0
 ---
 
 # guide-create

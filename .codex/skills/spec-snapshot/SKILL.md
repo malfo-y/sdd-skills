@@ -1,7 +1,6 @@
 ---
 name: spec-snapshot
 description: This skill should be used when the user asks to "spec snapshot", "snapshot spec", "translate spec", "export spec", "스펙 스냅샷", "스펙 번역", or wants to create a timestamped snapshot of the current spec with optional translation.
-version: 1.2.0
 ---
 
 # spec-snapshot

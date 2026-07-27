@@ -2,7 +2,7 @@
 
 > Markdown 기반 skill bundle로 AI 에이전트의 Spec-Driven Development 워크플로우를 Claude Code와 Codex에서 공통 계약으로 실행한다.
 
-**Spec Version**: 4.6.11
+**Spec Version**: 4.6.12
 **Last Updated**: 2026-07-27
 **Status**: Approved
 **Canonical Role**: current thin global spec
@@ -78,13 +78,13 @@ SDD Skills는 이 문제를 `SKILL.md = 실행 가능한 프롬프트`라는 관
 - skill의 agent invocation은 canonical 이름만 사용한다
   - Codex와 Claude 모두 kebab-case agent invocation을 canonical으로 사용한다(Codex `plan-review-agent`, Claude `sdd-skills:<agent>-agent`)
   - Legacy alias와 Codex underscore custom agent ID는 canonical이 아니며 normalize하지 않는다
-- `sdd-autopilot`(v4.0.0)은 SDD 체인 전용이다: orchestrator·pipeline artifact·승인 checkpoint 없이 메인 루프에서 `feature-draft → implementation → (persistent 변경 시) spec-sync` 3스킬 체인을 실행한다(Step 0 상태 확인 → Step 1 요청 분석 → Step 2 체인 4항목: Draft / 구현 / Spec sync / 최종 보고). 품질 게이트는 앞 두 producer 스킬 내부에서 돌므로 autopilot은 게이트를 호출하지도 fix를 수행하지도 않고, producer 반환의 게이트 수행·finding·fix·회귀 결과를 최종 보고로 모은다. full 레인(generated orchestrator 파이프라인)은 autopilot 표면에서 제거됐다 — SKILL 쌍 체인 전용 재작성, 부속 references/examples/scripts 삭제, `docs/AUTOPILOT_GUIDE.md`(ko·en) 2.1.0. 복구 경로는 git tag `full-lane-final`이고, legacy `_sdd/pipeline/` 산출물은 기록물로 무시한다
+- `sdd-autopilot`은 SDD 체인 전용이다: orchestrator·pipeline artifact·승인 checkpoint 없이 메인 루프에서 `feature-draft → implementation → (persistent 변경 시) spec-sync` 3스킬 체인을 실행한다(Step 0 상태 확인 → Step 1 요청 분석 → Step 2 체인 4항목: Draft / 구현 / Spec sync / 최종 보고). 품질 게이트는 앞 두 producer 스킬 내부에서 돌므로 autopilot은 게이트를 호출하지도 fix를 수행하지도 않고, producer 반환의 게이트 수행·finding·fix·회귀 결과를 최종 보고로 모은다. full 레인(generated orchestrator 파이프라인)은 autopilot 표면에서 제거됐다 — SKILL 쌍 체인 전용 재작성, 부속 references/examples/scripts 삭제, `docs/AUTOPILOT_GUIDE.md`(ko·en) 2.1.0. 복구 경로는 git tag `full-lane-final`이고, legacy `_sdd/pipeline/` 산출물은 기록물로 무시한다
   - 규모 초과의 해소 수단은 오케스트레이션(full 전환)이 아니라 분할이다. 체인 표면들은 full 전환을 안내하지 않으며, 단일 컨텍스트를 넘는 변경은 여러 feature로 분할한다 — 분할 draft는 롤링 형태(Part 1 마커 내부에 분할 feature 목록, Part 2는 첫 feature의 task만)로 작성하고, 분할 목록은 `spec-sync`(planned)가 feature별 개별 `🚧 Planned` todo로 global spec에 고정한 뒤 첫 feature부터 체인을 순차 실행한다
   - census형 sweep(같은 대상의 변형 표기가 여러 파일에 흩어진 rename/전파류)은 분할 신호가 아니라 검증 대상이다 — 해당 draft는 마지막 read-only 검증 task(변형 표기 전수 grep census를 AC로)를 필수로 둔다
   - 분할 판정의 canonical은 producer 체인 표면이 소유한다(`feature-draft` 분할 규칙 / `implementation` 중단·분할 규칙). autopilot은 신호를 소비만 하고 재정의하지 않는다. `plan-review`의 규모 판정 검사는 이 canonical을 재정의하지 않고 draft의 `> 규모 판정:` 앵커를 대조하는 게이트 rubric으로만 남는다
 - full 전용 실행 유닛은 삭제 완료다(F2): agent 쌍 4종(`feature-draft-agent`·`task-ordering-agent`·`test-author-agent`·`implementation-agent`)과 full 스킬 쌍 3종(당시 이름 `feature-draft`·`implementation`·`implementation-plan`)은 삭제됐다 — 현재의 `feature-draft`·`implementation` 스킬은 F5 개명으로 그 이름을 승계한 별개 스킬이다. 등록 표면(marketplace.json skills 21·agents 7, `.codex/agents/README.md`, 루트 README Subagent Model Override 목록)은 SDD 체인 기준이다. 일반 구현 요청 트리거("implement the plan"·"start implementation"·"execute the plan"·"구현해줘" 계열)는 `implementation` 스킬이 유일 수신 경로로 흡수했고 "병렬 구현" 계열 트리거는 폐기됐다
 - full 레인 실체 삭제와 `-lite` 개명은 완결됐다(F1~F5 — 롤링 분할 draft `_sdd/drafts/_processed_2026-07-22_feature_draft_lite_full_lane_removal.md` 순차 실행 완료). F4에서 잔재 정리와 repo 전체 full 어휘 census를 마쳤다 — live 표면(`.claude/`·`.codex/`·`.claude-plugin/`·`docs/`·`README.md`·`AGENTS.md`)의 full 고유 식별자 잔존 0(허용 예외: `_sdd/` 기록물, AUTOPILOT_GUIDE tag 복구 안내). 복구 보험은 git tag `full-lane-final`. 근거 요약: 체인 품질이 구 full 레인 대비 동등하면서 훨씬 빠르고, full급 복잡도는 분할로 해소하며, 분기 제거로 하네스 전파 표면이 준다(상세는 decision_log 2026-07-22 entry)
-  - F5 `-lite` 개명 완료(두 스킬 v2.0.0): `feature-draft-lite`→`feature-draft`·`implementation-lite`→`implementation`(디렉토리·name 필드·marketplace·전체 호출 참조, 미러 identical), 개념 어휘 교체("lite 체인"→"SDD 체인"·"lite draft"→"draft"·`> Lite 적격:`→`> 규모 판정:` 소비자 3곳 동시 교체·autopilot Step L→Step 2·AC-L→AC·lite 트리거 별칭 제거), draft 파일명 glob은 `*_feature_draft_*`로 통일(기존 lite 파일명은 substring 하위호환), `docs/SDD_SPEC_DEFINITION.md` ko·en은 현행 draft 형식으로 재작성(검증 rubric 사슬 유지, full 구조 어휘는 legacy 기록물 한정), 개명 census live 표면 잔존 0
+  - F5 `-lite` 개명 완료: `feature-draft-lite`→`feature-draft`·`implementation-lite`→`implementation`(디렉토리·name 필드·marketplace·전체 호출 참조, 미러 identical), 개념 어휘 교체("lite 체인"→"SDD 체인"·"lite draft"→"draft"·`> Lite 적격:`→`> 규모 판정:` 소비자 3곳 동시 교체·autopilot Step L→Step 2·AC-L→AC·lite 트리거 별칭 제거), draft 파일명 glob은 `*_feature_draft_*`로 통일(기존 lite 파일명은 substring 하위호환), `docs/SDD_SPEC_DEFINITION.md` ko·en은 현행 draft 형식으로 재작성(검증 rubric 사슬 유지, full 구조 어휘는 legacy 기록물 한정), 개명 census live 표면 잔존 0
   - 삭제 범위 밖(불변): SDD 체인 자체의 기능 변경, 레인 무관 스킬(spec 파이프라인·pr-review·ralph·discussion 등)
 - subagent를 dispatch하는 review 계열 스킬(`plan-review`·`implementation-review`·`pr-review`)의 subagent 모델 override는 런타임별 explicit per-call option으로만 취급한다. 옵션을 생략하면 세션/agent 기본값을 상속하며, persistent custom agent 정의를 수정하지 않는다. 구현·planning 스킬(`implementation`·`feature-draft`)은 메인 루프 직접 작성이라 override 비대상이다
   - Claude Code는 `--model <sonnet|opus|haiku|fable>`로 `Agent(...)` 호출의 model만 override한다
@@ -114,13 +114,13 @@ SDD Skills의 설계는 다음 층으로 나뉜다.
 
 | 결정 | 현재 선택 | 유지 이유 |
 |------|-----------|-----------|
-| Skill 정의 형식 | Markdown `SKILL.md` 단일 파일 — frontmatter가 name/description/version 등 스킬 메타데이터의 단일 소스이고, 메타데이터를 담는 사이드카 파일은 두지 않는다 | AI 에이전트가 직접 읽고 실행 규약을 추론하기 쉽다. 런타임이 읽지 않는 사이드카 메타데이터(구 `skill.json`)를 두면 드리프트가 감지되지 않는 채 누적된다 |
+| Skill 정의 형식 | Markdown `SKILL.md` 단일 파일 — frontmatter가 name/description(+ 런타임이 읽는 선택 키) 등 스킬 메타데이터의 단일 소스이고, 스킬 버전을 담는 필드·파일은 두지 않는다(스킬 변경 이력 = git history) | AI 에이전트가 직접 읽고 실행 규약을 추론하기 쉽다. 런타임이 읽지 않는 메타데이터는 사이드카 파일(구 `skill.json`)이든 frontmatter 필드(구 `version:`)든 드리프트가 감지되지 않는 채 누적되므로, 소비자가 없는 값은 두지 않고 버전 lockstep 검사 대상을 0으로 유지한다 |
 | 런타임 구조 | Claude/Codex dual bundle | 동일한 SDD 철학을 유지하면서 플랫폼별 실행 차이를 흡수한다 |
 | 실행 분리 | skill entrypoint + reusable agent. leaf dispatch가 필요한 execution(`pr-review` 2-렌즈 병렬, `investigate` 조건부 explore fan-out)은 `orchestrator skill + leaf agent`, 단순 위임 execution은 `wrapper skill + single-source agent`, 구현·planning은 메인 루프 직접 작성 | direct invocation 재사용성을 확보하면서 nesting 1단계 제한 안에서 dispatch를 메인 루프 skill로 올린다 |
 | 상태 전달 | `_sdd/` 파일 아티팩트 중심 | 세션 메모리 의존을 줄이고 재현성과 git 추적성을 높인다 |
 | 품질 게이트 | AC-First + explicit verification | "should work" 식 추측을 줄이고 종료 조건을 명확히 한다 |
 | 장문 산출물 작성 | producer-owned inline 2-phase writing | skeleton/fill/finalize를 같은 문맥에서 처리해 품질 저하를 줄인다 |
-| 오케스트레이션 | reasoning-based `sdd-autopilot` v4.0.0 — SDD 체인 전용(메인 루프 스킬 체인, orchestrator·pipeline artifact 없음). Step 2는 producer 3스킬(`feature-draft` → `implementation` → 조건부 `spec-sync`) 순차 호출 + 반환 종합 보고이고 게이트는 재호출하지 않는다. generated orchestrator full 레인과 full 전용 agent·스킬은 제거됨 — 잔재 정리·census·`-lite` 개명까지 완결(F1~F5, 복구는 git tag `full-lane-final`) | 소규모~단일 컨텍스트 변경이 지배적인 흐름에서 orchestrator 생성 비용을 없애고, 규모 초과는 full 승격이 아니라 분할로 해소한다. 게이트를 producer에 남기면 호출자별 중복 호출과 "선택 게이트" 분기가 사라져 직접 호출·autopilot 경로의 품질이 같아진다 |
+| 오케스트레이션 | reasoning-based `sdd-autopilot` — SDD 체인 전용(메인 루프 스킬 체인, orchestrator·pipeline artifact 없음). Step 2는 producer 3스킬(`feature-draft` → `implementation` → 조건부 `spec-sync`) 순차 호출 + 반환 종합 보고이고 게이트는 재호출하지 않는다. generated orchestrator full 레인과 full 전용 agent·스킬은 제거됨 — 잔재 정리·census·`-lite` 개명까지 완결(F1~F5, 복구는 git tag `full-lane-final`) | 소규모~단일 컨텍스트 변경이 지배적인 흐름에서 orchestrator 생성 비용을 없애고, 규모 초과는 full 승격이 아니라 분할로 해소한다. 게이트를 producer에 남기면 호출자별 중복 호출과 "선택 게이트" 분기가 사라져 직접 호출·autopilot 경로의 품질이 같아진다 |
 | 규모 초과 대응 | 승격이 아니라 분할 — 단일 컨텍스트 초과는 롤링 분할 draft + `spec-sync` planned todo 고정 + feature별 순차 체인으로 해소한다. 분할 판정 canonical은 체인 표면 소유(autopilot은 신호 소비만) | 규모 초과를 더 큰 파이프라인으로 올리면 full 레인 의존이 재생산된다. 분할은 "단일 컨텍스트 = 품질 전제"를 유지하는 해소 수단이며 full 레인 삭제(F1~F5 완결)의 선행 조각이었다 |
 | planning precedence | `feature-draft`가 유일 planning entry. 후속 확장 스킬 없음 — 규모 초과는 분할 | non-trivial 변경에서 peer-choice 혼선을 없애고 "단일 컨텍스트 = 품질 전제"를 유지한다 |
 | 품질 게이트 소유권 | producer-owned — `feature-draft`가 `plan-review`(review-only, 단일 패스 경량 반환, 리포트 파일 없음)를, `implementation`이 `implementation-review`를 각각 자기 마감의 강제 게이트로 1회 수행하고 fix 1회도 producer가 수행한다. 호출자(autopilot·사용자)는 게이트를 별도 호출하지 않으며 "선택" 해치는 없다 | 게이트 소유자를 산출물 작성자로 고정하면 어느 경로로 들어와도(직접 호출·autopilot) 같은 품질 계약이 걸리고, 호출자가 게이트를 다시 도는 중복이 사라진다. plan gate는 findings-first로 Target Files·task boundary·verification weakness·overengineering smell을 드러내되 plan 자체는 수정하지 않는다 |
@@ -146,8 +146,7 @@ SDD Skills의 설계는 다음 층으로 나뉜다.
 ### 현재 운영 제약
 
 - Claude와 Codex 문서/skill parity는 아직 완전 자동 동기화가 아니라 유지보수자의 관리가 필요하다. wrapper-backed skill에서는 agent가 단일 소스이므로 "skill 본문과 agent 본문을 함께 미러링"하는 의무는 대부분 해소됐고, 유지보수는 agent 본문과 thin wrapper의 entrypoint/dispatch 정합으로 좁혀졌다(claude/codex 양 플랫폼 parity는 여전히 수동 관리)
-- 스킬 version의 단일 소스는 각 `SKILL.md` frontmatter의 `version:` 필드다 — 두 런타임 어느 쪽도 읽지 않던 사이드카 `skill.json` 37개를 삭제해 미러 쌍당 version 검사 대상이 4필드(SKILL.md 2 + skill.json 2)에서 2필드로 줄었다. 값 갱신은 여전히 문서 편집 discipline에 의존하며, 삭제 시점 실측상 남은 미러 version 드리프트는 `guide-create`(`.claude` `2.2.0` / `.codex` `2.4.0`) 1건이다
-  - 🚧 Planned: `guide-create`·`spec-snapshot` 미러의 **본문 세대 격차** — `guide-create`는 version과 본문이 함께 갈렸고(176줄 / 159줄), `spec-snapshot`은 version을 `1.2.0`으로 맞췄으나 본문은 135줄 / 118줄이고 codex 쪽에만 legacy uppercase(`DECISION_LOG.md`) 대응 규칙이 있어 version만으로는 격차가 보이지 않는다. 어느 쪽이 canonical인지는 본문 대조가 선행되어야 해 별도 이슈로 해소한다
+- 🚧 Planned: `guide-create`·`spec-snapshot` 미러의 **본문 세대 격차** — 미러 쌍의 세대 차이는 이제 본문 대조로만 드러난다(버전 필드가 없으므로 값 비교라는 우회 신호가 없다). `guide-create`는 본문 줄 수가 175 / 158이고 codex 쪽에는 claude 본문의 생성 가이드 템플릿 블록(`**Version**: X.Y.Z` 필드 줄)이 아예 없다. `spec-snapshot`은 134 / 117이고 codex 쪽에만 legacy uppercase(`DECISION_LOG.md`) 대응 규칙이 있다. 어느 쪽이 canonical인지는 본문 대조가 선행되어야 해 별도 이슈로 해소한다
 - 이 저장소는 전통적인 테스트 프레임워크보다 실제 skill invocation과 리뷰 기반 검증에 크게 의존한다
 - `docs/` ko 본문과 `docs/en/` 미러의 세대 정합도 수동 관리다 — canonical rollout 순서의 `english mirrors` 단계가 가장 누락되기 쉬운 지점이고, 레이어·섹션 추가를 ko에만 반영하고 닫으면 en 짝이 한 세대 뒤처진다(하네스 레이어 추가가 en `SDD_WORKFLOW`·`SDD_CONCEPT`에 전파되지 않아 §2 Harness 누락 + 삭제된 full 레인 어휘 잔존으로 드러난 전례). ko/en 짝을 건드리는 변경은 대칭 마감을 검증 대상으로 둔다
 

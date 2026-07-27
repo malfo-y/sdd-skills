@@ -1,7 +1,6 @@
 ---
 name: second-opinion
 description: "Use this skill when the user asks for a \"second opinion\", \"세컨드 오피니언\", \"다른 관점\", \"codex에게 물어봐\", \"ask codex\", \"codex opinion\", or wants an independent review/analysis from Codex on a question, design decision, code, or debugging approach."
-version: 1.0.0
 ---
 
 # Second Opinion — Codex를 통한 독립적 분석
