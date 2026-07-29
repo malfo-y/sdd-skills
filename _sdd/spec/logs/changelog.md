@@ -2,6 +2,13 @@
 
 > 이 파일은 `_sdd/spec/main.md`의 **본문이 바뀐 버전만** 기록한다 — 본문 무변경 sync(헤더 날짜만 갱신)는 entry를 남기지 않으므로 버전 번호에 결번이 생길 수 있다.
 
+#### v4.6.14 (2026-07-29)
+
+- **하네스 실행 자산에 재주입 방향 추가 — 훅 자산 2개 → 3개 (post-implementation sync)**: `harness-context.sh`(SessionStart, `matcher: "clear|compact"`)가 기존 `worklog-gate.sh`·`worklog-context.sh`와 같은 설치 계약(verbatim 복사 + `settings.json` 키 수준 멱등 병합 + 하네스 설치와 동일 조건, opt-in 아님) 아래 편입됐다. compact·clear 뒤 `CLAUDE.md` 포인터만 재주입되고 하네스 본문이 사라지던 실패 모드를 실행 층으로 닫는다 — 재주입은 "읽으라는 지시"가 아니라 `AGENTS.md` 전문의 내용 주입이다. 설치 지시는 `spec-create` §3e / `spec-upgrade` Step 6에서 work log 전용 → 훅 자산 일반으로 확장됐다(별도 절 신설 없음 — 병합 규칙 판정 주체 단일 유지). 검증 evidence: structural check 29 PASS/0 FAIL + 변이 테스트 4건 전부 검출, **런타임 발동 관찰**(픽스처 repo 트랜스크립트에 `hook_success`/`hookName:"SessionStart:clear"`·`"SessionStart:compact"` + content에 픽스처 sentinel = 본문 전체 주입, `startup` 음성 대조 발동 0건, 리뷰어 독립 재현), `implementation-review` 게이트 1회 + fix 1회(correctness Blocker 0, 합산 Medium 7건 반영), 미러 md5(세 스크립트 각 4벌 1종, 두 SKILL.md claude↔codex 바이트 동일), `git diff --check` 무출력.
+- **적용 surface**: `main.md` — 헤더 4.6.14, §2 Guardrails 하네스 설치 불릿 **확장**(훅 자산 3개 + 역할 열거로 개수 리터럴 갱신 / 계약이 훅 자산 일반에 적용 / SessionStart matcher가 스크립트별로 다르고 미지원 런타임에서 무증상 미발동할 수 있다는 announce 조항 — 새 guardrail·결정 행 없음), §3 핵심 설계 harness 문단에 실행 자산의 **두 방향**(강제 / 사라진 규약 복구)과 "지시가 아니라 내용 주입" 근거 추가. `components.md` — Platform Notes 훅 3개·재주입 비대칭, Strategic Code Map `references/hooks/` 행에 `harness-context.sh` 역할 추가. `usage-guide.md` — Scenario 1 훅 산출물 불릿 세 스크립트화 + 관찰 결과에 clear/compact 재주입·`startup`/`resume`/`fork` 미발동 명시.
+- **선행 planned 종결**: v4.6.13이 `🚧 Planned`로 고정한 `docs/SDD_CONCEPT.md` §1(ko·en) drift는 이번 feature Task 5에서 레이어 표 행 + 문단 양쪽이 ko/en 대칭으로 갱신돼 종결됐다(잔여 planned 없음).
+- **불변**: 하네스 템플릿·`AGENTS.md` 무수정(훅 리드 1줄이 이미 "다시 읽지 말고 이대로 따른다"를 전달 — 템플릿에 중복 문장 금지), `§0~§5` 리터럴 변경 없음.
+
 #### v4.6.13 (2026-07-29)
 
 - **하네스를 문서 규약에서 실행 게이트로 확장 — work log 훅을 4번째 산출물군으로 편입 (post-implementation sync)**: `spec-create`·`spec-upgrade`가 소비 repo에 설치하는 하네스 산출물이 `AGENTS.md`·`CLAUDE.md`·`.gitignore` 3종에서 훅 자산군(`.claude/hooks/worklog-gate.sh`·`worklog-context.sh` + `.claude/settings.json` 등록)을 더한 4종이 됐다. 훅 설치는 하네스 설치와 동일 조건에 묶이며 opt-in이 아니다. 검증 evidence: 자체 structural check 29 PASS/0 FAIL(`jq`/`python3` 강제 마스킹으로 12케이스 × 2파서 = 24판정 동일, fail-open + 경고, exec bit 비의존, 하위 디렉토리 cwd 루트 고정), `implementation-review` 게이트 1회 + fix 1회(correctness Blocker 0 / AC 26 전부 MET, 합산 Medium 6건 반영) 후 회귀 29/29 유지, 미러 md5 실측(훅 4벌 + dogfooding 사본, 템플릿 4벌, SKILL.md claude↔codex 바이트 동일), `git diff --check` 무출력.
