@@ -49,6 +49,7 @@
 | Codex custom agent runtime | Codex는 `.codex/agents/`의 custom agent를 parent orchestrator가 직접 dispatch한다. agent는 leaf로 동작하며 사용자 전역 config 값을 workflow 전제로 삼지 않는다 | `.codex/agents/` |
 | Artifact path convention | 신규 temporary artifact는 lowercase canonical 경로를 기본으로 하고, skill-defined output surface는 dated slug naming을 사용한다. reader는 legacy uppercase/fixed-name path를 fallback으로 읽는다 | 관련 `SKILL.md`, `_sdd/implementation/implementation_progress.md` |
 | Workspace commit 정책 (소비 repo) | 소비 repo에서 커밋되는 `_sdd`는 `spec/`·`guides/`·`env.md`·`drafts/`·`work_log/`이고(`drafts/`·`work_log/`는 구현 로그 자산), 나머지 process artifact 4종(`_sdd/{discussion,implementation,pipeline,pr}/`)은 `.gitignore`로 로컬 전용이다. `_sdd/env.md`는 커밋되므로 비밀값 금지. 이 sdd_skills repo는 스킬 개발 메타 repo라 process artifact를 history 가치로 계속 커밋하는 예외다 | `.claude/skills/spec-create/SKILL.md` 3d, `.claude/skills/spec-upgrade/SKILL.md` Step 6 |
+| Harness 훅 자산 (플랫폼 비대칭) | 하네스 설치는 `.claude/hooks/` 훅 2개 + 커밋되는 `.claude/settings.json` 등록을 항상 포함한다. Codex에는 훅 메커니즘이 없어 `.codex/` 레인 스킬도 동일하게 `.claude/` 자산을 설치하지만 Codex 자신은 게이트의 강제를 받지 않는다 — 산출물은 대상 repo의 것이고 그 repo는 Claude Code로도 열리므로 이 비대칭을 수용한다 | `.claude/skills/spec-create/SKILL.md` 3e, `.claude/skills/spec-upgrade/SKILL.md` Step 6 |
 | Full-skill exceptions | `sdd-autopilot`, `discussion`처럼 사용자 상호작용이 핵심인 surface는 풀 스킬로 유지된다 | 관련 `SKILL.md` |
 | Platform-only features | `git`, `second-opinion`은 Claude Code 전용이며, Codex parity 대상이 아니다 | 관련 `SKILL.md` |
 
@@ -74,5 +75,6 @@
 | Environment/pre-flight | `_sdd/env.md` | 로컬 작업, PR verification, pre-flight assumption의 기준이다 |
 | Spec creation contract | `.claude/skills/spec-create/SKILL.md`<br>`.codex/skills/spec-create/SKILL.md` | primary navigation axis와 `Strategic Code Map` placement rule을 확인한다 |
 | Harness layer template | `.claude/skills/spec-create/references/agents-harness-template.md` | `AGENTS.md` 작업 진입·작업 규약 레이어의 정본 §0~§5 골격(§5 = on-demand work log 규약). 4곳(`spec-create`/`spec-upgrade` × `.claude`/`.codex`) byte-identical 미러의 source다 |
+| Harness 실행 자산 | `.claude/skills/spec-create/references/hooks/` | 하네스 §5 work log 규약을 강제하는 커밋 게이트(`worklog-gate.sh`)와 세션 컨텍스트 주입(`worklog-context.sh`)의 정본이다. 하네스 템플릿과 같은 4벌 byte-identical 미러 규율을 따르며, 이 repo의 `.claude/hooks/`도 dogfooding 사본이라 함께 동기화 대상이다 |
 | Feature planning map consumer | `.claude/skills/feature-draft/SKILL.md`<br>`.codex/skills/feature-draft/SKILL.md` | code map을 hint로 읽되 `Target Files`를 현재 코드 실측으로만 적는 규칙과 분할·census 규칙을 확인한다 |
 | Spec sync map promotion | `.claude/agents/spec-sync-agent.md`<br>`.codex/agents/spec-sync-agent.toml` | temporary touchpoint 중 어떤 항목이 persistent navigation hint로 승격될 수 있는지 확인한다 |

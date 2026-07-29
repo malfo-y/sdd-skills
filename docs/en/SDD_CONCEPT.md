@@ -6,13 +6,13 @@ This document explains how SDD places information across layers.
 
 | Layer | Role | Holds |
 |------|------|-------|
-| Harness (AGENTS.md) | repo work conventions (how) / work entry | work principles, reading order, verification standard, workflow stage order, judgment-criteria pointers |
+| Harness (AGENTS.md + hook assets) | repo work conventions (how) / work entry | work principles, reading order, verification standard, workflow stage order, judgment-criteria pointers, and the executable assets that enforce those conventions |
 | Global spec | repo-wide judgment layer | concept, boundaries, key decisions |
 | Temporary spec | execution blueprint for a change | delta, scope, per-task contracts/AC, target files |
 | Code/Test | actual behavior and detailed truth | implementation, runtime flow, detailed contract |
 | Guide/README/Refs | supporting explanation | usage examples, environment detail, reference information |
 
-The harness is its own layer and it does not grow the global spec body. Understanding (what/why) belongs to the global spec; work conventions (how) belong to the harness. The harness holds no skill catalog or routing table (it points at the installed SDD skills), and no repo-specific behavior triggers either (the global spec Guardrails are the single source for those).
+The harness is its own layer and it does not grow the global spec body. Understanding (what/why) belongs to the global spec; work conventions (how) belong to the harness. The harness is **not documentation alone** — conventions that a model can silently skip are enforced by executable assets (the work-log commit gate is the example). Conventions written only as prose do not get followed; that observation is why this layer carries executable assets. The harness holds no skill catalog or routing table (it points at the installed SDD skills), and no repo-specific behavior triggers either (the global spec Guardrails are the single source for those).
 
 ## 2. Role of the global spec
 

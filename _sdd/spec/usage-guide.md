@@ -27,8 +27,11 @@
 - `_sdd/env.md` 생성 — 환경 설정/실행 방법 가이드. 상단에 비밀값 금지 경고 헤더 포함(커밋되는 파일이므로 API 키·토큰·비밀번호 금지)
 - `.gitignore` 생성 또는 멱등 병합 — `SDD-WORKSPACE` 마커 블록으로 process artifact(`_sdd/{discussion,implementation,pipeline,pr}/`)를 ignore한다. 커밋되는 `_sdd`는 `spec/`·`guides/`·`env.md`·`drafts/`·`work_log/`이다(`drafts/`·`work_log/`는 구현 로그 자산).
   - 병합: 부재면 생성 / 마커 없으면 파일 끝에 append(기존 규칙 보존) / 마커 블록 존재면 그 블록만 교체(멱등)
-- `AGENTS.md` 생성 또는 멱등 병합 — harness 템플릿(§0~§5: 작업 원칙 / 읽는 순서 / 작업 규약·검증 표준 / SDD 워크플로우 순서 / 판단 기준 / 작업 기록(work log)) 기반으로 작업 진입·작업 규약 레이어를 생성한다. §5 work log는 `_sdd/work_log/<yyyy-mm-dd>.md`에 작업 단위를 append하는 on-demand 포렌식 규약이며 §1 읽기 순서에는 포함되지 않는다. 기존 파일이 있으면 `SDD-HARNESS` 마커 블록만 멱등 교체하고 마커 밖 내용은 보존한다
+- `AGENTS.md` 생성 또는 멱등 병합 — harness 템플릿(§0~§5: 작업 원칙 / 읽는 순서 / 작업 규약·검증 표준 / SDD 워크플로우 순서 / 판단 기준 / 작업 기록(work log)) 기반으로 작업 진입·작업 규약 레이어를 생성한다. §5 work log는 `_sdd/work_log/<yyyy-mm-dd>.md`에 작업 단위를 append하는 on-demand 포렌식 규약이며(아래 커밋 게이트 훅으로 강제된다) §1 읽기 순서에는 포함되지 않는다. 기존 파일이 있으면 `SDD-HARNESS` 마커 블록만 멱등 교체하고 마커 밖 내용은 보존한다
 - `CLAUDE.md` 생성 또는 업데이트 — `→ AGENTS.md 참조` 포인터로 harness를 단일 소스로 가리킨다
+- `.claude/hooks/worklog-gate.sh`·`.claude/hooks/worklog-context.sh` 설치 + `.claude/settings.json` 훅 등록 — 하네스 §5 규약을 강제하는 실행 자산이다. 하네스를 설치하면 **항상 함께** 설치되며(별도 opt-in 아님), 스크립트는 스킬 `references/hooks/` 정본의 verbatim 사본이고 `settings.json`은 키 수준 멱등 병합(사용자의 다른 훅·`permissions` 보존)이다
+  - 관찰 결과: 오늘 work log에 미커밋 변경이 없으면 **세션의 첫 `git commit`이 거부**되고(이후 분할 커밋은 통과), `SDD_SKIP_WORKLOG=1 git commit ...`으로 우회한다. 세션 시작 시 오늘 로그 상태가 컨텍스트로 주입된다
+  - 스킬 최종 보고에 설치 사실을 announce한다 — 대상이 커밋되는 `.claude/settings.json`이라 그 repo의 모든 Claude Code 사용자에게 적용된다
 - 사용자에게 요약 테이블 제시 후 전체 스펙 출력
 
 ### Scenario 2: 기능 추가 (수동 SDD Workflow — SDD 체인)

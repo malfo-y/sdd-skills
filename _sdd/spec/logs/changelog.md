@@ -2,6 +2,13 @@
 
 > 이 파일은 `_sdd/spec/main.md`의 **본문이 바뀐 버전만** 기록한다 — 본문 무변경 sync(헤더 날짜만 갱신)는 entry를 남기지 않으므로 버전 번호에 결번이 생길 수 있다.
 
+#### v4.6.13 (2026-07-29)
+
+- **하네스를 문서 규약에서 실행 게이트로 확장 — work log 훅을 4번째 산출물군으로 편입 (post-implementation sync)**: `spec-create`·`spec-upgrade`가 소비 repo에 설치하는 하네스 산출물이 `AGENTS.md`·`CLAUDE.md`·`.gitignore` 3종에서 훅 자산군(`.claude/hooks/worklog-gate.sh`·`worklog-context.sh` + `.claude/settings.json` 등록)을 더한 4종이 됐다. 훅 설치는 하네스 설치와 동일 조건에 묶이며 opt-in이 아니다. 검증 evidence: 자체 structural check 29 PASS/0 FAIL(`jq`/`python3` 강제 마스킹으로 12케이스 × 2파서 = 24판정 동일, fail-open + 경고, exec bit 비의존, 하위 디렉토리 cwd 루트 고정), `implementation-review` 게이트 1회 + fix 1회(correctness Blocker 0 / AC 26 전부 MET, 합산 Medium 6건 반영) 후 회귀 29/29 유지, 미러 md5 실측(훅 4벌 + dogfooding 사본, 템플릿 4벌, SKILL.md claude↔codex 바이트 동일), `git diff --check` 무출력.
+- **적용 surface**: `main.md` — 헤더 4.6.13, §2 Guardrails에 하네스 설치 계약 **새 불릿 1개**(4종 동일 조건 설치 / 커밋되는 `settings.json`이라 announce 필수 / 파서 부재 시 fail-open + 세션 경고로 조용한 무력화 금지 / 병합 규칙 canonical은 두 SKILL), §3 핵심 설계 harness 문단에 "규약 + 규약을 강제하는 실행 자산" 확장과 §0 네 원칙 이름이 `plan-review`의 `Principle Link` 앵커라는 사실 추가. 새 결정 테이블 행·중복 guardrail 없음(기존 workspace commit 경계 불릿과 판정 주체 분리). `usage-guide.md` Scenario 1에 훅 산출물 불릿(관찰 결과 + announce), `components.md` Platform Notes에 Codex 비대칭 행 + Strategic Code Map에 `references/hooks/` 정본 행.
+- **하네스 템플릿 §0 교체(draft Part 1 밖 추가 delta)**: 개인 global CLAUDE.md 유래 산문 5줄 → 명명된 4원칙(`Think Before Coding`·`Simplicity First`·`Surgical Changes`·`Goal-Driven Execution`) + 흡수 조항 2개. 근거는 `plan-review-agent`가 인용하는 이름이 구 §0에 존재하지 않았고(`Goal-Driven Execution` 축 부재) 개인 협업 어투가 소비 repo로 배포됐다는 점이다. §5에는 게이트 존재·발동 시점·우회법 1줄만 추가해 섹션 수 §0~§5를 유지했다(`§0~§5` 리터럴 18건 무변경).
+- **보류**: `docs/SDD_CONCEPT.md` §1(ko·en)이 하네스를 문서 규약 레이어로만 서술하는 drift는 `🚧 Planned`로 고정했다 — spec sync 대상은 `_sdd/spec/`뿐이며 ko·en 대칭 마감이 필요하다.
+
 #### v4.6.12 (2026-07-27)
 
 - **`SKILL.md` frontmatter `version:` 필드 삭제, 스킬 버전 소스를 0으로 (post-implementation sync)**: 직전 sync(v4.6.11)가 Open Question으로 남긴 "필드 자체 폐지"를 사용자가 판정해 실행했다 — `version:`의 소비자가 0이기 때문이다(두 런타임 바이너리 모두 `name`·`description`만 사용, `tools/install-codex-skill-bundle.py`는 `SKILL.md` 존재만 확인 후 디렉토리 통째 교체, `marketplace.json`은 디렉토리 경로 등록, `AGENTS.md`·`README.md`·`docs/`·agent 파일 참조 0건). `.claude/skills/*/SKILL.md` 21 + `.codex/skills/*/SKILL.md` 19 = 40파일에서 frontmatter `version:` 줄만 삭제(각 diff `+0/-1`). 잔존 키는 `name`·`description` + 런타임이 읽는 선택 키(`argument-hint`·`user_invocable`). structural check 8 PASS/0 FAIL + 회귀 13/0·77/0·39/0 + 40개 frontmatter 전수 파싱 실패 0 + live 표면 `^version:` 0건, 리뷰 게이트(correctness ∥ simplicity) 1회 + fix 1회(Critical/High 0).
