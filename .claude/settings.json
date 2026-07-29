@@ -19,6 +19,15 @@
             "command": "bash \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/worklog-context.sh"
           }
         ]
+      },
+      {
+        "matcher": "clear|compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/harness-context.sh"
+          }
+        ]
       }
     ]
   }

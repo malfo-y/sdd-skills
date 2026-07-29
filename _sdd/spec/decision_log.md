@@ -1,5 +1,30 @@
 # Decision Log
 
+## 2026-07-29 - 하네스 실행 자산에 재주입 방향 추가 (`harness-context.sh`, 훅 자산 2개 → 3개, v4.6.13 → v4.6.14, post-implementation sync)
+
+### Context
+
+직전 단위(v4.6.13)가 하네스를 실행 층으로 확장했지만 그 층은 "강제" 한 방향뿐이었다. compact·clear로 컨텍스트가 소실되면 `CLAUDE.md` 포인터("작업 전 `AGENTS.md`를 먼저 읽는다")만 재주입되고 하네스 본문은 사라지며, 포인터를 따라 읽을지는 모델 재량이라 실제로 누락된다 — work log 규약이 산문만으로 안 지켜져 커밋 게이트를 도입한 것과 같은 실패 모드이고 해소 수단도 같다. 변경 범위: `harness-context.sh` 정본 신설 + 4벌 미러, `spec-create` §3e·`spec-upgrade` Step 6의 훅 자산 계약을 work log 전용에서 훅 자산 일반으로 확장(claude·codex 2벌씩), 이 repo dogfooding(`.claude/hooks/` 사본 + `settings.json` SessionStart 그룹 추가), `docs/SDD_CONCEPT.md` ko·en §1 후행 갱신. 검증 evidence: 자체 structural check 29 PASS/0 FAIL + 변이 테스트 4건 전부 검출, **런타임 발동 관찰**(픽스처 repo 트랜스크립트에 `hook_success`/`hookName:"SessionStart:clear"`·`"SessionStart:compact"` 기록 + content에 픽스처 sentinel 포함 = 리드 줄만이 아니라 본문 전체 주입, 음성 대조로 `startup` 발동 0건, 리뷰어가 자기 sentinel로 clear leg 독립 재현), `implementation-review` 게이트 1회(correctness Blocker 0 / simplicity Medium 5 — 합산 Medium 7건 fix 1회 반영), 미러 실측(`references/hooks/` 세 스크립트 각 4벌 md5 1종, 두 SKILL.md claude↔codex 바이트 동일), `git diff --check` 무출력.
+
+### Decision
+
+1. **훅 자산 계약을 2개 → 3개로 넓히되 착지 지점은 기존 불릿 하나다 (current truth 승격)**: `harness-context.sh`(SessionStart, `matcher: "clear|compact"`)를 기존 두 스크립트와 같은 설치 계약(verbatim 복사 + `settings.json` 키 수준 멱등 병합 + 하네스 설치와 동일 조건, opt-in 아님) 아래 둔다. v4.6.13이 만든 §2 Guardrails 하네스 설치 불릿이 이미 이 계약의 판정 주체이므로 새 guardrail 행도 새 결정 테이블 행도 만들지 않고 그 불릿을 확장했다 — 새 행을 세우면 "하네스 설치가 무엇을 함께 설치하나"의 판정 주체가 둘로 갈린다.
+2. **재주입은 "읽으라는 지시"가 아니라 내용 주입이다**: `harness-context.sh`는 `AGENTS.md` 전문을 stdout으로 내보내 컨텍스트에 직접 넣는다. 지시 방식(예: "AGENTS.md를 읽어라" 한 줄 주입)은 모델 재량이 남아 이번에 닫으려는 실패 모드를 그대로 재생산하고, 모델이 순순히 읽어도 Read 왕복으로 같은 분량이 들어오므로 비용 이점도 없다. 이 판단은 §3 핵심 설계의 harness 산문에 실었다 — 하네스 레이어의 canonical이 그 산문이고, "실행 자산이 무엇을 하는 층인가"의 정의에 해당한다.
+3. **실행 자산의 성격을 두 방향으로 확정한다**: 실행 자산은 규약을 **강제**할 뿐 아니라 컨텍스트에서 사라진 규약을 **되돌려 놓는다**. v4.6.13의 §3 산문은 "강제"만 서술했고, 그 서술로는 재주입 자산이 같은 층에 속하는 근거가 설명되지 않는다. 산문으로만 적힌 규약은 지켜지지 않고, 컨텍스트에서 사라진 규약은 존재하지 않는 것과 같다 — 두 관찰이 같은 레이어의 두 방향이다.
+4. **설치 지시를 훅 자산 일반으로 넓히고 별도 절을 만들지 않는다**: `spec-create` §3e / `spec-upgrade` Step 6의 "work log 훅 자산" 한정을 걷었다. 세 번째 스크립트용 §3f를 신설하면 `settings.json` 병합 규칙의 판정 주체가 둘로 갈린다. verbatim 복사 지시·멱등 병합 규칙·파싱 불가 시 미덮어쓰기 조항은 문구를 유지한 채 대상만 넓혔다(직전 리뷰에서 실측 보정된 문구라 재작성 금지).
+5. **SessionStart matcher는 스크립트별로 다르고, 미지원 런타임에서는 무증상으로 죽는다**: `worklog-context.sh`는 matcher 없음(전 소스), `harness-context.sh`는 `"clear|compact"`. `startup`은 포인터를 보고 첫 턴에 읽는 것이 정상 동작이고 `resume`·`fork`는 컨텍스트가 복원되므로, "컨텍스트가 소실됐는데 포인터만 남는" source는 `clear`·`compact` 둘뿐이다. matcher 값 집합(`startup`/`resume`/`clear`/`compact`/`fork`)과 `|` split 매칭은 Claude Code 2.1.220 바이너리 실측이며, 이 문법을 지원하지 않는 버전에서는 훅이 오류 없이 조용히 미발동한다. 이 무증상 실패 가능성은 v4.6.13이 세운 "조용한 무력화 금지" 판단의 같은 갈래라 새 항목이 아니라 그 불릿의 announce 조항에 합류시켰다(두 스킬 Output Contract가 실행 표면).
+6. **matcher 문법을 정적 근거만으로 닫지 않았다**: 등록 문자열이 틀려도 훅은 오류 없이 미발동하므로 structural check만으로는 계약이 닫히지 않는다. 픽스처 repo에서 헤드리스 세션을 구동해 `clear`·`compact` 양쪽의 `hook_success` 기록과 주입 본문(sentinel)을 관찰했고, `startup` 음성 대조로 matcher가 실제로 좁게 걸림을 확인했다. 관찰 수단과 실행 메모는 임시 실행 정보라 global spec에 올리지 않는다.
+7. **주입 단위는 마커 블록이 아니라 `AGENTS.md` 전문이다**: 소비 repo에서 `AGENTS.md` ⊋ `SDD-HARNESS` 마커 블록이고, 마커 밖 내용은 그 repo가 직접 쓴 작업 규약이라 재주입 목적("작업 규약을 다시 보게 한다")에 정확히 해당한다. 마커 블록만 넣으면 SDD 자기 하네스는 살리고 그 repo 고유 규약은 버리는 셈이 된다. 이 repo는 `AGENTS.md` 전체가 마커 블록이라 dogfooding으로는 차이가 드러나지 않아, 픽스처 AC로 반증 가능하게 확인했다. 크기 상한·요약은 두지 않는다 — 자르면 무엇이 잘렸는지 모델이 알 수 없어 부분 규약을 전체로 오인하는 더 나쁜 실패가 된다.
+8. **Codex 비대칭은 기존 두 훅과 동일하게 수용한다**: `.codex` 레인도 `.claude/hooks/`를 설치하지만 Codex 자신은 훅을 실행하지 않아 게이트의 강제도 하네스 재주입도 받지 않는다. 플랫폼 특성이라 `components.md` Platform Notes가 계속 소유한다.
+9. **v4.6.13의 `docs/SDD_CONCEPT.md` planned 항목은 이번 구현으로 종결됐다**: 레이어 표 행과 §1 문단이 ko·en 양쪽에서 실행 자산의 두 방향을 서술하도록 갱신됐다(이 feature Task 5, ko/en 대칭 마감 검증 포함). planned 잔여로 남기지 않는다.
+10. **§ 범위 리터럴은 이번에도 불변이다**: 하네스 템플릿과 `AGENTS.md`를 건드리지 않았다(draft Scope Out의 의도된 결정 — 훅의 리드 1줄이 "다시 읽지 말고 이대로 따른다"를 이미 전달하므로 템플릿에 같은 말을 또 넣으면 주입 블록 안에서 메시지가 두 번 나온다). `§0~§5` 리터럴은 변경 대상이 아니다.
+
+### Rationale
+
+- 하네스 레이어에 자산을 하나 더 얹는 대신 "실행 자산이 하는 일"의 정의를 한 방향에서 두 방향으로 넓히는 쪽이 표면 증가가 적다. 자산이 더 늘어도(예: 다른 규약의 복구) 같은 정의 안에서 설명된다.
+- 개수 리터럴("스크립트 2개")은 자산이 늘 때마다 여러 표면에서 동시에 낡는다. 이번 census에서 이 feature 소유 표면은 개수 표기 자체를 걷어냈고(`_sdd/spec/`는 sync 소관이라 여기서 3으로 갱신), 이후에도 개수보다 역할 열거가 낡지 않는 표기임이 재확인됐다.
+- 정적 근거만으로 훅 계약을 닫으면 "등록은 됐는데 발동하지 않는" 상태가 규약이 지켜지는 것처럼 보인다. v4.6.13의 fail-open 가시성 판단과 같은 문제이므로 런타임 관찰을 AC로 강제한 것이 맞다.
+
 ## 2026-07-29 - 하네스를 문서 규약에서 실행 게이트로 확장 (work log 훅을 4번째 산출물군으로 편입, v4.6.12 → v4.6.13, post-implementation sync)
 
 ### Context
