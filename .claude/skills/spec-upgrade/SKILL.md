@@ -25,6 +25,7 @@ description: This skill should be used when the user asks to "upgrade spec", "mi
 - [ ] `CLAUDE.md`가 `→ AGENTS.md 참조` 마커 포인터 블록을 가진다 (부재 시 생성, 기존 파일이면 prepend).
 - [ ] 병합 결과 `AGENTS.md`·`CLAUDE.md`에 하네스와 별개의 중복 `## SDD란` 블록이 남지 않는다 (기존 산출물 흡수·제거, SDD 무관 사용자 내용은 보존).
 - [ ] `.gitignore`에 `SDD-WORKSPACE` 마커 블록이 존재한다 (부재/부분존재 시 process artifact ignore를 멱등 병합).
+- [ ] work log 훅 자산이 설치되어 있다 — `references/hooks/`의 두 스크립트가 `.claude/hooks/`에 verbatim으로, `.claude/settings.json`에 PreToolUse(`matcher: "Bash"`)·SessionStart 훅이 키 수준 멱등 병합으로 등록된다.
 
 ## SDD Lens
 
@@ -42,6 +43,8 @@ description: This skill should be used when the user asks to "upgrade spec", "mi
 - `references/template-full.md`
 - `references/upgrade-mapping.md`
 - `references/agents-harness-template.md`
+- `references/hooks/worklog-gate.sh`
+- `references/hooks/worklog-context.sh`
 - `examples/after-upgrade.md`
 - SDD 정의 문서: https://github.com/malfo-y/sdd-skills/tree/main/docs
 
@@ -110,7 +113,7 @@ description: This skill should be used when the user asks to "upgrade spec", "mi
 - truly useful guide/reference/Strategic Code Map만 조건부로 남김
 - stale하거나 exhaustive한 file tree / component catalog는 global 본문으로 보존하지 않음
 
-### Step 6: Harness Merge (AGENTS.md / CLAUDE.md / .gitignore)
+### Step 6: Harness Merge (AGENTS.md / CLAUDE.md / .gitignore / work log 훅 자산)
 
 작업 하네스(`AGENTS.md`)가 하네스 템플릿(`references/agents-harness-template.md`) 기준으로 존재하도록 SDD-HARNESS 마커 기반 멱등 병합을 적용한다. spec-upgrade 자체에는 `## SDD란` 같은 삽입 로직이 없다. 여기서 만나는 기존 `## SDD란` 블록은 spec-upgrade가 만든 게 아니라 **과거 spec-create 부트스트랩으로 생긴 소비 repo의 산출물**이며, 이 step은 그것을 삭제 로직 제거가 아니라 **병합 시 하네스 슬롯으로 흡수**한다.
 
@@ -145,6 +148,15 @@ _sdd/pr/
 
 env.md 비밀값 경고는 하네스 §2에 포함돼 있어 AGENTS.md 병합으로 함께 반영된다(별도 처리 불필요).
 
+work log 훅 자산 병합 규칙:
+
+하네스 §5(work log)는 산문 규약만으로는 지켜지지 않는다. 훅은 Claude Code가 직접 실행하는 셸 명령이라 모델 재량으로 건너뛸 수 없으므로 §5를 실행되는 게이트로 만든다. **훅 설치는 `AGENTS.md` 병합과 동일 조건에 묶인다 — 하네스를 병합하면 훅도 설치한다. 별도 opt-in이 아니다.**
+
+- **스크립트 2개는 verbatim 복사다.** `references/hooks/worklog-gate.sh`·`references/hooks/worklog-context.sh`를 각각 **Read**해 글자 그대로 `.claude/hooks/`에 쓴다. 슬롯 치환도 요약도 없다(대상 경로 `_sdd/work_log/<yyyy-mm-dd>.md`는 하네스 §5가 고정한다). 기억이나 이 SKILL 본문으로 **재구성하지 않는다** — 재구성하면 자산 변경이 산출물에 누락된다. 이미 있으면 정본 내용으로 덮어쓴다.
+- **`.claude/settings.json`은 마커 블록이 아니라 키 수준 멱등 병합이다**(JSON에는 마커 주석을 넣을 수 없다). 부재면 두 훅 항목만 담아 생성한다. 존재하면 `hooks.PreToolUse`·`hooks.SessionStart` 배열에 항목을 추가하되, `command` 문자열이 해당 스크립트 경로를 포함하는 기존 항목이 있으면 그 `command`를 담고 있는 **바깥 그룹 객체 전체**(`{matcher, hooks:[…]}`)를 계약 형태로 **교체**한다(멱등). 안쪽 `{type, command}`만 갈아끼우지 않는다 — 그러면 `matcher`가 빠져 있던 과거 설치를 정정하지 못한다. 그 그룹에 사용자의 다른 `command` 항목이 섞여 있으면 그 항목만 별도 그룹으로 떼어 보존한다. `permissions` 등 다른 최상위 키와 사용자의 다른 훅 항목은 보존한다. **파싱 불가**(깨진 JSON)면 덮어쓰지 않는다 — 통째로 다시 쓰면 사용자 설정이 소실된다. 훅 등록만 건너뛰고 그 사실을 최종 보고에 명시한다(스크립트 복사는 그대로 진행).
+- 계약 형태(그룹 객체 구조)는 `spec-create` 스킬의 `#### 3e`에 JSON 예시로 있다. 그 스킬이 없는 환경이면 아래 구조를 쓴다 — `PreToolUse`: `{"matcher": "Bash", "hooks": [{"type": "command", "command": "bash \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/worklog-gate.sh"}]}`, `SessionStart`: `{"hooks": [{"type": "command", "command": "bash \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/worklog-context.sh"}]}`.
+- 등록 형태: PreToolUse는 `matcher`가 `"Bash"`(게이트는 Bash 명령만 판정한다), SessionStart는 `matcher`를 두지 않는다. command는 둘 다 `bash "$CLAUDE_PROJECT_DIR"/.claude/hooks/<script>` — 복사된 스크립트에 실행 권한이 없을 수 있어 exec bit에 의존하지 않으며, 그래서 별도 `chmod` 단계도 두지 않는다.
+
 ### Step 7: Validate
 
 아래를 확인한다.
@@ -156,6 +168,7 @@ env.md 비밀값 경고는 하네스 §2에 포함돼 있어 AGENTS.md 병합으
 - Step 1 경계 판정을 어기고 rewrite 문제를 upgrade로 덮지 않았는가
 - `AGENTS.md`가 하네스(§0~§5) 마커 블록을 가지고, `CLAUDE.md`가 포인터 마커 블록을 가지며, 하네스와 별개의 중복 `## SDD란` 블록이 남지 않았는가
 - `.gitignore`가 `SDD-WORKSPACE` 마커 블록으로 process artifact를 ignore하는가
+- `.claude/hooks/`의 두 스크립트가 정본과 동일 내용이고, `.claude/settings.json`이 PreToolUse(`matcher: "Bash"`)·SessionStart 훅을 중복 없이 등록했는가(재실행 시 항목만 교체되는가)
 
 ## Output Contract
 
@@ -167,6 +180,7 @@ env.md 비밀값 경고는 하네스 §2에 포함돼 있어 AGENTS.md 병합으
 - global에 남긴 판단과 밖으로 내린 정보
 - 축약 또는 supporting surface 이동된 old inventory 항목
 - 하네스 병합 결과(AGENTS.md/CLAUDE.md/.gitignore 생성·prepend·마커 교체 여부, 흡수·제거된 legacy `## SDD란`/중복 항목)
+- work log 훅 설치 결과(`.claude/hooks/` 두 스크립트 배치, `.claude/settings.json` 항목 추가/교체 여부) — announce로 함께 알린다: 대상이 **커밋되는** `.claude/settings.json`이라 이 repo의 모든 Claude Code 사용자에게 적용된다는 점, 게이트는 세션 첫 커밋에서만 발동한다는 점, `SDD_SKIP_WORKLOG=1`로 우회 가능하다는 점
 - 남은 구조 문제와 후속 추천
 
 ## Error Handling
