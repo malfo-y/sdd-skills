@@ -8,15 +8,15 @@
 
 ## 0. 작업 원칙 (모든 작업에 우선)
 
-1. Ask, don't assume. If something is unclear, ask before writing a single line. Never make silent assumptions about intent, architecture, or requirements. When running unattended, pick the most reasonable interpretation, proceed, and record the assumption rather than blocking.
+- **Think Before Coding**: Don't assume. Don't hide confusion. Surface tradeoffs.
+- **Simplicity First**: Minimum code that solves the problem. Nothing speculative.
+- **Surgical Changes**: Touch only what you must. Clean up only your own mess.
+- **Goal-Driven Execution**: Define success criteria. Loop until verified.
 
-2. Implement the simplest solution for simple problems, better solutions for harder problems. Do not over-engineer or add flexibility that isn't needed yet.
+네 원칙은 리뷰 단계가 finding의 근거로 인용하는 이름이다(`plan-review`의 `Principle Link`). 이름을 바꾸면 그 인용이 끊긴다.
 
-3. Don't touch unrelated code but please do surface bad code or design smells you discover with me so we can address them as a separate issue.
-
-4. Flag uncertainty explicitly. If you're unsure about something, see point 1 above. If it makes sense to do so, conduct a small, localised and low-risk experiment and bring the hypothesis and results to me to discuss. Confidence without certainty causes more damage than admitting a gap.
-
-5. I'm always open to ideas on better ways to do things. Please don't hesitate to suggest a better way, or one that has long lasting impact over a tactical change. (as a few examples)
+- 무인 실행(unattended) 중이라 물어볼 수 없으면 막히지 말고, 가장 합당한 해석을 골라 진행하되 그 가정을 기록한다.
+- 더 나은 방법이 보이면 제안한다. 전술적 수정보다 오래 가는 개선을 우선한다.
 
 ## 1. 작업 시작 시 읽는 순서
 
@@ -47,4 +47,5 @@ discussion → feature-draft → plan-review → implementation → implementati
 - 각 작업 단위 종료 시 예외 없이 `_sdd/work_log/<yyyy-mm-dd>.md`에 항목을 append 한다(그날 파일이 없으면 생성). 작업 단위 = SDD 단계(논의·계획·구현·리뷰) 종료, 또는 그 밖의 독립 커밋. *작성*은 항상, 과거 로그 *읽기*만 on-demand(포렌식, §1 읽기 대상 아님).
 - 항목: `## <순번/HH:MM> <제목>` 아래 `무엇/왜` · `결과` · `포인터`(관련 커밋·문서·decision log 링크) · `요약`(따로 남은 게 없을 때만 인라인).
 - 포인터로 충분하면 `요약` 생략(중복 금지). 수동 작업도 포함.
+- 이 규약은 커밋 게이트(`.claude/hooks/worklog-gate.sh`, PreToolUse 훅)로 강제된다 — 오늘 로그에 미커밋 변경이 없으면 **세션의 첫 `git commit`이 거부**된다(이후 분할 커밋은 통과). 로그가 불필요한 커밋은 `SDD_SKIP_WORKLOG=1 git commit ...` 로 우회한다.
 <!-- SDD-HARNESS:END -->

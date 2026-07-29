@@ -1,5 +1,31 @@
 # Decision Log
 
+## 2026-07-29 - 하네스를 문서 규약에서 실행 게이트로 확장 (work log 훅을 4번째 산출물군으로 편입, v4.6.12 → v4.6.13, post-implementation sync)
+
+### Context
+
+하네스 §5("작업 단위 종료 시 예외 없이 work log append")는 산문 규약뿐이라 준수가 모델 재량에 달려 있었고 실제로 누락됐다. 훅은 Claude Code가 직접 실행하는 셸 명령이라 모델이 건너뛸 수 없다 — 이 차이를 이용해 §5를 실행되는 게이트로 승격했다. 변경 범위: 훅 자산 정본 2파일(`worklog-gate.sh` 5.6K / `worklog-context.sh` 1.5K) + 4벌 미러 배포, `spec-create`(신설 `#### 3e` + 5개 섹션 반영)·`spec-upgrade`(`Step 6` 확장 + 4개 섹션 반영) 각 claude·codex 2벌, 하네스 템플릿 §5 게이트 1줄(4벌) 및 §0 교체(4벌), 이 repo dogfooding 3파일 + `AGENTS.md` §5. 검증 evidence: 자체 structural check 29 PASS/0 FAIL(통제 PATH로 `jq`/`python3`를 강제 마스킹해 12 케이스 × 2파서 = 24판정 동일 + fail-open + exec bit 비의존 + 하위 디렉토리 cwd 루트 고정), fix 후 회귀 재실행 29/29 유지, `implementation-review` 게이트 1회(correctness Blocker 0 / AC 26건 전부 MET, simplicity Medium 3 — 합산 Medium 6건 fix 1회 반영), 미러 실측(`references/hooks/*.sh` 4벌 + 이 repo `.claude/hooks/` 사본까지 파일당 md5 고유해시 1종, `agents-harness-template.md` 4벌 1종, `spec-create`·`spec-upgrade` SKILL.md 각 claude↔codex 바이트 동일), `git diff --check` 무출력.
+
+### Decision
+
+1. **하네스 산출물 계약을 3종 → 4종으로 확장한다 (current truth 승격)**: `AGENTS.md`·`CLAUDE.md`·`.gitignore`에 훅 자산군(`.claude/hooks/` 스크립트 2개 + `.claude/settings.json` 등록)을 더한다. 착지 지점은 §2 Guardrails의 **새 불릿 1개**다 — 기존 workspace commit 경계 불릿은 "무엇을 커밋하나"를 판정하므로 "하네스 설치가 무엇을 함께 설치하나"를 겹쳐 실으면 한 불릿이 두 판정 주체가 된다. 새 결정 테이블 행은 만들지 않았다(하네스 레이어의 canonical은 §3 핵심 설계 산문이고, 그 산문을 확장하는 것이 anti-duplication에 맞다).
+2. **훅은 하네스 설치와 동일 조건에 묶인다 — opt-in 없음**: 조건부 설치를 허용하면 "규약은 깔렸는데 강제는 안 깔린 repo"가 생겨 §5의 강제성이 다시 모델 재량으로 회귀한다. 설치 조건 = `AGENTS.md` 마커 블록 생성/병합 수행 여부 하나다.
+3. **대상은 커밋되는 `.claude/settings.json`이고 announce가 계약이다**: 하네스는 repo 규약이라 팀 전체에 적용되어야 하므로 개인용 `settings.local.json`이 아니다. 부수 효과로 SDD를 쓰지 않는 기여자까지 커밋 게이트를 받으므로, 스킬 최종 보고의 announce(적용 범위 + 세션 첫 커밋 발동 + `SDD_SKIP_WORKLOG=1` 우회)를 산출물 계약의 일부로 고정했다.
+4. **조용한 무력화 금지**: 게이트는 JSON 파서를 `jq` → `python3` 순으로 쓰고 둘 다 없으면 fail-open하되, SessionStart 훅이 "게이트 비활성"을 경고한다. 강제 자산이 침묵으로 죽으면 규약이 지켜지는 것처럼 보이는 상태가 되므로, fail-open 자체보다 가시성이 계약이다.
+5. **병합 메커니즘 상세는 global spec에 올리지 않는다**: 스크립트 verbatim 복사 / `settings.json` 키 수준 멱등 병합(교체 단위 = 매칭된 `command`를 담은 **바깥 그룹 객체 전체**) / 등록 형태(PreToolUse `matcher: "Bash"`, SessionStart matcher 없음, command `bash <path>`)는 두 SKILL이 canonical이다. global에는 "동일 조건 + announce + 무력화 금지"라는 지속 판단만 남기고 포인터로 위임했다 — `Repo-wide Invariant Test` #1을 통과하지 못한다(SKILL 한 파일을 열면 규칙 전체가 보인다).
+6. **JSON은 마커 블록 방식이 아니다**: `.gitignore`·`AGENTS.md`의 `SDD-HARNESS`/`SDD-WORKSPACE` 마커 규율을 `settings.json`에 확장할 수 없다(JSON에 주석 불가). 멱등 판정 키를 "`command` 문자열이 해당 스크립트 경로를 포함하는 항목"으로 두고 그룹 객체째 교체하는 방식이 대체다 — 안쪽 `{type, command}`만 갈아끼우면 `matcher`가 빠져 있던 과거 설치를 정정하지 못한다.
+7. **Codex 비대칭을 수용한다**: Codex에는 훅 메커니즘이 없어 `.codex/` 레인 스킬도 `.claude/hooks/`를 설치하지만 Codex 자신은 게이트의 강제를 받지 않는다. 산출물은 대상 repo의 것이고 그 repo는 Claude Code로도 열린다는 근거다. 이 사실은 플랫폼 특성이라 `components.md` Platform Notes가 소유한다.
+8. **하네스 템플릿 §0을 개인 산문 5줄에서 명명된 4원칙으로 교체한다 (draft Part 1 밖의 추가 delta)**: `plan-review-agent`(claude·codex)가 finding의 `Principle Link` 값으로 `Goal-Driven Execution` 등 원칙 **이름**을 인용하는데, 구 §0에는 그 축이 아예 없고 라벨도 없어 인용 대상이 존재하지 않았다. 또 "with me"·"please don't hesitate" 같은 개인 협업 어투가 소비 repo로 배포됐다. 교체 후 §0 = `docs/agentic_coding_principle.md`의 4축과 같은 이름 + 흡수 조항 2개(무인 실행 시 가정 기록 후 진행 / 개선 제안 장려)다. "이름을 바꾸면 인용이 끊긴다"는 사실을 §3 핵심 설계 산문에 고정했다 — 세 표면(하네스 템플릿 4벌 · `plan-review-agent` 2벌 · 원칙 문서)에 걸친 이름 결합이라 `Repo-wide Invariant Test`를 통과한다.
+9. **§ 범위 리터럴은 불변이다**: 게이트 문장을 새 § 섹션이 아니라 §5 안의 불릿으로 넣어 템플릿 섹션 수를 §0~§5로 유지했다. `§0~§5` 리터럴 히트 18건은 변경 대상이 아니다 — 과거 실측에서 § 범위 문자열 전파가 반복적으로 샜다.
+10. **`docs/SDD_CONCEPT.md`는 `🚧 Planned`로 고정한다**: §1 레이어 표가 하네스를 "문서 규약(how)"으로만 서술해 실행 자산 편입이 반영되지 않았다. spec sync의 대상은 `_sdd/spec/`뿐이라 이번 단위에서 문서를 고치지 않고, ko·en 짝 갱신을 planned 항목으로 남겼다(ko만 고치고 닫으면 en 세대 격차가 재발한다는 v4.6.10 운영 제약 적용).
+
+### Rationale
+
+- 규약을 지키게 만드는 수단이 "더 강한 문장"이면 준수는 계속 확률적이다. 실행 층(훅)으로 옮기면 강제가 결정적이 되고, 하네스는 그 층을 소비 repo에 배달할 유일한 기존 경로였다 — 새 배포 메커니즘을 만들지 않고 기존 산출물 계약을 넓히는 쪽이 표면 증가가 적다.
+- 정본/미러 규율을 새로 발명하지 않고 `agents-harness-template.md`의 4벌 byte-identical 규율을 그대로 재사용했다. 자산 종류가 늘어도 동기화 판정 규칙이 하나면 census 방식이 바뀌지 않는다.
+- 훅 자산을 `.md` 코드블록으로 감싸는 대안은 폐기했다 — `tools/install-codex-skill-bundle.py`가 `SKILL.md` 존재만 확인한 뒤 `shutil.copytree`로 디렉토리를 통째 복사하고 파일 형식 검증기가 없으며, `marketplace.json`이 스킬을 디렉토리 경로로 등록한다는 실측으로 `.sh` 원본 배치가 안전함이 확인됐다.
+- 설치 지시를 "생성한다/사용한다"가 아니라 "Read + verbatim 복사, 재구성 금지"로 쓴 것은 과거 실측(모델이 reference를 재구성해 변경이 산출물에 누락됨)의 반영이다. 파서 fallback·판정 규칙이 재구성으로 증발하면 게이트가 조용히 약해진다.
+
 ## 2026-07-27 - `SKILL.md` frontmatter `version:` 필드 삭제, 스킬 버전 소스를 0으로 (v4.6.11 → v4.6.12, post-implementation sync)
 
 ### Context
