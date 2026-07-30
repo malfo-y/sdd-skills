@@ -1,5 +1,36 @@
 # Decision Log
 
+## 2026-07-30 - `implementation-review` 읽기 범위 계단 — 입력 상한의 형태는 렌즈에 맞춘다 (v4.6.15 → v4.6.16, post-implementation sync)
+
+### Context
+
+직전 단위(같은 날 아래 entry)의 정직한 계측이 출발점이다 — 리뷰 1회 소비에서 최종 리포트는 2~3k 토큰(전체의 4% 안팎)이고 나머지는 파일 읽기 + 중간 추론이었다. 따라서 출력 다이어트의 절감은 1% 미만이고 일의 양을 실제로 깎는 레버는 입력 상한뿐이다. 그 상한을 `implementation-review-agent`로 확장했다. 변경 2파일(`.claude/agents/implementation-review-agent.md`, `.codex/agents/implementation-review-agent.toml`, payload 동일). 검증 evidence: structural check 47 PASS / 0 FAIL(RED 34건 관찰 후 GREEN), 변이 테스트 12건(단일 미러 6 + 양쪽 미러 동시 5 + 재확인)으로 각 check의 판별력 증명, `implementation-review` 게이트 1회(correctness Blocker 0 / Medium 4 → fix 4) + `simplicity-review`(Medium 5 → fix 3, 반려 2), fix 후 회귀 47 PASS + 변이 5건 전량 재검출, `git diff --check` 무출력, codex TOML `tomllib` 파싱 + `Codex Agent Boundary` delta 보존.
+
+### Decision
+
+1. **입력 상한의 형태는 렌즈에 따라 다르다 (재사용 가능한 결정)**: 직전 단위가 `plan-review-agent`에 세운 `Glob`→`Grep`→`Read`→`UNKNOWN` **도구 계단**을 `implementation-review-agent`에 이식하지 않는다. draft 문서를 보는 리뷰는 `Read`를 후순위로 밀어도 판별력이 유지되지만, correctness 렌즈는 경계·null·에러 경로·동시성 같은 로직 결함 탐지가 본업이라 **코드 본문 Read가 그 렌즈의 핵심 수단**이다(이 agent가 직전 단위에서 변이 테스트 12건으로 검증 스크립트의 위장 PASS 3건을 잡은 것이 실증이다). 그래서 도구 순서 대신 **무엇을 읽을지의 범위**를 제한하는 **읽기 범위 계단**을 세웠다 — ① 변경 집합 + 기준 문서는 전문 Read에 상한을 걸지 않고, ② 인접 표면은 `Grep` 우선, ③ 그 밖은 탐색적 읽기 금지다. 같은 목적(무제한 재량 → 상한)이 렌즈에 따라 다른 형태를 갖는다는 이 구분 자체가 다음 reviewer로 확장할 때 재사용되는 결정이다.
+2. **착지 표면 — 형태 일반화는 `main.md`, 계단 상세는 `components.md`**: 직전 단위는 도구 계단을 `Repo-wide Invariant Test` #2(2개 이상 표면 공통) 미통과로 판정해 `components.md` `plan-review` 행에만 두었다. 계단 **상세**는 이번에도 agent 한 곳 계약이라 `components.md` `implementation-review` 행 note로 내렸다. 다만 "상한을 렌즈에 맞춘 형태로 세운다 + `pr-review`는 대상이 아니다"라는 **형태 판단**은 이번 두 번째 적용으로 reviewer 2종에 걸쳤고(#2 통과), 한두 파일 읽기로는 왜 형태가 다른지·왜 `pr-review`가 빠졌는지가 복구되지 않으며(#1), 틀리게 가정하면 다음 feature가 도구 계단을 그대로 복사하는 정확히 그 실수를 한다(#3). 그래서 §2 Guardrails의 기존 reviewer 불릿 **하위 항목 1개**로만 올렸다 — 새 guardrail 불릿도 새 결정 테이블 행도 만들지 않았다(reviewer 계약의 판정 주체를 둘로 갈지 않는다). 선례(`simplicity 렌즈는 spec-review로 확장하지 않는다`)와 같은 슬롯이다.
+3. **초과 대응은 삭제가 아니라 이전이다**: Error Handling `대규모 코드베이스` 행("핵심 컴포넌트 중심으로 범위를 줄이고 가정을 적는다")을 `Step 3 읽기 범위 계단 ①의 초과 대응을 따른다`로 축약하면서, 그 행이 담고 있던 degradation 능력은 ①로 옮겼다(단일 패스 초과 시 AC 관련도·diff hunk 밀도 순 읽기 + 못 읽은 파일과 약해진 AC verdict를 limitation으로 명시). "무엇을 읽는가(범위)"와 "담기지 않을 때 무엇을 포기하는가(초과 대응)"는 다른 규칙이므로 포인터 축약이 능력 손실이 되지 않게 이전을 명시했다. 이 이전은 사용자가 배제한 검증 예산 제한이 아니다.
+4. **③은 "읽지 않음"이 아니라 "탐색하지 않음"이다**: AC가 명시적으로 요구하는 증거(전수 census, 잔존 0건, 파일 목록 일치)는 범위 밖이라도 `Grep`/`Bash`로 확보한다. 이 예외가 없으면 이 repo가 반복해 앓은 census 잔존·미러 누락 표면이 그대로 `UNTESTED`로 새고, 상한이 검출력 손실로 환전된다.
+5. **`UNTESTED`는 사유를 병기한다**: Hard Rule 5의 "테스트 실행 불가"와 ③의 "범위 밖"이 같은 토큰으로 뭉치면 미달의 원인이 구별되지 않는다. `UNTESTED(범위 밖)` 형태로 사유를 병기하되 반환 ledger 표 형식은 불변이다.
+6. **`components.md` `implementation-review` 행 Primary Source 누락 보정**: `plan-review` 행은 claude/codex 짝 4개를 열거하는데 이 행은 claude 2개만 갖고 있었다. draft delta는 `.codex/agents/implementation-review-agent.toml`을 지목했고, 실측에서 `.codex/skills/implementation-review/SKILL.md`도 존재해 인용된 비대칭("codex 짝 2개")을 닫는 쪽으로 둘 다 추가했다. 같은 누락 패턴이 다른 행(`spec-sync` 등)에도 있으나 이번 단위 범위가 아니다.
+7. **기각·배제**: (a) `pr-review`에 상한 추가 — 사용자 명시 판정("PR 리뷰는 충분히 시간을 들이는 게 좋다"), 인간 리뷰 보조라 벽시계보다 검출력이 우선이다. (b) `simplicity-review` 상한 — 요청 범위 밖. (c) **검증 예산(깊이) 제한** — 변이 테스트 횟수·반복 검증 상한은 판별력과의 직접 맞교환이라 별도 판단이 필요하다(이번에 잡힌 위장 PASS 4건이 깊이 판 대가였다). (d) model/effort 티어 변경 — 사용자 실측 무효과, **재제안 금지**. (e) `plan-review` 도구 계단 재작성 — 직전 단위에서 완료.
+8. **게이트가 잡은 것은 자기 계약의 경계 결함이다**: correctness Medium 4 전량이 신설 문면의 실질 결함이었다 — (M1) ①의 기준 문서 열거가 "호출자 지정 draft/plan"에 앵커돼 `기준 문서 적응` mode 2·3에서 기준 문서가 ②로 떨어짐 → 모드 판정을 Step 1/`기준 문서 적응`에 위임하고 ①은 재열거하지 않는다, (M2 **목적 역행**) "참조한 spec 범위"에 한정 술어가 없어 1,700줄대 `decision_log.md`까지 무상한 ①에 들어가고, 변경 전 Step 3에는 spec 읽기 지시가 아예 없었으므로 이 조항이 상한이 아니라 **신규 읽기 의무**로 작동할 수 있었다 → `AC·정합 판정에 필요한 절로 한정`, (M3) `git diff --name-only` 단일 수단이라 커밋 후 호출 시 ①이 공집합이 되고 변경 파일이 ③에 걸림 → `<base>..HEAD`/`git log` fallback, (M4) check 4건의 위장 PASS → 보호 섹션 sha256 대조·문장 단위 앵커로 교체. simplicity Medium 2건은 근거를 대고 반려했다 — correctness 지시 3중 서술은 선재 중복이라 `Surgical Changes` 범위 밖이고, Error Handling 행 삭제는 그 표가 *상황→규칙* 라우팅 표면이라 `대규모 코드베이스` 상황이 표에서 사라진다.
+9. **효과는 절감 수치가 아니라 "무제한 재량을 상한으로 대체"다 (정직한 기록)**: 동기가 된 실측(363s / 79k)에 ①/②/③별 읽기 비중 원자료가 없어 ②③ 억제의 절감 규모는 **미측정**이다. 리뷰어가 현재도 사실상 ①만 읽고 있다면 절감은 0에 가까울 수 있다. 벤치마크는 문서 자산에 과한 비용이라 이번 범위에 넣지 않았고, 다음 `implementation-review` 1회의 tool call 구성으로 사후 실측한다.
+
+### Rationale
+
+- 상한을 세울 때 옮겨야 하는 것은 계단의 **모양**이 아니라 "무제한 재량을 없앤다"는 **목적**이다. 모양을 복사하면 렌즈의 핵심 수단을 후순위로 밀어 상한이 곧 검출력 손실이 된다 — 도구 계단을 correctness 렌즈에 이식하는 것이 정확히 그 사고였다.
+- 상한 신설은 팽창 여지도 함께 만든다. ①에 "기준 문서"를 넣는 순간, 한정 술어가 없으면 변경 전에 없던 읽기 의무가 생겨 읽기량을 줄이려는 feature가 읽기량을 늘린다(M2). 상한 문면은 항상 "변경 전 대비 무엇이 늘었는가"로 역검해야 한다.
+- 포인터 축약은 규칙 소유자를 1곳으로 모으는 좋은 수단이지만, 축약 대상이 담고 있던 **능력**이 포인터 대상에 실제로 존재하는지 확인해야 한다. 범위 규칙과 초과 대응은 다른 규칙이라 후자를 명시 이전하지 않으면 축약이 삭제가 된다(plan-review H3).
+- 상한의 예외(AC 요구 증거)는 선택적 완화가 아니라 상한이 성립하기 위한 조건이다. 예외가 없으면 이 repo의 지배적 실패 모드(census 잔존·미러 누락)가 상한 도입만으로 미검출로 전환된다.
+- 효과를 수치로 주장하지 않고 "재량 → 상한"으로만 기록해 두면, 다음 레버(검증 예산)를 고를 때 잘못된 성공 신호에 근거하지 않는다.
+
+### Follow-up
+
+- (선재 smell, 이번 범위 아님) correctness 능동 검토 지시가 agent 헤더·AC1·Step 3 세 곳에 서술돼 있다. 판정 주체 1곳 규범에 어긋나므로 별건으로 정리한다.
+- correctness Low 3 잔존: Step 6 `Assumptions` 정의가 "기준 문서 없이 리뷰한 경우"로 한정돼 범위 밖 가정의 귀속이 문면상 모순(반환 형식이 이번 Scope Out) / `UNTESTED` 사유 병기가 편면적이라 무표기 UNTESTED는 여전히 모호 / (이 entry로 해소) `components.md` spec surface.
+
 ## 2026-07-30 - reviewer 반환 출력 다이어트 + `plan-review` 읽기 입력 상한 (v4.6.14 → v4.6.15, post-implementation sync)
 
 ### Context
