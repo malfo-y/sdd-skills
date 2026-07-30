@@ -1,5 +1,34 @@
 # Decision Log
 
+## 2026-07-30 - `implementation` 커버리지 델타 — 테스트 집합을 AC의 함수에서 diff의 함수로 (v4.6.16 → v4.6.17, post-implementation sync)
+
+### Context
+
+사용자 문제 제기가 출발점이다 — "RED→GREEN으로 구현을 채우고 나면 빠진 테스트가 종종 보인다". 진단 결과 체인 전체가 AC에 앵커되어 **테스트 집합이 AC의 함수**였다. RED는 AC가 요구하는 동작의 미충족만 관찰하고, GREEN에서 코드가 AC보다 넓어진 부분(요구되지 않은 분기·경계값·에러 경로·기존 호출부 적응)은 어떤 테스트도 고정하지 않는다. 마감 증거 테이블은 AC 단위라 그 확장분이 등장조차 하지 않고, `implementation-review-agent`는 AC verdict ledger + 읽기 범위 계단(AC 밖 탐색적 읽기 금지)이라 구조적 사각지대였다. 변경 2파일(`.claude/skills/implementation/SKILL.md`·`.codex/skills/implementation/SKILL.md`, identical 미러) — `### 4. 커버리지 델타` 신설 + 기존 `테스트 불변 규칙` 번호만 4→5 이동, `## 마감` 절 무변경. 검증 evidence: structural check C0~C4 RED(C1 FAIL 헤딩 4개) → GREEN 전량 PASS, 변이 4건 전량 검출 후 복구·재실행 통과 재확인, `git diff --check` clean, 미러 `diff` exit 0, `implementation-review` 게이트 1회(correctness Blocker 0 / Must 5 → fix 5, simplicity Medium 2 → fix 2).
+
+### Decision
+
+1. **커버리지 델타 단계를 GREEN 직후에 둔다**: 각 task의 GREEN 통과 직후 그 task가 변경한 diff를 **실제로 실행해 읽고**, 방금 통과시킨 테스트/check가 도달하지 않는 동작을 열거한다. 근거는 diff 출력이지 기억이나 AC 재독이 아니다 — 이 스킬에서 RED가 작동하는 이유가 "실제 실행해 관찰한다"는 행위 의무 + 아티팩트 형태였으므로 델타도 명사형 근거 규정이 아니라 동사형 행위 지시로 둔다. 기준점은 task 시작 시점이고 커밋 경계가 없으면 이번 task가 만진 hunk로 한정한다(다중·병렬 task에서 앞 task hunk 혼입 방지). (c) test-free task는 비교할 테스트가 공집합이라 델타 = diff 전량으로 퇴화하므로, (c) 근거가 덮지 못하는 동작을 기준선으로 삼는다.
+2. **삭제가 1순위다**: §3 GREEN이 금지한 "요청되지 않은 옵션·설정·추상화·에러 처리"는 이 단계가 지목하는 전형적 델타와 **같은 목록**인데, triage는 테스트 가능성만 판정하고 "그 코드가 존재해야 하는가"를 묻지 않는다. 그대로 두면 GREEN 최소성 위반 코드가 테스트까지 달고 고착된다. 그래서 AC도 요구하지 않고 기존 동작 유지에도 불필요한 항목은 삭제를 먼저 검토하고, 남기기로 한 항목만 기존 triage 기준으로 닫는다(기준을 재정의하지 않는다).
+3. **델타 테스트의 판별력은 변이 확인으로 증명한다**: 코드가 이미 존재해 RED 관찰이 불가하므로, 대상 동작을 일시적으로 깨서 실패를 관찰하고 되돌린 뒤 재실행해 통과를 재확인한다. 이 절차가 없으면 델타 테스트는 코드를 보고 짜맞춘 무조건 통과 테스트로 퇴화한다. 나아가 테스트 불변 규칙의 트리거가 "RED 관찰 후"라 델타 테스트는 문면상 보호 밖이었고(가장 약화되기 쉬운 부류가 정작 무보호), 구제 절차 2단계도 "RED를 다시 관찰"이라 **실행 불가**였다. 두 구멍 모두 델타 절이 닫는다 — 동일 적용 + "RED 재관찰은 변이 확인 재수행으로 대체". 대체 규칙의 소유자는 델타 절이고 불변 규칙 본문은 무변경이다(판정 주체를 둘로 갈지 않는다).
+4. **마감 게이트 fix diff에도 적용한다 (draft AC 범위 밖 확장)**: Task 2의 회고 실효 관찰이 근거다 — 직전 feature 커밋 `134854f`(AC 유래 check 47건)에 절차를 돌려 델타 2건(`git diff --name-only` 공집합 시 fallback, "참조된 spec은 필요한 절로 한정")을 열거했고 check 커버는 0건이었는데, **둘 다 `implementation-review` fix로 들어온 동작**이었다. fix 산출물은 AC가 확정된 뒤 태어나 AC 유래 테스트가 구조적으로 없는 부류다. 적용은 fix 직후이고 마감의 회귀 재실행은 델타 처리까지 끝낸 뒤 1회 돈다(델타 산출물은 게이트 fix가 아니라 자기 재트리거가 불가하므로 무한 후퇴는 없다). 이 조항은 draft Contracts 5요소 밖의 6번째이며, `## 마감` 절이 아니라 델타 절 안에 둔 이유는 델타 규칙의 소유자가 그 절이기 때문이다.
+5. **"델타 없음" 통과 문구를 두지 않는다**: 델타가 없으면 아무것도 적지 않는다 — 형식적 통과 문구로 전락할 표면 자체를 만들지 않는 의도적 선택이다(출력 다이어트 방향과도 일치). 대가는 이 단계의 **스킵과 0건이 사후 구분되지 않는다**는 것이다(RED의 실패 출력 캡처, 계약 오류의 선언 아티팩트와 달리 수행 흔적이 없고 `implementation-review`도 AC ledger 기반이라 수행 여부를 못 본다). 강제력은 diff 실행 행위 의무와 델타 발견 시 증거 테이블 노출에만 의존하며, 이 한계를 accepted trade-off로 명시 수용한다.
+6. **착지 표면 — 순서를 열거하는 spec 표면 전량 갱신**: `main.md` §2 test-first 불릿의 순서 열거에 커버리지 델타를 넣고 하위 항목 1개를 추가했으며, 테스트 불변 규칙 하위 항목에 델타 적용·RED 재관찰 대체를 덧붙였다. §3 결정 표 `implementation test-first` 행, `components.md`의 `implementation` 컴포넌트 행과 Strategic Code Map `Implementation contract` 행도 같은 이유로 갱신했다(전부 단계를 전수 열거하는 서술이라 절이 늘면 stale해진다). `usage-guide.md`의 `RED→GREEN`은 축약 표기라 델타 추가 후에도 여전히 참이므로 무변경이다.
+
+### Rationale
+
+- **왜 GREEN 직후인가**: (B) 마감으로 미루면 전체 GREEN 통과 후라 코드를 보고 짜맞춘 테스트가 되어 RED 관찰의 가치가 소멸한다. (C) `implementation-review`에 얹으면 AC 밖 탐색을 금지한 읽기 범위 계단 원칙과 정면 충돌하고(v4.6.16 결정) fix 1회 타이밍이라 늦다. 델타는 코드를 방금 쓴 주체가 구현 시점에 닫는 것이 가장 싸다.
+- **왜 리뷰 렌즈를 넓히지 않았나**: 상한을 세운 직후에 같은 agent의 범위를 다시 열면 v4.6.16 결정이 무효화된다. 사각지대의 해소 지점을 리뷰가 아니라 구현 단계로 고정하는 편이 두 결정 모두를 보존한다.
+- **기각**: 중단·분할 규칙에 "델타가 반복적으로 크다 = 계획 문제" 신호 추가(YAGNI — 아직 관측되지 않은 실패 모드이고 기존 규칙 2(계약 오류 반복)로 계획 문제를 이미 잡는다), `## 마감` 절 편집(증거 테이블 스키마 무변경이라 델타 행 수용은 신설 절 1문장으로 충분 — 편집 표면 최소화), `implementation-review`/reviewer agent 변경, 새 agent·파일·artifact.
+- **재발 함정 기록**: 첫 check 실행이 macOS bash 3.2의 `mapfile` 부재로 죽었는데 `set -uo pipefail`만으로는 fail 플래그가 서지 않아 **ALL PASS + exit 0**을 보고했다(portable read loop로 교체). check 하네스 자체의 첫 실행 결과는 항상 의심 대상이라는 사실이 이 repo에서 다시 재현됐다.
+
+### Changes
+
+- `.claude/skills/implementation/SKILL.md`·`.codex/skills/implementation/SKILL.md` -- `### 4. 커버리지 델타` 신설, 기존 `테스트 불변 규칙` 4→5 번호 이동(본문 무변경), `## 마감` 무변경
+- `_sdd/spec/main.md` -- 헤더 4.6.17, §2 test-first 불릿 순서 열거 + 하위 항목 1개 추가, 테스트 불변 규칙 하위 항목에 델타 적용·RED 재관찰 대체 추가, §3 결정 표 `implementation test-first` 행 갱신
+- `_sdd/spec/components.md` -- `implementation` 컴포넌트 행에 커버리지 델타 note 추가, Strategic Code Map `Implementation contract` 행 열거 갱신
+- `_sdd/spec/logs/changelog.md` -- v4.6.17 entry
+
 ## 2026-07-30 - `implementation-review` 읽기 범위 계단 — 입력 상한의 형태는 렌즈에 맞춘다 (v4.6.15 → v4.6.16, post-implementation sync)
 
 ### Context
