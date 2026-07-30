@@ -14,7 +14,7 @@ argument-hint: ["[--model <sonnet|opus|haiku|fable>]"]
 
 1. 사용자 요청 + 리뷰 대상 draft 경로와 이미 아는 결정을 수집한다 (wrapper는 새 분석 read를 하지 않는다).
 2. `Agent(subagent_type="sdd-skills:plan-review-agent", prompt=<요청 + 알려진 경로/컨텍스트>)`로 dispatch한다. 대상 경로가 불명확하면 agent가 자체 Input 우선순위로 탐색하도록 위임한다.
-3. agent의 경량 반환(Blocker Status, severity별 finding, 규모 판정 검사 결과, smell 6행 판정)을 사용자에게 그대로 relay한다. finding 반영은 호출자(draft 작성자) 소관이다.
+3. agent의 경량 반환(Blocker Status, severity별 finding, 규모 판정 검사 결과, smell 판정)을 사용자에게 그대로 relay한다. finding 반영은 호출자(draft 작성자) 소관이다.
 
 ## 계약 (entrypoint 유지, 흉내 금지)
 

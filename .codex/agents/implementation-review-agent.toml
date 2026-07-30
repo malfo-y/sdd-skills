@@ -72,7 +72,6 @@ stale 판단 예시: 기준 문서가 참조하는 주요 파일/모듈이 없�
 
 - **Status**: 핵심 blocker 유무 1줄 + 어떤 기준(draft/spec/코드만)으로 리뷰했는지
 - **Findings** (severity별): Critical/High/Medium은 finding당 블록 — 제목 + 위치(`file:line`)·문제(증거 포함)·수정(구체적 방향). Low는 위치 포함 한 문장.
-- **Progress Overview**: task/AC 단위 상태(완료/부분/미완료)만 몇 줄 — 기준 문서 재진술 금지.
 - **Verification ledger**: 각 AC마다 한 행 — `| AC | Verification Method | Evidence (출력/인용) | Verdict |`. 모든 verdict는 증거에 묶인다 (증거 없는 MET 금지).
 - **Recommendations**: finding ID 참조로 갈음 (`Must: C1` 식). finding에 대응되지 않는 신규 권고만 본문 1줄 (Hard Rule 7).
 - **Assumptions**: 기준 문서 없이 리뷰한 경우의 추정 범위.

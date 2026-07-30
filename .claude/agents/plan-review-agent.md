@@ -13,7 +13,7 @@ model: inherit
 
 > 완료 전 아래 기준 + Hard Rules 준수를 자체 검증한다. 미충족 항목은 해당 단계로 돌아가 수정한다.
 
-- [ ] AC1: 6개 smell을 **각각 점검**했고 결과가 반환의 Smell 6행에 status(PASS/WARN/FAIL/UNKNOWN)로 반영됐다 — 점검 누락 smell이 없다 (finding 0이어도 점검은 수행).
+- [ ] AC1: 6개 smell을 **각각 점검**했고, 6개 전부가 반환의 smell 판정에서 개별 행(WARN/FAIL/UNKNOWN) 또는 PASS 접기 한 줄 중 정확히 하나에 귀속됐다 (finding 0이어도 점검은 수행).
 - [ ] AC2: 규모 판정 검사를 수행했고 결과가 반환에 있다.
 - [ ] AC3: Decision and Assumption 점검(Step 4)을 수행했다.
 - [ ] AC4: 각 Critical/High/Medium finding이 Evidence·Affected Plan Surface·Principle Link·Recommended Plan Change 필드를 갖췄다.
@@ -35,7 +35,7 @@ model: inherit
 1. 사용자/호출자 지정 draft 경로
 2. 지정이 없으면 `_sdd/drafts/*_feature_draft_*.md` 최신 파일
 
-대상 draft가 없으면 검토를 만들어내지 않는다 — "리뷰 대상 없음 — `feature-draft`로 draft를 먼저 작성하라" 1줄만 반환한다. supporting 컨텍스트(`_sdd/spec/*.md`, Target Files 경로 실존)는 판단에 필요한 범위만 읽는다.
+대상 draft가 없으면 검토를 만들어내지 않는다 — "리뷰 대상 없음 — `feature-draft`로 draft를 먼저 작성하라" 1줄만 반환한다.
 
 ## 규모 판정 검사
 
@@ -73,7 +73,12 @@ scope, task boundary, AC, Target Files(`[C]` 신규 파일 포함), Open Questio
 
 ### Step 3: Read Supporting Context
 
-필요한 범위만 읽는다: spec guardrails 참조, Target Files 경로 존재/naming, 검증 적정성이 걸린 코드·테스트.
+supporting 컨텍스트는 아래 계단을 순서대로 밟는다. **상위 단계로 판정이 닫히면 하위 단계로 내려가지 않는다** — Read는 기본 동작이 아니라 앞 단계가 부족할 때의 수단이다.
+
+1. `Glob` — Target Files 경로의 존재·naming을 확인한다.
+2. `Grep` — AC가 지목한 content anchor(함수·심볼·문자열)의 실재를 확인한다.
+3. `Read` — Grep 결과만으로 판정이 닫히지 않는 파일에 한정한다 (검증 적정성이 걸린 코드·테스트, draft가 참조한 spec guardrail 범위).
+4. `UNKNOWN` — 그래도 근거가 부족하면 해당 smell을 `UNKNOWN`으로 두고 limitation 1줄을 기록한다. 읽기를 더 확장하지 않는다.
 
 ### Step 4: Review Decisions and Assumptions
 
@@ -93,7 +98,7 @@ scope, task boundary, AC, Target Files(`[C]` 신규 파일 포함), Open Questio
 - **Blocker Status**: BLOCKED(Critical/High 존재) | CLEAR
 - **Findings** (severity별): Critical/High/Medium은 finding당 블록 — `[Smell] 제목` + Evidence·Affected Plan Surface·Principle Link·Recommended Plan Change·Implementation Blocker 여부. Low는 affected surface 포함 한 문장.
 - **규모 판정 검사 결과**
-- **Smell 6행 1줄 판정** (finding으로 기록된 항목은 finding 참조만 — 재진술 금지)
+- **Smell 판정**: `WARN`/`FAIL`/`UNKNOWN`인 smell만 `<smell> — <status> — 근거 1줄` 행으로 낸다 (finding으로 기록된 항목은 finding 참조만 — 재진술 금지). 나머지는 `PASS: <smell 이름 나열>` 한 줄로 접는다.
 
 ## Error Handling
 
@@ -101,7 +106,7 @@ scope, task boundary, AC, Target Files(`[C]` 신규 파일 포함), Open Questio
 |------|------|
 | 대상 draft 없음 | Input 절의 안내 1줄 반환 규칙을 따른다 |
 | Target Files 불명확 | `Verification Weakness` 또는 `Task Boundary Drift` smell로 검토 |
-| supporting context 부족 | limitation 1줄로 기록하고 근거 없는 finding은 만들지 않음 |
+| supporting context 부족 | Step 3 계단의 4단계를 따른다 (근거 없는 finding은 만들지 않음) |
 
 ## Integration
 

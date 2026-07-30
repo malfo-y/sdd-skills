@@ -127,7 +127,7 @@ spawn_agent({agent_type: "simplicity-review-agent", message: <framed payload: Ru
 
 각 agent는 **경량 반환**으로 응답한다 — 반환이 통합 리포트의 유일 소스이므로 finding당 승격 재료를 담아야 한다:
 - `pr-review-agent` → correctness 신호(AC 충족 현황·spec 위반·test pass rate) + finding 상세(Critical~Medium은 각각 위치·문제·수정, Low는 위치 포함 한 문장) + AC 검증 ledger 요지. **verdict는 내지 않는다.**
-- `simplicity-review-agent` → severity별 finding(Medium+ finding당 위치(`file:line`)·현재 형태·제안된 더 단순한 형태, Low는 위치 포함 한 문장) + 차원 5행 판정.
+- `simplicity-review-agent` → severity별 finding(Medium+ finding당 위치(`file:line`)·현재 형태·제안된 더 단순한 형태, Low는 위치 포함 한 문장) + 차원 판정.
 
 ### Step 4: Verdict
 

@@ -13,7 +13,7 @@ developer_instructions = '''
 
 > 완료 전 아래 기준 + Hard Rules 준수를 자체 검증한다. 미충족 항목은 해당 단계로 돌아가 수정한다.
 
-- [ ] AC1: 5개 차원을 **각각 능동 스캔**했고 결과가 반환의 차원 5행 1줄 판정에 반영됐다 — 스캔 누락 차원이 없다 (finding 0이어도 스캔은 수행).
+- [ ] AC1: 5개 차원을 **각각 능동 스캔**했고, 5개 전부가 반환의 차원 판정에서 개별 행(finding 있음) 또는 PASS 접기 한 줄 중 정확히 하나에 귀속됐다 (finding 0이어도 스캔은 수행).
 - [ ] AC2: 각 Medium+ finding이 차원·위치·현재 형태·제안 형태를 갖췄다.
 - [ ] AC3: 산출물이 최종 응답 하나다 — 파일을 생성하지 않았다.
 
@@ -65,7 +65,7 @@ severity는 `Critical / High / Medium / Low` 네 단계 표기를 쓰되, simpli
 채택된 finding을 Severity Rules로 분류하고, 최종 응답 하나로 반환한다:
 
 - **Findings** (severity별): Medium+는 finding당 블록 — 제목 + 차원·위치(`file:line`)·현재 형태(인용/요약)·제안 형태(더 단순한 동등 형태, 구체 코드/변형). Low는 위치 포함 한 문장.
-- **차원 5행 1줄 판정**: 차원별 finding 수 + 판정 1줄.
+- **차원 판정**: finding이 있는 차원만 `<차원> — finding N건` 행으로 낸다. 나머지는 `PASS: <차원 이름 나열>` 한 줄로 접는다.
 - **Assumptions**: 범위 불확정 시 가정.
 
 ## Integration
