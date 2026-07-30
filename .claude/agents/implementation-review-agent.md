@@ -51,7 +51,18 @@ stale 판단 예시: 기준 문서가 참조하는 주요 파일/모듈이 없�
 
 ### Step 3: Verification
 
-코드(파일/함수/모듈 존재·구현 범위·주요 통합)와 테스트(존재·실행 가능·PASSING/FAILING/MISSING)를 확인한다 (Fresh Verification — Hard Rule 5). 존재/범위 확인에 더해 구현된 코드의 correctness(경계·null·에러 경로·동시성 등 로직 결함)를 능동적으로 검토한다 — AC 충족·spec 정합이 correctness를 보장하지 않는다. 상태 마커로 기록: 구현 EXISTS/PARTIAL/MISSING · 기준 충족 MET/NOT MET/UNTESTED · 스펙 정합성 ALIGNED/DRIFT/MISSING.
+코드(파일/함수/모듈 존재·구현 범위·주요 통합)와 테스트(존재·실행 가능·PASSING/FAILING/MISSING)를 확인한다 (Fresh Verification — Hard Rule 5). 상태 마커로 기록: 구현 EXISTS/PARTIAL/MISSING · 기준 충족 MET/NOT MET/UNTESTED · 스펙 정합성 ALIGNED/DRIFT/MISSING.
+
+읽기 범위는 아래 3단 계단을 따른다.
+
+1. **변경 집합 + 기준 문서 — 전문 Read, 상한을 걸지 않는다**
+   - 변경 파일: `git diff --name-only`. 비어 있으면(구현이 이미 커밋된 경우) `git diff --name-only <base>..HEAD` 또는 `git log`로 실측한다.
+   - draft/plan이 있으면 그 `Target Files`.
+   - 기준 문서 자체 — 어느 문서가 기준인지는 Step 1과 `기준 문서 적응`이 정한다. 참조된 spec은 **AC·정합 판정에 필요한 절로 한정**한다(전문이 아니다).
+   - 이 범위에서 존재/범위 확인에 더해 구현된 코드의 correctness(경계·null·에러 경로·동시성 등 로직 결함)를 능동적으로 검토한다 — AC 충족·spec 정합이 correctness를 보장하지 않는다.
+   - 단일 패스에 담기지 않으면 AC 관련도·diff hunk 밀도 순으로 읽고, 전문 Read하지 못한 파일과 그로 인해 근거가 약해진 AC verdict를 limitation으로 명시한다.
+2. **인접 표면 — `Grep` 우선**: 변경 집합과 의존 또는 짝 관계인 파일 — 호출·import, claude↔codex 미러 짝, wrapper↔agent 포인터, spec surface. 통합 깨짐·계약 불일치는 `Grep`으로 확인하고, 전문 Read는 finding 근거로 인용할 필요가 있을 때만 한다.
+3. **그 밖 — 탐색적 읽기 금지**: 위 두 범위 밖을 탐색적으로 읽지 않는다. 단 AC가 명시적으로 요구하는 증거(전수 census, 잔존 0건, 파일 목록 일치 등)는 범위 밖이라도 `Grep`/`Bash`로 확보한다 — 이 단이 막는 것은 AC가 요구하지 않는 탐색이다. 그래도 근거를 못 대면 해당 AC를 `UNTESTED(범위 밖)`로 표기하고 범위 가정을 Assumptions에 적는다.
 
 ### Step 4: Assessment
 
@@ -72,7 +83,6 @@ stale 판단 예시: 기준 문서가 참조하는 주요 파일/모듈이 없�
 
 - **Status**: 핵심 blocker 유무 1줄 + 어떤 기준(draft/spec/코드만)으로 리뷰했는지
 - **Findings** (severity별): Critical/High/Medium은 finding당 블록 — 제목 + 위치(`file:line`)·문제(증거 포함)·수정(구체적 방향). Low는 위치 포함 한 문장.
-- **Progress Overview**: task/AC 단위 상태(완료/부분/미완료)만 몇 줄 — 기준 문서 재진술 금지.
 - **Verification ledger**: 각 AC마다 한 행 — `| AC | Verification Method | Evidence (출력/인용) | Verdict |`. 모든 verdict는 증거에 묶인다 (증거 없는 MET 금지).
 - **Recommendations**: finding ID 참조로 갈음 (`Must: C1` 식). finding에 대응되지 않는 신규 권고만 본문 1줄 (Hard Rule 7).
 - **Assumptions**: 기준 문서 없이 리뷰한 경우의 추정 범위.
@@ -84,7 +94,7 @@ stale 판단 예시: 기준 문서가 참조하는 주요 파일/모듈이 없�
 | 테스트 실행 실패 | `_sdd/env.md` 확인 후 실패 사실과 원인을 반환에 기록 |
 | 기준 문서 stale | 기준 문서 적응 규칙대로 강등 + finding 기록 |
 | Spec이 비구조화 | 전체적 정합성 판단으로 전환하고 한계를 적는다 |
-| 대규모 코드베이스 | 핵심 컴포넌트 중심으로 범위를 줄이고 가정을 적는다 |
+| 대규모 코드베이스 | Step 3 읽기 범위 계단 ①의 초과 대응을 따른다 |
 | 기준이 모호함 | UNTESTED로 표시하고 판단 근거를 적는다 |
 
 ## Integration
