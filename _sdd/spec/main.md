@@ -2,8 +2,8 @@
 
 > Markdown 기반 skill bundle로 AI 에이전트의 Spec-Driven Development 워크플로우를 Claude Code와 Codex에서 공통 계약으로 실행한다.
 
-**Spec Version**: 4.6.14
-**Last Updated**: 2026-07-29
+**Spec Version**: 4.6.15
+**Last Updated**: 2026-07-30
 **Status**: Approved
 **Canonical Role**: current thin global spec
 
@@ -72,6 +72,8 @@ SDD Skills는 이 문제를 `SKILL.md = 실행 가능한 프롬프트`라는 관
   - simplicity finding은 falsifiable-only gating을 따른다: 동작 변화 없이 더 단순한 동등 형태를 구체적으로 제시할 수 있는 객관적 위반만 Medium 이상(gating)이고, 주관적 취향은 Low(advisory)다. gating을 falsifiable finding으로 한정하는 규칙이 수렴성의 핵심이다. simplicity 렌즈는 `spec-review`로 확장하지 않는다(코드 형태 품질이라 spec 문서 품질에 부적합)
   - 직교 2-렌즈 review의 현재 적용 지점은 PR review(`pr-review` 스킬)다 — `pr-review`는 correctness(`pr-review-agent`) ∥ simplicity(`simplicity-review-agent`) 두 read-only leaf reviewer를 병렬 dispatch하고 두 요약을 합쳐 verdict를 합성하는 orchestrator다. correctness 검증도 자체 inline이 아니라 dispatched agent이므로 `--model` override가 두 렌즈에 균일하게 적용된다. 표적은 disjoint하다(correctness=PR/spec 정합·AC·보안·테스트 + 정확성-중복, simplicity=동작-불변 형태 + 형태-중복). 두 reviewer는 파일을 쓰지 않고 경량 반환(finding별 위치·문제·수정 제안)으로 응답하며, orchestrator(스킬 메인 루프)가 통합 verdict 리포트(`_sdd/pr/..._pr_review_...`) 1파일만 write한다(단일 작성자 — 구 3파일 구조에서 축소, 반환이 통합 리포트의 유일 소스). 통합 리포트는 통계 표(metrics/severity 카운트) 없이 행동 대상 finding을 위치·문제·수정 블록 전문으로 싣는다 — correctness Critical/High와 simplicity falsifiable gating finding(Medium+, REQUEST CHANGES rationale 기여, verdict 자동 강제 없음)은 Pre-merge 섹션에, correctness Medium은 non-blocking 상세 블록으로, 주관(Low)은 위치 포함 한 문장으로 흐른다 — pr-review는 인간 리뷰 보조이므로 합집합 자동 exit를 적용하지 않는다. Medium=gating/Low=advisory 분류는 위 falsifiable-only gating 규칙을 그대로 재사용한다
   - reviewer agent 4종(`plan-review-agent`·`implementation-review-agent`·`simplicity-review-agent`·`pr-review-agent`)은 판정만 반환하는 read-only leaf다 — tools에 `Write`가 없고(correctness 계열 2종만 테스트 실행용 `Bash` 유지) 리포트 파일 작성은 호출자 소관이다(작성자 불변식의 reviewer 적용). orchestrator 스킬은 산출물을 직접 rewrite하지 않으며(산출물 단일 작성자), fix는 산출물 작성자(SDD 체인에서는 메인 루프)가 수행한다
+    - reviewer 반환에는 **실제 소비자가 있는 항목만** 둔다 — 같은 반환의 다른 항목에서 도출되는 요약 섹션은 두지 않고, 유지/삭제는 wrapper relay 목록의 소비 실측으로 판정한다(`implementation-review-agent`의 task/AC 상태 요약은 `Verification ledger`에서 도출되고 relay 소비자도 없어 삭제 — 반환 항목 5개. 반대로 `pr-review-agent`의 `Correctness 신호`는 `pr-review` 통합 리포트 `Signals` 줄이 소비하므로 유지 대상이다)
+    - 판정 표를 가진 reviewer 반환은 **문제 있는 항목만 개별 행으로 내고 나머지는 `PASS: <이름 나열>` 한 줄로 접는다**(`plan-review-agent` 6 smell, `simplicity-review-agent` 5 차원). 점검·스캔 의무는 그대로이고 출력 의무만 완화된다 — 점검 대상 전량이 개별 행 또는 PASS 접기 한 줄 중 정확히 하나에 귀속된다는 완전성 불변식은 각 agent의 **AC 절 한 곳**이 소유하고, 반환 형식 절에는 재서술하지 않는다("나머지는"이 분할을 이미 완결하므로 재서술은 사족이다)
 - 구현의 test-first는 `implementation` 스킬이 메인 루프에서 직접 집행하는 실행 규율이다: task별 3-way triage — (a) test: 실패하는 테스트 작성 가능, (b) structural-check: 프레임워크 부재 자산이라도 grep·diff·exit code로 실질 구조를 판정 가능, (c) test-free: 동어반복 check뿐인 non-falsifiable task(분류 근거 1줄 기록 필수, "간단한 구현이라서"는 (c) 자격이 아니며 경계 애매하면 (b)로 보수 분류) — 이후 (a)/(b)는 RED 실패 관찰 전 구현 금지 → 최소 구현 GREEN → 마감 시 AC→증거 테이블(증거 없는 AC는 "충족" 금지). triage와 규칙의 canonical surface는 `implementation` SKILL이다
   - `implementation` 마감 순서는 회귀 1회 → AC→증거 테이블 → `implementation-review` 게이트 1회(Critical/High/Medium fix 1회, fix가 있었으면 회귀 재실행 + 증거 테이블 갱신, Low는 advisory) → 마감 요약이다. 마감 요약에는 계약 오류 선언·대상 파일 밖 수정과 함께 게이트의 finding·fix 내역·잔존 finding·fix 후 회귀 결과를 싣는다 — 호출자가 게이트를 다시 돌지 않으므로 이 반환이 finding/fix 내역의 유일 소스다. 이 마감 반환 계약은 `implementation`에만 적용한다(`feature-draft`는 마감 노출을 Open Questions로 제한하는 출력 다이어트가 의도된 설계이며, plan gate finding의 잔여 이슈 보고 의무는 위 review-only 금지 규칙이 소유한다)
   - 테스트 불변 규칙: RED 관찰 후에는 테스트를 통과시키기 위해 테스트를 약화·수정하지 않는다. 계약이 틀렸다고 판단되면 선언을 남기고 테스트 수정 → 재-RED 후 구현으로 돌아가며, 같은 task에서 선언이 반복되면 구현 중단 + draft 복귀다

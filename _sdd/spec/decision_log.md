@@ -1,5 +1,32 @@
 # Decision Log
 
+## 2026-07-30 - reviewer 반환 출력 다이어트 + `plan-review` 읽기 입력 상한 (v4.6.14 → v4.6.15, post-implementation sync)
+
+### Context
+
+review 게이트의 체감 지연을 줄이려는 요구에서 출발했다. 사용자가 먼저 검토한 안은 "lite review agent 신설"이었으나 실측에서 agent 본문은 80~115줄로 이미 작았고, 지배 요인은 본문 길이도 subagent 호출 왕복도 아니라 **리포트 작성(추론)** 이었다. 그래서 계약·rubric·severity는 손대지 않고 (a) 정보를 더하지 않는 출력, (b) 무제한으로 열려 있던 입력만 걷어냈다. 변경 10파일 — agent 3종 각 claude md + codex toml(`plan-review-agent`·`implementation-review-agent`·`simplicity-review-agent`) + wrapper SKILL 4벌(`plan-review`·`pr-review` × claude/codex). 검증 evidence: 프레임워크 부재 자산이라 structural check으로 RED→GREEN(초기 28 FAIL → 최종 66 PASS / 0 FAIL), census 5종 전부 0건(`6행`·`5행`·`Progress Overview`·`필요한 범위만 읽는다`·`어느 쪽에도 없는`), 미러 3쌍의 변경 payload diff 동일 + codex TOML 3종 `tomllib` 파싱 성공 및 codex 적응 delta(`Codex Agent Boundary`·`spawn_agent`·gpt 모델 허용값) 보존, `git diff --check` 무출력, `implementation-review` 게이트 1회(correctness Blocker 0 / Medium 4 → fix 4) + `simplicity-review` Medium 2 → fix 2.
+
+### Decision
+
+1. **소비자 없는 반환 항목은 제거한다 (current truth 승격)**: `implementation-review-agent` 반환에서 `Progress Overview`(task/AC 단위 상태 요약)를 삭제해 반환 항목이 6 → 5개(`Status`·`Findings`·`Verification ledger`·`Recommendations`·`Assumptions`)가 됐다. 근거는 도출 가능성 + 소비 실측 둘이다 — 같은 반환의 `Verification ledger`가 AC별 verdict+증거를 보유해 task 상태는 그로부터 도출되고, `implementation-review` SKILL의 relay 목록(`AC verdict ledger, findings 요약, blocker`)에 이 섹션의 소비자가 없다. 착지 지점은 §2 Guardrails의 기존 reviewer 불릿 하위 항목이다 — reviewer 반환 계약의 판정 주체가 이미 그 불릿이라 새 guardrail도 새 결정 테이블 행도 만들지 않았다.
+2. **2026-07-10 결정 #6의 `Progress Overview` 조항을 대체한다**: 그 결정은 같은 섹션을 "task/AC 상태로 **제약**"했다(중복 서술을 줄이되 섹션은 유지). 이번 단위는 제약이 아니라 **삭제**다 — 제약된 형태에서도 `Verification ledger`와 정보가 겹치고 relay 소비자가 없다는 사실이 그때 확인되지 않았기 때문이다. 같은 결정의 나머지 조항(finding ID 블록화·Recommendations ID 참조 갈음·Conclusion 삭제)은 유효하고 무변경이다.
+3. **판정 표는 문제 있는 항목만 개별 행으로 내고 나머지는 접는다**: `plan-review-agent`의 6 smell과 `simplicity-review-agent`의 5 차원에서 `WARN`/`FAIL`/`UNKNOWN`(또는 finding 있는 차원)만 개별 행으로 내고 나머지는 `PASS: <이름 나열>` 한 줄로 접는다. 점검·스캔 의무는 유지하고 출력 의무만 완화한다 — 무정보 행(전부 PASS인 6행/5행)은 판정을 담지 않으면서 매 리뷰마다 생성 비용을 낸다.
+4. **완전성 불변식의 소유자는 각 agent의 AC1 절 한 곳이다 (draft 계약 정정)**: 점검 대상 전량이 개별 행 또는 PASS 접기 한 줄 중 **정확히 하나**에 귀속돼야 한다는 명제는 AC1 positive 1회만 적는다. draft Task 2/4 AC1은 원래 이 불변식이 AC 절과 반환 형식 절 **양쪽** 문면에 있어야 한다고 가정했는데, 그 가정이 이 repo 규범(판정 주체 1곳)과 정면으로 어긋났다 — 반환 형식 절의 "나머지는"이 분할을 이미 완결하므로 뒤 문장은 함의이고, 부정형 대우("어느 쪽에도 없는 항목은 점검 누락이다")는 positive의 재천명이다. 출력 다이어트가 목적인 변경이 같은 명제를 3번 적는 자기모순이라 draft AC를 "반환 형식 절에는 재서술하지 않는다"로 뒤집고 check을 '부재가 PASS'로 반전해 RED(10건) → fix → GREEN을 다시 관찰했다.
+5. **`plan-review-agent`의 읽기 재량을 도구 계단으로 대체한다**: "필요한 범위만 읽는다"는 상한이 아니라 재량이라 read 비용이 무제한으로 열려 있었다. `Glob`(경로 존재) → `Grep`(AC가 지목한 content anchor) → `Read`(Grep으로 판정이 닫히지 않는 파일 한정) → `UNKNOWN`(+limitation 1줄, 읽기 확장 금지) 계단 + "상위 단계로 판정이 닫히면 하위 단계로 내려가지 않는다" 정지 규칙으로 바꿨다. 규칙의 단일 소유자는 Step 3이고 Input 절 중복 서술은 삭제, Error Handling 행은 Step 3 포인터로 축약했다. 이 계약은 agent 한 곳에만 적용돼 `Repo-wide Invariant Test` #2(2개 이상 표면 공통)를 통과하지 못하므로 global spec 본문이 아니라 `components.md` `plan-review` 행의 reference note로 내렸다.
+6. **`Read` 전면 금지는 기각한다**: 초안은 Target File 본문 Read를 금지했으나 `plan-review` 자신이 반례였다 — 이 draft의 AC들(잔여 반환 항목 5개, rubric 6행 유지, relay 목록 확인)은 본문을 읽어야 판정이 갈린다. 금지는 `Verification Weakness` smell(AC가 falsifiable한가·기존 구조와 충돌하는가)의 판별력을 없애고, 게다가 agent가 이미 보유한 `Grep`이 초안 어디에도 없어 금지만 있고 대체 수단이 비어 있었다. 상한은 금지가 아니라 **더 싼 수단을 먼저 쓰게 하는 계단**이어야 한다.
+7. **`pr-review-agent`의 `Correctness 신호`는 유지한다**: 제거 후보였으나 `pr-review` orchestrator가 통합 리포트 `Signals` 줄(`AC MET X of N / test pass F%`)에서 실제 소비한다. `pr-review-agent` 본문은 이번 단위에서 무변경이며, 이 agent에는 판정행 표도 없다. "소비자 실측으로 판정한다"는 규칙이 삭제와 유지를 같은 기준으로 가른 사례다.
+8. **lite review agent 신설은 기각한다**: 계약을 복제해 claude md ↔ codex toml 짝 propagation 부담으로 환전하는 셈이고, 이 repo가 반복해서 앓은 실패 모드다. 계약은 계속 agent 하나가 단일 소스로 보유한다.
+9. **model/effort 티어 강등은 재제안하지 않는다**: 사용자가 이미 시도해 효과 없음을 확인했다.
+10. **Medium finding 블록 강등은 기각한다**: `implementation-review`·`simplicity-review`의 Medium은 메인 루프 fix 1회의 입력이라 블록(위치·문제·수정)을 줄이면 fix 정확도가 떨어진다. reviewer 4종 모두 현행 Medium 블록을 유지한다.
+11. **wrapper relay 문구는 지칭만 고친다**: `smell 6행 판정` → `smell 판정`, `차원 5행 판정` → `차원 판정`(`plan-review`·`pr-review` 각 claude/codex 4벌). `implementation-review` SKILL의 `simplicity: 5개 차원 판정`은 새 형식(개별 행 + PASS 접기로 5개 전량 귀속)과 의미가 일치해 미변경으로 판정했다. 이 리터럴들은 global spec 어느 표면에도 등장하지 않아 spec 반영 대상이 아니다.
+
+### Rationale
+
+- 체감 지연의 지배 요인이 작성(추론)이면 레버는 "무엇을 쓰게 하느냐"이고, 계약·rubric·severity를 건드리지 않고도 당길 수 있다. 반대로 agent를 쪼개거나 모델 티어를 낮추는 레버는 검출력이나 유지 비용을 지불한다.
+- 삭제 판정 기준을 "중복처럼 보인다"가 아니라 **relay 소비 실측**으로 두면 같은 기준이 유지 판정(`Correctness 신호`)에도 대칭으로 적용돼, 다음 다이어트에서 소비자 있는 항목을 잘라내는 사고를 막는다.
+- 완전성 불변식을 여러 곳에 적는 것은 검출력을 늘리지 않는다 — 판정 주체가 둘 이상이면 한쪽만 갱신되는 드리프트가 생기고, 출력 다이어트 변경이 스스로 사족을 낳는다. 이 repo에서 반복 확인된 규범(판정 주체 1곳)이라 draft AC보다 규범이 우선한다.
+- 입력 상한을 금지가 아니라 계단으로 세운 덕에 rubric(6 smell)은 무변경으로 남는다. 금지는 rubric의 일부를 사실상 무력화하는 숨은 rubric 변경이었다.
+
 ## 2026-07-29 - 하네스 실행 자산에 재주입 방향 추가 (`harness-context.sh`, 훅 자산 2개 → 3개, v4.6.13 → v4.6.14, post-implementation sync)
 
 ### Context
