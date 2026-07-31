@@ -2,6 +2,12 @@
 
 > 이 파일은 `_sdd/spec/main.md`의 **본문이 바뀐 버전만** 기록한다 — 본문 무변경 sync(헤더 날짜만 갱신)는 entry를 남기지 않으므로 버전 번호에 결번이 생길 수 있다.
 
+#### v4.6.23 (2026-07-31)
+
+- **simplicity reviewer 차원 묶음 분할 dispatch — 참조 ∥ 국소, N+2 (post-implementation sync)**: 게이트의 다른 구간이 내려간 뒤 simplicity(실측 107~252s, 리포트 56~96%)가 임계 경로 후보 → 분할 축을 task가 아닌 **차원**으로 잡았다. `simplicity-review-agent` 미러 2벌에 `호출자 차원 한정` 절(참조 = 중복 코드·죽은 코드·단일 사용처 추상화 — 사용처/복제 추적형 / 국소 = 도달 불가 에러 처리·과잉압축 — 코드 자리 판독형, 합집합 = 정확히 5차원). **한정은 차원이지 범위가 아니다** — 각 shard가 전체 변경을 봐 중복 렌즈의 두 지점 동시 관찰이 유지되고 v4.6.21의 task 축 반대 논거와 공존한다(supersede 아님). 무조건 "5개" 문면 4곳(자체 검증 AC1·Hard Rule 3·Review Dimensions 도입부·Step 2)을 "소유한 차원"으로 일반화, Integration의 pr-review 서술은 "차원 한정 없는 호출 — 전체 5차원 후방 호환 경로"로 갱신(`pr-review` 무변경 동작). `implementation-review` SKILL 미러 2벌은 simplicity를 묶음마다 1회(총 2회) dispatch — correctness shard들과 한 메시지 **N+2** 병렬, relay 차원 판정 = 두 묶음 반환의 합집합(각 차원 정확히 한 묶음 소유). 게이트 fix로 근거 문장·payload bullet의 SKILL 재기재 제거(단일 소스 = agent 절/Runtime Adapter 블록).
+- **stale 표면 정정**: `main.md` §2 implementation-review 불릿·직교 2-렌즈 결정 행의 "simplicity는 (항상/양쪽 모두) 통짜 1회" → 차원 묶음 2회 + pr-review 전체 5차원 1회(후방 호환) 구분 서술, relay (N+1)→(N+2)·차원 합집합 추가, 비분할 경로 (1+1)→(1+2). `components.md` implementation-review 행·Claude skill/agent split 행 동일 갱신.
+- **적용 surface 검증 evidence**: structural check 게이트 fix 후 **20 PASS / 0 FAIL**(RED→GREEN), 변이 8종 전량 검출. 게이트 = N+2 완전체 첫 런: correctness 103/85/110s + simplicity 참조 164s ∥ 국소 91s — 벽시계 **164s**, simplicity 합 255s ≈ 동급 통짜 252s(총량 보존). 묶음 불균형 실측(중복 차원 집중 → 참조 shard 우세, 재배분은 실측 누적 후 별건). 🚧 Planned 갱신: plan-review 2-렌즈 첫 관측(실측 320s ∥ 판단 86s — max 320s, 재고 밴드 해당, n=1)을 기록하되 판정은 사용자 보고 후 결정 대기.
+
 #### v4.6.22 (2026-07-31)
 
 - **plan-review 2-렌즈 분할 dispatch — 실측 ∥ 판단 (post-implementation sync)**: plan-review는 유일한 무병렬 단독 리뷰 단계였고(5회차 실측 평균 ~294s, 최종 리포트 54~68%) finding이 섹션 교차·repo 대조형이라 task 축이 불성립(실측 9건 중 task 내부 닫힘 0건) → 분할 축을 렌즈로 잡았다. `plan-review-agent` 미러 2벌에 `호출자 렌즈 한정` 절(실측 = Step 3 계단 + `Verification Weakness` + draft 사실 주장 repo 대조·판단 렌즈 소유 smell의 사실 전제 포함 / 판단 = 나머지 5 smell + 규모 판정 검사 + Step 4, Step 3 미수행·draft 내부 근거·UNKNOWN 금지, 자체 검증 AC2·AC3은 판단 렌즈에만 적용, 미지정 시 6 smell 후방 호환). `plan-review` SKILL 미러 2벌은 thin wrapper → 2-렌즈 orchestrator(한 메시지 2회 병렬 dispatch + 병합 relay: 하나라도 BLOCKED면 BLOCKED·findings 합산·smell 판정 합집합·규모 판정 = 판단 렌즈, codex는 Runtime Adapter 블록 단일 소스). 단일 패스 불변(렌즈 2개 = 한 패스의 병렬 분해), 새 agent 없음.

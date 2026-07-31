@@ -6,7 +6,7 @@ argument-hint: "[--model <gpt-5.5|gpt-5.4|gpt-5.4-mini>] [--effort <low|medium|h
 
 # Implementation Review (2-렌즈 Orchestrator, Review-only)
 
-이 스킬은 review-only orchestrator다. 사용자의 implementation-review 요청을 두 렌즈의 reviewer agent에 **병렬 dispatch**하고, 경량 반환들과 합산 severity 요약을 사용자에게 relay한다. correctness는 기준 draft의 task 수에 따라 shard 여러 개로 나뉠 수 있다(아래 실행 1).
+이 스킬은 review-only orchestrator다. 사용자의 implementation-review 요청을 두 렌즈의 reviewer agent에 **병렬 dispatch**하고, 경량 반환들과 합산 severity 요약을 사용자에게 relay한다. correctness는 기준 draft의 task 수에 따라 shard 여러 개로, simplicity는 차원 묶음 2개로 나뉜다(아래 실행 1·2).
 
 - `implementation-review-agent` — **correctness** 렌즈 (AC 충족·버그·보안·spec drift — 기준 문서 적응)
 - `simplicity-review-agent` — **clarity** 렌즈 (동작-불변 형태 품질: 중복·죽은 코드·단일 사용처 추상화·도달 불가 에러 처리·과잉압축)
@@ -25,8 +25,8 @@ argument-hint: "[--model <gpt-5.5|gpt-5.4|gpt-5.4-mini>] [--effort <low|medium|h
 
 ```text
 spawn_agent({agent_type: "implementation-review-agent", message: "<framed payload: Runtime Boundary + Mode + Input Data(+ shard k 범위 한정)>"})  // correctness shard마다 1회
-spawn_agent({agent_type: "simplicity-review-agent", message: "<framed payload: Runtime Boundary + Mode + Input Data>"})
-wait_agent({targets: [<correctness_shard_id...>, <simplicity_id>], timeout_ms: 600000})
+spawn_agent({agent_type: "simplicity-review-agent", message: "<framed payload: Runtime Boundary + Mode + Input Data(+ 차원 묶음 한정)>"})  // simplicity 묶음(참조/국소)마다 1회
+wait_agent({targets: [<correctness_shard_id...>, <simplicity_묶음_id...>], timeout_ms: 600000})
 close_agent({target: <각 id>})
 ```
 
@@ -45,7 +45,7 @@ review
 
 ## 병렬 안전성 근거
 
-reviewer들은 sub-agent를 spawn하지 않고 **어떤 파일도 쓰지 않는** read-only leaf다 (correctness는 테스트 실행용 Bash 보유). 판정을 응답으로만 반환하므로 correctness shard 수와 무관하게 한 번에 동시 spawn해도 안전하다.
+reviewer들은 sub-agent를 spawn하지 않고 **어떤 파일도 쓰지 않는** read-only leaf다 (correctness는 테스트 실행용 Bash 보유). 판정을 응답으로만 반환하므로 reviewer shard 수와 무관하게 한 번에 동시 spawn해도 안전하다.
 
 ## 실행
 
@@ -56,14 +56,12 @@ draft/plan 파일이 있으면 agent가 그것으로 범위를 잡지만, **없�
    - 이미 아는 경로(plan/spec/코드, 직전 산출물)
    - **대화에만 있는 맥락 digest**: 이번 세션에서 무엇을 구현/변경했는지, 그 의도, 리뷰 대상 범위(plan 파일이 없을 때 특히). plan 파일이 분명하면 이 digest는 짧아진다.
    - **correctness 분할표**: 기준 draft의 Part 2 task가 2개 이상이면 correctness를 task별 shard로 나눈다 — shard k의 Input Data는 공통 digest에 **Task k의 AC·Target Files로 리뷰 범위를 한정**하는 지시를 더한 것이다(해당 task의 AC만 검증). task가 1개이거나 draft 없이 대화 digest 기반이면 분할하지 않는다(correctness 1회).
-2. **모든 reviewer를 동시 spawn한다** (read-only leaf라 동시 실행 안전 — 위 근거). 호출·수거 문법은 위 Codex Runtime Adapter 블록이 단일 소스다 — correctness는 shard마다 1회, simplicity는 분할하지 않고 전체 변경 대상으로 1회 spawn한다. clarity 렌즈의 중복 탐지는 두 지점을 같이 봐야 잡히므로 shard로 자르지 않는다.
-   - correctness shard k의 message: `<framed payload: Runtime Boundary + review mode + Input Data(사용자 요청 data, 경로, 공통 digest, shard 범위 한정)>`
-   - simplicity의 message: `<framed payload: Runtime Boundary + review mode + Input Data(사용자 요청 data, 경로, 공통 digest)>`
-   - 반환된 모든 agent ids(correctness shard들 + simplicity)를 어댑터의 `wait_agent`로 전부 수거한다. 모든 handle의 final status가 반환된 뒤에만 결과를 기록하고 `close_agent`로 닫는다. `wait_agent`가 timeout이면 완료로 간주하지 말고 더 기다리거나, controlled stop/blocked 상태를 사용자에게 보고한 뒤에만 handle 정리를 결정한다.
+2. **모든 reviewer를 동시 spawn한다** (read-only leaf라 동시 실행 안전 — 위 근거). 호출 배수·message 구성·수거 문법은 위 Codex Runtime Adapter 블록이 단일 소스다 — correctness는 shard마다 1회, simplicity는 차원 **묶음마다 1회**(참조 ∥ 국소) spawn하며 각 spawn은 **전체 변경 대상**이다. 묶음 정의·범위 불변 근거는 agent의 `호출자 차원 한정` 절이 단일 소스다.
+   - 반환된 모든 agent ids(correctness shard들 + simplicity 묶음들)를 어댑터의 `wait_agent`로 전부 수거한다. 모든 handle의 final status가 반환된 뒤에만 결과를 기록하고 `close_agent`로 닫는다. `wait_agent`가 timeout이면 완료로 간주하지 말고 더 기다리거나, controlled stop/blocked 상태를 사용자에게 보고한 뒤에만 handle 정리를 결정한다.
    - 대상 경로가 불명확하면 각 agent가 자체 Input 우선순위로 탐색하도록 위임한다.
 3. 반환들을 모아 사용자에게 relay한다:
    - correctness: 리뷰 기준(draft/spec/코드만), AC verdict ledger, findings 요약, blocker. 분할 spawn이면 ledger는 shard 반환의 **연접**이다 — 모든 task의 AC가 정확히 한 shard에 속하므로 누락 없이 합쳐진다.
-   - simplicity: 5개 차원 판정, findings 요약
+   - simplicity: 차원 판정과 findings 요약 — 차원 판정은 두 묶음 반환의 합집합이다(각 차원 정확히 한 묶음 소유라 중복 없음)
    - **합산 severity 요약**: 모든 반환의 Critical/High/Medium findings를 합쳐 한눈에 보이게 정리한다 (판정은 하지 않고 합산만). task들이 같은 파일을 만져 shard 간 중복 finding이 나와도 dedup하지 않고 전부 relay한다 — dedup은 fix 주체인 호출자 소관이다.
 
 > **경계**: orchestrator는 *대화 맥락을 모아 전달*하고 *반환들을 relay*까지만 한다. 기준 판별·검증·findings 분류는 각 agent의 Process가 수행한다(중복 금지). 합집합 exit 판정은 하지 않는다.
