@@ -2,6 +2,11 @@
 
 > 이 파일은 `_sdd/spec/main.md`의 **본문이 바뀐 버전만** 기록한다 — 본문 무변경 sync(헤더 날짜만 갱신)는 entry를 남기지 않으므로 버전 번호에 결번이 생길 수 있다.
 
+#### v4.6.24 (2026-07-31)
+
+- **spec-sync 표면 묶음 분할 dispatch — 본문 ∥ 기록, 첫 작성자 분할 (post-implementation sync)**: 리뷰 3종 병렬화(v4.6.21~v4.6.23) 후 최장 단독 구간인 spec-sync(실측 245~445s, 집필 ~50%)를 표면 묶음 2개로 분할했다. `spec-sync-agent` 미러 2벌에 `호출자 표면 한정` 절 — **본문 묶음**(live truth 갱신 + evidence 검증·승격) ∥ **기록 묶음**(`decision_log`·`changelog` append-only entry + `_processed_` rename). read-only reviewer가 아닌 **첫 작성자 분할**이며 안전 근거는 **쓰기 집합 서로소**(reviewer들의 "파일 안 씀"과 다른 새 근거). read-vs-rename 경합은 본문의 원/`_processed_` 양쪽 조회로 흡수. `spec-sync` SKILL 미러 2벌은 orchestrator화 — implemented sync면 한 메시지 2 묶음 병렬 dispatch, 공유 사실(버전·delta·결정 제목)은 orchestrator **선고정**(두 shard가 각자 도출하지 않음), 사후 정합 grep 2종(버전 일치·append-only 삭제 줄 0, 비gating), 부분 Report 병합 relay(각 파트 정확히 한 묶음 소유). 기록 묶음은 digest 선고정 값 기반·코드 재검증 없음(재검증 중복 제거가 분할 이득의 절반 — 의도된 trade-off, 내용 오류는 후속 spec-review가 그물). 무조건 문구 전수 조건화 + 후방 호환(planned 경로 현행 1회·직접 호출 — pr-review 경로 아님).
+- **적용 surface 검증 evidence**: structural check RED 선관찰 → GREEN **21 PASS / 0 FAIL**, 변이 9종 전량 검출. 게이트(N+2) 실측: correctness shard 185/87/181s + simplicity 참조 145s ∥ 국소 134s — 벽시계 **185s**. 게이트 finding High 1(rename 블록 무조건형 잔존 — census 단일 패턴이 '마킹한다' 변형을 놓친 위장 PASS) + Medium 4, 전량 fix. plan-review 2-렌즈 표본 2 = max 178s(지지 밴드). 벽시계 효과 첫 관측은 이 체인의 spec-sync 파일럿(수동 2-shard) — 결과 수치는 다음 sync에서 기록.
+
 #### v4.6.23 (2026-07-31)
 
 - **simplicity reviewer 차원 묶음 분할 dispatch — 참조 ∥ 국소, N+2 (post-implementation sync)**: 게이트의 다른 구간이 내려간 뒤 simplicity(실측 107~252s, 리포트 56~96%)가 임계 경로 후보 → 분할 축을 task가 아닌 **차원**으로 잡았다. `simplicity-review-agent` 미러 2벌에 `호출자 차원 한정` 절(참조 = 중복 코드·죽은 코드·단일 사용처 추상화 — 사용처/복제 추적형 / 국소 = 도달 불가 에러 처리·과잉압축 — 코드 자리 판독형, 합집합 = 정확히 5차원). **한정은 차원이지 범위가 아니다** — 각 shard가 전체 변경을 봐 중복 렌즈의 두 지점 동시 관찰이 유지되고 v4.6.21의 task 축 반대 논거와 공존한다(supersede 아님). 무조건 "5개" 문면 4곳(자체 검증 AC1·Hard Rule 3·Review Dimensions 도입부·Step 2)을 "소유한 차원"으로 일반화, Integration의 pr-review 서술은 "차원 한정 없는 호출 — 전체 5차원 후방 호환 경로"로 갱신(`pr-review` 무변경 동작). `implementation-review` SKILL 미러 2벌은 simplicity를 묶음마다 1회(총 2회) dispatch — correctness shard들과 한 메시지 **N+2** 병렬, relay 차원 판정 = 두 묶음 반환의 합집합(각 차원 정확히 한 묶음 소유). 게이트 fix로 근거 문장·payload bullet의 SKILL 재기재 제거(단일 소스 = agent 절/Runtime Adapter 블록).
