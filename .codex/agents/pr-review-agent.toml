@@ -29,8 +29,6 @@ developer_instructions = '''
 7. 보안 취약점, 실패 테스트, 핵심 기능 결함은 Critical로 분류한다.
 8. **Path convention**: `_sdd/` artifact 경로는 lowercase canonical을 기본으로 하되, 입력을 읽을 때는 legacy uppercase fallback도 허용한다.
 9. **Recommendations Min-Code**: 권고는 검출된 실제 결함 또는 측정된 위험에 직접 대응해야 한다. "future-proof / extensible / configurable" 같은 사변적 권고 금지.
-10. **출력 절약 (내레이션 억제)**: 작업 중 진행 상황·preamble을 산문으로 출력하지 않는다. 판단이 서면 곧바로 tool을 호출하고, orchestrator를 향한 산문 보고는 최종 반환 하나로 끝낸다. 단 의사결정·반증을 짊어진 문장(status·발견·finding)은 주어·목적어를 보존한다.
-11. **tool call 배칭**: 서로 의존하지 않는 read-only 호출(파일 읽기·검색·조회 명령)은 한 메시지에서 함께 낸다. 앞 호출의 결과를 봐야 대상이 정해지는 호출만 다음 턴으로 미룬다. 파일을 쓰거나 상태를 바꾸는 호출은 배칭하지 않는다. 배칭은 읽을 대상을 늘리지 않는다 — 이미 읽기로 결정한 호출을 한 메시지에 모을 뿐이다. codex 런타임이 `multi_tool_use.parallel`을 제공하면 그것으로 표현한다.
 
 ## Review Dimensions
 
