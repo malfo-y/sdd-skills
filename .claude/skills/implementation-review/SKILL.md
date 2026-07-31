@@ -4,46 +4,47 @@ description: "Use this skill to review implementation progress against the plan,
 argument-hint: ["[--model <sonnet|opus|haiku|fable>]"]
 ---
 
-# Implementation Review (2-Reviewer Orchestrator, Review-only)
+# Implementation Review (2-렌즈 Orchestrator, Review-only)
 
-이 스킬은 review-only orchestrator다. 사용자의 implementation-review 요청을 두 개의 형제 reviewer agent에 **병렬 dispatch**하고, 두 경량 반환과 합산 severity 요약을 사용자에게 relay한다.
+이 스킬은 review-only orchestrator다. 사용자의 implementation-review 요청을 두 렌즈의 reviewer agent에 **병렬 dispatch**하고, 경량 반환들과 합산 severity 요약을 사용자에게 relay한다. correctness는 기준 draft의 task 수에 따라 shard 여러 개로 나뉠 수 있다(아래 실행 1).
 
 - `sdd-skills:implementation-review-agent` — **correctness** 렌즈 (AC 충족·버그·보안·spec drift — 기준 문서 적응)
 - `sdd-skills:simplicity-review-agent` — **clarity** 렌즈 (동작-불변 형태 품질: 중복·죽은 코드·단일 사용처 추상화·도달 불가 에러 처리·과잉압축)
 
-전체 리뷰 프로세스·findings-first severity·반환 형식은 각 agent가 단일 소스로 보유한다. 이 orchestrator는 맥락을 모아 전달하고 두 반환을 relay할 뿐이다.
+전체 리뷰 프로세스·findings-first severity·반환 형식은 각 agent가 단일 소스로 보유한다. 이 orchestrator는 맥락을 모아 전달하고 반환들을 relay할 뿐이다.
 
-> **Review-only 경계**: 이 스킬은 두 반환을 relay만 한다. finding 반영(fix)과 마감 판정은 이 스킬이 소유하지 않으며, 호출자 소관이다 (체인에서는 메인 루프가 fix 1회로 반영).
+> **Review-only 경계**: 이 스킬은 반환을 relay만 한다. finding 반영(fix)과 마감 판정은 이 스킬이 소유하지 않으며, 호출자 소관이다 (체인에서는 메인 루프가 fix 1회로 반영).
 
 ## 병렬 안전성 근거
 
-두 reviewer는 sub-agent를 spawn하지 않고 **어떤 파일도 쓰지 않는** read-only leaf다 (`implementation-review-agent`: `["Read","Glob","Grep","Bash"]` — Bash는 테스트 실행용, `simplicity-review-agent`: `["Read","Glob","Grep"]`). 판정을 응답으로만 반환하므로 한 메시지에서 동시 dispatch해도 안전하다.
+reviewer들은 sub-agent를 spawn하지 않고 **어떤 파일도 쓰지 않는** read-only leaf다 (`implementation-review-agent`: `["Read","Glob","Grep","Bash"]` — Bash는 테스트 실행용, `simplicity-review-agent`: `["Read","Glob","Grep"]`). 판정을 응답으로만 반환하므로 correctness shard 수와 무관하게 한 메시지에서 동시 dispatch해도 안전하다.
 
 ## 실행
 
-> **Model override**: `$ARGUMENTS`에 `--model <name>`이 있으면 두 reviewer `Agent(...)` 호출 모두에 `model=<name>`을 추가한다. `<name>`은 `sonnet`·`opus`·`haiku`·`fable` 중 하나여야 하며, 그 외 값이면 dispatch하지 않고 사용자에게 허용값을 안내한다. 미지정 시 model을 생략한다(세션 기본값 상속).
+> **Model override**: `$ARGUMENTS`에 `--model <name>`이 있으면 모든 reviewer `Agent(...)` 호출에 `model=<name>`을 추가한다. `<name>`은 `sonnet`·`opus`·`haiku`·`fable` 중 하나여야 하며, 그 외 값이면 dispatch하지 않고 사용자에게 허용값을 안내한다. 미지정 시 model을 생략한다(세션 기본값 상속).
 
 draft/plan 파일이 있으면 agent가 그것으로 범위를 잡지만, **없이 "방금 구현한 거 리뷰"처럼 호출되면 무엇을·왜 구현했는지·리뷰 범위가 대화에 산다**. agent는 파일은 read하지만 **이번 세션의 대화는 못 읽으므로**, orchestrator가 그 맥락을 정리해 전달한다.
 
-1. 다음을 수집한다 (digest는 두 reviewer에 공통으로 전달):
+1. 다음을 수집한다 (공통 digest는 모든 reviewer에 전달):
    - 사용자 요청 원문 + 인자
    - 이미 아는 경로(plan/spec/코드, 직전 산출물)
    - **대화에만 있는 맥락 digest**: 이번 세션에서 무엇을 구현/변경했는지, 그 의도, 리뷰 대상 범위(plan 파일이 없을 때 특히). plan 파일이 분명하면 이 digest는 짧아진다.
-2. **한 메시지에서 두 reviewer를 병렬 dispatch한다** (read-only leaf라 동시 실행 안전 — 위 근거):
-   - `Agent(subagent_type="sdd-skills:implementation-review-agent", prompt=<요청 + 경로 + 대화 맥락 digest>)`
-   - `Agent(subagent_type="sdd-skills:simplicity-review-agent", prompt=<요청 + 경로 + 대화 맥락 digest>)`
+   - **correctness 분할표**: 기준 draft의 Part 2 task가 2개 이상이면 correctness를 task별 shard로 나눈다 — shard k의 digest는 공통 digest에 **Task k의 AC·Target Files로 리뷰 범위를 한정**하는 지시를 더한 것이다(해당 task의 AC만 검증). task가 1개이거나 draft 없이 대화 digest 기반이면 분할하지 않는다(correctness 1회).
+2. **한 메시지에서 모든 reviewer를 병렬 dispatch한다** (read-only leaf라 동시 실행 안전 — 위 근거):
+   - correctness — shard마다 1회: `Agent(subagent_type="sdd-skills:implementation-review-agent", prompt=<요청 + 경로 + 공통 digest + shard 범위 한정>)`
+   - simplicity는 분할하지 않고 전체 변경 대상으로 1회: `Agent(subagent_type="sdd-skills:simplicity-review-agent", prompt=<요청 + 경로 + 공통 digest>)`. clarity 렌즈의 중복 탐지는 두 지점을 같이 봐야 잡히므로 shard로 자르지 않는다.
    - 대상 경로가 불명확하면 각 agent가 자체 Input 우선순위로 탐색하도록 위임한다.
-3. 두 agent의 반환을 모아 사용자에게 relay한다:
-   - correctness: 리뷰 기준(draft/spec/코드만), AC verdict ledger, findings 요약, blocker
+3. 반환들을 모아 사용자에게 relay한다:
+   - correctness: 리뷰 기준(draft/spec/코드만), AC verdict ledger, findings 요약, blocker. 분할 dispatch면 ledger는 shard 반환의 **연접**이다 — 모든 task의 AC가 정확히 한 shard에 속하므로 누락 없이 합쳐진다.
    - simplicity: 5개 차원 판정, findings 요약
-   - **합산 severity 요약**: 두 결과의 Critical/High/Medium findings를 합쳐 한눈에 보이게 정리한다 (판정은 하지 않고 합산만).
+   - **합산 severity 요약**: 모든 반환의 Critical/High/Medium findings를 합쳐 한눈에 보이게 정리한다 (판정은 하지 않고 합산만). task들이 같은 파일을 만져 shard 간 중복 finding이 나와도 dedup하지 않고 전부 relay한다 — dedup은 fix 주체인 호출자 소관이다.
 
-> **경계**: orchestrator는 *대화 맥락을 모아 전달*하고 *두 반환을 relay*까지만 한다. 기준 판별·검증·findings 분류는 각 agent의 Process가 수행한다(중복 금지). 합집합 exit 판정은 하지 않는다.
+> **경계**: orchestrator는 *대화 맥락을 모아 전달*하고 *반환들을 relay*까지만 한다. 기준 판별·검증·findings 분류는 각 agent의 Process가 수행한다(중복 금지). 합집합 exit 판정은 하지 않는다.
 
 ## 계약 (entrypoint·artifact 유지, 흉내 금지)
 
 - trigger(implementation-review 호출) 계약은 이 orchestrator가 유지한다.
-- 실제 검증은 두 agent가 각각 수행한다. agent가 지원하지 않는 동작을 orchestrator가 흉내내지 않는다.
-- 두 agent가 노출하는 Critical/High findings·blocker를 orchestrator가 relay해 보존한다 (합산 요약은 relay이지 gating이 아니다).
+- 실제 검증은 각 reviewer agent가 수행한다. agent가 지원하지 않는 동작을 orchestrator가 흉내내지 않는다.
+- reviewer들이 노출하는 Critical/High findings·blocker를 orchestrator가 relay해 보존한다 (합산 요약은 relay이지 gating이 아니다).
 
 > Source: correctness 계약·severity·반환 형식은 `.claude/agents/implementation-review-agent.md`가, simplicity 계약·5개 차원·falsifiable severity는 `.claude/agents/simplicity-review-agent.md`가 각각 단일 소스로 보유한다 (orchestrator↔agent; 동일 본문 mirror 아님).
