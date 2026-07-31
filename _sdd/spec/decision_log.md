@@ -1,5 +1,28 @@
 # Decision Log
 
+## 2026-07-31 - plan-review 2-렌즈 분할 dispatch (실측 ∥ 판단) + 실행 경제 guardrail의 fan-out 배제 supersede (v4.6.21 → v4.6.22, post-implementation sync)
+
+### Context
+
+`plan-review`는 체인에서 유일하게 병렬 파트너가 없는 단독 리뷰 단계였다(5회차 실측 257~347s, 평균 ~294s; 시간 분해 = 최종 리포트 54~68% + 중반 추론 + 도구 15~25%). correctness task-shard 파일럿(v4.6.21)이 "finding이 나뉘면 리포트 생성이 나뉘어 벽시계가 준다"는 메커니즘을 검증했으나, plan-review의 finding은 섹션 교차·repo 대조형이라 task 축이 성립하지 않는다(실측 finding 9건 중 task 내부로 닫힌 것 0건). 변경 4파일 — `plan-review-agent` 미러 2벌 + `plan-review` SKILL 미러 2벌(codex는 3-way 적응).
+
+### Decision
+
+1. **렌즈 축 분할 (agent — 호출자 렌즈 한정 절)**: 호출자가 렌즈를 한정하면 그 소유분만 수행한다. 실측 렌즈 = Step 3 도구 계단 + `Verification Weakness` smell + draft 사실 주장의 repo 대조(판단 렌즈 소유 smell의 사실 전제 — 기존 파일의 수정 수용 가능성, 기존 로직/중복의 실재 여부 — 포함). 판단 렌즈 = 나머지 5 smell + 규모 판정 검사 + Step 4 — Step 3 계단을 밟지 않고 draft 내부 근거로만 판정하며 사실 전제에 UNKNOWN을 내지 않는다(repo 반증은 실측 렌즈 반환). agent 자체 검증의 규모 판정(AC2)·Step 4(AC3) 항목은 소유 렌즈(판단)에만 적용된다(게이트 fix로 명시). 렌즈 미지정 시 전체 6 smell 후방 호환.
+2. **SKILL orchestrator화**: thin wrapper(1 dispatch) → 한 메시지 2회 병렬 dispatch + 병합 relay — Blocker Status는 하나라도 BLOCKED면 BLOCKED, findings 합산, smell 판정 합집합(각 smell 정확히 한 렌즈 소유), 규모 판정 = 판단 렌즈 반환. codex는 Runtime Adapter 블록이 호출·수거·payload 스펙의 단일 소스다(게이트 fix로 실행 절 재기재 제거). 단일 패스 불변(렌즈 2개 = 한 패스의 병렬 분해). 새 agent 없음(동일 agent 2회 — 등록 census 리스크 회피).
+3. **guardrail supersede**: `main.md` §2 "해소 수단은 fan-out이 아니라 턴 접기다" 문면이 fan-out 계열 결정(v4.6.21 1+N, 본 건)과 모순돼 "턴 접기(배칭)와 read-only reviewer fan-out"으로 정정했다. 여전히 비대상: 중첩 fan-out — nesting 1단계 제한과 배칭 지시는 유지되고, 병렬 분해는 메인 루프 orchestrator의 1단계 read-only leaf dispatch에 한정된다.
+4. **stale 표면 정리 (이 sync)**: `components.md` plan-review 행 "wrapper -> agent" → orchestrator + 2-렌즈 서술, Claude skill/agent split 행의 잔존 wrapper-backed 목록은 `spec-sync`만으로 축소·orchestrator 목록에 plan-review 추가. `main.md` 실행 분리·품질 게이트 소유권 결정 행 갱신, 단일 패스 항에 병렬 분해 단서, 입력 상한 "도구 계단"에 실측 렌즈 소유 단서, 2-렌즈 결정 행에 1+N 첫 정식 런 evidence(벽시계 122s). `usage-guide.md` Scenario 2 게이트 문장에 2-렌즈 병합 명시.
+
+### Rationale / Evidence
+
+- structural check RED 11 FAIL → GREEN 18 → 게이트 fix 후 **21 PASS / 0 FAIL**, 변이 9종 전량 검출. 게이트(implementation-review 1+N 첫 정식 런): correctness shard 122s ∥ 81s ∥ 101s + simplicity 107s — 벽시계 **122s**(shard 합 304s, 파일럿 143s 재현+개선). finding fix 2건: correctness Medium(자체 검증 AC2/AC3 무조건 문구 ↔ 렌즈 절 내부 모순) + simplicity Medium(codex payload 스펙 이중 기재) 반영, shard 2·3 finding 0.
+- 벽시계 효과(기대 ~294s → ~200s, 약 30%)는 **미관측** — 플러그인 발효 후 다음 draft의 plan-review 게이트가 첫 관측 지점이다(main.md 🚧 Planned로 고정, 판정 밴드 max(렌즈 shard) ≤ ~220s 지지 / ~300s+ 재고).
+
+### Follow-up
+
+- plan-review 게이트의 simplicity 차원 분할은 별건 feature 후보로 남긴다(이번 범위 밖).
+- 렌즈 불균형 리스크: 역대 finding이 `Verification Weakness`에 몰리는 경향이라 이득이 30%보다 작을 수 있다 — 렌즈 재배분은 효과 실측 후 별건.
+
 ## 2026-07-31 - implementation-review correctness task-shard 분할 dispatch (1+N) (v4.6.20 → v4.6.21, post-implementation sync)
 
 ### Context

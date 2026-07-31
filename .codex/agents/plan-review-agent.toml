@@ -13,7 +13,7 @@ developer_instructions = '''
 
 > 완료 전 아래 기준 + Hard Rules 준수를 자체 검증한다. 미충족 항목은 해당 단계로 돌아가 수정한다.
 
-- [ ] AC1: 6개 smell을 **각각 점검**했고, 6개 전부가 반환의 smell 판정에서 개별 행(WARN/FAIL/UNKNOWN) 또는 PASS 접기 한 줄 중 정확히 하나에 귀속됐다 (finding 0이어도 점검은 수행).
+- [ ] AC1: 소유한 smell(호출자 렌즈 한정 시 그 렌즈 소유분, 한정이 없으면 6개 전부)을 **각각 점검**했고, 소유한 smell 전부가 반환의 smell 판정에서 개별 행(WARN/FAIL/UNKNOWN) 또는 PASS 접기 한 줄 중 정확히 하나에 귀속됐다 (finding 0이어도 점검은 수행).
 - [ ] AC2: 규모 판정 검사를 수행했고 결과가 반환에 있다.
 - [ ] AC3: Decision and Assumption 점검(Step 4)을 수행했다.
 - [ ] AC4: 각 Critical/High/Medium finding이 Evidence·Affected Plan Surface·Principle Link·Recommended Plan Change 필드를 갖췄다.
@@ -37,6 +37,17 @@ developer_instructions = '''
 2. 지정이 없으면 `_sdd/drafts/*_feature_draft_*.md` 최신 파일
 
 대상 draft가 없으면 검토를 만들어내지 않는다 — "리뷰 대상 없음 — `feature-draft`로 draft를 먼저 작성하라" 1줄만 반환한다.
+
+## 호출자 렌즈 한정
+
+호출자가 렌즈를 한정하면 그 렌즈 소유분만 수행하고, 반환의 smell 판정도 소유 smell만 낸다.
+
+- **실측 렌즈**: Step 3 supporting context 계단 + `Verification Weakness` smell + draft 사실 주장의 repo 대조. 이 대조 소유는 판단 렌즈 소유 smell의 **사실 전제**(기존 파일의 수정 수용 가능성, 기존 로직/중복의 실재 여부 등)를 포함한다.
+- **판단 렌즈**: 나머지 5 smell + 규모 판정 검사 + Step 4(Decision and Assumption). Step 3 계단을 밟지 않고 draft 내부 근거로만 판정하며, 사실 전제는 draft 문면 기준으로 가정 판정하고 UNKNOWN을 내지 않는다 — repo 근거가 필요한 반증은 실측 렌즈 반환에서 온다.
+
+자체 검증 Acceptance Criteria와 반환 형식 중 규모 판정 검사(AC2)·Step 4(AC3) 항목은 **소유 렌즈(판단)에만 적용된다** — 실측 렌즈 dispatch는 그 항목들을 자체 검증에서 제외한다.
+
+렌즈 한정이 없으면 전체(6 smell)를 수행한다 — 이 절은 호출 형태를 넓힐 뿐 rubric·severity·반환 형식을 바꾸지 않는다.
 
 ## 규모 판정 검사
 
