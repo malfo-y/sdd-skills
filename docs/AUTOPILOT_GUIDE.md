@@ -79,5 +79,5 @@ SDD 체인을 무승인으로 자동 실행하는 sdd-autopilot 메타스킬 가
 - `feature-draft` — 기능 명세 + 분할 규칙 canonical
 - `plan-review` — `feature-draft`가 내부에서 1회 수행하는 draft 품질 게이트 (단일 패스, 경량 반환)
 - `implementation` — 메인 루프 직접 RED→GREEN 구현 + 중단·분할 규칙 canonical
-- `implementation-review` — `implementation`이 마감에서 1회 수행하는 구현 품질 게이트 (correctness ∥ simplicity 2-reviewer, 경량 반환)
+- `implementation-review` — `implementation`이 마감에서 1회 수행하는 구현 품질 게이트 (correctness shard N ∥ simplicity, 경량 반환)
 - `spec-sync` — global spec 동기화 (planned/implemented 적응)

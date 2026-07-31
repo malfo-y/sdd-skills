@@ -79,5 +79,5 @@ Examples:
 - `feature-draft` — feature spec + canonical split rules
 - `plan-review` — the draft quality gate `feature-draft` runs once internally (single pass, lightweight return)
 - `implementation` — main-loop RED→GREEN implementation + canonical stop/split rules
-- `implementation-review` — the implementation quality gate `implementation` runs once at close (correctness ∥ simplicity 2-reviewer, lightweight return)
+- `implementation-review` — the implementation quality gate `implementation` runs once at close (correctness shard N ∥ simplicity, lightweight return)
 - `spec-sync` — global spec synchronization (adapts to planned/implemented evidence)
