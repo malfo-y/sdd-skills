@@ -1,5 +1,31 @@
 # Decision Log
 
+## 2026-07-31 - spec-sync 표면 묶음 분할(본문 ∥ 기록) — 첫 작성자 분할 (v4.6.23 → v4.6.24, post-implementation sync)
+
+### Context
+
+리뷰 3종 병렬화(v4.6.21~v4.6.23) 후 체인의 최장 단독 구간은 spec-sync였다(실측 245~445s, 시간의 ~50%가 집필). 집필 대상 파일이 성격상 둘로 나뉘고 쓰기 집합이 서로소라는 점을 근거로 분할 축을 **표면 묶음**으로 잡았다. 변경 4파일 — `.claude/agents/spec-sync-agent.md` + `.codex/agents/spec-sync-agent.toml`(3-way) + `.claude/skills/spec-sync/SKILL.md` + `.codex/skills/spec-sync/SKILL.md`(3-way).
+
+### Decision
+
+1. **표면 묶음 2 분할 (agent — 호출자 표면 한정 절)**: implemented sync를 **본문 묶음**(live truth 갱신 + delta의 evidence 검증·승격) ∥ **기록 묶음**(`decision_log.md`·`changelog.md` append-only 신규 entry + input `_processed_` rename)으로 병렬 dispatch한다. 이는 read-only reviewer가 아닌 **첫 작성자 분할**이며, 병렬 안전 근거는 reviewer들의 "파일을 안 쓴다"와 다른 새 근거인 **쓰기 집합 서로소**다(본문은 기록 파일을 쓰지 않고 기록은 live truth 파일을 쓰지 않는다).
+2. **read-vs-rename 경합 흡수**: 기록 묶음의 `_processed_` rename이 본문 묶음의 input 읽기보다 먼저 닿을 수 있어, 본문 묶음은 input 파일을 원 이름과 `_processed_` 이름 양쪽으로 조회한다.
+3. **공유 사실은 orchestrator 선고정**: 신규 spec 버전·delta 목록·결정 제목은 orchestrator가 digest에 고정해 넘기고 두 shard가 각자 도출하지 않는다.
+4. **사후 정합 검사 (orchestrator, 비gating)**: grep 2종 — ① `main.md` 헤더 버전 == changelog 최신 entry 버전, ② git diff에서 두 기록 파일 삭제 줄 0(append-only). 불일치는 relay에 명시, fix는 호출자 소관.
+5. **기록 묶음은 digest 선고정 값 기반 — 코드 재검증 없음**: 재검증 중복 제거가 분할 이득의 절반이라 의도된 trade-off다. digest가 틀리면 기록이 틀리는 리스크는 사후 정합 검사와 append-only 규율로 완화하고, 내용 오류는 후속 spec-review가 그물이다.
+6. **무조건 문구 전수 조건화 + 후방 호환**: agent AC·Hard Rule 11·Step 7·Output Format의 무조건 문구를 소유 조건화했고, 한정 없는 호출은 전체 수행이다. planned 경로(구현 전 호출)는 분할하지 않고 현행 1회 유지 — 후방 호환 경로는 pr-review가 아니라 planned 경로·직접 호출이다.
+
+### Rationale / Evidence
+
+- structural check RED 선관찰 → GREEN **21 PASS / 0 FAIL**, 변이 9종 전량 검출.
+- 게이트(N+2) 실측: correctness shard 185/87/181s + simplicity 참조 145s ∥ 국소 134s — 벽시계 **185s**.
+- 게이트 finding **High 1 + Medium 4, 전량 fix**. High = rename 블록 무조건형 잔존 — census 단일 패턴이 '마킹한다' 변형을 놓친 위장 PASS.
+- plan-review 2-렌즈 관측 표본 2 = max 178s, 지지 밴드.
+
+### Follow-up
+
+- 본 feature의 벽시계 효과 실측은 이 체인의 spec-sync 파일럿(발효 전 수동 2-shard dispatch — 지금 이 sync)이 첫 관측이다 — 결과 수치는 다음 sync에서 기록한다.
+
 ## 2026-07-31 - simplicity reviewer 차원 묶음 분할 dispatch (참조 ∥ 국소, N+2) (v4.6.22 → v4.6.23, post-implementation sync)
 
 ### Context
