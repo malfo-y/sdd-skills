@@ -49,7 +49,7 @@
 **Expected Result:**
 - `_sdd/drafts/<YYYY-MM-DD>_feature_draft_<slug>.md` — 스펙 패치 초안(Part 1 마커) + 구현 태스크 리스트(Part 2)
 - `_sdd/spec/<project>.md` 업데이트 — planned persistent truth 반영(조건부)
-- 구현 전 계획 리뷰(`plan-review`)는 `feature-draft`가 내부에서 1회 수행하고 리포트 파일 없이 경량 반환으로 finding을 응답 — Critical/High finding이 있으면 구현 전 blocker로 취급하고 fix는 draft 작성자가 1회 수행
+- 구현 전 계획 리뷰(`plan-review`)는 `feature-draft`가 내부에서 1회 수행하고(게이트 1회 = 동일 agent 실측 ∥ 판단 2-렌즈 병렬 dispatch의 병합 반환) 리포트 파일 없이 경량 반환으로 finding을 응답 — Critical/High finding이 있으면 구현 전 blocker로 취급하고 fix는 draft 작성자가 1회 수행
 - 구현은 메인 루프가 직접 작성하고 회귀 → AC→증거 테이블 → `implementation-review` 게이트 1회 + C/H/M fix 1회(fix 시 회귀 재실행) → 마감 요약으로 닫는다(별도 plan artifact 없음). 단일 컨텍스트 초과면 분할 규칙(롤링 draft + planned todo 고정 + feature별 순차 체인)으로 해소한다
 - 구현 마감 요약에 게이트 finding·fix 내역·잔존 finding이 실리고, spec sync까지 연결돼 스펙과 코드 간 드리프트가 설명 가능한 상태
 

@@ -2,6 +2,13 @@
 
 > 이 파일은 `_sdd/spec/main.md`의 **본문이 바뀐 버전만** 기록한다 — 본문 무변경 sync(헤더 날짜만 갱신)는 entry를 남기지 않으므로 버전 번호에 결번이 생길 수 있다.
 
+#### v4.6.22 (2026-07-31)
+
+- **plan-review 2-렌즈 분할 dispatch — 실측 ∥ 판단 (post-implementation sync)**: plan-review는 유일한 무병렬 단독 리뷰 단계였고(5회차 실측 평균 ~294s, 최종 리포트 54~68%) finding이 섹션 교차·repo 대조형이라 task 축이 불성립(실측 9건 중 task 내부 닫힘 0건) → 분할 축을 렌즈로 잡았다. `plan-review-agent` 미러 2벌에 `호출자 렌즈 한정` 절(실측 = Step 3 계단 + `Verification Weakness` + draft 사실 주장 repo 대조·판단 렌즈 소유 smell의 사실 전제 포함 / 판단 = 나머지 5 smell + 규모 판정 검사 + Step 4, Step 3 미수행·draft 내부 근거·UNKNOWN 금지, 자체 검증 AC2·AC3은 판단 렌즈에만 적용, 미지정 시 6 smell 후방 호환). `plan-review` SKILL 미러 2벌은 thin wrapper → 2-렌즈 orchestrator(한 메시지 2회 병렬 dispatch + 병합 relay: 하나라도 BLOCKED면 BLOCKED·findings 합산·smell 판정 합집합·규모 판정 = 판단 렌즈, codex는 Runtime Adapter 블록 단일 소스). 단일 패스 불변(렌즈 2개 = 한 패스의 병렬 분해), 새 agent 없음.
+- **실행 경제 guardrail fan-out 배제 supersede**: `main.md` §2 "해소 수단은 fan-out이 아니라 턴 접기다"를 "턴 접기(배칭)와 read-only reviewer fan-out"으로 정정 — 리포트-분할 메커니즘 검증(v4.6.21 1+N, 본 건)으로 read-only leaf reviewer 병렬 분해가 채택 레버가 됐다. 중첩 fan-out(nesting 1단계 제한)과 배칭 지시는 유지.
+- **stale 표면 정정**: `components.md` plan-review 행 "wrapper -> agent" → orchestrator + 2-렌즈 서술, 잔존 wrapper-backed 목록 `spec-sync`만으로 축소. `main.md` 실행 분리·품질 게이트 소유권·2-렌즈 결정 행 갱신(1+N 첫 정식 런 벽시계 122s evidence 포함), 단일 패스 항 병렬 분해 단서, subagent model override 균일 적용 명시. `usage-guide.md` Scenario 2 게이트 문장 2-렌즈 병합 명시. 🚧 Planned: 벽시계 효과(기대 ~294s → ~200s)는 미관측 — 머지+플러그인 갱신 후 다음 draft의 plan-review 게이트가 첫 관측 지점.
+- **적용 surface 검증 evidence**: structural check RED 11 FAIL → 게이트 fix 후 **21 PASS / 0 FAIL**, 변이 9종 전량 검출, 게이트(1+N 첫 정식 런) finding fix 2건(correctness Medium 1 + simplicity Medium 1), shard 2·3 finding 0.
+
 #### v4.6.21 (2026-07-31)
 
 - **implementation-review correctness task-shard 분할 dispatch — 1+N (post-implementation sync)**: 게이트 벽시계가 correctness 단독으로 결정되고(실측 214~430s, simplicity는 병렬 그늘) correctness 시간 분해(검증 루프 65~80% + 리포트 19~35%)가 task 경계로 나뉜다는 실측을 근거로, `implementation-review` orchestrator SKILL 미러 2벌에 분할 계약을 넣었다 — 기준 draft의 Part 2 task가 **2개 이상이면 correctness를 task별 shard로 분할 dispatch**(shard k digest = 공통 digest + Task k의 AC·Target Files 한정), simplicity는 통짜 1회(중복 탐지 렌즈는 두 지점을 같이 봐야 함), 전부 한 메시지 병렬, 비분할 경로(task 1개/draft 없음 → 1+1) 유지, 분할 상한 없음(YAGNI). relay는 correctness AC ledger의 shard 연접 + 모든 반환(N+1) 합산 severity, shard 간 중복 finding dedup은 fix 주체(호출자) 소관. codex는 3-way 적응(spawn_agent 어댑터 보존, 게이트 fix로 call 문법을 Runtime Adapter 블록 단일 소스화). reviewer agent 본문 무변경. **파일럿 실측(게이트 겸용)**: shard A 70s ∥ shard B 143s ∥ simplicity 120s — 벽시계 **143s**, shard 합 213s ≈ 동급 단독 correctness 214s(비례 분배 지지 밴드 통과).
