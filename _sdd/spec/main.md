@@ -2,8 +2,8 @@
 
 > Markdown 기반 skill bundle로 AI 에이전트의 Spec-Driven Development 워크플로우를 Claude Code와 Codex에서 공통 계약으로 실행한다.
 
-**Spec Version**: 4.6.17
-**Last Updated**: 2026-07-30
+**Spec Version**: 4.6.18
+**Last Updated**: 2026-07-31
 **Status**: Approved
 **Canonical Role**: current thin global spec
 
@@ -59,6 +59,7 @@ SDD Skills는 이 문제를 `SKILL.md = 실행 가능한 프롬프트`라는 관
 - 사용자 entrypoint는 skill layer에, 재사용 execution unit은 agent layer에 둔다. dispatch된 agent는 sub-agent를 다시 spawn하지 않는다(nesting 1단계 제한)
   - leaf dispatch가 필요한 execution은 `orchestrator(skill) + leaf/producer(agent)` 형태로 둔다(메인 루프 skill/autopilot만 dispatch, agent는 단일 단위/단일 산출물만 처리)
   - dispatch가 없는 단순 위임 execution만 `wrapper-backed skill + single-source agent` 형태로 둔다
+  - **실행 경제 — 해소 수단은 fan-out이 아니라 턴 접기다**: 이 계열의 체감 지연은 subagent dispatch 왕복도 입력 읽기량도 아니라 턴 수만큼 반복되는 추론이다. nesting 1단계 제한은 그 지연의 원인이 아니며, 허용되더라도 자식마다 컨텍스트를 적재해 배칭보다 비싸다. 그래서 reviewer/producer agent(`plan-review`·`implementation-review`·`simplicity-review`·`pr-review`·`spec-sync`)와 `implementation` SKILL은 **서로 의존하지 않는 read-only 호출을 한 메시지에서 함께 내는 tool call 배칭을 지시형으로 요구한다** — 앞 호출 결과를 봐야 대상이 정해지는 호출만 다음 턴이고, 파일을 쓰거나 상태를 바꾸는 호출은 배칭 대상이 아니다. **배칭은 읽을 대상을 늘리지 않는다**(이미 읽기로 결정한 호출을 모을 뿐이며, 이 단서가 없으면 배칭 지시가 읽기량 팽창으로 번져 위 reviewer 입력 상한을 잠식한다). 항상 이득인 규칙(배칭)과 판단이 필요한 재량(서로 독립인 task를 병렬 진행)은 한 문장에 섞지 않는다 — 전자는 지시형, 후자는 허가형이고 각 task 안의 RED→GREEN 순서는 병렬 여부와 무관하게 유지된다. 규칙 문면은 런타임별 tool 이름에 의존하지 않으며, 특정 병렬 호출 API는 그 런타임 미러에서 조건형 예시로만 덧붙인다
 - persistent handoff는 `_sdd/spec/`, `_sdd/drafts/`, `_sdd/implementation/`, `_sdd/pipeline/`, `_sdd/discussion/`의 canonical 경로를 통해 이뤄진다
 - 새 temporary artifact는 가능한 한 lowercase canonical 경로를 사용하고, skill contract가 dated slug 패턴을 정의한 output surface는 그 형식을 따라야 한다. reader는 legacy uppercase/fixed-name artifact를 fallback으로 읽을 수 있어야 한다
 - 소비 repo에서 커밋되는 `_sdd`는 `spec/`·`guides/`·`env.md`·`drafts/`·`work_log/`이고(`drafts/`·`work_log/`는 구현 로그 자산), 나머지 process artifact(`_sdd/{discussion,implementation,pipeline,pr}/`)는 `.gitignore`(`SDD-WORKSPACE` 마커 블록)로 로컬 전용이다. `_sdd/env.md`는 커밋되므로 비밀값(API 키·토큰·비밀번호)을 적지 않는다. 단 이 sdd_skills repo는 스킬 개발 메타 repo라 process artifact를 history 가치로 계속 커밋하는 예외다(소비 repo 정책과 별개)
@@ -153,6 +154,9 @@ SDD Skills의 설계는 다음 층으로 나뉜다.
 - Claude와 Codex 문서/skill parity는 아직 완전 자동 동기화가 아니라 유지보수자의 관리가 필요하다. wrapper-backed skill에서는 agent가 단일 소스이므로 "skill 본문과 agent 본문을 함께 미러링"하는 의무는 대부분 해소됐고, 유지보수는 agent 본문과 thin wrapper의 entrypoint/dispatch 정합으로 좁혀졌다(claude/codex 양 플랫폼 parity는 여전히 수동 관리)
 - 🚧 Planned: `guide-create`·`spec-snapshot` 미러의 **본문 세대 격차** — 미러 쌍의 세대 차이는 이제 본문 대조로만 드러난다(버전 필드가 없으므로 값 비교라는 우회 신호가 없다). `guide-create`는 본문 줄 수가 175 / 158이고 codex 쪽에는 claude 본문의 생성 가이드 템플릿 블록(`**Version**: X.Y.Z` 필드 줄)이 아예 없다. `spec-snapshot`은 134 / 117이고 codex 쪽에만 legacy uppercase(`DECISION_LOG.md`) 대응 규칙이 있다. 어느 쪽이 canonical인지는 본문 대조가 선행되어야 해 별도 이슈로 해소한다
 - 이 저장소는 전통적인 테스트 프레임워크보다 실제 skill invocation과 리뷰 기반 검증에 크게 의존한다
+- dispatch되는 agent/skill은 작업트리가 아니라 **plugin 설치본**(`~/.claude/plugins/cache/<marketplace>/<plugin>/<pushed SHA>/`)에서 로드된다 — 방금 편집한 agent 본문은 커밋·푸시로 플러그인이 갱신되기 전까지 그 세션의 dispatch에 발효되지 않는다(실측: 설치본에 당일 편집한 규칙 0/5, 전날 머지분은 존재). 따라서 **같은 세션의 마감 게이트로 자기 변경의 효과를 계측하는 설계는 구조적으로 무효**이고, agent 행동 계측은 (a) 커밋·푸시 후 플러그인 갱신 + (b) 검증 대상 개념을 호출자 digest에 넣지 않은 새 세션을 전제조건으로 갖는다. 규칙이 로드되지 않은 실행은 그 규칙의 반증이 아니다
+- agent 행동을 transcript로 계측할 때는 지표를 먼저 검증한다 — subagent transcript(JSONL)는 한 메시지의 content 블록을 **줄 단위로 쪼개** 기록하므로 "메시지당 tool_use/tool_result 수"는 항상 1이 되어 tool call 배칭을 원리적으로 탐지하지 못한다. 유효 지표는 **연속 실행 길이**(user `tool_result`가 끼지 않고 이어지는 assistant `tool_use` 줄 수)이며 양성 대조 회차로 판별력을 확인한 뒤 쓴다. agent·리뷰어의 자기 행동 보고는 논거로 삼기 전에 transcript 계수로 교차검증한다(자기보고 "한 메시지에 최대 4개"가 실측 1이었던 전례)
+- 🚧 Planned: tool call 배칭 규칙의 **행동 효과**(규칙이 실제로 배칭을 만드는가)는 미검증이다. 도입 회차의 계측은 위 plugin 캐시 지연으로 `UNTESTED`로 닫혔고, 위 전제조건을 갖춘 다음 회차에서 연속 실행 길이 ≥ 2로 확인한다. 벽시계 절감 폭은 단일 표본으로 주장하지 않는다
 - `docs/` ko 본문과 `docs/en/` 미러의 세대 정합도 수동 관리다 — canonical rollout 순서의 `english mirrors` 단계가 가장 누락되기 쉬운 지점이고, 레이어·섹션 추가를 ko에만 반영하고 닫으면 en 짝이 한 세대 뒤처진다(하네스 레이어 추가가 en `SDD_WORKFLOW`·`SDD_CONCEPT`에 전파되지 않아 §2 Harness 누락 + 삭제된 full 레인 어휘 잔존으로 드러난 전례). ko/en 짝을 건드리는 변경은 대칭 마감을 검증 대상으로 둔다
 
 ## Supporting Surfaces

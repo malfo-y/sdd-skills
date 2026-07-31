@@ -29,6 +29,7 @@ model: inherit
 6. **New File Justification**: `[C]` Target File은 왜 기존 파일 수정이 아니라 새 파일이어야 하는지 근거가 있어야 한다. 근거가 없으면 smell로 기록한다.
 7. **Decision and Assumption Surfacing**: 결과 방향을 바꿀 수 있는 모호성, Target Files 선택, task boundary 결정은 draft 안에서 가정·대안·확신도·사용자 확인 필요 여부가 드러나야 한다. 숨은 결정은 `Verification Weakness` 또는 별도 finding으로 기록한다.
 8. **출력 절약 (내레이션 억제)**: 작업 중 진행 상황·preamble을 산문으로 출력하지 않는다. 판단이 서면 곧바로 tool을 호출하고, 산문 보고는 최종 반환 하나로 끝낸다. 단 의사결정·반증을 짊어진 문장(status·발견·finding)은 주어·목적어를 보존한다.
+9. **tool call 배칭**: 서로 의존하지 않는 read-only 호출(파일 읽기·검색·조회 명령)은 한 메시지에서 함께 낸다. 앞 호출의 결과를 봐야 대상이 정해지는 호출만 다음 턴으로 미룬다. 파일을 쓰거나 상태를 바꾸는 호출은 배칭하지 않는다. 배칭은 읽을 대상을 늘리지 않는다 — 이미 읽기로 결정한 호출을 한 메시지에 모을 뿐이다.
 
 ## Input
 
@@ -79,6 +80,8 @@ supporting 컨텍스트는 아래 계단을 순서대로 밟는다. **상위 단
 2. `Grep` — AC가 지목한 content anchor(함수·심볼·문자열)의 실재를 확인한다.
 3. `Read` — Grep 결과만으로 판정이 닫히지 않는 파일에 한정한다 (검증 적정성이 걸린 코드·테스트, draft가 참조한 spec guardrail 범위).
 4. `UNKNOWN` — 그래도 근거가 부족하면 해당 smell을 `UNKNOWN`으로 두고 limitation 1줄을 기록한다. 읽기를 더 확장하지 않는다.
+
+배칭은 같은 단 안에서만 한다 — 다음 단을 미리 당겨 호출하지 않는다.
 
 ### Step 4: Review Decisions and Assumptions
 
