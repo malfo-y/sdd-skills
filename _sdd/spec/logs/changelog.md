@@ -2,6 +2,16 @@
 
 > 이 파일은 `_sdd/spec/main.md`의 **본문이 바뀐 버전만** 기록한다 — 본문 무변경 sync(헤더 날짜만 갱신)는 entry를 남기지 않으므로 버전 번호에 결번이 생길 수 있다.
 
+#### v4.6.26 (2026-07-31)
+
+- **Codex subagent dynamic model override (post-implementation sync)**: `plan-review`, `implementation-review`, `pr-review` 3종이 `--model`·`--effort`를 고정 repository allowlist가 아니라 선택된 active `spawn_agent` schema의 model·reasoning-effort enum으로 검증한다. 요청 field가 없거나 값이 unsupported면 dispatch 전에 차단하고 노출된 허용값을 보고한다. 유효 override는 모든 reviewer에 균일 적용하며, 생략값 상속과 model/effort 분리 계약을 유지한다. `gpt-5.6-sol`·`gpt-5.6-terra`, effort `low`·`max`·`ultra`는 현재 관측 예시이지 persistent contract가 아니다.
+- **검증 evidence**: Desktop model·effort edge combinations 완료; CLI 0.146 smoke exit 0 + `CLI_OVERRIDE_SMOKE_DONE` + model/effort markers; stale live values **0**, dynamic **3/3**, mutation **3/3**, hygiene pass.
+
+#### v4.6.25 (2026-07-31)
+
+- **Codex multi-agent dual-runtime adapter (post-implementation sync)**: Desktop/CLI surface 이름이 아니라 활성 tool schema가 lifecycle을 선택하도록 `.codex` dispatch 표면을 정렬했다. mailbox schema(Desktop·현재 CLI 0.146.0)는 invocation별 parent-tree 고유 `task_name` + `fork_turns: "none"` + target 없는 wait + no-close를 사용하고, legacy target/close schema는 target wait와 `close_agent`가 함께 노출된 경우에만 유지한다. schema가 없거나 모호하면 mandatory dispatch는 fail closed, optional helper는 inline fallback하며, 없는 lifecycle tool은 검색하지 않는다. 요청된 model/effort field를 활성 spawn schema가 지원하지 않으면 dispatch를 차단한다.
+- **검증 evidence**: Desktop 2-reviewer plan-review 완료; CLI 0.146.0 mailbox plan-review exit 0 + `CLI_PLAN_REVIEW_DONE`; static census **12/12**, stale pattern **0**, TOML **5/5**, links/refs clean, mutation **4/4**.
+
 #### v4.6.24 (2026-07-31)
 
 - **spec-sync 표면 묶음 분할 dispatch — 본문 ∥ 기록, 첫 작성자 분할 (post-implementation sync)**: 리뷰 3종 병렬화(v4.6.21~v4.6.23) 후 최장 단독 구간인 spec-sync(실측 245~445s, 집필 ~50%)를 표면 묶음 2개로 분할했다. `spec-sync-agent` 미러 2벌에 `호출자 표면 한정` 절 — **본문 묶음**(live truth 갱신 + evidence 검증·승격) ∥ **기록 묶음**(`decision_log`·`changelog` append-only entry + `_processed_` rename). read-only reviewer가 아닌 **첫 작성자 분할**이며 안전 근거는 **쓰기 집합 서로소**(reviewer들의 "파일 안 씀"과 다른 새 근거). read-vs-rename 경합은 본문의 원/`_processed_` 양쪽 조회로 흡수. `spec-sync` SKILL 미러 2벌은 orchestrator화 — implemented sync면 한 메시지 2 묶음 병렬 dispatch, 공유 사실(버전·delta·결정 제목)은 orchestrator **선고정**(두 shard가 각자 도출하지 않음), 사후 정합 grep 2종(버전 일치·append-only 삭제 줄 0, 비gating), 부분 Report 병합 relay(각 파트 정확히 한 묶음 소유). 기록 묶음은 digest 선고정 값 기반·코드 재검증 없음(재검증 중복 제거가 분할 이득의 절반 — 의도된 trade-off, 내용 오류는 후속 spec-review가 그물). 무조건 문구 전수 조건화 + 후방 호환(planned 경로 현행 1회·직접 호출 — pr-review 경로 아님).

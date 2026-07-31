@@ -34,16 +34,17 @@
 
 ## Invocation Contract
 
-Codex custom agent 문서는 **실제 Codex tool contract**를 기준으로 작성한다.
+Codex custom agent 문서는 **활성 tool schema에서 선택한 단일 runtime contract**를 기준으로 작성한다. 실행 가능한 세부 adapter는 각 wrapper `SKILL.md`가 self-contained하게 소유하며, 이 README는 유지보수 요약만 제공한다.
 
-- sub-agent fan-out은 `spawn_agent({agent_type: ..., message: <framed payload>})`로 시작한다.
-- spawned agent 결과 수집은 반드시 `wait_agent(...)`로 명시한다.
-- `wait_agent(...)`가 final status를 반환한 agent는 결과를 기록한 직후 `close_agent({target: <agent_id>})`로 닫는다.
-- 중간 보완 지시가 필요할 때만 `send_input({target: <agent_id>, message: ...})`을 사용한다.
-- 여러 agent 결과를 합칠 때는 `spawn -> wait -> record -> close -> verify -> integrate` 순서를 명시한다.
-- 읽기 전용 병렬화는 `multi_tool_use.parallel` 또는 read-only explorer fan-out으로 표현한다.
+- **Mailbox contract (Desktop/current CLI)**: `spawn_agent`가 `task_name`/`fork_turns`를 요구하거나 `wait_agent`에 `targets`가 없으면 invocation별 lowercase `run_id`를 포함해 같은 parent tree의 재실행까지 고유한 `task_name`을 만들고, `agent_type`, `fork_turns: "none"`, `message`를 전달한다. target 없는 `wait_agent({timeout_ms: ...})` mailbox를 반복해 final을 수거한다. 완료 agent는 닫지 않으며, 통제된 중단에만 노출된 `interrupt_agent`를 쓴다.
+- **Target/close contract (legacy CLI schema)**: `wait_agent`가 `targets`를 지원하고 `close_agent`가 노출되면 `spawn_agent({agent_type: ..., message: ...})` → target wait → final 기록 → 완료 handle close 순서를 쓴다.
+- contract가 불완전하거나 하나로 확정되지 않으면 dispatch하지 않고 schema blocker를 보고한다. 없는 lifecycle tool을 `tool_search`로 찾지 않고 두 contract의 필드·호출을 섞지 않는다.
+- 실행 surface 이름이 아니라 schema가 contract를 결정한다. 현재 CLI가 mailbox schema를 노출하면 mailbox contract를 쓴다.
+- 여러 agent 결과를 합칠 때는 선택한 contract의 `spawn -> wait -> record -> verify -> integrate` 순서를 명시한다. target/close contract에서만 `record` 뒤에 `close`가 추가된다.
+- 중간 보완 지시는 현재 schema가 노출한 전달 도구(`send_message` 등)만 사용한다.
+- 읽기 전용 병렬화는 read-only explorer fan-out으로 표현한다.
 
-`wait_agent`가 timeout으로 final status를 주지 않으면 아직 수집 완료로 보지 않는다. 더 기다리거나 controlled stop/abandon을 결정한 뒤에만 닫는다.
+wait가 timeout으로 final status를 주지 않으면 아직 수집 완료로 보지 않는다. 더 기다리거나 controlled stop/abandon을 결정한다.
 
 ### Message Boundary
 
@@ -66,9 +67,11 @@ You are already running as <agent_type>. Do not invoke or re-enter SDD skills fr
 
 대신 아래처럼 Codex-native 역할을 사용한다:
 
-- `spawn_agent({agent_type: "explorer", message: ...})` for read-only investigation
-- `spawn_agent({agent_type: "worker", message: ...})` for bounded implementation / translation / execution tasks
-- `spawn_agent({agent_type: "default", message: ...})` for bounded sequential drafting or fill assistance when the caller keeps ownership
+- `explorer` for read-only investigation
+- `worker` for bounded implementation / translation / execution tasks
+- `default` for bounded sequential drafting or fill assistance when the caller keeps ownership
+
+실제 `spawn_agent` 필드는 위에서 선택한 mailbox/target-close contract를 따른다.
 
 ## Ownership Rules for Fan-out
 
@@ -77,4 +80,4 @@ You are already running as <agent_type>. Do not invoke or re-enter SDD skills fr
 - 각 worker/explorer는 **서로 겹치지 않는 파일/모듈/질문 범위**를 가진다.
 - write 작업이 있는 경우 소유 파일 목록을 프롬프트에 명시한다.
 - merge는 부모 agent가 수행하고, spawned agent끼리 서로의 출력을 직접 가정하지 않는다.
-- spawned agent가 불완전한 결과를 내면 부모가 `wait_agent` 이후 결과를 기록하고 `close_agent({target: <agent_id>})`로 handle을 반납한 뒤 재시도 또는 순차 fallback을 결정한다.
+- spawned agent가 불완전한 결과를 내면 부모가 wait 이후 결과를 기록하고 재시도 또는 순차 fallback을 결정한다. target/close contract에서만 완료 handle을 닫는다.

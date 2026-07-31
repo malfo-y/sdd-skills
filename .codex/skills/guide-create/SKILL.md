@@ -119,7 +119,11 @@ guide가 길면 다음 순서를 따른다.
 2. 같은 흐름에서 각 섹션 내용을 채움
 3. TODO/placeholder를 제거하고 finalize
 4. 의존 섹션은 `default`, 독립 시나리오/API 섹션은 `worker`로 채운다
-5. helper agent를 썼다면 필요한 경우 먼저 `tool_search` query `spawn_agent wait_agent close_agent multi-agent sub-agent`로 multi-agent tools를 로드한 뒤, `wait_agent`가 final status를 반환한 경우에만 결과를 반영하고 `close_agent({target: <agent_id>})`로 닫는다. timeout은 완료로 간주하지 않는다. helper dispatch는 실제 Codex schema인 `spawn_agent({agent_type: "worker", message: ...})`를 사용한다.
+5. helper agent를 쓴다면 active tool schema에서 contract 하나를 선택한다.
+   - **Mailbox (Desktop/current CLI)**: `task_name`/`fork_turns`가 필요하거나 wait에 `targets`가 없을 때 선택한다. invocation별 lowercase `run_id`를 포함해 parent tree에서 고유한 `task_name`을 만들고 `agent_type: "worker"`, `fork_turns: "none"`, `message`로 spawn한다. target 없는 wait를 final까지 반복하고 완료 agent는 닫지 않는다.
+   - **Target/close (legacy CLI schema)**: wait가 `targets`를 지원하고 `close_agent`가 노출될 때 선택한다. `agent_type`/`message`로 spawn하고 target wait 뒤 완료 handle을 닫는다.
+   - **Fallback**: schema가 모호하거나 불완전하면 helper 없이 인라인 작성한다.
+   - **공통**: surface 이름이 아니라 schema로 선택하고, 없는 lifecycle tool을 `tool_search`로 찾지 않는다. final 뒤에만 결과를 반영하며 timeout은 완료로 간주하지 않는다.
 
 ### Step 6: Save
 

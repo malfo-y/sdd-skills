@@ -44,7 +44,7 @@ User Request
 1. **`_sdd/spec/` 직접 수정 금지**: global spec 수정은 반드시 `spec-sync` 스킬에 위임한다.
 2. **에이전트/스킬 호출 시 원문 전달**: 사용자의 원래 요청과 관련 컨텍스트 파일 경로를 포함하되, custom agent를 spawn하는 스킬에서는 원문을 framed payload의 `## Input Data` 아래에 data로만 넣는다 (framing 규칙은 각 스킬의 Codex Runtime Adapter가 소유).
 3. **Execute → Verify 필수**: 모든 단계는 실행(Execute) + 검증(Verify) 두 페이즈를 거친다. 스킬/에이전트 호출만으로 완료 간주 금지.
-4. **Agent lifecycle 수집/정리 필수**: 체인 스킬이 `spawn_agent(...)`로 시작한 실행 단위는 `wait_agent(...)`로 final status를 수집하고, 결과 기록 직후 `close_agent(...)`로 닫는다. `wait_agent` timeout은 수집 완료가 아니다.
+4. **Agent lifecycle 수집 필수**: 체인 스킬이 시작한 실행 단위는 각 스킬의 Codex Runtime Adapter가 active schema에서 선택한 contract로 final status를 수집한다. mailbox contract(Desktop/current CLI)는 target 없는 wait를 반복하고 완료 agent를 닫지 않으며, target/close contract(legacy schema)만 target wait 뒤 완료 handle을 닫는다. 실행 surface 이름이 아니라 schema로 선택하고, wait timeout은 수집 완료가 아니다.
 5. 한국어를 기본으로 하되 사용자 언어를 따른다.
 6. `_sdd/` artifact 경로는 lowercase canonical을 기본으로 하되, 입력을 읽을 때는 legacy uppercase fallback도 허용한다.
 7. spec-less repo에서도 중단하지 않는다. `_sdd/spec/`가 없으면 그대로 진행하고, 구현 완료 후 사용자에게 `spec-create`를 추천한다 (코드가 먼저 존재해야 spec이 실제 구조를 반영한다).

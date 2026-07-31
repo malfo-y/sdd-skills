@@ -123,9 +123,9 @@ Claude Code:
 Codex:
 
 ```text
-/plan-review --model gpt-5.5 --effort high
-/implementation-review --model gpt-5.4 --effort medium
-/plan-review --effort high
+/plan-review --model gpt-5.6-sol --effort low
+/implementation-review --model gpt-5.6-terra --effort max
+/pr-review --model gpt-5.6-sol --effort ultra
 ```
 
-Codex에서는 model과 effort를 분리해서 쓴다. `gpt-5.5-high` 같은 결합형 값 대신 `--model gpt-5.5 --effort high`를 사용한다.
+Codex에서는 model과 effort를 분리해서 쓴다. `gpt-5.6-sol-high` 같은 결합형 값 대신 `--model gpt-5.6-sol --effort high`를 사용한다. 위 모델과 `low`·`max`·`ultra` effort는 현재 Codex 0.146.0/Desktop schema의 예시이며, 실제 허용값은 실행 시 active `spawn_agent` schema가 노출한 enum을 따른다. 옵션을 생략하면 현재 세션/agent 기본값을 상속한다.

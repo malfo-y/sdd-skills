@@ -9,14 +9,17 @@ description: 'This skill should be used when the user asks to "write-phased", "�
 
 ## Codex Runtime Adapter
 
-이 스킬은 기본적으로 helper agent 없이 인라인 작성한다. 런타임이 skill-internal helper dispatch를 허용하고 독립 섹션 때문에 bounded helper가 필요할 때만 `default` / `worker` helper를 사용할 수 있다. dispatch 전에 `spawn_agent`, `wait_agent`, `close_agent`가 active tools에 없으면 `tool_search` query `spawn_agent wait_agent close_agent multi-agent sub-agent`로 multi-agent tools를 먼저 로드한다. 현재 런타임 정책이 명시적 sub-agent 허가를 추가로 요구하면, dispatch 전에 사용자에게 위임 허가를 요청한다.
+이 스킬은 기본적으로 helper agent 없이 인라인 작성한다. 런타임이 skill-internal helper dispatch를 허용하고 독립 섹션 때문에 bounded helper가 필요할 때만 `default` / `worker` helper를 사용할 수 있다. 현재 런타임 정책이 명시적 sub-agent 허가를 추가로 요구하면, dispatch 전에 사용자에게 위임 허가를 요청한다.
+
+helper dispatch 전 active tool schema에서 contract 하나를 선택한다. Mailbox(Desktop/current CLI: `task_name`/`fork_turns`가 필요하거나 wait에 `targets` 없음)는 invocation마다 짧은 lowercase `run_id`를 만들고 같은 parent tree의 재실행까지 고유한 `task_name`에 넣은 뒤, `agent_type`, `fork_turns: "none"`, `message`로 spawn한다. target 없는 wait를 반복하며 완료 agent를 닫지 않는다. Target/close(legacy CLI schema: wait에 `targets` 지원 + `close_agent` 노출)는 `agent_type`/`message` spawn, target wait, 완료 handle close를 사용한다. 실행 surface 이름이 아니라 schema로 선택한다. contract가 불완전하거나 모호하면 helper를 쓰지 않고 인라인 작성한다. 없는 lifecycle tool을 `tool_search`로 찾거나 두 contract를 혼용하지 않는다.
 
 실제 Codex 호출은 `prompt`가 아니라 `message`를 사용한다:
 
 ```text
-spawn_agent({agent_type: "worker", message: "<대상 파일 + 섹션 책임 + 유지할 skeleton>"})
-wait_agent({targets: ["<agent_id>"], timeout_ms: 600000})
-close_agent({target: "<agent_id>"})
+Mailbox: spawn_agent({task_name: "write_phased_r7f3a_api_section", agent_type: "worker", fork_turns: "none", message: "<대상 파일 + 섹션 책임 + 유지할 skeleton>"})  // r7f3a는 invocation마다 교체
+Mailbox: wait_agent({timeout_ms: 600000})  // final까지 반복, close 없음
+Target/close: spawn_agent({agent_type: "worker", message: "<대상 파일 + 섹션 책임 + 유지할 skeleton>"})
+Target/close: wait_agent({targets: ["<agent_id>"], timeout_ms: 600000}) → final 기록 → close_agent({target: "<완료 agent_id>"})
 ```
 
 ## Acceptance Criteria
@@ -59,7 +62,7 @@ helper를 쓰는 경우에도 최소한 아래를 넘긴다.
 - 대상 파일 경로
 - 채워야 할 섹션 또는 책임 범위
 - 유지해야 할 skeleton 구조
-- helper agent를 spawn했다면 `wait_agent`가 final status를 반환한 뒤에만 결과를 반영하고 `close_agent({target: <agent_id>})`로 닫는다. timeout은 완료로 간주하지 않는다.
+- helper agent를 spawn했다면 위 Runtime Adapter가 final status를 반환한 뒤에만 결과를 반영한다. timeout은 완료로 간주하지 않는다.
 - 언어/톤/출력 형식
 - placeholder를 실제 내용으로 치환하라는 지시
 
