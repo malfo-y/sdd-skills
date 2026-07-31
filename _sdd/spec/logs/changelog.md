@@ -2,6 +2,11 @@
 
 > 이 파일은 `_sdd/spec/main.md`의 **본문이 바뀐 버전만** 기록한다 — 본문 무변경 sync(헤더 날짜만 갱신)는 entry를 남기지 않으므로 버전 번호에 결번이 생길 수 있다.
 
+#### v4.6.27 (2026-07-31)
+
+- **Codex investigate intent boundary (post-implementation sync)**: 모호한 `investigate`·`debug`·`diagnose` 요청은 diagnose-only로 잠그고, 조사 대상 제품·소스의 fix·repair·patch·수정 명시 또는 후속 승인 때만 fix mode로 전환한다. 진단 보고서·분석 산출물 작성은 제품 fix 권한이 아니다. diagnose-only는 Fix & Verify를 건너뛰며 제품·소스·spec fix와 회귀 테스트 추가를 금지한다. mandatory governance write만 정확한 대상·append semantics를 지키고 보고하는 예외다. fix mode의 blast-radius/fresh-verification과 기존 runtime/fan-out guard는 유지한다. **Codex-only 변경이며 Claude mirror parity는 주장하지 않는다.**
+- **검증 evidence**: implementation review finding Critical 1 + High 2 + Medium 1을 fix 1회로 해소; runtime fixture work-log replacement 발견 후 append-only exception 강화; fresh isolated Codex CLI 0.146.0 smoke exit 0, product manifest·other work-log 불변, current work-log byte-prefix append-only, exact markers/governance report status 0.
+
 #### v4.6.26 (2026-07-31)
 
 - **Codex subagent dynamic model override (post-implementation sync)**: `plan-review`, `implementation-review`, `pr-review` 3종이 `--model`·`--effort`를 고정 repository allowlist가 아니라 선택된 active `spawn_agent` schema의 model·reasoning-effort enum으로 검증한다. 요청 field가 없거나 값이 unsupported면 dispatch 전에 차단하고 노출된 허용값을 보고한다. 유효 override는 모든 reviewer에 균일 적용하며, 생략값 상속과 model/effort 분리 계약을 유지한다. `gpt-5.6-sol`·`gpt-5.6-terra`, effort `low`·`max`·`ultra`는 현재 관측 예시이지 persistent contract가 아니다.

@@ -1,5 +1,30 @@
 # Decision Log
 
+## 2026-07-31 - Codex investigate separates diagnose-only from explicitly authorized product fix (v4.6.26 → v4.6.27, post-implementation sync)
+
+### Context
+
+Codex `investigate`가 `investigate`·`debug`·`diagnose` 같은 모호한 요청을 관례적 수정 요청으로 넓히면, 사용자가 승인하지 않은 제품·소스 변경과 회귀 테스트 추가까지 수행할 수 있었다. 진단 보고서나 분석 산출물 작성 요청도 제품 fix 권한으로 오인하지 않도록 intent 경계를 명시적으로 분리했다.
+
+### Decision
+
+1. **모호한 조사 요청의 기본값은 diagnose-only다**: 조사 대상 제품·소스의 fix·repair·patch·수정을 명시적으로 요청하거나 사용자가 후속 승인한 경우에만 fix mode로 진입한다. 진단 보고서·분석 산출물 작성 요청은 제품 fix 권한이 아니다.
+2. **diagnose-only는 제품 변경 단계를 건너뛴다**: 근본원인과 영향 범위, evidence, 권고를 반환하되 Fix & Verify를 수행하지 않고 제품·소스·spec fix와 회귀 테스트 추가를 금지한다.
+3. **mandatory governance write만 유일한 쓰기 예외다**: 상위 저장소 규칙이 강제한 기록만 정확한 대상·연산 의미로 수행할 수 있다. append 요구는 기존 내용을 보존해야 하며, 실제 governance write는 최종 보고에 공개한다.
+4. **fix mode의 기존 안전 계약은 유지한다**: blast-radius gate 뒤에만 수정하고 fresh verification을 수행한다. runtime adapter, 조건부 fan-out, 3-Strike, scope lock도 유지한다.
+5. **이번 결정은 Codex-only다**: `.codex/skills/investigate/SKILL.md`만 적용 대상이며 Claude mirror는 의도적으로 변경하지 않았다. cross-platform parity를 주장하지 않는다.
+
+### Rationale / Evidence
+
+- implementation review가 intent ambiguity **High 1**, 실패하는 marker oracle **Critical 1**, governance oracle gap **High 1**, report compression **Medium 1**을 발견했고 모두 fix 1회에 반영됐다.
+- runtime smoke가 fixture work-log replacement를 추가로 드러내 append-only governance exception을 강화했다.
+- fresh isolated Codex CLI 0.146.0 smoke가 exit 0으로 완료됐다. product manifest와 다른 work-log는 불변이고, current work-log는 기존 byte prefix를 보존한 append-only 변경이었다. exact mode/fix marker와 governance report 검증도 모두 status 0이었다.
+
+### Changes
+
+- `.codex/skills/investigate/SKILL.md` — intent classification, mode별 금지/허용 경계, 조건부 Fix & Verify, governance write 보고 계약 정렬
+- 입력: `_sdd/drafts/_processed_2026-07-31_feature_draft_codex_investigate_intent_boundary.md`
+
 ## 2026-07-31 - Codex subagent model overrides follow active spawn schema enums (v4.6.25 → v4.6.26, post-implementation sync)
 
 ### Context
