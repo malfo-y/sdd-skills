@@ -1,5 +1,30 @@
 # Decision Log
 
+## 2026-07-31 - simplicity reviewer 차원 묶음 분할 dispatch (참조 ∥ 국소, N+2) (v4.6.22 → v4.6.23, post-implementation sync)
+
+### Context
+
+correctness task-shard(v4.6.21)와 plan-review 2-렌즈(v4.6.22)로 게이트의 다른 구간이 내려간 뒤, simplicity(실측 107~252s, 시간의 56~96%가 리포트 — 세션 transcript 계측, `_sdd/work_log/2026-07-31.md`)가 implementation-review 게이트의 임계 경로 후보가 됐다. v4.6.21은 "simplicity는 task로 자르지 않는다 — 중복 탐지는 두 지점을 같이 봐야 한다"로 task 축 분할을 배제했는데, 이번 분할 축은 task가 아니라 **차원**이다. 변경 4파일 — `simplicity-review-agent` 미러 2벌(codex 3-way) + `implementation-review` SKILL 미러 2벌.
+
+### Decision
+
+1. **차원 묶음 분할 (agent — 호출자 차원 한정 절)**: 호출자가 차원 묶음을 한정하면 그 묶음만 스캔하고 반환의 차원 판정도 소유 차원만 낸다. **참조 묶음** = 중복 코드 + 죽은 코드 + 단일 사용처 추상화(사용처/복제 추적형 — Grep 무거움), **국소 묶음** = 도달 불가 에러 처리 + 과잉압축(코드 자리 판독형). 두 묶음의 합집합 = 정확히 5개 차원(누락·중복 배정 없음).
+2. **한정은 차원이지 범위가 아니다 (task 축 반대 논거와 공존, supersede 아님)**: 어느 묶음이든 리뷰 범위는 전체 변경이다 — 중복 렌즈를 소유한 shard가 여전히 모든 지점을 동시에 관찰하므로 v4.6.21의 반대 논거를 위반하지 않는다.
+3. **무조건 "5개" 문면 전수 일반화**: 자체 검증 AC1·Hard Rule 3·Review Dimensions 도입부·Step 2의 무조건 "5개" 문구를 "소유한 차원"으로 조건화했다(소유하지 않은 차원 finding 금지 취지는 유지). Integration의 pr-review 서술은 "차원 한정 없는 호출 — 전체 5차원 후방 호환 경로"로 갱신 — `pr-review`는 이 경로로 무변경 동작한다.
+4. **orchestrator 계약 (implementation-review SKILL)**: simplicity를 묶음마다 1회, 총 2회 dispatch한다(참조 ∥ 국소, 각각 전체 변경 대상) — correctness shard들과 합쳐 **한 메시지 N+2 병렬**. relay의 차원 판정은 두 반환의 합집합(각 차원 정확히 한 묶음 소유 — 중복 없음), 합산 severity "모든 반환" 문면은 N+2를 그대로 포섭. codex는 3-way — spawn 예시에 묶음 슬롯 반영, wait 예시의 simplicity id 복수화. 게이트 fix로 근거 문장·payload bullet의 SKILL 재기재를 제거했다(단일 소스 = agent `호출자 차원 한정` 절/Runtime Adapter 블록).
+5. **stale 표면 정리 (이 sync)**: `main.md` §2 implementation-review 불릿·2-렌즈 결정 행의 "simplicity는 (항상/양쪽 모두) 통짜 1회"를 차원 묶음 2회 + pr-review 전체 5차원 1회(후방 호환) 구분 서술로 교체, relay 문면 (N+1)→(N+2)·차원 합집합 추가. `components.md` implementation-review 행·Claude skill/agent split 행 동일 갱신.
+
+### Rationale / Evidence
+
+- structural check RED → GREEN 18 → 게이트 fix 후 **20 PASS / 0 FAIL**, 변이 8종 전량 검출.
+- **게이트 = N+2 완전체 첫 런 (첫 실측)**: correctness shard 103/85/110s + simplicity 참조 164s ∥ 국소 91s — 게이트 벽시계 **164s**. simplicity 합 255s ≈ 동급 통짜 실측 252s(총량 보존 3번째 재현). finding: 참조 Medium 2(근거 문장 4벌 복제·codex payload bullet 이중 기재) → 단일 소스화 fix, 국소·correctness shard 2·3 finding 0.
+- **묶음 불균형 실측(정직)**: finding이 중복 차원에 집중돼 참조 shard가 시간·리포트 우세 — 이득이 리포트 반분 가정보다 작다. 재배분은 실측 누적 후 별건.
+
+### Follow-up
+
+- 묶음 재배분(참조 shard 우세 해소)은 실측 누적 후 별건 후보로 남긴다.
+- plan-review 2-렌즈 벽시계 효과의 첫 관측이 이 draft의 plan-review 게이트에서 나왔다 — 실측 렌즈 320s ∥ 판단 렌즈 86s, max 320s로 재고 밴드(~300s+) 해당(n=1, repo 대조 밀도 높은 draft). 판정은 확정하지 않고 사용자 보고 후 결정 대기로 main.md 🚧 Planned 항목에 기록했다.
+
 ## 2026-07-31 - plan-review 2-렌즈 분할 dispatch (실측 ∥ 판단) + 실행 경제 guardrail의 fan-out 배제 supersede (v4.6.21 → v4.6.22, post-implementation sync)
 
 ### Context
