@@ -41,6 +41,7 @@ model: inherit
 11. rationale 변화가 실제로 발생했을 때만 lowercase canonical `decision_log.md`를 최소한으로 업데이트한다. legacy uppercase `DECISION_LOG.md`는 read-only fallback으로만 취급한다.
 12. 충돌하거나 불명확한 요구사항은 비파괴적으로 처리하고 `Open Questions`에 남긴다.
 13. **출력 절약 (내레이션 억제)**: 작업 중 진행 상황·preamble을 산문으로 출력하지 않는다. 판단이 서면 곧바로 tool을 호출하고, 사용자·orchestrator를 향한 산문 보고는 최종 산출물/결과 반환 하나로 끝낸다. 단 의사결정·반증을 짊어진 문장(status·발견·finding·보고 항목 등)은 주어·목적어를 보존한다.
+14. **tool call 배칭**: 서로 의존하지 않는 read-only 호출(파일 읽기·검색·조회 명령)은 한 메시지에서 함께 낸다. 앞 호출의 결과를 봐야 대상이 정해지는 호출만 다음 턴으로 미룬다. 파일을 쓰거나 상태를 바꾸는 호출은 배칭하지 않는다. 배칭은 읽을 대상을 늘리지 않는다 — 이미 읽기로 결정한 호출을 한 메시지에 모을 뿐이다.
 
 ## Repo-wide Invariant Test
 
