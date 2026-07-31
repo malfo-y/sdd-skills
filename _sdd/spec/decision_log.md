@@ -1,5 +1,29 @@
 # Decision Log
 
+## 2026-07-31 - implementation-review correctness task-shard 분할 dispatch (1+N) (v4.6.20 → v4.6.21, post-implementation sync)
+
+### Context
+
+`implementation-review` 게이트의 벽시계는 correctness reviewer 단독이 결정한다(5회차 실측 214~430s; simplicity 177~252s는 병렬 그늘 안). correctness의 시간 분해(transcript 실측)는 검증 루프(AC 단위 tool 턴) 65~80% + 최종 리포트 19~35%로 둘 다 task 경계로 나뉜다. 직전 레버였던 배칭 발화 시점 feature는 폐기됐고(병목은 I/O가 아니라 분석의 직렬성), 남은 레버가 correctness의 task 단위 분할이었다. 변경 4파일 — orchestrator SKILL 미러 2벌(`.claude/`·`.codex/skills/implementation-review/SKILL.md`, codex는 3-way 적응) + `docs/AUTOPILOT_GUIDE.md` ko/en 각 1줄. reviewer agent 본문 무변경.
+
+### Decision
+
+1. **correctness task-shard 분할 dispatch (1+N)**: 기준 draft의 Part 2 task가 2개 이상이면 correctness를 task별 shard로 분할 dispatch한다. shard k의 digest = 공통 digest + Task k의 AC·Target Files 범위 한정(해당 task의 AC만 검증). 전부 한 메시지에서 병렬 dispatch. task 1개이거나 draft 없이 대화 digest 기반이면 현행 비분할(1+1) 유지. 분할 축이 task인 근거는 기존 불변식 재사용이다 — feature-draft 규칙이 "task는 자기 AC만으로 완료 판정이 닫히는 실행 단위"를 보증하고 plan-review가 그 경계를 감시한다.
+2. **simplicity는 분할하지 않는다**: (1) 병렬 그늘 안이라 벽시계 이득 0, (2) 중복 탐지 렌즈는 두 지점을 같이 봐야 해서 task 분할이 렌즈 본질을 자른다. **분할 상한도 두지 않는다** — draft 분할 규칙이 task 수를 소수로 유지하고 simplicity가 자연 바닥이라 상한 문면은 사변적이다(YAGNI).
+3. **relay 계약**: correctness AC ledger는 shard 반환의 연접이다(task별 AC 집합이 서로소라 누락 없이 합쳐진다). 합산 severity 요약은 N+1개 반환 전부를 합산한다. task들이 같은 파일을 만져 shard 간 중복 finding이 나와도 orchestrator는 dedup하지 않고 전부 relay한다 — dedup은 fix 주체(호출자)가 자연 흡수한다.
+4. **reviewer agent 본문 무변경**: shard 범위는 digest의 "호출자 지정" 경로로 기존 계약(기준 문서 적응)에 이미 들어온다. review-only 경계·병렬 안전성 근거(read-only leaf — shard 수와 무관하게 동시 dispatch 안전)·Model override(모든 reviewer 호출로 일반화, 동작 불변)는 보존. codex는 게이트 fix로 spawn/wait/close 호출 문법을 Codex Runtime Adapter 블록 단일 소스로 정리했다(실행 절의 이중 기재가 따옴표 drift를 실증해 제거).
+5. **stale spec 표면 정리 (이 sync)**: `main.md` §2의 "직교 2-렌즈 review의 현재 적용 지점은 PR review" 문장을 두 곳(PR review + implementation 마감 게이트)으로 정정하고 implementation-review의 1+N 계약을 형제 불릿으로 추가. 실행 분리·2-렌즈 결정 행에 implementation-review를 orchestrator로 반영(2-렌즈 결정 행의 "(implementation gate 적용분은 F2에서 제거)" 잔존 서술 제거). `components.md` implementation-review 행을 "wrapper -> agent"에서 orchestrator + 1+N 서술로 교체하고, Claude skill/agent split 행의 wrapper-backed 목록에서 implementation-review를 orchestrator 목록으로 이동. `docs/AUTOPILOT_GUIDE.md` ko/en의 "2-reviewer" 리터럴은 feature가 직접 갱신했다("correctness shard N ∥ simplicity").
+
+### Rationale
+
+- **파일럿 실측이 비례 분배를 지지한다**: 게이트 = 파일럿(사용자 합의)으로 메인 루프가 수동 1+N dispatch — correctness shard A(T1+T3) 70s ∥ shard B(T2+T4) 143s ∥ simplicity 120s, 게이트 벽시계 **143s**, shard 합 213s ≈ 동급 단독 correctness 214s. 일의 총량이 보존되면서 벽시계만 줄었다(지지 밴드 ~220s 통과, 고정비 지배 아님 → 머지 재고 조건 미발동).
+- 검증 evidence: structural check RED 17 FAIL → GREEN 17 PASS → fix 후 **18 PASS / 0 FAIL**(델타 check 1 포함), 변이 7종 전량 검출(고정 표기 재도입·연접 제거·고정 2-id 복원·docs 원복·분할 조건 약화·docs 초과 수정·call 문법 재기재), repo-wide 고정 표기 census(git 추적 파일) 정당 잔존 목록 밖 0건, 게이트 finding: shard A/B 0 + simplicity Medium 1(codex call 문법 이중 기재) → fix 1, correctness Low 1(따옴표 불일치)은 fix에 흡수, 전 AC MET.
+
+### Follow-up
+
+- `plan-review`의 2-렌즈 분할(기대값 ~30%)은 별건 후보로 남긴다 — 이번 범위 밖.
+- shard 분할의 누적 효과(다양한 task 수·규모에서의 비례 분배 유지 여부)는 이후 게이트 회차에서 자연 관측된다.
+
 ## 2026-07-31 - 커버리지 델타 절 후속 정정 4건 — 순서 명제의 소유자는 집행 주체, 삭제 경로도 재검증 대상 (v4.6.19 → v4.6.20, post-implementation sync)
 
 > 이 entry는 `2026-07-30 - implementation 커버리지 델타`(v4.6.17) entry의 **후속 정정**이다. 그 entry는 append-only 원칙에 따라 수정하지 않으며, 아래 결정 2가 그 Decision 1에 적힌 `(c)` 기준선을 폐기한다.
