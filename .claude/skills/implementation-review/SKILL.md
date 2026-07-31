@@ -6,7 +6,7 @@ argument-hint: ["[--model <sonnet|opus|haiku|fable>]"]
 
 # Implementation Review (2-렌즈 Orchestrator, Review-only)
 
-이 스킬은 review-only orchestrator다. 사용자의 implementation-review 요청을 두 렌즈의 reviewer agent에 **병렬 dispatch**하고, 경량 반환들과 합산 severity 요약을 사용자에게 relay한다. correctness는 기준 draft의 task 수에 따라 shard 여러 개로 나뉠 수 있다(아래 실행 1).
+이 스킬은 review-only orchestrator다. 사용자의 implementation-review 요청을 두 렌즈의 reviewer agent에 **병렬 dispatch**하고, 경량 반환들과 합산 severity 요약을 사용자에게 relay한다. correctness는 기준 draft의 task 수에 따라 shard 여러 개로, simplicity는 차원 묶음 2개로 나뉜다(아래 실행 1·2).
 
 - `sdd-skills:implementation-review-agent` — **correctness** 렌즈 (AC 충족·버그·보안·spec drift — 기준 문서 적응)
 - `sdd-skills:simplicity-review-agent` — **clarity** 렌즈 (동작-불변 형태 품질: 중복·죽은 코드·단일 사용처 추상화·도달 불가 에러 처리·과잉압축)
@@ -17,7 +17,7 @@ argument-hint: ["[--model <sonnet|opus|haiku|fable>]"]
 
 ## 병렬 안전성 근거
 
-reviewer들은 sub-agent를 spawn하지 않고 **어떤 파일도 쓰지 않는** read-only leaf다 (`implementation-review-agent`: `["Read","Glob","Grep","Bash"]` — Bash는 테스트 실행용, `simplicity-review-agent`: `["Read","Glob","Grep"]`). 판정을 응답으로만 반환하므로 correctness shard 수와 무관하게 한 메시지에서 동시 dispatch해도 안전하다.
+reviewer들은 sub-agent를 spawn하지 않고 **어떤 파일도 쓰지 않는** read-only leaf다 (`implementation-review-agent`: `["Read","Glob","Grep","Bash"]` — Bash는 테스트 실행용, `simplicity-review-agent`: `["Read","Glob","Grep"]`). 판정을 응답으로만 반환하므로 reviewer shard 수와 무관하게 한 메시지에서 동시 dispatch해도 안전하다.
 
 ## 실행
 
@@ -32,11 +32,11 @@ draft/plan 파일이 있으면 agent가 그것으로 범위를 잡지만, **없�
    - **correctness 분할표**: 기준 draft의 Part 2 task가 2개 이상이면 correctness를 task별 shard로 나눈다 — shard k의 digest는 공통 digest에 **Task k의 AC·Target Files로 리뷰 범위를 한정**하는 지시를 더한 것이다(해당 task의 AC만 검증). task가 1개이거나 draft 없이 대화 digest 기반이면 분할하지 않는다(correctness 1회).
 2. **한 메시지에서 모든 reviewer를 병렬 dispatch한다** (read-only leaf라 동시 실행 안전 — 위 근거):
    - correctness — shard마다 1회: `Agent(subagent_type="sdd-skills:implementation-review-agent", prompt=<요청 + 경로 + 공통 digest + shard 범위 한정>)`
-   - simplicity는 분할하지 않고 전체 변경 대상으로 1회: `Agent(subagent_type="sdd-skills:simplicity-review-agent", prompt=<요청 + 경로 + 공통 digest>)`. clarity 렌즈의 중복 탐지는 두 지점을 같이 봐야 잡히므로 shard로 자르지 않는다.
+   - simplicity — 차원 **묶음마다 1회**(참조 ∥ 국소), 각 dispatch는 **전체 변경 대상**: `Agent(subagent_type="sdd-skills:simplicity-review-agent", prompt=<요청 + 경로 + 공통 digest + 차원 묶음 한정>)`. 묶음 정의·범위 불변 근거는 agent의 `호출자 차원 한정` 절이 단일 소스다.
    - 대상 경로가 불명확하면 각 agent가 자체 Input 우선순위로 탐색하도록 위임한다.
 3. 반환들을 모아 사용자에게 relay한다:
    - correctness: 리뷰 기준(draft/spec/코드만), AC verdict ledger, findings 요약, blocker. 분할 dispatch면 ledger는 shard 반환의 **연접**이다 — 모든 task의 AC가 정확히 한 shard에 속하므로 누락 없이 합쳐진다.
-   - simplicity: 5개 차원 판정, findings 요약
+   - simplicity: 차원 판정과 findings 요약 — 차원 판정은 두 묶음 반환의 합집합이다(각 차원 정확히 한 묶음 소유라 중복 없음)
    - **합산 severity 요약**: 모든 반환의 Critical/High/Medium findings를 합쳐 한눈에 보이게 정리한다 (판정은 하지 않고 합산만). task들이 같은 파일을 만져 shard 간 중복 finding이 나와도 dedup하지 않고 전부 relay한다 — dedup은 fix 주체인 호출자 소관이다.
 
 > **경계**: orchestrator는 *대화 맥락을 모아 전달*하고 *반환들을 relay*까지만 한다. 기준 판별·검증·findings 분류는 각 agent의 Process가 수행한다(중복 금지). 합집합 exit 판정은 하지 않는다.
