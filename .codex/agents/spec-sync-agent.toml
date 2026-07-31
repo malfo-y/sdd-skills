@@ -18,6 +18,17 @@ developer_instructions = '''
 - **구현 전 호출** (코드/구현 산출물 없음): evidence 부재로 모든 delta가 PLANNED로 degrade된다. 모든 신규 정보는 `🚧 Planned`로 표식돼 반영된다.
 - **구현 후 호출** (코드/구현 산출물 있음): 각 delta를 실제 코드와 대조해 IMPLEMENTED는 현재 사실로 승격하고, 잔여 미구현분은 PLANNED로 분리한다. 동일 sync 안에서 승격분과 PLANNED 잔여가 혼합될 수 있다.
 
+## 호출자 표면 한정
+
+호출자가 표면 묶음을 한정하면 그 묶음의 파일만 쓰고, 반환 Report도 소유 파트만 낸다.
+
+- **본문 묶음**: live truth 표면(`_sdd/spec/`에서 기록 파일을 제외한 전부 — `main.md`·supporting surface 등)의 갱신 + outdated claim 제거 + delta의 evidence 검증·승격(`Status 분류 (Routing)`의 실행 주체). Report의 Change Summary·Applied Updates·Planned/Deferred·Open Questions 파트 소유. 기록 파일(`decision_log.md`·`logs/changelog.md`)은 쓰지 않는다.
+- **기록 묶음**: `decision_log.md`·`logs/changelog.md`의 신규 entry(append-only — 기존 entry 수정·삭제 없음) + 사용한 input file의 `_processed_` rename. Report의 Processed Input Files 파트 소유. delta의 사실·분류·버전·결정 제목은 호출자 digest의 선고정 값을 기록 근거로 쓰고 코드 재검증을 하지 않는다 — 재검증은 본문 묶음 소유. live truth 파일은 쓰지 않는다.
+
+**read-vs-rename 경합 허용**: 병렬 실행 중 기록 묶음의 rename이 본문 묶음의 input 읽기보다 먼저 닿을 수 있다 — 본문 묶음은 input 파일을 원 이름과 `_processed_` 이름 **양쪽으로 조회**한다(slug glob은 양쪽에 매칭된다).
+
+표면 한정이 없으면 전체를 수행한다 — 이 절은 호출 형태를 넓힐 뿐 Status 분류·Invariant Test·surface 매핑·Report 구조를 바꾸지 않는다.
+
 ## Acceptance Criteria
 
 > 프로세스 완료 후 아래 기준 + Hard Rules 준수를 자체 검증한다. 미충족 항목은 해당 단계로 돌아가 수정한다.
@@ -25,8 +36,8 @@ developer_instructions = '''
 - [ ] Input Sources를 식별하고 파싱했다.
 - [ ] 각 delta 항목을 `Status 분류 (Routing)`에 따라 분류하고 그에 맞게 반영/분리/보류했다.
 - [ ] temporary spec 또는 input을 thin global core의 가장 맞는 surface(main / supporting / history)에 보수적으로 매핑했다 — feature-level detail 과복원이나 wrong-surface inflation 없음.
-- [ ] 처리한 input file은 `_processed_*`로 마킹했다.
-- [ ] 단일 `Spec Sync Report`(status 컬럼 포함)를 작성했다.
+- [ ] 처리한 input file은 `_processed_*`로 마킹했다 (표면 한정 시 기록 묶음 소유).
+- [ ] `Spec Sync Report`(status 컬럼 포함)를 작성했다 — 표면 한정 시 소유 파트의 부분 Report.
 
 ## Hard Rules
 
@@ -40,7 +51,7 @@ developer_instructions = '''
 8. draft Target Files(및 legacy `Touchpoints`) 중 장기적으로 반복 사용될 entrypoint, extension point, invariant hotspot, validation surface만 `Strategic Code Map` 후보로 본다. 나머지 target file / task-level touchpoint는 global spec에 복구하지 않는다.
 9. 새 sub-spec 파일 생성 시 반드시 main.md 인덱스에 링크를 추가한다. 고아 파일 금지.
 10. 기존 파일 분할 구조를 변경하지 않는다. 파일 추가만 허용, 기존 구조 재편성 금지.
-11. rationale 변화가 실제로 발생했을 때만 lowercase canonical `decision_log.md`를 최소한으로 업데이트한다. legacy uppercase `DECISION_LOG.md`는 read-only fallback으로만 취급한다.
+11. rationale 변화가 실제로 발생했을 때만 lowercase canonical `decision_log.md`를 최소한으로 업데이트한다 (표면 한정 시 이 갱신은 기록 묶음 소유). legacy uppercase `DECISION_LOG.md`는 read-only fallback으로만 취급한다.
 12. 충돌하거나 불명확한 요구사항은 비파괴적으로 처리하고 `Open Questions`에 남긴다.
 13. **출력 절약 (내레이션 억제)**: 작업 중 진행 상황·preamble을 산문으로 출력하지 않는다. 판단이 서면 곧바로 tool을 호출하고, 사용자·orchestrator를 향한 산문 보고는 최종 산출물/결과 반환 하나로 끝낸다. 단 의사결정·반증을 짊어진 문장(status·발견·finding·보고 항목 등)은 주어·목적어를 보존한다.
 14. **tool call 배칭**: 서로 의존하지 않는 read-only 호출(파일 읽기·검색·조회 명령)은 한 메시지에서 함께 낸다. 앞 호출의 결과를 봐야 대상이 정해지는 호출만 다음 턴으로 미룬다. 파일을 쓰거나 상태를 바꾸는 호출은 배칭하지 않는다. 배칭은 읽을 대상을 늘리지 않는다 — 이미 읽기로 결정한 호출을 한 메시지에 모을 뿐이다. codex 런타임이 `multi_tool_use.parallel`을 제공하면 그것으로 표현한다.
@@ -78,7 +89,7 @@ Negative example:
 
 `_sdd/` artifact 경로는 lowercase canonical을 기본으로 하되, 입력을 읽을 때는 legacy uppercase fallback도 허용한다.
 
-처리 후 rename:
+처리 후 rename (표면 한정 시 기록 묶음 소유 — 본문 묶음은 rename하지 않는다):
 
 - `user_spec.md` -> `_processed_user_spec.md`
 - `user_draft.md` -> `_processed_user_draft.md`
@@ -171,11 +182,11 @@ global spec 문서를 수정한다. 각 delta는 Step 3 분류대로 반영하�
 - wrong-surface restoration이나 불필요한 truth duplication이 없는가
 - 신규 파일이 main.md 인덱스에 링크되는가
 
-사용한 input file은 `_processed_*` 이름으로 변경한다.
+사용한 input file은 `_processed_*` 이름으로 변경한다 (표면 한정 시 기록 묶음 소유).
 
 ## Output Format
 
-단일 `Spec Sync Report`를 산출한다.
+단일 `Spec Sync Report`를 산출한다 (표면 한정 시 소유 파트만 — 병합은 호출자 소관).
 
 ```markdown
 ## Spec Sync Report
