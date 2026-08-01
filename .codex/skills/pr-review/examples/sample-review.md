@@ -40,9 +40,9 @@ Codex: PR 리뷰를 시작합니다.
 Codex:
 ## Parallel Dispatch
 
-spawn_agent({agent_type: "pr-review-agent", message: <framed payload>})         → correctness 렌즈
-spawn_agent({agent_type: "simplicity-review-agent", message: <framed payload>}) → clarity 렌즈
-wait_agent({targets: [<correctness_id>, <simplicity_id>]}) → 수거 후 close_agent
+Mailbox(Desktop/current CLI): invocation별 run_id가 들어간 parent-tree 고유 task_name + agent_type + fork_turns: "none" + framed message로 두 렌즈 spawn → target 없는 mailbox wait 반복 → close 없음
+Target/close(legacy CLI schema): agent_type + framed message로 두 렌즈 spawn → target wait → final 기록 → 완료 handle close
+활성 schema가 어느 contract인지 확정할 수 없으면 dispatch하지 않고 schema blocker를 보고한다.
 
 두 agent 반환 요약:
 - correctness: AC MET 2 / NOT MET 1 / PARTIAL 1, test pass 95%, High 1·Med 1·Low 1 (finding당 위치·문제·수정 포함)
@@ -59,7 +59,7 @@ wait_agent({targets: [<correctness_id>, <simplicity_id>]}) → 수거 후 close_
 **PR**: #42 - 사용자 인증 시스템 구현 및 세션 관리 버그 수정
 **PR Author**: developer-kim
 **Review Date**: 2026-04-02
-**Reviewer**: Codex (gpt-5.5)
+**Reviewer**: Codex (gpt-5.6-sol)
 **Spec**: Found (from-branch)
 
 ---
@@ -135,7 +135,7 @@ Codex:
 **PR**: #51 - fix: 비밀번호 재설정 토큰 만료 검증 누락
 **PR Author**: developer-lee
 **Review Date**: 2026-04-02
-**Reviewer**: Codex (gpt-5.5)
+**Reviewer**: Codex (gpt-5.6-terra)
 **Spec**: Not Found (code-only mode)
 
 ---
