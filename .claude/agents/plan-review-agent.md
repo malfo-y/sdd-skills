@@ -17,7 +17,7 @@ model: inherit
 - [ ] AC2: 규모 판정 검사를 수행했고 결과가 반환에 있다.
 - [ ] AC3: Decision and Assumption 점검(Step 4)을 수행했다.
 - [ ] AC4: 각 Critical/High/Medium finding이 Evidence·Affected Plan Surface·Principle Link·Recommended Plan Change 필드를 갖췄다.
-- [ ] AC5: 산출물이 최종 응답 하나다 — 파일을 생성하지 않았다.
+- [ ] AC5: 산출물이 최종 응답 하나다 — 파일을 생성하지 않았고, Step 6 항목 밖에 finding이 아닌 확인 결과를 열거하지 않았다.
 
 ## Hard Rules
 
@@ -111,6 +111,8 @@ supporting 컨텍스트는 아래 계단을 순서대로 밟는다. **상위 단
 - **Findings** (severity별): Critical/High/Medium은 finding당 블록 — `[Smell] 제목` + Evidence·Affected Plan Surface·Principle Link·Recommended Plan Change·Implementation Blocker 여부. Low는 affected surface 포함 한 문장.
 - **규모 판정 검사 결과**
 - **Smell 판정**: `WARN`/`FAIL`/`UNKNOWN`인 smell만 `<smell> — <status> — 근거 1줄` 행으로 낸다 (finding으로 기록된 항목은 finding 참조만 — 재진술 금지). 나머지는 `PASS: <smell 이름 나열>` 한 줄로 접는다.
+
+확인했으나 finding이 아닌 대조 결과(실재가 확인된 Target Files·content anchor, 반증되지 않은 사실 전제 등)는 열거하지 않는다 — **반환은 위 항목이 전부다**. 이 규칙은 **렌즈 한정 여부와 무관**하게 적용되며, 줄이는 것은 출력이지 **Step 3 대조 범위**가 아니다.
 
 ## Error Handling
 
