@@ -2,6 +2,12 @@
 
 > 이 파일은 `_sdd/spec/main.md`의 **본문이 바뀐 버전만** 기록한다 — 본문 무변경 sync(헤더 날짜만 갱신)는 entry를 남기지 않으므로 버전 번호에 결번이 생길 수 있다.
 
+#### v4.6.28 (2026-08-01)
+
+- **plan-review 반환 다이어트 (post-implementation sync)**: `plan-review-agent` 미러 2벌의 `Step 6: Return`이 **확인했으나 finding이 아닌 대조 결과를 열거하지 않는다** — 반환은 명시된 4개 항목(`Blocker Status`·`Findings`·`규모 판정 검사 결과`·`Smell 판정`)이 전부다. 호출자 렌즈 한정 여부와 무관한 무조건 규칙이며, 줄이는 것은 출력이지 `Step 3` 대조 범위가 아니다. 규칙 준수는 새 AC 대신 기존 자체 검증 `AC5`에 흡수했다. 렌즈 구조(실측 ∥ 판단 2-렌즈)·6-smell rubric·severity·`plan-review` SKILL 미러 4벌은 무변경이다.
+- **채택 근거**: 게이트 시간의 54~68%가 반환 작성이고 그 상당 부분이 판정 무기여 확인 목록이었다. 같은 목표를 실측 렌즈 묶음 분할(검증 ∥ 전제, 3-dispatch)로 치려던 대안은 구현 완료 후 **커밋 전 전량 되돌렸다** — 벽시계 353s(재고 밴드), shard 합 738s로 총량 보존 첫 붕괴, 검출 품질 개선 근거 없음, 계약 표면만 증가. 부풀림의 원인은 분할이 아니라 반환 습성이었다.
+- **검증 evidence**: plan-review 게이트(다이어트 미적용 대조 표본 4) 실측 131s ∥ 판단 93s, 벽시계 131s; 구현 게이트 correctness 221s ∥ simplicity 126s ∥ 79s, 벽시계 221s, Critical·High 0 / Medium 1 fix(AC5 범위 한정어 보강); structural check RED 4 FAIL → GREEN 9 PASS, 변이 7종 전량 검출. **다이어트 효과 자체는 미관측** — 첫 관측은 발효 후 다음 feature의 plan-review 게이트다.
+
 #### v4.6.27 (2026-07-31)
 
 - **Codex investigate intent boundary (post-implementation sync)**: 모호한 `investigate`·`debug`·`diagnose` 요청은 diagnose-only로 잠그고, 조사 대상 제품·소스의 fix·repair·patch·수정 명시 또는 후속 승인 때만 fix mode로 전환한다. 진단 보고서·분석 산출물 작성은 제품 fix 권한이 아니다. diagnose-only는 Fix & Verify를 건너뛰며 제품·소스·spec fix와 회귀 테스트 추가를 금지한다. mandatory governance write만 정확한 대상·append semantics를 지키고 보고하는 예외다. fix mode의 blast-radius/fresh-verification과 기존 runtime/fan-out guard는 유지한다. **Codex-only 변경이며 Claude mirror parity는 주장하지 않는다.**

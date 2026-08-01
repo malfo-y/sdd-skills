@@ -1,5 +1,35 @@
 # Decision Log
 
+## 2026-08-01 - plan-review 반환 다이어트 — finding이 아닌 확인 결과 비열거 (v4.6.27 → v4.6.28, post-implementation sync)
+
+### Context
+
+`plan-review` 게이트의 벽시계는 리포트 작성량이 결정한다 — 실측에서 게이트 시간의 **54~68%**가 반환 작성이었다. 그 작성량의 상당 부분은 판정에 기여하지 않는 **확인 결과의 열거**였다: 실재가 확인된 Target Files·content anchor 목록, 대조했으나 반증되지 않은(지지된) 사실 전제 목록이 반환 하단에 통째로 실린다. 판정 결과는 이미 `Findings`와 `Smell 판정`(PASS 접기 포함)이 전부 담으므로 이 목록은 중복이다. 이 습성은 특정 렌즈나 dispatch 형태에 매인 것이 아니라 실측 계열 dispatch 전반에서 관측됐다.
+
+### Decision
+
+1. **반환은 `Step 6`에 명시된 항목이 전부다**: `plan-review-agent` 미러 2벌의 `Step 6: Return`에 비열거 규칙 1문장을 추가한다 — 확인했으나 finding이 아닌 대조 결과는 열거하지 않는다. 기존 4개 반환 항목(`Blocker Status`·`Findings`·`규모 판정 검사 결과`·`Smell 판정`)은 축소하지 않는다.
+2. **무조건 규칙이다**: 호출자 렌즈 한정 여부와 무관하게 모든 dispatch에 적용된다. 같은 파일의 `호출자 렌즈 한정` 절이 일부 자체 검증 항목을 렌즈별로 조건화하고 있어, 무조건성을 명시하지 않으면 실측 렌즈 dispatch가 이 규칙도 조건부로 오독한다.
+3. **줄이는 것은 출력이지 검증이 아니다**: `Step 3` 대조 범위(읽기 범위 계단)는 불변이다. 검출력은 그대로 두고 출력량만 줄인다.
+4. **자체 검증은 새 항목을 만들지 않는다**: 규칙 준수를 기존 `AC5`(산출물 형태)에 흡수한다("Step 6 항목 밖에 …"). 새 AC·Hard Rule·섹션은 추가하지 않았고, 렌즈 구조(실측 ∥ 판단 2-렌즈)·6-smell rubric·severity·`plan-review` SKILL 미러 4벌은 무변경이다.
+
+### Rationale / Evidence
+
+- **되돌린 대안 (핵심 음성 결과)**: 같은 목적을 **실측 렌즈 묶음 분할**(검증 ∥ 전제, 3-dispatch)로 치려다 끝까지 구현한 뒤 **커밋 전 전량 되돌렸다**. (a) 벽시계 353s로 재고 밴드, (b) shard 합 738s — **총량 보존이 4회 재현 끝에 처음 붕괴**, (c) 검출 품질 개선 근거 없음(잡힌 High 2가 전부 구 실측 렌즈도 소유하던 종류), (d) 계약 표면만 증가(비대칭 반환·PASS 접기 보정 2개 불변식 신설 → 그 자리에서 구멍 3개 발생: 상위 조항 소실, `PASS` 접기 줄 미차단, 반증 smell의 status 공백). 결론: **부풀림의 원인은 분할이 아니라 반환 습성이다** — 전제 묶음뿐 아니라 검증 묶음 반환에도 확인 목록이 실렸다. 나눠서 양을 분배하는 것보다 **덜 쓰게 하는 편**이 계약 표면을 늘리지 않고 같은 목표를 친다. 커밋 전 되돌림이라 이력 흔적은 0이며 supersede 기록은 두지 않는다.
+- **게이트 실측**: 이 draft의 `plan-review` 게이트는 다이어트 **미적용** 상태로 돌아 2-렌즈 대조 표본 4가 됐다 — 실측 131s ∥ 판단 93s, 벽시계 131s. 구현 게이트는 correctness 221s ∥ simplicity 126s ∥ 79s, 벽시계 221s, Critical·High 0 / Medium 1 fix(AC5 범위 한정어 유실 → "Step 6 항목 밖에" 추가). structural check RED 4 FAIL → GREEN 9 PASS, 변이 7종 전량 검출.
+- **효과는 아직 미관측**: 다이어트 효과의 첫 관측은 플러그인 발효 후 **다음 feature의 `plan-review` 게이트**다. 판정은 실측 렌즈 시간과 반환에 확인 목록이 실렸는지를 함께 본다.
+- **선고정 방법 교훈**: 직전 회차에서 sync 선고정 버전을 세션 기억으로 정해 stale(4.6.24)했고 두 묶음이 각자 잡아 수렴했다. 이번에는 `main.md` 헤더 grep 1회로 실측 확정했다.
+
+### Changes
+
+- `.claude/agents/plan-review-agent.md` -- `Step 6: Return`에 비열거 규칙 1문장, 자체 검증 `AC5`에 준수 흡수
+- `.codex/agents/plan-review-agent.toml` -- 같은 두 지점의 codex 미러 반영
+- `_sdd/spec/main.md` -- v4.6.27 → v4.6.28
+
+### Follow-up
+
+- 같은 열거 습성이 다른 reviewer agent(`implementation-review-agent`·`simplicity-review-agent`·`pr-review-agent`)에도 있는지, 이 규칙을 전파할지는 **효과 관측 후 별건**으로 판단한다. 이번 범위에서는 확인하지 않았다.
+
 ## 2026-07-31 - Codex investigate separates diagnose-only from explicitly authorized product fix (v4.6.26 → v4.6.27, post-implementation sync)
 
 ### Context
