@@ -2,6 +2,11 @@
 
 > 이 파일은 `_sdd/spec/main.md`의 **본문이 바뀐 버전만** 기록한다 — 본문 무변경 sync(헤더 날짜만 갱신)는 entry를 남기지 않으므로 버전 번호에 결번이 생길 수 있다.
 
+#### v4.6.29 (2026-08-01)
+
+- **simplicity 반환 다이어트 — plan-review 울타리 규칙 이식 (post-implementation sync)**: `simplicity-review-agent` 미러 2벌(각 +3/-1)의 Step 4 반환에 울타리 규칙 1문장 추가 — **확인했으나 finding이 아닌 스캔 결과는 열거하지 않는다, 반환은 위 항목이 전부다**. 차원 한정 여부와 무관한 무조건 규칙이며, 줄이는 것은 출력이지 Step 2 스캔 범위가 아니다. 규칙 준수는 새 AC 대신 기존 자체 검증 `AC3`에 흡수했다(범위 한정어 "Step 4 항목 밖에"). 채택 근거: simplicity는 반환 구조가 plan-review와 동형(`Findings` + 차원 판정 PASS 접기 + `Assumptions`)인데 울타리가 없었고, 이번 implementation-review 게이트에서 구계약 reviewer들이 실제로 "스캔 요지" 비-finding 단락을 반환에 실어 습성의 실재가 확인됐다. `implementation-review-agent`·`pr-review-agent`는 Verification ledger(MET 행 증거 결속) 계약이라 제외 — ledger 예외 문장이 필요한 별도 feature로 파킹(사용자 결정).
+- **검증 evidence**: structural check RED 4 FAIL → GREEN 9 PASS, 변이 7종 전량 검출; implementation-review 게이트 finding 0 (correctness 97s ∥ simplicity 참조 55s ∥ 국소 57s). **부수 실측 — plan-review 다이어트 첫 관측(발효 후 첫 게이트)**: 실측 렌즈 114s ∥ 판단 72s, 실측 절대값 역대 최저, 열거 섹션 소멸(압축 요약 1문장 잔존) — 긍정 신호, n=1 누적 계속. **simplicity 다이어트 자체 효과는 미관측(발효 전)** — 첫 관측은 머지 + 플러그인 갱신 후 다음 implementation-review 게이트다.
+
 #### v4.6.28 (2026-08-01)
 
 - **plan-review 반환 다이어트 (post-implementation sync)**: `plan-review-agent` 미러 2벌의 `Step 6: Return`이 **확인했으나 finding이 아닌 대조 결과를 열거하지 않는다** — 반환은 명시된 4개 항목(`Blocker Status`·`Findings`·`규모 판정 검사 결과`·`Smell 판정`)이 전부다. 호출자 렌즈 한정 여부와 무관한 무조건 규칙이며, 줄이는 것은 출력이지 `Step 3` 대조 범위가 아니다. 규칙 준수는 새 AC 대신 기존 자체 검증 `AC5`에 흡수했다. 렌즈 구조(실측 ∥ 판단 2-렌즈)·6-smell rubric·severity·`plan-review` SKILL 미러 4벌은 무변경이다.

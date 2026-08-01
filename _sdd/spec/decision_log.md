@@ -1,5 +1,36 @@
 # Decision Log
 
+## 2026-08-01 - simplicity-review-agent 반환 다이어트 — plan-review 울타리 규칙 이식 (v4.6.28 → v4.6.29, post-implementation sync)
+
+### Context
+
+plan-review 반환 다이어트(v4.6.28)의 전파 판단이 Follow-up으로 남아 있었다. `simplicity-review-agent`는 반환 구조가 plan-review와 동형(`Findings` + 차원 판정 PASS 접기 + `Assumptions`)인데 울타리 규칙이 없었고, 이번 feature의 `implementation-review` 게이트에서 구계약 reviewer들이 실제로 "스캔 요지" 비-finding 단락을 반환에 실어 열거 습성의 실재가 확인됐다. 진단은 v4.6.28과 동일하다 — 시간은 "적어야 할 양"이 결정한다.
+
+### Decision
+
+1. **반환은 Step 4 항목이 전부다**: `simplicity-review-agent` 미러 2벌(각 +3/-1)의 Step 4 반환에 울타리 규칙 1문장을 추가한다 — 확인했으나 finding이 아닌 스캔 결과는 열거하지 않는다, 반환은 위 항목이 전부다, 차원 한정 여부와 무관하며, 줄이는 것은 출력이지 Step 2 스캔 범위가 아니다.
+2. **자체 검증은 새 항목을 만들지 않는다**: 규칙 준수를 기존 자체 검증 `AC3`에 흡수한다(범위 한정어 "Step 4 항목 밖에").
+3. **전파 범위 결정 — reviewer 2종 제외 (사용자 결정)**: `implementation-review-agent`·`pr-review-agent`는 Verification ledger(MET 행 증거 결속) 계약이라 이번 범위에서 제외한다. ledger 예외 문장이 필요한 별도 feature로 파킹한다.
+
+### Rationale / Evidence
+
+- **습성의 실재**: 이번 implementation-review 게이트에서 구계약 reviewer들이 "스캔 요지" 비-finding 단락을 반환에 실었다 — 울타리 부재가 실제 출력 부풀림으로 나타남을 관측했다.
+- **검증**: structural check RED 4 FAIL → GREEN 9 PASS, 변이 7종 전량 검출. implementation-review 게이트 finding 0 (correctness 97s ∥ simplicity 참조 55s ∥ 국소 57s).
+- **부수 실측 — plan-review 다이어트 첫 관측 (발효 후 첫 게이트)**: 실측 렌즈 114s ∥ 판단 72s. 실측 렌즈 절대값 역대 최저이고 열거 섹션이 소멸했다(압축 요약 1문장 잔존). 긍정 신호이며 n=1로 누적을 계속한다.
+- **simplicity 다이어트 자체 효과는 미관측 (발효 전)**: 첫 관측은 머지 + 플러그인 갱신 후 다음 implementation-review 게이트다.
+
+### Changes
+
+- `.claude/agents/simplicity-review-agent.md` -- Step 4 반환에 울타리 규칙 1문장, 자체 검증 `AC3`에 준수 흡수
+- `.codex/agents/simplicity-review-agent.toml` -- 같은 두 지점의 codex 미러 반영
+- `_sdd/spec/main.md` -- v4.6.28 → v4.6.29
+- 입력: `_sdd/drafts/2026-08-01_feature_draft_simplicity_return_diet.md`
+
+### Follow-up
+
+- `implementation-review-agent`·`pr-review-agent`로의 전파는 Verification ledger 예외 문장이 필요한 **별도 feature로 파킹**됐다 — 이번 범위에서 다루지 않았다.
+- simplicity 다이어트 효과의 첫 관측은 발효 후 다음 implementation-review 게이트에서 수행한다.
+
 ## 2026-08-01 - plan-review 반환 다이어트 — finding이 아닌 확인 결과 비열거 (v4.6.27 → v4.6.28, post-implementation sync)
 
 ### Context
