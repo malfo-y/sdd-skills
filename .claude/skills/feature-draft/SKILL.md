@@ -73,7 +73,7 @@ description: This skill should be used when the user asks to "feature draft", "d
 - **AC가 핵심이다**: 각 AC는 falsifiable해야 한다 — "미충족"이라 말할 수 있는 관찰/증거가 정의되지 않는 AC는 다시 쓴다.
 - **Target Files는 실측**: 현재 코드 탐색으로 확인한 경로만 적는다. 확정 불가면 `[TBD] <사유>`. 마커는 `[C]` Create / `[M]` Modify / `[D]` Delete.
 - **마커 보존**: `spec-update-todo-input` 마커 쌍을 유실하지 않는다 — `spec-sync` 입력 호환의 조건이다.
-- **품질 게이트**: 작성 후 `plan-review` 스킬 1회로 draft를 점검한다 — **단일 패스**로, review loop는 돌리지 않고 finding은 작성자인 메인 루프가 직접 반영한다.
+- **품질 게이트**: 작성 후 `plan-review` 스킬 1회로 draft를 점검한다 — **단일 패스**로, review loop는 돌리지 않고 finding은 작성자인 메인 루프가 직접 반영한다. 반영 후, 게이트 반환의 합산 finding(fix 전 기준)이 **Critical+High ≥ 3 또는 Medium ≥ 5**였으면 마감 메시지에 수치와 함께 "finding이 많았으니 `plan-review` 1회 추가 실행을 권장한다"를 1줄 출력한다 — 권고 출력만 하고 추가 리뷰를 자체 실행하지는 않는다(단일 패스 유지).
 - **실행 인계**: `implementation` 스킬(메인 루프 직접 RED→GREEN 구현)로 인계한다. 구현 작성을 여러 갈래로 나눠야 할 규모로 드러나면 분할 규칙으로 돌아간다.
 - **Minimum-Code Mandate**: task의 description과 AC는 요청된 동작을 만드는 최소 코드만 명세한다. 요청되지 않은 기능·옵션·설정 가능성, 단일 사용처 추상화, 발생할 수 없는 시나리오의 에러 처리를 계획에 넣지 않는다.
 

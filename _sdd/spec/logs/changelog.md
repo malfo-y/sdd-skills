@@ -2,6 +2,11 @@
 
 > 이 파일은 `_sdd/spec/main.md`의 **본문이 바뀐 버전만** 기록한다 — 본문 무변경 sync(헤더 날짜만 갱신)는 entry를 남기지 않으므로 버전 번호에 결번이 생길 수 있다.
 
+#### v4.6.30 (2026-08-03)
+
+- **게이트 finding 과다 시 재리뷰 권고 메시지 (post-implementation sync, 경량 경로)**: `feature-draft`·`implementation` 품질 게이트에 advisory-only 권고 규칙 추가 — finding 반영 후, 게이트 반환의 합산 finding(fix 전 기준; `implementation-review`는 shard 합산 요약 그대로 dedup 없음; Low 제외)이 **Critical+High ≥ 3 또는 Medium ≥ 5**였으면 마감 메시지에 수치와 함께 해당 게이트(`plan-review`/`implementation-review`) 1회 추가 실행 권고 1줄을 출력한다. 권고 출력만 하고 추가 리뷰를 자체 실행하지 않는다 — 단일 패스·fix 1회·무승인 불변식 불변, 셈·출력 주체는 producer SKILL 메인 루프(reviewer agent 계약 무변경).
+- **검증 evidence**: git diff 4파일 +4/-2(`.claude`/`.codex` × `feature-draft`/`implementation` SKILL.md), 미러 문면 동일 diff 확인. draft 없는 경량 경로(사용자 합의) — advisory 문구 몇 줄이라 draft/게이트 생략.
+
 #### v4.6.29 (2026-08-01)
 
 - **simplicity 반환 다이어트 — plan-review 울타리 규칙 이식 (post-implementation sync)**: `simplicity-review-agent` 미러 2벌(각 +3/-1)의 Step 4 반환에 울타리 규칙 1문장 추가 — **확인했으나 finding이 아닌 스캔 결과는 열거하지 않는다, 반환은 위 항목이 전부다**. 차원 한정 여부와 무관한 무조건 규칙이며, 줄이는 것은 출력이지 Step 2 스캔 범위가 아니다. 규칙 준수는 새 AC 대신 기존 자체 검증 `AC3`에 흡수했다(범위 한정어 "Step 4 항목 밖에"). 채택 근거: simplicity는 반환 구조가 plan-review와 동형(`Findings` + 차원 판정 PASS 접기 + `Assumptions`)인데 울타리가 없었고, 이번 implementation-review 게이트에서 구계약 reviewer들이 실제로 "스캔 요지" 비-finding 단락을 반환에 실어 습성의 실재가 확인됐다. `implementation-review-agent`·`pr-review-agent`는 Verification ledger(MET 행 증거 결속) 계약이라 제외 — ledger 예외 문장이 필요한 별도 feature로 파킹(사용자 결정).
