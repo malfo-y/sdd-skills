@@ -1,5 +1,30 @@
 # Decision Log
 
+## 2026-08-03 - 게이트 finding 과다 시 재리뷰 권고 메시지 (Critical+High ≥ 3 또는 Medium ≥ 5, advisory-only) (v4.6.29 → v4.6.30, post-implementation sync)
+
+### Context
+
+체인 게이트는 단일 패스 + fix 1회로 닫히므로, finding이 유난히 많았던 회차에서도 fix 후 재검증 없이 마감된다. 재리뷰 loop 재도입은 기각된 방향이라(무승인·단일 패스 불변식), finding 과다를 사용자에게 알리고 재실행 판단을 넘기는 최소 장치가 필요했다.
+
+### Decision
+
+1. **advisory 재리뷰 권고 메시지**: `feature-draft`·`implementation` 품질 게이트에서 finding 반영 후, 게이트 반환의 합산 finding(fix 전 기준)이 **Critical+High ≥ 3 또는 Medium ≥ 5**였으면 마감 메시지에 수치와 함께 해당 게이트(`plan-review`/`implementation-review`) 1회 추가 실행을 권장하는 1줄을 출력한다 — 권고 출력만 하고 추가 리뷰를 자체 실행하지 않는다(단일 패스 유지, 실행 여부는 사용자 판단).
+2. **셈 기준**: fix 전 게이트 반환의 합산 severity — `implementation-review`는 shard 합산 요약 그대로(dedup 없음), Low는 advisory라 셈에서 제외.
+3. **소유 주체**: 셈과 출력은 반환을 합산하는 producer SKILL 메인 루프 소유 — reviewer agent 계약 무변경.
+
+### Rationale / Evidence
+
+- 체인 불변식(무승인·review 단일 패스·fix 1회)은 유지된다 — advisory는 계약을 바꾸지 않고 메시지만 추가하며, 게이트는 relay만 한다는 기존 설계와 일관.
+- 경량 경로 채택(사용자 합의): 4파일 몇 줄짜리 advisory 문구라 draft/게이트를 생략했다. 미러 동일성은 diff로 검증됨(4파일 +4/-2, claude/codex 문면 동일).
+
+### Changes
+
+- `.claude/skills/feature-draft/SKILL.md` · `.codex/skills/feature-draft/SKILL.md` -- §품질 게이트 bullet에 권고 규칙 추가 (문면 동일 미러)
+- `.claude/skills/implementation/SKILL.md` · `.codex/skills/implementation/SKILL.md` -- 마감 §3 품질 게이트 bullet 목록에 1줄 추가 (문면 동일 미러)
+- `_sdd/spec/main.md` -- v4.6.29 → v4.6.30 (§2 단일 패스 계약 불릿에 advisory 규칙 반영)
+- `_sdd/spec/components.md` · `_sdd/spec/usage-guide.md` -- 마감 재서술 표면에 임계값 복제 없는 짧은 참조 추가
+- 입력: draft 없음(경량 경로) — `_processed_` 마킹 대상 없음
+
 ## 2026-08-01 - simplicity-review-agent 반환 다이어트 — plan-review 울타리 규칙 이식 (v4.6.28 → v4.6.29, post-implementation sync)
 
 ### Context
