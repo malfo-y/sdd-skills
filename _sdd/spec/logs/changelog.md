@@ -2,6 +2,11 @@
 
 > 이 파일은 `_sdd/spec/main.md`의 **본문이 바뀐 버전만** 기록한다 — 본문 무변경 sync(헤더 날짜만 갱신)는 entry를 남기지 않으므로 버전 번호에 결번이 생길 수 있다.
 
+#### v4.6.31 (2026-08-03)
+
+- **SDD 체인에 경량 경로(light path) 명문화 — 성질 3조건 + 하네스 템플릿 4벌 전파 (post-implementation sync)**: 하네스 §3 말미(repo `AGENTS.md` + `{.claude,.codex}/skills/{spec-create,spec-upgrade}/references/agents-harness-template.md` 4벌, verbatim 동일 각 +2줄)에 경량 경로 규칙 문단 추가 — 성질 3조건(① 새 contract/invariant 없음 ② 신규 파일 없음(work log 제외) ③ 전파 표면 전수 열거 + diff/grep 검증) 전부 충족 시 풀 체인 대신 직접 구현→검증→spec-sync 허용. 하나라도 아니거나 애매하면 풀 체인 기본값이고, 새 계약·agent 반환 형식·dispatch 구조 변경·rename/전파류(census)·신규 skill/agent는 항상 풀 체인이다. 경량이어도 브랜치·Execute→Verify·spec-sync·work log 생략 불가 + 판정 근거 1줄 work log 기록. 템플릿 4벌 포함으로 앞으로 `spec-create`/`spec-upgrade`가 초기화하는 모든 소비 repo의 하네스에 적용된다. `main.md` §2 Guardrails에 결정 승격(v4.6.30 회차의 ad-hoc 관행을 명문화).
+- **검증 evidence**: git diff 5표면 +10줄(각 +2, 삭제 0, §3 구간 내부 한정, 문면 verbatim 동일 — diff 3쌍 무출력 + §3 구간 추출 비교); structural check `check_lightpath.sh` RED(T1-AC1 12요소 + T3-AC3 의도표면 5 누락 FAIL) → GREEN **11 PASS**, 변이 5종(구간밖 편집·미러 단어 변경·목록밖 잔존·새 §섹션·hook 임베딩) 전량 검출; plan-review 게이트(3-dispatch) 검증 131s ∥ 전제 149s ∥ 판단 71s(벽시계 ~149s) — High 1(census allowlist가 PR #42 spec 이력 표면 누락)·Low 2 전량 반영; implementation-review 게이트(N+2=5) correctness 3-shard 72/67/113s 전 AC MET ∥ simplicity 참조 53s·국소 71s — C/H/M **0**, Low 1(census 패턴 `lightpath` 붙임 변형 미커버, 실질 영향 0, advisory 잔존). **simplicity 반환 다이어트 첫 관측(n=1)**: 시간 대폭 감소(참조 279→53s·국소 147→71s), 비-finding 열거 단락 잔존 — 2기준 중 1개 충족, 판정 유보·누적 계속(🚧 Planned 항목 갱신).
+
 #### v4.6.30 (2026-08-03)
 
 - **게이트 finding 과다 시 재리뷰 권고 메시지 (post-implementation sync, 경량 경로)**: `feature-draft`·`implementation` 품질 게이트에 advisory-only 권고 규칙 추가 — finding 반영 후, 게이트 반환의 합산 finding(fix 전 기준; `implementation-review`는 shard 합산 요약 그대로 dedup 없음; Low 제외)이 **Critical+High ≥ 3 또는 Medium ≥ 5**였으면 마감 메시지에 수치와 함께 해당 게이트(`plan-review`/`implementation-review`) 1회 추가 실행 권고 1줄을 출력한다. 권고 출력만 하고 추가 리뷰를 자체 실행하지 않는다 — 단일 패스·fix 1회·무승인 불변식 불변, 셈·출력 주체는 producer SKILL 메인 루프(reviewer agent 계약 무변경).

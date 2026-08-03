@@ -1,5 +1,31 @@
 # Decision Log
 
+## 2026-08-03 - SDD 체인에 경량 경로(light path) 명문화 — 성질 3조건 + 하네스 템플릿 4벌 전파 (v4.6.30 → v4.6.31, post-implementation sync)
+
+### Context
+
+직전 회차(v4.6.30 재리뷰 권고)에서 사용자 합의로 풀 체인을 생략한 "경량 경로"가 ad-hoc 관행으로 처음 등장했다. 판정 기준이 문서화돼 있지 않으면 경로 선택이 회차마다 재협상되고, 소비 repo의 하네스에는 이 관행이 아예 전파되지 않는다. 이 feature는 그 관행을 성질 기준으로 명문화해 하네스 §3의 계약으로 승격한다.
+
+### Decision
+
+1. **경량 경로 적격 판정 기준**: 성질 3조건 — ① 새 contract/invariant 없음 ② 신규 파일 없음(work log 제외) ③ 전파 표면(미러·섹션 리터럴·등록 목록) 전수 열거 + 각각 diff/grep 검증 — 을 **모두** 충족하는 소규모 변경은 풀 체인 대신 직접 구현 → 검증 → spec-sync로 처리할 수 있다.
+2. **보수 기본값**: 하나라도 아니거나 판정이 애매하면 풀 체인이 기본값이다. 새 계약·agent 반환 형식·dispatch 구조 변경·rename/전파류(census 필요)·신규 skill/agent 추가는 항상 풀 체인이다.
+3. **경량 경로 불변식**: 경량이어도 브랜치·Execute→Verify·spec-sync·work log는 생략 불가이며, 채택 시 판정 근거 1줄을 work log에 남긴다.
+4. **전파**: 규칙 문면은 repo `AGENTS.md` §3 + 하네스 템플릿 4벌(`{.claude,.codex}/skills/{spec-create,spec-upgrade}/references/agents-harness-template.md`) §3에 verbatim 동일하게 들어간다 — 앞으로 두 스킬이 초기화하는 모든 repo의 하네스에 적용된다. 전파 표면 5곳은 체인 리터럴 예외 문장과 같은 전파 규율이다.
+
+### Rationale / Evidence
+
+- 직전 feature(게이트 재리뷰 권고, PR #42)를 이 경로로 처리한 실측이 근거다 — 규칙은 관행의 사후 명문화이며, 경로 선택 소관은 스킬이 아니라 하네스다(SDD 스킬 본문 무변경).
+- 구현 검증: git diff 5표면 각 +2줄(삭제 0, §3 구간 내부 한정), verbatim 동일성은 diff 3쌍 무출력 + §3 구간 추출 문자열 비교로 확인. structural check RED(12요소 + 의도표면 5 누락 FAIL) → GREEN 11 PASS, 변이 5종 전량 검출.
+- 게이트: plan-review(3-dispatch, 벽시계 ~149s) High 1(census allowlist가 PR #42 spec 이력 표면 누락)·Low 2 전량 반영; implementation-review(N+2=5) 전 AC MET, C/H/M 0, Low 1(census 패턴 `lightpath` 붙임 변형 미커버 — 실질 영향 0, advisory 잔존).
+
+### Changes
+
+- `AGENTS.md` §3 말미 + 하네스 템플릿 4벌 §3 -- 경량 경로 규칙 문단 verbatim 추가 (각 +2줄)
+- `_sdd/spec/main.md` -- v4.6.30 → v4.6.31 (§2 Guardrails에 경량 경로 결정 승격; §3 현재 운영 제약의 simplicity 반환 다이어트 🚧 Planned 항목에 첫 관측 n=1 반영 — 판정 유보; 융합돼 있던 `spec-sync` 2-shard 벽시계 항목을 별도 불릿으로 분리 복원)
+- `_sdd/spec/logs/changelog.md` -- v4.6.31 entry 추가
+- 입력: `_sdd/drafts/2026-08-03_feature_draft_light_path_harness.md` → `_processed_` 마킹
+
 ## 2026-08-03 - 게이트 finding 과다 시 재리뷰 권고 메시지 (Critical+High ≥ 3 또는 Medium ≥ 5, advisory-only) (v4.6.29 → v4.6.30, post-implementation sync)
 
 ### Context

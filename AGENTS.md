@@ -32,6 +32,8 @@
 discussion → feature-draft → plan-review → implementation → implementation-review → spec-sync
 `spec-sync`는 단일 진입점으로, 분할 draft의 planned todo 고정(조건부)과 구현 후 동기화를 evidence 유무로 구분해 수행한다. 각 단계의 구체 스킬은 **설치된 SDD 스킬**을 사용한다. ⚠️ 화살표의 각 단계 이름(discussion·feature-draft·implementation·spec-sync 등)은 **동명의 SDD 스킬**이다. 해당 단계 진입 시 그 스킬을 **호출**하고, 로직을 직접 재구현하지 않는다 — 스킬이 단일 소스다. 단 `plan-review`·`implementation-review` 단계는 각각 `feature-draft`·`implementation` 스킬이 자기 품질 게이트로 내부 수행하므로 별도로 호출하지 않는다. 스킬 미설치 환경에서만 SDD 개념으로 수동 수행한다. (스킬 카탈로그를 여기 복사하지 않는다 — 최신 스킬셋이 단일 소스다.)
 
+**경량 경로 (light path)**: 아래 셋에 **모두** 해당하는 소규모 변경은 풀 체인 대신 **직접 구현 → 검증 → spec-sync**로 처리해도 된다 — ① 새 contract/invariant가 없다 ② 신규 파일이 없다(work log 제외) ③ 전파 표면(미러·섹션 리터럴·등록 목록)이 전수 열거되고 각각 diff/grep로 검증된다. 하나라도 아니거나 판정이 애매하면 풀 체인이 기본값이다. 새 계약·agent 반환 형식·dispatch 구조 변경, rename/전파류(census 필요), 신규 skill/agent 추가는 항상 풀 체인이다. 경량 경로에서도 브랜치·Execute→Verify(§2)·spec-sync·work log(§5)는 생략하지 않으며, 채택 시 판정 근거 1줄을 work log 항목에 남긴다.
+
 ## 4. 판단 기준이 필요할 때 (가리키기, 복사 금지)
 
 - scope / 경계 → `_sdd/spec/main.md` §2. Scope / Non-goals / Guardrails
