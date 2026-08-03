@@ -2,7 +2,7 @@
 
 Spec-Driven Development (SDD) workflow skills for Claude Code and Codex.
 
-Codex bundle: 19 skills + 9 custom agents. Claude bundle: 21 skills + 9 agents.
+Codex bundle: 19 skills. Claude bundle: 21 skills (`git`·`second-opinion` 추가). 양 번들 공통 custom agent 5종: `plan-review` · `implementation-review` · `simplicity-review` · `pr-review` · `spec-sync`.
 
 ## Documentation
 

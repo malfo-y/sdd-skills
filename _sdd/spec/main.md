@@ -2,7 +2,7 @@
 
 > Markdown 기반 skill bundle로 AI 에이전트의 Spec-Driven Development 워크플로우를 Claude Code와 Codex에서 공통 계약으로 실행한다.
 
-**Spec Version**: 4.6.31
+**Spec Version**: 4.6.32
 **Last Updated**: 2026-08-03
 **Status**: Approved
 **Canonical Role**: current thin global spec
@@ -93,7 +93,7 @@ SDD Skills는 이 문제를 `SKILL.md = 실행 가능한 프롬프트`라는 관
   - census형 sweep(같은 대상의 변형 표기가 여러 파일에 흩어진 rename/전파류)은 분할 신호가 아니라 검증 대상이다 — 해당 draft는 마지막 read-only 검증 task(변형 표기 전수 grep census를 AC로)를 필수로 둔다
   - 분할 판정의 canonical은 producer 체인 표면이 소유한다(`feature-draft` 분할 규칙 / `implementation` 중단·분할 규칙). autopilot은 신호를 소비만 하고 재정의하지 않는다. `plan-review`의 규모 판정 검사는 이 canonical을 재정의하지 않고 draft의 `> 규모 판정:` 앵커를 대조하는 게이트 rubric으로만 남는다
 - SDD 체인에는 **경량 경로(light path)** 가 명문화돼 있다: 성질 3조건 — ① 새 contract/invariant 없음 ② 신규 파일 없음(work log 제외) ③ 전파 표면(미러·섹션 리터럴·등록 목록) 전수 열거 + 각각 diff/grep 검증 — 을 **모두** 충족하는 소규모 변경은 풀 체인 대신 직접 구현 → 검증 → spec-sync로 처리할 수 있다. 하나라도 아니거나 판정이 애매하면 풀 체인이 기본값이고, 새 계약·agent 반환 형식·dispatch 구조 변경·rename/전파류(census 필요)·신규 skill/agent 추가는 항상 풀 체인이다. 경량이어도 브랜치·Execute→Verify·spec-sync·work log는 생략 불가이며, 채택 시 판정 근거 1줄을 work log에 남긴다. 규칙 문면의 canonical은 하네스 §3이고 전파 표면은 `AGENTS.md` + `spec-create`·`spec-upgrade` 하네스 템플릿 4미러 = 5곳이다(체인 리터럴 예외 문장과 같은 전파 규율). 템플릿에 들어가 있으므로 두 스킬이 초기화하는 모든 소비 repo의 하네스에 적용된다
-- full 전용 실행 유닛은 삭제 완료다(F2): agent 쌍 4종(`feature-draft-agent`·`task-ordering-agent`·`test-author-agent`·`implementation-agent`)과 full 스킬 쌍 3종(당시 이름 `feature-draft`·`implementation`·`implementation-plan`)은 삭제됐다 — 현재의 `feature-draft`·`implementation` 스킬은 F5 개명으로 그 이름을 승계한 별개 스킬이다. 등록 표면(marketplace.json skills 21·agents 7, `.codex/agents/README.md`, 루트 README Subagent Model Override 목록)은 SDD 체인 기준이다. 일반 구현 요청 트리거("implement the plan"·"start implementation"·"execute the plan"·"구현해줘" 계열)는 `implementation` 스킬이 유일 수신 경로로 흡수했고 "병렬 구현" 계열 트리거는 폐기됐다
+- full 전용 실행 유닛은 삭제 완료다(F2): agent 쌍 4종(`feature-draft-agent`·`task-ordering-agent`·`test-author-agent`·`implementation-agent`)과 full 스킬 쌍 3종(당시 이름 `feature-draft`·`implementation`·`implementation-plan`)은 삭제됐다 — 현재의 `feature-draft`·`implementation` 스킬은 F5 개명으로 그 이름을 승계한 별개 스킬이다. 등록 표면(marketplace.json skills 21·agents 5 — F2 직후 7이었고 이후 `spec-review-agent`·`ralph-loop-init-agent`가 직접 실행 스킬로 흡수되며 2종 삭제, `.codex/agents/README.md`, 루트 README Subagent Model Override 목록)은 SDD 체인 기준이다. 일반 구현 요청 트리거("implement the plan"·"start implementation"·"execute the plan"·"구현해줘" 계열)는 `implementation` 스킬이 유일 수신 경로로 흡수했고 "병렬 구현" 계열 트리거는 폐기됐다
 - full 레인 실체 삭제와 `-lite` 개명은 완결됐다(F1~F5 — 롤링 분할 draft `_sdd/drafts/_processed_2026-07-22_feature_draft_lite_full_lane_removal.md` 순차 실행 완료). F4에서 잔재 정리와 repo 전체 full 어휘 census를 마쳤다 — live 표면(`.claude/`·`.codex/`·`.claude-plugin/`·`docs/`·`README.md`·`AGENTS.md`)의 full 고유 식별자 잔존 0(허용 예외: `_sdd/` 기록물, AUTOPILOT_GUIDE tag 복구 안내). 복구 보험은 git tag `full-lane-final`. 근거 요약: 체인 품질이 구 full 레인 대비 동등하면서 훨씬 빠르고, full급 복잡도는 분할로 해소하며, 분기 제거로 하네스 전파 표면이 준다(상세는 decision_log 2026-07-22 entry)
   - F5 `-lite` 개명 완료: `feature-draft-lite`→`feature-draft`·`implementation-lite`→`implementation`(디렉토리·name 필드·marketplace·전체 호출 참조, 미러 identical), 개념 어휘 교체("lite 체인"→"SDD 체인"·"lite draft"→"draft"·`> Lite 적격:`→`> 규모 판정:` 소비자 3곳 동시 교체·autopilot Step L→Step 2·AC-L→AC·lite 트리거 별칭 제거), draft 파일명 glob은 `*_feature_draft_*`로 통일(기존 lite 파일명은 substring 하위호환), `docs/SDD_SPEC_DEFINITION.md` ko·en은 현행 draft 형식으로 재작성(검증 rubric 사슬 유지, full 구조 어휘는 legacy 기록물 한정), 개명 census live 표면 잔존 0
   - 삭제 범위 밖(불변): SDD 체인 자체의 기능 변경, 레인 무관 스킬(spec 파이프라인·pr-review·ralph·discussion 등)
