@@ -95,6 +95,7 @@ RED 관찰 후에는 테스트를 통과시키기 위해 테스트를 약화·�
     - 반환된 Critical/High/Medium finding은 구현자인 메인 루프가 직접 fix 1회로 반영한다.
     - fix가 있었으면 그 fix diff에 **§4 커버리지 델타**를 먼저 적용한 뒤 회귀를 1회 재실행하고, 증거가 바뀐 AC는 위 증거 테이블을 갱신한다.
     - Low finding은 fix하지 않고 아래 마감 요약에 advisory로 남긴다.
+    - fix 반영 후, 게이트 반환의 합산 finding(fix 전 기준)이 **Critical+High ≥ 3 또는 Medium ≥ 5**였으면 마감 요약에 수치와 함께 "finding이 많았으니 `implementation-review` 1회 추가 실행을 권장한다"를 1줄 출력한다 — 권고 출력만 하고 추가 리뷰를 자체 실행하지는 않는다(단일 패스 유지).
 4. **마감 요약**: 계약 오류 선언·대상 파일 밖 수정이 있었으면 요약하고, 게이트의 finding·fix 내역(fix로 닫히지 않은 잔존 finding 포함)과 fix 후 회귀 재실행 결과를 함께 남긴다.
 
 ## Integration
