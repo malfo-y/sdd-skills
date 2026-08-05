@@ -24,7 +24,7 @@ description: This skill should be used when the user asks to "feature draft", "d
 
 ## Process
 
-1. **맥락 수집**: 요구사항의 원천은 이번 대화다(메인 루프가 이미 보유). spec/코드 탐색은 Target Files와 AC를 실측으로 뒷받침할 만큼만 한다. 결과 방향·Target Files 선택·task boundary를 바꿀 수 있는 중요 결정과, 동일 change element가 둘 이상의 동기화 표면에 걸리는지도 함께 식별한다.
+1. **맥락 수집**: 요구사항의 원천은 이번 대화다(메인 루프가 이미 보유). spec/코드 탐색은 Target Files와 AC를 실측으로 뒷받침할 만큼만 한다. 동일 change element가 둘 이상의 동기화 표면에 걸리는지 함께 식별한다.
 2. **분할 판정**: 위 분할 규칙 점검. 판정 근거 1줄 확정 (census형 신호가 있으면 검증 task를 Part 2 마지막에 예약).
 3. **draft 작성**: Required Output 구조로 작성한다. **task는 단일 의도를 가지고 자기 AC만으로 완료 판정이 닫히는 실행 단위다** — 의도가 두 문장이면 두 task로 쪼개고, 다른 task의 결과를 봐야 완료를 판정할 수 있으면 경계를 다시 긋는다.
 4. **surface**: 저장 후 Open Questions 중 사용자 확인이 필요한 항목만 채팅에 1줄씩 노출한다. 없으면 "사용자 확인이 필요한 항목 없음" 1줄.
@@ -48,16 +48,6 @@ description: This skill should be used when the user asks to "feature draft", "d
 - **In**: ...
 - **Out**: ...
 <!-- spec-update-todo-input-end -->
-
-# Decisions and Assumptions
-[중요 결정이 있을 때만 작성하고, 없으면 섹션 생략. 중요 결정 = 결과 방향·Target Files 선택·task boundary 중 하나를 바꿀 수 있는 결정.]
-
-### D1: [decision title]
-- **Decision / Assumption**: ...
-- **Evidence**: ...
-- **Rejected alternatives**: ...
-- **Confidence**: High | Medium | Low
-- **User confirmation needed**: Yes | No -- [근거]
 
 # Propagation Surfaces
 [동일 change element가 둘 이상의 동기화 표면(미러·등록·템플릿·문서 등)에 반영돼야 할 때만 작성하고, 없으면 섹션 생략.]
@@ -90,7 +80,6 @@ description: This skill should be used when the user asks to "feature draft", "d
 - **AC가 핵심이다**: 각 AC는 falsifiable해야 한다 — "미충족"이라 말할 수 있는 관찰/증거가 정의되지 않는 AC는 다시 쓴다.
 - **Target Files는 실측**: 현재 코드 탐색으로 확인한 경로만 적는다. 확정 불가면 `[TBD] <사유>`. 마커는 `[C]` Create / `[M]` Modify / `[D]` Delete.
 - **마커 보존**: `spec-update-todo-input` 마커 쌍을 유실하지 않는다 — `spec-sync` 입력 호환의 조건이다.
-- **중요 결정만 기록**: `Decisions and Assumptions`는 결과 방향·Target Files 선택·task boundary를 바꿀 수 있는 결정에만 위 5필드를 요구한다. 중요 결정이 없으면 섹션을 생략하며, 사소한 결정에 형식을 강제하지 않는다. `User confirmation needed: Yes` 항목은 `Open Questions`에서 decision ID로 참조해 사용자 확인 대상으로 노출한다.
 - **조건부 propagation 표**
   - 발동: 동일 change element가 둘 이상의 동기화 표면에 걸릴 때만 `Propagation Surfaces`를 만든다.
   - 필드: `Required surfaces`는 exact path/pattern, `Discovery evidence`는 read-only query와 기대 surface 집합을 적는다.

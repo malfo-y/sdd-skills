@@ -154,14 +154,13 @@ Canonical structure (the `feature-draft` skill's Required Output is the single s
 
 1. A one-line `> 규모 판정:` (scale verdict) — includes the verdict rationale; value is "fit" or "split needed — split plan included"
 2. `Part 1: Spec Delta` — `Change Summary` and `Scope` (In/Out) inside the `spec-update-todo-input` marker. A split draft also lists the split features here; `spec-sync` consumes the marker contents.
-3. `Decisions and Assumptions` (conditional) — only decisions that can change the result direction, Target Files selection, or task boundary use the five fields `Decision / Assumption`, `Evidence`, `Rejected alternatives`, `Confidence`, and `User confirmation needed`. Omit the section when there is no important decision.
-4. `Propagation Surfaces` (conditional)
+3. `Propagation Surfaces` (conditional)
    - Trigger: only when the same change element spans two or more synchronized surfaces, add the five-column table `ID / Change element / Required surfaces / Discovery evidence / Owner task`.
    - Ownership and closure: each row has exactly one owner task, whose Target Files and ACs close execution and verification.
    - Non-trigger: ordinary multi-file work does not trigger the table.
    - Census exception: add a final census verification task separately only for exhaustive variant removal.
-5. `Part 2: Tasks` — per task: a one-line intent, `Contracts` (only when a new promise is made), falsifiable ACs, measured Target Files. Census-style sweeps end with a read-only verification task.
-6. `Open Questions`
+4. `Part 2: Tasks` — per task: a one-line intent, `Contracts` (only when a new promise is made), falsifiable ACs, measured Target Files. Census-style sweeps end with a read-only verification task.
+5. `Open Questions`
 
 Its purpose is to handle what changes now, what gets touched, and how the change will be verified.
 
@@ -245,9 +244,6 @@ Current primary extra axes:
 ## Change Summary
 ## Scope (In / Out)
 <!-- spec-update-todo-input-end -->
-
-# Decisions and Assumptions
-Use the five fields only for important decisions; omit the section when there are none
 
 # Propagation Surfaces
 Use the five-column table only when one change element spans two or more synchronized surfaces; otherwise omit the section
