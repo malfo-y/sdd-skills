@@ -1,5 +1,30 @@
 # Decision Log
 
+## 2026-08-05 - work log 모델명 병기를 전 항목으로 일반화 (v4.6.36 → v4.6.37, post-implementation sync)
+
+### Context
+
+같은 날 v4.6.36이 도입한 하네스 §5 "리뷰 게이트 수치에만 실행 모델명 병기" 규칙의 범위 확대 — supersede가 아니라 일반화이며, 게이트 병기 예시는 모델 override 시 규칙으로 존치한다. 게이트 수치만 태그하면 draft 작성·구현 등 producer 단계의 모델 귀속이 여전히 유실된다.
+
+### Decision
+
+§5 work log 항목 형식을 `## <순번/HH:MM> <제목> (<실행 모델명>)`로 확장해 모든 항목 제목에 실행 모델명을 병기한다. 게이트 한정 bullet은 다음으로 대체한다 — "모델명은 모든 항목 제목에 병기하고, 게이트를 다른 모델로 돌렸으면 그 수치 옆에도 적는다(예: `plan-review (opus-5): H2 M2`) — 모델별 finding 밀도 비교용".
+
+### Alternatives
+
+게이트 수치 한정 병기(v4.6.36 원안) 유지를 검토했으나, 항목 제목 병기는 비용이 동일하면서 모든 SDD 단계 산출물이 모델별로 추적되므로 사용자 제안으로 범위를 확대했다.
+
+### Rationale / Evidence
+
+- 게이트만 태그하면 producer 단계(draft 작성·구현)의 모델 귀속이 유실된다 — 제목 병기로 전 단계 산출물의 모델별 추적이 가능해진다.
+- 검증: git diff(브랜치 chore/worklog-model-tag, 미커밋) 기준 적용 표면 5곳 전수(파일당 +2/-2), §5 블록 md5 일치 검증 완료.
+
+### Changes
+
+- `AGENTS.md` -- §5 work log 항목 형식을 `## <순번/HH:MM> <제목> (<실행 모델명>)`로 확장, 게이트 한정 bullet을 전 항목 병기 규칙으로 대체
+- `.claude/skills/spec-create/references/agents-harness-template.md`, `.claude/skills/spec-upgrade/references/agents-harness-template.md`, `.codex/skills/spec-create/references/agents-harness-template.md`, `.codex/skills/spec-upgrade/references/agents-harness-template.md` -- 동일 문면 전파
+- `_sdd/spec/main.md` -- v4.6.36 → v4.6.37 (본문 묶음 소유)
+
 ## 2026-08-05 - work log 게이트 수치에 실행 모델명 병기 (v4.6.35 → v4.6.36, post-implementation sync, 경량 경로)
 
 ### Context

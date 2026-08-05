@@ -47,8 +47,8 @@ discussion → feature-draft → plan-review → implementation → implementati
 ## 5. 작업 기록 (work log)
 
 - 각 작업 단위 종료 시 예외 없이 `_sdd/work_log/<yyyy-mm-dd>.md`에 항목을 append 한다(그날 파일이 없으면 생성). 작업 단위 = SDD 단계(논의·계획·구현·리뷰) 종료, 또는 그 밖의 독립 커밋. *작성*은 항상, 과거 로그 *읽기*만 on-demand(포렌식, §1 읽기 대상 아님).
-- 항목: `## <순번/HH:MM> <제목>` 아래 `무엇/왜` · `결과` · `포인터`(관련 커밋·문서·decision log 링크) · `요약`(따로 남은 게 없을 때만 인라인).
-- 리뷰 게이트(plan-review·implementation-review) 결과 수치를 기록할 때는 실행 모델명을 병기한다(예: `plan-review (opus-5): H2 M2`) — 모델별 finding 밀도 비교용.
+- 항목: `## <순번/HH:MM> <제목> (<실행 모델명>)` 아래 `무엇/왜` · `결과` · `포인터`(관련 커밋·문서·decision log 링크) · `요약`(따로 남은 게 없을 때만 인라인).
+- 모델명은 모든 항목 제목에 병기하고, 게이트를 다른 모델로 돌렸으면 그 수치 옆에도 적는다(예: `plan-review (opus-5): H2 M2`) — 모델별 finding 밀도 비교용.
 - 포인터로 충분하면 `요약` 생략(중복 금지). 수동 작업도 포함.
 - 이 규약은 커밋 게이트(`.claude/hooks/worklog-gate.sh`, PreToolUse 훅)로 강제된다 — 오늘 로그에 미커밋 변경이 없으면 **세션의 첫 `git commit`이 거부**된다(이후 분할 커밋은 통과). 로그가 불필요한 커밋은 `SDD_SKIP_WORKLOG=1 git commit ...` 로 우회한다.
 <!-- SDD-HARNESS:END -->

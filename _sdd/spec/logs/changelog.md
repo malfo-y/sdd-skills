@@ -2,6 +2,11 @@
 
 > 이 파일은 `_sdd/spec/main.md`의 **본문이 바뀐 버전만** 기록한다 — 본문 무변경 sync(헤더 날짜만 갱신)는 entry를 남기지 않으므로 버전 번호에 결번이 생길 수 있다.
 
+#### v4.6.37 (2026-08-05)
+
+- **work log 모델명 병기를 전 항목으로 일반화 (post-implementation sync)**: 같은 날 v4.6.36의 "리뷰 게이트 수치에만 실행 모델명 병기" 규칙을 모든 work log 항목으로 확대(사용자 제안, supersede가 아니라 일반화) — 항목 형식을 `## <순번/HH:MM> <제목> (<실행 모델명>)`로 확장하고, 게이트 한정 bullet은 "모델명은 모든 항목 제목에 병기하고, 게이트를 다른 모델로 돌렸으면 그 수치 옆에도 적는다(예: `plan-review (opus-5): H2 M2`) — 모델별 finding 밀도 비교용"으로 대체. 배경: 게이트 수치만 태그하면 draft 작성·구현 등 producer 단계의 모델 귀속이 여전히 유실되며, 항목 제목 병기는 비용 동일하면서 모든 SDD 단계 산출물이 모델별로 추적된다. 게이트 병기 예시는 모델 override 시 규칙으로 존치. 적용 표면 5곳 전수(파일당 +2/-2): `AGENTS.md` + `{.claude,.codex}/skills/{spec-create,spec-upgrade}/references/agents-harness-template.md` 4벌.
+- **검증 evidence**: git diff(브랜치 chore/worklog-model-tag, 미커밋) 5표면 동일 문면, §5 블록 md5 일치 검증 완료.
+
 #### v4.6.36 (2026-08-05)
 
 - **work log 게이트 수치에 실행 모델명 병기 (post-implementation sync, 경량 경로)**: 하네스 §5 work log 규약에 bullet 1줄 추가 — 리뷰 게이트(plan-review·implementation-review) 결과 수치를 기록할 때 실행 모델명을 병기한다(예: `plan-review (opus-5): H2 M2`) — 모델별 finding 밀도 비교용. 배경: 모델 회귀 가설이 2026-08-05 진단에서 UNCONFIRMED로 남은 원인이 work log 게이트 기록에 실행 모델 표본 부재였고, 대안(별도 계측 파일·A/B 실험)보다 비용이 사실상 0인 기록 규약 확장을 채택. 적용 표면 5곳 전수: `AGENTS.md` + `{.claude,.codex}/skills/{spec-create,spec-upgrade}/references/agents-harness-template.md` 4벌(동일 문면) — 템플릿 포함이므로 소비 repo 하네스에도 적용된다. 경량 경로 근거: 새 contract/invariant 없음 · 신규 파일 없음 · 전파 표면 5곳 전수 열거 + md5/diff 검증.
