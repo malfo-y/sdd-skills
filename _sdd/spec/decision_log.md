@@ -1,5 +1,33 @@
 # Decision Log
 
+## 2026-08-05 - resume-only implementation ledger 도입 (v4.6.34 → v4.6.35, post-implementation sync)
+
+### Context
+
+긴 구현 중 컨텍스트 요약(compact)으로 task 상태가 유실되는 통로가 있었다(2026-08-05 토론 결정 6~9). 이를 닫되 감사 로그가 아닌 **resume pointer**로 한정한다 — 재실행으로 복원 가능한 정보는 기록 대상에서 제외해 (b) structural-check 구현의 무상태 복원력과 중복되지 않게 한다.
+
+### Decision
+
+1. `implementation` SKILL 2벌에 `## Implementation Ledger (resume pointer)` 절을 신설한다 — 모든 실행이 `_sdd/implementation/<YYYY-MM-DD>_implementation_ledger_<slug>.md`를 생성하고, 같은 slug의 기존 ledger가 있으면 새로 만들지 않고 이어쓴다(분열 금지). 기록 기준 = **재실행으로 복원할 수 없는 사실만**(출력 전문·서술형 진행기 금지). task당 4상태 `READY → RED_CONFIRMED → GREEN_CONFIRMED → DELTA_CLOSED`만 사용하며 (c) test-free task는 `READY → DELTA_CLOSED`로 직행한다. 재개 시 미완료 task는 stale 상태를 신뢰하지 않고 무조건 fresh 재판정하고, DELTA_CLOSED task는 현재 diff와 모순이 보일 때만 fresh 재확인한다. 마감 AC→증거 테이블의 기록처를 ledger로 통합하고(채팅 노출 유지), 게이트 fix는 `Review fix delta` 단일 블록으로 기록한다.
+2. SDD_SPEC_DEFINITION 한·영 §6에 구현 측 기록처로 implementation ledger를 명시한다.
+3. AUTOPILOT_GUIDE 한·영 산출물 목록에 ledger를 추가한다.
+
+사용자 조정 2건: ① ledger = 마감 AC→증거 테이블의 점진 작성본(이중 기록 제거) ② 재개 시 미완료 task는 stale 상태 신뢰 없이 무조건 fresh 재판정.
+
+### Rationale / Evidence
+
+- 긴 구현 중 compact로 task 상태가 유실되는 통로를 닫는다(토론 결정 6~9). resume pointer 한정으로 기록 범위를 재실행 불가 사실로 좁혀, 재실행으로 복원 가능한 영역을 담당하는 (b) structural-check 구현의 무상태 복원력과 역할이 겹치지 않는다.
+- **도입 관측 exit 조건**: 도입 후 수 회의 구현에서 ledger가 실제 재개에 읽힌 적이 있는지 관측하고, 전혀 사용되지 않으면 회수를 재검토한다(같은 날 D&A 5필드 회수 사례와 동일 기준 — 실사용 증거 없는 형식은 유지하지 않는다).
+- 검증: structural check RED **24 FAIL** → GREEN, post-fix 회귀 **35/35 pass**(exit 0), 변이 확인 **3회 kill**, 미러 byte parity, implementation-review 6 reviewer(correctness 3 shard + simplicity 2 묶음) Medium 3 전부 fix 반영·Low 5 advisory 잔존(전체 status 갱신 시점·증거 발췌 수준·en 글롭 비대칭·AUTOPILOT_GUIDE 헤더 날짜 stale·ko 글롭 밀도).
+
+### Changes
+
+- `.claude/skills/implementation/SKILL.md`, `.codex/skills/implementation/SKILL.md` -- `## Implementation Ledger (resume pointer)` 절 신설 + 마감 증거 테이블 기록처 통합 (byte-identical 미러)
+- `docs/SDD_SPEC_DEFINITION.md`, `docs/en/SDD_SPEC_DEFINITION.md` -- §6 구현 기록처로 implementation ledger 명시
+- `docs/AUTOPILOT_GUIDE.md`, `docs/en/AUTOPILOT_GUIDE.md` -- 산출물 목록에 ledger 추가
+- `_sdd/spec/main.md` -- v4.6.34 → v4.6.35
+- 입력: `_sdd/drafts/2026-08-05_feature_draft_implementation_ledger.md` → `_processed_` 마킹
+
 ## 2026-08-05 - feature-draft D&A(Decisions and Assumptions) 5필드 계약 제거 — 산문 복귀 (v4.6.33 → v4.6.34, post-implementation sync)
 
 ### Context
