@@ -168,7 +168,7 @@ Verification is defined next to the execution unit — **each task's ACs** are t
 
 - **AC falsifiability**: every AC must close as met/unmet against evidence. Do not keep an AC for which no observation/evidence could ever say "unmet".
 - **Two evaluation tiers**: the bar is not "measurable" but "evidence-decidable". Allow Tier 1 (quantitative: reproducible test/check output) and Tier 2 (qualitative rubric judgment: stated criteria + reviewer verdict, cited grounds), but both must (a) close as a binary verdict, (b) bind to external evidence, and (c) be refutable by a third party. Quality/readability ACs are taken as Tier 2.
-- **Evidence-bound results**: after execution, every AC verdict is recorded bound to evidence (reproducible output or cited grounds) — the implementation's AC→evidence table and the review's verification ledger are where that lives. A "met" without evidence is not accepted.
+- **Evidence-bound results**: after execution, every AC verdict is recorded bound to evidence (reproducible output or cited grounds) — the implementation's AC→evidence table (completed in the implementation ledger file under `_sdd/implementation/`) and the review's verification ledger are where that lives. A "met" without evidence is not accepted.
 
 Information placement follows "details live in the task":
 

@@ -25,7 +25,7 @@ SDD 체인을 무승인으로 자동 실행하는 sdd-autopilot 메타스킬 가
 
 - **무승인**: 승인 단계가 없습니다. 잘못된 방향은 draft 단계(~1분)에서 싸게 드러나고, `feature-draft`가 자기 품질 게이트로 계획 품질을 검사합니다.
 - **게이트와 fix는 producer 스킬 소유**: 각 품질 게이트는 그 산출물을 만든 스킬(`feature-draft`·`implementation`)이 내부에서 1회 수행하고 fix도 1회입니다 — autopilot이 게이트를 다시 호출하지 않습니다. review-fix loop는 돌지 않으므로 1회 fix로 안 닫히는 finding은 최종 보고에 남고, 반복 재발은 계획 재설계·분할 신호로 취급됩니다.
-- **경량 반환**: 리뷰 결과는 리포트 파일 없이 응답으로 돌아옵니다. 산출물은 draft 파일, 코드+테스트, 채팅의 AC→증거 테이블, 갱신된 spec뿐입니다.
+- **경량 반환**: 리뷰 결과는 리포트 파일 없이 응답으로 돌아옵니다. 산출물은 draft 파일, 코드+테스트, implementation ledger, 채팅의 AC→증거 테이블, 갱신된 spec뿐입니다.
 
 ## 3. 분할 (규모 초과 대응)
 
@@ -67,6 +67,7 @@ SDD 체인을 무승인으로 자동 실행하는 sdd-autopilot 메타스킬 가
 | draft | `_sdd/drafts/<날짜>_feature_draft_<slug>.md` (spec-sync 후 `_processed_` 접두로 이동) |
 | 코드 + 테스트 | 대상 파일 (draft의 Target Files) |
 | AC→증거 테이블 | 최종 응답 (채팅) |
+| implementation ledger | `_sdd/implementation/<날짜>_implementation_ledger_<slug>.md` |
 | spec 갱신 | `_sdd/spec/` (spec-sync 경유) |
 
 ## 6. FAQ

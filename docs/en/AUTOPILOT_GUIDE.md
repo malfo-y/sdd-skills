@@ -25,7 +25,7 @@ Core principles:
 
 - **No approval steps**: a wrong direction surfaces cheaply at the draft stage (~1 min), and `feature-draft` checks plan quality through its own quality gate.
 - **Gates and fixes belong to the producer skill**: each quality gate runs once inside the skill that produced the artifact (`feature-draft`, `implementation`), followed by a single fix — autopilot never invokes a gate itself. There are no review-fix loops, so findings not closed by the single fix go into the final report; a recurring finding is treated as a signal to redesign or split the plan.
-- **Lightweight returns**: review results come back as responses, not report files. The only artifacts are the draft file, code + tests, the AC→evidence table in chat, and the updated spec.
+- **Lightweight returns**: review results come back as responses, not report files. The only artifacts are the draft file, code + tests, the implementation ledger, the AC→evidence table in chat, and the updated spec.
 
 ## 3. Splitting (handling oversized changes)
 
@@ -67,6 +67,7 @@ Examples:
 | draft | `_sdd/drafts/<date>_feature_draft_<slug>.md` (renamed with a `_processed_` prefix after spec-sync) |
 | code + tests | target files listed in the draft |
 | AC→evidence table | final response (chat) |
+| implementation ledger | `_sdd/implementation/<date>_implementation_ledger_<slug>.md` |
 | spec updates | `_sdd/spec/` (via spec-sync only) |
 
 ## 6. FAQ
