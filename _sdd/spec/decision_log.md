@@ -1,5 +1,30 @@
 # Decision Log
 
+## 2026-08-05 - work log 게이트 수치에 실행 모델명 병기 (v4.6.35 → v4.6.36, post-implementation sync, 경량 경로)
+
+### Context
+
+모델 회귀 가설(예: "Opus 5가 잔실수가 많다")이 2026-08-05 진단에서 UNCONFIRMED로 남았다 — 원인은 work log의 게이트 기록에 실행 모델 표본이 없어 모델별 finding 밀도를 사후 비교할 수 없었기 때문이다.
+
+### Decision
+
+하네스 §5 work log 규약에 bullet 1줄을 추가한다 — 리뷰 게이트(plan-review·implementation-review) 결과 수치를 기록할 때는 실행 모델명을 병기한다(예: `plan-review (opus-5): H2 M2`). 태그 누적으로 모델별 finding 밀도를 사후 비교 가능하게 만든다.
+
+### Alternatives
+
+별도 계측 파일 신설, A/B 실험 설계를 검토했으나, 비용이 사실상 0인 기록 규약 확장(기존 work log bullet 1줄)을 채택했다.
+
+### Rationale / Evidence
+
+- 경량 경로 판정: 새 contract/invariant 없음 · 신규 파일 없음 · 전파 표면 5곳 전수 열거 + md5/diff 검증 — 성질 3조건 전부 충족.
+- 검증: git diff(브랜치 chore/worklog-model-tag) 기준 5개 표면 동일 문면 추가, §5 블록 md5 일치 확인.
+
+### Changes
+
+- `AGENTS.md` -- §5 work log 규약에 실행 모델명 병기 bullet 추가
+- `.claude/skills/spec-create/references/agents-harness-template.md`, `.claude/skills/spec-upgrade/references/agents-harness-template.md`, `.codex/skills/spec-create/references/agents-harness-template.md`, `.codex/skills/spec-upgrade/references/agents-harness-template.md` -- 동일 문면 전파 (템플릿 포함이므로 소비 repo 하네스에도 적용)
+- `_sdd/spec/main.md` -- v4.6.35 → v4.6.36 (본문 묶음 소유)
+
 ## 2026-08-05 - resume-only implementation ledger 도입 (v4.6.34 → v4.6.35, post-implementation sync)
 
 ### Context
