@@ -2,6 +2,11 @@
 
 > 이 파일은 `_sdd/spec/main.md`의 **본문이 바뀐 버전만** 기록한다 — 본문 무변경 sync(헤더 날짜만 갱신)는 entry를 남기지 않으므로 버전 번호에 결번이 생길 수 있다.
 
+#### v4.6.33 (2026-08-05)
+
+- **feature-draft producer-review contract alignment (post-implementation sync)**: 모든 feature draft에서 결과 방향·Target Files·task boundary를 바꿀 수 있는 중요 결정만 조건부 `Decisions and Assumptions` 5필드로 기록하고, 중요 결정이 없으면 섹션 부재를 허용한다. 동일 change element가 둘 이상의 동기화 표면에 걸릴 때만 `Propagation Surfaces` 5열 표를 만들고 각 행을 정확히 한 owner task의 Target Files·AC에 연결한다. 일반 다중파일은 비발동이며 변형 표기 전수 제거만 별도 census task로 닫는다. `plan-review`는 같은 decision 조건과 propagation의 발동·required surface 실측·discovery 기대 집합·단일 owner·task 연접을 새 smell 없이 기존 `Verification Weakness`와 Glob→Grep→Read 계단에서 검사한다.
+- **검증 evidence**: 구현 6파일, RED→GREEN, canonical assertions **12/12**, 동일 checker mutant **12/12 killed**, producer byte parity, TOML parse, exact census, post-fix regression 통과, implementation-review finding fix 완료. producer·reviewer·정의 문서에 공통 적용되고 누락 시 repo-level planning/review 판단이 어긋나는 지속 계약이라 Repo-wide Invariant Test를 통과했다.
+
 #### v4.6.31 (2026-08-03)
 
 - **SDD 체인에 경량 경로(light path) 명문화 — 성질 3조건 + 하네스 템플릿 4벌 전파 (post-implementation sync)**: 하네스 §3 말미(repo `AGENTS.md` + `{.claude,.codex}/skills/{spec-create,spec-upgrade}/references/agents-harness-template.md` 4벌, verbatim 동일 각 +2줄)에 경량 경로 규칙 문단 추가 — 성질 3조건(① 새 contract/invariant 없음 ② 신규 파일 없음(work log 제외) ③ 전파 표면 전수 열거 + diff/grep 검증) 전부 충족 시 풀 체인 대신 직접 구현→검증→spec-sync 허용. 하나라도 아니거나 애매하면 풀 체인 기본값이고, 새 계약·agent 반환 형식·dispatch 구조 변경·rename/전파류(census)·신규 skill/agent는 항상 풀 체인이다. 경량이어도 브랜치·Execute→Verify·spec-sync·work log 생략 불가 + 판정 근거 1줄 work log 기록. 템플릿 4벌 포함으로 앞으로 `spec-create`/`spec-upgrade`가 초기화하는 모든 소비 repo의 하네스에 적용된다. `main.md` §2 Guardrails에 결정 승격(v4.6.30 회차의 ad-hoc 관행을 명문화).
