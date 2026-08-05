@@ -2,6 +2,11 @@
 
 > 이 파일은 `_sdd/spec/main.md`의 **본문이 바뀐 버전만** 기록한다 — 본문 무변경 sync(헤더 날짜만 갱신)는 entry를 남기지 않으므로 버전 번호에 결번이 생길 수 있다.
 
+#### v4.6.34 (2026-08-05)
+
+- **feature-draft D&A(Decisions and Assumptions) 5필드 계약 제거 — 산문 복귀 (post-implementation sync)**: v4.6.33(같은 날, 커밋 99a6bd5)이 도입한 두 계약 중 D&A 5필드만 제거한다(사용자 확정 결정) — 실패 이력 없는 곳에 형식을 추가한 것으로, 알맹이(사용자 확인 필요 결정의 구현 전 노출)는 기존 `Open Questions` 표면이 이미 담당하고 5필드 구조는 형식 준수 검사로 퇴화하기 쉽다(산문 규칙 > 의사코드). producer(feature-draft SKILL 2벌)에서 조건부 5필드 템플릿·`중요 결정만 기록` Hard Rule 제거(Process 1은 propagation 식별만 유지), reviewer(plan-review-agent 2벌)의 AC3·Hard Rule 7·Step 2·Step 4를 99a6bd5^ 산문(숨은 결정 surfacing 산문 규칙 + Step 4 4불릿 + decision markers 추출)으로 복귀, SDD_SPEC_DEFINITION 한·영 canonical 구조에서 D&A 항목 제거·재번호(3=Propagation Surfaces, 4=Part 2, 5=Open Questions) + 스켈레톤 D&A 2줄 제거. 실측 실패 이력(다중 표면 누락 재발) 기반인 `Propagation Surfaces` 계약 — Hard Rule 8·Step 3 계단 propagation 검증·Verification Weakness propagation 문구 — 은 유지한다.
+- **검증 evidence**: structural check **70/70 pass**(RED 45 FAIL → GREEN, exit 0), 커버리지 델타 변이 확인 **1/1 kill**, producer 미러 byte parity, TOML 파싱 통과, census 계약 고유 리터럴 **0건**(허용 예외: plan-review-agent 2벌 Step 4 헤딩 `Review Decisions and Assumptions`), implementation-review 6 reviewer(correctness 4 shard + simplicity 2 묶음) finding **0**.
+
 #### v4.6.33 (2026-08-05)
 
 - **feature-draft producer-review contract alignment (post-implementation sync)**: 모든 feature draft에서 결과 방향·Target Files·task boundary를 바꿀 수 있는 중요 결정만 조건부 `Decisions and Assumptions` 5필드로 기록하고, 중요 결정이 없으면 섹션 부재를 허용한다. 동일 change element가 둘 이상의 동기화 표면에 걸릴 때만 `Propagation Surfaces` 5열 표를 만들고 각 행을 정확히 한 owner task의 Target Files·AC에 연결한다. 일반 다중파일은 비발동이며 변형 표기 전수 제거만 별도 census task로 닫는다. `plan-review`는 같은 decision 조건과 propagation의 발동·required surface 실측·discovery 기대 집합·단일 owner·task 연접을 새 smell 없이 기존 `Verification Weakness`와 Glob→Grep→Read 계단에서 검사한다.

@@ -1,5 +1,30 @@
 # Decision Log
 
+## 2026-08-05 - feature-draft D&A(Decisions and Assumptions) 5필드 계약 제거 — 산문 복귀 (v4.6.33 → v4.6.34, post-implementation sync)
+
+### Context
+
+v4.6.33(같은 날, 커밋 99a6bd5)이 producer-reviewer 정렬로 두 계약을 도입했다 — 조건부 `Decisions and Assumptions` 5필드와 조건부 `Propagation Surfaces` 5열 표. 이 중 D&A 5필드는 실패 이력이 없는 곳에 형식을 추가한 것이었다: 유용한 알맹이(사용자 확인이 필요한 결정의 구현 전 노출)는 기존 `Open Questions` 표면이 이미 담당하고, 5필드 구조는 형식 준수 검사로 퇴화하기 쉽다(산문 규칙 > 의사코드 관측). 반면 `Propagation Surfaces` 계약은 실측 실패 이력(다중 표면 누락 재발) 기반이다.
+
+### Decision
+
+사용자 확정 결정으로 D&A 5필드 계약만 제거하고 산문으로 복귀한다. `Propagation Surfaces` 계약은 유지한다.
+
+1. producer(feature-draft SKILL 2벌)에서 조건부 `Decisions and Assumptions` 5필드 템플릿과 `중요 결정만 기록` Hard Rule을 제거한다. Process 1은 propagation 식별만 유지한다.
+2. reviewer(plan-review-agent 2벌)의 AC3·Hard Rule 7·Step 2·Step 4를 99a6bd5^ 산문(숨은 결정 surfacing 산문 규칙 + Step 4 4불릿 + decision markers 추출)으로 복귀한다. Hard Rule 8(Propagation Surface Coverage)·Step 3 계단 propagation 검증·Verification Weakness propagation 문구는 유지한다.
+3. SDD_SPEC_DEFINITION 한·영 canonical 구조에서 D&A 항목을 제거하고 재번호한다(3=Propagation Surfaces, 4=Part 2, 5=Open Questions). 스켈레톤 D&A 2줄을 제거한다.
+
+### Rationale / Evidence
+
+- D&A 5필드는 실패 이력 없는 곳에 추가된 형식이며, 알맹이는 기존 `Open Questions`가 담당하고 구조는 형식 준수 검사로 퇴화하기 쉽다(산문 규칙 > 의사코드). `Propagation Surfaces`는 실측 실패 이력 기반이라 유지 — 두 계약의 근거 비대칭이 결정의 축이다.
+- structural check **70/70 pass**(RED 45 FAIL → GREEN, exit 0), 커버리지 델타 변이 확인 **1/1 kill**, producer 미러 byte parity, TOML 파싱 통과, census 계약 고유 리터럴 **0건**(허용 예외: plan-review-agent 2벌 Step 4 헤딩 `Review Decisions and Assumptions`), implementation-review 6 reviewer(correctness 4 shard + simplicity 2 묶음) finding **0**.
+
+### Changes
+
+- producer(feature-draft SKILL 2벌)·reviewer(plan-review-agent 2벌)·SDD_SPEC_DEFINITION 한·영에서 D&A 5필드 계약 제거·산문 복귀, `Propagation Surfaces` 계약은 유지
+- `_sdd/spec/main.md` -- v4.6.33 → v4.6.34
+- 입력: `_sdd/drafts/2026-08-05_feature_draft_decisions_assumptions_contract_removal.md` → `_processed_` 마킹
+
 ## 2026-08-05 - feature-draft producer-review contract alignment (v4.6.32 → v4.6.33, post-implementation sync)
 
 ### Context
