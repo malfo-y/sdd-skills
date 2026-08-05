@@ -154,8 +154,13 @@ canonical 구조 (`feature-draft` 스킬의 Required Output이 단일 소스):
 
 1. `> 규모 판정:` 1줄 — 판정 근거 포함, 값은 "적격" 또는 "분할 필요 — 분할 계획 포함"
 2. `Part 1: Spec Delta` — `spec-update-todo-input` 마커 내부의 `Change Summary`·`Scope`(In/Out). 분할 draft면 분할 feature 목록을 포함하며, `spec-sync`가 이 마커 내부를 소비한다.
-3. `Part 2: Tasks` — task마다 의도 1줄, `Contracts`(새 약속이 있을 때만), falsifiable AC, 실측 Target Files. census형 sweep이면 마지막에 read-only 검증 task.
-4. `Open Questions`
+3. `Propagation Surfaces`(조건부)
+   - 발동: 동일 change element가 둘 이상의 동기화 표면에 걸릴 때만 `ID / Change element / Required surfaces / Discovery evidence / Owner task` 표를 둔다.
+   - 소유·연접: 각 행은 정확히 한 owner task에 연결되고 그 task의 Target Files·AC가 실행과 검증을 닫는다.
+   - 비발동: 일반 다중파일 변경은 발동 조건이 아니다.
+   - census 예외: 변형 표기 전수 제거가 필요할 때만 마지막 census verification task를 별도로 둔다.
+4. `Part 2: Tasks` — task마다 의도 1줄, `Contracts`(새 약속이 있을 때만), falsifiable AC, 실측 Target Files. census형 sweep이면 마지막에 read-only 검증 task.
+5. `Open Questions`
 
 temporary spec의 목적은 이번 변경이 무엇을 바꾸고, 어디를 건드리며, 무엇으로 검증할지를 직접 다루는 것이다.
 
@@ -239,6 +244,9 @@ temporary spec의 목적은 이번 변경이 무엇을 바꾸고, 어디를 건�
 ## Change Summary
 ## Scope (In / Out)
 <!-- spec-update-todo-input-end -->
+
+# Propagation Surfaces
+동일 change element가 둘 이상의 동기화 표면에 걸릴 때만 5열 표로 작성하고, 없으면 섹션 생략
 
 # Part 2: Tasks
 ### Task N: [title]
