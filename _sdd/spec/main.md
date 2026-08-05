@@ -2,7 +2,7 @@
 
 > Markdown 기반 skill bundle로 AI 에이전트의 Spec-Driven Development 워크플로우를 Claude Code와 Codex에서 공통 계약으로 실행한다.
 
-**Spec Version**: 4.6.37
+**Spec Version**: 4.6.38
 **Last Updated**: 2026-08-05
 **Status**: Approved
 **Canonical Role**: current thin global spec
@@ -63,7 +63,7 @@ SDD Skills는 이 문제를 `SKILL.md = 실행 가능한 프롬프트`라는 관
 - persistent handoff는 `_sdd/spec/`, `_sdd/drafts/`, `_sdd/implementation/`, `_sdd/pipeline/`, `_sdd/discussion/`의 canonical 경로를 통해 이뤄진다
 - 새 temporary artifact는 가능한 한 lowercase canonical 경로를 사용하고, skill contract가 dated slug 패턴을 정의한 output surface는 그 형식을 따라야 한다. reader는 legacy uppercase/fixed-name artifact를 fallback으로 읽을 수 있어야 한다
 - 소비 repo에서 커밋되는 `_sdd`는 `spec/`·`guides/`·`env.md`·`drafts/`·`work_log/`이고(`drafts/`·`work_log/`는 구현 로그 자산), 나머지 process artifact(`_sdd/{discussion,implementation,pipeline,pr}/`)는 `.gitignore`(`SDD-WORKSPACE` 마커 블록)로 로컬 전용이다. `_sdd/env.md`는 커밋되므로 비밀값(API 키·토큰·비밀번호)을 적지 않는다. 단 이 sdd_skills repo는 스킬 개발 메타 repo라 process artifact를 history 가치로 계속 커밋하는 예외다(소비 repo 정책과 별개)
-- 하네스 설치는 문서 산출물(`AGENTS.md`·`CLAUDE.md`·`.gitignore`)과 훅 자산(`.claude/hooks/` 스크립트 3개 — work log 커밋 게이트·세션 컨텍스트 주입·컨텍스트 소실 후 하네스 재주입 + `.claude/settings.json` 등록)을 **동일 조건에 묶어** 함께 수행한다 — 훅은 별도 opt-in이 아니다. 대상이 개인용 `settings.local.json`이 아니라 **커밋되는** `.claude/settings.json`이라 SDD를 쓰지 않는 기여자까지 게이트를 받으므로, 설치 스킬은 그 사실을 최종 보고에 announce한다. 실행 자산은 조용히 무력화되지 않는다 — JSON 파서가 없으면 게이트는 fail-open하되 세션 시작 훅이 "게이트 비활성"을 경고한다. 같은 이유로 SessionStart 등록 문법(스크립트마다 다른 matcher — 전 소스 vs `clear|compact`)이 런타임 버전에 의존해 미지원 버전에서 오류 없이 미발동할 수 있다는 사실도 announce 대상이다. 설치 절차와 병합 규칙(스크립트 verbatim 복사 / `settings.json` 키 수준 멱등 병합)의 canonical은 `spec-create`·`spec-upgrade` SKILL이며, 이 계약은 특정 훅 전용이 아니라 훅 자산 일반에 적용된다
+- 하네스 설치는 문서 산출물(`AGENTS.md`·`CLAUDE.md`·`.gitignore`)과 훅 자산(`.claude/hooks/` 스크립트 4개 — work log 커밋 게이트·세션 컨텍스트 주입·컨텍스트 소실 후 하네스 재주입·subagent 장기실행 watchdog nudge + `.claude/settings.json` 등록)을 **동일 조건에 묶어** 함께 수행한다 — 훅은 별도 opt-in이 아니다. 대상이 개인용 `settings.local.json`이 아니라 **커밋되는** `.claude/settings.json`이라 SDD를 쓰지 않는 기여자까지 게이트를 받으므로, 설치 스킬은 그 사실을 최종 보고에 announce한다. 실행 자산은 조용히 무력화되지 않는다 — 이 경고 의무는 강제 자산(게이트)에 한정된다: JSON 파서가 없으면 게이트는 fail-open하되 세션 시작 훅이 "게이트 비활성"을 경고한다. advisory 자산(watchdog)은 게이트가 아니므로 판정 불가 시 조용히 fail-open해도 된다. 같은 이유로 SessionStart 등록 문법(스크립트마다 다른 matcher — 전 소스 vs `clear|compact`)이 런타임 버전에 의존해 미지원 버전에서 오류 없이 미발동할 수 있다는 사실도 announce 대상이다. 설치 절차와 병합 규칙(스크립트 verbatim 복사 / `settings.json` 키 수준 멱등 병합)의 canonical은 `spec-create`·`spec-upgrade` SKILL이며, 이 계약은 특정 훅 전용이 아니라 훅 자산 일반에 적용된다
 - wrapper-backed skill은 사용자 entrypoint와 artifact contract를 유지해야 하며, 지원하지 않는 동작을 조용히 흉내내지 않는다
   - wrapper는 thin entrypoint로 두고 전체 계약·프로세스는 agent를 단일 소스로 유지한다
   - 입력이 대화에서 태어나는 wrapper는 그 대화 맥락을 agent에 forwarding해야 한다(agent는 파일은 read하지만 대화는 읽지 못한다)
@@ -121,7 +121,7 @@ SDD Skills의 설계는 다음 층으로 나뉜다.
 3. Artifact layer: `_sdd/` 아래의 persistent handoff contract
 4. Reference layer: README, `docs/`, global spec이 유지하는 설명과 경계
 
-이 위에 별도의 **Harness layer(`AGENTS.md`)** 가 놓인다. harness는 repo 작업 진입점이자 작업 규약(how) 레이어로, global spec(이해 = what/why) 위에서 작업 시작 시 먼저 읽는 surface다. global spec 본문을 키우지 않는 별도 레이어이며(둘은 같은 정보를 중복 보유하지 않는다), 작업 원칙·읽는 순서·검증 표준·워크플로우 단계 순서·판단 기준 포인터만 담는다. repo-specific 행동 트리거와 핵심 결정은 여전히 global spec Guardrails가 단일 소스다. harness는 산문 규약만이 아니라 그 규약을 실행하는 자산까지 포함하며, 그 자산은 두 방향으로 일한다 — 규약을 **강제**하거나(§5 work log 규약은 함께 설치되는 PreToolUse 커밋 게이트 훅으로 집행된다), 컨텍스트에서 사라진 규약을 **되돌려 놓는다**(compact·clear 뒤 SessionStart 훅이 `AGENTS.md` 전문을 재주입한다). 둘 다 모델 재량으로 건너뛸 수 없는 층이다. 재주입은 "읽으라는 지시"가 아니라 내용 주입이다 — 지시는 재량이 남아 닫으려던 실패 모드를 그대로 재생산하고, 모델이 순순히 읽어도 Read 왕복으로 같은 분량이 들어와 비용 이점이 없다. 설치 계약은 위 Guardrails가 소유한다. §0 작업 원칙의 네 이름(`Think Before Coding`·`Simplicity First`·`Surgical Changes`·`Goal-Driven Execution`)은 [docs/agentic_coding_principle.md](../../docs/agentic_coding_principle.md)의 4축과 같은 이름이며 `plan-review`가 finding의 `Principle Link`로 인용하는 앵커다 — 이름을 바꾸면 그 인용이 끊긴다. layer model과 사용 시점의 기준은 [docs/SDD_CONCEPT.md](../../docs/SDD_CONCEPT.md)와 [docs/SDD_WORKFLOW.md](../../docs/SDD_WORKFLOW.md)에 둔다.
+이 위에 별도의 **Harness layer(`AGENTS.md`)** 가 놓인다. harness는 repo 작업 진입점이자 작업 규약(how) 레이어로, global spec(이해 = what/why) 위에서 작업 시작 시 먼저 읽는 surface다. global spec 본문을 키우지 않는 별도 레이어이며(둘은 같은 정보를 중복 보유하지 않는다), 작업 원칙·읽는 순서·검증 표준·워크플로우 단계 순서·판단 기준 포인터만 담는다. repo-specific 행동 트리거와 핵심 결정은 여전히 global spec Guardrails가 단일 소스다. harness는 산문 규약만이 아니라 그 규약을 실행하는 자산까지 포함하며, 그 자산은 두 방향으로 일한다 — 규약을 **강제**하거나(§5 work log 규약은 함께 설치되는 PreToolUse 커밋 게이트 훅으로 집행된다), 컨텍스트에서 사라진 규약을 **되돌려 놓는다**(compact·clear 뒤 SessionStart 훅이 `AGENTS.md` 전문을 재주입한다). 둘 다 모델 재량으로 건너뛸 수 없는 층이다(advisory 자산인 subagent watchdog nudge는 이 강제 층 밖의 보조 자산이다). 재주입은 "읽으라는 지시"가 아니라 내용 주입이다 — 지시는 재량이 남아 닫으려던 실패 모드를 그대로 재생산하고, 모델이 순순히 읽어도 Read 왕복으로 같은 분량이 들어와 비용 이점이 없다. 설치 계약은 위 Guardrails가 소유한다. §0 작업 원칙의 네 이름(`Think Before Coding`·`Simplicity First`·`Surgical Changes`·`Goal-Driven Execution`)은 [docs/agentic_coding_principle.md](../../docs/agentic_coding_principle.md)의 4축과 같은 이름이며 `plan-review`가 finding의 `Principle Link`로 인용하는 앵커다 — 이름을 바꾸면 그 인용이 끊긴다. layer model과 사용 시점의 기준은 [docs/SDD_CONCEPT.md](../../docs/SDD_CONCEPT.md)와 [docs/SDD_WORKFLOW.md](../../docs/SDD_WORKFLOW.md)에 둔다.
 
 ### 유지해야 할 주요 결정
 

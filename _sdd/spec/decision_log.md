@@ -1,5 +1,33 @@
 # Decision Log
 
+## 2026-08-05 - Agent Watchdog 훅 — 하네스 훅 자산 4호 (advisory) (v4.6.37 → v4.6.38, post-implementation sync)
+
+### Context
+
+review agent가 20분씩 도는 원인(예: `uv run --with torch` 반복 재설치)을 사용자가 매번 알 수 없어, 5분 초과 agent에게 스스로 점검·전환하게 하는 훅을 사용자가 요청했다. 2026-08-05 실험 1·2(work log 항목 11·12)로 성립 조건이 검증됐다 — 훅은 subagent tool call에 발동하고, agent_id는 subagent payload에만 존재하며, PostToolUse decision:block reason이 subagent 모델에 전문 전달·지시 수행된다.
+
+### Decision
+
+하네스 훅 자산 4호 `agent-watchdog.sh`(PostToolUse)를 추가한다 — subagent 장기실행(첫 tool call 후 300s+) 시 자기점검 nudge(시간 도둑 자평·캐시/재사용 전환)를 전달하고, cooldown 300s, advisory·fail-open, jq→python3 fallback. 새 contract 2건: ① 하네스 훅 자산 목록 3→4개 ② watchdog은 advisory 자산 — "조용히 무력화되지 않는다" guardrail의 경고 의무는 강제 자산(게이트)에 한정한다.
+
+### Alternatives
+
+worklog-context.sh 경고 확장(경고 의무를 watchdog까지 확대)을 검토했으나 기각 — 5미러 표면 확대 대비 이득이 미미하다.
+
+### Rationale / Evidence
+
+- 실험 1·2(work log 항목 11·12)로 성립 조건 3건(subagent 발동·agent_id 키·block reason 전문 전달) 검증 완료.
+- 알려진 한계: nudge는 tool call 경계에서만 전달된다 — 단일 장시간 명령 중간 개입은 불가하며, 후속 PreToolUse 패턴 차단 레버 후보로 스코프 아웃.
+- 검증: structural check RED 12 → GREEN **28/28**, 변이 7종 전량 kill, implementation-review(correctness 5 shard + simplicity 2묶음) fix 전 C/H 0 · M 1(도달 불가 줄바꿈 이스케이프 no-op → fix) · L 5 advisory.
+
+### Changes
+
+- 스크립트 5경로(정본 + 미러 3 + dogfooding, md5 5-way 일치) -- `agent-watchdog.sh` 추가
+- spec-create/spec-upgrade SKILL 4파일 -- 설치 계약 갱신(훅 자산 개수 리터럴 3→4, census 확장 패턴 `세 스크립트|스크립트 3개|세 훅|훅 3개|셋 다|두 항목` 잔존 0)
+- `.claude/settings.json` -- PostToolUse 등록
+- `_sdd/spec/main.md` -- v4.6.37 → v4.6.38 (본문 묶음 소유)
+- 입력: `_sdd/drafts/2026-08-05_feature_draft_agent_watchdog_hook.md` → `_processed_` 마킹
+
 ## 2026-08-05 - work log 모델명 병기를 전 항목으로 일반화 (v4.6.36 → v4.6.37, post-implementation sync)
 
 ### Context

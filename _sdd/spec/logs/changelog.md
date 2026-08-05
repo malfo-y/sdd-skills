@@ -2,6 +2,11 @@
 
 > 이 파일은 `_sdd/spec/main.md`의 **본문이 바뀐 버전만** 기록한다 — 본문 무변경 sync(헤더 날짜만 갱신)는 entry를 남기지 않으므로 버전 번호에 결번이 생길 수 있다.
 
+#### v4.6.38 (2026-08-05)
+
+- **Agent Watchdog 훅 — 하네스 훅 자산 4호 (advisory) (post-implementation sync)**: 하네스 훅 자산 4호 `agent-watchdog.sh`(PostToolUse) 추가 — subagent 장기실행(첫 tool call 후 300s+) 시 자기점검 nudge(시간 도둑 자평·캐시/재사용 전환)를 전달, cooldown 300s, advisory·fail-open, jq→python3 fallback. 배경: review agent가 20분씩 도는 원인(예: `uv run --with torch` 반복 재설치)을 사용자가 매번 알 수 없어 5분 초과 agent의 자기점검·전환 훅을 요청, 2026-08-05 실험 1·2(work log 항목 11·12)로 성립 조건 검증(훅은 subagent tool call에 발동·agent_id는 subagent payload에만·PostToolUse decision:block reason이 subagent 모델에 전문 전달·지시 수행). 구현 표면: 스크립트 5경로(정본+미러3+dogfooding, md5 5-way) + spec-create/spec-upgrade SKILL 4파일 설치 계약(개수 리터럴 3→4, census 확장 패턴 `세 스크립트|스크립트 3개|세 훅|훅 3개|셋 다|두 항목` 잔존 0) + `.claude/settings.json` PostToolUse 등록. 새 contract 2건: ① 하네스 훅 자산 목록 3→4개 ② watchdog은 advisory 자산 — "조용히 무력화되지 않는다" guardrail의 경고 의무는 강제 자산(게이트)에 한정(worklog-context.sh 경고 확장 기각 — 5미러 표면 확대 대비 이득 미미). 알려진 한계: nudge는 tool call 경계에서만(단일 장시간 명령 중간 개입 불가 — 후속 PreToolUse 패턴 차단 레버 후보로 스코프 아웃).
+- **검증 evidence**: structural check RED 12 → GREEN **28/28**, 변이 7종 전량 kill, implementation-review(correctness 5 shard + simplicity 2묶음) fix 전 C/H 0 · M 1(도달 불가 줄바꿈 이스케이프 no-op → fix) · L 5 advisory.
+
 #### v4.6.37 (2026-08-05)
 
 - **work log 모델명 병기를 전 항목으로 일반화 (post-implementation sync)**: 같은 날 v4.6.36의 "리뷰 게이트 수치에만 실행 모델명 병기" 규칙을 모든 work log 항목으로 확대(사용자 제안, supersede가 아니라 일반화) — 항목 형식을 `## <순번/HH:MM> <제목> (<실행 모델명>)`로 확장하고, 게이트 한정 bullet은 "모델명은 모든 항목 제목에 병기하고, 게이트를 다른 모델로 돌렸으면 그 수치 옆에도 적는다(예: `plan-review (opus-5): H2 M2`) — 모델별 finding 밀도 비교용"으로 대체. 배경: 게이트 수치만 태그하면 draft 작성·구현 등 producer 단계의 모델 귀속이 여전히 유실되며, 항목 제목 병기는 비용 동일하면서 모든 SDD 단계 산출물이 모델별로 추적된다. 게이트 병기 예시는 모델 override 시 규칙으로 존치. 적용 표면 5곳 전수(파일당 +2/-2): `AGENTS.md` + `{.claude,.codex}/skills/{spec-create,spec-upgrade}/references/agents-harness-template.md` 4벌.
