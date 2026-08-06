@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# SDD 하네스 자산 — work log 커밋 게이트 (Claude Code PreToolUse 훅).
+# SDD 하네스 자산 — work log 커밋 게이트 (Claude Code/Codex PreToolUse 훅).
 #
 # 정본 = `.claude/skills/spec-create/references/hooks/`.
-# 나머지 3곳(`.codex/spec-create`, `.claude/spec-upgrade`, `.codex/spec-upgrade`의
-# `references/hooks/`)은 미러다. 수정 시 4곳을 바이트 동일로 동기화한다.
+# 나머지 4곳(`.codex/spec-create`, `.claude/spec-upgrade`, `.codex/spec-upgrade`의
+# `references/hooks/` + `.claude/hooks/`)은 미러다. 수정 시 5곳을 바이트 동일로 동기화한다.
 #
 # AGENTS.md §5("작업 단위 종료 시 예외 없이 work log 기록")를 하네스 차원에서 강제한다.
 # 통과 조건 (하나라도 만족하면 allow):
@@ -24,8 +24,16 @@ set -uo pipefail
 
 allow() { exit 0; }
 
-# 훅 cwd는 repo 루트가 아닐 수 있다. 아래 git 경로 판정이 전부 상대경로이므로 루트를 고정한다.
-cd "${CLAUDE_PROJECT_DIR:-.}" 2>/dev/null || allow
+# Claude Code는 CLAUDE_PROJECT_DIR를 주지만 Codex는 주지 않는다. 유효한 환경변수를
+# 우선하고, 없거나 잘못됐으면 현재 worktree의 git root로 복구한다.
+project_root=$(
+  if [ -n "${CLAUDE_PROJECT_DIR:-}" ] && [ -d "$CLAUDE_PROJECT_DIR" ]; then
+    printf '%s\n' "$CLAUDE_PROJECT_DIR"
+  else
+    git rev-parse --show-toplevel 2>/dev/null
+  fi
+) || allow
+cd "$project_root" 2>/dev/null || allow
 
 payload=$(cat)
 

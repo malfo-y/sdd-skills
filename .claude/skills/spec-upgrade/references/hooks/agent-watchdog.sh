@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# SDD 하네스 자산 — subagent 장기실행 watchdog (Claude Code PostToolUse 훅).
+# SDD 하네스 자산 — subagent 장기실행 watchdog (Claude Code/Codex PostToolUse 훅).
 #
 # 정본 = `.claude/skills/spec-create/references/hooks/`.
-# 나머지 3곳(`.codex/spec-create`, `.claude/spec-upgrade`, `.codex/spec-upgrade`의
-# `references/hooks/`)은 미러다. 수정 시 4곳을 바이트 동일로 동기화한다.
+# 나머지 4곳(`.codex/spec-create`, `.claude/spec-upgrade`, `.codex/spec-upgrade`의
+# `references/hooks/` + `.claude/hooks/`)은 미러다. 수정 시 5곳을 바이트 동일로 동기화한다.
 #
-# subagent가 첫 tool call 이후 THRESHOLD초 이상 돌면 tool 결과에 자기점검 nudge를
-# 끼워 넣는다 — 시간 도둑(반복 환경 재설치 등) 자평 + 캐시/재사용 전환 유도.
+# subagent가 첫 tool call 이후 THRESHOLD초 이상 돌면 원래 tool 결과 옆에 자기점검
+# additional context를 붙인다 — 시간 도둑(반복 환경 재설치 등) 자평 + 캐시/재사용 전환 유도.
 # COOLDOWN초마다 최대 1회 재발동한다. 메인 루프 호출(payload에 agent_id 없음)은 대상이 아니다.
 #
 # advisory 자산이다(게이트 아님) — 파서 부재·파싱 실패·상태 기록 실패 등 판정 불가는
@@ -46,14 +46,14 @@ agent=$(printf '%s\n' "$parsed" | sed -n '2p')
 [ -n "$agent" ] || allow
 
 # 상태는 세션·agent 단위 파일로만 둔다. 디렉토리 생성 실패(공유 /tmp 소유권 등)는 fail-open.
-dir="${TMPDIR:-/tmp}/claude-agent-watchdog/$session"
+dir="${TMPDIR:-/tmp}/sdd-agent-watchdog/$session"
 mkdir -p "$dir" 2>/dev/null || allow
 now=$(date +%s)
 start_file="$dir/$agent.start"
 nudge_file="$dir/$agent.nudge"
 
 if [ ! -f "$start_file" ]; then
-  printf '%s' "$now" > "$start_file" 2>/dev/null
+  printf '%s' "$now" 2>/dev/null > "$start_file" || allow
   allow
 fi
 
@@ -65,10 +65,10 @@ elapsed=$(( now - start ))
 last=$(cat "$nudge_file" 2>/dev/null || echo 0)
 case "$last" in (''|*[!0-9]*) last=0 ;; esac
 [ $(( now - last )) -ge "$COOLDOWN" ] || allow
-printf '%s' "$now" > "$nudge_file" 2>/dev/null
+printf '%s' "$now" 2>/dev/null > "$nudge_file" || allow
 
 # ⚠️ reason 에는 " 와 \ 와 줄바꿈이 없어야 한다(문구를 고칠 때도 넣지 말 것 — 단일 라인 리터럴 유지).
-reason="[agent-watchdog] 이 agent는 첫 tool call 이후 ${elapsed}초째 실행 중입니다. (1) 지금 하는 작업이 시간을 과도하게 먹고 있는지 1문장으로 자평하세요. (2) 반복되는 작업에 시간이 새고 있다면 더 싼 경로로 전환하세요 — 준비/설치를 매번 반복하고 있으면 한 번 만들어 재사용(캐시·venv 등), 전체 재실행이 잦으면 필요한 부분만으로 범위 축소, 같은 파일/결과를 다시 읽거나 재계산하고 있으면 이전 결과 재활용. (3) 이 메시지로 접근을 바꿨다면 최종 응답에 한 줄로 언급하세요."
+reason="[agent-watchdog] 이 agent는 첫 tool call 이후 ${elapsed}초째 실행 중입니다. (1) 지금까지의 진행 상황과 남은 blocker를 1문장으로 요약하세요. (2) 원래 요구사항과 완료 조건을 다시 확인하고 현재 작업이 이를 직접 닫는지 자평하세요. (3) 반복 비용이 새고 있다면 더 싼 경로로 접근을 조정하세요 — 준비/설치를 매번 반복하면 한 번 만들어 재사용(캐시·venv 등), 전체 재실행이 잦으면 필요한 부분만으로 범위 축소, 같은 파일/결과를 다시 읽거나 재계산하면 이전 결과 재활용. 이 메시지로 접근을 바꿨다면 최종 응답에 한 줄로 언급하세요."
 
-printf '{"decision":"block","reason":"%s"}\n' "$reason"
+printf '{"hookSpecificOutput":{"hookEventName":"PostToolUse","additionalContext":"%s"}}\n' "$reason"
 exit 0

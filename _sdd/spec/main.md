@@ -2,8 +2,8 @@
 
 > Markdown 기반 skill bundle로 AI 에이전트의 Spec-Driven Development 워크플로우를 Claude Code와 Codex에서 공통 계약으로 실행한다.
 
-**Spec Version**: 4.6.39
-**Last Updated**: 2026-08-06
+**Spec Version**: 4.6.40
+**Last Updated**: 2026-08-07
 **Status**: Approved
 **Canonical Role**: current thin global spec
 
@@ -63,7 +63,10 @@ SDD Skills는 이 문제를 `SKILL.md = 실행 가능한 프롬프트`라는 관
 - persistent handoff는 `_sdd/spec/`, `_sdd/drafts/`, `_sdd/implementation/`, `_sdd/pipeline/`, `_sdd/discussion/`의 canonical 경로를 통해 이뤄진다
 - 새 temporary artifact는 가능한 한 lowercase canonical 경로를 사용하고, skill contract가 dated slug 패턴을 정의한 output surface는 그 형식을 따라야 한다. reader는 legacy uppercase/fixed-name artifact를 fallback으로 읽을 수 있어야 한다
 - 소비 repo에서 커밋되는 `_sdd`는 `spec/`·`guides/`·`env.md`·`drafts/`·`work_log/`이고(`drafts/`·`work_log/`는 구현 로그 자산), 나머지 process artifact(`_sdd/{discussion,implementation,pipeline,pr}/`)는 `.gitignore`(`SDD-WORKSPACE` 마커 블록)로 로컬 전용이다. `_sdd/env.md`는 커밋되므로 비밀값(API 키·토큰·비밀번호)을 적지 않는다. 단 이 sdd_skills repo는 스킬 개발 메타 repo라 process artifact를 history 가치로 계속 커밋하는 예외다(소비 repo 정책과 별개)
-- 하네스 설치는 문서 산출물(`AGENTS.md`·`CLAUDE.md`·`.gitignore`)과 훅 자산(`.claude/hooks/` 스크립트 4개 — work log 커밋 게이트·세션 컨텍스트 주입·컨텍스트 소실 후 하네스 재주입·subagent 장기실행 watchdog nudge + `.claude/settings.json` 등록)을 **동일 조건에 묶어** 함께 수행한다 — 훅은 별도 opt-in이 아니다. 대상이 개인용 `settings.local.json`이 아니라 **커밋되는** `.claude/settings.json`이라 SDD를 쓰지 않는 기여자까지 게이트를 받으므로, 설치 스킬은 그 사실을 최종 보고에 announce한다. 실행 자산은 조용히 무력화되지 않는다 — 이 경고 의무는 강제 자산(게이트)에 한정된다: JSON 파서가 없으면 게이트는 fail-open하되 세션 시작 훅이 "게이트 비활성"을 경고한다. advisory 자산(watchdog)은 게이트가 아니므로 판정 불가 시 조용히 fail-open해도 된다. 같은 이유로 SessionStart 등록 문법(스크립트마다 다른 matcher — 전 소스 vs `clear|compact`)이 런타임 버전에 의존해 미지원 버전에서 오류 없이 미발동할 수 있다는 사실도 announce 대상이다. 설치 절차와 병합 규칙(스크립트 verbatim 복사 / `settings.json` 키 수준 멱등 병합)의 canonical은 `spec-create`·`spec-upgrade` SKILL이며, 이 계약은 특정 훅 전용이 아니라 훅 자산 일반에 적용된다
+- 하네스 설치는 문서 산출물(`AGENTS.md`·`CLAUDE.md`·`.gitignore`)과 **공용** 훅 bundle을 동일 조건에 묶어 함께 수행한다 — 훅은 별도 opt-in이 아니다. 공용 실행 경로는 호환성을 위해 `.claude/hooks/`에 유지하며, work log 커밋 게이트·세션 컨텍스트 주입·컨텍스트 소실 후 하네스 재주입·subagent 장기실행 watchdog nudge의 스크립트 4개를 self-host 사본과 `spec-create`/`spec-upgrade`의 Claude/Codex reference surface에 byte-identical하게 유지한다
+  - 호출 runtime과 무관하게 커밋되는 `.claude/settings.json`과 `.codex/hooks.json`을 함께 등록한다. 두 파일은 독립된 parse/merge unit으로 다루고 SDD handler만 canonical로 보완하며, 기존 non-SDD handler와 다른 top-level key를 보존한다. 한 runtime 파일이 깨졌으면 원본을 덮어쓰지 않고 그 등록만 skip한 채 반대 runtime과 공용 script 설치를 계속하며, 재실행은 멱등이어야 한다
+  - SessionStart context hook은 `hookSpecificOutput.hookEventName=SessionStart`와 `additionalContext` JSON envelope를 출력해 양 runtime에 context를 주입하고, PreToolUse는 work-log gate를, PostToolUse는 원래 tool result를 보존하는 advisory watchdog `additionalContext`를 제공한다. JSON 파서가 없으면 강제 자산은 fail-open하되 세션 시작에서 비활성을 경고하고, advisory watchdog은 판정 불가 시 조용히 fail-open할 수 있다
+  - 설치 스킬은 커밋되는 두 runtime 설정의 영향과 지원 runtime 조건을 최종 보고에 announce한다. Codex project hook은 `/hooks`에서 exact definition을 사용자가 검토·신뢰하기 전에는 acceptance 완료로 보지 않으며, 스킬은 trust를 자동 승인하거나 user-global Codex 설정을 수정하거나 hook trust bypass를 사용하지 않는다. 설치·독립 병합 계약의 canonical은 `spec-create`이고 `spec-upgrade`는 partial/old install 보완과 canonical fallback을 맡는다
 - wrapper-backed skill은 사용자 entrypoint와 artifact contract를 유지해야 하며, 지원하지 않는 동작을 조용히 흉내내지 않는다
   - wrapper는 thin entrypoint로 두고 전체 계약·프로세스는 agent를 단일 소스로 유지한다
   - 입력이 대화에서 태어나는 wrapper는 그 대화 맥락을 agent에 forwarding해야 한다(agent는 파일은 read하지만 대화는 읽지 못한다)
@@ -129,6 +132,7 @@ SDD Skills의 설계는 다음 층으로 나뉜다.
 |------|-----------|-----------|
 | Skill 정의 형식 | Markdown `SKILL.md` 단일 파일 — frontmatter가 name/description(+ 런타임이 읽는 선택 키) 등 스킬 메타데이터의 단일 소스이고, 스킬 버전을 담는 필드·파일은 두지 않는다(스킬 변경 이력 = git history) | AI 에이전트가 직접 읽고 실행 규약을 추론하기 쉽다. 런타임이 읽지 않는 메타데이터는 사이드카 파일(구 `skill.json`)이든 frontmatter 필드(구 `version:`)든 드리프트가 감지되지 않는 채 누적되므로, 소비자가 없는 값은 두지 않고 버전 lockstep 검사 대상을 0으로 유지한다 |
 | 런타임 구조 | Claude/Codex dual bundle | 동일한 SDD 철학을 유지하면서 플랫폼별 실행 차이를 흡수한다 |
+| Codex/Claude hook parity and dual-setting runtime acceptance | 공용 script 4개는 `.claude/hooks/` 실행 경로를 공유하고, `spec-create`·`spec-upgrade`는 `.claude/settings.json`과 `.codex/hooks.json`을 독립·멱등 병합한다. 구조 parity만으로 완료 처리하지 않고 Codex trust boundary와 양 runtime lifecycle acceptance까지 검증한다 | 기존 Claude 경로와 소비 repo 호환성을 유지하면서 실행 bytes를 한 벌로 공유하고, 한쪽 설정 손상이 다른 runtime 설치를 막지 않게 한다. 사용자 설정 보존·명시적 trust·실제 lifecycle 증거를 완료 조건에 포함해 등록만 된 무발동 상태나 위험한 trust 우회를 parity로 오인하지 않는다 |
 | Codex multi-agent runtime adapter | active tool schema로 mailbox 또는 legacy target/close contract 중 정확히 하나를 선택한다. Desktop과 현재 CLI 0.146.0은 mailbox contract로 수렴하며, legacy target/close는 target wait와 close lifecycle이 함께 노출될 때만 사용한다 | runtime 이름을 capability의 대리값으로 쓰지 않아 schema 세대 차이를 안전하게 흡수하고, 존재하지 않는 lifecycle 호출·혼합 contract·지원되지 않는 override 전달을 차단한다 |
 | 실행 분리 | skill entrypoint + reusable agent. leaf dispatch가 필요한 execution(`pr-review` 2-렌즈 병렬, `implementation-review` 2-렌즈 병렬 + correctness task-shard 1+N, `plan-review` 동일-agent 실측 ∥ 판단 2-렌즈 병렬, `spec-sync` evidence 분기 — implemented sync는 본문 ∥ 기록 표면 묶음 작성자 2-shard·planned는 1 dispatch, `investigate` 조건부 explore fan-out)은 `orchestrator skill + leaf agent`, 단순 위임 execution은 `wrapper skill + single-source agent`(현존 인스턴스 0 — 패턴은 허용 형태로 유지), 구현·planning은 메인 루프 직접 작성 | direct invocation 재사용성을 확보하면서 nesting 1단계 제한 안에서 dispatch를 메인 루프 skill로 올린다 |
 | 상태 전달 | `_sdd/` 파일 아티팩트 중심 | 세션 메모리 의존을 줄이고 재현성과 git 추적성을 높인다 |
