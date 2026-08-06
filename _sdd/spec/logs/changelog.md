@@ -2,6 +2,11 @@
 
 > 이 파일은 `_sdd/spec/main.md`의 **본문이 바뀐 버전만** 기록한다 — 본문 무변경 sync(헤더 날짜만 갱신)는 entry를 남기지 않으므로 버전 번호에 결번이 생길 수 있다.
 
+#### v4.6.39 (2026-08-06)
+
+- **리뷰 게이트 Low finding 선택적 fix (correctness/plan-review 3조건 · simplicity Low advisory 유지) (post-implementation sync)**: 리뷰 게이트 Low finding을 무조건 advisory에서 **3조건 AND 게이트** 기반 선택적 fix로 전환. correctness 렌즈 Low(`implementation-review-agent`)와 plan-review Low(`feature-draft` 게이트)는 **저비용 AND 명백히 이득 AND 현재 change scope 내** 세 조건을 모두 만족할 때만 조건부 fix/반영하고, 아니면 advisory 유지. simplicity 렌즈 Low는 주관적 취향이라 churn 방지로 선택 fix 대상에서 제외하고 advisory 유지. 배경: 사용자 요청 "판단해서 고칠만한건 고치게" — Low여도 값싸고 명백히 이득이면 같은 change scope 안에서 고치도록. 3조건 AND에서 `현재 scope 내`가 load-bearing conjunct로 scope creep을 차단해 단일 패스·fix 1회·gating exit(`critical=high=medium=0`) 불변식을 보존한다. 이 정책은 기존 "Low는 무조건 advisory" 단언(decision_log의 review-fix severity boundary·falsifiable-only gating의 categorical 서술)을 supersede하되 Critical/High/Medium fix 1회 계약은 무변경. 구현 표면 6파일(claude+codex 미러 3쌍): `implementation/SKILL.md` L109, `feature-draft/SKILL.md` L89, `implementation-review-agent` L77.
+- **검증 evidence**: structural check grep/diff로 **12 AC MET**, implementation-review 2렌즈 Blocker CLEAR·Medium 2·Low 1, review-fix로 `implementation/SKILL.md` L109·`feature-draft/SKILL.md` L89 중첩 bullet 재구성.
+
 #### v4.6.38 (2026-08-05)
 
 - **Agent Watchdog 훅 — 하네스 훅 자산 4호 (advisory) (post-implementation sync)**: 하네스 훅 자산 4호 `agent-watchdog.sh`(PostToolUse) 추가 — subagent 장기실행(첫 tool call 후 300s+) 시 자기점검 nudge(시간 도둑 자평·캐시/재사용 전환)를 전달, cooldown 300s, advisory·fail-open, jq→python3 fallback. 배경: review agent가 20분씩 도는 원인(예: `uv run --with torch` 반복 재설치)을 사용자가 매번 알 수 없어 5분 초과 agent의 자기점검·전환 훅을 요청, 2026-08-05 실험 1·2(work log 항목 11·12)로 성립 조건 검증(훅은 subagent tool call에 발동·agent_id는 subagent payload에만·PostToolUse decision:block reason이 subagent 모델에 전문 전달·지시 수행). 구현 표면: 스크립트 5경로(정본+미러3+dogfooding, md5 5-way) + spec-create/spec-upgrade SKILL 4파일 설치 계약(개수 리터럴 3→4, census 확장 패턴 `세 스크립트|스크립트 3개|세 훅|훅 3개|셋 다|두 항목` 잔존 0) + `.claude/settings.json` PostToolUse 등록. 새 contract 2건: ① 하네스 훅 자산 목록 3→4개 ② watchdog은 advisory 자산 — "조용히 무력화되지 않는다" guardrail의 경고 의무는 강제 자산(게이트)에 한정(worklog-context.sh 경고 확장 기각 — 5미러 표면 확대 대비 이득 미미). 알려진 한계: nudge는 tool call 경계에서만(단일 장시간 명령 중간 개입 불가 — 후속 PreToolUse 패턴 차단 레버 후보로 스코프 아웃).
