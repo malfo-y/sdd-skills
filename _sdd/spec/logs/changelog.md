@@ -2,10 +2,15 @@
 
 > 이 파일은 `_sdd/spec/main.md`의 **본문이 바뀐 버전만** 기록한다 — 본문 무변경 sync(헤더 날짜만 갱신)는 entry를 남기지 않으므로 버전 번호에 결번이 생길 수 있다.
 
-#### v4.6.39 (2026-08-07)
+#### v4.6.40 (2026-08-07)
 
 - **Codex/Claude hook parity and dual-setting runtime acceptance (post-implementation sync)**: Feature 1~3을 하나의 runtime parity 계약으로 완결했다. 훅 4종(`worklog-gate.sh`, `worklog-context.sh`, `harness-context.sh`, `agent-watchdog.sh`)은 self-host + `spec-create`/`spec-upgrade` Claude·Codex reference surface 5곳에서 같은 실행 자산으로 유지되고, `SessionStart`는 cross-runtime `hookSpecificOutput.additionalContext` JSON, `PreToolUse`는 work-log gate, `PostToolUse`는 advisory watchdog을 제공한다. 두 설치 스킬은 `.claude/settings.json`과 `.codex/hooks.json`을 독립 병합해 비-SDD handler·top-level key를 보존하며, 한 runtime 설정이 손상돼도 반대 runtime 설치를 계속하고 반복 실행 멱등성을 지킨다. acceptance는 실제 격리 Codex skill invocation fixture의 trust boundary와 `SessionStart`/clear/`PreToolUse`/watchdog lifecycle, Claude Code smoke, manifest 안정성, no-bypass까지 포함한다.
 - **검증 evidence**: scripts 4×5 byte parity + `bash -n`, SKILL mirror byte parity, JSON canonical map, isolated manifest 안정성, Codex 0.146.0·Claude 2.1.223 실제 lifecycle, current-repo hook trust 정확 범위 승인, global config SHA1 `e9bbd36054cbd784565c250e277c9d9c40851de4`, trust bypass 0. 세 feature draft AC 전부 체크, implementation-review C2/H8/M4 fix pass 완료.
+
+#### v4.6.39 (2026-08-06)
+
+- **리뷰 게이트 Low finding 선택적 fix (correctness/plan-review 3조건 · simplicity Low advisory 유지) (post-implementation sync)**: 리뷰 게이트 Low finding을 무조건 advisory에서 **3조건 AND 게이트** 기반 선택적 fix로 전환. correctness 렌즈 Low(`implementation-review-agent`)와 plan-review Low(`feature-draft` 게이트)는 **저비용 AND 명백히 이득 AND 현재 change scope 내** 세 조건을 모두 만족할 때만 조건부 fix/반영하고, 아니면 advisory 유지. simplicity 렌즈 Low는 주관적 취향이라 churn 방지로 선택 fix 대상에서 제외하고 advisory 유지. 배경: 사용자 요청 "판단해서 고칠만한건 고치게" — Low여도 값싸고 명백히 이득이면 같은 change scope 안에서 고치도록. 3조건 AND에서 `현재 scope 내`가 load-bearing conjunct로 scope creep을 차단해 단일 패스·fix 1회·gating exit(`critical=high=medium=0`) 불변식을 보존한다. 이 정책은 기존 "Low는 무조건 advisory" 단언(decision_log의 review-fix severity boundary·falsifiable-only gating의 categorical 서술)을 supersede하되 Critical/High/Medium fix 1회 계약은 무변경. 구현 표면 6파일(claude+codex 미러 3쌍): `implementation/SKILL.md` L109, `feature-draft/SKILL.md` L89, `implementation-review-agent` L77.
+- **검증 evidence**: structural check grep/diff로 **12 AC MET**, implementation-review 2렌즈 Blocker CLEAR·Medium 2·Low 1, review-fix로 `implementation/SKILL.md` L109·`feature-draft/SKILL.md` L89 중첩 bullet 재구성.
 
 #### v4.6.38 (2026-08-05)
 
