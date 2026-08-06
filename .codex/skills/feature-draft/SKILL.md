@@ -86,7 +86,11 @@ description: This skill should be used when the user asks to "feature draft", "d
   - 소유·연접: 각 행은 정확히 하나의 owner task를 가지며, 그 task의 Target Files와 AC가 required surface의 실행·검증을 닫는다.
   - 비발동: 일반 다중파일 변경만으로는 표를 만들지 않는다.
   - census 예외: 변형 표기 전수 제거가 필요할 때만 별도의 census read-only 검증 task 규칙을 적용한다.
-- **품질 게이트**: 작성 후 `plan-review` 스킬 1회로 draft를 점검한다 — **단일 패스**로, review loop는 돌리지 않고 finding은 작성자인 메인 루프가 직접 반영한다. 반영 후, 게이트 반환의 합산 finding(fix 전 기준)이 **Critical+High ≥ 3 또는 Medium ≥ 5**였으면 마감 메시지에 수치와 함께 "finding이 많았으니 `plan-review` 1회 추가 실행을 권장한다"를 1줄 출력한다 — 권고 출력만 하고 추가 리뷰를 자체 실행하지는 않는다(단일 패스 유지).
+- **품질 게이트**: 작성 후 `plan-review` 스킬 1회로 draft를 점검한다 — **단일 패스**로, review loop는 돌리지 않고 반환 finding을 severity로 갈라 작성자인 메인 루프가 반영한다:
+  - **Critical/High/Medium**: 직접 반영한다.
+  - **Low**: 판단해 **저비용 AND 명백히 이득 AND 현재 draft scope 내** 세 조건을 모두 만족하는 것만 반영하고, 나머지는 마감 메시지에 advisory로 남긴다. `현재 draft scope 내`가 scope 확장을 막는 load-bearing 조건이다(scope 확장·사변적 개선 금지, 단일 패스 유지).
+
+  반영 후, 게이트 반환의 합산 finding(fix 전 기준)이 **Critical+High ≥ 3 또는 Medium ≥ 5**였으면 마감 메시지에 수치와 함께 "finding이 많았으니 `plan-review` 1회 추가 실행을 권장한다"를 1줄 출력한다 — 권고 출력만 하고 추가 리뷰를 자체 실행하지는 않는다(단일 패스 유지).
 - **실행 인계**: `implementation` 스킬(메인 루프 직접 RED→GREEN 구현)로 인계한다. 구현 작성을 여러 갈래로 나눠야 할 규모로 드러나면 분할 규칙으로 돌아간다.
 - **Minimum-Code Mandate**: task의 description과 AC는 요청된 동작을 만드는 최소 코드만 명세한다. 요청되지 않은 기능·옵션·설정 가능성, 단일 사용처 추상화, 발생할 수 없는 시나리오의 에러 처리를 계획에 넣지 않는다.
 

@@ -1,5 +1,41 @@
 # Decision Log
 
+## 2026-08-06 - 리뷰 게이트 Low finding 선택적 fix (correctness/plan-review 렌즈 3조건 · simplicity Low advisory 유지) (v4.6.38 → v4.6.39, post-implementation sync)
+
+### Context
+
+기존 리뷰 게이트 정책은 Low finding을 무조건 advisory/logged follow-up으로만 처리했다(과거 단언: line 1231 `주관적 취향은 Low(advisory)`, line 1361 `review-fix severity boundary: Critical/High/Medium은 review-fix blocker이고 Low는 advisory/logged follow-up이다`, line 1369 `Low advisory 정책은 loop 종료 조건과 fix 대상 범위를 일치시킨다`). 사용자가 "판단해서 고칠만한건 고치게" — Low여도 값싸고 명백히 이득이면 같은 change scope 안에서 고치도록 요청했다.
+
+### Decision
+
+리뷰 게이트 Low finding을 무조건 advisory에서 **3조건 AND 게이트 기반 선택적 fix**로 전환한다.
+
+1. **correctness 렌즈 Low**(`implementation-review-agent`): **저비용 AND 명백히 이득 AND 현재 change scope 내** 세 조건을 모두 만족할 때만 조건부 fix, 아니면 advisory 유지. 최종 fix/후속 권고 여부의 기준은 호출 스킬 소관.
+2. **plan-review Low**(`feature-draft` 게이트): 동일 3조건(현재 draft scope 내)을 모두 만족할 때만 조건부 반영.
+3. **simplicity 렌즈 Low**: 선택적 fix 대상에서 **제외** — 주관적 취향이라 churn 방지 목적으로 advisory 유지.
+
+### Alternatives
+
+simplicity Low까지 선택 fix에 포함하는 안을 검토했으나 기각 — simplicity Low는 객관적 위반이 아닌 주관적 취향이라(line 1231의 falsifiable-only gating 닻과 일관), fix 대상에 넣으면 취향 기반 churn을 유발한다.
+
+### Rationale / Evidence
+
+- 3조건 AND 게이트에서 `현재 scope 내`가 **load-bearing conjunct**다 — 이 conjunct가 scope creep(별건 리팩터로의 확장)을 차단해 단일 패스·fix 1회 불변식과 loop 수렴을 보존한다. 저비용·명백한 이득만으로는 범위를 넘는 fix를 허용하지 않는다.
+- 범위 한정: plan-review Low + implementation-review correctness Low만 선택 fix 대상이고, simplicity Low는 advisory 유지 → gating exit 조건(`critical=high=medium=0`)은 무변경, Low는 여전히 loop 종료를 막지 않는다.
+- 검증: 구현 완료(git diff 6파일, structural check grep/diff로 **12 AC MET**), implementation-review 2렌즈 Blocker CLEAR·Medium 2·Low 1, review-fix로 `implementation/SKILL.md` L109·`feature-draft/SKILL.md` L89 중첩 bullet 재구성.
+
+### Supersedes
+
+이 결정은 기존 "Low는 무조건 advisory" 단언을 **supersede**한다 — 구체적으로 line 1231(`주관적 취향은 Low(advisory)`는 simplicity 렌즈에 한정 존치되고 correctness/plan-review Low는 3조건 선택 fix로 갈린다), line 1361(`Low는 advisory/logged follow-up이다`의 categorical 서술), line 1369(`Low advisory 정책`)의 무조건성을 제한한다. 기존 줄은 수정하지 않으며 이 entry가 최신 상태를 정의한다. Critical/High/Medium fix 1회·단일 패스·gating exit 불변식은 그대로다.
+
+### Changes
+
+- `.claude/skills/implementation/SKILL.md` / `.codex/skills/implementation/SKILL.md` L109 -- correctness 렌즈 Low 3조건 조건부 fix, simplicity 렌즈 Low advisory 유지
+- `.claude/skills/feature-draft/SKILL.md` / `.codex/skills/feature-draft/SKILL.md` L89 -- plan-review Low 3조건(현재 draft scope 내) 조건부 반영
+- `.claude/agents/implementation-review-agent.md` / `.codex/agents/implementation-review-agent.toml` L77 -- Low = 호출자의 선택적 fix/후속 권고(기준은 호출 스킬 소관)
+- `_sdd/spec/main.md` -- v4.6.38 → v4.6.39 (본문 묶음 소유)
+- 입력: `_sdd/drafts/2026-08-06_feature_draft_review_low_selective_fix.md` → `_processed_` 마킹
+
 ## 2026-08-05 - Agent Watchdog 훅 — 하네스 훅 자산 4호 (advisory) (v4.6.37 → v4.6.38, post-implementation sync)
 
 ### Context
