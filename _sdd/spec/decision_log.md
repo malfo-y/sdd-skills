@@ -1,5 +1,35 @@
 # Decision Log
 
+## 2026-08-07 - Codex/Claude hook parity and dual-setting runtime acceptance (v4.6.38 → v4.6.39, post-implementation sync)
+
+### Context
+
+하네스 훅은 Claude 설정과 실행 경로에만 집중돼 있어 Codex 소비 repo에서 같은 work-log gate, context 주입, watchdog 계약을 설치·실행·검증할 수 없었다. 또한 한 runtime의 설정 파일이 손상됐을 때 다른 runtime까지 함께 실패하거나, 비-SDD 설정을 덮어쓰지 않으면서 두 설정을 독립적으로 병합한다는 영속 계약이 없었다.
+
+### Decision
+
+1. 하네스 훅 4종(`worklog-gate.sh`, `worklog-context.sh`, `harness-context.sh`, `agent-watchdog.sh`)은 self-host와 `spec-create`/`spec-upgrade`의 Claude·Codex reference surface를 동일 실행 자산으로 유지한다. `SessionStart`는 runtime별 `hookSpecificOutput.additionalContext` JSON을 내고, `PreToolUse`는 work-log gate, `PostToolUse`는 advisory watchdog을 담당한다.
+2. `spec-create`와 `spec-upgrade`는 `.claude/settings.json`과 `.codex/hooks.json`을 각각 독립 병합한다. 비-SDD handler와 top-level key를 보존하고, 한 runtime 파일이 손상되면 그 파일만 건너뛰어 반대 runtime 설치는 계속하며, 반복 실행은 멱등이어야 한다.
+3. runtime acceptance는 정적 parity만으로 닫지 않는다. 격리된 실제 Codex skill invocation fixture와 Claude Code smoke에서 trust boundary, `SessionStart`/clear/`PreToolUse`/watchdog lifecycle, manifest 안정성, bypass 부재를 검증한다.
+
+### Alternatives
+
+Claude 설정만 canonical로 유지하고 Codex를 문서상 호환으로만 취급하거나, 두 runtime 설정을 단일 all-or-nothing 설치로 묶는 방안을 기각했다. 전자는 실제 Codex lifecycle을 보장하지 못하고, 후자는 한쪽의 손상으로 정상인 반대 runtime까지 설치하지 못하게 한다.
+
+### Rationale / Evidence
+
+- 스크립트 4종 × 5 surface가 byte-identical이고 `bash -n`을 통과했으며, SKILL mirror와 JSON canonical map도 동일성을 확인했다.
+- 격리 fixture의 manifest가 안정적으로 유지됐고 Codex 0.146.0과 Claude 2.1.223에서 실제 lifecycle을 검증했다. current-repo Codex hook trust는 정확한 repo 범위로 승인됐으며 trust bypass는 없었다.
+- global config 최종 SHA1은 `e9bbd36054cbd784565c250e277c9d9c40851de4`다. 세 feature draft의 AC가 모두 체크됐고 implementation-review C2/H8/M4 fix pass를 완료했다.
+
+### Changes
+
+- Feature 1 — 공용 `.claude/hooks` 실행 경로와 Claude/Codex reference surface의 훅 4종 parity, runtime별 SessionStart JSON·PreToolUse gate·PostToolUse advisory 계약
+- Feature 2 — `.claude/settings.json` + `.codex/hooks.json` dual installation, 독립 merge·보존·손상 격리·멱등 계약과 Codex self-host 설정
+- Feature 3 — 격리 Codex invocation fixture, Codex trust/lifecycle acceptance, Claude smoke, parity·manifest·no-bypass 검증
+- `_sdd/spec/main.md` — v4.6.38 → v4.6.39 (본문 묶음 소유)
+- 입력 draft 3개와 runtime-acceptance implementation ledger를 `_processed_`로 마킹
+
 ## 2026-08-05 - Agent Watchdog 훅 — 하네스 훅 자산 4호 (advisory) (v4.6.37 → v4.6.38, post-implementation sync)
 
 ### Context

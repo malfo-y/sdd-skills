@@ -2,6 +2,11 @@
 
 > 이 파일은 `_sdd/spec/main.md`의 **본문이 바뀐 버전만** 기록한다 — 본문 무변경 sync(헤더 날짜만 갱신)는 entry를 남기지 않으므로 버전 번호에 결번이 생길 수 있다.
 
+#### v4.6.39 (2026-08-07)
+
+- **Codex/Claude hook parity and dual-setting runtime acceptance (post-implementation sync)**: Feature 1~3을 하나의 runtime parity 계약으로 완결했다. 훅 4종(`worklog-gate.sh`, `worklog-context.sh`, `harness-context.sh`, `agent-watchdog.sh`)은 self-host + `spec-create`/`spec-upgrade` Claude·Codex reference surface 5곳에서 같은 실행 자산으로 유지되고, `SessionStart`는 cross-runtime `hookSpecificOutput.additionalContext` JSON, `PreToolUse`는 work-log gate, `PostToolUse`는 advisory watchdog을 제공한다. 두 설치 스킬은 `.claude/settings.json`과 `.codex/hooks.json`을 독립 병합해 비-SDD handler·top-level key를 보존하며, 한 runtime 설정이 손상돼도 반대 runtime 설치를 계속하고 반복 실행 멱등성을 지킨다. acceptance는 실제 격리 Codex skill invocation fixture의 trust boundary와 `SessionStart`/clear/`PreToolUse`/watchdog lifecycle, Claude Code smoke, manifest 안정성, no-bypass까지 포함한다.
+- **검증 evidence**: scripts 4×5 byte parity + `bash -n`, SKILL mirror byte parity, JSON canonical map, isolated manifest 안정성, Codex 0.146.0·Claude 2.1.223 실제 lifecycle, current-repo hook trust 정확 범위 승인, global config SHA1 `e9bbd36054cbd784565c250e277c9d9c40851de4`, trust bypass 0. 세 feature draft AC 전부 체크, implementation-review C2/H8/M4 fix pass 완료.
+
 #### v4.6.38 (2026-08-05)
 
 - **Agent Watchdog 훅 — 하네스 훅 자산 4호 (advisory) (post-implementation sync)**: 하네스 훅 자산 4호 `agent-watchdog.sh`(PostToolUse) 추가 — subagent 장기실행(첫 tool call 후 300s+) 시 자기점검 nudge(시간 도둑 자평·캐시/재사용 전환)를 전달, cooldown 300s, advisory·fail-open, jq→python3 fallback. 배경: review agent가 20분씩 도는 원인(예: `uv run --with torch` 반복 재설치)을 사용자가 매번 알 수 없어 5분 초과 agent의 자기점검·전환 훅을 요청, 2026-08-05 실험 1·2(work log 항목 11·12)로 성립 조건 검증(훅은 subagent tool call에 발동·agent_id는 subagent payload에만·PostToolUse decision:block reason이 subagent 모델에 전문 전달·지시 수행). 구현 표면: 스크립트 5경로(정본+미러3+dogfooding, md5 5-way) + spec-create/spec-upgrade SKILL 4파일 설치 계약(개수 리터럴 3→4, census 확장 패턴 `세 스크립트|스크립트 3개|세 훅|훅 3개|셋 다|두 항목` 잔존 0) + `.claude/settings.json` PostToolUse 등록. 새 contract 2건: ① 하네스 훅 자산 목록 3→4개 ② watchdog은 advisory 자산 — "조용히 무력화되지 않는다" guardrail의 경고 의무는 강제 자산(게이트)에 한정(worklog-context.sh 경고 확장 기각 — 5미러 표면 확대 대비 이득 미미). 알려진 한계: nudge는 tool call 경계에서만(단일 장시간 명령 중간 개입 불가 — 후속 PreToolUse 패턴 차단 레버 후보로 스코프 아웃).
