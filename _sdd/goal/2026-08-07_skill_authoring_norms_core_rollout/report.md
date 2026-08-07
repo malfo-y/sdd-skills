@@ -1,6 +1,6 @@
 # Report
 
-**Status**: IN_PROGRESS
+**Status**: DONE
 
 ## Summary
 P0·P1·P2를 완료했다. 19개 component 전부 `AUDITED`이며, 18개는 `UPDATED`, 1개(plan-review)는 `NO_CHANGE`로 닫았다. P0 commit `e42faa3`, P1 commit `8679235`; P2 세 document producer는 v4.6.55 단일 feature chain(norms_p2_document_surfaces)으로 impl-review unique C1 H5 M5 fix 후 잔존 0, `NORMS_PASS 14/14`까지 검증했다.
@@ -53,7 +53,14 @@ P0·P1·P2를 완료했다. 19개 component 전부 `AUDITED`이며, 18개는 `UP
 ## 근거
 `journal.md`의 `2026-08-07 Goal init` 항목이 범위 선택과 완료조건 self-check를 기록한다.
 
+## 최종 횡단 검증 (2026-08-08)
+
+- 19행 최종: report priority 19행 전부 `AUDITED` (비-AUDITED 0)
+- validator: P2 3스킬 × 양 런타임 5/6 `Skill is valid!` — 예외 1건은 Claude spec-snapshot의 `user_invocable: true`, v4.6.55에서 허용된 runtime allowlist delta로 기록된 알려진 편차
+- TOML: codex agents 5종 전부 parse OK
+- discussion 보존: `0f2d72e` 이후 discussion 쌍 diff 0
+- worktree 위생: status clean, `git diff --check` PASS
+- commit: P0 `e42faa3` / P1 `8679235` / P2 `063d4e3`
+
 ## 다음 단계
-1. ~~P1 변경을 `norms-p1` Conventional Commit으로 고정한다.~~ (완료: `8679235`)
-2. ~~P2 `spec-summary`·`spec-snapshot`·`guide-create`를 횡단 감사한다.~~ (완료: v4.6.55 feature chain)
-3. P2 변경을 `norms-p2` Conventional Commit으로 고정하고, 최종 19행·TOML·discussion 보존·worktree 위생을 검증한다.
+없음 — goal 완료. 후속(선택): 브랜치 `docs/skill-authoring-norms` push + PR.
