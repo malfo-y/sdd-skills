@@ -18,6 +18,7 @@
 
 ## Temporary Spec
 
-- Are delta, touchpoints, implementation, and validation still explicit?
-- Is validation linkage preserved?
+- Does the artifact preserve the exact `Temporary Spec Target Shape` from `template-compact.md`, including only the conditional blocks whose trigger is met?
+- Does each acceptance criterion state reproducible evidence or a named review rubric?
 - Are execution details kept in the temporary artifact rather than lifted into the global spec?
+- For an oversized rolling split, does each Part 1 feature retain its one-line intent and scope while Part 2 details only the current feature?

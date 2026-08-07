@@ -101,3 +101,129 @@
 - 검증: `main.md` version `4.6.48` == changelog latest `v4.6.48`; decision/changelog 누적 diff `+155/-0`, `+30/-0`; current main의 P0 planned 0; processed draft·ledger 존재; `git diff --check` PASS
 - 결과: 통과 — `implementation`·`implementation-review`·`implementation-review-agent`를 `AUDITED / UPDATED`로 닫아 P0 12/12, 전체 12/19 완료다. P0 5개 feature는 v4.6.44~v4.6.48에 순차 승격됐다.
 - 다음: P0 전수 mirror/TOML/frontmatter/spec/worklog gate 후 `norms-p0` commit을 만든다.
+
+## 2026-08-07 P0 priority commit
+- 가설: 다섯 세로 슬라이스를 priority boundary 하나로 commit하면 P1/P2 변경과 bisect 가능한 경계를 만들 수 있다.
+- 검증: staged 38 files, cached diff check PASS; commit subject `refactor(norms-p0): align core SDD skill contracts`
+- 결과: 통과 — commit `e42faa3`. push/PR 없음.
+- 다음: P1 네 spec lifecycle skill을 norms rubric으로 횡단 감사한다.
+
+## 2026-08-07 P1 spec lifecycle 횡단 감사
+- 가설: P1 네 skill의 본문·reference·example·Claude/Codex mirror를 함께 census하면 개별 skill 리뷰가 놓치는 progressive disclosure와 temporary-spec producer drift를 찾을 수 있다.
+- 검증: Claude/Codex SKILL 네 쌍 exact match; `spec-create/spec-review/spec-rewrite/spec-upgrade` 각 385/217/145/216줄. `spec-create`·`spec-upgrade` hook/JSON/trust 관련 42건, 세 skill의 reference load timing 누락, `spec-rewrite`·`spec-upgrade`의 legacy 7-section temporary-spec 형식을 확인했다.
+- 결과: 지지 — P1을 `spec-bootstrap-disclosure`(create/upgrade)와 `spec-quality-interface`(review/rewrite) 두 feature로 분리한다. hook 설치 상세는 조건부 rich reference 한 곳에서 소비하고, quality pair는 기준·enum·reference load interface와 현재 Part 1/Part 2 temporary-spec 계약을 맞춘다.
+- 다음: 롤링 feature draft의 Part 1에 두 feature를 고정하고 Part 2에는 첫 feature만 상세화해 plan-review를 실행한다.
+
+## 2026-08-07 P1 1/2 bootstrap disclosure plan-review
+- 가설: hook 상세만 current feature에 두고 quality/load interface를 planned feature로 격리하면 8개 target의 단일 홈 이동을 한 컨텍스트에서 닫을 수 있다.
+- 검증: `plan-review` 판단∥실측 2-렌즈. 원시 합산 `C0 H6 M9`(stale `spec-format`·Source pointer·중복 gate 중복 포함), 고유 `C0 H4 M8`. stale reference 선로드, template 선택 기준 부재, 존재하지 않는 Source pointer, untracked 누락을 High로 검출했다.
+- 결과: 통과 — 한 batch에서 current scope를 hook extraction으로 축소하고, Step뿐 아니라 Validation/Output 상세도 이동 대상으로 고정했다. authoring canonical 1개+distribution mirror 3개, preservation matrix, 실제 heading, tracked+untracked 합집합, 28 protected asset manifest, 재현 가능한 validator command로 교정했다. 수정 후 author self-check에서 잔존 C/H/M 0, `git diff --check` PASS. 단일 패스 계약상 자동 재리뷰하지 않는다.
+- 다음: rolling Part 1의 두 feature를 planned spec-sync로 고정한 뒤 current Task 1·2를 구현한다.
+
+## 2026-08-07 P1 rolling planned sync
+- 가설: 두 feature를 별도 planned todo로만 고정하면 current implementation과 후속 quality-interface의 stale reference 교정을 섞지 않을 수 있다.
+- 검증: v4.6.49 main/changelog version 일치; main은 version 1줄 + planned 2줄, decision/changelog append-only `+24/-0`·`+5/-0`; target skill diff·new reference·implementation evidence 0; draft 원경로만 존재; `git diff --check` PASS.
+- 결과: 통과 — `spec-bootstrap-disclosure`와 `spec-quality-interface`를 각각 `PLANNED / NOT_IMPLEMENTED`로 고정했다. components·usage는 Repo-wide Invariant Test를 통과하지 않아 무변경이다.
+- 다음: current feature의 structural RED를 기록하고 8 target을 구현한다.
+
+## 2026-08-07 P1 1/2 bootstrap disclosure 구현
+- 가설: hook 실행 상세를 조건부 rich reference로 이동하고 SKILL에 trigger·upgrade repair owner·pointer만 남기면 hard contract를 잃지 않고 기본 context를 줄일 수 있다.
+- 검증: RED new reference `0/4`, embedded detail 8건 → GREEN refs 4-way exact, required heading 7/case 4/JSON 2, target union 8, validator 4/4, protected manifest 28 mismatch 0, allowed-diff-only 4, `git diff --check` PASS.
+- 결과: 지지 — SKILL 4면은 `+48/-250`(net -202), 조건부 reference는 171줄×4 exact mirror다. authoring canonical 1개와 distribution mirror 3개를 유지하고 hook script/template/harness 28개는 무변경이다.
+- 다음: implementation-review correctness 2 + simplicity 2 gate에서 criterion loss와 과잉압축을 검증한다.
+
+## 2026-08-07 P1 1/2 bootstrap disclosure implementation-review
+- 가설: reference 구조와 local pointer를 correctness·simplicity로 분리 검토하면 구조 검사가 놓친 의미 손실과 압축 품질을 찾을 수 있다.
+- 검증: aggregate `C0 H2 M5`; watchdog original-result/additional-context와 unsupported-version no-error 기준 손실 H2, preservation matrix M1, 본문·reference 중복 M2, mixed/report 과잉압축 M2. fix 1회 후 structural/mirror/validator/allowed-diff/target/protected/diff regression 전부 PASS.
+- 결과: 지지 — H2 문장을 복원하고 M5를 single-home·구조형 reference로 정리했다. review가 새로 찾은 top-level AC/Hard Rule pointer 표면은 ledger에 계획 이탈 1건으로 기록하고 draft 허용 surface를 정정했다. 잔존 C/H/M 0.
+- 다음: v4.6.50 implemented spec-sync로 P1 1/2만 current truth로 승격하고 P1 2/2 planned를 유지한다.
+
+## 2026-08-07 P1 1/2 bootstrap disclosure post-sync
+- 가설: verified hook extraction만 승격하고 quality interface todo를 유지하면 구현 사실과 후속 load-interface 계획이 섞이지 않는다.
+- 검증: main/changelog/decision v4.6.50 일치; P1 1/2 current main 잔존 0, P1 2/2 planned 1; body `+9/-6`, records v4.6.49 포함 누적 decision/changelog `+50/-0`·`+10/-0`; processed draft·ledger 2개; `git diff --check` PASS.
+- 결과: 통과 — main/components가 hook reference authoring canonical과 package-local mirror/repair ownership을 current truth로 반영했다. usage-guide는 scenario drift가 없어 무변경이다.
+- 다음: P1 2/2를 review criterion, rewrite reference, template load의 세 독립 slice로 롤링 분할한다.
+
+## 2026-08-07 P1 2/2a spec-review interface plan-review
+- 가설: 기존 metric 3종을 더 정교하게 만들기보다 spec disposition에 직접 쓰이는 status/decision만 ordered routing으로 남기면 작은 deterministic interface가 된다.
+- 검증: plan-review 실측∥판단 2-렌즈 원시 `C0 H6 M2`, 중복 정규화 `C0 H5 M1`. decision gap/overlap, report path 오측정, Drift Summary consumer 부재, metric 재현성·의식, AC 실행방법 부재를 검출했다.
+- 결과: 통과 — metric 3종과 고정 output table을 제거하고 code analysis를 finding-linked optional evidence로 축소했다. status는 evidence sufficiency→absence→comparison 순서, decision은 material uncertainty→verified spec change→no spec change 순서로 고정했다. Output Drift Summary 4필드와 exact routing 반례, unique path value/occurrence 2, baseline/validator/normalization command를 추가했다. 수정 후 잔존 C/H/M 0, `git diff --check` PASS.
+- 다음: umbrella planned todo를 review/rewrite/template 세 slice로 교체 고정하는 planned spec-sync를 실행한다.
+
+## 2026-08-07 P1 2/2 umbrella split planned sync
+- 가설: quality-interface umbrella를 세 planned item으로 교체하면 각 change element를 독립 full chain으로 닫으면서 global todo 순서를 유지할 수 있다.
+- 검증: v4.6.51 main/changelog 일치; umbrella 0, review/rewrite/template planned 각 1; spec-review target diff 0, implementation ledger 0; main `+4/-2`, decision/changelog append-only `+22/-0`·`+5/-0`; draft 원경로 보존; `git diff --check` PASS.
+- 결과: 통과 — 세 item 모두 `PLANNED / NOT_IMPLEMENTED`; components/usage는 새 persistent navigation fact가 없어 무변경이다.
+- 다음: first slice spec-review의 RED→GREEN 구현과 implementation-review gate를 수행한다.
+
+## 2026-08-07 P1 2/2a spec-review interface 구현
+- 가설: status와 decision의 판정 축을 ordered criterion으로 고정하고 output이 같은 enum을 직접 소비하면 고정 metric 의식 없이도 review 결과가 결정적이다.
+- 검증: RED legacy example/metric 18줄, 새 heading/schema 0 → GREEN section-aware routing·output·forbidden assertion PASS; baseline `e42faa3` 허용 블록 밖 diff 0; Claude/Codex exact; validator 2/2; report path 2건/file; scoped two-path M; `git diff --check` PASS.
+- 결과: 지지 — 두 mirror `+68/-46`. status는 evidence sufficiency→one-side absence→comparison, decision은 uncertainty→verified spec change→otherwise 순서로 고정했다. fixed metrics는 제거하고 finding-linked optional evidence 4필드만 남겼다.
+- 다음: implementation-review correctness·simplicity gate에서 norms §3.1·§3.2·§4와 AC1–AC10을 검증한다.
+
+## 2026-08-07 P1 2/2a spec-review interface implementation-review
+- 가설: correctness 2개와 simplicity 2개를 분리하면 판정 완전성과 norms single-home 회귀를 독립적으로 검출할 수 있다.
+- 검증: correctness 두 shard `C0 H0 M0`, AC1–AC10·norms §3.1/§3.2/§4 MET. simplicity 두 shard raw `C0 H0 M2`, 동일 중복을 정규화해 unique `C0 H0 M1`. fix 후 single-home assertion·baseline normalization·mirror·validator 2/2·target set·report path·diff PASS.
+- 결과: 지지 — Process는 status/decision criterion, Output은 shape만 소유하도록 enum example row·direction·analysis field 중복을 제거했다. draft AC3·AC4를 pointer 기반 검증으로 교정했으며 잔존 C/H/M 0이다.
+- 다음: v4.6.52 implemented spec-sync로 review slice만 current truth로 승격하고 rewrite/template 두 planned item을 유지한다.
+
+## 2026-08-07 P1 2/2a spec-review interface post-sync
+- 가설: reviewed status/decision interface만 승격하고 후속 두 slice를 planned로 남기면 구현 evidence와 실행 순서를 섞지 않는다.
+- 검증: `P1_REVIEW_SPEC_SYNC_PASS v4.6.52 planned=2 processed=2`; main/changelog version 일치; decision/changelog 누적 diff `+97/-0`·`+20/-0`; completed planned 0, remaining planned 2; processed pair 존재·원본 부재; `git diff --check` PASS.
+- 결과: 통과 — main/components에 ordered status·spec disposition·producer pointer·finding-linked optional evidence를 current truth로 반영했다. usage는 scenario/navigation 변화가 없어 무변경이다.
+- 다음: 남은 첫 planned item `spec-rewrite-reference-interface`의 rolling feature draft와 plan-review를 시작한다.
+
+## 2026-08-07 P1 2/2b spec-rewrite reference interface plan-review
+- 가설: point-of-use load, 세 temporary reference, 두 producer example을 한 interface feature로 닫으면 package-local asset drift를 같은 검증 경계에서 제거할 수 있다.
+- 검증: plan-review 판단 렌즈 `C0 H0 M0`, 실측 렌즈 `C0 H3 M2`. propagation query 비재현성, table row를 놓치는 legacy regex, normalization/validator 미고정 H3와 example field 오산·항상-read reference M2를 검출했다. reviewer 장기 실행은 추가 탐색을 중단하고 같은 reviewer follow-up으로 기존 evidence만 회수했다.
+- 결과: 통과 — exact path/query/expected count, 형식 무관 legacy 6-name census, pinned interpreter+validator, 12-file normalization, explicit producer fields, conditional rich-reference load로 fix 1회 교정했다. author self-check 잔존 C/H/M 0, tasks 4·AC 16·target clean·`git diff --check` PASS. 단일 패스 계약상 자동 재리뷰하지 않는다.
+- 다음: implementation ledger를 만들고 Task 1–4를 structural RED→GREEN으로 실행한다.
+
+## 2026-08-07 P1 2/2b spec-rewrite reference interface 구현
+- 가설: 조건부 stage-local pointer와 current producer-shaped rich asset을 함께 반영하면 startup preload 없이 rewrite interface를 완결할 수 있다.
+- 검증: RED mapping 0·legacy 24·plan/report heading 4/2 → GREEN mapping·legacy 0·producer fields COMPLETE; parity five exact pairs + template runtime delta 1; validator 2/2; asset path 10/10; allowed diff 12/12; scoped 12 M; `git diff --check` PASS.
+- 결과: 지지 — 12파일 `+212/-40`. SKILL은 5 asset의 조건부 소비 시점만 소유하고, 세 reference는 current Part 1/Part 2 shape, examples는 plan/report output shape를 소유한다. 첫 checker 실패는 baseline replacement count 오류로 기록·교정했다.
+- 다음: implementation-review 4 task correctness + simplicity 2 gate에서 field 의미와 single-home을 검증한다.
+
+## 2026-08-07 P1 2/2b spec-rewrite reference interface implementation-review
+- 가설: task별 correctness 4개와 simplicity 2개를 분리하면 producer drift와 중복 rich asset을 함께 검출할 수 있다.
+- 검증: correctness `C0 H4 M2`, simplicity `C0 H0 M6`, raw 합 `C0 H4 M8`, 중복 정규화 `C0 H4 M7`. no-rewrite gap, incomplete/non-verbatim template, Contracts optional drift, extra report metrics H4와 schema/list/example duplication·table·rolling intent M7을 검출했다.
+- 결과: 지지 — fix 1회로 feature-draft fenced template exact mirror를 단독 정본으로 두고 format/checklist는 pointer-only로 축소했다. Companion local list와 단일 사용처 example 4개를 제거해 final `+106/-140`; routing·schema·verbatim·deletion·parity·validator·allowed-diff·status·diff PASS, 잔존 C/H/M 0.
+- 다음: v4.6.53 implemented spec-sync로 rewrite slice를 current truth로 승격하고 template-load 하나만 planned로 유지한다.
+
+## 2026-08-07 P1 2/2b spec-rewrite reference interface post-sync
+- 가설: verified rewrite reference diet만 승격하고 template-load를 planned로 유지하면 P1 마지막 feature의 evidence 경계가 선명하다.
+- 검증: `P1_REWRITE_SPEC_SYNC_PASS v4.6.53 planned=1 processed=2`; main/changelog version 일치; decision/changelog 누적 `+124/-0`·`+25/-0`; completed planned 0, template planned 1; processed pair; `git diff --check` PASS. 첫 사후 phrase assertion 2회는 components의 동의어 표현을 literal로 가정한 checker defect였고 row semantic anchors로 교정했다.
+- 결과: 통과 — main/components에 conditional load·no-rewrite exit·single-home verbatim template·example removal을 current truth로 반영했다. usage는 scenario/navigation 변화가 없어 무변경이다.
+- 다음: P1 마지막 `spec-template-load-interface` feature draft와 plan-review를 시작한다.
+
+## 2026-08-07 P1 2/2c spec template load interface plan-review
+- 가설: create template 선택/load, upgrade staged reference load/current format, 통합 parity gate를 기존 8개 파일 안에서 닫으면 P1 마지막 규범 gap을 단일 컨텍스트로 해소할 수 있다.
+- 검증: plan-review 측정 `C0 H2 M1`, 판단 `C0 H1 M3`, 합산 `C0 H3 M4`. current producer title·규모 판정 누락, dirty SKILL normalizer 비결정성, baseline 순서 역전 H3와 protected manifest 외부 의존, full 선택 술어, Claude canonical 근거, 중복 AC M4를 검출했다.
+- 결과: 통과 — 두 구현 task + cross-task gate로 경계를 교정하고 pre-edit baseline precondition, exact anchor normalizer, 24-path protected manifest, current producer 순서, closed full criterion, canonical 대안·확신도, 통합 AC ownership을 한 번의 fix로 반영했다. author self-check tasks 3·AC 10·target 존재·`git diff --check` PASS, 잔존 C/H/M 0. 단일 패스 계약상 자동 재리뷰하지 않는다.
+- 다음: ledger에 baseline을 먼저 기록한 뒤 Task 1·2 RED→GREEN과 Task 3 통합 검증을 실행한다.
+
+## 2026-08-07 P1 2/2c spec template load interface 구현
+- 가설: compact/full을 closed criterion으로 고르고 단계별 local asset 하나만 읽게 하면 startup preload와 template 재구성을 동시에 막을 수 있다.
+- 검증: RED create selection `0/2`, upgrade staged block `0/6`, legacy temporary literal 12 → GREEN. normalized SKILL `4/4`, SKILL parity `2/2`, spec-format `2/2`, create template runtime parity `2/2`, asset path `12/12`, protected template `8/8`, protected hook/harness `24/24`, validator `4/4`, scoped set difference 4, `git diff --check` PASS.
+- 결과: 지지 — create는 Structure Decision과 독립인 selected-only verbatim load를 Step 4에, upgrade는 conditional mapping/current-format load와 같은 template criterion을 Step 1/2/5에 둔다. Codex create templates는 Claude authoring canonical의 runtime-token-only mirror가 됐고 두 spec-format은 current producer 순서를 반영한다.
+- 다음: correctness 3 + simplicity 2 implementation-review gate에서 AC1–AC10과 norms §3.1–§3.4를 검증한다.
+
+## 2026-08-07 P1 2/2c spec template load interface implementation-review
+- 가설: task별 correctness 3개와 interface/reference simplicity 2개를 분리하면 template 실물 drift와 single-home 위반을 함께 잡을 수 있다.
+- 검증: correctness `C0 H3 M0`, simplicity `C0 H0 M3`, raw `C0 H3 M3`; heading drift 중복을 정규화해 unique `C0 H3 M2`. create fence 부재, upgrade heading mismatch, Open Questions semantic 축소 H3와 heading literal 이중 소유, defensive negative, temporary producer 설명 이중 홈을 검출했다.
+- 결과: 지지 — fix 1회로 선택 기준을 semantic rationale로 바꾸고 create whole-template/upgrade fenced-template 실물 경계를 맞췄다. redundant negative를 제거하고 temporary shape는 same-runtime feature-draft Required Output이 단독 소유한다. post-fix review fix·producer parity·normalizer·asset 14/14·protected 8/8+24/24·validator 4/4·status·diff PASS, 잔존 C/H/M 0.
+- 다음: v4.6.54 implemented spec-sync로 template-load를 current truth에 승격하고 P1 planned item을 0으로 만든다.
+
+## 2026-08-07 P1 2/2c spec template load interface post-sync
+- 가설: verified template/load interface만 current truth로 승격하면 P1 마지막 planned item을 evidence 기반으로 제거할 수 있다.
+- 검증: `P1_TEMPLATE_SPEC_SYNC_PASS v4.6.54 planned=0 processed=2`; main/changelog version 일치; body main/components만 변경, usage 무변경; decision/changelog append-only; processed pair SHA 보존; `git diff --check` PASS.
+- 결과: 통과 — main/components가 create selected whole-template, Claude canonical/Codex runtime mirror, upgrade mapping/global/direct-producer/selected-template stage load를 current truth로 반영했다. temporary shape는 feature-draft Required Output이 단독 소유한다.
+- 다음: P1 네 component 횡단 parity·validator·report를 검증하고 priority commit을 만든다.
+
+## 2026-08-07 P1 priority verification
+- 가설: 네 lifecycle component를 한 번에 횡단 검증하면 feature별 gate가 놓친 mirror/runtime drift를 commit 전에 잡을 수 있다.
+- 검증: official validator 8/8; SKILL parity 4/4; hook exact 4/4; create templates runtime parity 2/2; rewrite refs exact 2+runtime 1, examples removed 4/4; upgrade format/mapping/template parity; spec v4.6.54 planned P1 0; report 19 rows/P1 AUDITED 4; norms gate 6종 PASS; `git diff --check` PASS. 첫 rewrite checker는 known `/guide-create`↔`$guide-create` delta를 exact로 오판해 normalization 후 통과했다.
+- 결과: 통과 — P1 네 component 모두 UPDATED, 잔존 C/H/M 0이며 commit-ready다.
+- 다음: `refactor(norms-p1)` Conventional Commit 후 P2 감사를 시작한다.

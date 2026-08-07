@@ -2,7 +2,7 @@
 
 > Markdown 기반 skill bundle로 AI 에이전트의 Spec-Driven Development 워크플로우를 Claude Code와 Codex에서 공통 계약으로 실행한다.
 
-**Spec Version**: 4.6.48
+**Spec Version**: 4.6.54
 **Last Updated**: 2026-08-07
 **Status**: Approved
 **Canonical Role**: current thin global spec
@@ -64,9 +64,10 @@ SDD Skills는 이 문제를 `SKILL.md = 실행 가능한 프롬프트`라는 관
 - 새 temporary artifact는 가능한 한 lowercase canonical 경로를 사용하고, skill contract가 dated slug 패턴을 정의한 output surface는 그 형식을 따라야 한다. reader는 legacy uppercase/fixed-name artifact를 fallback으로 읽을 수 있어야 한다
 - 소비 repo에서 커밋되는 `_sdd`는 `spec/`·`guides/`·`env.md`·`drafts/`·`work_log/`이고(`drafts/`·`work_log/`는 구현 로그 자산), 나머지 process artifact(`_sdd/{discussion,implementation,pipeline,pr}/`)는 `.gitignore`(`SDD-WORKSPACE` 마커 블록)로 로컬 전용이다. `_sdd/env.md`는 커밋되므로 비밀값(API 키·토큰·비밀번호)을 적지 않는다. 단 이 sdd_skills repo는 스킬 개발 메타 repo라 process artifact를 history 가치로 계속 커밋하는 예외다(소비 repo 정책과 별개)
 - 하네스 설치는 문서 산출물(`AGENTS.md`·`CLAUDE.md`·`.gitignore`)과 **공용** 훅 bundle을 동일 조건에 묶어 함께 수행한다 — 훅은 별도 opt-in이 아니다. 공용 실행 경로는 호환성을 위해 `.claude/hooks/`에 유지하며, work log 커밋 게이트·세션 컨텍스트 주입·컨텍스트 소실 후 하네스 재주입·subagent 장기실행 watchdog nudge의 스크립트 4개를 self-host 사본과 `spec-create`/`spec-upgrade`의 Claude/Codex reference surface에 byte-identical하게 유지한다
+  - 훅 event/matcher·설정 병합·trust·검증·보고 계약의 authoring canonical은 `.claude/skills/spec-create/references/hook-installation.md`이다. 나머지 Claude/Codex `spec-create`·`spec-upgrade` 세 package의 동명 reference는 exact 배포 mirror며, 각 skill은 자기 package의 local 사본만 읽어 독립 배포를 유지한다. `spec-create` 본문은 하네스 설치 trigger·guardrail·local pointer를, `spec-upgrade` 본문은 partial/legacy 설치 보완 책임·local pointer를 소유하며 다른 skill package에 의존하지 않는다
   - 호출 runtime과 무관하게 커밋되는 `.claude/settings.json`과 `.codex/hooks.json`을 함께 등록한다. 두 파일은 독립된 parse/merge unit으로 다루고 SDD handler만 canonical로 보완하며, 기존 non-SDD handler와 다른 top-level key를 보존한다. 한 runtime 파일이 깨졌으면 원본을 덮어쓰지 않고 그 등록만 skip한 채 반대 runtime과 공용 script 설치를 계속하며, 재실행은 멱등이어야 한다
   - SessionStart context hook은 `hookSpecificOutput.hookEventName=SessionStart`와 `additionalContext` JSON envelope를 출력해 양 runtime에 context를 주입하고, PreToolUse는 work-log gate를, PostToolUse는 원래 tool result를 보존하는 advisory watchdog `additionalContext`를 제공한다. JSON 파서가 없으면 강제 자산은 fail-open하되 세션 시작에서 비활성을 경고하고, advisory watchdog은 판정 불가 시 조용히 fail-open할 수 있다
-  - 설치 스킬은 커밋되는 두 runtime 설정의 영향과 지원 runtime 조건을 최종 보고에 announce한다. Codex project hook은 `/hooks`에서 exact definition을 사용자가 검토·신뢰하기 전에는 acceptance 완료로 보지 않으며, 스킬은 trust를 자동 승인하거나 user-global Codex 설정을 수정하거나 hook trust bypass를 사용하지 않는다. 설치·독립 병합 계약의 canonical은 `spec-create`이고 `spec-upgrade`는 partial/old install 보완과 canonical fallback을 맡는다
+  - 설치 스킬은 커밋되는 두 runtime 설정의 영향과 지원 runtime 조건을 최종 보고에 announce한다. Codex project hook은 `/hooks`에서 exact definition을 사용자가 검토·신뢰하기 전에는 acceptance 완료로 보지 않으며, 스킬은 trust를 자동 승인하거나 user-global Codex 설정을 수정하거나 hook trust bypass를 사용하지 않는다
 - wrapper-backed skill은 사용자 entrypoint와 artifact contract를 유지해야 하며, 지원하지 않는 동작을 조용히 흉내내지 않는다
   - wrapper는 thin entrypoint로 두고 전체 계약·프로세스는 agent를 단일 소스로 유지한다
   - 입력이 대화에서 태어나는 wrapper는 그 대화 맥락을 agent에 forwarding해야 한다(agent는 파일은 read하지만 대화는 읽지 못한다)
@@ -138,6 +139,7 @@ SDD Skills의 설계는 다음 층으로 나뉜다.
 | 상태 전달 | `_sdd/` 파일 아티팩트 중심 | 세션 메모리 의존을 줄이고 재현성과 git 추적성을 높인다 |
 | 품질 게이트 | AC-First + explicit verification | "should work" 식 추측을 줄이고 종료 조건을 명확히 한다 |
 | 장문 산출물 작성 | producer-owned inline 2-phase writing | skeleton/fill/finalize를 같은 문맥에서 처리해 품질 저하를 줄인다 |
+| spec template load interface | `spec-create` Step 4는 compact를 기본으로 하되 source의 project motivation·evaluated-alternative rationale를 compact의 named slot에 의미 손실 없이 보존할 수 없을 때만 full을 고르고, 작성 직전에 선택한 runtime-local template 하나의 전체 skeleton을 verbatim 적용한다. Claude template pair가 authoring canonical이고 Codex pair는 runtime invocation token만 다른 distribution mirror다. `spec-upgrade`는 Step 1의 불충분한 경계 판정에 mapping을, Step 2의 exact global 비교에 global-only `spec-format`을, mixed temporary 판정에 same-runtime `feature-draft` `Required Output`을, Step 5 작성에 선택한 fenced template 하나를 읽는다 | rich reference를 실제 소비 시점에만 읽고 template·temporary shape의 소유자를 하나로 유지해, stale 복제와 memory reconstruction drift를 막는다 |
 | 오케스트레이션 | reasoning-based `sdd-autopilot` — SDD 체인 전용(메인 루프 스킬 체인, orchestrator·pipeline artifact 없음). Step 2는 producer 3스킬(`feature-draft` → `implementation` → 조건부 `spec-sync`) 순차 호출 + 반환 종합 보고이고 게이트는 재호출하지 않는다. generated orchestrator full 레인과 full 전용 agent·스킬은 제거됨 — 잔재 정리·census·`-lite` 개명까지 완결(F1~F5, 복구는 git tag `full-lane-final`) | 소규모~단일 컨텍스트 변경이 지배적인 흐름에서 orchestrator 생성 비용을 없애고, 규모 초과는 full 승격이 아니라 분할로 해소한다. 게이트를 producer에 남기면 호출자별 중복 호출과 "선택 게이트" 분기가 사라져 직접 호출·autopilot 경로의 품질이 같아진다 |
 | 규모 초과 대응 | 승격이 아니라 분할 — 단일 컨텍스트 초과는 롤링 분할 draft + `spec-sync` planned todo 고정 + feature별 순차 체인으로 해소한다. 분할 판정 canonical은 체인 표면 소유(autopilot은 신호 소비만) | 규모 초과를 더 큰 파이프라인으로 올리면 full 레인 의존이 재생산된다. 분할은 "단일 컨텍스트 = 품질 전제"를 유지하는 해소 수단이며 full 레인 삭제(F1~F5 완결)의 선행 조각이었다 |
 | planning precedence | `feature-draft`가 유일 planning entry. 후속 확장 스킬 없음 — 규모 초과는 분할 | non-trivial 변경에서 peer-choice 혼선을 없애고 "단일 컨텍스트 = 품질 전제"를 유지한다 |
@@ -147,6 +149,7 @@ SDD Skills의 설계는 다음 층으로 나뉜다.
 | subagent model override | review 계열 스킬(`plan-review`·`implementation-review`·`pr-review`)의 subagent 호출은 필요할 때만 런타임별 per-call option으로 모델/추론 강도를 override한다. Claude는 `--model` 단일 옵션, Codex는 `--model`과 `--effort` 분리 옵션을 canonical로 두되 허용값은 선택된 active `spawn_agent` schema의 각 enum이 결정한다 | 기본 세션/agent 설정 상속을 보존하면서 특정 실행만 강도·비용·속도에 맞게 조절하고, 저장소 allowlist가 runtime schema와 drift하는 일을 막으며, 플랫폼별 tool schema 차이를 숨기지 않는다 |
 | spec 구조 | thin global spec + execution-focused temporary spec | 장기 기준과 일회성 실행 정보를 분리해 drift를 줄인다 |
 | spec sync 진입점 | 단일 `spec-sync` 스킬 + `spec-sync-agent`. 구현 전/후 구분은 별도 스킬이 아니라 evidence-driven status 분류로 처리 | 두 진입점(`spec-update-todo`/`spec-update-done`) 이분 진입을 제거해 운영 표면을 줄이면서, 코드+validation evidence 유무로 동작이 자동 적응한다 |
+| spec review 판정 인터페이스 | `spec-review`의 drift status는 evidence sufficiency → 탐색 완료 후 one-side absence → 양면 비교 순서로, spec disposition은 material uncertainty → verified spec change → otherwise 순서로 각각 하나를 고른다. Output은 이 producer 판정을 pointer로 소비하고, code analysis는 고정 metric 없이 finding에 연결된 optional evidence로만 남긴다 | 불충분 evidence를 부재로 오판하거나 구현 측 drift를 spec 변경으로 잘못 라우팅하는 일을 막고, decision이 소비하지 않는 metric 의식을 제거한다 |
 | Strategic Code Map | optional compact navigation surface | global spec을 inventory로 되돌리지 않으면서 사람과 LLM agent가 entrypoint, contract source, invariant hotspot, extension point, validation surface를 빠르게 찾게 한다 |
 | artifact naming/history | lowercase canonical artifact를 기본으로 하고, skill contract가 정의한 output surface는 dated slug naming과 git-history-first 추적을 따른다 | 산출물 경로 추론을 단순화하고 legacy fixed-name drift를 줄인다 |
 | canonical rollout 순서 | `definition -> generators/transformers -> consumers/planners -> docs -> english mirrors/examples -> audit` | definition, skill behavior, human docs drift를 줄인다 |

@@ -1,5 +1,157 @@
 # Decision Log
 
+## 2026-08-07 - spec template selection and point-of-use load interface (v4.6.53 → v4.6.54, post-implementation sync)
+
+### Context
+
+v4.6.53에서 `🚧 Planned`로 남긴 `spec-template-load-interface`를 구현했다. 기존 spec lifecycle producer는 compact/full 선택을 구조 분할과 명확히 분리하지 않았고, reference path와 temporary-spec shape 설명이 startup asset 목록·단계별 소비 지점·format reference에 중복돼 drift 위험이 있었다.
+
+### Decision
+
+1. `spec-create`와 `spec-upgrade`의 compact/full 선택은 파일 분할과 독립된 semantic-loss 기준을 사용한다. compact가 기본이며, 입력에 project motivation 또는 evaluated-alternative rationale가 있고 compact의 named slot이 그 고유 역할을 보존하지 못할 때만 full을 고른다.
+2. 선택·load interface와 local path map은 실제 소비 단계가 단독 소유한다. `spec-create`는 Step 4 직전에 선택한 template 전체 skeleton만 읽어 verbatim 적용하고, Claude template을 authoring canonical, Codex template을 runtime invocation token만 다른 distribution mirror로 유지한다.
+3. `spec-upgrade`는 Step 1의 conditional upgrade mapping, Step 2의 global format과 same-runtime `feature-draft` producer, Step 5의 selected template을 stage-local single home으로 둔다. migration은 선택한 fenced template만 verbatim/slot-only로 적용한다.
+4. temporary-spec shape의 direct producer는 same-runtime `feature-draft`의 `Required Output`이다. `spec-format`의 stale `Temporary Spec Reference` 설명은 제거하고 global format만 소유하게 한다.
+
+### Rationale / Evidence
+
+- 예시 단어가 아니라 보존해야 할 의미 역할로 full 선택을 닫아 template heading 변화와 producer criterion의 결합을 줄이고, compact default를 결정적으로 유지한다.
+- implementation ledger는 `REVIEW_PASSED`이며 AC1–AC10이 모두 GREEN이다. implementation-review는 raw `C0 H3 M3`, duplicate-normalized `C0 H3 M2`였고 fix 1회 후 잔여 Critical/High/Medium은 0이다.
+- 최종 검증은 normalized SKILL 4/4, asset path 14/14, protected template/reference 8/8, protected hook/harness 24/24, validator 4/4와 Claude/Codex parity·`git diff --check`를 모두 통과했다.
+
+### Changes
+
+- `.claude/skills/spec-create/SKILL.md`, `.codex/skills/spec-create/SKILL.md` — compact default, semantic-loss criterion, selected whole-template verbatim load
+- `.codex/skills/spec-create/references/{template-compact.md,template-full.md}` — Claude authoring canonical의 runtime-token distribution mirror
+- `.claude/skills/spec-upgrade/SKILL.md`, `.codex/skills/spec-upgrade/SKILL.md` — mapping/global-format/same-runtime producer/selected-template stage-local load
+- `.claude/skills/spec-upgrade/references/spec-format.md`, `.codex/skills/spec-upgrade/references/spec-format.md` — global format only; stale temporary-spec 설명 제거
+- `_sdd/spec/main.md`, `_sdd/spec/components.md` — v4.6.54 current truth 승격 (본문 묶음 소유)
+- `_sdd/drafts/_processed_2026-08-07_feature_draft_spec_template_load_interface.md`, `_sdd/implementation/_processed_2026-08-07_implementation_ledger_spec_template_load_interface.md` — 사용 input 처리 표시
+
+## 2026-08-07 - spec-rewrite point-of-use references and single-home template (v4.6.52 → v4.6.53, post-implementation sync)
+
+### Context
+
+v4.6.52에서 `🚧 Planned`로 남겨 둔 P1 2/2의 둘째 slice `spec-rewrite-reference-interface`를 구현했다. 기존 `spec-rewrite`는 format·checklist·target template의 load 시점이 실제 소비 단계와 연결되지 않았고, temporary-spec schema와 plan/report producer interface가 reference와 단일 사용 example에 중복돼 있었다.
+
+### Decision
+
+1. `spec-rewrite`는 global/temporary/target shape 판별에 필요할 때만 `spec-format`, rewrite를 실행해 Step 2에 진입할 때만 `rewrite-checklist`, Step 3에서 target shape를 재구성할 때만 `template-compact`를 읽는 point-of-use interface를 사용한다. rewrite가 필요 없으면 Steps 2–4와 관련 asset을 읽지 않고 종료한다.
+2. `template-compact`를 current temporary-spec exact skeleton의 단일 홈으로 두고 fenced skeleton을 verbatim 적용한다. 허용 변경은 placeholder 치환, 필요 row/task 반복, 조건부 block 제거로 한정하며 heading·marker·field order를 보존한다. `spec-format`과 `rewrite-checklist`는 자기 고유 역할과 template pointer만 소유한다.
+3. SKILL Step 2·4가 plan/report producer interface의 단일 소스다. 이를 단일 사용처에서 재구현하던 Claude/Codex `rewrite-plan.md`·`rewrite-report.md` example 네 파일은 제거한다.
+4. `spec-rewrite-reference-interface`만 current truth로 승격한다. `spec-template-load-interface`는 구현·검증 evidence가 없으므로 `🚧 Planned`로 유지한다.
+
+### Rationale / Evidence
+
+- implementation ledger는 `REVIEW_PASSED`이고 AC1–AC16이 모두 GREEN이다. 최종 변경 집합은 surviving reference/SKILL 8 `M` + redundant example 4 `D`, `+106/-140`이며, exact producer template·conditional load·no-rewrite exit·verbatim 적용·example 제거가 모두 검증됐다.
+- implementation-review는 raw `C0 H4 M8`, duplicate-normalized `C0 H4 M7`이었고 fix 1회 후 잔여 Critical/High/Medium은 0이다.
+- `spec-template-load-interface`는 이번 draft의 planned scope이지만 ledger의 구현·validation 대상이 아니므로 evidence 없이 승격하지 않는다.
+
+### Changes
+
+- `.claude/skills/spec-rewrite/SKILL.md`, `.codex/skills/spec-rewrite/SKILL.md` — conditional point-of-use load, no-rewrite exit, verbatim/slot-only target reshape
+- `.claude/skills/spec-rewrite/references/{rewrite-checklist.md,spec-format.md,template-compact.md}`, `.codex/skills/spec-rewrite/references/{rewrite-checklist.md,spec-format.md,template-compact.md}` — exact temporary-spec skeleton single-home과 pointer-only supporting references
+- `.claude/skills/spec-rewrite/examples/{rewrite-plan.md,rewrite-report.md}`, `.codex/skills/spec-rewrite/examples/{rewrite-plan.md,rewrite-report.md}` — 단일 사용 producer 재구현 example 제거
+- `_sdd/spec/main.md`, `_sdd/spec/components.md` — v4.6.53 current truth 승격과 `spec-template-load-interface` planned 유지 (본문 묶음 소유)
+- `_sdd/drafts/_processed_2026-08-07_feature_draft_spec_rewrite_reference_interface.md`, `_sdd/implementation/_processed_2026-08-07_implementation_ledger_spec_rewrite_reference_interface.md` — 사용 input 처리 표시
+
+## 2026-08-07 - spec-review deterministic status and disposition interface (v4.6.51 → v4.6.52, post-implementation sync)
+
+### Context
+
+v4.6.51에서 세 feature로 분할해 `🚧 Planned`로 둔 P1 2/2 중 첫 slice `spec-review-deterministic-interface`를 구현했다. 기존 `spec-review`는 drift status와 spec disposition decision을 예시 중심으로 설명하고, 고정 code-analysis metrics와 output의 값 재열거가 producer 판정과 report consumer 사이에 중복돼 있었다.
+
+### Decision
+
+1. drift status는 evidence 충분성 → 한쪽 surface의 확인된 부재 → 양쪽 비교 순서로 판정하고 `ALIGNED | DRIFT | MISSING | UNTESTED` 중 정확히 하나를 고른다. `MISSING`만 `SPEC_MISSING | IMPLEMENTATION_MISSING` direction을 사용하며 그 외 direction은 `N/A`다.
+2. spec disposition은 material uncertainty를 먼저 `NEEDS_DISCUSSION`으로 라우팅하고, 검증된 spec-side drift만 `SYNC_REQUIRED`, 그 밖에는 `SPEC_OK`로 둔다. implementation-only drift는 `SPEC_OK`와 implementation next action으로 분리한다.
+3. Output의 Drift Summary와 Decision은 각각 status/decision producer를 가리키며 enum을 다시 복제하지 않는다. revision/history/change-set 분석은 scope 선택이나 finding을 실제로 뒷받침할 때만 bounded evidence로 기록하고, 사용하지 않으면 생략한다.
+4. `spec-review-deterministic-interface`만 current truth로 승격한다. `spec-rewrite-reference-interface`와 `spec-template-load-interface`는 구현 evidence가 없으므로 각각 `🚧 Planned`로 유지한다.
+
+### Rationale / Evidence
+
+- implementation ledger는 `REVIEW_PASSED`이고 AC1–AC10이 모두 GREEN이다. Claude/Codex mirror exact parity, validator 2/2, baseline 허용 블록 normalization, scoped target set, report path, `git diff --check`가 모두 PASS했다.
+- implementation-review는 raw `C0 H0 M2`, duplicate-normalized `C0 H0 M1`이었고 single-home fix 1회 후 잔여 Critical/High/Medium은 0이다.
+- 나머지 두 slice는 이번 implementation ledger의 대상이 아니므로 evidence 없는 planned truth를 승격하지 않는다.
+
+### Changes
+
+- `.claude/skills/spec-review/SKILL.md`, `.codex/skills/spec-review/SKILL.md` — ordered drift status·decision interface, producer pointer 기반 output, 조건부 code-analysis evidence
+- `_sdd/spec/main.md` — v4.6.52, 첫 slice current truth 승격과 나머지 두 slice의 개별 `🚧 Planned` 유지 (본문 묶음 소유)
+- `_sdd/drafts/_processed_2026-08-07_feature_draft_spec_quality_interface.md`, `_sdd/implementation/_processed_2026-08-07_implementation_ledger_spec_review_interface.md` — 사용 input 처리 표시
+
+## 2026-08-07 - spec quality interface를 세 feature로 분할 (v4.6.50 → v4.6.51, pre-implementation planned sync)
+
+### Context
+
+P1 2/2 `spec-quality-interface`는 review verdict 판정, rewrite reference 소비, template 선택·load라는 서로 다른 producer/consumer interface를 하나의 todo로 묶고 있었다. 현재 input은 feature draft뿐이고, 첫 feature의 두 `spec-review` target에는 diff가 없으며 신규 implementation ledger도 없다.
+
+### Decision
+
+1. umbrella todo를 `spec-review-deterministic-interface` → `spec-rewrite-reference-interface` → `spec-template-load-interface` 순서의 세 개별 `🚧 Planned` 항목으로 분할한다.
+2. draft의 `current`는 실행 순서일 뿐 구현 status가 아니므로, 코드와 validation evidence가 생기기 전에는 세 항목 모두 `PLANNED / NOT_IMPLEMENTED`로 유지한다.
+3. task별 contract·AC·Target Files는 draft에만 두고 global spec에 복제하지 않는다. 이 분할은 repo-wide invariant나 persistent navigation을 바꾸지 않으므로 `components.md`·`usage-guide.md`는 건드리지 않는다.
+
+### Rationale / Evidence
+
+- verdict enum, rewrite 산출물, template load는 change element·target set·검증면이 독립적이라 순차 구현·검증이 가능한 단위로 나누는 편이 더 명확하다.
+- `.claude/skills/spec-review/SKILL.md`·`.codex/skills/spec-review/SKILL.md` target diff는 0이고, `spec_quality_interface` 관련 implementation ledger는 없다. 따라서 완료 승격은 없다.
+
+### Changes
+
+- `_sdd/spec/main.md` — v4.6.51, P1 2/2 umbrella todo를 세 개의 ordered `🚧 Planned` todo로 교체
+- `_sdd/drafts/2026-08-07_feature_draft_spec_quality_interface.md` — 다음 implementation 입력으로 원래 경로와 내용을 유지하며 process/rename하지 않음
+
+## 2026-08-07 - spec bootstrap hook contract progressive disclosure (v4.6.49 → v4.6.50, post-implementation sync)
+
+### Context
+
+v4.6.49에서 `🚧 Planned`로 남긴 P1 1/2 `spec-bootstrap-disclosure`를 구현했다. `spec-create`·`spec-upgrade`의 상시 로드 본문에 hook event·matcher, settings merge case, runtime JSON, trust, validation/report 세부가 흩어져 있어, 하네스를 생성·보완하지 않는 호출도 모든 설치 계약을 부담하고 single-home drift 위험이 있었다.
+
+### Decision
+
+1. 훅 설치의 rich contract는 package-local `references/hook-installation.md`로 옮긴다. `.claude/skills/spec-create/references/hook-installation.md`를 authoring canonical로 두고, Claude `spec-upgrade`와 Codex `spec-create`·`spec-upgrade`의 세 사본은 exact distribution mirror로 유지한다.
+2. `spec-create`는 top-level AC·Hard Rule·Step 3e·Validation·Output에 하네스 생성/병합 시 local reference를 읽고 전부 적용하는 trigger와 verification/report pointer만 남기며, event/matcher·merge·runtime·trust 세부는 reference가 소유한다.
+3. `spec-upgrade`는 자기 package의 local reference를 직접 읽고 partial/legacy 설치를 current dual-runtime 상태로 보완하며 재실행 diff를 없애는 upgrade-only repair 판단을 본문에 남긴다. `spec-create`의 존재나 cross-skill reference에 의존하지 않는다.
+4. P1 1/2 `spec-bootstrap-disclosure`는 current truth로 승격하고, P1 2/2 `spec-quality-interface`는 별도 `🚧 Planned`로 유지한다.
+
+### Rationale / Evidence
+
+- 하나의 authoring home과 세 package-local exact mirror를 사용해 작성 기준을 단일화하면서도 각 skill의 독립 배포를 보존했다.
+- 최종 SKILL 4면은 합계 `+48/-250`(net `-202`)이고, literal target 8개·official validator 4/4·protected asset 28개 SHA-256 exact match를 확인했다.
+- implementation-review gate `C0 H2 M5`를 fix 1회로 해소했다. watchdog original-result 보존, unsupported Claude version no-fire/no-error, non-SDD handler·malformed runtime continuation, single-home 잔존 세부를 복원·정리한 후 잔여 Critical/High/Medium은 0이다.
+
+### Changes
+
+- `.claude/skills/spec-create/{SKILL.md,references/hook-installation.md}`, `.codex/skills/spec-create/{SKILL.md,references/hook-installation.md}` — authoring canonical + distribution mirror, top-level trigger/pointer 전환
+- `.claude/skills/spec-upgrade/{SKILL.md,references/hook-installation.md}`, `.codex/skills/spec-upgrade/{SKILL.md,references/hook-installation.md}` — local reference + partial/legacy repair ownership, cross-skill 의존 없음
+- `_sdd/spec/main.md`, `_sdd/spec/components.md` — v4.6.50 current truth, P1 1/2 완료·P1 2/2 planned 반영 (본문 묶음 소유)
+- `_sdd/drafts/_processed_2026-08-07_feature_draft_norms_p1_spec_lifecycle.md`, `_sdd/implementation/_processed_2026-08-07_implementation_ledger_norms_p1_spec_lifecycle.md` — 사용 input 처리 표시
+
+## 2026-08-07 - spec lifecycle P1을 두 feature로 분리 (v4.6.48 → v4.6.49, pre-implementation planned sync)
+
+### Context
+
+`docs/SKILL_AUTHORING_NORMS.md`의 P1 적용 대상에는 hook 설치 상세의 progressive disclosure와 spec lifecycle skill의 deterministic quality interface가 함께 있었지만, 두 변경은 change element·검증면·구현 target이 겹치지 않는다. 현재 입력은 feature draft뿐이며 target code diff, 신규 hook reference, implementation artifact가 없어 구현 완료로 승격할 evidence가 없다.
+
+### Decision
+
+1. P1을 `spec-bootstrap-disclosure` → `spec-quality-interface` 순서의 두 독립 feature로 나누고 각각 별도 `🚧 Planned` todo로 유지한다. draft에서 첫 feature가 `current`로 지칭돼도 이는 실행 순서일 뿐 구현 status가 아니며, evidence가 생기기 전에는 current truth로 승격하지 않는다.
+2. `spec-bootstrap-disclosure`는 `spec-create`·`spec-upgrade`의 hook 설치 상세를 조건부 package-local rich reference로 옮긴다. Claude `spec-create` reference 하나를 authoring canonical로 두고 나머지 세 사본을 exact 배포 mirror로 유지해 각 skill의 독립 배포를 보존한다. skill 본문에는 trigger, upgrade-only repair ownership, reference pointer만 남긴다.
+3. `spec-quality-interface`는 `spec-review`의 criterion·status/decision enum과 spec lifecycle producer들의 template/reference/example 선택·load·output interface를 완결한다. legacy 7-section temporary-spec reference는 현재 producer shape로 고친 뒤에만 load한다.
+4. 구현 전 global surface에는 두 planned item과 그 rationale만 남긴다. task별 AC·Target Files·reference section 상세는 temporary draft가 소유하며 `components.md`·`usage-guide.md`에 복제하지 않는다.
+
+### Rationale / Evidence
+
+- hook 설치 상세는 하네스 생성·병합 때만 필요하고 100줄 이상이라 조건부 rich reference가 맞지만, 실행 trigger와 upgrade 고유 repair 책임은 항상 읽는 skill 본문에 남아야 한다.
+- cross-skill 단일 reference는 독립 배포를 깨므로 authoring canonical 1개 + package-local exact mirror 3개를 선택한다.
+- `references/hook-installation.md` 0개, 네 current skill target diff 0개, 관련 implementation artifact 0개를 확인했다. 따라서 두 delta의 status는 모두 `PLANNED / NOT_IMPLEMENTED`다.
+
+### Changes
+
+- `_sdd/spec/main.md` — v4.6.48 → v4.6.49, `spec-bootstrap-disclosure`와 `spec-quality-interface`를 별도 `🚧 Planned` todo로 추가
+- `_sdd/drafts/2026-08-07_feature_draft_norms_p1_spec_lifecycle.md` — 구현 입력으로 원래 경로와 내용을 유지하며 이번 sync에서 process/rename하지 않음
+
 ## 2026-08-07 - implementation producer·review pair 규범 다이어트 (v4.6.47 → v4.6.48, post-implementation sync)
 
 ### Context

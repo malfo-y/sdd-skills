@@ -23,7 +23,7 @@ description: This skill should be used when the user asks to "create a spec", "w
 - [ ] 코드베이스가 있으면 스펙이 실제 코드 구조와 naming을 반영한다.
 - [ ] 필요한 경우에만 `AGENTS.md`(하네스 템플릿 기반 §0~§5 채움), `CLAUDE.md`(`→ AGENTS.md 참조` 포인터), `_sdd/env.md`(비밀값 금지 경고 포함), `.gitignore`(`SDD-WORKSPACE` 마커로 process artifact ignore)를 최소 범위로 생성/보강했다.
 - [ ] `AGENTS.md`·`CLAUDE.md` 생성/보강 시 SDD-HARNESS 마커 멱등 병합을 적용했고(부재→생성, 존재→맨 위 prepend·기존 보존, 마커 블록 존재→블록만 교체), legacy `## SDD란` 블록은 하네스로 흡수·제거했다.
-- [ ] 하네스를 생성/병합했으면 훅 자산(`references/hooks/`의 네 스크립트 → `.claude/hooks/`, `.claude/settings.json` + `.codex/hooks.json` 훅 등록)도 함께 설치했고, runtime별 설치 결과를 최종 보고에 명시했다(3e).
+- [ ] 하네스를 생성/병합했으면 Step 3e의 local hook installation contract를 적용했다.
 
 ## SDD Lens
 
@@ -55,9 +55,8 @@ Negative example:
 
 ## Companion Assets
 
-- `references/template-compact.md`
-- `references/template-full.md`
 - `references/agents-harness-template.md`
+- `references/hook-installation.md`
 - `references/hooks/worklog-gate.sh`
 - `references/hooks/worklog-context.sh`
 - `references/hooks/harness-context.sh`
@@ -71,7 +70,7 @@ Negative example:
 1. `src/`, `tests/` 등 구현 코드 파일은 수정하지 않는다.
 2. 문서 언어는 기존 스펙/문서를 따른다. 기존 스펙이 없으면 한국어를 기본으로 한다.
 3. 스펙 출력은 `_sdd/spec/`에만 저장한다.
-4. `AGENTS.md`, `CLAUDE.md`는 없을 때 SDD-HARNESS 마커 블록으로 생성하고, 이미 있으면 마커 멱등 병합(맨 위 prepend·기존 보존, 마커 블록 존재 시 블록만 교체)한다. `_sdd/env.md`는 없을 때 생성하고 이미 있으면 필수 안내 문구가 빠진 경우에만 최소 수정한다. `.claude/hooks/`의 훅 스크립트는 항상 정본으로 덮어쓰고(verbatim), `.claude/settings.json`과 `.codex/hooks.json`은 각각 해당 훅 항목만 교체하는 독립 키 수준 병합으로 다룬다(3e).
+4. `AGENTS.md`, `CLAUDE.md`는 없을 때 SDD-HARNESS 마커 블록으로 생성하고, 이미 있으면 마커 멱등 병합(맨 위 prepend·기존 보존, 마커 블록 존재 시 블록만 교체)한다. `_sdd/env.md`는 없을 때 생성하고 이미 있으면 필수 안내 문구가 빠진 경우에만 최소 수정한다. 하네스를 생성/병합하면 Step 3e의 local hook installation contract를 적용한다.
 5. 거버넌스 문서는 기본적으로 lowercase canonical `decision_log.md`까지만 사용한다. legacy uppercase `DECISION_LOG.md`는 read-only fallback으로만 취급한다.
 6. global spec을 feature-level usage/validation/reference 문서로 부풀리지 않는다.
 7. `Strategic Code Map`을 exhaustive file tree, component catalog, API reference, 구현 narrative로 만들지 않는다.
@@ -211,102 +210,13 @@ _sdd/pr/
 
 #### 3e. 훅 자산 설치
 
-하네스 규약은 산문만으로는 지켜지지 않는다. 훅은 Claude Code와 Codex가 직접 실행하는 셸 명령이라 모델 재량으로 건너뛸 수 없으므로, 규약 중 재량으로 흘릴 수 있는 것을 실행 층으로 옮긴다. **훅 설치는 `AGENTS.md` 하네스 생성/병합과 동일 조건에 묶인다 — 하네스를 깔면 두 runtime의 등록을 함께 설치한다. 별도 opt-in이 아니다.**
+훅 설치는 `AGENTS.md` 하네스 생성/병합과 동일 조건이다. 하네스를 설치하면 Claude Code와 Codex 등록을 함께 설치하며 별도 opt-in으로 다루지 않는다.
 
-설치 대상은 `references/hooks/`의 네 스크립트다.
+1. 호출 중인 skill package의 `references/hook-installation.md`를 **Read**한다.
+2. 그 reference의 `Trigger and Inputs`부터 `Verification and Report`까지 전부 적용한다.
+3. reference의 검증 checklist로 재실행 멱등성을 확인하고 runtime별 결과를 그 report 필드로 알린다.
 
-- `worklog-gate.sh` — `PreToolUse`, `matcher: "Bash"`(게이트는 Bash 명령만 판정한다). 하네스 §5 work log 규약을 강제한다(오늘 로그에 미커밋 변경이 없으면 세션 첫 `git commit`을 거부).
-- `worklog-context.sh` — `SessionStart`, matcher 없음(전 소스). 세션 시작 시 오늘 work log 상태를 컨텍스트에 넣는다.
-- `harness-context.sh` — `SessionStart`, `matcher: "clear|compact"`. 컨텍스트가 소실된 뒤 `AGENTS.md` 전문을 재주입한다. `startup`은 `CLAUDE.md` 포인터를 보고 첫 턴에 읽는 것이 정상 동작이고 `resume`·`fork`는 컨텍스트가 복원된다. 컨텍스트가 사라졌는데 포인터만 남는 source는 `clear`·`compact` 둘뿐이라 이 둘만 잡는다.
-- `agent-watchdog.sh` — `PostToolUse`, matcher 없음(전 tool). subagent가 첫 tool call 이후 5분 이상 돌면 원래 tool 결과 옆에 자기점검 nudge를 additional context로 전달한다. advisory 자산이다 — 게이트가 아니며, 판정 불가 시 조용히 fail-open 한다.
-
-**스크립트 4개는 verbatim 복사다.** `references/hooks/worklog-gate.sh`·`references/hooks/worklog-context.sh`·`references/hooks/harness-context.sh`·`references/hooks/agent-watchdog.sh`를 각각 **Read**해 그 내용을 **글자 그대로** 소비 repo의 `.claude/hooks/` 같은 이름으로 쓴다. 어떤 줄도 추가·삭제·재배열·요약하지 않으며 슬롯 치환도 없다(대상 경로 `_sdd/work_log/<yyyy-mm-dd>.md`는 하네스 §5가, 주입 대상 `AGENTS.md`는 하네스 자체가 고정한다). 기억이나 이 SKILL 본문으로 **재구성하지 않는다** — 재구성하면 자산 변경(파서 fallback·판정 규칙 등)이 산출물에 누락된다. 이미 있으면 정본 내용으로 덮어쓴다.
-
-`.claude/settings.json`과 `.codex/hooks.json` 병합 규칙 — JSON에는 마커 주석을 넣을 수 없으므로 두 파일을 **서로 독립적인 키 수준 멱등 병합 단위**로 다룬다.
-
-- **파일 부재** → 해당 runtime의 아래 네 훅 항목만 담아 새로 만든다. 호출한 runtime과 무관하게 두 파일 모두를 설치 대상으로 판정한다.
-- **파일 존재** → `hooks.PreToolUse`·`hooks.PostToolUse`·`hooks.SessionStart` 배열에 항목을 추가한다. 단 `command` 문자열이 `.claude/hooks/<script>.sh`를 포함하는 기존 항목이 있으면, 그 `command`를 담고 있는 **바깥 그룹 객체 전체**(`{matcher, hooks:[…]}`)를 해당 runtime 예시의 그룹 객체로 **교체**한다. 네 스크립트는 각각 독립적으로 판정한다. 안쪽 `{type, command}`만 갈아끼우지 않는다 — 그러면 `matcher`가 빠져 있던 과거 설치를 정정하지 못한다.
-- 교체할 그룹에 사용자의 다른 `command` handler가 섞여 있으면 교체 전 원래 outer group의 event와 matcher를 먼저 보존한다. SDD handler만 canonical event·matcher 그룹으로 옮기고, 모든 non-SDD handler는 원래 event와 matcher(matcher key가 없었으면 생략)를 그대로 가진 별도 그룹으로 떼어 보존한다. `permissions`·`description` 등 다른 최상위 키, 다른 event group, 사용자의 다른 hook handler도 그대로 보존한다. (재실행해도 중복 누적되지 않는다 = 멱등.)
-- **파싱 불가**(깨진 JSON)면 그 파일을 덮어쓰지 않는다 — 통째로 다시 쓰면 사용자 설정이 소실된다. 해당 runtime 등록만 건너뛰고 다른 설정의 병합과 스크립트 복사는 계속한다. 최종 보고에는 Claude/Codex 각각 생성·교체·skip 여부와 부분 실패를 명시한다.
-
-등록 형태는 아래를 따른다(각 스크립트의 이벤트·matcher는 위 목록과 같다). command는 `bash <path>` 형태로 써 exec bit에 의존하지 않는다. Claude Code는 기존 `$CLAUDE_PROJECT_DIR` command를 유지한다. Codex hook command는 session cwd에서 실행되므로 공식 권장대로 git root에서 공용 `.claude/hooks/` 설치본을 찾는다. 별도 `.codex/hooks/` script 사본이나 `chmod` 단계는 만들지 않는다.
-
-Claude Code — `.claude/settings.json`:
-
-```json
-{
-  "hooks": {
-    "PreToolUse": [
-      {
-        "matcher": "Bash",
-        "hooks": [
-          { "type": "command", "command": "bash \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/worklog-gate.sh" }
-        ]
-      }
-    ],
-    "PostToolUse": [
-      {
-        "hooks": [
-          { "type": "command", "command": "bash \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/agent-watchdog.sh" }
-        ]
-      }
-    ],
-    "SessionStart": [
-      {
-        "hooks": [
-          { "type": "command", "command": "bash \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/worklog-context.sh" }
-        ]
-      },
-      {
-        "matcher": "clear|compact",
-        "hooks": [
-          { "type": "command", "command": "bash \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/harness-context.sh" }
-        ]
-      }
-    ]
-  }
-}
-```
-
-Codex — `.codex/hooks.json`:
-
-```json
-{
-  "hooks": {
-    "PreToolUse": [
-      {
-        "matcher": "Bash",
-        "hooks": [
-          { "type": "command", "command": "bash \"$(git rev-parse --show-toplevel)/.claude/hooks/worklog-gate.sh\"" }
-        ]
-      }
-    ],
-    "PostToolUse": [
-      {
-        "hooks": [
-          { "type": "command", "command": "bash \"$(git rev-parse --show-toplevel)/.claude/hooks/agent-watchdog.sh\"" }
-        ]
-      }
-    ],
-    "SessionStart": [
-      {
-        "hooks": [
-          { "type": "command", "command": "bash \"$(git rev-parse --show-toplevel)/.claude/hooks/worklog-context.sh\"" }
-        ]
-      },
-      {
-        "matcher": "clear|compact",
-        "hooks": [
-          { "type": "command", "command": "bash \"$(git rev-parse --show-toplevel)/.claude/hooks/harness-context.sh\"" }
-        ]
-      }
-    ]
-  }
-}
-```
-
-설치 후 최종 보고에 설치 사실을 명시한다(announce) — 알릴 내용은 `## Output Contract` 참조.
-
+hook event·matcher·settings merge·runtime definition·trust 계약을 기억이나 이 본문으로 재구성하지 않는다.
 ### Step 4: Write the Spec
 
 글로벌 스펙 본문 필수 요소:
@@ -331,6 +241,17 @@ Codex — `.codex/hooks.json`:
 - `Repo-wide Invariant Test`를 통과하지 못하면 global core에 올리지 않는다.
 - split을 택했다면 body thinness보다 navigation + surface fit 개선 근거를 남긴다.
 
+#### Template Selection and Load
+
+Structure Decision의 single-file/multi-file 결과와 content template 선택은 서로 독립이다.
+
+| Selection | Closed criterion | Read exactly this asset |
+|---|---|---|
+| Compact | 기본값 | `references/template-compact.md` |
+| Full | source input에 project motivation 또는 evaluated-alternative rationale가 명시돼 있고, compact의 existing named slot에 그 고유한 rationale 역할을 보존할 수 없을 때만 선택한다. | `references/template-full.md` |
+
+spec 작성 직전에 선택한 runtime-local asset만 **Read**한다. 선택한 template 파일의 전체 skeleton을 verbatim 복사해 heading·field order를 보존하고, source evidence로 placeholder를 치환하며 evidence가 없는 optional block은 제거한다. reference 내용을 기억이나 이 SKILL 본문으로 대체하지 않는다.
+
 ### Step 5: Validate and Save
 
 마지막으로 아래를 점검한다.
@@ -345,7 +266,7 @@ Codex — `.codex/hooks.json`:
 - 생성/병합 결과 `AGENTS.md`·`CLAUDE.md`에 하네스와 별개의 중복 `## SDD란` 블록이 남지 않았는가(legacy 흡수·제거, SDD 무관 사용자 내용 보존)
 - 마커 블록이 재실행 시 중복 누적 없이 블록만 교체되는가(멱등)
 - `.gitignore`가 `SDD-WORKSPACE` 마커 블록으로 process artifact를 ignore하고, `_sdd/env.md`에 비밀값 금지 경고가 있는가
-- 하네스를 설치했다면 `.claude/hooks/`의 네 스크립트가 정본과 동일 내용으로 놓였고, `.claude/settings.json`과 `.codex/hooks.json`이 각각 PreToolUse(`matcher: "Bash"`)·PostToolUse(matcher 없음)·SessionStart(matcher 없음 / `"clear|compact"` 그룹 2개)를 중복 없이 등록했는가(재실행 시 runtime별 항목만 교체되는가)
+- 하네스를 설치했다면 local `references/hook-installation.md`의 `Verify` checklist를 모두 만족하고 재실행 시 runtime별 diff가 없는가
 
 ## Output Contract
 
@@ -364,11 +285,11 @@ Codex — `.codex/hooks.json`:
 - `CLAUDE.md` — `→ AGENTS.md 참조` 포인터(SDD-HARNESS 마커 블록)
 - `_sdd/env.md` — 상단에 비밀값 금지 경고 포함
 - `.gitignore` — `SDD-WORKSPACE` 마커 블록(process artifact ignore)
-- `.claude/hooks/worklog-gate.sh`·`.claude/hooks/worklog-context.sh`·`.claude/hooks/harness-context.sh`·`.claude/hooks/agent-watchdog.sh` — `references/hooks/` 정본의 verbatim 사본(3e)
-- `.claude/settings.json` — Claude Code용 네 훅 등록(독립 키 수준 멱등 병합)
-- `.codex/hooks.json` — Codex용 네 훅 등록(독립 키 수준 멱등 병합)
+- `.claude/hooks/worklog-gate.sh`·`.claude/hooks/worklog-context.sh`·`.claude/hooks/harness-context.sh`·`.claude/hooks/agent-watchdog.sh` — local hook installation contract의 script 산출물
+- `.claude/settings.json` — 같은 contract의 Claude Code 등록 산출물
+- `.codex/hooks.json` — 같은 contract의 Codex 등록 산출물
 
-하네스를 설치했다면 최종 보고에 runtime별 훅 설치 결과를 명시한다(announce). `.claude/settings.json`은 **커밋되는** 설정이라 이 repo의 모든 Claude Code 사용자에게 적용된다. 게이트는 세션 첫 커밋에서만 발동하고 `SDD_SKIP_WORKLOG=1`로 우회 가능하며, compact/clear 후 `AGENTS.md` **전문**이 그 분량만큼 재주입된다. 재주입은 SessionStart `matcher`를 지원하는 Claude Code(2.1.220 실측)에서 발동하고 미지원 버전에서는 오류 없이 미발동한다 — compact/clear 직후 `[harness]` 줄로 확인한다. Codex hook은 0.124.0+ stable 기능이며 project `.codex/` layer가 trusted여야 한다. non-managed exact definition은 사용자가 `/hooks`에서 검토·신뢰하기 전까지 실행되지 않고 definition이 바뀌면 다시 검토 대상이다. skill은 trust를 자동 승인하거나 user-global Codex 설정을 수정하지 않는다.
+하네스를 설치했다면 local `references/hook-installation.md`의 `Report` 계약대로 알린다.
 
 ## Error Handling
 

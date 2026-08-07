@@ -24,12 +24,4 @@ Global anti-patterns:
 
 ## Temporary Spec Reference
 
-| Order | Section | Required |
-|------|---------|----------|
-| 1 | Change Summary | Yes |
-| 2 | Scope Delta | Yes |
-| 3 | Contract/Invariant Delta | Yes |
-| 4 | Touchpoints | Yes |
-| 5 | Implementation Plan | Yes |
-| 6 | Validation Plan | Yes |
-| 7 | Risks / Open Questions | Yes |
+Temporary spec은 change 실행 청사진이다. exact structure, optional block trigger, field order, rolling split rule의 단일 소스는 `template-compact.md`의 `Temporary Spec Target Shape`다. target이 temporary spec이거나 mixed 문서의 temporary portion을 비교할 때 그 section을 읽는다.
