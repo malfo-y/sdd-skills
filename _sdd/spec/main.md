@@ -2,7 +2,7 @@
 
 > Markdown 기반 skill bundle로 AI 에이전트의 Spec-Driven Development 워크플로우를 Claude Code와 Codex에서 공통 계약으로 실행한다.
 
-**Spec Version**: 4.6.54
+**Spec Version**: 4.6.55
 **Last Updated**: 2026-08-07
 **Status**: Approved
 **Canonical Role**: current thin global spec
@@ -140,6 +140,7 @@ SDD Skills의 설계는 다음 층으로 나뉜다.
 | 품질 게이트 | AC-First + explicit verification | "should work" 식 추측을 줄이고 종료 조건을 명확히 한다 |
 | 장문 산출물 작성 | producer-owned inline 2-phase writing | skeleton/fill/finalize를 같은 문맥에서 처리해 품질 저하를 줄인다 |
 | spec template load interface | `spec-create` Step 4는 compact를 기본으로 하되 source의 project motivation·evaluated-alternative rationale를 compact의 named slot에 의미 손실 없이 보존할 수 없을 때만 full을 고르고, 작성 직전에 선택한 runtime-local template 하나의 전체 skeleton을 verbatim 적용한다. Claude template pair가 authoring canonical이고 Codex pair는 runtime invocation token만 다른 distribution mirror다. `spec-upgrade`는 Step 1의 불충분한 경계 판정에 mapping을, Step 2의 exact global 비교에 global-only `spec-format`을, mixed temporary 판정에 same-runtime `feature-draft` `Required Output`을, Step 5 작성에 선택한 fenced template 하나를 읽는다 | rich reference를 실제 소비 시점에만 읽고 template·temporary shape의 소유자를 하나로 유지해, stale 복제와 memory reconstruction drift를 막는다 |
+| document producer output interface | `spec-summary`와 `guide-create`는 작성 직전에 runtime-local rich reference의 fenced skeleton을 verbatim 적용하며, output shape·rubric은 그 reference 한 곳만 소유한다. `spec-snapshot`은 별도 reference 없이 양 runtime의 공통 SKILL 본문이 source manifest·destination collision·metadata/body 보존 interface를 소유하고, source pre/post manifest exact match를 완료 hard gate로 둔다. 세 producer는 main loop가 skeleton 또는 file set을 직접 작성·검증하며 runtime helper lifecycle이나 완성 example로 같은 계약을 재소유하지 않는다 | 실제 산출물 interface를 한 곳에서 기계적으로 소비하면 설명·예시·runtime mirror 사이의 format drift를 줄이고, snapshot 원본 read-only와 재현 가능한 보존 경계를 검증할 수 있다 |
 | 오케스트레이션 | reasoning-based `sdd-autopilot` — SDD 체인 전용(메인 루프 스킬 체인, orchestrator·pipeline artifact 없음). Step 2는 producer 3스킬(`feature-draft` → `implementation` → 조건부 `spec-sync`) 순차 호출 + 반환 종합 보고이고 게이트는 재호출하지 않는다. generated orchestrator full 레인과 full 전용 agent·스킬은 제거됨 — 잔재 정리·census·`-lite` 개명까지 완결(F1~F5, 복구는 git tag `full-lane-final`) | 소규모~단일 컨텍스트 변경이 지배적인 흐름에서 orchestrator 생성 비용을 없애고, 규모 초과는 full 승격이 아니라 분할로 해소한다. 게이트를 producer에 남기면 호출자별 중복 호출과 "선택 게이트" 분기가 사라져 직접 호출·autopilot 경로의 품질이 같아진다 |
 | 규모 초과 대응 | 승격이 아니라 분할 — 단일 컨텍스트 초과는 롤링 분할 draft + `spec-sync` planned todo 고정 + feature별 순차 체인으로 해소한다. 분할 판정 canonical은 체인 표면 소유(autopilot은 신호 소비만) | 규모 초과를 더 큰 파이프라인으로 올리면 full 레인 의존이 재생산된다. 분할은 "단일 컨텍스트 = 품질 전제"를 유지하는 해소 수단이며 full 레인 삭제(F1~F5 완결)의 선행 조각이었다 |
 | planning precedence | `feature-draft`가 유일 planning entry. 후속 확장 스킬 없음 — 규모 초과는 분할 | non-trivial 변경에서 peer-choice 혼선을 없애고 "단일 컨텍스트 = 품질 전제"를 유지한다 |
@@ -167,7 +168,6 @@ SDD Skills의 설계는 다음 층으로 나뉜다.
 ### 현재 운영 제약
 
 - Claude와 Codex 문서/skill parity는 아직 완전 자동 동기화가 아니라 유지보수자의 관리가 필요하다. wrapper-backed skill에서는 agent가 단일 소스이므로 "skill 본문과 agent 본문을 함께 미러링"하는 의무는 대부분 해소됐고, 유지보수는 agent 본문과 thin wrapper의 entrypoint/dispatch 정합으로 좁혀졌다(claude/codex 양 플랫폼 parity는 여전히 수동 관리)
-- 🚧 Planned: `guide-create`·`spec-snapshot` 미러의 **본문 세대 격차** — 미러 쌍의 세대 차이는 이제 본문 대조로만 드러난다(버전 필드가 없으므로 값 비교라는 우회 신호가 없다). `guide-create`는 본문 줄 수가 175 / 158이고 codex 쪽에는 claude 본문의 생성 가이드 템플릿 블록(`**Version**: X.Y.Z` 필드 줄)이 아예 없다. `spec-snapshot`은 134 / 117이고 codex 쪽에만 legacy uppercase(`DECISION_LOG.md`) 대응 규칙이 있다. 어느 쪽이 canonical인지는 본문 대조가 선행되어야 해 별도 이슈로 해소한다
 - 이 저장소는 전통적인 테스트 프레임워크보다 실제 skill invocation과 리뷰 기반 검증에 크게 의존한다
 - dispatch되는 agent/skill은 작업트리가 아니라 **plugin 설치본**(`~/.claude/plugins/cache/<marketplace>/<plugin>/<pushed SHA>/`)에서 로드된다 — 방금 편집한 agent 본문은 커밋·푸시로 플러그인이 갱신되기 전까지 그 세션의 dispatch에 발효되지 않는다(실측: 설치본에 당일 편집한 규칙 0/5, 전날 머지분은 존재). 따라서 **같은 세션의 마감 게이트로 자기 변경의 효과를 계측하는 설계는 구조적으로 무효**이고, agent 행동 계측은 (a) 커밋·푸시 후 플러그인 갱신 + (b) 검증 대상 개념을 호출자 digest에 넣지 않은 새 세션을 전제조건으로 갖는다. 규칙이 로드되지 않은 실행은 그 규칙의 반증이 아니다. 같은 이유로 **동시 A/B 대조는 불가능하다** — 활성 설치본은 시점당 하나뿐이라 처치군과 대조군을 같은 시각에 돌릴 수 없다. 따라서 agent 행동 변경의 효과 확인은 도입 전후의 **누적 관측**으로만 설계할 수 있고, 대조군 회차 자체에 변동이 있으므로(같은 지표에서 회차별로 다른 값이 나온다) n=1 arm 비교로 결론내지 않는다
 - agent 행동을 transcript로 계측할 때는 지표를 먼저 검증한다 — subagent transcript(JSONL)는 한 메시지의 content 블록을 **줄 단위로 쪼개** 기록하므로 "메시지당 tool_use/tool_result 수"는 항상 1이 되어 tool call 배칭을 원리적으로 탐지하지 못한다. 유효 지표는 **연속 실행 길이**(user `tool_result`가 끼지 않고 이어지는 assistant `tool_use` 줄 수)이며 양성 대조 회차로 판별력을 확인한 뒤 쓴다. agent·리뷰어의 자기 행동 보고는 논거로 삼기 전에 transcript 계수로 교차검증한다(자기보고 "한 메시지에 최대 4개"가 실측 1이었던 전례). **tool 호출 수는 배칭 여지의 대리지표가 아니다 — 호출 안의 내용까지 봐야 한다**: 실측에서 correctness reviewer의 `Bash` 호출은 배칭 규칙 도입 전후 모두 100% 복합 명령(`&&`·`;`·`|`)이었고(12/12·16/16, 첫 호출부터 `git status && git log && git diff --stat` 형태), 셸로 엮이는 작업은 이미 한 호출로 접혀 있었다. 그래서 multi-tool 배칭의 실제 여지는 셸로 엮을 수 없는 호출(`Read` 등)에만 남으며 관측 회차 기준 28~35턴 중 4턴 남짓이다. 호출 수만 세고 내용을 보지 않으면 여지를 과대 추정한다 — v4.6.18 도입 근거의 "앞 9개가 서로 독립인데 한 개씩 냈다"와 라운드 수 추정이 이 오류였고 v4.6.19 실측으로 정정됐다

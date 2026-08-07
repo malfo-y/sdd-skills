@@ -2,6 +2,11 @@
 
 > 이 파일은 `_sdd/spec/main.md`의 **본문이 바뀐 버전만** 기록한다 — 본문 무변경 sync(헤더 날짜만 갱신)는 entry를 남기지 않으므로 버전 번호에 결번이 생길 수 있다.
 
+#### v4.6.55 (2026-08-07)
+
+- **document producer single-home interfaces and deterministic snapshot preservation (post-implementation sync)**: `spec-summary`는 runtime-local `summary-template.md`를 fenced whitepaper shape의 단일 홈으로 두고 완성 example을 제거했다. `guide-create`는 `output-format.md`에 section·citation/evidence·confidence rubric을 모으고 compact/tool-gate reference와 confidence example을 제거했다. 두 producer는 작성 직전 fenced skeleton을 verbatim/slot-only로 적용하며 main loop가 skeleton-first로 직접 작성한다. `spec-snapshot`은 source 사전/사후 manifest exact match, safe slug·direct-parent confinement·collision suffix, exact metadata marker, source summary present/absent 분기로 read-only 보존을 결정적으로 닫았다. Claude의 `user_invocable: true`만 runtime allowlist delta로 보존했다.
+- **검증 evidence**: implementation ledger `REVIEW_PASSED`, AC1–AC16 GREEN. implementation-review raw `C2 H8 M10`, unique `C1 H5 M5`를 fix 1회로 해소해 잔여 C/H/M 0이다. final `M10+D12`, SKILL/reference parity, deleted asset 12/12, stale runtime zero 6/6, official validator 5/5 + Claude schema, snapshot fixture·read-only hard gate, `NORMS_PASS 14/14`, `git diff --check` 모두 PASS했다.
+
 #### v4.6.54 (2026-08-07)
 
 - **spec template selection and point-of-use load interface (post-implementation sync)**: `spec-create`는 compact default와 semantic-loss 기반 full criterion을 사용하고, Step 4 직전에 선택한 template 전체 skeleton만 읽어 verbatim 적용한다. Claude template은 authoring canonical, Codex template은 runtime invocation token만 다른 distribution mirror다. `spec-upgrade`는 mapping → global format/same-runtime `feature-draft` producer → selected fenced template을 실제 Step 1/2/5 소비 지점의 단일 path home으로 두고 verbatim/slot-only로 적용한다. `spec-format`의 stale temporary-spec 설명은 제거했으며 temporary shape는 `feature-draft` `Required Output`이 단독 소유한다. `spec-template-load-interface`를 current truth로 승격해 P1 2/2를 완료했다.

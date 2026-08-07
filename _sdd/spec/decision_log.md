@@ -1,5 +1,31 @@
 # Decision Log
 
+## 2026-08-07 - document producer single-home interfaces and deterministic snapshot preservation (v4.6.54 → v4.6.55, post-implementation sync)
+
+### Context
+
+`spec-summary`·`guide-create`·`spec-snapshot` 문서 producer의 runtime 미러와 output 자산을 감사했다. `spec-summary`와 `guide-create`는 output shape·schema·example이 SKILL 본문과 여러 reference/example에 중복돼 있었고, `spec-snapshot`은 source 보존·destination collision·root `summary.md` 병합 계약이 runtime별로 드리프해 결과의 결정성과 read-only 보장이 약했다.
+
+### Decision
+
+1. `spec-summary`는 runtime-local `references/summary-template.md`를 whitepaper output shape의 단일 홈으로 두고, 작성 직전 fenced skeleton을 verbatim으로 적용한다. SKILL은 input·current-evidence 판단·point-of-use load만 소유하며 output을 재소유하던 완성 example은 제거한다.
+2. `guide-create`는 runtime-local `references/output-format.md`를 section schema·evidence/citation·confidence rubric의 단일 rich interface로 두고, 작성 직전 fenced structure를 verbatim/slot-only로 적용한다. 이 계약을 중복하던 compact/tool-gate reference와 confidence example은 제거한다.
+3. `spec-snapshot`은 source 사전/사후 sorted path+SHA-256 manifest exact match를 read-only hard gate로 삼고, safe language slug·resolved direct-parent confinement·unused collision suffix로 destination을 결정한다. 모든 source Markdown relative path를 보존하며, exact metadata marker와 source `summary.md` present/absent 분기를 분리한다. Claude의 `user_invocable: true`만 runtime allowlist delta로 남기고 common 본문은 Codex와 맞춘다.
+4. 세 producer는 runtime helper lifecycle을 정의하지 않고 main loop가 skeleton-first로 직접 작성·검증한다. `docs/SKILL_AUTHORING_NORMS.md` 14개 rubric은 각 target 인용으로 검증하되 임시 task 상세를 global spec에 복제하지 않는다.
+
+### Rationale / Evidence
+
+- implementation ledger는 `REVIEW_PASSED`이며 AC1–AC16이 모두 GREEN이다. implementation-review는 raw `C2 H8 M10`, duplicate-normalized `C1 H5 M5`였고 fix 1회 후 잔여 Critical/High/Medium은 0이다.
+- 최종 검증은 SKILL 미러, summary/guide rich reference, snapshot schema·fixture·read-only hard gate, official validator 5/5 + Claude schema, 정확한 target `M10+D12`, stale runtime census 6/6, `NORMS_PASS 14/14`, `git diff --check`를 모두 통과했다.
+
+### Changes
+
+- `.claude/skills/spec-summary/`, `.codex/skills/spec-summary/` — concise producer + fenced whitepaper interface; duplicate example 제거
+- `.claude/skills/spec-snapshot/SKILL.md`, `.codex/skills/spec-snapshot/SKILL.md` — deterministic preservation/collision/summary contract와 runtime allowlist parity
+- `.claude/skills/guide-create/`, `.codex/skills/guide-create/` — output-format single home; duplicate/stale reference·example 제거
+- `_sdd/spec/main.md`, `_sdd/spec/components.md`, `_sdd/spec/usage-guide.md` — v4.6.55 current truth 승격 (본문 묶음 소유)
+- `_sdd/drafts/_processed_2026-08-07_feature_draft_norms_p2_document_surfaces.md`, `_sdd/implementation/_processed_2026-08-07_implementation_ledger_norms_p2_document_surfaces.md` — 사용 input 처리 표시
+
 ## 2026-08-07 - spec template selection and point-of-use load interface (v4.6.53 → v4.6.54, post-implementation sync)
 
 ### Context

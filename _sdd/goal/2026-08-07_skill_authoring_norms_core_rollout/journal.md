@@ -227,3 +227,27 @@
 - 검증: official validator 8/8; SKILL parity 4/4; hook exact 4/4; create templates runtime parity 2/2; rewrite refs exact 2+runtime 1, examples removed 4/4; upgrade format/mapping/template parity; spec v4.6.54 planned P1 0; report 19 rows/P1 AUDITED 4; norms gate 6종 PASS; `git diff --check` PASS. 첫 rewrite checker는 known `/guide-create`↔`$guide-create` delta를 exact로 오판해 normalization 후 통과했다.
 - 결과: 통과 — P1 네 component 모두 UPDATED, 잔존 C/H/M 0이며 commit-ready다.
 - 다음: `refactor(norms-p1)` Conventional Commit 후 P2 감사를 시작한다.
+
+## 2026-08-07 P1 priority commit
+- 가설: P1 네 lifecycle component와 네 processed draft를 한 priority commit으로 고정하면 P2와 history 경계가 분리된다.
+- 검증: staged 37 paths `git diff --cached --check` PASS; commit `8679235 refactor(norms-p1): align spec lifecycle skills`; commit 후 tracked worktree clean.
+- 결과: 통과 — P0 `e42faa3`, P1 `8679235` 두 priority boundary가 생겼다.
+- 다음: P2 세 document producer를 audit한다.
+
+## 2026-08-07 P2 document surfaces feature-draft·plan-review
+- 가설: summary/snapshot/guide를 실물 정본 1개·point-of-use load·runtime-neutral main loop로 함께 정리하면 22-path 변경을 단일 컨텍스트에서 닫을 수 있다.
+- 검증: plan-review 측정 `C0 H5 M2`, 판단 `C0 H2 M1`, raw `C0 H7 M3`, collision finding 중복 정규화 unique `C0 H6 M3`. runtime metadata 삭제, summary byte-copy 충돌, dirty baseline, checker/Propagation 비재현성, non-verbatim summary template H6와 bounded writing/census/rubric M3를 검출했다.
+- 결과: 통과 — `user_invocable` allowlist delta, exact snapshot marker/body hash, post-minus-initial status, fenced summary template, M10+D12 exact paths, pinned 5+1 validator, output-format normalizer, 14-row norms rubric, main-loop skeleton-first를 fix 1회 반영했다. tasks 4·AC16·target 22·`git diff --check` PASS, 잔존 C/H/M 0. raw C+H ≥3이므로 별도 `plan-review` 1회 실행을 권장하지만 단일 패스 계약상 자동 실행하지 않는다.
+- 다음: implementation ledger에 baseline/RED를 기록하고 Task 1–4를 구현한다.
+
+## 2026-08-07 P2 document surfaces 구현
+- 가설: summary·snapshot·guide의 rich interface를 point-of-use reference 한 곳에 두고 main loop에 skeleton-first 집행만 남기면 runtime helper 중복을 없앨 수 있다.
+- 검증: RED summary fence 0·example 2·snapshot parity 0·guide delete candidate 10·stale pointer 2 → GREEN. SKILL parity 3 pair, summary/guide single-home, snapshot marker·collision·body-hash, deletion 12/12, stale runtime 0, validator 5+Claude schema, target `M10+D12`, `git diff --check` PASS.
+- 결과: 지지 — 6 SKILL과 4 rich reference를 갱신하고 중복·stale asset 12개를 제거했다. Claude snapshot의 runtime-only `user_invocable: true`는 allowlist delta로 보존했다.
+- 다음: implementation-review correctness 4 + simplicity 2 gate로 AC1–AC16과 norms 14행·snapshot hard gate를 검증한다.
+
+## 2026-08-07 P2 document surfaces implementation-review
+- 가설: correctness 4개와 simplicity 2개를 분리하면 보존 계약의 edge case와 남은 단발성 검증 추상화를 함께 찾을 수 있다.
+- 검증: raw `C2 H8 M10`, collision 정규화 unique `C1 H5 M5`. safe destination, reserved marker, translation fidelity, processed currentness, unsupported error scenario, normalized-hash gate와 세 producer의 판단 중복·삭제 census·고정 recipe를 검출했다.
+- 결과: 지지 — main-loop fix 1회로 safe slug/direct-parent, marker preflight, semantic rubric, active-only summary, evidence-conditional guide, process single owner, raw baseline+census를 반영했다. post-fix mirror/schema/fixture/deletion/stale/status/validator 5+1/diff, `NORMS_PASS 14/14`, snapshot hard gate PASS; 잔존 C/H/M 0.
+- 다음: `spec-sync` writer 두 shard로 v4.6.55 current truth와 decision/changelog/processed pair를 동기화한다.

@@ -14,8 +14,12 @@
 
 ## 2. Writing Rules
 
-> 모든 섹션에 적용되는 작성 규칙은 `template-compact.md`의 Writing Rules를 따른다.
-> Code Excerpt, Inline Citation, What/Why/How Triad, Source Field, Component Why Style 규칙 참조.
+- `SKILL.md` Step 5에서 이 파일을 Read한 뒤 §3의 fenced skeleton을 verbatim 복사한다. title·metadata·section order를 유지하고 placeholder만 source-grounded content로 치환한다.
+- spec은 purpose/boundary/decision의 primary source다. concrete behavior는 code/test/interface evidence로 보강하고 본문에 `[filepath:symbolName]` citation을 둔다.
+- source로 확인되지 않은 API, error, scenario, invariant는 만들지 않는다. 필요한 gap은 assumption/unknown으로 표시한다.
+- optional appendix는 관련 evidence가 있을 때만 유지한다.
+- code excerpt는 첫 줄에 source citation을 두고 핵심만 발췌한다. 긴 구현을 그대로 복제하지 않는다.
+- confidence는 §6 rubric으로 판정한다.
 
 ## 3. 문서 필수 구조
 
@@ -66,34 +70,13 @@
 - 인라인 citation: 본문 서술에서 `[filepath:symbolName]` 형식으로 코드 참조
 - 코드 발췌: `# [filepath:functionName]` 헤더가 부착된 코드 블록
 
-코드 citation이 있으면 해당 코드의 핵심 로직을 간결하게 설명한다. 코드 발췌는 ≤30줄 전문, >30줄 시그니처+핵심 로직만. 코드 근거가 없으면 스펙 기반으로 설명하고 "코드 미확인" 표기.
+코드 citation이 있으면 해당 코드의 핵심 로직을 간결하게 설명한다. 코드 발췌는 claim을 증명하는 최소 범위만 남긴다. 코드 근거가 없으면 스펙 기반으로 설명하고 "코드 미확인" 표기.
 
 ### §3 사용 시나리오 가이드 ★특화
 
 **이 섹션이 가이드의 핵심이다.** 가능한 한 구체적이고 자세하게 작성한다.
 
-작성 원칙:
-
-- 시나리오별로 서브섹션을 나눈다
-- 각 시나리오는 다음 구조를 따른다:
-  1. **전제 조건**: 이 시나리오가 성립하는 초기 상태
-  2. **입력**: 구체적 데이터 예시 포함
-  3. **처리 흐름**: 단계별 동작 설명. **각 단계에서 호출되는 함수/메서드를 인라인 citation으로 참조한다** (예: "`[src/payments/payment_service.ts:confirmPayment]`에서 상태를 검증한다")
-  4. **기대 결과**: 성공/실패 시 예상 출력
-- 정상 시나리오를 먼저 작성하고, 예외/에러 시나리오를 이어서 작성한다
-- 가능하면 요청/응답 JSON, 상태 전이, 코드 호출 예시 등을 구체적으로 포함한다
-
-최소 요구사항:
-
-- 정상 시나리오 1개 이상
-- 예외/에러 시나리오 1개 이상
-
-권장 시나리오 유형:
-
-- 기본 정상 흐름 (happy path)
-- 엣지 케이스 (경계값, 빈 입력 등)
-- 에러/실패 시나리오 (권한 부족, 잘못된 입력, 외부 서비스 실패 등)
-- 동시성/멱등성 시나리오 (해당되는 경우)
+소스 근거가 있는 대표 end-to-end 흐름과 확인된 경계만 시나리오로 쓴다. 각 시나리오는 근거로 확인되는 범위에서 전제 조건, 입력, citation을 포함한 처리 흐름, 기대 결과를 연결한다. 확인된 예외/에러 근거가 없으면 시나리오를 만들지 않고 `확인된 예외/에러 시나리오 없음`과 evidence limitation을 적는다.
 
 ### §4 API 레퍼런스 ★특화
 
