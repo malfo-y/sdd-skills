@@ -7,7 +7,7 @@ model: inherit
 
 # Implementation Review
 
-이 agent는 구현 상태를 **단일 패스**로 리뷰하고 결과를 **최종 응답으로만 반환**하는 read-only reviewer다 (correctness 렌즈 — AC 충족·로직 결함·spec 정합). 리포트 파일을 만들지 않으며, finding 반영은 호출자 소관이다.
+이 agent는 구현 상태를 **단일 패스**로 리뷰하고 결과를 **최종 응답 하나로 반환**하는 read-only reviewer다 (correctness 렌즈 — AC 충족·로직 결함·spec 정합). finding 반영은 호출자 소관이다.
 
 ## Acceptance Criteria
 
@@ -16,7 +16,7 @@ model: inherit
 - [ ] AC1: correctness 검토(경계·null·에러 경로·동시성 등 로직 결함)를 수행했고, 발견된 결함이 반환 Findings에 severity와 함께 기록됐다 (없으면 "로직 결함 없음"을 명시). AC 충족·spec 정합만으로 통과시키지 않았다.
 - [ ] AC2: 기준 문서 적응(아래)이 정상 동작했고 어떤 기준으로 리뷰했는지 반환에 명시했다.
 - [ ] AC3: 각 AC verdict가 증거에 묶여 반환 Verification ledger에 기록됐다.
-- [ ] AC4: 산출물이 최종 응답 하나다 — 파일을 생성하지 않았다.
+- [ ] AC4: 산출물이 최종 응답 하나다.
 
 ## Hard Rules
 
@@ -50,7 +50,7 @@ stale 판단 예시: 기준 문서가 참조하는 주요 파일/모듈이 없�
 
 ### Step 3: Verification
 
-코드(파일/함수/모듈 존재·구현 범위·주요 통합)와 테스트(존재·실행 가능·PASSING/FAILING/MISSING)를 확인한다 (Fresh Verification — Hard Rule 5). 상태 마커로 기록: 구현 EXISTS/PARTIAL/MISSING · 기준 충족 MET/NOT MET/UNTESTED · 스펙 정합성 ALIGNED/DRIFT/MISSING.
+코드(파일/함수/모듈 존재·구현 범위·주요 통합)와 테스트(존재·실행 가능·PASSING/FAILING/MISSING)를 Hard Rule 5에 따라 fresh 실행으로 확인한다. 상태 마커로 기록: 구현 EXISTS/PARTIAL/MISSING · 기준 충족 MET/NOT MET/UNTESTED · 스펙 정합성 ALIGNED/DRIFT/MISSING.
 
 읽기 범위는 아래 3단 계단을 따른다.
 
@@ -74,7 +74,7 @@ stale 판단 예시: 기준 문서가 참조하는 주요 파일/모듈이 없�
 - **Medium**: 비핵심 테스트 누락, 패턴 불일치, 중간 수준 성능/유지보수성 우려, 후속 수정이 필요한 구현 품질 문제
 - **Low**: 리팩터링, 문서화, 가독성, 선택적 엣지 케이스, 추후 개선 권고
 
-`Critical / High / Medium`은 호출자의 fix 대상이다 (체인에서는 메인 루프가 fix 1회로 반영). `Low`는 호출자의 선택적 fix 또는 후속 권고 대상이다 — fix 여부·기준은 호출 스킬이 정한다.
+`Critical / High / Medium`은 호출자에게 전달할 fix 대상이다. `Low`는 선택적 fix 또는 후속 권고 대상이다.
 
 ### Step 6: Return
 

@@ -25,13 +25,22 @@ description: This skill should be used when the user asks to "feature draft", "d
 ## Process
 
 1. **맥락 수집**: 요구사항의 원천은 이번 대화다(메인 루프가 이미 보유). spec/코드 탐색은 Target Files와 AC를 실측으로 뒷받침할 만큼만 한다. 동일 change element가 둘 이상의 동기화 표면에 걸리는지 함께 식별한다.
-2. **분할 판정**: 위 분할 규칙 점검. 판정 근거 1줄 확정 (census형 신호가 있으면 검증 task를 Part 2 마지막에 예약).
-3. **draft 작성**: Required Output 구조로 작성한다. **task는 단일 의도를 가지고 자기 AC만으로 완료 판정이 닫히는 실행 단위다** — 의도가 두 문장이면 두 task로 쪼개고, 다른 task의 결과를 봐야 완료를 판정할 수 있으면 경계를 다시 긋는다.
-4. **surface**: 저장 후 Open Questions 중 사용자 확인이 필요한 항목만 채팅에 1줄씩 노출한다. 없으면 "사용자 확인이 필요한 항목 없음" 1줄.
+2. **핵심 질문**
+   - **발동**: 로컬 탐색으로 닫히지 않고 답이 아키텍처·범위·Target Files를 바꾸는 unknown만 묻는다.
+   - **순서**: 한 번에 하나씩, 뒤늦은 답이 앞선 결정을 가장 많이 무효화하는 질문부터 묻는다.
+   - **무인 실행**: 가장 합당한 해석을 택해 결정과 근거를 Open Questions에 기록한다.
+3. **분할 판정**: 위 분할 규칙 점검. 판정 근거 1줄 확정 (census형 신호가 있으면 검증 task를 Part 2 마지막에 예약).
+4. **draft 작성**
+   - **Template fidelity**: Required Output의 fenced template을 출발 skeleton으로 verbatim 복사하고 heading·marker·field order를 보존한다.
+   - **허용 변형**: placeholder와 예시 값을 실제 값으로 치환하고, Propagation row·task block·AC·Target File row는 필요한 수만큼 반복한다. 조건이 성립하지 않는 `Propagation Surfaces`·`Open Questions` 섹션만 제거할 수 있다.
+   - **Task boundary**: task는 단일 의도를 가지고 자기 AC만으로 완료 판정이 닫히는 실행 단위다. 의도가 두 문장이면 두 task로 쪼개고, 다른 task의 결과를 봐야 완료를 판정할 수 있으면 경계를 다시 긋는다.
+5. **surface**: 저장 후 Open Questions 중 사용자 확인이 필요한 항목만 채팅에 1줄씩 노출한다. 없으면 "사용자 확인이 필요한 항목 없음" 1줄.
 
 ## Required Output
 
 파일: `_sdd/drafts/<YYYY-MM-DD>_feature_draft_<slug>.md` (`slug`는 소문자 snake_case)
+
+아래 fenced template이 산출물 구조의 단일 소스다.
 
 ```markdown
 # Feature Draft: [title]
@@ -77,7 +86,10 @@ description: This skill should be used when the user asks to "feature draft", "d
 
 ## 규칙
 
-- **AC가 핵심이다**: 각 AC는 falsifiable해야 한다 — "미충족"이라 말할 수 있는 관찰/증거가 정의되지 않는 AC는 다시 쓴다.
+- **AC가 핵심이다**
+  - **1등급**: 재현 가능한 test/check 출력으로 판정한다.
+  - **2등급**: 명시 rubric + reviewer 판정 + 인용 근거로 판정한다.
+  - **공통 기준**: 각 AC에 평가방법과 기대 evidence를 함께 쓰고, 이진 판정으로 닫으며, 외부 증거에 묶어 제3자가 반박 가능하게 한다.
 - **Target Files는 실측**: 현재 코드 탐색으로 확인한 경로만 적는다. 확정 불가면 `[TBD] <사유>`. 마커는 `[C]` Create / `[M]` Modify / `[D]` Delete.
 - **마커 보존**: `spec-update-todo-input` 마커 쌍을 유실하지 않는다 — `spec-sync` 입력 호환의 조건이다.
 - **조건부 propagation 표**
@@ -92,7 +104,7 @@ description: This skill should be used when the user asks to "feature draft", "d
 
   반영 후, 게이트 반환의 합산 finding(fix 전 기준)이 **Critical+High ≥ 3 또는 Medium ≥ 5**였으면 마감 메시지에 수치와 함께 "finding이 많았으니 `plan-review` 1회 추가 실행을 권장한다"를 1줄 출력한다 — 권고 출력만 하고 추가 리뷰를 자체 실행하지는 않는다(단일 패스 유지).
 - **실행 인계**: `implementation` 스킬(메인 루프 직접 RED→GREEN 구현)로 인계한다. 구현 작성을 여러 갈래로 나눠야 할 규모로 드러나면 분할 규칙으로 돌아간다.
-- **Minimum-Code Mandate**: task의 description과 AC는 요청된 동작을 만드는 최소 코드만 명세한다. 요청되지 않은 기능·옵션·설정 가능성, 단일 사용처 추상화, 발생할 수 없는 시나리오의 에러 처리를 계획에 넣지 않는다.
+- **Minimum-Code 기준**: task의 description과 AC는 요청 동작 또는 관측된 위험에 직접 추적되는 가장 작은 변경만 명세한다.
 
 ## Integration
 

@@ -1,5 +1,160 @@
 # Decision Log
 
+## 2026-08-07 - implementation producer·review pair 규범 다이어트 (v4.6.47 → v4.6.48, post-implementation sync)
+
+### Context
+
+v4.6.47에서 `🚧 Planned`로 남긴 P0 5/5 `implementation-pair-diet`를 구현했다. post-review fix 시점·횟수와 실행 중 분할 handoff는 실제 코드를 쓰는 `implementation`이 소비하지만 review wrapper·agent도 같은 정책을 다시 설명했고, reviewer의 no-file·Fresh Verification 경계와 plan 없는 호출의 대화 digest도 여러 절에 흩어져 drift 위험이 있었다.
+
+### Decision
+
+1. `implementation`을 post-review fix 정책의 단일 홈으로 둔다. gate 단일 패스와 Critical/High/Medium fix 1회, Low 판단을 producer가 소유하며 review pair는 finding 분류·relay만 담당한다. 실행 중 규모 초과 신호는 `feature-draft`의 `분할 방법 (롤링)`을 가리키고 draft 형식을 복제하지 않는다.
+2. implementation ledger에는 source task에서 달라진 판단이나 새 edge case를 이유·처리와 함께 남기는 `계획 이탈·발견` 필드를 추가한다. 테스트/check 가정 오류를 세는 `계약 오류 선언 횟수`와 분리해 compact 뒤에도 두 원인을 구별한다.
+3. `implementation-review` wrapper는 review-only 경계와 plan 없는 호출의 대화 digest ownership을 한 곳으로 합치되 correctness/simplicity 두 렌즈, shard relay topology, Claude/Codex runtime adapter를 유지한다.
+4. `implementation-review-agent`는 no-file/no-spawn 경계를 단일 홈으로 합치고 producer의 fix 횟수를 재서술하지 않는다. Step 3은 Hard Rule의 `Fresh Verification` canonical home을 가리키며, Codex의 bounded helper 예외를 제거해 no-spawn 계약 충돌을 해소한다.
+
+### Rationale / Evidence
+
+- 6개 target surface에서 AC1–AC15가 모두 MET였고 structural checks는 RED에서 GREEN으로 전환됐다.
+- implementation-review aggregate `C0 H0 M8`은 7개 고유 원인으로 정리해 fix 1회에 반영했고 잔여 Critical/High/Medium은 0이다. root 포함 concurrency 4 제한에 따른 runtime reviewer 3+1 dispatch deviation은 ledger에 기록했다.
+- 최종 target diff는 `+41/-29`이며 mirror/core parity, TOML parse, Source Pointer, runtime/frontmatter, validator, status census, `git diff --check`가 모두 PASS했다.
+
+### Changes
+
+- `.claude/skills/implementation/SKILL.md`, `.codex/skills/implementation/SKILL.md` — fix 정책 canonical home, rolling split pointer, `계획 이탈·발견` ledger 필드
+- `.claude/skills/implementation-review/SKILL.md`, `.codex/skills/implementation-review/SKILL.md` — review-only/no-plan digest ownership 통합, 두 렌즈·relay·runtime adapter 보존
+- `.claude/agents/implementation-review-agent.md`, `.codex/agents/implementation-review-agent.toml` — no-file/no-spawn 단일 홈, fix-count 재천명 제거, Fresh Verification pointer
+- `_sdd/spec/main.md`, `_sdd/spec/components.md` — v4.6.48 current truth와 P0 5/5 완료 반영 (본문 묶음 소유)
+- `_sdd/drafts/_processed_2026-08-07_feature_draft_implementation_pair_diet.md`, `_sdd/implementation/_processed_2026-08-07_implementation_ledger_implementation_pair_diet.md` — 사용 input 처리 표시
+
+## 2026-08-07 - feature-draft producer·plan-review verifier 규범 다이어트 (v4.6.46 → v4.6.47, post-implementation sync)
+
+### Context
+
+v4.6.46에서 `🚧 Planned`로 남긴 P0 4/5 `feature-draft-pair-diet`를 구현했다. `feature-draft`에는 질문·output template·AC evidence·minimum-code 판단이 있었고, `plan-review-agent`는 producer가 소유한 Propagation·평가 세부 계약과 evidence/minimum-code 권고를 다시 설명해 drift 위험이 있었다.
+
+### Decision
+
+1. `feature-draft`의 질문은 로컬 탐색으로 해소되지 않았고 답이 아키텍처·범위·Target Files를 바꾸는 unknown에만 발동한다. 한 번에 한 질문씩 영향이 큰 순서로 묻고, 무인 실행은 합리적 가정과 근거를 `Open Questions`에 기록한다.
+2. inline `Required Output` fenced template을 output structure의 단일 소스로 유지한다. 작성 단계는 이를 verbatim 출발 skeleton으로 사용해 heading·marker·field order를 보존하되, placeholder 치환과 필요한 Propagation row·task block·AC·Target File row/block 반복, producer 규칙이 허용한 조건부 section 삭제는 허용한다.
+3. AC evidence는 재현 가능한 test/check 출력인 1등급 또는 명시 rubric·reviewer 판정·인용 근거를 갖춘 2등급으로 닫는다. 두 등급은 모두 이진 판정·외부 증거·제3자 반박 가능성을 만족해야 하며, minimum code는 요청 동작 또는 관측 위험에 직접 추적되는 최소 변경으로 판단한다.
+4. `plan-review-agent`는 Propagation/평가 세부를 복제하지 않고, 해당 판정이 필요할 때 current `feature-draft` producer contract을 읽어 검증한다. source를 읽을 수 없으면 기억으로 재구성하지 않고 `Verification Weakness=UNKNOWN`과 limitation을 반환하며, evidence/minimum-code 권고는 인용된 근거를 해결하는 가장 작은 plan change 규칙 하나로 합친다.
+5. Claude/Codex `plan-review` wrapper는 2-lens single-pass dispatch·merge relay·runtime adapter만 소유하는 thin entrypoint로 감사했고 `NO_CHANGE`로 닫았다. P0 5/5 `implementation-pair-diet`는 `🚧 Planned`로 유지한다.
+
+### Rationale / Evidence
+
+- 변경 target 4면과 `NO_CHANGE` wrapper 2면을 검증했고 AC1–AC15가 모두 MET다.
+- checker contract deviation은 T1 2건·T2 1건을 명시적으로 교정한 뒤 HEAD에서 RED를 다시 확인했다. implementation-review aggregate `C1 H0 M2`는 fix 1회로 해소했고 잔여 Critical/High/Medium은 0이다.
+- feature-draft exact mirror, 정규화 plan-review-agent core parity, Codex TOML parse, wrapper diff 0, `quick_validate.py` 2면, `git diff --check`가 모두 PASS했다.
+
+### Changes
+
+- `.claude/skills/feature-draft/SKILL.md`, `.codex/skills/feature-draft/SKILL.md` — 질문 발동·무인 가정, inline template 소비, AC evidence 2등급, minimum-code 추적성
+- `.claude/agents/plan-review-agent.md`, `.codex/agents/plan-review-agent.toml` — current producer contract 검증 pointer, source 부재 `UNKNOWN`, smallest-change 규칙 단일화
+- `.claude/skills/plan-review/SKILL.md`, `.codex/skills/plan-review/SKILL.md` — thin wrapper 감사 `NO_CHANGE`
+- `_sdd/spec/main.md` — v4.6.46 → v4.6.47, P0 4/5 승격 및 P0 5/5 planned 유지 (본문 묶음 소유)
+- `_sdd/drafts/_processed_2026-08-07_feature_draft_feature_draft_pair_diet.md`, `_sdd/implementation/_processed_2026-08-07_implementation_ledger_feature_draft_pair_diet.md` — 사용 input 처리 표시
+
+## 2026-08-07 - pr-review 입력·UNTESTED 경계 다이어트 (v4.6.45 → v4.6.46, post-implementation sync)
+
+### Context
+
+v4.6.45에서 `🚧 Planned`로 남긴 P0 3/5 `pr-review-diet`를 구현했다. 기존 `pr-review`의 두 reviewer 입력은 공통 정보가 자유 산문으로 전달됐고, wrapper가 agent 반환 계약과 read-only 경계를 다시 설명했으며, 실제 test execution evidence가 없을 때의 `UNTESTED` 신호가 통합 verdict까지 닫히지 않았다.
+
+### Decision
+
+1. `pr-review` wrapper와 correctness/simplicity reviewer가 공유하는 입력을 `Changed Files`, `PR Diff`, `PR Metadata`, `PR Discussion`, `Spec Context`, `Validation Evidence`, `Report Slug` 순서의 정확한 7필드 `PR Review Input`으로 고정한다.
+2. wrapper는 PR·CI/local validation evidence를 수집·redact해 공통 입력을 생산하고, reviewer별 반환 형식은 재정의하지 않고 각 agent가 소유한 계약을 소비한다. 두 read-only reviewer의 병렬 dispatch와 wrapper 단일 작성자 경계는 유지한다.
+3. correctness reviewer가 read-only 경계와 Fresh Verification을 소유한다. 검증은 CI evidence → `_sdd/env.md`가 가리키는 실행 가능한 local validation → 사유가 있는 `UNTESTED` 순서로 판정하고, code citation만으로 test status를 `MET`로 만들지 않는다. test-dependent 항목에 실행 evidence가 없으면 wrapper는 `UNTESTED`를 자동 승인이나 실패로 해석하지 않고 `NEEDS DISCUSSION`으로 라우팅하며, non-test-dependent·명시적 N/A 항목은 이 신호에서 제외한다.
+4. simplicity reviewer는 `Changed Files`와 `PR Diff`로 범위를 고정하되 validation status를 재판정하지 않는다. checklist의 verdict 복제 기준은 제거하고 runtime별 wrapper Step 4를 canonical verdict 기준으로 가리킨다.
+5. P0 4/5 `feature-draft-pair-diet`와 P0 5/5 `implementation-pair-diet`는 계속 `🚧 Planned`로 유지한다.
+
+### Rationale / Evidence
+
+- wrapper 2면, checklist 2면, correctness agent 2면, simplicity agent 2면의 8개 target surface에서 구현을 검증했고 AC1–AC17이 모두 MET다.
+- implementation-review aggregate는 fix 전 `C0 H1 M2`였으며 fix 1회 뒤 잔여 Critical/High/Medium은 0이다.
+- 6개 producer/consumer surface의 7필드 입력 exact parity, checklist pointer 2면, Codex TOML 2개 parse, 정규화 agent core parity, target census, `git diff --check`가 모두 PASS했다.
+
+### Changes
+
+- `.claude/skills/pr-review/SKILL.md`, `.codex/skills/pr-review/SKILL.md` — 7필드 입력 producer, evidence 수집·redaction, agent-owned 반환 소비, `UNTESTED` verdict 경계
+- `.claude/skills/pr-review/references/review-checklist.md`, `.codex/skills/pr-review/references/review-checklist.md` — verdict 복제 제거 및 runtime wrapper Step 4 포인터
+- `.claude/agents/pr-review-agent.md`, `.codex/agents/pr-review-agent.toml` — 7필드 correctness consumer와 read-only/Fresh Verification canonical 경계
+- `.claude/agents/simplicity-review-agent.md`, `.codex/agents/simplicity-review-agent.toml` — 공통 입력 consumer와 validation 비판정 경계
+- `_sdd/spec/main.md` — v4.6.45 → v4.6.46, P0 3/5 승격 및 P0 4/5~5/5 planned 유지 (본문 묶음 소유)
+- `_sdd/drafts/_processed_2026-08-07_feature_draft_pr_review_diet.md`, `_sdd/implementation/_processed_2026-08-07_implementation_ledger_pr_review_diet.md` — 사용 input 처리 표시
+
+## 2026-08-07 - spec-sync digest interface and single-home agent rules (v4.6.44 → v4.6.45, post-implementation sync)
+
+### Context
+
+v4.6.44에서 `🚧 Planned`로 남긴 P0 2/5 `spec-sync-agent-diet`를 구현했다. implemented sync의 본문·기록 분할 dispatch는 같은 사실·분류·버전·결정 정보를 소비하지만, wrapper와 agent 사이 digest 형식이 자유 산문이었고 status routing, legacy input fallback, processed-input 소유 규칙이 agent 여러 절에 반복돼 계약 drift 위험이 있었다.
+
+### Decision
+
+1. implemented sync digest의 producer/consumer 계약을 `## Implemented Sync Digest` 아래 `Delta List`, `Classification Basis`, `Spec Version`, `Decision Title`의 비어 있지 않은 네 필드로 고정한다. 두 wrapper는 같은 digest를 본문·기록 호출에 전달하고, 두 agent는 같은 형식으로 소비한다.
+2. agent의 status 4분류는 `Status 분류 (Routing)`, legacy input discovery는 `Input Sources`, `_processed_` rename의 본문·기록 묶음 소유권은 `호출자 표면 한정`을 각각 canonical home으로 사용한다. 다른 절은 해당 heading을 참조하고 판정 목록이나 소유 규칙을 재서술하지 않는다.
+3. status enum의 의미, evidence 기반 승격, 본문/기록 표면 분할, dispatch lifecycle, report 필드는 변경하지 않는다. P0 3/5 `pr-review-diet`, 4/5 `feature-draft-pair-diet`, 5/5 `implementation-pair-diet`는 계속 `🚧 Planned`로 유지한다.
+
+### Rationale / Evidence
+
+- T1/T2/T3 structural 검사는 RED exit 1에서 GREEN exit 0으로 전환됐고 AC1–AC12가 모두 MET다.
+- implementation-review correctness shard finding은 0건이었다. simplicity Medium 3건은 fix 1회로 반영했고, 최종 digest census, single-home 검사, agent mirror semantics, TOML parse, `git diff --check`가 모두 PASS했다.
+
+### Changes
+
+- `.claude/skills/spec-sync/SKILL.md`, `.codex/skills/spec-sync/SKILL.md` — 고정 4필드 digest producer 계약
+- `.claude/agents/spec-sync-agent.md`, `.codex/agents/spec-sync-agent.toml` — digest consumer 계약과 status·fallback·processed-input 규칙의 canonical home 정리
+- `_sdd/spec/main.md` — v4.6.44 → v4.6.45, P0 2/5 승격 및 P0 3/5~5/5 planned 유지 (본문 묶음 소유)
+- `_sdd/drafts/_processed_2026-08-07_feature_draft_spec_sync_agent_diet.md`, `_sdd/implementation/_processed_2026-08-07_implementation_ledger_spec_sync_agent_diet.md` — 사용 input 처리 표시
+
+## 2026-08-07 - SKILL_AUTHORING_NORMS P0 1/5 autopilot-simplicity 규범 다이어트 완료 (v4.6.43 → v4.6.44, post-implementation sync)
+
+### Context
+
+v4.6.43에서 `🚧 Planned`로 고정한 5개 롤링 feature 중 첫 번째 `autopilot-simplicity-diet`를 구현했다. 대상은 Claude/Codex `sdd-autopilot`과 `simplicity-review-agent` 4파일이며, orchestration·review 계약은 유지하면서 producer 내부 알고리즘 재서술과 공통 방어 규칙의 중복을 줄이는 작업이다.
+
+### Decision
+
+1. `autopilot-simplicity-diet`를 current truth로 승격한다. `sdd-autopilot`은 chain order, no-approval, `_sdd/spec/` 쓰기의 spec-sync 위임, 플랫폼별 runtime delta를 유지하고 Workflow Position 다이어그램·producer 내부 알고리즘 재서술·형식 리터럴·수치형 질문 knob를 제거한다.
+2. `simplicity-review-agent`는 5개 차원, severity·return·path 계약과 플랫폼별 실행 경계를 유지하고 correctness/read-only/falsifiability의 반복 재서술을 축약한다.
+3. P0 2/5 `spec-sync-agent-diet`, 3/5 `pr-review-diet`, 4/5 `feature-draft-pair-diet`, 5/5 `implementation-pair-diet`는 계속 `🚧 Planned`로 유지한다.
+
+### Rationale / Evidence
+
+- 3개 task의 structural RED→GREEN을 완료했고 14/14 AC가 모두 MET다.
+- TOML parse와 `git diff --check`가 PASS했고, implementation-review correctness는 전부 MET다. simplicity Medium 3건은 fix 1회로 반영했으며 post-fix regression 뒤 Critical/High/Medium 잔여는 0이다.
+- 4파일 diff는 28 insertions / 74 deletions이고, 현재 line count는 Claude/Codex autopilot 71/70줄, Claude/Codex simplicity reviewer 92/93줄이다.
+
+### Changes
+
+- `.claude/skills/sdd-autopilot/SKILL.md`, `.codex/skills/sdd-autopilot/SKILL.md` — orchestration 고유 계약과 runtime delta만 남도록 다이어트
+- `.claude/agents/simplicity-review-agent.md`, `.codex/agents/simplicity-review-agent.toml` — 공통 재천명 축약, 플랫폼별 경계 보존
+- `_sdd/spec/main.md` — v4.6.43 → v4.6.44, P0 1/5 승격 및 P0 2/5~5/5 planned 유지 (본문 묶음 소유)
+- `_sdd/implementation/_processed_2026-08-07_implementation_ledger_norms_diet_remaining_pairs.md` — post-implementation evidence 처리 표시
+
+## 2026-08-07 - SKILL_AUTHORING_NORMS P0 나머지 5쌍 롤링 분할 고정 (v4.6.42 → v4.6.43, pre-implementation planned sync)
+
+### Context
+
+discussion 쌍의 규범 다이어트는 v4.6.42에서 완료됐다. 나머지 핵심 spec/implementation 스킬과 agent를 한 번에 수정하면 단일 컨텍스트를 넘으므로, feature draft의 Part 1 분할 목록을 P0 롤링 작업으로 고정한다. 첫 feature `autopilot-simplicity-diet`는 plan-review를 마쳤지만 구현 산출물과 validation evidence는 없다.
+
+### Decision
+
+1. 🚧 Planned: P0는 `autopilot-simplicity-diet` → `spec-sync-agent-diet` → `pr-review-diet` → `feature-draft-pair-diet` → `implementation-pair-diet`의 5개 feature를 순차 실행한다. 각 feature는 구현·검증된 뒤 해당 todo만 current truth로 승격한다.
+2. 🚧 Planned: `Propagation Surfaces` 계약은 `feature-draft`를 canonical home으로 두고, `plan-review`는 복제하지 않고 검증만 한다.
+3. 🚧 Planned: 공통 다이어트 기준은 지시·판단 주체의 단일 홈화, 근거 없는 수치·방어 규칙의 기준화, 하드 게이트 존치 시 근거 병기다. Final Check 1줄은 유지하고 완료된 discussion 쌍과 하네스 변경은 범위에서 제외한다.
+
+### Rationale / Evidence
+
+- 구현 코드와 `_sdd/implementation/` validation evidence가 없으므로 5개 항목 모두 PLANNED다. plan-review 완료는 구현 승격 evidence로 사용하지 않는다.
+- 쌍 단위 분할은 각 feature가 독립적으로 검증·승격될 수 있게 하며, 미구현 항목을 current contract와 섞지 않는다.
+
+### Changes
+
+- `_sdd/spec/main.md` — v4.6.42 → v4.6.43, P0 5개 todo를 개별 `🚧 Planned` 항목으로 추가
+- `_sdd/drafts/_processed_2026-08-07_feature_draft_norms_diet_remaining_pairs.md` — planned sync 처리 표시; 첫 feature의 Part 2 task를 보존해 다음 implementation 입력으로 계속 검색 가능
+
 ## 2026-08-07 - discussion 스킬 쌍 규범 다이어트 (SKILL_AUTHORING_NORMS 적용 1호) (v4.6.41 → v4.6.42, post-implementation sync)
 
 ### Context

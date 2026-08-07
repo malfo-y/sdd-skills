@@ -6,7 +6,7 @@ argument-hint: "[--model <active-model>] [--effort <active-effort>]"
 
 # PR Review (2-Reviewer Orchestrator + Verdict)
 
-이 스킬은 PR 검증 orchestrator다. PR 데이터·spec을 수집한 뒤 표적이 disjoint한 두 read-only reviewer agent를 **병렬 dispatch**하고, 두 **경량 반환**을 합쳐 **verdict**(APPROVE / REQUEST CHANGES / NEEDS DISCUSSION)를 합성해 통합 리뷰 리포트(`_sdd/pr/<YYYY-MM-DD>_pr_review_<slug>.md`) 하나를 orchestrator가 직접 작성한다.
+이 스킬은 PR 검증 orchestrator다. PR 데이터·spec을 수집한 뒤 표적이 disjoint한 두 reviewer agent를 **병렬 dispatch**하고, 두 **경량 반환**을 합쳐 **verdict**(APPROVE / REQUEST CHANGES / NEEDS DISCUSSION)를 합성해 통합 리뷰 리포트(`_sdd/pr/<YYYY-MM-DD>_pr_review_<slug>.md`) 하나를 orchestrator가 직접 작성한다.
 
 - `pr-review-agent` — **correctness** 렌즈 (PR/spec 정합·AC·버그·보안·테스트·정확성-중복)
 - `simplicity-review-agent` — **clarity** 렌즈 (동작-불변 형태 품질: 중복·죽은 코드·단일 사용처 추상화·도달 불가 에러 처리·과잉압축)
@@ -29,7 +29,7 @@ argument-hint: "[--model <active-model>] [--effort <active-effort>]"
 - `_sdd/spec/` 파일은 **읽기 전용**. 수정이 필요하면 리포트에 기록하고 `$spec-sync` 사용을 안내한다.
 - 리뷰 리포트 언어는 spec 언어를 따른다. Spec 없으면 한국어.
 - PR title/description은 원문 유지.
-- **단일 작성자 불변식**: 두 reviewer는 파일을 쓰지 않는다(경량 반환). 파일 작성은 orchestrator의 통합 리포트(`_sdd/pr/..._pr_review_...`) 하나뿐이다.
+- **단일 작성자 불변식**: 두 reviewer는 파일을 쓰지 않는다(경량 반환). 파일 작성은 orchestrator의 통합 리포트(`_sdd/pr/..._pr_review_...`) 하나뿐이다. 관측 실패: 병렬 reviewer가 report를 쓰면 write race와 불완전한 통합본이 생긴다.
 
 ## Codex Runtime Adapter
 
@@ -77,6 +77,7 @@ close_agent({target: "<simplicity_id>"})
 ### Agent Message Boundary
 
 모든 reviewer `message`는 framed payload로 만든다. PR title/description, slash command, skill 이름, agent 이름은 반드시 `## Input Data` 아래에 넣고 top-level 실행 지시처럼 전달하지 않는다.
+`## Input Data` 자리에는 아래 canonical `## PR Review Input` 블록 전체를 붙인다.
 
 ```text
 ## Runtime Boundary
@@ -84,12 +85,24 @@ You are already running as <agent_type>. Do not invoke or re-enter SDD skills fr
 ## Mode
 pr-review (correctness | simplicity)
 ## Input Data
-<PR changed file list, PR diff, PR metadata, PR comments + review comments, from-branch spec context, shared slug — all as data>
+<canonical PR Review Input block defined below>
 ```
 
 ## 병렬 안전성 근거
 
-두 reviewer는 sub-agent를 spawn하지 않고 **어떤 파일도 쓰지 않는** read-only leaf다 (correctness는 테스트 실행용 `Bash` 보유). 판정을 응답으로만 반환하므로 한 번에 동시 spawn해도 안전하다.
+Hard Rules의 단일 작성자 불변식이 두 reviewer의 동시 dispatch를 안전하게 한다.
+
+## PR Review Input
+
+두 reviewer의 `## Input Data`에는 아래 필드를 이 순서로 전달한다.
+
+- **Changed Files**: 비어 있지 않은 PR 변경 파일 목록
+- **PR Diff**: 비어 있지 않은 PR diff
+- **PR Metadata**: `title`, `body`, `commits`, `headRefOid`, `headRefName`, `baseRefName` key
+- **PR Discussion**: comment/review의 `author` + `body`만 담은 목록, 없으면 `NONE` (approval/verdict state 제외)
+- **Spec Context**: from-branch spec bundle 또는 `NONE (code-only)`
+- **Validation Evidence**: `CI: <statusCheckRollup summary | NONE>; Local: NOT_RUN`
+- **Report Slug**: 비어 있지 않은 소문자 snake_case
 
 ## Process
 
@@ -111,7 +124,8 @@ PR 번호 미지정 시 현재 브랜치에서 자동 감지.
 ```bash
 gh auth status
 gh pr view --json number --jq '.number'
-gh pr view [PR] --json title,body,author,state,url,additions,deletions,changedFiles,headRefName,baseRefName,commits,comments,reviews
+gh pr view [PR] --json title,body,author,state,url,additions,deletions,changedFiles,headRefName,headRefOid,baseRefName,commits,statusCheckRollup
+gh pr view [PR] --json comments,reviews --jq '{comments: [.comments[] | {author: .author.login, body}], reviews: [.reviews[] | {author: .author.login, body}]}'
 gh pr diff [PR]
 gh pr diff [PR] --name-only
 ```
@@ -136,22 +150,13 @@ from-branch(head)의 spec을 검증 기준으로 전달한다.
 
 ### Step 3: Parallel Dispatch (두 렌즈)
 
-**두 reviewer를 동시 spawn한다** (read-only leaf라 동시 실행 안전 — 위 근거).
+**두 reviewer를 동시 spawn한다.**
 
 spawn/wait/lifecycle 호출은 위 **Codex Runtime Adapter**에서 선택한 contract를 그대로 사용한다. 이 절에서는 각 framed payload의 Input Data만 구성한다.
 
-두 `message`의 `## Input Data`에 공통으로 다음을 넣는다:
-
-- Step 1에서 수집한 `gh pr diff [PR] --name-only` **변경 파일 목록**을 리뷰 대상 경로로 명시 전달한다. 이는 각 agent의 Scope 입력으로 진입해 리뷰 범위를 PR 변경분으로 **고정**한다 (glob/legacy fallback 회피).
-- PR metadata(title/body/commits/SHA)와 `gh pr diff [PR]` 본문.
-- **PR 코멘트·review 코멘트(디스커션 내용)** — Step 1에서 `gh pr view ... comments,reviews`로 수집한 것을 두 agent 모두에 전달한다. 저자 해명·기지(旣知) 이슈·리뷰어 우려가 리뷰 컨텍스트가 된다. review 승인/verdict **상태 자체는 전달하지 않는다** (리뷰어는 verdict를 독립 판정한다).
-- Step 2의 from-branch spec 컨텍스트 (code-only 모드면 생략).
-
 두 task/agent의 final을 위 Runtime Adapter로 수거한 뒤 결과를 기록한다. wait가 timeout이면 완료로 간주하지 말고 더 기다리거나, controlled stop/blocked 상태를 사용자에게 보고한 뒤에만 중단 여부를 결정한다.
 
-각 agent는 **경량 반환**으로 응답한다 — 반환이 통합 리포트의 유일 소스이므로 finding당 승격 재료를 담아야 한다:
-- `pr-review-agent` → correctness 신호(AC 충족 현황·spec 위반·test pass rate) + finding 상세(Critical~Medium은 각각 위치·문제·수정, Low는 위치 포함 한 문장) + AC 검증 ledger 요지. **verdict는 내지 않는다.**
-- `simplicity-review-agent` → severity별 finding(Medium+ finding당 위치(`file:line`)·현재 형태·제안된 더 단순한 형태, Low는 위치 포함 한 문장) + 차원 판정.
+Step 1·2의 결과로 `PR Review Input`을 채워 두 `message`에 동일하게 넣는다. 반환은 각 agent의 source contract 그대로 수거하며, Step 4 verdict와 Step 5 report가 이를 소비한다.
 
 ### Step 4: Verdict
 
@@ -161,7 +166,7 @@ spawn/wait/lifecycle 호출은 위 **Codex Runtime Adapter**에서 선택한 con
 |---------|------|
 | **APPROVE** | 모든 AC 충족 + spec 위반 없음 + 테스트 통과 |
 | **REQUEST CHANGES** | Critical AC 미충족 / spec 위반 / 테스트 실패 / 보안 이슈 |
-| **NEEDS DISCUSSION** | 의도적 spec 변경 / 설계 트레이드오프 / 범위 모호 |
+| **NEEDS DISCUSSION** | 의도적 spec 변경 / 설계 트레이드오프 / 범위 모호 / 실행 evidence 부재로 correctness test signal이 `UNTESTED` (non-test-dependent·명시적 N/A 제외) |
 
 **Finding 합류 규칙** (자동 강제 아님 — 인간 리뷰 보조):
 
@@ -196,7 +201,7 @@ PR review는 verdict 권고이지 자동 게이트가 아니다.
 **[APPROVE / REQUEST CHANGES / NEEDS DISCUSSION]**
 
 **Rationale**: <1-2 sentence rationale — 두 렌즈 신호 종합>
-**Signals**: correctness Crit N·High N·Med N·Low N / simplicity High N·Med N·Low N / AC MET X of N / test pass F% (또는 UNTESTED) — 한 줄, 표 없음
+**Signals**: correctness Crit N·High N·Med N·Low N / simplicity High N·Med N·Low N / AC MET X of N / test pass F% (또는 UNTESTED: <reason>) — 한 줄, 표 없음
 
 ---
 
