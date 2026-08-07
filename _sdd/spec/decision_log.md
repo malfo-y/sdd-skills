@@ -1,5 +1,42 @@
 # Decision Log
 
+## 2026-08-07 - discussion 스킬 쌍 규범 다이어트 (SKILL_AUTHORING_NORMS 적용 1호) (v4.6.41 → v4.6.42, post-implementation sync)
+
+### Context
+
+v4.6.41에서 추가한 `docs/SKILL_AUTHORING_NORMS.md`(Claude 5 세대 제작 규범 체크리스트)를 실제 스킬에 적용한 사례가 없었다. discussion 스킬 쌍(claude+codex 미러)을 규범 리뷰한 결과 finding F1~F9 — 파일 생성 규칙 반복 서술, AGENTS.md §5 work log 규약과의 충돌, 인라인 요약 템플릿(재구성 위험), 무근거 수치 노브, 의사코드 블록, 과잉 예시 표, 질문 우선순위 기준 부재 등 — 가 나왔다.
+
+### Decision
+
+discussion 스킬 쌍을 규범 다이어트하는 적용 1호로 삼는다 (claude SKILL.md 436→320줄, codex 400→275줄).
+
+1. **요약 템플릿 단일 소스화**: discussion 요약 템플릿의 단일 소스는 `references/summary-template.md`(claude·codex 양쪽)이고, Step 4는 이를 Read 후 verbatim 복사(`[...]` 슬롯만 치환)로 소비한다 — 신규 contract.
+2. **파일 규칙 단일화 + work log 규약 예외**: 파일 생성 제한 규칙을 Hard Rules 1곳으로 통합하고, "호출 환경의 work log 규약에 따른 기록은 예외" 문구로 AGENTS.md §5 충돌을 해소한다 (직접 인용 대신 일반화 — 플러그인 이식성).
+3. **수치 노브 4건 기준화**: 연속 2라운드 비판 금지·매 3라운드 요약·stagnation 2회·재방문 1회를 기준 서술로 전환하거나 근거 병기.
+4. **의사코드 산문화 + 예시 표 question-guide 위임**: 3.1/3.2 의사코드 블록을 산문으로 대체하고, 깊이 신호·비판 유형·수렴 신호 표의 상세 예시는 question-guide 참조로 위임 (깊이 신호 예시 표를 question-guide에 신설해 정보 보존).
+5. **아키텍처-변경 질문 우선 기준 추가**: 질문 선택 전략에 "답이 아키텍처(구조·범위·후속 작업 방향)를 바꾸는 질문 우선" 기준 추가 (field-guide 반영).
+
+### Alternatives
+
+- Final Check 삭제 계열 finding은 d903052 존치 결정(하드 게이트는 실측 근거가 있을 때만 걷어냄)으로 기각.
+- work log 예외 문구를 AGENTS.md 직접 인용으로 쓰는 안은 플러그인 이식성 저하로 기각 — "호출 환경의 work log 규약"으로 일반화.
+
+### Rationale / Evidence
+
+- 행동 로직(커버리지·게이트·카테고리 4종·근거 유형 4종 enum·Gate 구조)은 의미 변경 없음 — 다이어트는 서술 층위에 한정.
+- 게이트: plan-review CLEAR(M2 L2 반영), implementation-review 전 AC MET, 합산 M6 L5 → fix 1회 반영(깊이 신호 예시 question-guide 표 신설, Step 4 템플릿 위임으로 codex sources 불일치 동시 해소 등). 재리뷰 임계(M≥5) 도달로 추가 리뷰 권장은 advisory로 기록.
+- fix 후 census 재실행 전건 통과(변형형 grep 잔존 0·헤더 대응 5:5·템플릿 쌍 identical). codex 미러는 3-way merge로 고유 delta(interactive-only·request_user_input·최신성 HR) 보존.
+
+### Changes
+
+- `.claude/skills/discussion/SKILL.md` — 436→320줄 (F1·F2·F5~F9 + Step 4 verbatim 소비 지시)
+- `.claude/skills/discussion/references/summary-template.md` — 신규 (템플릿 단일 소스)
+- `.claude/skills/discussion/references/discussion-question-guide.md` — 깊이 신호 예시 표 신설
+- `.codex/skills/discussion/SKILL.md` — 400→275줄 (3-way merge 전파)
+- `.codex/skills/discussion/references/summary-template.md` — 신규 (템플릿 미러)
+- `.codex/skills/discussion/references/discussion-question-guide.md` — 미러 전파
+- `_sdd/spec/main.md` — v4.6.41 → v4.6.42 (본문 묶음 소유)
+
 ## 2026-08-07 - Claude 5 세대 스킬 제작 규범 문서 추가 (docs/SKILL_AUTHORING_NORMS.md) (v4.6.40 → v4.6.41, post-implementation sync)
 
 ### Context

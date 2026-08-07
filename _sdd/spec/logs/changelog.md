@@ -2,6 +2,11 @@
 
 > 이 파일은 `_sdd/spec/main.md`의 **본문이 바뀐 버전만** 기록한다 — 본문 무변경 sync(헤더 날짜만 갱신)는 entry를 남기지 않으므로 버전 번호에 결번이 생길 수 있다.
 
+#### v4.6.42 (2026-08-07)
+
+- **discussion 스킬 쌍 규범 다이어트 — SKILL_AUTHORING_NORMS 적용 1호 (post-implementation sync)**: v4.6.41의 규범 문서를 실제 스킬에 적용한 첫 사례. SKILL_AUTHORING_NORMS 리뷰 finding F1~F9를 discussion 스킬 쌍에 반영 — claude SKILL.md 436→320줄, codex 400→275줄. 신규 contract: **요약 템플릿 단일 소스 = `references/summary-template.md`(claude·codex 양쪽)**, Step 4는 Read+verbatim 복사(`[...]` 슬롯만 치환)로 소비. 그 외: 파일 생성 규칙 Hard Rules 1곳 단일화 + work log 규약 예외 명시(AGENTS.md §5 충돌 해소, "호출 환경의 work log 규약" 일반화), 수치 노브 4건(연속 2라운드 비판 금지·매 3라운드 요약·stagnation 2회·재방문 1회) 기준화, 3.1/3.2 의사코드 산문화, 예시 표 상세는 question-guide 위임(깊이 신호 예시 표 신설로 정보 보존), 질문 선택 전략에 아키텍처-변경 질문 우선 기준 추가. 행동 로직(커버리지·게이트·카테고리 4종·근거 유형 4종 enum·Gate 구조)은 의미 변경 없음. Final Check 삭제 계열 finding은 d903052 존치 결정으로 기각. codex 미러는 3-way merge로 고유 delta(interactive-only·request_user_input·최신성 HR) 보존.
+- **검증 evidence**: 게이트 plan-review CLEAR(M2 L2 반영), implementation-review 전 AC MET, 합산 M6 L5 → fix 1회 반영, fix 후 census 재실행 전건 통과(변형형 grep 잔존 0·헤더 대응 5:5·템플릿 쌍 identical). 재리뷰 임계(M≥5) 도달로 추가 리뷰 권장은 advisory로 기록.
+
 #### v4.6.41 (2026-08-07)
 
 - **Claude 5 세대 스킬 제작 규범 문서 추가 (post-implementation sync, 경량 경로)**: `docs/SKILL_AUTHORING_NORMS.md` 신규 추가(82줄, 한국어) — Claude 5 세대 모델 대상 스킬/agent/하네스 제작 규범 체크리스트. Anthropic 블로그 2편("The New Rules of Context Engineering for Claude 5 Generation Models" + "A Field Guide to Claude Fable: Finding Your Unknowns") 증류. 구성: §1 배경(80% 프롬프트 제거, 규칙→judgment) / §2 Then→Now 전환 표 / §3 제작 체크리스트(본문·구조 progressive disclosure·rich reference·인터페이스) / §4 Unknowns 실천법→SDD 단계 매핑 표 / §5 기존 repo 규범과의 관계(부합점 + 하드 게이트 유지 조건 "걷어낼 자격은 실측이 준다"). 배경: 기존 docs 문서 병합 안을 검토했으나 사용자가 신규 문서로 지시. 경량 경로 근거: 순수 참고 문서 — 계약·스킬 로직·미러 전파 없음(신규 파일 조건은 형식상 걸리나 전파 표면 부재).
