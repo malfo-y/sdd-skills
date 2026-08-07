@@ -2,6 +2,11 @@
 
 > 이 파일은 `_sdd/spec/main.md`의 **본문이 바뀐 버전만** 기록한다 — 본문 무변경 sync(헤더 날짜만 갱신)는 entry를 남기지 않으므로 버전 번호에 결번이 생길 수 있다.
 
+#### v4.6.41 (2026-08-07)
+
+- **Claude 5 세대 스킬 제작 규범 문서 추가 (post-implementation sync, 경량 경로)**: `docs/SKILL_AUTHORING_NORMS.md` 신규 추가(82줄, 한국어) — Claude 5 세대 모델 대상 스킬/agent/하네스 제작 규범 체크리스트. Anthropic 블로그 2편("The New Rules of Context Engineering for Claude 5 Generation Models" + "A Field Guide to Claude Fable: Finding Your Unknowns") 증류. 구성: §1 배경(80% 프롬프트 제거, 규칙→judgment) / §2 Then→Now 전환 표 / §3 제작 체크리스트(본문·구조 progressive disclosure·rich reference·인터페이스) / §4 Unknowns 실천법→SDD 단계 매핑 표 / §5 기존 repo 규범과의 관계(부합점 + 하드 게이트 유지 조건 "걷어낼 자격은 실측이 준다"). 배경: 기존 docs 문서 병합 안을 검토했으나 사용자가 신규 문서로 지시. 경량 경로 근거: 순수 참고 문서 — 계약·스킬 로직·미러 전파 없음(신규 파일 조건은 형식상 걸리나 전파 표면 부재).
+- **검증 evidence**: TODO/TBD grep 0건, `git diff --check` 통과.
+
 #### v4.6.40 (2026-08-07)
 
 - **Codex/Claude hook parity and dual-setting runtime acceptance (post-implementation sync)**: Feature 1~3을 하나의 runtime parity 계약으로 완결했다. 훅 4종(`worklog-gate.sh`, `worklog-context.sh`, `harness-context.sh`, `agent-watchdog.sh`)은 self-host + `spec-create`/`spec-upgrade` Claude·Codex reference surface 5곳에서 같은 실행 자산으로 유지되고, `SessionStart`는 cross-runtime `hookSpecificOutput.additionalContext` JSON, `PreToolUse`는 work-log gate, `PostToolUse`는 advisory watchdog을 제공한다. 두 설치 스킬은 `.claude/settings.json`과 `.codex/hooks.json`을 독립 병합해 비-SDD handler·top-level key를 보존하며, 한 runtime 설정이 손상돼도 반대 runtime 설치를 계속하고 반복 실행 멱등성을 지킨다. acceptance는 실제 격리 Codex skill invocation fixture의 trust boundary와 `SessionStart`/clear/`PreToolUse`/watchdog lifecycle, Claude Code smoke, manifest 안정성, no-bypass까지 포함한다.

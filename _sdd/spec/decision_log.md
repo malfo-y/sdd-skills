@@ -1,5 +1,30 @@
 # Decision Log
 
+## 2026-08-07 - Claude 5 세대 스킬 제작 규범 문서 추가 (docs/SKILL_AUTHORING_NORMS.md) (v4.6.40 → v4.6.41, post-implementation sync)
+
+### Context
+
+Claude 5 세대 모델 대상 스킬/agent/하네스 제작에 적용할 규범이 repo 안에 정리돼 있지 않았다. Anthropic 블로그 2편 — "The New Rules of Context Engineering for Claude 5 Generation Models"와 "A Field Guide to Claude Fable: Finding Your Unknowns" — 이 담고 있는 규범(80% 프롬프트 제거, 규칙→judgment 전환, progressive disclosure, unknowns 실천법)을 이 repo의 제작 체크리스트로 증류하기로 했다.
+
+### Decision
+
+`docs/SKILL_AUTHORING_NORMS.md` 신규 문서(82줄, 한국어)를 추가한다. 구성: §1 배경(80% 프롬프트 제거, 규칙→judgment) / §2 Then→Now 전환 표 / §3 제작 체크리스트(본문·구조 progressive disclosure·rich reference·인터페이스) / §4 Unknowns 실천법→SDD 단계 매핑 표 / §5 기존 repo 규범과의 관계(부합점 + 하드 게이트 유지 조건 "걷어낼 자격은 실측이 준다"). 순수 참고 문서로, 계약·스킬 로직·미러 전파 표면은 없다.
+
+### Alternatives
+
+기존 docs 문서에 병합하는 안을 검토했으나 사용자가 신규 문서로 지시해 기각했다.
+
+### Rationale / Evidence
+
+- 문서 완성 상태 검증: TODO/TBD grep 0건, `git diff --check` 통과.
+- 경량 경로 채택 근거: 순수 참고 문서로 계약·스킬 로직·미러 전파 없음 — 신규 파일 조건은 형식상 걸리나 전파 표면 부재로 경량 경로가 타당하다고 판단.
+- §5는 기존 repo 규범(하드 게이트·structural check 등)과의 부합점을 명시하고, 게이트 제거는 실측 근거가 있을 때만 허용한다는 조건을 남긴다.
+
+### Changes
+
+- `docs/SKILL_AUTHORING_NORMS.md` — 신규 (Claude 5 세대 제작 규범 체크리스트)
+- `_sdd/spec/main.md` — v4.6.40 → v4.6.41 (본문 묶음 소유)
+
 ## 2026-08-07 - Codex/Claude hook parity and dual-setting runtime acceptance (v4.6.39 → v4.6.40, post-implementation sync)
 
 ### Context

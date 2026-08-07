@@ -2,7 +2,7 @@
 
 > Markdown 기반 skill bundle로 AI 에이전트의 Spec-Driven Development 워크플로우를 Claude Code와 Codex에서 공통 계약으로 실행한다.
 
-**Spec Version**: 4.6.40
+**Spec Version**: 4.6.41
 **Last Updated**: 2026-08-07
 **Status**: Approved
 **Canonical Role**: current thin global spec
@@ -183,3 +183,4 @@ SDD Skills의 설계는 다음 층으로 나뉜다.
 - [decision_log.md](./decision_log.md): 구조 변경과 주요 spec 판단 이력
 - [logs/changelog.md](./logs/changelog.md): 릴리스 및 문서 변경 이력
 - [README.md](../../README.md), [docs/SDD_SPEC_DEFINITION.md](../../docs/SDD_SPEC_DEFINITION.md), [docs/SDD_WORKFLOW.md](../../docs/SDD_WORKFLOW.md): 설치, canonical model, workflow semantics 기준 문서
+- [docs/SKILL_AUTHORING_NORMS.md](../../docs/SKILL_AUTHORING_NORMS.md): 스킬·agent·하네스 문서를 작성/수정할 때 점검하는 Claude 5 세대 제작 규범 체크리스트(런타임 참조 문서 아님 — [docs/agentic_coding_principle.md](../../docs/agentic_coding_principle.md)와 같은 참고 자산 계층)
