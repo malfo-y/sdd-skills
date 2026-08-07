@@ -118,22 +118,19 @@ spec type 판별 규칙:
 - path/reference가 실제 코드와 맞는지 확인
 - `Strategic Code Map`이 있다면 현재 코드의 entrypoint / hotspot / validation surface와 맞는지 확인
 
-상태 예시:
+#### Drift Status (allowed values)
 
-- `ALIGNED`
-- `DRIFT`
-- `MISSING`
-- `UNTESTED`
+아래 순서로 각 surface의 status를 정확히 하나 고른다.
 
-### Step 3.5: Code Analysis Metrics
+1. 필요한 evidence 수집이 불완전하거나 비교하기에 불충분하거나 기대한 양쪽 surface가 모두 부재하면 `UNTESTED`다. 단순 접근 실패는 `MISSING`으로 판정하지 않는다.
+2. 필요한 범위를 끝까지 탐색했고 기대한 한쪽 surface만 실제로 부재하면 `MISSING`이다. 이때 direction은 `SPEC_MISSING` 또는 `IMPLEMENTATION_MISSING`이다.
+3. 양쪽 evidence가 비교 가능하면 일치할 때 `ALIGNED`, 충돌할 때 `DRIFT`다.
 
-`Bash`, `Grep`, `Glob`으로 세 가지 지표를 수집한다.
+모든 status에는 concrete evidence가 필요하다. `MISSING`이 아닌 status의 direction은 `N/A`다.
 
-| Metric | Method | Use |
-|--------|--------|-----|
-| Hotspots | `git log --format='' --name-only \| sort \| uniq -c \| sort -rn \| head -20` | 자주 변경되는 파일 식별 |
-| Focus Score | 변경 파일 중 스펙 관련 컴포넌트 비율 | 변경 집중도 평가 |
-| Test Coverage | 스펙 기능별 관련 테스트 파일 존재 여부 | 테스트 갭 식별 |
+### Step 3.5: Optional Code Analysis Evidence
+
+revision/history/change-set 분석은 scope 선택이나 concrete finding을 실제로 뒷받침할 때만 수행한다. 사용했다면 Output Format의 `Optional Code Analysis Evidence` 필드를 채우고, 사용하지 않았으면 해당 section을 생략한다. placeholder나 임의 수치를 만들지 않는다.
 
 ### Step 4: Severity and Decision
 
@@ -143,11 +140,13 @@ severity 규칙:
 - `Quality`: global 오염, 약한 경계, evidence가 충분한 중간 수준 drift, 공통 코어 4축 위반
 - `Improvements`: 가독성, 정리, appendix 수준 개선
 
-decision 예시:
+#### Decision (allowed values)
 
-- `SPEC_OK`
-- `SYNC_REQUIRED`
-- `NEEDS_DISCUSSION`
+Decision은 spec 변경 필요 여부라는 단일 축에서 아래 precedence로 정확히 하나 고른다.
+
+1. material uncertainty나 authority/scope/contract ambiguity 때문에 spec 변경 필요 여부를 결정할 수 없으면 `NEEDS_DISCUSSION`이다.
+2. 그렇지 않고 verified evidence가 spec 변경 필요를 입증하면 `SYNC_REQUIRED`다.
+3. 그 외에는 `SPEC_OK`다. implementation-only drift는 `SPEC_OK`로 두고 Recommended Next Actions에 구현 측 조치를 기록한다. Improvements만 있는 경우도 `SPEC_OK`가 가능하다.
 
 ### Step 5: Report and Handoff
 
@@ -161,7 +160,7 @@ decision 예시:
 **Review Date**: YYYY-MM-DD
 **Reviewed Spec**: ...
 **Spec Type**: Global | Temporary | Mixed
-**Decision**: SPEC_OK | SYNC_REQUIRED | NEEDS_DISCUSSION
+**Decision**: <Decision per Step 4>
 
 ## 1. Findings
 ### Critical
@@ -183,15 +182,19 @@ decision 예시:
 ...
 
 ## 5. Drift Summary
-...
 
-## 6. Code Analysis Metrics
+| Surface | Drift Status | Direction | Evidence |
+|---------|--------------|-----------|----------|
 
-| Metric | Value | Notes |
-|--------|-------|-------|
-| Top Hotspots | file1 (N), file2 (N) | 자주 변경되는 파일 |
-| Focus Score | X% | 스펙 컴포넌트 집중도 |
-| Test Coverage | X/Y features covered | 스펙 기능별 테스트 현황 |
+각 row의 status와 direction은 Step 3의 `Drift Status` 판정을 따른다.
+
+## 6. Optional Code Analysis Evidence
+
+<!-- 분석을 사용하지 않았으면 이 section을 생략한다. -->
+- **Bounded window**:
+- **Method**:
+- **Result**:
+- **Finding link**:
 
 ## 7. Recommended Next Actions
 ...

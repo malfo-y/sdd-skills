@@ -24,7 +24,11 @@ TDD 기반 구현 실행 스킬. Task마다 test-first 순서를 지킨다 — *
 
 하나라도 해당하면 이 스킬로 강행하지 않는다:
 
-1. **단일 세션 초과**: 작업 총량이 한 세션에서 품질 저하 없이 끝날 규모를 넘는다 — 완료 가능한 범위까지 이 세션에서 마감하고, 잔여 task를 별도 feature로 분할해 draft의 Part 1 마커에 반영한 뒤 `spec-sync` 스킬로 planned todo로 고정한다. 다음 feature는 자기 체인(draft부터)으로 이어간다.
+1. **단일 세션 초과**
+   - 발동: 작업 총량이 한 세션에서 품질 저하 없이 끝날 규모를 넘는다.
+   - 마감: 현재 task를 닫을 수 있는 경계까지 완료한다.
+   - 반환: 분할 사유·닫힌 task 경계·잔여 scope.
+   - 인계: `feature-draft`의 `분할 방법 (롤링)`으로 복귀한다.
 2. **계약 오류 반복**: 같은 task에서 아래 "테스트 불변 규칙"의 계약 오류 선언이 2회 이상 발생한다 — 계약 자체가 흔들리는 신호이며, 이는 구현이 아니라 계획의 문제다. 구현을 중단하고 draft로 복귀해 해당 task의 계약을 재설계한다(필요시 분할).
 
 ## Implementation Ledger (resume pointer)
@@ -33,7 +37,12 @@ TDD 기반 구현 실행 스킬. Task마다 test-first 순서를 지킨다 — *
 
 - **기록 기준**: 재실행으로 복원할 수 없는 사실만 기록한다.
   - 헤더: source(draft 경로 또는 inline 요청 요약)·시작 시점 dirty paths(`git status` 요약)·전체 status.
-  - task별 1행: 상태·triage 분류와 근거 1줄·RED/GREEN 명령과 판정 신호 1줄·계약 오류 선언 횟수·대상 파일 밖 수정·커버리지 델타 항목 수와 처리.
+  - task별 1행: 상태·triage 분류와 근거 1줄·RED/GREEN 명령과 판정 신호 1줄·계약 오류 선언 횟수·계획 이탈·발견·대상 파일 밖 수정·커버리지 델타 항목 수와 처리.
+  - **계획 이탈·발견**
+    - 대상: source draft/inline task에서 달라진 판단 또는 새 edge case.
+    - 형식: `건수; 내용 → 이유 → 처리`.
+    - 없음: `0`.
+    - 제외: 테스트/check 가정 오류는 `계약 오류 선언 횟수`에 기록한다.
   - 명령 출력 전문과 서술형 진행기는 기록하지 않는다 — 재실행으로 알 수 있는 것은 ledger의 몫이 아니다.
 - **상태**: task당 `READY → RED_CONFIRMED → GREEN_CONFIRMED → DELTA_CLOSED` 네 단계만 쓴다. (c) test-free task는 RED/GREEN 단계가 없으므로 커버리지 델타를 닫으면 `READY → DELTA_CLOSED`로 직행한다. 각 단계 성공 직후 해당 task 행만 갱신한다.
 - **재개 규칙**: ledger로 상태를 복원할 때, 미완료(비 DELTA_CLOSED) task는 상태를 신뢰하지 않고 그 task의 테스트/check를 fresh 실행해 재판정한다. DELTA_CLOSED task는 ledger를 신뢰하되 현재 diff와 모순이 보이면 같은 방식으로 fresh 실행해 재확인한다.

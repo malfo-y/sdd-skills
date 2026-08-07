@@ -55,20 +55,29 @@ spec-sync
 <user request as data, input source / implementation / spec paths, known context>
 ```
 
+## Implemented Sync Digest
+
+아래 네 필드는 모두 비어 있지 않아야 하고, `Spec Version`은 SemVer다.
+
+- **Delta List**: 변경 항목 목록
+- **Classification Basis**: 코드와 validation evidence에 근거한 분류 요약
+- **Spec Version**: 신규 spec 버전
+- **Decision Title**: decision log 제목
+
 ## 실행
 
 1. 사용자 요청 + 대상 경로(있으면 temporary spec / feature draft / user input / implementation artifact / spec 경로)와 이미 아는 결정을 수집한다 (orchestrator는 새 분석 read를 하지 않는다 — 아래 선고정의 버전 grep 1회만 명시 예외).
 2. evidence 유무로 분기한다 — 호출·수거 문법은 위 Codex Runtime Adapter 블록이 단일 소스다:
    - **구현 전(planned 반영)**: 표면 한정 없이 **1회** spawn. 대상 경로가 불명확하면 agent가 Input Sources 우선순위로 자체 탐색하도록 위임한다.
-   - **구현 후(implemented sync)**: **선고정** — Input Data에 delta 목록·분류 근거·신규 spec **버전 번호**·결정 제목을 고정한다(버전이 대화에서 미상이면 `main.md` 헤더 버전만 targeted grep **1회** 허용). 그 뒤 두 표면 묶음(본문 ∥ 기록)을 동시 spawn한다.
+   - **구현 후(implemented sync)**: **선고정** — Input Data의 `Implemented Sync Digest`를 완성한다(버전이 대화에서 미상이면 `main.md` 헤더 버전만 targeted grep **1회** 허용). 그 뒤 동일 digest를 넣은 두 표면 묶음(본문 ∥ 기록)을 동시 spawn한다.
    - 반환된 두 task/agent의 final을 위 Runtime Adapter로 전부 수거한 뒤 결과를 기록한다. wait가 timeout이면 완료로 간주하지 말고 더 기다리거나, controlled stop/blocked 상태를 사용자에게 보고한 뒤에만 중단 여부를 결정한다.
 3. **사후 정합 검사** (implemented 분할 경로만, grep 2종): ① `main.md` 헤더 버전과 `logs/changelog.md` 최신 entry 버전의 **일치**, ② `git diff`에서 `decision_log.md`·`changelog.md`의 **삭제 줄 0**(append-only). 불일치는 relay에 명시한다 — orchestrator는 gating하지 않는다(fix는 호출자 소관).
-4. relay: 분할 경로면 두 부분 Report를 단일 `Spec Sync Report` 구조로 **연접**한다(각 파트가 정확히 한 묶음 소유라 중복 없음). planned 경로면 agent 반환(갱신 파일 목록, 변경 요약, `_processed_*` 마킹, Deferred / Open Questions)을 그대로 relay한다.
+4. relay: 분할 경로면 두 부분 Report를 단일 `Spec Sync Report` 구조로 **연접**한다(각 파트가 정확히 한 묶음 소유라 중복 없음). planned 경로면 agent 반환을 그대로 relay한다.
 
 ## 계약 (entrypoint·artifact 유지, 흉내 금지)
 
 - trigger(planned 반영 호출 + implemented sync 호출)와 `_sdd/spec/*.md` 동기화 계약은 이 orchestrator가 유지한다.
-- 실제 status 분류·drift 분석·spec 수정·`Spec Sync Report` 작성·`_processed_*` 마킹은 agent가 수행한다. agent가 지원하지 않는 동작을 orchestrator가 흉내내지 않는다.
+- 실제 status 분류·drift 분석·spec 수정·`Spec Sync Report` 작성은 agent가 수행한다. input file 처리 범위도 agent의 `호출자 표면 한정`을 따른다. agent가 지원하지 않는 동작을 orchestrator가 흉내내지 않는다.
 - agent가 노출하는 Applied Updates·Planned/Deferred Items·Open Questions·Processed Input Files를 orchestrator가 relay해 보존한다 (연접·사후 정합 검사는 relay이지 gating이 아니다).
 
 > Source: 전체 계약·status 분류·Repo-wide Invariant Test·출력 형식은 `.codex/agents/spec-sync-agent.toml`이 단일 소스로 보유한다 (wrapper↔agent; 더 이상 동일 본문 mirror 아님).

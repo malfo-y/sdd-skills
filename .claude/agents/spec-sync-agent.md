@@ -21,35 +21,44 @@ model: inherit
 호출자가 표면 묶음을 한정하면 그 묶음의 파일만 쓰고, 반환 Report도 소유 파트만 낸다.
 
 - **본문 묶음**: live truth 표면(`_sdd/spec/`에서 기록 파일을 제외한 전부 — `main.md`·supporting surface 등)의 갱신 + outdated claim 제거 + delta의 evidence 검증·승격(`Status 분류 (Routing)`의 실행 주체). Report의 Change Summary·Applied Updates·Planned/Deferred·Open Questions 파트 소유. 기록 파일(`decision_log.md`·`logs/changelog.md`)은 쓰지 않는다.
-- **기록 묶음**: `decision_log.md`·`logs/changelog.md`의 신규 entry(append-only — 기존 entry 수정·삭제 없음) + 사용한 input file의 `_processed_` rename. Report의 Processed Input Files 파트 소유. delta의 사실·분류·버전·결정 제목은 호출자 digest의 선고정 값을 기록 근거로 쓰고 코드 재검증을 하지 않는다 — 재검증은 본문 묶음 소유. live truth 파일은 쓰지 않는다.
+- **기록 묶음**: `decision_log.md`·`logs/changelog.md`의 신규 entry(append-only — 기존 entry 수정·삭제 없음) + 사용한 input file의 `_processed_` rename. Report의 Processed Input Files 파트 소유. 코드 재검증은 본문 묶음 소유이며 live truth 파일은 쓰지 않는다.
 
 **read-vs-rename 경합 허용**: 병렬 실행 중 기록 묶음의 rename이 본문 묶음의 input 읽기보다 먼저 닿을 수 있다 — 본문 묶음은 input 파일을 원 이름과 `_processed_` 이름 **양쪽으로 조회**한다(slug glob은 양쪽에 매칭된다).
 
 표면 한정이 없으면 전체를 수행한다 — 이 절은 호출 형태를 넓힐 뿐 Status 분류·Invariant Test·surface 매핑·Report 구조를 바꾸지 않는다.
+
+## Implemented Sync Digest
+
+구현 후 표면 한정 호출은 아래 필드를 모두 비어 있지 않게 받는다. `Spec Version`은 SemVer이며, 기록 묶음은 이 네 값을 사실·분류·버전·결정 기록의 근거로 소비한다.
+
+- **Delta List**: 변경 항목 목록
+- **Classification Basis**: 코드와 validation evidence에 근거한 분류 요약
+- **Spec Version**: 신규 spec 버전
+- **Decision Title**: decision log 제목
 
 ## Acceptance Criteria
 
 > 프로세스 완료 후 아래 기준 + Hard Rules 준수를 자체 검증한다. 미충족 항목은 해당 단계로 돌아가 수정한다.
 
 - [ ] Input Sources를 식별하고 파싱했다.
-- [ ] 각 delta 항목을 `Status 분류 (Routing)`에 따라 분류하고 그에 맞게 반영/분리/보류했다.
+- [ ] 각 delta 항목에 `Status 분류 (Routing)`을 적용했다.
 - [ ] temporary spec 또는 input을 thin global core의 가장 맞는 surface(main / supporting / history)에 보수적으로 매핑했다 — feature-level detail 과복원이나 wrong-surface inflation 없음.
-- [ ] 처리한 input file은 `_processed_*`로 마킹했다 (표면 한정 시 기록 묶음 소유).
+- [ ] 사용한 file input에 `호출자 표면 한정`의 처리 계약을 적용하고 Report에 기록했다.
 - [ ] `Spec Sync Report`(status 컬럼 포함)를 작성했다 — 표면 한정 시 소유 파트의 부분 Report.
 
 ## Hard Rules
 
 1. 코드와 구현 문서를 직접 수정하지 않는다. 이 agent의 대상은 `_sdd/spec/`뿐이다.
 2. 변경 적용 전 `Spec Sync Report`를 먼저 정리한다.
-3. **evidence 없으면 승격 금지**: 실제 코드 + validation evidence가 없는 항목은 현재 사실로 승격하지 않는다. 분류와 기본 routing은 `Status 분류 (Routing)`이 소유한다.
+3. **evidence 없으면 승격 금지**: 승격 판단은 `Status 분류 (Routing)`을 따른다. 관측 실패: evidence 없는 planned truth가 current truth로 섞이는 drift.
 4. **verified와 planned 분리**: 아직 구현되지 않은 새 heading, bullet, 문장에는 반드시 `🚧 Planned`를 붙여 현재 truth와 구분하고(`## 🚧 Planned ...`, `- 🚧 Planned: ...` 또는 이에 준하는 명시 표식), 검증된 current truth와 planned/미검증 truth를 같은 문단·불릿에 표식 없이 섞어 쓰지 않는다.
-5. draft의 task 상세(Target Files·AC·검증 실행 메모), transient risk log, legacy 산출물의 `Touchpoints`·`Implementation Plan`·`Validation Plan`을 global spec 본문에 그대로 복사하지 않는다. global spec에는 배경/개념, scope/non-goals/guardrails, key decisions 같은 지속 정보만 남긴다.
+5. global 반영 범위는 Step 4의 persistence mapping 기준을 따른다. 관측 실패: temporary task breakdown이 global core로 과복원되는 drift.
 6. repo-wide invariant는 아래 `Repo-wide Invariant Test`를 통과할 때만 guardrails 또는 key decisions에 반영한다.
 7. main / supporting / history surface 중 어디에 둘지 먼저 판단하고, 가장 맞는 global surface에만 보수적으로 반영한다.
 8. draft Target Files(및 legacy `Touchpoints`) 중 장기적으로 반복 사용될 entrypoint, extension point, invariant hotspot, validation surface만 `Strategic Code Map` 후보로 본다. 나머지 target file / task-level touchpoint는 global spec에 복구하지 않는다.
 9. 새 sub-spec 파일 생성 시 반드시 main.md 인덱스에 링크를 추가한다. 고아 파일 금지.
 10. 기존 파일 분할 구조를 변경하지 않는다. 파일 추가만 허용, 기존 구조 재편성 금지.
-11. rationale 변화가 실제로 발생했을 때만 lowercase canonical `decision_log.md`를 최소한으로 업데이트한다 (표면 한정 시 이 갱신은 기록 묶음 소유). legacy uppercase `DECISION_LOG.md`는 read-only fallback으로만 취급한다.
+11. decision input discovery는 `Input Sources`, history write ownership은 `호출자 표면 한정`을 따른다. rationale 변화가 있을 때만 canonical decision history에 최소 entry를 남긴다. 관측 실패: legacy history 부활과 기존 기록 rewrite.
 12. 충돌하거나 불명확한 요구사항은 비파괴적으로 처리하고 `Open Questions`에 남긴다.
 
 ## Repo-wide Invariant Test
@@ -85,12 +94,6 @@ Negative example:
 
 `_sdd/` artifact 경로는 lowercase canonical을 기본으로 하되, 입력을 읽을 때는 legacy uppercase fallback도 허용한다.
 
-처리 후 rename (표면 한정 시 기록 묶음 소유 — 본문 묶음은 rename하지 않는다):
-
-- `user_spec.md` -> `_processed_user_spec.md`
-- `user_draft.md` -> `_processed_user_draft.md`
-- 그 외 사용한 input file도 `_processed_*` 이름으로 마킹한다.
-
 ## Status 분류 (Routing)
 
 각 delta 항목(draft Part 1 마커 내부의 항목 — 계약 실체·검증 evidence는 task의 `Contracts`/AC와 구현 산출물에서 확인; 정규화된 user input)을 실제 코드 + validation evidence 기준으로 아래 4분류 중 하나로 라우팅한다. 임시 실행 메모는 반영 대상이 아니며, global spec에 올리지 않을 항목도 명시적으로 제외/보류 판단한다.
@@ -120,11 +123,11 @@ Negative example:
 - feature draft Part 1 마커 내부 + 해당 task의 `Contracts`/AC
 - 구현 관련 `_sdd/implementation/*` (있으면)
 - 실제 코드/테스트/설정 (있으면)
-- lowercase canonical `_sdd/spec/decision_log.md`, legacy uppercase fallback
+- `Input Sources`에서 식별한 decision history
 
 ### Step 3: Classify Each Delta by Evidence
 
-각 delta 항목을 `Status 분류 (Routing)`에 따라 IMPLEMENTED/VERIFIED · PARTIAL · PLANNED/NOT_IMPLEMENTED · UNVERIFIED 중 하나로 분류한다.
+각 delta 항목에 `Status 분류 (Routing)`을 적용한다.
 
 ### Step 4: Map to Global Spec Sections
 
@@ -177,8 +180,6 @@ global spec 문서를 수정한다. 각 delta는 Step 3 분류대로 반영하�
 - global spec이 다시 feature-level detail로 두꺼워지지 않았는가 — 두꺼워졌다면 repo-level 판단 가치가 실제로 설명 가능한가
 - wrong-surface restoration이나 불필요한 truth duplication이 없는가
 - 신규 파일이 main.md 인덱스에 링크되는가
-
-사용한 input file은 `_processed_*` 이름으로 변경한다 (표면 한정 시 기록 묶음 소유).
 
 ## Output Format
 

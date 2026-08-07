@@ -7,37 +7,18 @@ description: "SDD 체인 자동 실행 메타스킬. /sdd-autopilot으로 호출
 
 ## Goal
 
-사용자 요청을 받아 체인(draft → 구현 → spec sync)을 무승인으로 끝까지 실행하는 메타스킬이다. 품질 게이트는 각 producer 스킬이 소유하고, autopilot은 그 결과를 최종 보고로 모은다(아래 규칙). global spec은 장기적 SoT로, draft는 실행 청사진으로 취급하며 `_sdd/` 아티팩트를 중심으로 planning, implementation, review, spec sync를 연결한다. 규모 초과는 분할로 해소한다.
+사용자 요청을 받아 체인(draft → 구현 → spec sync)을 무승인으로 끝까지 실행하는 메타스킬이다. global spec은 장기적 SoT로, draft는 실행 청사진으로 취급하며 `_sdd/` 아티팩트를 중심으로 planning, implementation, review, spec sync를 연결한다. 규모 초과는 분할로 해소한다.
 
 ## Acceptance Criteria
 
 > 완료 전 아래 기준을 자체 검증한다. 미충족 항목이 있으면 해당 단계로 돌아가 수정한다.
 
-- [ ] AC1: 판정 근거가 draft 상단 `> 규모 판정:` 1줄로 존재한다 (autopilot의 별도 판정 기록 없음)
-- [ ] AC2: 두 품질 게이트가 각 producer 스킬 내부에서 수행되었고, Critical/High/Medium finding이 fix 1회로 반영되었거나 잔존 finding이 최종 보고에 남았다
-- [ ] AC3: implementation의 AC→증거 테이블이 최종 보고에 포함되었고, fix가 있었으면 재실행한 회귀 결과도 포함되었다
+- [ ] AC1: draft에 규모 판정 근거가 존재하고 autopilot의 별도 판정 기록은 없다
+- [ ] AC2: 각 producer가 반환한 품질 게이트 결과와 잔존 finding이 최종 보고에 포함되었다
+- [ ] AC3: implementation이 반환한 AC별 증거와 회귀 결과가 최종 보고에 포함되었다
 - [ ] AC4: spec sync가 수행되었거나 스킵 사유가 최종 보고에 명시되었다
 - [ ] AC5: 테스트/검증 결과가 통과/실패 건수, 실패 원인 요약, 수동 확인 필요 항목과 함께 사용자에게 보고되었다
 - [ ] AC6: 이번 실행의 `_sdd/spec/` 변경이 모두 `sdd-skills:spec-sync` 스킬 경유로만 발생했다 (autopilot 직접 수정 0건)
-
-## Workflow Position
-
-```text
-User Request
-    |
-    v
-[sdd-autopilot] --> Step 0: 상태 확인 (기존 산출물·spec 유무)
-    |
-    v
-[sdd-autopilot] --> Step 1: 요청 분석 + 인라인 질문 (필요 시)
-    |
-    v
-[sdd-autopilot] --> Step 2: 체인 (무승인 실행)
-                    |- feature-draft (내부 품질 게이트 + fix 1회)
-                    |- implementation (내부 품질 게이트 + fix 1회)
-                    `- (persistent 변경 시) spec-sync -> 최종 응답 요약
-                        * 분할 신호 발생 시 분할 규칙으로 처리
-```
 
 ## Hard Rules
 
@@ -65,11 +46,7 @@ legacy `_sdd/pipeline/` 산출물이 보이면 기록물로 무시한다.
 
 요청에서 기능 설명, 제약 조건, 기존 코드와의 관계, 테스트 요구사항, 스펙 변경 여부를 추출하고, 부족한 정보만 질문으로 보완한다.
 
-질문 원칙:
-- 1회에 1개 핵심 분기만 묻는다
-- 선택지는 2-3개로 제한한다
-- 항상 `충분합니다 -- 진행해주세요` 옵션을 둔다
-- 최대 5회 이내로 정리한다
+질문은 답이 설계나 범위를 바꾸는 핵심 분기만 한 번에 하나씩, 최소 횟수로 묻는다. 사용자가 충분하다고 판단하면 즉시 체인으로 넘어갈 선택지를 둔다.
 
 Gate: 핵심 요구사항이 확정되면 Step 2.
 
@@ -78,13 +55,13 @@ Gate: 핵심 요구사항이 확정되면 Step 2.
 아래 체인을 메인 루프에서 스킬 호출로 순서대로 실행한다. 산출물의 정의는 체인의 각 스킬이 소유한다.
 
 1. **Draft**: `sdd-skills:feature-draft` 스킬을 실행해 draft를 작성한다. 스킬의 판정이 분할 필요면 아래 분할 규칙을 따른다.
-2. **구현**: `sdd-skills:implementation` 스킬을 실행한다 (RED→GREEN, AC→증거 테이블 마감). 스킬의 중단·분할 규칙이 트리거되면 그 규칙대로 처리한다 (잔여 분할 마감 또는 draft 복귀).
+2. **구현**: `sdd-skills:implementation` 스킬을 실행하고 완료·분할 신호를 소비한다.
 3. **Spec sync**: persistent spec 변경이 있으면 `sdd-skills:spec-sync` 스킬(post-implementation)을 실행한다. spec-less이거나 persistent 변경이 없으면 스킵하고 사유를 보고에 남긴다.
 4. **최종 보고**: report 파일 없이 최종 응답으로 요약한다 — 수행 단계, 각 게이트의 finding/fix 내역과 잔존 finding, 테스트 결과, spec sync 여부, 잔존 항목.
 
 규칙:
 
-- **품질 게이트와 fix는 producer 스킬이 소유한다.** autopilot은 게이트를 호출하지도 fix를 수행하지도 않고, producer 반환의 결과를 최종 보고로 모은다. 게이트당 fix는 1회이고 loop는 없다 — 같은 finding이 반복 재발하면 그것 자체를 분할·draft 재설계 신호로 본다.
+- **품질 게이트와 finding 반영은 producer 스킬이 소유한다.** autopilot은 producer 반환을 최종 보고로 모은다.
 - **분할 판정의 canonical은 각 스킬이 소유한다** (feature-draft: 분할 규칙 / implementation: 중단·분할 규칙). autopilot은 신호를 소비만 한다.
 - **분할 규칙**: 어느 단계에서든 분할 신호가 뜨면 사용자에게 사유를 알리고, draft를 분할 계획으로 만든 뒤(롤링) `sdd-skills:spec-sync` 스킬로 분할 todo를 spec에 고정하고, 첫 feature부터 이 체인을 순차 실행한다. 나머지 feature는 각자 차례에 자기 draft부터 다시 이 체인을 탄다.
 - **사용자 개입**: 승인 게이트는 없다. 단 draft `Open Questions`에 진행을 막는 항목이 있으면 일반 대화로 질문할 수 있다.

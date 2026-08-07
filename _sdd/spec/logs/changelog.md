@@ -2,6 +2,81 @@
 
 > 이 파일은 `_sdd/spec/main.md`의 **본문이 바뀐 버전만** 기록한다 — 본문 무변경 sync(헤더 날짜만 갱신)는 entry를 남기지 않으므로 버전 번호에 결번이 생길 수 있다.
 
+#### v4.6.55 (2026-08-07)
+
+- **document producer single-home interfaces and deterministic snapshot preservation (post-implementation sync)**: `spec-summary`는 runtime-local `summary-template.md`를 fenced whitepaper shape의 단일 홈으로 두고 완성 example을 제거했다. `guide-create`는 `output-format.md`에 section·citation/evidence·confidence rubric을 모으고 compact/tool-gate reference와 confidence example을 제거했다. 두 producer는 작성 직전 fenced skeleton을 verbatim/slot-only로 적용하며 main loop가 skeleton-first로 직접 작성한다. `spec-snapshot`은 source 사전/사후 manifest exact match, safe slug·direct-parent confinement·collision suffix, exact metadata marker, source summary present/absent 분기로 read-only 보존을 결정적으로 닫았다. Claude의 `user_invocable: true`만 runtime allowlist delta로 보존했다.
+- **검증 evidence**: implementation ledger `REVIEW_PASSED`, AC1–AC16 GREEN. implementation-review raw `C2 H8 M10`, unique `C1 H5 M5`를 fix 1회로 해소해 잔여 C/H/M 0이다. final `M10+D12`, SKILL/reference parity, deleted asset 12/12, stale runtime zero 6/6, official validator 5/5 + Claude schema, snapshot fixture·read-only hard gate, `NORMS_PASS 14/14`, `git diff --check` 모두 PASS했다.
+
+#### v4.6.54 (2026-08-07)
+
+- **spec template selection and point-of-use load interface (post-implementation sync)**: `spec-create`는 compact default와 semantic-loss 기반 full criterion을 사용하고, Step 4 직전에 선택한 template 전체 skeleton만 읽어 verbatim 적용한다. Claude template은 authoring canonical, Codex template은 runtime invocation token만 다른 distribution mirror다. `spec-upgrade`는 mapping → global format/same-runtime `feature-draft` producer → selected fenced template을 실제 Step 1/2/5 소비 지점의 단일 path home으로 두고 verbatim/slot-only로 적용한다. `spec-format`의 stale temporary-spec 설명은 제거했으며 temporary shape는 `feature-draft` `Required Output`이 단독 소유한다. `spec-template-load-interface`를 current truth로 승격해 P1 2/2를 완료했다.
+- **검증 evidence**: implementation ledger `REVIEW_PASSED`, AC1–AC10 GREEN. implementation-review raw `C0 H3 M3`, unique `C0 H3 M2`를 fix 1회로 해소해 잔여 C/H/M 0이다. normalized SKILL 4/4, asset path 14/14, protected template/reference 8/8 + hook/harness 24/24, validator 4/4, Claude/Codex parity와 `git diff --check`가 모두 PASS했다.
+
+#### v4.6.53 (2026-08-07)
+
+- **spec-rewrite point-of-use references and single-home template (post-implementation sync)**: Claude/Codex `spec-rewrite`는 shape 판별·rewrite 진입·target 재구성의 실제 소비 시점에서만 `spec-format`·`rewrite-checklist`·`template-compact`를 조건부로 읽고, no-rewrite에서는 후속 단계와 asset load를 종료한다. `template-compact`가 current temporary-spec fenced skeleton을 단독 소유하고 verbatim/slot-only 적용을 강제하며, format/checklist는 pointer-only로 유지한다. SKILL의 plan/report producer를 재구현하던 단일 사용 example 네 파일은 제거했다. `spec-rewrite-reference-interface`는 current truth로 승격했고 `spec-template-load-interface`는 `🚧 Planned`로 유지했다.
+- **검증 evidence**: implementation ledger `REVIEW_PASSED`, AC1–AC16 GREEN, final 8 `M` + 4 `D`, `+106/-140`, exact producer template, conditional load·no-rewrite exit·verbatim apply·example removal PASS. implementation-review raw `C0 H4 M8`, unique `C0 H4 M7`을 fix 1회로 해소해 잔여 Critical/High/Medium 0이다.
+
+#### v4.6.52 (2026-08-07)
+
+- **spec-review deterministic status and disposition interface (post-implementation sync)**: Claude/Codex `spec-review`의 drift status를 evidence 충분성 → 확인된 한쪽 부재 → 양쪽 비교의 ordered route와 `ALIGNED | DRIFT | MISSING | UNTESTED` allowed set으로 고정했다. spec disposition은 material uncertainty → verified spec-side drift → otherwise 순서로 `NEEDS_DISCUSSION | SYNC_REQUIRED | SPEC_OK`를 선택한다. Output은 producer를 가리키고 enum을 재복제하지 않으며, revision/history/change-set 분석은 scope나 finding을 실제로 뒷받침할 때만 bounded evidence로 남긴다. `spec-review-deterministic-interface`는 current truth로 승격했고 `spec-rewrite-reference-interface`와 `spec-template-load-interface`는 각각 `🚧 Planned`로 유지했다.
+- **검증 evidence**: implementation ledger `REVIEW_PASSED`, AC1–AC10 GREEN, Claude/Codex exact mirror, validator 2/2, baseline normalization, scoped target set, report path와 `git diff --check` PASS. implementation-review raw `C0 H0 M2`, unique `C0 H0 M1`을 fix 1회로 해소해 잔여 Critical/High/Medium 0이다.
+
+#### v4.6.51 (2026-08-07)
+
+- **spec quality interface 3-feature 분할 (pre-implementation planned sync)**: P1 2/2 `spec-quality-interface` umbrella todo를 `spec-review-deterministic-interface` → `spec-rewrite-reference-interface` → `spec-template-load-interface` 순서의 세 개별 `🚧 Planned` 항목으로 교체했다. task/AC 상세는 feature draft에만 남겼고 `components.md`·`usage-guide.md`는 변경하지 않았다.
+- **Status/evidence**: 첫 feature의 Claude/Codex `spec-review` target diff 0, 관련 implementation ledger 0이므로 세 delta 모두 `PLANNED / NOT_IMPLEMENTED`다. 입력 draft는 process/rename 없이 원래 경로에 보존했다.
+
+#### v4.6.50 (2026-08-07)
+
+- **spec bootstrap hook contract progressive disclosure (post-implementation sync)**: `spec-create`·`spec-upgrade` 네 package에 local `references/hook-installation.md`를 두고, Claude `spec-create` 사본을 authoring canonical, 나머지 세 사본을 exact distribution mirror로 고정했다. `spec-create`는 top-level AC·Hard Rule·Step 3e·Validation·Output에 trigger·pointer만 남겼고, `spec-upgrade`는 자기 local reference를 읽으며 partial/legacy repair·dual-runtime 보완·재실행 diff 제거를 소유해 cross-skill 의존을 없앤다. P1 1/2는 완료, P1 2/2 `spec-quality-interface`는 `🚧 Planned`다.
+- **검증 evidence**: SKILL 4면 net `-202`, literal target 8개, official validator 4/4, protected asset 28개 exact match. implementation-review `C0 H2 M5`를 fix 1회로 해소했고 잔여 C/H/M 0, final structural·mirror·target census·protected manifest·`git diff --check` 모두 PASS했다.
+
+#### v4.6.49 (2026-08-07)
+
+- **spec lifecycle P1 두-feature 롤링 계획 고정 (pre-implementation planned sync)**: `spec-bootstrap-disclosure` → `spec-quality-interface`를 두 개의 독립 `🚧 Planned` todo로 추가했다. 첫 feature는 `spec-create`·`spec-upgrade`의 hook 설치 상세를 package-local rich reference로 옮기고 Claude `spec-create` reference를 authoring canonical, 나머지 세 사본을 exact 배포 mirror로 유지한다. 둘째 feature는 `spec-review` criterion·status/decision enum과 `spec-create`·`spec-rewrite`·`spec-upgrade`의 template/reference/example 선택·load·output interface를 완결하고 legacy 7-section temporary-spec 설명을 current producer shape로 갱신한다.
+- **Status/evidence**: 신규 hook reference 0개, 네 current skill target diff 0개, 관련 implementation artifact 0개다. 두 feature 모두 `PLANNED / NOT_IMPLEMENTED`이며 current truth 승격은 없다. 입력 draft는 다음 implementation을 위해 원래 경로와 내용으로 보존했다.
+
+#### v4.6.48 (2026-08-07)
+
+- **implementation producer·review pair 규범 다이어트 (post-implementation sync)**: Claude/Codex `implementation`을 gate 단일 패스·Critical/High/Medium fix 1회와 Low 판단의 단일 홈으로 두고, 규모 초과 시 `feature-draft`의 `분할 방법 (롤링)`을 가리키도록 했다. ledger에는 source task 변경·새 edge case의 이유와 처리를 기록하는 `계획 이탈·발견`을 계약 오류 필드와 분리해 추가했다. `implementation-review` wrapper는 review-only/no-plan digest ownership을 통합하면서 두 렌즈·shard relay·runtime adapter를 보존했고, agent는 no-file/no-spawn 경계를 단일화하고 producer fix-count 재천명을 제거했으며 Step 3을 `Fresh Verification` canonical home으로 연결했다. P0 5/5가 모두 구현됐다.
+- **검증 evidence**: 6개 target surface, AC1–AC15 MET, RED→GREEN. implementation-review `C0 H0 M8`(7개 고유 원인)을 fix 1회로 해소해 잔여 C/H/M 0. runtime reviewer 3+1 deviation을 기록했고, 최종 `+41/-29`, mirror/core/TOML/Source/runtime/frontmatter/validator/status/diff 및 `git diff --check` 모두 PASS.
+
+#### v4.6.47 (2026-08-07)
+
+- **feature-draft producer·plan-review verifier 규범 다이어트 (post-implementation sync)**: Claude/Codex `feature-draft`는 로컬로 해소되지 않고 답이 architecture·scope·Target Files를 바꾸는 unknown만 한 번에 하나씩 영향 순으로 묻고, 무인 실행은 가정·근거를 기록한다. inline `Required Output`은 verbatim 출발 skeleton으로 쓰되 placeholder 치환·필요 row/block 반복·조건부 section 삭제를 허용한다. AC evidence는 재현 가능 check 또는 rubric+reviewer+인용의 2등급으로 닫고 이진·외부·반박 가능 기준을 공유하며, minimum code는 요청 동작/관측 위험에 직접 추적되는 최소 변경이다. `plan-review-agent`는 세부 계약 복제 대신 current producer contract을 조건부로 읽고, source 부재는 `Verification Weakness=UNKNOWN`으로 닫으며 evidence/minimum-code를 smallest-change 규칙 하나로 합쳤다. plan-review wrapper 2면은 thin entrypoint로 감사해 `NO_CHANGE`로 유지했고 P0 5/5는 `🚧 Planned`다.
+- **검증 evidence**: 변경 target 4면 + wrapper `NO_CHANGE` 2면, AC1–AC15 MET. checker deviation T1 2건·T2 1건 교정 및 HEAD re-RED, implementation-review `C1 H0 M2` fix 1회 후 잔여 C/H/M 0. exact feature mirror, normalized agent core parity, TOML parse, wrapper diff 0, `quick_validate.py` 2면, `git diff --check` 모두 PASS.
+
+#### v4.6.46 (2026-08-07)
+
+- **pr-review 입력·UNTESTED 경계 다이어트 (post-implementation sync)**: Claude/Codex `pr-review` wrapper와 correctness/simplicity reviewer의 공통 payload를 `Changed Files`·`PR Diff`·`PR Metadata`·`PR Discussion`·`Spec Context`·`Validation Evidence`·`Report Slug` 순서의 정확한 7필드 `PR Review Input`으로 통일했다. wrapper는 PR·CI/local evidence 수집·redaction과 통합 verdict/report만 소유하고 agent 반환 계약을 소비한다. correctness reviewer는 read-only 및 CI → local → 사유 있는 `UNTESTED` 검증 경계를 소유하며, test-dependent evidence 부재는 non-test/N/A 예외를 제외하고 `NEEDS DISCUSSION`으로 흐른다. simplicity reviewer는 Changed Files/PR Diff만 범위 판단에 쓰고 validation을 재판정하지 않으며, checklist는 wrapper Step 4를 canonical verdict 기준으로 가리킨다. 두 reviewer의 병렬 dispatch와 wrapper 단일 작성자 경계는 유지했고 P0 4/5~5/5는 계속 `🚧 Planned`다.
+- **검증 evidence**: 8개 target surface, AC1–AC17 MET. implementation-review aggregate `C0 H1 M2`를 fix 1회로 해소해 잔여 C/H/M 0. 6-surface input exact parity, checklist pointer 2면, TOML 2개 parse, normalized agent core parity, target census, `git diff --check` 모두 PASS.
+
+#### v4.6.45 (2026-08-07)
+
+- **spec-sync digest interface and single-home agent rules (post-implementation sync)**: Claude/Codex `spec-sync` wrapper와 `spec-sync-agent` 사이 implemented sync digest를 `Delta List`·`Classification Basis`·SemVer `Spec Version`·`Decision Title`의 비어 있지 않은 고정 4필드 producer/consumer 계약으로 통일했다. 두 분할 호출은 같은 digest를 사용한다. agent의 status routing, legacy input discovery, `_processed_` 묶음 소유 규칙은 각각 `Status 분류 (Routing)`·`Input Sources`·`호출자 표면 한정` 한 곳만 canonical home으로 남겼다. 기존 status 의미·evidence 승격·dispatch topology·report contract는 유지하며 P0 3/5~5/5는 계속 `🚧 Planned`다.
+- **검증 evidence**: T1/T2/T3 structural RED exit 1 → GREEN exit 0, AC1–AC12 MET, correctness shard finding 0. simplicity Medium 3건 fix 1회 반영 뒤 digest census, single-home, agent mirror semantics, TOML parse, `git diff --check` 모두 PASS.
+
+#### v4.6.44 (2026-08-07)
+
+- **SKILL_AUTHORING_NORMS P0 1/5 autopilot-simplicity 규범 다이어트 완료 (post-implementation sync)**: Claude/Codex `sdd-autopilot`은 Workflow Position 다이어그램, producer 내부 알고리즘 재서술, 형식 리터럴과 수치형 질문 knob를 제거하면서 chain order·no-approval·spec-sync-only write 경계와 플랫폼별 runtime delta를 보존했다. Claude/Codex `simplicity-review-agent`는 correctness/read-only/falsifiability 반복을 축약하면서 5개 차원, severity·return·path 계약과 플랫폼별 실행 경계를 유지했다. 4파일 diff는 28 insertions / 74 deletions, 현재 line count는 71/70/92/93이다. P0 2/5~5/5는 계속 `🚧 Planned`다.
+- **검증 evidence**: 3개 task structural RED→GREEN, 14/14 AC MET, TOML parse와 `git diff --check` PASS. implementation-review correctness 전부 MET, simplicity Medium 3건 fix 1회 반영, post-fix regression PASS, 잔여 Critical/High/Medium 0.
+
+#### v4.6.43 (2026-08-07)
+
+- **SKILL_AUTHORING_NORMS P0 나머지 5쌍 롤링 분할 고정 (pre-implementation planned sync)**: `autopilot-simplicity-diet` → `spec-sync-agent-diet` → `pr-review-diet` → `feature-draft-pair-diet` → `implementation-pair-diet`를 개별 `🚧 Planned` todo로 추가했다. 공통 방향은 지시·판단 주체 단일 홈화, 근거 없는 수치·방어 규칙의 기준화, 하드 게이트 존치 근거 유지이며 `Propagation Surfaces` 계약은 `feature-draft` 소유로 단일 홈화한다. Final Check 1줄은 유지하고 discussion 쌍과 하네스는 범위에서 제외한다.
+- **Status/evidence**: 첫 feature의 plan-review는 완료됐지만 구현 코드·validation evidence는 없다. 5개 전부 PLANNED이며 current truth 승격은 없다. 입력 draft는 `_processed_`로 표시하되 Part 2를 보존해 다음 implementation 단계에서 계속 검색 가능하다.
+
+#### v4.6.42 (2026-08-07)
+
+- **discussion 스킬 쌍 규범 다이어트 — SKILL_AUTHORING_NORMS 적용 1호 (post-implementation sync)**: v4.6.41의 규범 문서를 실제 스킬에 적용한 첫 사례. SKILL_AUTHORING_NORMS 리뷰 finding F1~F9를 discussion 스킬 쌍에 반영 — claude SKILL.md 436→320줄, codex 400→275줄. 신규 contract: **요약 템플릿 단일 소스 = `references/summary-template.md`(claude·codex 양쪽)**, Step 4는 Read+verbatim 복사(`[...]` 슬롯만 치환)로 소비. 그 외: 파일 생성 규칙 Hard Rules 1곳 단일화 + work log 규약 예외 명시(AGENTS.md §5 충돌 해소, "호출 환경의 work log 규약" 일반화), 수치 노브 4건(연속 2라운드 비판 금지·매 3라운드 요약·stagnation 2회·재방문 1회) 기준화, 3.1/3.2 의사코드 산문화, 예시 표 상세는 question-guide 위임(깊이 신호 예시 표 신설로 정보 보존), 질문 선택 전략에 아키텍처-변경 질문 우선 기준 추가. 행동 로직(커버리지·게이트·카테고리 4종·근거 유형 4종 enum·Gate 구조)은 의미 변경 없음. Final Check 삭제 계열 finding은 d903052 존치 결정으로 기각. codex 미러는 3-way merge로 고유 delta(interactive-only·request_user_input·최신성 HR) 보존.
+- **검증 evidence**: 게이트 plan-review CLEAR(M2 L2 반영), implementation-review 전 AC MET, 합산 M6 L5 → fix 1회 반영, fix 후 census 재실행 전건 통과(변형형 grep 잔존 0·헤더 대응 5:5·템플릿 쌍 identical). 재리뷰 임계(M≥5) 도달로 추가 리뷰 권장은 advisory로 기록.
+
+#### v4.6.41 (2026-08-07)
+
+- **Claude 5 세대 스킬 제작 규범 문서 추가 (post-implementation sync, 경량 경로)**: `docs/SKILL_AUTHORING_NORMS.md` 신규 추가(82줄, 한국어) — Claude 5 세대 모델 대상 스킬/agent/하네스 제작 규범 체크리스트. Anthropic 블로그 2편("The New Rules of Context Engineering for Claude 5 Generation Models" + "A Field Guide to Claude Fable: Finding Your Unknowns") 증류. 구성: §1 배경(80% 프롬프트 제거, 규칙→judgment) / §2 Then→Now 전환 표 / §3 제작 체크리스트(본문·구조 progressive disclosure·rich reference·인터페이스) / §4 Unknowns 실천법→SDD 단계 매핑 표 / §5 기존 repo 규범과의 관계(부합점 + 하드 게이트 유지 조건 "걷어낼 자격은 실측이 준다"). 배경: 기존 docs 문서 병합 안을 검토했으나 사용자가 신규 문서로 지시. 경량 경로 근거: 순수 참고 문서 — 계약·스킬 로직·미러 전파 없음(신규 파일 조건은 형식상 걸리나 전파 표면 부재).
+- **검증 evidence**: TODO/TBD grep 0건, `git diff --check` 통과.
+
 #### v4.6.40 (2026-08-07)
 
 - **Codex/Claude hook parity and dual-setting runtime acceptance (post-implementation sync)**: Feature 1~3을 하나의 runtime parity 계약으로 완결했다. 훅 4종(`worklog-gate.sh`, `worklog-context.sh`, `harness-context.sh`, `agent-watchdog.sh`)은 self-host + `spec-create`/`spec-upgrade` Claude·Codex reference surface 5곳에서 같은 실행 자산으로 유지되고, `SessionStart`는 cross-runtime `hookSpecificOutput.additionalContext` JSON, `PreToolUse`는 work-log gate, `PostToolUse`는 advisory watchdog을 제공한다. 두 설치 스킬은 `.claude/settings.json`과 `.codex/hooks.json`을 독립 병합해 비-SDD handler·top-level key를 보존하며, 한 runtime 설정이 손상돼도 반대 runtime 설치를 계속하고 반복 실행 멱등성을 지킨다. acceptance는 실제 격리 Codex skill invocation fixture의 trust boundary와 `SessionStart`/clear/`PreToolUse`/watchdog lifecycle, Claude Code smoke, manifest 안정성, no-bypass까지 포함한다.

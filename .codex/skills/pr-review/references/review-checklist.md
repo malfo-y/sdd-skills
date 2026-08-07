@@ -64,31 +64,4 @@ Verification checklist used by the `pr-review` skill.
 
 ## Verdict Criteria
 
-### APPROVE
-```markdown
-All items must be satisfied:
-- [ ] All acceptance criteria met (✓)
-- [ ] 0 spec violations (or spec not applicable)
-- [ ] All tests pass
-- [ ] No security issues
-- [ ] 0 blockers
-```
-
-### REQUEST CHANGES
-```markdown
-If any of the following apply:
-- [ ] Acceptance criteria not met (✗) items exist
-- [ ] Spec violation found
-- [ ] Test failure
-- [ ] Security vulnerability found
-- [ ] Critical functionality bug
-```
-
-### NEEDS DISCUSSION
-```markdown
-If any of the following apply:
-- [ ] Intentional spec change included (design decision needed)
-- [ ] Implementation approach with trade-offs
-- [ ] Requirements with ambiguous scope
-- [ ] New architectural decision needed
-```
+Canonical verdict criteria live in `../SKILL.md` Step 4. Apply that table after collecting both reviewer returns; do not maintain a second verdict list here.

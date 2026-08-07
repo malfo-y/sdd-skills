@@ -32,11 +32,6 @@ description: This skill should be used when the user asks to "rewrite spec", "re
 
 ## Companion Assets
 
-- `references/template-compact.md`
-- `references/spec-format.md`
-- `references/rewrite-checklist.md`
-- `examples/rewrite-plan.md`
-- `examples/rewrite-report.md`
 - SDD 정의 문서: https://github.com/malfo-y/sdd-skills/tree/main/docs
 
 ## Hard Rules
@@ -51,6 +46,10 @@ description: This skill should be used when the user asks to "rewrite spec", "re
 ## Process
 
 ### Step 1: Diagnose the Current Spec
+
+> Asset load: 아래 본문 기준만으로 global/temporary/mixed type이나 target shape 비교가 닫히지 않을 때만 `references/spec-format.md`를 읽는다.
+
+> No-rewrite exit: 잘 구조화되어 rewrite가 불필요하면 개선점만 보고하고 종료한다. Steps 2–4와 그 단계의 asset은 읽거나 실행하지 않는다.
 
 공통 코어 4축:
 
@@ -77,6 +76,8 @@ rewrite 고유 진단 축:
 
 ### Step 2: Write the Rewrite Plan
 
+> Asset load: Step 1에서 rewrite가 필요하다고 판정했을 때만 `references/rewrite-checklist.md`를 읽어 보존 기준을 고정한다.
+
 plan에는 아래를 포함한다.
 
 - main에 남길 내용
@@ -100,6 +101,8 @@ multi-file 분할이 필요할 때 축 선택:
 어떤 축이든 각 파일에 담는 건 global-level 결정만이다.
 
 ### Step 3: Rewrite the Spec
+
+> Asset load: 실제 target shape를 재구성할 때만 `references/template-compact.md`를 읽는다. fenced skeleton을 verbatim 복사해 heading·marker·field order를 보존하고, placeholder 치환·필요한 row/task 반복·조건부 block 제거만 허용한다.
 
 원칙:
 

@@ -1,134 +1,105 @@
 ---
 name: spec-snapshot
-description: |
-  Create a translated snapshot of the current spec.
-  Copies _sdd/spec/ to _sdd/snapshots/<timestamp>_<lang>/ with optional translation.
-  Trigger phrases: "spec snapshot", "스펙 스냅샷", "snapshot spec", "translate spec", "스펙 번역", "export spec"
+description: This skill should be used when the user asks to "spec snapshot", "snapshot spec", "translate spec", "export spec", "스펙 스냅샷", "스펙 번역", or wants to create a timestamped snapshot of the current spec with optional translation.
 user_invocable: true
 ---
 
-# Spec Snapshot — 스펙 스냅샷 생성 및 번역
+# spec-snapshot
 
-현재 `_sdd/spec/` 전체를 특정 언어로 번역하여 타임스탬프 디렉토리에 저장한다.
-번역 없이 원본 언어 그대로 스냅샷을 찍는 용도로도 사용할 수 있다.
+## Goal
+
+현재 `_sdd/spec/`의 모든 Markdown을 원본 구조 그대로 타임스탬프 snapshot에 보존하고, 필요하면 지정 언어로 번역한다. source bytes는 수정하지 않으며 snapshot의 `summary.md`가 provenance를 기록한다.
 
 ## Acceptance Criteria
 
-> 프로세스 완료 후 아래 기준을 자체 검증한다. 미충족 항목은 해당 단계로 돌아가 수정한다.
-
-- [ ] AC1: `_sdd/snapshots/<timestamp>_<lang>/` 디렉토리가 생성되었다
-- [ ] AC2: 원본 `_sdd/spec/`의 모든 `.md` 파일이 번역되어 스냅샷에 포함되었다
-- [ ] AC3: 스냅샷 디렉토리 루트에 `summary.md`가 생성되었다
-- [ ] AC4: 원본 `_sdd/spec/` 파일이 수정되지 않았다
-
-**사용 예시**: `/sdd-skills:spec-snapshot en` (영어) · `ja` (일본어) · `ko` (한국어 원본) · 미지정 시 원본 언어 그대로
+- [ ] source relative-path + SHA-256 manifest를 snapshot 작성 전에 기록했다.
+- [ ] unused `_sdd/snapshots/<timestamp>_<lang>[-NN]/` destination을 만들었다.
+- [ ] 모든 source `.md` relative path가 destination에 존재한다.
+- [ ] same-language copy 또는 translated-structure/token 규칙을 각 파일에 적용했다.
+- [ ] destination `summary.md`가 exact metadata marker와 source-summary present/absent branch를 만족한다.
+- [ ] 완료 후 source manifest가 시작 manifest와 exact match한다.
 
 ## Hard Rules
 
-1. **구현 코드 수정 금지**: `src/`, `tests/` 등 구현 코드 파일은 수정하지 않는다.
-2. **원본 스펙 수정 금지**: `_sdd/spec/` 원본 파일은 절대 수정하지 않는다. 읽기만 한다.
-3. **전체 복사 + 구조 보존**: `_sdd/spec/` 아래 모든 `.md` 파일을 스냅샷에 포함하고, 원본 디렉토리 구조를 그대로 유지한다.
-4. **summary.md 생성**: 스냅샷 디렉토리 루트에 `summary.md`를 생성한다.
-5. **번역 일관성**: 한 스냅샷 내 모든 파일은 동일한 대상 언어로 번역한다.
-6. **도메인 용어 보존**: 코드 경로, 심볼명, 명령어, 설정 키 등 코드 관련 용어는 번역하지 않고 원문 그대로 유지한다.
-
-## Output Structure
-
-```
-_sdd/snapshots/
-└── 2026-03-09T14-30_en/
-    ├── summary.md                    # 번역된 스펙 요약 (자동 생성)
-    ├── main.md                       # 번역된 메인 스펙
-    ├── decision_log.md               # 번역된 결정 로그
-    ├── auth.md                       # 번역된 컴포넌트 스펙 (플랫 구조)
-    ├── billing/                      # subdirectory 구조 보존
-    │   ├── billing.md
-    │   └── subscription.md
-    └── ...
-```
-
-- 타임스탬프 형식: `YYYY-MM-DDTHH-MM` (로컬 시간)
-- 언어 코드: ISO 639-1 (`en`, `ja`, `zh`, `ko`, `es`, `de`, `fr` 등)
+1. `_sdd/spec/` source는 read-only다.
+2. existing destination을 덮어쓰지 않는다.
 
 ## Process
 
-### Step 1: 준비
+### Step 1: Capture Source and Destination
 
-**Tools**: `Glob`, `Read`, `Bash`
+1. `_sdd/spec/` 존재를 확인한다. 없으면 Error Handling으로 종료한다.
+2. 모든 source `.md`의 sorted relative path와 SHA-256을 manifest로 기록한다.
+3. root `summary.md`에 reserved delimiter `<!-- SPEC-SNAPSHOT-METADATA:START -->` 또는 `<!-- SPEC-SNAPSHOT-METADATA:END -->`가 있으면 destination을 만들기 전에 종료한다.
+4. 표시할 target language는 사용자 지정값을 우선하고, 없으면 source 언어를 사용한다.
+5. filesystem `lang-slug`는 target language를 lowercase ASCII로 바꾼 영문·숫자를 남기고, 그 밖의 연속 문자를 `_`로 치환한 뒤 앞뒤 `_`를 제거해 만든다. 빈 값은 `lang`을 쓰고 final slug가 `^[a-z0-9]+(?:_[a-z0-9]+)*$`인지 확인한다.
+6. local time `YYYY-MM-DDTHH-MM_<lang-slug>`을 기본 destination으로 잡는다.
+7. 같은 directory가 있으면 `-02`, `-03` 순으로 첫 unused suffix를 선택한다.
+8. destination을 만들기 전에 resolved parent가 resolved `_sdd/snapshots/`와 exact match하는지 확인한다.
+9. current source commit short hash를 기록한다. dirty source 상태의 식별은 manifest가 담당한다.
 
-1. `_sdd/spec/` 존재 여부 확인. 없으면 에러 보고 후 종료.
-2. 대상 언어 결정:
-   - 사용자가 언어 코드를 지정하면 해당 언어 사용
-   - 미지정 시 원본 스펙의 언어를 감지하여 그대로 사용 (번역 없이 복사)
-3. 타임스탬프 생성: `date +%Y-%m-%dT%H-%M` (로컬 시간)
-4. 스냅샷 디렉토리 생성: `mkdir -p _sdd/snapshots/<timestamp>_<lang>/`
-5. `_sdd/spec/` 아래 모든 `.md` 파일 목록 수집
-6. 각 스펙 파일의 내용을 Read로 미리 읽어 둔다 (Step 2 병렬 디스패치 준비)
+### Step 2: Copy or Translate Source Files
 
-### Step 2: 스펙 파일 번역 및 저장
+sorted manifest를 main loop가 context에 맞는 bounded batch로 처리하되, 한 batch의 파일을 모두 기록·검증한 뒤 다음 batch로 간다.
 
-**Tools**: `Read`, `Write`, `Edit`
+- target language가 source와 같으면 root `summary.md`를 제외한 파일을 byte-exact 복사한다.
+- translation이면 heading/list/table/link/code-fence structure를 유지하고 code/path/symbol/command/config token을 원문으로 둔다. 모든 natural-language block은 target language에서 원문과 같은 의미를 전달하며 material omission/addition이 없어야 하고, 원문으로 남긴 일반 용어는 번역을 병기한다.
+- source와 같은 relative path에 저장한다.
+- root `summary.md`는 Step 3이 metadata와 함께 처리한다.
 
-각 스펙 파일의 번역은 현재 콘텍스트에서 먼저 skeleton/섹션 구조를 유지한 채 직접 기록하고, 같은 흐름에서 Edit으로 내용을 채운다.
-- 독립 섹션 2개+ → 병렬 Agent dispatch 가능
-- 의존 섹션 → 순서대로 Edit
-- 완료 후 TODO/Phase 마커 제거
+### Step 3: Write Snapshot Metadata
 
-번역 규칙 (각 Agent 호출에 포함):
-- 마크다운 구조(헤딩, 테이블, 코드블록, 링크)는 그대로 유지
-- 코드블록 내용은 번역하지 않음
-- 파일 경로, 심볼명, 명령어는 번역하지 않음
-- 섹션 헤딩은 번역하되, 앵커 링크가 깨지지 않도록 주의
-
-독립 파일 2개 이상이면 병렬 디스패치. summary.md는 Step 3에서 순차 생성.
-
-### Step 3: summary.md 생성
-
-**Tools**: `Write`
-
-스냅샷 디렉토리 루트에 `summary.md` 생성. 내용:
+destination `summary.md` 맨 앞에 아래 marker block을 정확히 한 번 쓴다.
 
 ```markdown
-# Spec Snapshot Summary
+<!-- SPEC-SNAPSHOT-METADATA:START -->
 - **Source**: `_sdd/spec/`
-- **Snapshot**: `_sdd/snapshots/<timestamp>_<lang>/`
-- **Language**: <대상 언어>  |  **Created**: <날짜 시간>  |  **Source Commit**: <short hash>
-
-## Project Overview
-<메인 스펙의 Goal 섹션 요약 — 2-3문장>
-
-## Components
-| Component | File | Description |
-|-----------|------|-------------|
-| ... | ... | ... |
-
-## Open Questions
-<Open Questions 섹션 요약>
+- **Snapshot**: `<destination>`
+- **Language**: `<lang>`
+- **Created**: `<local timestamp>`
+- **Source Commit**: `<short hash>`
+<!-- SPEC-SNAPSHOT-METADATA:END -->
 ```
 
-### Step 4: 완료 보고
+그다음 branch 하나만 적용한다.
 
-| 항목 | 내용 |
-|------|------|
-| 스냅샷 경로 | `_sdd/snapshots/<timestamp>_<lang>/` |
-| 대상 언어 | (언어명) |
-| 파일 수 | N개 |
-| 원본 커밋 | (short hash) |
+- source `summary.md` 존재: end marker 뒤 blank line 하나를 두고 copied/translated source body 전체를 쓴다. same-language이면 marker와 blank line을 제거한 body SHA-256이 source `summary.md`와 같아야 한다.
+- source `summary.md` 부재: end marker 뒤에 source evidence로 Project Overview, Components, Open Questions 요약을 생성한다.
+
+### Step 4: Verify Manifests and Content
+
+1. source manifest를 다시 계산해 시작 manifest와 path/hash 모두 exact 비교한다.
+2. 모든 source relative path가 destination에 존재하는지 확인한다.
+3. same-language이면 root summary 외 destination hash를 source hash와 비교한다.
+4. destination summary marker start/end가 각 1개이고 fixed field 5개가 모두 있는지 확인한다.
+5. source summary present branch면 marker 제거 후 body hash/structure를, absent branch면 생성 요약 필드를 확인한다.
+6. translation이면 Markdown structure·protected token, target-language coverage, source-to-target semantic fidelity(의미 유지·material omission/addition 없음)를 파일별로 확인한다.
+7. resolved destination이 `_sdd/snapshots/`의 direct child이고 `lang-slug`가 허용 regex를 만족하는지 다시 확인한다.
+
+### Step 5: Report Completion
+
+- snapshot path
+- language
+- source file count
+- source commit
+- source manifest preservation result
+
+## Output Contract
+
+- `_sdd/snapshots/<timestamp>_<lang-slug>[-NN]/...`
+- `_sdd/snapshots/<timestamp>_<lang-slug>[-NN]/summary.md`
 
 ## Error Handling
 
 | 상황 | 대응 |
-|------|------|
-| `_sdd/spec/` 미존재 | 에러: "`spec-create`를 먼저 실행하세요." |
-| `_sdd/snapshots/` 미존재 | `mkdir -p`로 자동 생성 |
-| 동일 타임스탬프 디렉토리 존재 | 덮어쓰기 |
-| 빈 스펙 파일 | 빈 파일 그대로 복사 |
-| 번역 중 불확실한 용어 | 원문을 괄호로 병기: "invariant (불변 조건)" |
-
-## Integration
-
-`spec-create`(원본 생성) → **spec-snapshot**(번역 스냅샷) → `spec-summary`(요약 참고)
+|---|---|
+| `_sdd/spec/` 없음 | `spec-create`를 먼저 권장하고 종료 |
+| source summary에 reserved metadata delimiter 있음 | destination 생성 전 충돌 경로를 알리고 종료 |
+| destination 충돌 | overwrite 없이 다음 numeric suffix 선택 |
+| 빈 source file | empty body를 그대로 보존 |
+| 번역 용어가 불확실 | protected token은 원문 유지, 일반 용어는 원문 병기 |
+| source manifest 변경 | snapshot 완료로 보고하지 않고 변경 경로를 알림 |
 
 ## Final Check
 
-Acceptance Criteria가 모두 만족되었나 검증한다. 미충족 항목이 있으면 해당 단계로 돌아가 수정한다.
+Acceptance Criteria와 Step 4를 완료하고 source tree가 수정되지 않았음을 보고한다.

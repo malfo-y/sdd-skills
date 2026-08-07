@@ -25,7 +25,7 @@ description: This skill should be used when the user asks to "upgrade spec", "mi
 - [ ] `CLAUDE.md`가 `→ AGENTS.md 참조` 마커 포인터 블록을 가진다 (부재 시 생성, 기존 파일이면 prepend).
 - [ ] 병합 결과 `AGENTS.md`·`CLAUDE.md`에 하네스와 별개의 중복 `## SDD란` 블록이 남지 않는다 (기존 산출물 흡수·제거, SDD 무관 사용자 내용은 보존).
 - [ ] `.gitignore`에 `SDD-WORKSPACE` 마커 블록이 존재한다 (부재/부분존재 시 process artifact ignore를 멱등 병합).
-- [ ] 하네스를 병합했으면 훅 자산(`references/hooks/`의 네 스크립트 → `.claude/hooks/` verbatim, `.claude/settings.json` + `.codex/hooks.json` 독립 키 수준 멱등 병합)도 함께 설치했다(Step 6).
+- [ ] 하네스를 병합했으면 Step 6의 local hook installation contract를 적용하고 partial/legacy 설치를 current 두-runtime 상태로 보완했다.
 
 ## SDD Lens
 
@@ -38,11 +38,8 @@ description: This skill should be used when the user asks to "upgrade spec", "mi
 
 ## Companion Assets
 
-- `references/spec-format.md`
-- `references/template-compact.md`
-- `references/template-full.md`
-- `references/upgrade-mapping.md`
 - `references/agents-harness-template.md`
+- `references/hook-installation.md`
 - `references/hooks/worklog-gate.sh`
 - `references/hooks/worklog-context.sh`
 - `references/hooks/harness-context.sh`
@@ -74,6 +71,10 @@ description: This skill should be used when the user asks to "upgrade spec", "mi
 - section-heavy 또는 inventory-heavy 문서를 current model로 줄이는 것이 주된 작업이면 `spec-upgrade`
 - domain/topic 재분할, 문서군 재배치, rationale rescue 중심 pruning이면 `spec-rewrite`
 
+#### Asset Load: Upgrade Mapping
+
+위 기준만으로 upgrade↔rewrite boundary 또는 legacy section의 current destination이 닫히지 않을 때만 `references/upgrade-mapping.md`를 **Read**한다.
+
 ### Step 2: Legacy-to-Canonical Gap Analysis
 
 진단 대상:
@@ -86,6 +87,10 @@ description: This skill should be used when the user asks to "upgrade spec", "mi
 - legacy code map이나 architecture inventory 중 `Strategic Code Map`으로 보존할 navigation-critical hint가 있는지
 - supporting surface로 내릴 수 있는 정보
 - temporary spec 성격의 내용이 글로벌 스펙에 섞였는지 여부
+
+#### Asset Load: Current Format
+
+exact current global shape와 비교할 때는 `references/spec-format.md`를, global에 섞인 temporary portion을 판정할 때는 current runtime의 `../feature-draft/SKILL.md` `Required Output`을 **Read**한다.
 
 ### Step 3: Evidence Collection
 
@@ -114,6 +119,15 @@ description: This skill should be used when the user asks to "upgrade spec", "mi
 - feature-level usage / validation / detail inventory는 supporting surface 또는 temp artifact로 재배치
 - truly useful guide/reference/Strategic Code Map만 조건부로 남김
 - stale하거나 exhaustive한 file tree / component catalog는 global 본문으로 보존하지 않음
+
+#### Template Selection and Load
+
+| Selection | Closed criterion | Read exactly this asset |
+|---|---|---|
+| Compact | 기본값 | `references/template-compact.md` |
+| Full | source input에 project motivation 또는 evaluated-alternative rationale가 명시돼 있고, compact의 existing named slot에 그 고유한 rationale 역할을 보존할 수 없을 때만 선택한다. | `references/template-full.md` |
+
+migration 작성 직전에 선택한 runtime-local asset만 **Read**한다. 선택한 파일의 fenced skeleton을 verbatim 복사해 heading·field order를 보존하고, source evidence로 placeholder를 치환하며 evidence가 없는 optional block은 제거한다. reference 내용을 기억이나 이 SKILL 본문으로 대체하지 않는다.
 
 ### Step 6: Harness Merge (AGENTS.md / CLAUDE.md / .gitignore / 훅 자산)
 
@@ -150,30 +164,16 @@ _sdd/pr/
 
 env.md 비밀값 경고는 하네스 §2에 포함돼 있어 AGENTS.md 병합으로 함께 반영된다(별도 처리 불필요).
 
-훅 자산 병합 규칙:
+#### Hook Assets
 
-하네스 규약은 산문만으로는 지켜지지 않는다. 훅은 Claude Code와 Codex가 직접 실행하는 셸 명령이라 모델 재량으로 건너뛸 수 없으므로, 규약 중 재량으로 흘릴 수 있는 것을 실행 층으로 옮긴다. **훅 설치는 `AGENTS.md` 병합과 동일 조건에 묶인다 — 하네스를 병합하면 두 runtime의 등록을 함께 설치한다. 별도 opt-in이 아니다.**
+훅 설치는 `AGENTS.md` 하네스 병합과 동일 조건이다. 하네스를 병합하면 Claude Code와 Codex 등록을 함께 설치하며 별도 opt-in으로 다루지 않는다.
 
-설치 대상은 `references/hooks/`의 네 스크립트다.
+1. 호출 중인 skill package의 `references/hook-installation.md`를 **Read**하고 전부 적용한다.
+2. Claude-only·Codex-only·과거 command/matcher 같은 partial 또는 legacy 설치는 reference의 current 두 runtime 정의로 보완한다.
+3. 사용자 설정을 보존하면서 재실행 시 두 runtime의 diff가 없도록 만든다.
+4. reference의 `Verification and Report`로 검증하고 runtime별 결과를 알린다.
 
-- `worklog-gate.sh` — `PreToolUse`, `matcher: "Bash"`(게이트는 Bash 명령만 판정한다). 하네스 §5 work log 규약을 강제한다.
-- `worklog-context.sh` — `SessionStart`, matcher 없음(전 소스). 오늘 work log 상태를 주입한다.
-- `harness-context.sh` — `SessionStart`, `matcher: "clear|compact"`. 컨텍스트가 소실된 뒤 `AGENTS.md` 전문을 재주입한다. `startup`은 `CLAUDE.md` 포인터를 보고 첫 턴에 읽는 것이 정상 동작이고 `resume`·`fork`는 컨텍스트가 복원된다. 컨텍스트가 사라졌는데 포인터만 남는 source는 `clear`·`compact` 둘뿐이라 이 둘만 잡는다.
-- `agent-watchdog.sh` — `PostToolUse`, matcher 없음(전 tool). subagent가 첫 tool call 이후 5분 이상 돌면 원래 tool 결과 옆에 자기점검 nudge를 additional context로 전달한다. advisory 자산이다 — 게이트가 아니며, 판정 불가 시 조용히 fail-open 한다.
-
-- **스크립트 4개는 verbatim 복사다.** `references/hooks/worklog-gate.sh`·`references/hooks/worklog-context.sh`·`references/hooks/harness-context.sh`·`references/hooks/agent-watchdog.sh`를 각각 **Read**해 글자 그대로 `.claude/hooks/`에 쓴다. 슬롯 치환도 요약도 없다(대상 경로 `_sdd/work_log/<yyyy-mm-dd>.md`는 하네스 §5가, 주입 대상 `AGENTS.md`는 하네스 자체가 고정한다). 기억이나 이 SKILL 본문으로 **재구성하지 않는다** — 재구성하면 자산 변경이 산출물에 누락된다. 이미 있으면 정본 내용으로 덮어쓴다.
-- **설치 계약의 canonical은 `spec-create` 스킬 `#### 3e`다.** 그 스킬이 있으면 두 JSON example과 독립 merge 규칙을 Read해 그대로 적용한다. upgrade의 고유 책임은 Claude-only·Codex-only·과거 command/matcher 같은 부분 설치를 현재 dual-setting 상태로 보완하고 재실행 diff를 없애는 것이다.
-- **`.claude/settings.json`과 `.codex/hooks.json`은 서로 독립적인 키 수준 멱등 병합 단위다.** 호출 runtime과 무관하게 둘 다 설치 대상으로 삼는다. script path를 포함하는 handler의 바깥 group을 runtime 계약 형태로 교체하되, 교체 전 원래 event와 matcher를 캡처해 mixed group의 모든 non-SDD handler를 그 원래 event·matcher(matcher key가 없었으면 생략)의 별도 group으로 보존한다. 다른 top-level key·event·사용자 hook도 보존한다. 한 파일이 파싱 불가이면 byte-preserved하고 해당 runtime만 skip하며 반대 파일 병합과 script 복사는 계속한다. 최종 보고에는 runtime별 생성·교체·skip과 부분 실패를 적는다.
-- `spec-create`가 없는 환경은 아래 fallback map을 완전한 등록 소스로 쓴다. matcher `—`는 key를 생략한다. command는 exec bit에 의존하지 않는 `bash <path>` 형태이며 별도 `.codex/hooks/` script 사본이나 `chmod` 단계는 없다.
-
-| script | event | matcher | `.claude/settings.json` command | `.codex/hooks.json` command |
-|---|---|---|---|---|
-| `worklog-gate.sh` | `PreToolUse` | `Bash` | `bash "$CLAUDE_PROJECT_DIR"/.claude/hooks/worklog-gate.sh` | `bash "$(git rev-parse --show-toplevel)/.claude/hooks/worklog-gate.sh"` |
-| `agent-watchdog.sh` | `PostToolUse` | — | `bash "$CLAUDE_PROJECT_DIR"/.claude/hooks/agent-watchdog.sh` | `bash "$(git rev-parse --show-toplevel)/.claude/hooks/agent-watchdog.sh"` |
-| `worklog-context.sh` | `SessionStart` | — | `bash "$CLAUDE_PROJECT_DIR"/.claude/hooks/worklog-context.sh` | `bash "$(git rev-parse --show-toplevel)/.claude/hooks/worklog-context.sh"` |
-| `harness-context.sh` | `SessionStart` | `clear\|compact` | `bash "$CLAUDE_PROJECT_DIR"/.claude/hooks/harness-context.sh` | `bash "$(git rev-parse --show-toplevel)/.claude/hooks/harness-context.sh"` |
-
-- Codex hook은 0.124.0+ stable 기능이고 project `.codex/` layer trust가 필요하다. non-managed exact definition은 `/hooks`에서 검토·신뢰하기 전 무발동하며 definition 변경 시 재검토 대상이다. upgrade는 trust를 자동 승인하거나 user-global Codex 설정을 수정하지 않는다.
+upgrade가 소유하는 것은 부분 설치의 repair 판단이다. hook event·matcher·settings merge·runtime definition·trust 계약은 local reference를 따르며 `spec-create`의 존재에 의존하거나 이 본문에서 fallback을 재구성하지 않는다.
 
 ### Step 7: Validate
 
@@ -186,7 +186,7 @@ env.md 비밀값 경고는 하네스 §2에 포함돼 있어 AGENTS.md 병합으
 - Step 1 경계 판정을 어기고 rewrite 문제를 upgrade로 덮지 않았는가
 - `AGENTS.md`가 하네스(§0~§5) 마커 블록을 가지고, `CLAUDE.md`가 포인터 마커 블록을 가지며, 하네스와 별개의 중복 `## SDD란` 블록이 남지 않았는가
 - `.gitignore`가 `SDD-WORKSPACE` 마커 블록으로 process artifact를 ignore하는가
-- `.claude/hooks/`의 네 스크립트(`worklog-gate.sh`·`worklog-context.sh`·`harness-context.sh`·`agent-watchdog.sh`)가 정본과 동일 내용이고, `.claude/settings.json`과 `.codex/hooks.json`이 각각 PreToolUse(`matcher: "Bash"`)·PostToolUse(matcher 없음)·SessionStart(matcher 없음 / `"clear|compact"` 그룹 2개)를 중복 없이 등록했는가(부분 설치를 보완하고 재실행 시 runtime별 diff가 없는가)
+- 하네스를 병합했다면 local `references/hook-installation.md`의 `Verify` checklist를 모두 만족하고 partial 설치가 보완됐으며 재실행 시 두 runtime의 diff가 없는가
 
 ## Output Contract
 
@@ -198,7 +198,7 @@ env.md 비밀값 경고는 하네스 §2에 포함돼 있어 AGENTS.md 병합으
 - global에 남긴 판단과 밖으로 내린 정보
 - 축약 또는 supporting surface 이동된 old inventory 항목
 - 하네스 병합 결과(AGENTS.md/CLAUDE.md/.gitignore 생성·prepend·마커 교체 여부, 흡수·제거된 legacy `## SDD란`/중복 항목)
-- 훅 설치 결과(`.claude/hooks/` 네 스크립트 배치, `.claude/settings.json`·`.codex/hooks.json` runtime별 생성/교체/skip 여부) — Claude Code에는 커밋되는 설정·첫 commit gate·`SDD_SKIP_WORKLOG=1` 우회·compact/clear 전문 재주입·matcher 미지원 시 무발동을 기존대로 알린다. Codex에는 0.124.0+·project trust·`/hooks` exact-definition 신뢰 전 무발동과 definition 변경 시 재검토를 알린다. trust 자동 승인이나 user-global 설정 수정은 하지 않는다
+- 훅 설치 결과 — local `references/hook-installation.md`의 `Report` 계약대로 알린다
 - 남은 구조 문제와 후속 추천
 
 ## Error Handling
