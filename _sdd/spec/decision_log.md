@@ -1,5 +1,40 @@
 # Decision Log
 
+## 2026-08-08 - AGENTS.md 하네스 규범 다이어트 (SKILL_AUTHORING_NORMS 하네스 적용) (v4.6.55 → v4.6.56, post-implementation sync)
+
+### Context
+
+norms-p1/p2로 스킬 19개를 `docs/SKILL_AUTHORING_NORMS.md` §3 체크리스트로 다이어트한 뒤, 하네스 자신 — `AGENTS.md` 인스턴스와 정본 템플릿 `agents-harness-template.md`(미러 4 byte-identical) — 을 같은 rubric으로 리뷰했다. §2 유효 검증 정의 이중 서술, §3 spec-sync 내부 로직 재서술, §2/§5 work log 의무 이중 홈, §0 원칙 상세 홈 포인터 부재, 근거 미병기 negative 2건이 확인됐다.
+
+### Decision
+
+1. **F1 (인스턴스 한정)**: §2 유효 검증 정의 이중 서술을 단일 문장으로 통합. 두 번째 병렬 문장("검증은 슬래시 커맨드 실제 호출…")은 템플릿에 부재하고 repo 채움 유래임이 실측돼 인스턴스 한정으로 분류했다.
+2. **F2 (템플릿 공통)**: §3의 spec-sync 내부 분기 재서술("planned todo 고정(조건부)…evidence 유무로 구분")을 제거하고 "계획·구현 반영의 단일 진입점" 수준만 유지.
+3. **F3 (템플릿 공통)**: work log 의무의 완전 서술은 §5 단일 홈으로 두고 §2는 "(§5)" 포인터만 유지("예외 없이" §5에 1회만).
+4. **F4 (인스턴스 한정)**: §0에 원칙 상세·자기점검 질문의 홈 포인터(`docs/agentic_coding_principle.md`) 1줄 추가 — repo 고유 경로.
+5. **F5 (템플릿 공통)**: §3 스킬 카탈로그 복사 금지·§4 복사 금지 negative 2건에 방지 실패 근거를 병기 — 새 관측이 아니라 기존 결정(§4의 존재 이유·스킬 카탈로그 드리프트)에서 인용.
+
+§구조·마커·슬롯은 불변: §0~§5 헤더 6개, SDD-HARNESS 마커 쌍, `<…>` 슬롯, repo 채움 값(브랜치 규칙·경량 경로·worklog-gate 훅 경로) 유지. SKILL.md 4파일의 "§0~§5" 리터럴 12곳 census 비발동 실측.
+
+### Alternatives
+
+- Final Check류 재검토는 d903052 존치 결정으로 이번 다이어트의 비대상으로 유지했다.
+
+### Rationale / Evidence
+
+- plan-review CLEAR — 실측 M2 L2 + 판단 M1 L1을 반영해 Discovery evidence 교정, AC anchor 판별화, F1 분류 근거 병기 후 진행.
+- implementation-review C0 H0 M0 (L2는 advisory 보존), 전 AC MET (T1 AC1~6, T2 AC1~3, T3 AC1~3).
+- implementation ledger DONE: 삭제 문구 변형형("evidence 유무로 구분"·"planned todo 고정") 5파일 전수 grep 잔존 0, 템플릿 4 md5 단일(e3b6a9e), 슬롯 보존·인스턴스 delta 유입 0, §헤더 6:6, `git diff --check` PASS.
+
+### Changes
+
+- `AGENTS.md` — F1~F5 전체 (인스턴스: 템플릿 공통 + 인스턴스 한정 delta)
+- `.claude/skills/spec-create/references/agents-harness-template.md` — F2·F3·F5 (정본)
+- `.codex/skills/spec-create/references/agents-harness-template.md` — 정본 byte-copy 미러
+- `.claude/skills/spec-upgrade/references/agents-harness-template.md` — 정본 byte-copy 미러
+- `.codex/skills/spec-upgrade/references/agents-harness-template.md` — 정본 byte-copy 미러
+- `_sdd/drafts/_processed_2026-08-08_feature_draft_harness_norms_diet.md` — 사용 input 처리 표시
+
 ## 2026-08-07 - document producer single-home interfaces and deterministic snapshot preservation (v4.6.54 → v4.6.55, post-implementation sync)
 
 ### Context
