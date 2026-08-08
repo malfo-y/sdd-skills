@@ -2,6 +2,11 @@
 
 > 이 파일은 `_sdd/spec/main.md`의 **본문이 바뀐 버전만** 기록한다 — 본문 무변경 sync(헤더 날짜만 갱신)는 entry를 남기지 않으므로 버전 번호에 결번이 생길 수 있다.
 
+#### v4.6.56 (2026-08-08)
+
+- **AGENTS.md 하네스 규범 다이어트 (post-implementation sync)**: `docs/SKILL_AUTHORING_NORMS.md` §3 체크리스트를 하네스 자신 — `AGENTS.md` 인스턴스와 정본 템플릿 `agents-harness-template.md`(미러 4 byte-identical) — 에 적용했다. §2 유효 검증 정의 이중 서술을 단일 문장으로 통합(F1, 인스턴스 한정 — 두 번째 문장은 템플릿 부재·repo 채움 유래 실측), §3 spec-sync 내부 로직 재서술을 제거하고 "계획·구현 반영의 단일 진입점" 수준만 유지(F2), work log 의무를 §5 단일 홈으로 두고 §2는 포인터화(F3), §0에 원칙 상세 홈 포인터 `docs/agentic_coding_principle.md` 추가(F4, 인스턴스 한정), §3·§4 복사 금지 negative 2건에 방지 실패 근거 병기(F5). §0~§5 헤더·SDD-HARNESS 마커·`<…>` 슬롯·repo 채움 값은 불변이며 SKILL.md "§0~§5" 리터럴 12곳 census는 비발동이다.
+- **검증 evidence**: plan-review CLEAR(실측 M2 L2 + 판단 M1 L1 반영), implementation-review C0 H0 M0 (L2 advisory), 전 AC MET. implementation ledger DONE — 삭제 문구 변형형 5파일 전수 grep 잔존 0, 템플릿 4 md5 단일(e3b6a9e), 인스턴스 delta 유입 0, §헤더 6:6, `git diff --check` PASS.
+
 #### v4.6.55 (2026-08-07)
 
 - **document producer single-home interfaces and deterministic snapshot preservation (post-implementation sync)**: `spec-summary`는 runtime-local `summary-template.md`를 fenced whitepaper shape의 단일 홈으로 두고 완성 example을 제거했다. `guide-create`는 `output-format.md`에 section·citation/evidence·confidence rubric을 모으고 compact/tool-gate reference와 confidence example을 제거했다. 두 producer는 작성 직전 fenced skeleton을 verbatim/slot-only로 적용하며 main loop가 skeleton-first로 직접 작성한다. `spec-snapshot`은 source 사전/사후 manifest exact match, safe slug·direct-parent confinement·collision suffix, exact metadata marker, source summary present/absent 분기로 read-only 보존을 결정적으로 닫았다. Claude의 `user_invocable: true`만 runtime allowlist delta로 보존했다.
