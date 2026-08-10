@@ -98,16 +98,18 @@ description: This skill should be used when the user asks to "feature draft", "d
   - 소유·연접: 각 행은 정확히 하나의 owner task를 가지며, 그 task의 Target Files와 AC가 required surface의 실행·검증을 닫는다.
   - 비발동: 일반 다중파일 변경만으로는 표를 만들지 않는다.
   - census 예외: 변형 표기 전수 제거가 필요할 때만 별도의 census read-only 검증 task 규칙을 적용한다.
-- **품질 게이트**: 작성 후 `plan-review` 스킬 1회로 draft를 점검한다 — **단일 패스**로, review loop는 돌리지 않고 반환 finding을 severity로 갈라 작성자인 메인 루프가 반영한다:
-  - **Critical/High/Medium**: 직접 반영한다.
-  - **Low**: 판단해 **저비용 AND 명백히 이득 AND 현재 draft scope 내** 세 조건을 모두 만족하는 것만 반영하고, 나머지는 마감 메시지에 advisory로 남긴다. `현재 draft scope 내`가 scope 확장을 막는 load-bearing 조건이다(scope 확장·사변적 개선 금지, 단일 패스 유지).
+- **품질 게이트**: 작성 후 producer인 메인 루프가 `plan-review`를 호출하고 반환 finding을 severity로 갈라 반영한다. 각 gate 호출 내부는 **단일 패스**이며 reviewer와 사용자는 gate 재호출이나 fix를 소유하지 않는다.
+  1. **gate 1 → fix 1**: 첫 gate를 항상 호출한다. 반환된 Critical/High/Medium은 직접 반영한다. Low는 **저비용 AND 명백히 이득 AND 현재 draft scope 내** 세 조건을 모두 만족하는 것만 반영하고, 나머지는 advisory로 남긴다. `현재 draft scope 내`가 scope 확장을 막는 load-bearing 조건이다.
+  2. **조건 판정**: fix 전 gate 1의 raw 합산 finding에서 Low를 제외하고 **Critical+High ≥ 3 또는 Medium ≥ 5**인지 판정한다.
+  3. **gate 2 → fix 2**: 임계값에 도달한 경우에만 같은 `plan-review`를 두 번째 호출한다. 반환된 Critical/High/Medium을 직접 반영하고, Low에는 gate 1과 동일한 정책을 적용한다.
+  4. **검증 후 종료**: fix 2 뒤에는 gate 2 finding이 인용한 평가조건을 final draft에서 다시 확인하고 evidence와 해소되지 않은 finding을 남긴다. 세 번째 gate는 호출하지 않는다. gate 2의 fix 전 raw 합산 finding도 같은 임계값에 도달하면 마감 메시지에서 후속 `plan-review` 1회 수동 실행을 권고한다.
 
-  반영 후, 게이트 반환의 합산 finding(fix 전 기준)이 **Critical+High ≥ 3 또는 Medium ≥ 5**였으면 마감 메시지에 수치와 함께 "finding이 많았으니 `plan-review` 1회 추가 실행을 권장한다"를 1줄 출력한다 — 권고 출력만 하고 추가 리뷰를 자체 실행하지는 않는다(단일 패스 유지).
+  마감 메시지는 gate 2를 실행했으면 호출 1/2의 severity, fix, 검증 결과를 구분해 보고한다. gate 2를 실행하지 않았으면 gate 1 경로의 결과만 보고한다.
 - **실행 인계**: `implementation` 스킬(메인 루프 직접 RED→GREEN 구현)로 인계한다. 구현 작성을 여러 갈래로 나눠야 할 규모로 드러나면 분할 규칙으로 돌아간다.
 - **Minimum-Code 기준**: task의 description과 AC는 요청 동작 또는 관측된 위험에 직접 추적되는 가장 작은 변경만 명세한다.
 
 ## Integration
 
-- `plan-review`: draft 품질 게이트 — 작성 후 단일 패스 점검 (위 규칙 참조).
+- `plan-review`: draft 품질 게이트 — producer가 각 호출을 단일 패스로 실행하며, finding 규모에 따라 최대 두 번 호출한다 (위 규칙 참조).
 - `implementation`: 실행 인계 대상 — Part 2 task를 RED→GREEN으로 구현한다.
 - `spec-sync`: Part 1 마커 내부를 global spec 반영 입력으로 소비한다 (파일명이 기존 `*_feature_draft_*` glob에 매칭된다).

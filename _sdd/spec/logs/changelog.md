@@ -2,6 +2,11 @@
 
 > 이 파일은 `_sdd/spec/main.md`의 **본문이 바뀐 버전만** 기록한다 — 본문 무변경 sync(헤더 날짜만 갱신)는 entry를 남기지 않으므로 버전 번호에 결번이 생길 수 있다.
 
+#### v4.6.57 (2026-08-10)
+
+- **Bounded conditional second quality-gate pass (post-implementation sync)**: `feature-draft`와 `implementation` producer는 gate 1/fix 1을 항상 수행하고, gate-1 fix 전 raw finding이 `Critical+High ≥ 3` 또는 `Medium ≥ 5`일 때만 같은 gate를 한 번 더 호출해 fix 2와 producer별 표적 검증을 수행한다. Low는 임계값에서 제외하고 `implementation-review` shard는 dedup 없는 raw 합계를 유지한다. 기본 경로는 1회, 임계값 경로는 최대 2회이며 gate 3은 없다. gate-2 raw finding도 같은 임계값이면 producer는 세 번째 호출 대신 수동 follow-up review 1회를 권고한다. 사용자와 `sdd-autopilot`은 gate를 재호출하거나 fix하지 않고 reviewer/orchestrator는 호출당 single-pass 계약을 유지한다. v4.6.30의 advisory-only 동작을 supersede했다.
+- **문서·검증 evidence**: 한·영 `SDD_WORKFLOW`·`AUTOPILOT_GUIDE`를 기본 1회/조건부 최대 2회, ownership, 호출별 최종 보고, no-third 의미로 정렬했다. exact 8개 구현·문서 표면, 구조적 RED→GREEN, AC 14/14, stale contract 0, runtime mirror parity, reviewer surface 무변경, `git diff --check`가 통과했다. 최초 implementation-review `C0 H0 M1 L0`의 M1 수정과 회귀를 완료했고 후속 advisory 변경 검토는 `C0 H0 M0 L0`이었다.
+
 #### v4.6.56 (2026-08-08)
 
 - **AGENTS.md 하네스 규범 다이어트 (post-implementation sync)**: `docs/SKILL_AUTHORING_NORMS.md` §3 체크리스트를 하네스 자신 — `AGENTS.md` 인스턴스와 정본 템플릿 `agents-harness-template.md`(미러 4 byte-identical) — 에 적용했다. §2 유효 검증 정의 이중 서술을 단일 문장으로 통합(F1, 인스턴스 한정 — 두 번째 문장은 템플릿 부재·repo 채움 유래 실측), §3 spec-sync 내부 로직 재서술을 제거하고 "계획·구현 반영의 단일 진입점" 수준만 유지(F2), work log 의무를 §5 단일 홈으로 두고 §2는 포인터화(F3), §0에 원칙 상세 홈 포인터 `docs/agentic_coding_principle.md` 추가(F4, 인스턴스 한정), §3·§4 복사 금지 negative 2건에 방지 실패 근거 병기(F5). §0~§5 헤더·SDD-HARNESS 마커·`<…>` 슬롯·repo 채움 값은 불변이며 SKILL.md "§0~§5" 리터럴 12곳 census는 비발동이다.

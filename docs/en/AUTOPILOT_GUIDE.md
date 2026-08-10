@@ -1,7 +1,7 @@
 # SDD-Autopilot User Guide
 
-**Version**: 2.1.0
-**Date**: 2026-07-26
+**Version**: 2.2.0
+**Date**: 2026-08-09
 
 A guide for the sdd-autopilot meta-skill that runs the SDD chain end-to-end without approval steps.
 
@@ -15,16 +15,16 @@ A guide for the sdd-autopilot meta-skill that runs the SDD chain end-to-end with
 
 ```
 Request analysis
-  → feature-draft           (feature spec: per-task AC + Target Files, ~1 min — internal quality gate + one fix)
-  → implementation          (main loop writes RED→GREEN directly — internal quality gate + one fix)
+  → feature-draft           (feature spec: per-task AC + Target Files — internal gate+fix once by default, at most twice at the threshold)
+  → implementation          (main loop writes RED→GREEN directly — internal gate+fix once by default, at most twice at the threshold)
   → spec-sync               (only when persistent spec changes exist)
   → final response summary  (no report files)
 ```
 
 Core principles:
 
-- **No approval steps**: a wrong direction surfaces cheaply at the draft stage (~1 min), and `feature-draft` checks plan quality through its own quality gate.
-- **Gates and fixes belong to the producer skill**: each quality gate runs once inside the skill that produced the artifact (`feature-draft`, `implementation`), followed by a single fix — autopilot never invokes a gate itself. There are no review-fix loops, so findings not closed by the single fix go into the final report; a recurring finding is treated as a signal to redesign or split the plan.
+- **No approval steps**: a wrong direction surfaces cheaply at the draft stage, and `feature-draft` checks plan quality through its own quality gate.
+- **Gates and fixes belong to the producer skill**: `feature-draft` and `implementation` always run gate 1 and fix 1. If the first invocation's pre-fix findings reach `Critical+High >= 3` or `Medium >= 5`, the producer invokes the same gate a second time, applies fix 2, and then stops. Each reviewer invocation is a single pass, and there is no third invocation. Autopilot neither recalls the gate nor applies fixes; the producer's final response distinguishes invocation 1/2 findings, fixes, verification, and unresolved findings.
 - **Lightweight returns**: review results come back as responses, not report files. The only artifacts are the draft file, code + tests, the implementation ledger, the AC→evidence table in chat, and the updated spec.
 
 ## 3. Splitting (handling oversized changes)
@@ -78,7 +78,7 @@ Examples:
 ## 7. Related skills
 
 - `feature-draft` — feature spec + canonical split rules
-- `plan-review` — the draft quality gate `feature-draft` runs once internally (single pass, lightweight return)
+- `plan-review` — the draft quality gate `feature-draft` invokes once by default and at most twice at the threshold (each invocation is a single pass with a lightweight return)
 - `implementation` — main-loop RED→GREEN implementation + canonical stop/split rules
-- `implementation-review` — the implementation quality gate `implementation` runs once at close (correctness shard N ∥ simplicity, lightweight return)
+- `implementation-review` — the implementation quality gate `implementation` invokes once at close by default and at most twice at the threshold (each invocation runs correctness shard N ∥ simplicity with a lightweight return)
 - `spec-sync` — global spec synchronization (adapts to planned/implemented evidence)
