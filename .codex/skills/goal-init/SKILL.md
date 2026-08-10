@@ -23,7 +23,8 @@ description: This skill should be used when the user asks to set up a "/goal", "
 - [ ] AC2: 목표 달성 접근/가설 2개 이상이 발산되어 `experiments.md` 백로그에 수집되었다.
 - [ ] AC3: 완료조건 문자열이 평가자 적합성 self-check(도구 없이 판정·evidence 매 턴 surface·4,000자 이하)를 통과했다.
 - [ ] AC4: `_sdd/goal/<YYYY-MM-DD>_<slug>/`에 4파일(`goal.md`/`experiments.md`/`journal.md`/`report.md`)이 생성되었다.
-- [ ] AC5: 조건 문자열 + Codex `/goal` 실행법을 핸드오프로 제시했고, 스킬이 `/goal`을 직접 발동하지 않았다.
+- [ ] AC5: 조건 문자열 + Codex `/goal` 실행법 + 생성한 4파일의 개별 경로를 핸드오프로 제시했고, “goal을 활성화하지 않았으며 기존 goal 상태도 변경하지 않았다”는 불변식을 표시했으며, 스킬이 `/goal`을 직접 발동하지 않았다.
+- [ ] AC6: `preset=sdd` 입력이면 기존 5단계·4파일·self-check를 그대로 수행하고 `references/harness-templates.md`의 SDD Loop Protocol payload를 선택했다.
 
 ## Hard Rules
 
@@ -32,6 +33,11 @@ description: This skill should be used when the user asks to set up a "/goal", "
 3. **적합성 gate (I3)**: Goal Intake의 적합성 gate를 통과하지 못한 목표로는 Divergence를 진행하지 않는다.
 4. **ralph 불간섭**: `ralph-loop-init` 스킬을 건드리지 않는다. bash `while-true` 루프·`run.sh`·컨테이너 격리를 차용하지 않는다.
 5. **산출 경로**: 4파일은 `_sdd/goal/<YYYY-MM-DD>_<slug>/`에만 생성한다. 그 외 경로에 산출물을 만들지 않는다.
+6. **SDD preset setup 경계**: `preset=sdd`는 Loop Protocol payload만 바꾸는 HOW preset이다.
+   - setup에서 `feature-draft`·`implementation`·`spec-sync`를 호출하지 않는다.
+   - initial feature를 만들지 않는다.
+   - current native goal status를 조회하거나 변경하지 않는다.
+   - active goal 때문에 setup을 중단하지 않는다.
 
 ## Key Principles
 
@@ -83,7 +89,7 @@ Process의 모든 단계에 횡단 적용되는 판단 지침. Hard Rules가 강
 
 `_sdd/goal/<YYYY-MM-DD>_<slug>/`에 `references/harness-templates.md` 템플릿으로 **4파일을 생성한다**: `goal.md` / `experiments.md` / `journal.md` / `report.md`.
 
-- **`goal.md`**: 확정한 조건 문자열(`DONE WHEN`/`CONSTRAINTS`/`STOP`)을 `/goal` 조건 문자열 슬롯에 기입하고, `Loop Protocol`에 매 턴 행동 규칙(① `experiments.md` pending 큐 소비 · ② 큐가 비고 미완이면 새 가설 자동 발산해 pending에 append · ③ 검증 명령 출력을 대화에 surface · ④ 시도·결과를 `journal.md`에 append)을 기입한다.
+- **`goal.md`**: 확정한 조건 문자열(`DONE WHEN`/`CONSTRAINTS`/`STOP`)을 `/goal` 조건 문자열 슬롯에 기입한다. `Loop Protocol`에는 preset이 없으면 template의 generic payload를, `preset=sdd`이면 SDD payload를 정확히 하나 삽입한다.
 - **`experiments.md`**: Step 2에서 발산한 가설들을 pending 백로그로 기입한다.
 - **실행법 슬롯**: Codex 슬롯만 채운다 — 실행법 4요소는 Step 5 Handoff에 단일 소스로 정의한다 (Claude Code 슬롯은 그쪽 스킬이 채우므로 placeholder로 둔다).
 
@@ -91,10 +97,11 @@ Process의 모든 단계에 횡단 적용되는 판단 지침. Hard Rules가 강
 
 ### Step 5: Handoff
 
-확정한 **조건 문자열**과 **Codex `/goal` 실행법**을 사용자에게 제시한다.
+확정한 **조건 문자열**, **Codex `/goal` 실행법**, 생성한 `goal.md`·`experiments.md`·`journal.md`·`report.md`의 **개별 경로**를 사용자에게 제시한다.
 
 - **Codex 실행법**: (a) `codex features enable goals`(또는 config의 `features.goals`)로 goals 기능을 활성화한다. (b) 라이프사이클은 `set`(목표 설정)·`status`(진행 확인)·`clear`(종료)이며, 중간에 멈췄다 이어가려면 `pause`·`resume`를 쓴다. (c) continuation은 thread-scoped state로 유지되며, 안전 경계(turn 종료·idle·no queued input) 안에서만 다음 턴으로 이어진다. (d) 진행은 evidence-based다 — 매 턴 검증 명령의 출력을 대화에 surface해 평가자가 그 증거로 완료를 판정한다.
 - **스킬은 `/goal`을 직접 발동하지 않는다 (I2)**. 핸드오프는 조건 문자열 + 실행법 제시까지이며, 사용자가 조건을 검토한 뒤 **직접 발동한다**.
+- **Setup invariant**: “goal을 활성화하지 않았으며 기존 goal 상태도 변경하지 않았다”를 항상 명시한다. 이를 확인하기 위한 status 조회는 하지 않는다.
 
 **Decision Gate (종료)**: 조건 문자열 + Codex 실행법 제시가 완료되면 종료한다.
 

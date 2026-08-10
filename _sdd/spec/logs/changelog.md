@@ -2,6 +2,11 @@
 
 > 이 파일은 `_sdd/spec/main.md`의 **본문이 바뀐 버전만** 기록한다 — 본문 무변경 sync(헤더 날짜만 갱신)는 entry를 남기지 않으므로 버전 번호에 결번이 생길 수 있다.
 
+#### v4.7.0 (2026-08-10)
+
+- **sdd-autopilot을 goal-init SDD instance로 전환 (post-implementation sync)**: `sdd-autopilot`을 독립 end-to-end runner에서 existing `goal-init(preset=sdd)`를 호출하는 setup-only thin entrypoint로 전환했다. `goal-init`은 기존 5단계·condition self-check·4-file harness를 보존하면서, native goal 활성화 뒤 unmet DONE WHEN 또는 failed final integration-proof gap에서 최소 next unit을 선택해 `feature-draft → implementation → persistent spec-sync → evidence 기록 → final integration proof`로 수렴하는 6-step SDD Loop Protocol payload를 제공한다. setup은 initial producer 실행·native goal 활성화·current goal status 조회·기존 goal mutation/block을 하지 않고 activation은 사용자가 결정한다. rolling split은 current goal 안에서 계속하며 nested goal-init, formal Goal Contract/queue schema/goal-level reviewer는 도입하지 않는다. Claude는 plugin-prefixed invocation, Codex는 active installed skill catalog를 사용한다.
+- **문서·검증 evidence**: 한·영 AUTOPILOT_GUIDE, README, `_sdd/env.md`를 setup/activation/native-goal-loop 모델로 정렬하고 obsolete pre-flight를 제거했다. draft AC1–AC20 MET, exact live target 10/10, excluded surface 무변경, stale runner/blocker census 0, template payload parity, `git diff --check` PASS를 확인했다. implementation-review gate 1 `C2 H1 M2 L0`와 gate 2 `C0 H0 M3 L0` finding을 모두 수정했고 gate 3 임계값에는 도달하지 않았다.
+
 #### v4.6.57 (2026-08-10)
 
 - **Bounded conditional second quality-gate pass (post-implementation sync)**: `feature-draft`와 `implementation` producer는 gate 1/fix 1을 항상 수행하고, gate-1 fix 전 raw finding이 `Critical+High ≥ 3` 또는 `Medium ≥ 5`일 때만 같은 gate를 한 번 더 호출해 fix 2와 producer별 표적 검증을 수행한다. Low는 임계값에서 제외하고 `implementation-review` shard는 dedup 없는 raw 합계를 유지한다. 기본 경로는 1회, 임계값 경로는 최대 2회이며 gate 3은 없다. gate-2 raw finding도 같은 임계값이면 producer는 세 번째 호출 대신 수동 follow-up review 1회를 권고한다. 사용자와 `sdd-autopilot`은 gate를 재호출하거나 fix하지 않고 reviewer/orchestrator는 호출당 single-pass 계약을 유지한다. v4.6.30의 advisory-only 동작을 supersede했다.
