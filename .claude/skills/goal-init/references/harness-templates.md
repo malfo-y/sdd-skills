@@ -3,7 +3,7 @@
 goal-init이 `_sdd/goal/<YYYY-MM-DD>_<slug>/`에 생성하는 4파일 하네스의 단일 소스 템플릿이다.
 SKILL.md Process(Harness Setup 단계)가 이 템플릿을 참조해 슬롯을 채운다. Codex 미러 스킬도 동일 템플릿을 references로 복사 사용한다.
 
-`<...>` 는 생성 시 치환할 슬롯이다. 그 외 텍스트(헤딩·레이블·구조)는 그대로 유지한다.
+`<...>` 는 생성 시 치환할 슬롯이다. 그 외 텍스트(헤딩·레이블·구조)는 그대로 유지한다. `<LOOP_PROTOCOL_PAYLOAD>`에는 아래 preset payload 중 정확히 하나를 삽입한다.
 
 분업 원칙(D10):
 - **완료조건**(`DONE WHEN`/`CONSTRAINTS`/`STOP`)은 `/goal` 조건 문자열에 자족 인라인 → 평가자(도구 없는 small fast model)가 transcript만으로 판정한다. 증명은 명령·기대 출력이 대화에 surface되는 형태로 인라인한다 (별도 VERIFY 슬롯 없음).
@@ -28,11 +28,9 @@ CONSTRAINTS: <지켜야 할 제약. 없으면 이 줄 삭제.>
 STOP: after <N> turns without progress.
 
 ## Loop Protocol
-매 턴 다음을 수행한다 (이 섹션은 메인 에이전트용 HOW이며 조건 문자열에 넣지 않는다):
-1. `experiments.md`의 pending 가설 하나를 골라 시도한다.
-2. 해당 가설의 검증 명령을 실행하고 **출력을 대화에 그대로 표시**한다 (평가자가 transcript에서 본다).
-3. 시도·검증 결과를 `journal.md`에 append한다.
-4. pending 큐가 비었는데 목표 미완이면, 새 가설을 brainstorm해 `experiments.md` pending에 append한다.
+<LOOP_PROTOCOL_PAYLOAD>
+
+> Setup invariant: goal을 활성화하지 않았으며 기존 goal 상태도 변경하지 않았다.
 
 ## 실행법
 <!-- 각 런타임 스킬이 자기 런타임 슬롯만 채워 산출한다. 이 Claude Code 템플릿은 양쪽 슬롯이 placeholder다. -->
@@ -42,6 +40,30 @@ STOP: after <N> turns without progress.
 
 ### Codex
 <Codex에서의 활성화·실행 명령 placeholder>
+```
+
+### Loop Protocol preset payloads
+
+#### Generic payload (default)
+
+```markdown
+매 턴 다음을 수행한다 (이 섹션은 메인 에이전트용 HOW이며 조건 문자열에 넣지 않는다):
+1. `experiments.md`의 pending 가설 하나를 골라 시도한다.
+2. 해당 가설의 검증 명령을 실행하고 **출력을 대화에 그대로 표시**한다 (평가자가 transcript에서 본다).
+3. 시도·검증 결과를 `journal.md`에 append한다.
+4. pending 큐가 비었는데 목표 미완이면, 새 가설을 brainstorm해 `experiments.md` pending에 append한다.
+```
+
+#### SDD payload (`preset=sdd`)
+
+```markdown
+매 턴 다음을 순서대로 수행한다 (이 섹션은 메인 에이전트용 HOW이며 조건 문자열에 넣지 않는다):
+1. 아직 충족되지 않은 `DONE WHEN` 또는 실패한 final integration proof가 드러낸 gap에서 가장 작은 next feature를 고른다. `experiments.md`의 pending 가설은 접근 후보로만 참고한다.
+2. 그 feature의 reviewed draft가 없으면 `feature-draft`를 실행한다. draft가 분할되면 현재 native goal 안에서 가장 작은 next unit을 고르고 nested `goal-init`은 만들지 않는다.
+3. 선택한 draft를 `implementation`으로 구현하고 producer-owned 품질 게이트 결과까지 닫는다.
+4. persistent 변경이 있으면 `spec-sync`를 실행한다.
+5. 검증 출력을 대화에 표시하고 evidence·완료 feature·남은 gap·next action을 `journal.md`에 append한 뒤 `report.md`를 갱신한다.
+6. 모든 `DONE WHEN`과 final integration proof가 통과했을 때만 종료한다. 아니면 1단계로 돌아간다.
 ```
 
 ---

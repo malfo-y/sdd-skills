@@ -53,9 +53,9 @@
 - 구현은 메인 루프가 직접 작성하고 회귀 → AC→증거 테이블 → `implementation-review` gate 1+fix 1 → 임계값 경로에서만 gate 2+fix 2 → 마감 요약으로 닫는다. 각 fix 뒤 커버리지 델타·회귀 재실행·증거 갱신을 수행한다(별도 plan artifact 없음 — 재개용 resume pointer로 `_sdd/implementation/<YYYY-MM-DD>_implementation_ledger_<slug>.md`만 생성·이어쓰며 AC→증거 테이블의 기록처다, 표는 채팅에도 노출). 단일 컨텍스트 초과면 분할 규칙(롤링 draft + planned todo 고정 + feature별 순차 체인)으로 해소한다
 - gate 2 뒤에는 gate 3 없이 종료한다. gate 2의 fix 전 raw finding도 같은 임계값이면 수동 후속 review 1회를 권고하고, 마감 요약은 호출 1/2의 severity·fix·검증·잔존 finding을 구분한다. 이어서 spec sync까지 연결돼 스펙과 코드 간 드리프트가 설명 가능한 상태가 된다
 
-### Scenario 2b: 대규모 기능 추가 (sdd-autopilot 자동 실행)
+### Scenario 2b: 여러 SDD 단위를 native goal로 수렴시키기 (sdd-autopilot setup)
 
-> autopilot은 SDD 체인 전용이다. 규모 초과는 feature 분할(분할 목록 `spec-sync` planned todo 고정 후 feature별 순차 체인)로 해소한다. 구 orchestrator 기반 full 파이프라인은 제거됐다 — 복구는 git tag `full-lane-final`, legacy `_sdd/pipeline/` 산출물은 기록물이다.
+> `sdd-autopilot`은 구현을 즉시 시작하는 runner가 아니라 `goal-init(preset=sdd)` 기반 setup entrypoint다. 실제 반복 실행은 사용자가 native goal을 활성화한 뒤 시작된다.
 
 **Action:**
 ```bash
@@ -63,12 +63,12 @@
 ```
 
 **Expected Result:**
-- Step 0~1: 기존 `_sdd/drafts/` 산출물 재활용·spec 유무를 확인하고 요청을 분석한다(부족한 정보만 인라인 질문, 승인 게이트 없음)
-- Step 2: `feature-draft(내부 gate+fix 기본 1회, 임계값 시 최대 2회) → implementation(내부 gate+fix 기본 1회, 임계값 시 최대 2회) → (persistent 변경 시) spec-sync → 최종 보고` 4항목을 무승인으로 실행한다. autopilot은 게이트를 호출하거나 fix하지 않는다. 분할 신호가 뜨면 분할 규칙(롤링 draft + planned todo 고정 + feature별 순차 체인)으로 처리한다
-- `_sdd/drafts/<YYYY-MM-DD>_feature_draft_<slug>.md` — 실행 청사진이 되는 draft
-- `_sdd/implementation/<YYYY-MM-DD>_implementation_ledger_<slug>.md` — 구현 단계의 resume pointer(AC→증거 테이블 기록처)
-- report 파일 없이 최종 응답 요약 — 수행 단계, producer별 gate 호출 횟수, 호출별 finding/fix/검증 내역과 잔존 finding, 테스트 결과, spec sync 여부, 잔존 항목
-- 구현 완료 + 스펙 동기화 완료
+- `sdd-autopilot`이 사용자 목표와 관련 context를 `goal-init(preset=sdd)`에 전달하고, 기존 5단계·condition self-check를 거쳐 `_sdd/goal/<YYYY-MM-DD>_<slug>/` 아래 `goal.md`·`experiments.md`·`journal.md`·`report.md`를 생성한다
+- handoff에는 자족적 조건 문자열, runtime 실행법, 네 파일의 개별 경로와 “goal을 활성화하지 않았으며 기존 goal 상태도 변경하지 않았다”는 불변식이 표시된다. 사용자가 내용을 검토하고 native goal activation 여부와 시점을 결정한다
+- setup 중 initial `feature-draft`·`implementation`·`spec-sync`는 실행되지 않는다. current goal status를 조회하지 않고 existing goal을 변경하거나 active goal 때문에 setup을 차단하지도 않는다
+- activation 뒤 SDD Loop Protocol은 미충족 `DONE WHEN` 또는 실패한 final integration proof gap에서 가장 작은 next feature를 선택하고, 필요 시 reviewed `feature-draft`를 만든 뒤 `implementation` → persistent 변경 시 `spec-sync` → evidence·완료 feature·남은 gap·next action 기록을 반복한다
+- draft가 분할되면 같은 native goal 안에서 smallest next unit을 계속 선택하며 nested `goal-init`을 만들지 않는다. 모든 `DONE WHEN`과 final integration proof가 통과해야 종료한다
+- `feature-draft`와 `implementation`의 품질 게이트는 각 producer가 소유한다. 별도 Goal Contract, Initial Feature Queue, status manifest, goal-level reviewer는 생성하지 않는다
 
 ### Scenario 3: PR 기반 스펙 동기화
 

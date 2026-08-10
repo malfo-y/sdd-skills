@@ -1,84 +1,93 @@
 # SDD-Autopilot User Guide
 
-**Version**: 2.2.0
-**Date**: 2026-08-09
-
-A guide for the sdd-autopilot meta-skill that runs the SDD chain end-to-end without approval steps.
-
----
+**Version**: 3.0.0
+**Date**: 2026-08-10
 
 ## 1. Overview
 
-**sdd-autopilot** takes a single feature request and runs planning → implementation → spec synchronization to completion via the **SDD chain**, with each skill running its own quality gate internally. There is no separate execution-plan artifact and no approval step: once requirements are settled, execution starts immediately. The user only answers the initial requirement questions (when needed) and any Open Questions surfaced by the draft.
+`sdd-autopilot` is no longer an independent runner that starts implementation immediately. It is an **SDD-specific goal harness setup entrypoint**. It forwards the feature outcome to `goal-init(preset=sdd)`, creates a self-contained completion condition and four files under `_sdd/goal/<date>_<slug>/`, and hands them back for the user to review and activate.
 
-## 2. The Chain
+Planning, implementation, and spec synchronization repeat only inside the native goal after the user activates it, never during setup.
 
+## 2. Setup and execution flow
+
+```text
+/sdd-autopilot <feature outcome>
+  → goal-init(preset=sdd)
+  → Goal Intake → Divergence → Condition Crafting → Harness Setup → Handoff
+  → condition string + four-file harness (still inactive)
+
+User reviews and activates the native /goal
+  → the SDD Loop Protocol repeats feature-sized SDD paths as needed
+  → stop only after every DONE WHEN item and the final integration proof pass
 ```
-Request analysis
-  → feature-draft           (feature spec: per-task AC + Target Files — internal gate+fix once by default, at most twice at the threshold)
-  → implementation          (main loop writes RED→GREEN directly — internal gate+fix once by default, at most twice at the threshold)
-  → spec-sync               (only when persistent spec changes exist)
-  → final response summary  (no report files)
-```
 
-Core principles:
+The existing five `goal-init` stages, evaluator self-check (tool-free judgment, surfaced evidence, and at most 4,000 characters), and four-file format stay the same as the generic path. The SDD preset changes only the Loop Protocol payload in `goal.md`.
 
-- **No approval steps**: a wrong direction surfaces cheaply at the draft stage, and `feature-draft` checks plan quality through its own quality gate.
-- **Gates and fixes belong to the producer skill**: `feature-draft` and `implementation` always run gate 1 and fix 1. If the first invocation's pre-fix findings reach `Critical+High >= 3` or `Medium >= 5`, the producer invokes the same gate a second time, applies fix 2, and then stops. Each reviewer invocation is a single pass, and there is no third invocation. Autopilot neither recalls the gate nor applies fixes; the producer's final response distinguishes invocation 1/2 findings, fixes, verification, and unresolved findings.
-- **Lightweight returns**: review results come back as responses, not report files. The only artifacts are the draft file, code + tests, the implementation ledger, the AC→evidence table in chat, and the updated spec.
+## 3. SDD Loop Protocol
 
-## 3. Splitting (handling oversized changes)
+The active native goal follows this order on every turn:
 
-When a change does not fit in a single context, it is **split into multiple features** instead of being escalated to a bigger pipeline:
+1. Pick the smallest next feature from either an unmet `DONE WHEN` item or a gap exposed by a failed final integration proof.
+2. If no reviewed draft exists, run `feature-draft`. If it splits, choose the smallest next unit inside the current goal.
+3. Execute the selected draft with `implementation`, including its producer-owned quality gate.
+4. Run `spec-sync` when persistent changes exist.
+5. Surface verification output and record the evidence, completed feature, remaining gap, and next action in the journal/report.
+6. Finish only when every `DONE WHEN` item and the final integration proof pass; otherwise return to step 1.
 
-1. The draft becomes a **rolling split draft** — the full feature list goes inside the Part 1 marker, and Part 2 holds only the first feature's tasks.
-2. `spec-sync` pins the split list into the global spec as **one planned todo per feature**.
-3. The chain runs for the first feature; each remaining feature later gets its own draft and runs the chain in turn.
+If `feature-draft` splits again during execution, it does not create a nested `goal-init`. The current native goal keeps selecting the next smallest feature through the same Loop Protocol.
 
-The canonical split criteria (coverage not eyeball-checkable / exceeds a single context) and the split method live in the `feature-draft` SKILL. Census-style sweeps (renames/propagation) are handled not by splitting but by a mandatory read-only verification task at the end of the draft.
+## 4. Boundaries
 
-## 4. Usage
+- **Setup only**: initial `feature-draft`, `implementation`, and `spec-sync` do not run during `/sdd-autopilot` setup.
+- **User activation**: the skill never activates the native goal itself.
+- **Existing goal remains untouched**: setup does not read current goal status, mutate, clear, pause, replace, or merge an existing goal, and it does not block because a goal is active.
+- **Handoff invariant**: the result always states that the goal was not activated and the existing goal state was not changed.
+- **Producer ownership**: after activation, `feature-draft` and `implementation` continue to own their plan and implementation quality gates and fixes.
+- **Existing harness reused**: the roles and formats of `goal.md`, `experiments.md`, `journal.md`, and `report.md` remain unchanged; no separate queue or state-machine schema is introduced.
 
-```
-/sdd-autopilot <feature description>
+## 5. Usage
+
+```text
+/sdd-autopilot <verifiable multi-turn feature outcome>
 ```
 
 Examples:
 
-```
-/sdd-autopilot Implement JWT-based authentication: login, logout, token refresh.
-/sdd-autopilot Change the login button color from blue to green.
+```text
+/sdd-autopilot Implement JWT authentication with login, logout, token refresh, and integration proof.
+/sdd-autopilot Migrate the legacy payment module to the new API, including regression tests and documentation sync.
 ```
 
-**Trigger keywords**: `sdd-autopilot`, `autopilot`, `자동 구현`, `end-to-end 구현`, `자동으로 구현해줘`
+A native goal is appropriate for a multi-turn task with a verifiable end state. For a one-line change, the `goal-init` suitability gate recommends redefining the outcome or using a one-shot task; autopilot does not start implementation automatically.
 
 ### The user's role
 
 | Stage | What the user does |
 |-------|--------------------|
-| Request analysis | Answer clarifying questions (one branch at a time, at most 5) |
-| Right after the draft | Answer Open Questions that need confirmation (often none) |
-| After that | Nothing — autonomous execution until the final report |
+| Goal Intake / Condition Crafting | Answer questions that define the outcome and DONE WHEN items |
+| Handoff | Review the condition string and four-file harness |
+| Activation | Decide whether and when to activate the native `/goal` |
+| During execution | Use `/goal status`, `pause`, `resume`, or `clear` when needed |
 
-## 5. Artifacts
+## 6. Artifacts
 
-| Artifact | Location |
-|----------|----------|
-| draft | `_sdd/drafts/<date>_feature_draft_<slug>.md` (renamed with a `_processed_` prefix after spec-sync) |
-| code + tests | target files listed in the draft |
-| AC→evidence table | final response (chat) |
-| implementation ledger | `_sdd/implementation/<date>_implementation_ledger_<slug>.md` |
-| spec updates | `_sdd/spec/` (via spec-sync only) |
+| Artifact | Location / meaning |
+|----------|--------------------|
+| `goal.md` | Completion condition, SDD Loop Protocol, and runtime instructions |
+| `experiments.md` | Pending/done backlog of approach hypotheses |
+| `journal.md` | Append-only evidence, completed feature, remaining gap, and next action |
+| `report.md` | Current conclusion and integration-proof status |
 
-## 6. FAQ
+The four files are created under `_sdd/goal/<YYYY-MM-DD>_<slug>/`. Setup does not create a draft, code changes, an implementation ledger, or spec changes. Those artifacts appear feature by feature only after the user activates the native goal.
 
-- **Does it work in a spec-less repo?** — Yes. It proceeds in spec-less mode and recommends `spec-create` after implementation.
-- **What happened to the old orchestrator-based full pipeline?** — It was removed. If you ever need it back, the last full implementation is preserved at the git tag `full-lane-final`.
+## 7. FAQ
 
-## 7. Related skills
+- **Does this work without an existing spec?** — Goal harness setup does. After activation, the producer contracts and repository state determine whether a loop iteration has a persistent spec change to synchronize.
 
-- `feature-draft` — feature spec + canonical split rules
-- `plan-review` — the draft quality gate `feature-draft` invokes once by default and at most twice at the threshold (each invocation is a single pass with a lightweight return)
-- `implementation` — main-loop RED→GREEN implementation + canonical stop/split rules
-- `implementation-review` — the implementation quality gate `implementation` invokes once at close by default and at most twice at the threshold (each invocation runs correctness shard N ∥ simplicity with a lightweight return)
-- `spec-sync` — global spec synchronization (adapts to planned/implemented evidence)
+## 8. Related skills
+
+- `goal-init` — canonical owner of the five-stage condition/harness setup, including the SDD preset payload
+- `feature-draft` — specifies the next feature and owns split rules inside the active goal
+- `implementation` — implements the draft RED→GREEN and runs its internal quality gate
+- `spec-sync` — synchronizes persistent changes into the global spec

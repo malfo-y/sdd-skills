@@ -15,7 +15,7 @@ Codex bundle: 19 skills. Claude bundle: 21 skills (`git`·`second-opinion` 추�
 | [sdd.md](docs/sdd.md) | SDD 철학과 문제의식 — 왜 스펙 기반 개발인가 | SDD의 배경과 동기가 궁금할 때 |
 | [SDD_CONCEPT.md](docs/SDD_CONCEPT.md) | 핵심 컨셉: 하네스 / 글로벌 스펙 / 임시 스펙 / 코드 / 보조 문서의 레이어 구조와 정보 배치 원칙 | 스펙 구조를 이해하고 싶을 때 |
 | [SDD_SPEC_DEFINITION.md](docs/SDD_SPEC_DEFINITION.md) | 스펙의 정의 — 단순 문서가 아닌 화이트페이퍼형 기준 문서 | 스펙 작성 기준이 필요할 때 |
-| [AUTOPILOT_GUIDE.md](docs/AUTOPILOT_GUIDE.md) | sdd-autopilot 메타스킬 사용 가이드 | 전체 파이프라인을 자동화하고 싶을 때 |
+| [AUTOPILOT_GUIDE.md](docs/AUTOPILOT_GUIDE.md) | sdd-autopilot SDD goal harness 셋업 가이드 | 큰 목표를 native goal로 활성화해 여러 SDD path로 수렴시키고 싶을 때 |
 
 > 영문 문서: `docs/en/` 디렉토리에 일부 문서의 영문 버전이 있습니다.
 

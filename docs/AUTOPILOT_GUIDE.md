@@ -1,84 +1,93 @@
 # SDD-Autopilot 사용 가이드
 
-**버전**: 2.2.0
-**날짜**: 2026-08-09
-
-SDD 체인을 무승인으로 자동 실행하는 sdd-autopilot 메타스킬 가이드
-
----
+**버전**: 3.0.0
+**날짜**: 2026-08-10
 
 ## 1. 개요
 
-**sdd-autopilot**은 기능 요청 하나를 받아 계획 → 구현 → 스펙 동기화를 **체인**으로 끝까지 실행하는 메타스킬입니다. 품질 게이트는 각 스킬 내부에서 돕니다. 별도의 실행 계획서나 승인 단계 없이, 요구사항이 확정되면 곧바로 실행됩니다. 사용자는 초반 요구사항 질문(필요 시)과 draft의 Open Questions에만 답하면 됩니다.
+`sdd-autopilot`은 기능을 즉시 구현하는 독립 runner가 아니라 **SDD 전용 goal harness 셋업 entrypoint**입니다. 기능 목표를 `goal-init(preset=sdd)`에 전달해 자족적 완료조건과 `_sdd/goal/<날짜>_<slug>/` 4파일을 만들고, 사용자가 검토한 뒤 native goal을 직접 활성화하도록 안내합니다.
 
-## 2. 체인
+실제 planning·implementation·spec sync 반복은 setup 중이 아니라 사용자가 활성화한 native goal 안에서 수행됩니다.
 
+## 2. 셋업과 실행 흐름
+
+```text
+/sdd-autopilot <기능 목표>
+  → goal-init(preset=sdd)
+  → Goal Intake → Divergence → Condition Crafting → Harness Setup → Handoff
+  → 조건 문자열 + 4-file harness 제시 (아직 비활성)
+
+사용자가 검토 후 native /goal 활성화
+  → SDD Loop Protocol이 필요한 feature별 SDD path를 반복
+  → 모든 DONE WHEN + final integration proof 통과 시 종료
 ```
-요청 분석
-  → feature-draft   (기능 명세: task별 AC·Target Files — 내부 gate+fix 기본 1회, 임계값 시 최대 2회)
-  → implementation  (메인 루프 직접 RED→GREEN 구현 — 내부 gate+fix 기본 1회, 임계값 시 최대 2회)
-  → spec-sync       (persistent 변경이 있을 때만)
-  → 최종 응답 요약   (리포트 파일 없음)
-```
 
-핵심 원칙:
+`goal-init`의 기존 5단계, evaluator self-check(도구 없이 판정·evidence surface·4,000자 이하), 4파일 형식은 generic 경로와 같습니다. SDD preset은 `goal.md`의 Loop Protocol payload만 바꿉니다.
 
-- **무승인**: 승인 단계가 없습니다. 잘못된 방향은 draft 단계에서 싸게 드러나고, `feature-draft`가 자기 품질 게이트로 계획 품질을 검사합니다.
-- **게이트와 fix는 producer 스킬 소유**: `feature-draft`와 `implementation`은 gate 1과 fix 1을 항상 수행합니다. 첫 호출의 fix 전 finding이 `Critical+High ≥ 3` 또는 `Medium ≥ 5`이면 같은 gate를 두 번째 호출하고 fix 2까지 수행한 뒤 종료합니다. 각 reviewer 호출은 단일 패스이며 세 번째 호출은 없습니다. autopilot은 gate를 다시 호출하거나 fix하지 않고, producer의 최종 응답은 호출 1/2의 finding·fix·검증과 해소되지 않은 finding을 구분해 보고합니다.
-- **경량 반환**: 리뷰 결과는 리포트 파일 없이 응답으로 돌아옵니다. 산출물은 draft 파일, 코드+테스트, implementation ledger, 채팅의 AC→증거 테이블, 갱신된 spec뿐입니다.
+## 3. SDD Loop Protocol
 
-## 3. 분할 (규모 초과 대응)
+활성화된 native goal은 매 턴 다음 순서를 따릅니다.
 
-변경이 단일 컨텍스트로 감당되지 않으면 더 큰 파이프라인으로 올리는 대신 **여러 feature로 분할**합니다:
+1. 아직 충족되지 않은 `DONE WHEN` 또는 실패한 final integration proof가 드러낸 gap에서 가장 작은 next feature를 고릅니다.
+2. reviewed draft가 없으면 `feature-draft`를 실행합니다. draft가 분할되면 현재 goal 안에서 가장 작은 next unit을 고릅니다.
+3. 선택한 draft를 `implementation`으로 구현하고 producer-owned 품질 게이트까지 닫습니다.
+4. persistent 변경이 있으면 `spec-sync`를 실행합니다.
+5. 검증 출력을 대화에 표시하고 evidence·완료 feature·남은 gap·next action을 journal/report에 기록합니다.
+6. 모든 `DONE WHEN`과 final integration proof가 통과했을 때만 종료합니다. 아니면 1단계로 돌아갑니다.
 
-1. draft가 **롤링 분할 draft**가 됩니다 — Part 1 마커에 분할 feature 목록(전체 계획), Part 2에는 첫 feature의 task만.
-2. `spec-sync`가 분할 목록을 **feature별 개별 planned todo**로 global spec에 고정합니다.
-3. 첫 feature부터 체인을 순차 실행하고, 나머지 feature는 각자 차례에 자기 draft부터 체인을 다시 탑니다.
+`feature-draft`가 실행 중 다시 분할돼도 nested `goal-init`을 만들지 않습니다. 현재 native goal이 같은 Loop Protocol에서 다음 최소 feature를 계속 선택합니다.
 
-분할 판정 기준(coverage 눈검산 불가 / 단일 컨텍스트 초과)과 방법의 canonical은 `feature-draft` SKILL이 소유합니다. census형 sweep(rename/전파류)은 분할이 아니라 draft 마지막의 read-only 검증 task로 처리됩니다.
+## 4. 경계
 
-## 4. 사용법
+- **Setup only**: `/sdd-autopilot` 호출 중 initial `feature-draft`·`implementation`·`spec-sync`는 실행되지 않습니다.
+- **사용자 activation**: 스킬은 native goal을 직접 발동하지 않습니다.
+- **기존 goal 불간섭**: current goal status를 조회하지 않고, 기존 goal을 변경·clear·pause·replace·merge하거나 active goal 때문에 setup을 차단하지 않습니다.
+- **Handoff 불변식**: 결과에는 “goal을 활성화하지 않았으며 기존 goal 상태도 변경하지 않았다”가 항상 표시됩니다.
+- **Producer ownership**: 활성화 후 각 feature의 계획·구현 품질 게이트와 fix는 계속 `feature-draft`·`implementation`이 소유합니다.
+- **기존 harness 재사용**: `goal.md`·`experiments.md`·`journal.md`·`report.md`의 역할과 형식을 유지하며 별도 queue/state-machine schema를 만들지 않습니다.
 
-```
-/sdd-autopilot <기능 설명>
+## 5. 사용법
+
+```text
+/sdd-autopilot <검증 가능한 멀티턴 기능 목표>
 ```
 
 예:
 
-```
-/sdd-autopilot JWT 기반 인증 시스템을 구현해줘. 로그인, 로그아웃, 토큰 갱신 포함.
-/sdd-autopilot 로그인 버튼 색상을 파란색에서 초록색으로 변경해줘.
+```text
+/sdd-autopilot JWT 기반 인증 시스템을 구현해줘. 로그인, 로그아웃, 토큰 갱신과 통합 검증 포함.
+/sdd-autopilot legacy 결제 모듈을 새 API로 마이그레이션하고 회귀 테스트와 문서 동기화까지 완료해줘.
 ```
 
-**트리거 키워드**: `sdd-autopilot`, `autopilot`, `자동 구현`, `end-to-end 구현`, `자동으로 구현해줘`
+`/goal`은 verifiable end state가 있는 멀티턴 작업에 적합합니다. 한 줄 수정 같은 단발 작업이면 `goal-init` 적합성 gate가 재정의 또는 단발 작업 전환을 안내하며, autopilot이 구현을 자동 시작하지 않습니다.
 
 ### 사용자 역할
 
 | 시점 | 사용자가 하는 것 |
 |------|----------------|
-| 요청 분석 | 부족한 정보에 대한 질문 답변 (1회 1분기, 최대 5회) |
-| draft 직후 | Open Questions 중 확인 필요 항목 답변 (없으면 개입 없음) |
-| 이후 | 없음 — 최종 보고까지 자율 실행 |
+| Goal Intake/Condition Crafting | 목표와 DONE WHEN을 확정하는 질문에 답변 |
+| Handoff | 조건 문자열과 4파일 harness 검토 |
+| Activation | native `/goal`을 직접 활성화할지와 시점을 결정 |
+| 실행 중 | 필요할 때 `/goal status`·`pause`·`resume`·`clear` 사용 |
 
-## 5. 산출물
+## 6. 산출물
 
-| 산출물 | 위치 |
-|--------|------|
-| draft | `_sdd/drafts/<날짜>_feature_draft_<slug>.md` (spec-sync 후 `_processed_` 접두로 이동) |
-| 코드 + 테스트 | 대상 파일 (draft의 Target Files) |
-| AC→증거 테이블 | 최종 응답 (채팅) |
-| implementation ledger | `_sdd/implementation/<날짜>_implementation_ledger_<slug>.md` |
-| spec 갱신 | `_sdd/spec/` (spec-sync 경유) |
+| 산출물 | 위치 / 의미 |
+|--------|-------------|
+| `goal.md` | 완료조건 + SDD Loop Protocol + runtime 실행법 |
+| `experiments.md` | 접근 가설 pending/done 백로그 |
+| `journal.md` | evidence·완료 feature·남은 gap·next action append-only 기록 |
+| `report.md` | 현재 결론과 integration proof 상태 |
 
-## 6. FAQ
+네 파일은 `_sdd/goal/<YYYY-MM-DD>_<slug>/`에 생성됩니다. setup 직후 draft·코드·implementation ledger·spec 변경은 생기지 않습니다. 해당 산출물은 사용자가 native goal을 활성화한 뒤 Loop Protocol이 feature별로 만듭니다.
 
-- **spec이 없는 repo에서도 되나요?** — 됩니다. spec-less mode로 진행하고, 구현 완료 후 `spec-create`를 추천받습니다.
-- **예전 orchestrator 기반 full 파이프라인은?** — 제거되었습니다. 복구가 필요하면 git tag `full-lane-final`에 마지막 전체 구현이 보존되어 있습니다.
+## 7. FAQ
 
-## 7. 관련 스킬
+- **spec이 없는 repo에서도 되나요?** — goal harness setup은 가능합니다. 활성화 후 persistent spec이 없으면 해당 loop의 `spec-sync` 처리 여부는 producer contract와 repo 상태에 따라 결정됩니다.
 
-- `feature-draft` — 기능 명세 + 분할 규칙 canonical
-- `plan-review` — `feature-draft`가 내부에서 기본 한 번, 임계값 도달 시 최대 두 번 호출하는 draft 품질 게이트 (각 호출은 단일 패스, 경량 반환)
-- `implementation` — 메인 루프 직접 RED→GREEN 구현 + 중단·분할 규칙 canonical
-- `implementation-review` — `implementation`이 마감에서 기본 한 번, 임계값 도달 시 최대 두 번 호출하는 구현 품질 게이트 (각 호출은 correctness shard N ∥ simplicity, 경량 반환)
-- `spec-sync` — global spec 동기화 (planned/implemented 적응)
+## 8. 관련 스킬
+
+- `goal-init` — 5단계 condition/harness setup의 canonical owner; SDD preset payload 포함
+- `feature-draft` — 활성 goal이 선택한 next feature의 명세와 분할 규칙
+- `implementation` — draft를 RED→GREEN으로 구현하고 내부 품질 게이트 수행
+- `spec-sync` — persistent 변경의 global spec 동기화

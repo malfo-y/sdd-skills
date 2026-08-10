@@ -1,5 +1,38 @@
 # Decision Log
 
+## 2026-08-10 - sdd-autopilot을 goal-init SDD instance로 전환 (v4.6.57 → v4.7.0, post-implementation sync)
+
+### Context
+
+기존 `sdd-autopilot`은 feature draft부터 구현·리뷰·spec sync까지 독립적으로 실행하는 end-to-end runner였다. 이 구조는 이미 native goal의 반복 실행과 4-file harness를 소유하는 `goal-init`과 장기 실행 책임이 겹쳤고, active goal 감지·차단과 별도 orchestration 상태가 사용자 activation 모델을 복잡하게 만들었다.
+
+### Decision
+
+1. `sdd-autopilot`은 독립 runner가 아니라 existing `goal-init(preset=sdd)`를 호출하고 결과를 relay하는 setup-only thin entrypoint다.
+2. `goal-init`은 generic 계약의 5단계, condition self-check, `goal.md`·`experiments.md`·`journal.md`·`report.md` 4-file harness를 그대로 보존한다. `preset=sdd`는 native goal 활성화 뒤 미충족 DONE WHEN 또는 실패한 final integration-proof gap에서 다음 최소 단위를 선택하고, `feature-draft → implementation → persistent spec-sync → evidence 기록 → final integration proof`로 수렴하는 6-step SDD Loop Protocol payload만 추가한다.
+3. setup에서는 initial producer 실행, native goal 활성화, current goal status 조회, 기존 goal mutation이나 active-goal blocker를 모두 금지한다. activation은 사용자가 결정하며, active goal 안의 rolling split은 current goal의 smallest next unit으로 계속하고 nested `goal-init`을 만들지 않는다.
+4. formal Goal Contract, queue/status schema, goal-level reviewer는 도입하지 않는다. 기존 `goal-init` contract를 단일 소스로 유지하고 producer-owned quality gate도 재사용한다.
+5. runtime별 dispatch는 Claude의 plugin-prefixed invocation과 Codex의 active installed skill catalog를 사용한다.
+
+### Alternatives
+
+- 기존 end-to-end autopilot runner와 active-goal conflict guard를 유지하는 안은 native goal loop와 실행·상태 책임이 중복되므로 채택하지 않았다.
+- 별도 Goal Contract, initial feature queue, status manifest, goal-level reviewer를 추가하는 안은 기존 4-file harness와 producer-owned gate로 충족되는 책임을 이중화하므로 채택하지 않았다.
+
+### Rationale / Evidence
+
+- setup과 execution의 소유자를 분리하면 `sdd-autopilot`은 목표 조건과 harness 준비만 담당하고, 반복·재개·완료 판정은 native goal이 일관되게 소유한다.
+- implementation ledger에서 draft AC1–AC20이 모두 MET다. exact live target 10/10, excluded surface 무변경, stale runner/blocker census 0, Claude/Codex template payload parity, `git diff --check` PASS를 확인했다.
+- implementation-review gate 1의 `C2 H1 M2 L0`와 gate 2의 `C0 H0 M3 L0` finding은 모두 수정했고, gate 3 임계값에는 도달하지 않았다.
+
+### Changes
+
+- `.claude/skills/goal-init/`, `.codex/skills/goal-init/` — 기존 generic harness에 `preset=sdd` adapter와 6-step SDD Loop Protocol payload 추가
+- `.claude/skills/sdd-autopilot/SKILL.md`, `.codex/skills/sdd-autopilot/SKILL.md` — setup-only thin entrypoint로 전환
+- `README.md`, `docs/AUTOPILOT_GUIDE.md`, `docs/en/AUTOPILOT_GUIDE.md`, `_sdd/env.md` — setup → 사용자 activation → native goal loop 모델로 정렬하고 obsolete pre-flight 제거
+- `_sdd/spec/main.md`, `_sdd/spec/components.md`, `_sdd/spec/usage-guide.md` — v4.7.0 current truth 반영 (본문 묶음 소유)
+- `_sdd/drafts/_processed_2026-08-10_feature_draft_sdd_autopilot_goal_instance.md` — 사용 input 처리 표시
+
 ## 2026-08-10 - Bounded conditional second quality-gate pass (v4.6.56 → v4.6.57, post-implementation sync)
 
 ### Context
