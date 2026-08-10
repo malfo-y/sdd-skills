@@ -7,11 +7,13 @@ This document explains the default SDD workflow and where each document layer is
 ```text
 discussion
   -> align global direction
-  -> feature draft (plan-review gate + one fix)
-  -> implementation (implementation-review gate + one fix)
+  -> feature draft (plan-review + fix: one pass by default, at most two at the threshold)
+  -> implementation (implementation-review + fix: one pass by default, at most two at the threshold)
   -> verification
   -> global spec sync
 ```
+
+Each reviewer invocation is a single pass. When the first invocation's pre-fix findings reach `Critical+High >= 3` or `Medium >= 5`, the producer (`feature-draft` or `implementation`) invokes the same gate a second time, applies the fixes itself, and stops. There is no third invocation, and neither the user nor autopilot invokes or fixes the gate separately.
 
 ## 2. When the harness is used
 

@@ -1,7 +1,7 @@
 # SDD-Autopilot 사용 가이드
 
-**버전**: 2.1.0
-**날짜**: 2026-07-26
+**버전**: 2.2.0
+**날짜**: 2026-08-09
 
 SDD 체인을 무승인으로 자동 실행하는 sdd-autopilot 메타스킬 가이드
 
@@ -15,16 +15,16 @@ SDD 체인을 무승인으로 자동 실행하는 sdd-autopilot 메타스킬 가
 
 ```
 요청 분석
-  → feature-draft   (기능 명세: task별 AC·Target Files, ~1분 — 내부 품질 게이트 + fix 1회)
-  → implementation  (메인 루프 직접 RED→GREEN 구현 — 내부 품질 게이트 + fix 1회)
+  → feature-draft   (기능 명세: task별 AC·Target Files — 내부 gate+fix 기본 1회, 임계값 시 최대 2회)
+  → implementation  (메인 루프 직접 RED→GREEN 구현 — 내부 gate+fix 기본 1회, 임계값 시 최대 2회)
   → spec-sync       (persistent 변경이 있을 때만)
   → 최종 응답 요약   (리포트 파일 없음)
 ```
 
 핵심 원칙:
 
-- **무승인**: 승인 단계가 없습니다. 잘못된 방향은 draft 단계(~1분)에서 싸게 드러나고, `feature-draft`가 자기 품질 게이트로 계획 품질을 검사합니다.
-- **게이트와 fix는 producer 스킬 소유**: 각 품질 게이트는 그 산출물을 만든 스킬(`feature-draft`·`implementation`)이 내부에서 1회 수행하고 fix도 1회입니다 — autopilot이 게이트를 다시 호출하지 않습니다. review-fix loop는 돌지 않으므로 1회 fix로 안 닫히는 finding은 최종 보고에 남고, 반복 재발은 계획 재설계·분할 신호로 취급됩니다.
+- **무승인**: 승인 단계가 없습니다. 잘못된 방향은 draft 단계에서 싸게 드러나고, `feature-draft`가 자기 품질 게이트로 계획 품질을 검사합니다.
+- **게이트와 fix는 producer 스킬 소유**: `feature-draft`와 `implementation`은 gate 1과 fix 1을 항상 수행합니다. 첫 호출의 fix 전 finding이 `Critical+High ≥ 3` 또는 `Medium ≥ 5`이면 같은 gate를 두 번째 호출하고 fix 2까지 수행한 뒤 종료합니다. 각 reviewer 호출은 단일 패스이며 세 번째 호출은 없습니다. autopilot은 gate를 다시 호출하거나 fix하지 않고, producer의 최종 응답은 호출 1/2의 finding·fix·검증과 해소되지 않은 finding을 구분해 보고합니다.
 - **경량 반환**: 리뷰 결과는 리포트 파일 없이 응답으로 돌아옵니다. 산출물은 draft 파일, 코드+테스트, implementation ledger, 채팅의 AC→증거 테이블, 갱신된 spec뿐입니다.
 
 ## 3. 분할 (규모 초과 대응)
@@ -78,7 +78,7 @@ SDD 체인을 무승인으로 자동 실행하는 sdd-autopilot 메타스킬 가
 ## 7. 관련 스킬
 
 - `feature-draft` — 기능 명세 + 분할 규칙 canonical
-- `plan-review` — `feature-draft`가 내부에서 1회 수행하는 draft 품질 게이트 (단일 패스, 경량 반환)
+- `plan-review` — `feature-draft`가 내부에서 기본 한 번, 임계값 도달 시 최대 두 번 호출하는 draft 품질 게이트 (각 호출은 단일 패스, 경량 반환)
 - `implementation` — 메인 루프 직접 RED→GREEN 구현 + 중단·분할 규칙 canonical
-- `implementation-review` — `implementation`이 마감에서 1회 수행하는 구현 품질 게이트 (correctness shard N ∥ simplicity, 경량 반환)
+- `implementation-review` — `implementation`이 마감에서 기본 한 번, 임계값 도달 시 최대 두 번 호출하는 구현 품질 게이트 (각 호출은 correctness shard N ∥ simplicity, 경량 반환)
 - `spec-sync` — global spec 동기화 (planned/implemented 적응)

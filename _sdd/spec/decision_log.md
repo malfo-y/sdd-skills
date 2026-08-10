@@ -1,5 +1,32 @@
 # Decision Log
 
+## 2026-08-10 - Bounded conditional second quality-gate pass (v4.6.56 → v4.6.57, post-implementation sync)
+
+### Context
+
+v4.6.30은 `feature-draft`와 `implementation`의 첫 품질 게이트 finding이 과다해도 producer가 fix 1회 뒤 추가 gate를 실행하지 않고 사용자에게 재리뷰를 권고하는 advisory-only 계약을 채택했다. 이 방식은 과다 finding 회차의 fix 결과를 producer 마감 안에서 다시 검증하지 못하고, 게이트 재호출과 fix 책임을 사용자에게 넘겼다.
+
+### Decision
+
+1. `feature-draft`와 `implementation` producer는 gate 1과 fix 1을 항상 수행한다. gate-1 fix 전 raw finding이 `Critical+High ≥ 3` 또는 `Medium ≥ 5`이면(Low 제외), producer가 같은 gate를 정확히 한 번 더 호출하고 gate 2 finding에 fix 2를 적용한다. `implementation-review` shard 수치는 dedup하지 않은 raw 합계를 사용한다.
+2. fix 2 뒤에는 producer별 표적 검증으로 닫는다. `feature-draft`는 finding이 인용한 평가조건과 final draft evidence를 재확인하고, `implementation`은 fix diff의 커버리지 델타 적용 뒤 회귀를 재실행하고 AC→증거 테이블을 갱신한다. gate 3은 호출하지 않는다.
+3. gate-2 fix 전 raw finding도 같은 임계값에 도달하면 producer는 gate 3 대신 수동 follow-up review 1회를 권고한다. 해소하지 못한 finding과 두 호출의 severity·fix·검증 결과는 구분해 최종 보고한다.
+4. 게이트 호출과 fix의 소유자는 producer다. 사용자와 `sdd-autopilot`은 gate를 별도 재호출하거나 fix하지 않으며, `plan-review`·`implementation-review` reviewer/orchestrator는 호출당 single-pass/read-only/relay 계약을 유지한다.
+5. 이 결정은 v4.6.30의 advisory-only 동작을 supersede한다. 기본 경로는 gate/fix 1회이고 임계값 도달 경로만 최대 2회이며, 어느 경로에서도 producer가 세 번째 gate를 호출하지 않는다.
+
+### Rationale / Evidence
+
+- producer가 과다 finding 회차의 두 번째 검증과 수정을 같은 마감 계약 안에서 소유하되, 최대 2회 상한과 gate당 single-pass 경계를 유지해 무한 review-fix loop를 막는다.
+- 구현은 producer runtime 4파일과 한·영 workflow/autopilot 문서 4파일의 exact 8개 표면에 한정됐다. 구조적 RED→GREEN, AC 14/14, stale-contract census 0, Claude/Codex runtime mirror parity, reviewer surface 무변경, `git diff --check`가 통과했다.
+- 최초 implementation-review는 `C0 H0 M1 L0`이었고 M1을 수정한 뒤 회귀가 통과했다. gate-2 과다 finding의 수동 follow-up 권고를 더한 후속 검토는 `C0 H0 M0 L0`이었다.
+
+### Changes
+
+- `.claude/skills/{feature-draft,implementation}/SKILL.md`, `.codex/skills/{feature-draft,implementation}/SKILL.md` — producer-owned bounded conditional second gate/fix와 검증·보고 계약
+- `docs/{SDD_WORKFLOW,AUTOPILOT_GUIDE}.md`, `docs/en/{SDD_WORKFLOW,AUTOPILOT_GUIDE}.md` — 기본 1회·임계값 경로 최대 2회·ownership·no-third 사용자 안내
+- `_sdd/spec/main.md`, `_sdd/spec/components.md`, `_sdd/spec/usage-guide.md` — v4.6.57 current truth 반영 (본문 묶음 소유)
+- `_sdd/drafts/_processed_2026-08-09_feature_draft_bounded_fix_loop.md` — 사용 input 처리 표시
+
 ## 2026-08-08 - AGENTS.md 하네스 규범 다이어트 (SKILL_AUTHORING_NORMS 하네스 적용) (v4.6.55 → v4.6.56, post-implementation sync)
 
 ### Context

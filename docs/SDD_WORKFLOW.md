@@ -7,11 +7,13 @@
 ```text
 discussion
   -> global direction 정리
-  -> feature draft (plan-review 게이트 + fix 1회)
-  -> implementation (implementation-review 게이트 + fix 1회)
+  -> feature draft (plan-review + fix: 기본 1회, 임계값 도달 시 최대 2회)
+  -> implementation (implementation-review + fix: 기본 1회, 임계값 도달 시 최대 2회)
   -> verification
   -> global spec sync
 ```
+
+각 reviewer 호출은 단일 패스다. 첫 호출의 fix 전 finding이 `Critical+High ≥ 3` 또는 `Medium ≥ 5`이면 producer인 `feature-draft`나 `implementation`이 같은 gate를 두 번째 호출하고 직접 fix한 뒤 종료한다. 세 번째 호출은 없으며 사용자나 autopilot이 gate를 별도로 호출하거나 fix하지 않는다.
 
 ## 2. Harness가 쓰이는 시점
 
