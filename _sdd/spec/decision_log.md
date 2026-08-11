@@ -1,5 +1,33 @@
 # Decision Log
 
+## 2026-08-12 - 리뷰 읽기 다이어트 — Claim Manifest 계약 + 위험 적응형 읽기·ledger MET 접기 (v4.7.4 → v4.7.5, post-implementation sync)
+
+### Context
+
+병렬화가 완결된 상태에서 리뷰 벽시계는 pole 작성자의 "읽고 확인할 양"이 결정한다. plan-review 실측 렌즈는 draft 산문 전체에서 repo 대조가 필요한 주장을 발굴해 하나씩 확인했고, implementation-review Step 3 ①은 변경 파일을 상한 없이 전문 Read했으며, impl-review·pr-review ledger는 통과(MET) verdict까지 증거 행을 전사했다. 이 읽기·작성 비용을 확인 항목 무손실 조건으로 줄일 필요가 있었다(롤링 분할 F1+F2, 두 feature 모두 이번에 구현 완료 — 잔여 없음).
+
+### Decision
+
+1. **Claim Manifest 계약 신설 (F1)**: draft의 repo 대조 필요 사실 주장은 `# Claim Manifest` 표(`| ID | Claim | Query | Expected |`, 행 ID `CM<n>`)가 단일 소스다. AC 평가방법·산문은 `CM<n>` ID로 참조하고 재서술하지 않으며, Target Files·Propagation `Discovery evidence`와 중복 수록하지 않는다. 대조 필요 주장이 없으면 `없음` 1줄로 대체한다.
+2. **plan-review 실측 렌즈 개편 (F1)**: content anchor·사실 전제 대조는 manifest 행 전수 순회(각 행 Query 재실행 → Expected 대조)로 수행하고 산문에서 새 대조 대상을 발굴하지 않는다. `CM<n>` 참조 없는 repo-사실 주장은 repo 대조 없이 producer 계약 위반으로 `Verification Weakness`에 귀속한다. manifest 없는 legacy draft는 현행 산문 발굴 방식으로 fallback한다. 판단 렌즈·5-smell rubric·severity는 불변.
+3. **위험 적응형 읽기 (F2)**: implementation-review-agent Step 3 ①을 "diff hunk+주변 문맥 기본, 승격 트리거 시 파일 전문" 계단으로 개편한다. 승격 트리거 6종 — ①실행 semantics 파일 ②제어 흐름·상태·에러 경로 접촉 ③행동 AC ④고밀도 변경(사실상 재작성) ⑤hunk 검토 중 결함 의심 ⑥draft의 Open Questions·낮은 확신도 표기. 미승격 파일은 반환에 `hunk-scoped` 표기. 기준 문서 전문 Read·correctness 능동 검토 결속은 불변.
+4. **ledger MET 접기 (F2)**: implementation-review Verification ledger와 pr-review AC 검증 ledger는 문제 verdict(NOT MET·UNTESTED·PARTIAL·FAIL)만 증거 행을 유지하고 MET은 축약 한 줄(`MET: AC1–AC5` 꼴)로 접는다. 판정 의무("증거 없는 MET 금지")는 보존 — 통과 증거를 반환에 전사하지 않을 뿐이다.
+
+### Rationale / Evidence
+
+- F1은 실측 렌즈의 산문 발굴을 producer가 끝낸 열거의 행 순회로 대체한다 — 확인 항목 무손실, 줄어드는 것은 발굴 비용뿐. F2는 저위험 변경(산문·구조 AC·무신호)의 읽기를 hunk로 줄이고 통과 증거 전사를 접는다 — 탐지·판정 의무 보존, 감사 흔적만 희생.
+- 기각 대안: reviewer model 강등(과거 실측 효과 없음), 표본 검증(확인 항목 누락 방식 거부), 존재 확인 스크립트화(위장 PASS 위험).
+- 잔여 위험 수용: hunk 밖 원거리 불변식 파괴는 구조 AC+문서류+무신호 버킷에서 놓칠 수 있음 — 승격 트리거 ③⑤가 부분 완화. 속도 효과는 플러그인 갱신 후 실측 예정(planned 관측).
+- 검증: 사용자 지시 "최소한의 리뷰"에 따라 plan-review 게이트 생략, correctness 단일 dispatch ×2로 검증 — F1 M1+L1·F2 L1 fix 반영. 전 18 AC MET(fresh grep evidence), 구 문면 census case-insensitive 0건, 판정 의무 문면 역검증 통과.
+
+### Changes
+
+- `.claude/skills/feature-draft/SKILL.md`, `.codex/skills/feature-draft/SKILL.md` — Claim Manifest template 섹션·단일 소스 규칙 (commit 64caa42)
+- `.claude/agents/plan-review-agent.md`, `.codex/agents/plan-review-agent.toml` — 실측 렌즈 manifest 행 순회·legacy fallback·Verification Weakness 귀속 (commit 64caa42)
+- `.claude/agents/implementation-review-agent.md`, `.codex/agents/implementation-review-agent.toml` — Step 3 ① hunk 기본+승격 트리거 6종+`hunk-scoped` 표기, ledger MET 접기 (commit 81c889e)
+- `.claude/agents/pr-review-agent.md`, `.codex/agents/pr-review-agent.toml` — AC 검증 ledger MET 접기 (commit 81c889e)
+- `_sdd/drafts/_processed_2026-08-11_feature_draft_review_claim_manifest.md`, `_sdd/drafts/_processed_2026-08-12_feature_draft_adaptive_read_ledger_diet.md` — 사용 input 처리 표시 (F1·F2 모두 구현 완료, 롤링 잔여 없음)
+
 ## 2026-08-12 - Single-use Abstraction을 중복/DRY 축으로 통합 — plan-review 6→5 smell·simplicity 5→4 차원 (v4.7.3 → v4.7.4, post-implementation sync)
 
 ### Context
