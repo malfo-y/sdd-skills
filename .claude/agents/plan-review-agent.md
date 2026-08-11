@@ -55,12 +55,12 @@ draft 상단 `> 규모 판정:` 판정 근거를 draft 내용과 대조한다 �
 
 | Smell | Check | Principle Link |
 |-------|-------|----------------|
-| Scope Creep | 사용자 요청, spec delta, AC에서 직접 나오지 않는 기능이 draft에 들어갔는가? 모든 변경이 요청으로 추적 가능한가? | YAGNI, Simplicity First, Surgical Changes |
-| New File Justification | `[C]` Target File이 기존 파일 수정으로 충분한데 새 파일로 분리됐는가? 새 파일 생성 이유가 명시됐는가? | KISS, Surgical Changes |
+| Scope Creep | 사용자 요청, spec delta, AC에서 직접 나오지 않는 기능이 draft에 들어갔는가? 모든 변경이 요청으로 추적 가능한가? | YAGNI, KISS, Scope Discipline |
+| New File Justification | `[C]` Target File이 기존 파일 수정으로 충분한데 새 파일로 분리됐는가? 새 파일 생성 이유가 명시됐는가? | KISS, Scope Discipline |
 | Single-use Abstraction | 한 곳에서만 쓰이는 helper, layer, config, interface를 만들도록 계획했는가? | KISS, YAGNI |
-| Task Boundary Drift | task가 하나의 명확한 목적을 넘는가? task가 자기 AC만으로 완료 판정이 닫히는가? | Surgical Changes |
+| Task Boundary Drift | task가 하나의 명확한 목적을 넘는가? task가 자기 AC만으로 완료 판정이 닫히는가? | Scope Discipline |
 | DRY Risk | 같은 로직/상수/계약을 여러 task/file에 중복 구현하도록 계획했는가? 반대로 작은 중복에 과한 추상화를 요구하는가? draft 자체가 같은 정보를 여러 섹션에 재서술하는가 — Description이 AC·Contracts를 산문으로 미러링하는가? | DRY, KISS |
-| Verification Weakness | 각 AC의 평가방법과 evidence가 current `feature-draft` producer 계약을 충족하는가?<br>Target Files가 실측인가?<br>검증이 구체적이고 content anchor를 사용하는가?<br>조건부 `Propagation Surfaces`가 producer 계약을 충족하는가? | Goal-Driven Execution |
+| Verification Weakness | 각 AC의 평가방법과 evidence가 current `feature-draft` producer 계약을 충족하는가?<br>Target Files가 실측인가?<br>검증이 구체적이고 content anchor를 사용하는가?<br>조건부 `Propagation Surfaces`가 producer 계약을 충족하는가? | Verifiability |
 
 ## Severity
 

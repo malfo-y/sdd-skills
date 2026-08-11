@@ -1,5 +1,60 @@
 # Decision Log
 
+## 2026-08-11 - 하네스 §0을 SDD 전용 3원칙으로 교체 (v4.7.1 → v4.7.2, post-implementation sync)
+
+### Context
+
+SDD bundle의 하네스 §0은 `Think Before Coding`·`Simplicity First`·`Surgical Changes`·`Goal-Driven Execution`이라는 일반 agent 작업 원칙을 배포하고 있었다. 이 원칙은 개인·조직 하네스와 중복되기 쉽고 SDD 고유 계약이 아니므로, truth lifetime 혼합·evidence 없는 승격·handoff 소실 또는 과잉 기록이라는 SDD 고유 실패를 직접 막는 원칙으로 소유 경계를 좁힐 필요가 있었다.
+
+### Decision
+
+1. `AGENTS.md`와 spec-create/spec-upgrade의 Claude·Codex harness template 4벌에서 기존 일반 원칙과 일반 보조 문면을 제거하고, §0을 아래 세 SDD failure-prevention invariant로 교체한다.
+   - `Separate Truth by Lifetime`: repo-wide decision은 global spec에, change-specific execution detail은 temporary artifact에 둔다.
+   - `Evidence Before Promotion`: goal과 acceptance criteria가 검증된 outcome만 current truth로 승격하고, 나머지는 planned 또는 unverified로 둔다.
+   - `Persist Handoffs, Not Process`: 다음 단계나 재개에 필요한 결정과 evidence만 기록하고, 재현 가능한 process narration은 보존하지 않는다.
+2. `Evidence Before Promotion`은 구현마다 자동으로 spec-sync하라는 규칙도, 사람 사용자의 명시적 승인을 요구하는 규칙도 아니다. goal·AC에 비춰 outcome이 검증됐는지가 승격 조건이다.
+3. §1–§5 workflow contract, `docs/agentic_coding_principle.md` reference asset, `plan-review`의 reviewer-local KISS/YAGNI/DRY/Scope Discipline/Verifiability rubric은 변경하지 않는다.
+4. 이 결정은 v4.7.1에서 일반 네 원칙과 상세 문서 포인터를 하네스에 유지한 판단만 supersede한다. `plan-review` 분류 어휘를 하네스 원칙 이름에서 분리한 판단은 유지한다.
+
+### Rationale / Evidence
+
+- SDD bundle이 배포할 최소 공통 원칙을 SDD 고유 실패 방지에 한정하면 개인 agent 원칙과의 중복 없이 global/temporary truth 경계, evidence 기반 승격, persistent handoff 범위를 명시할 수 있다.
+- 다섯 live harness surface에서 세 새 contract가 각각 정확히 5회 확인됐고, 기존 일곱 generic pattern은 0회다. 네 template의 SHA-256은 1종이며 다섯 target의 변경 hunk는 모두 §0 안에 한정됐다.
+- `docs/agentic_coding_principle.md` diff는 없고 Claude/Codex `plan-review` rubric parity와 기존 rubric mapping이 보존됐다. `git diff --check`와 TOML parse도 통과했다.
+- implementation-review correctness는 Task 1 AC1–AC3과 Task 2 AC1을 모두 MET, finding 0건으로 판정했고 simplicity는 다섯 차원 모두 PASS했다.
+
+### Changes
+
+- `AGENTS.md`, `.claude/skills/{spec-create,spec-upgrade}/references/agents-harness-template.md`, `.codex/skills/{spec-create,spec-upgrade}/references/agents-harness-template.md` — §0을 SDD 전용 3원칙으로 교체
+- `_sdd/spec/main.md` — harness layer current truth와 spec version 4.7.2 반영 (본문 묶음 소유)
+- `_sdd/drafts/_processed_2026-08-11_feature_draft_sdd_specific_harness_principles.md` — 사용 input 처리 표시
+
+## 2026-08-11 - AGENTS 작업 원칙과 plan-review 분류 어휘 결합 해제 (v4.7.0 → v4.7.1, post-implementation sync)
+
+### Context
+
+2026-07-29 결정은 `AGENTS.md` §0의 네 작업 원칙 이름을 `plan-review` finding의 `Principle Link` 앵커로 고정했다. 그러나 하네스의 repo 작업 규범과 reviewer의 분류 rubric은 서로 다른 판단 표면이며, 이름을 함께 유지해야 할 지속 이유가 없었다. 이 결합은 원칙이나 review 품질을 강화하기보다 두 계약의 어휘 변경을 불필요하게 전파시키는 결합 비용을 만들었다.
+
+### Decision
+
+1. `AGENTS.md` §0의 `Think Before Coding`·`Simplicity First`·`Surgical Changes`·`Goal-Driven Execution`은 repo 작업 규범으로 유지한다. `docs/agentic_coding_principle.md` 포인터도 유지한다.
+2. `plan-review`는 reviewer-local 분류 어휘인 KISS·YAGNI·DRY·Scope Discipline·Verifiability를 독립적으로 소유한다. `Principle Link` 반환 필드는 유지하되 값의 이름은 하네스 §0과 결합하지 않는다.
+3. “하네스 §0 원칙 이름이 `Principle Link`의 앵커이며 이름 변경 시 인용이 끊긴다”는 repo-wide invariant를 current global truth에서 제거한다. 이는 2026-07-29 결정 #8 중 이름 결합 판단만 supersede하며, 하네스 §0을 명명된 네 작업 원칙으로 교체한 나머지 판단은 유지한다.
+
+### Rationale / Evidence
+
+- 작업 규범과 review rubric을 각 소유 표면에 두면 한쪽의 용어 변경이 다른 쪽의 contract migration을 강제하지 않는다.
+- working-tree diff는 `AGENTS.md`, byte-identical harness template 4벌, mirrored plan-review rubric 2벌의 전수 표면을 변경했다. 구조적 RED에서 `coupling_count=5`, `agent_name_count=8`을 관찰했고 GREEN에서 모두 0이다.
+- 네 작업 원칙은 4개, `docs/agentic_coding_principle.md` 포인터는 1개로 보존됐다. harness mirror와 Claude/Codex reviewer rubric parity가 통과했다.
+- implementation-review correctness는 AC1–AC3과 census AC를 모두 MET로 판정했고 finding 0건이었다. simplicity도 다섯 차원 모두 PASS했다.
+
+### Changes
+
+- `AGENTS.md`, `.claude/skills/{spec-create,spec-upgrade}/references/agents-harness-template.md`, `.codex/skills/{spec-create,spec-upgrade}/references/agents-harness-template.md` — plan-review 이름 앵커 설명 제거
+- `.claude/agents/plan-review-agent.md`, `.codex/agents/plan-review-agent.toml` — reviewer-local KISS/YAGNI/DRY/Scope Discipline/Verifiability rubric으로 정렬
+- `_sdd/spec/main.md` — repo-wide 이름 결합 invariant 제거 및 v4.7.1 current truth 반영 (본문 묶음 소유)
+- `_sdd/drafts/_processed_2026-08-11_feature_draft_decouple_agent_principles_plan_review.md` — 사용 input 처리 표시
+
 ## 2026-08-10 - sdd-autopilot을 goal-init SDD instance로 전환 (v4.6.57 → v4.7.0, post-implementation sync)
 
 ### Context

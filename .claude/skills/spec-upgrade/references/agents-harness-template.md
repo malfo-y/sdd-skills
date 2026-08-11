@@ -8,15 +8,9 @@
 
 ## 0. 작업 원칙 (모든 작업에 우선)
 
-- **Think Before Coding**: Don't assume. Don't hide confusion. Surface tradeoffs.
-- **Simplicity First**: Minimum code that solves the problem. Nothing speculative.
-- **Surgical Changes**: Touch only what you must. Clean up only your own mess.
-- **Goal-Driven Execution**: Define success criteria. Loop until verified.
-
-네 원칙은 리뷰 단계가 finding의 근거로 인용하는 이름이다(`plan-review`의 `Principle Link`). 이름을 바꾸면 그 인용이 끊긴다.
-
-- 무인 실행(unattended) 중이라 물어볼 수 없으면 막히지 말고, 가장 합당한 해석을 골라 진행하되 그 가정을 기록한다.
-- 더 나은 방법이 보이면 제안한다. 전술적 수정보다 오래 가는 개선을 우선한다.
+- **Separate Truth by Lifetime**: Keep repo-wide decisions in the global spec and change-specific execution detail in temporary artifacts.
+- **Evidence Before Promotion**: Promote outcomes to current truth only after goals and acceptance criteria are verified; otherwise keep them planned or unverified.
+- **Persist Handoffs, Not Process**: Record only the decisions and evidence needed by the next stage or a resumed session, not reproducible process narration.
 
 ## 1. 작업 시작 시 읽는 순서
 
