@@ -2,6 +2,16 @@
 
 > 이 파일은 `_sdd/spec/main.md`의 **본문이 바뀐 버전만** 기록한다 — 본문 무변경 sync(헤더 날짜만 갱신)는 entry를 남기지 않으므로 버전 번호에 결번이 생길 수 있다.
 
+#### v4.7.2 (2026-08-11)
+
+- **하네스 §0을 SDD 전용 3원칙으로 교체 (post-implementation sync)**: `AGENTS.md`와 spec-create/spec-upgrade의 Claude·Codex harness template 4벌에서 일반 agent 작업 원칙과 보조 문면을 제거하고, `Separate Truth by Lifetime`·`Evidence Before Promotion`·`Persist Handoffs, Not Process` 세 SDD failure-prevention invariant로 교체했다. evidence 기반 승격은 goal·AC 검증을 조건으로 하며 구현마다 자동 spec-sync하거나 사람 승인을 의무화하지 않는다.
+- **보존 범위와 검증 evidence**: §1–§5 workflow contract, `docs/agentic_coding_principle.md` reference asset, reviewer-local `plan-review` rubric은 유지했다. 새 contract는 다섯 live surface에서 각각 5회, 기존 일곱 generic pattern은 0회였고 네 template SHA-256 1종·§0 hunk 한정·TOML parse·`git diff --check`가 통과했다. implementation-review correctness는 Task 1 AC1–AC3과 Task 2 AC1을 모두 MET/finding 0건으로, simplicity는 다섯 차원 PASS로 판정했다.
+
+#### v4.7.1 (2026-08-11)
+
+- **AGENTS 작업 원칙과 plan-review 분류 어휘 결합 해제 (post-implementation sync)**: `AGENTS.md` §0의 네 작업 원칙은 repo 작업 규범으로 유지하고, `plan-review`는 KISS·YAGNI·DRY·Scope Discipline·Verifiability라는 reviewer-local rubric을 독립적으로 소유하도록 분리했다. `Principle Link` 필드는 유지하되 하네스 원칙 이름과의 결합은 제거했다. 2026-07-29에 도입한 “§0 원칙 이름이 `Principle Link` 앵커”라는 repo-wide invariant만 supersede하며, 네 원칙과 상세 문서 포인터는 보존했다.
+- **검증 evidence**: `AGENTS.md` + byte-identical harness template 4벌 + mirrored plan-review rubric 2벌을 전수 변경했다. 구조적 RED `coupling_count=5`, `agent_name_count=8`에서 GREEN 모두 0으로 전환했고, 원칙 4개·상세 포인터 1개가 유지됐다. mirror checks와 implementation-review correctness AC1–AC3·census AC가 모두 MET였고 finding 0건, simplicity 다섯 차원 PASS였다.
+
 #### v4.7.0 (2026-08-10)
 
 - **sdd-autopilot을 goal-init SDD instance로 전환 (post-implementation sync)**: `sdd-autopilot`을 독립 end-to-end runner에서 existing `goal-init(preset=sdd)`를 호출하는 setup-only thin entrypoint로 전환했다. `goal-init`은 기존 5단계·condition self-check·4-file harness를 보존하면서, native goal 활성화 뒤 unmet DONE WHEN 또는 failed final integration-proof gap에서 최소 next unit을 선택해 `feature-draft → implementation → persistent spec-sync → evidence 기록 → final integration proof`로 수렴하는 6-step SDD Loop Protocol payload를 제공한다. setup은 initial producer 실행·native goal 활성화·current goal status 조회·기존 goal mutation/block을 하지 않고 activation은 사용자가 결정한다. rolling split은 current goal 안에서 계속하며 nested goal-init, formal Goal Contract/queue schema/goal-level reviewer는 도입하지 않는다. Claude는 plugin-prefixed invocation, Codex는 active installed skill catalog를 사용한다.
