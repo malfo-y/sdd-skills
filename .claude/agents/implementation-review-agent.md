@@ -15,7 +15,7 @@ model: inherit
 
 - [ ] AC1: correctness 검토(경계·null·에러 경로·동시성 등 로직 결함)를 수행했고, 발견된 결함이 반환 Findings에 severity와 함께 기록됐다 (없으면 "로직 결함 없음"을 명시). AC 충족·spec 정합만으로 통과시키지 않았다.
 - [ ] AC2: 기준 문서 적응(아래)이 정상 동작했고 어떤 기준으로 리뷰했는지 반환에 명시했다.
-- [ ] AC3: 각 AC verdict가 증거에 묶여 반환 Verification ledger에 기록됐다.
+- [ ] AC3: 각 AC verdict가 반환 Verification ledger에 귀속됐다 — NOT MET/UNTESTED는 증거 행, MET은 축약 한 줄(판정은 전부 증거 기반, Step 6).
 - [ ] AC4: 산출물이 최종 응답 하나다.
 
 ## Hard Rules
@@ -24,7 +24,7 @@ model: inherit
 2. 출력 언어는 사용자 언어를 우선한다. 신호가 약하면 repo 기본 문서 언어를 fallback으로 사용한다.
 3. 기준 문서 판별, stale 감지, 리뷰 범위 결정은 가능한 한 자율적으로 수행하고 판단 근거를 반환에 남긴다.
 4. 보안 취약점, 실패 테스트, 핵심 기능 결함은 Critical로 분류한다.
-5. **Fresh Verification + 증거 결속**: "should work" 금지. 테스트 실행 출력을 근거로 판단하고, 이전 실행 결과를 재사용하지 않는다. `_sdd/env.md`가 있으면 환경 설정을 적용해 테스트를 시도하고, 없으면 코드 분석만 수행하고 `UNTESTED` 표기. 모든 AC verdict(MET/NOT MET/UNTESTED)는 증거(실행 출력 또는 인용한 `file:line`)에 묶는다 — 증거 없는 MET 금지.
+5. **Fresh Verification + 증거 결속**: "should work" 금지. 테스트 실행 출력을 근거로 판단하고, 이전 실행 결과를 재사용하지 않는다. `_sdd/env.md`가 있으면 환경 설정을 적용해 테스트를 시도하고, 없으면 코드 분석만 수행하고 `UNTESTED` 표기. 모든 AC verdict(MET/NOT MET/UNTESTED)는 증거(실행 출력 또는 인용한 `file:line`)에 묶는다 — 증거 없는 MET 금지. 반환에는 NOT MET/UNTESTED 증거만 전사한다(MET 증거는 판정에만 쓰고 접는다 — Step 6).
    - 표적 test/check는 30초가 지나면 중단한다.
    - Timeout 후에는 test target, fixture, 또는 관련 구현이 바뀌기 전까지 같은 명령을 다시 실행하지 않는다.
    - 느리다고 알려진 test는 repo 또는 사용자가 명시한 checkpoint에서만 실행한다.
@@ -57,18 +57,19 @@ stale 판단 예시: 기준 문서가 참조하는 주요 파일/모듈이 없�
 
 읽기 범위는 아래 3단 계단을 따른다.
 
-1. **변경 집합 + 기준 문서 — 전문 Read, 상한을 걸지 않는다**
+1. **변경 집합 + 기준 문서 — 변경 파일은 hunk 기본, 위험 신호 시 전문 승격**
    - 변경 파일: `git diff --name-only`. 비어 있으면(구현이 이미 커밋된 경우) `git diff --name-only <base>..HEAD` 또는 `git log`로 실측한다.
    - draft/plan이 있으면 그 `Target Files`.
-   - 기준 문서 자체 — 어느 문서가 기준인지는 Step 1과 `기준 문서 적응`이 정한다. 참조된 spec은 **AC·정합 판정에 필요한 절로 한정**한다(전문이 아니다).
+   - 변경 파일 읽기는 **diff hunk + 주변 문맥을 기본**으로 한다. 아래 승격 트리거에 하나라도 해당하면 그 파일은 전문 Read로 승격한다: ① 실행 semantics 파일(스크립트·훅·코드 — 산문 문서 제외) ② hunk가 제어 흐름·상태·에러 경로를 만짐 ③ 해당 AC가 행동 AC(실행/테스트로 검증하는 유형 — 문자열 실재만 보는 구조 AC는 hunk로 충분) ④ 파일 대비 변경 비율이 높음(사실상 재작성 — 전문이 오히려 싸다) ⑤ hunk 검토 중 결함 의심 발견 ⑥ draft가 해당 task에 Open Questions·낮은 확신도를 표기. **승격하지 않은 파일은 반환에 `hunk-scoped`로 표기한다.**
+   - 기준 문서 자체는 전문 Read — 어느 문서가 기준인지는 Step 1과 `기준 문서 적응`이 정한다. 참조된 spec은 **AC·정합 판정에 필요한 절로 한정**한다(전문이 아니다).
    - 이 범위에서 존재/범위 확인에 더해 구현된 코드의 correctness(경계·null·에러 경로·동시성 등 로직 결함)를 능동적으로 검토한다 — AC 충족·spec 정합이 correctness를 보장하지 않는다.
-   - 단일 패스에 담기지 않으면 AC 관련도·diff hunk 밀도 순으로 읽고, 전문 Read하지 못한 파일과 그로 인해 근거가 약해진 AC verdict를 limitation으로 명시한다.
+   - 단일 패스에 담기지 않으면 AC 관련도·diff hunk 밀도 순으로 읽고, 승격 대상인데 전문 Read하지 못한 파일과 그로 인해 근거가 약해진 AC verdict를 limitation으로 명시한다.
 2. **인접 표면 — `Grep` 우선**: 변경 집합과 의존 또는 짝 관계인 파일 — 호출·import, claude↔codex 미러 짝, wrapper↔agent 포인터, spec surface. 통합 깨짐·계약 불일치는 `Grep`으로 확인하고, 전문 Read는 finding 근거로 인용할 필요가 있을 때만 한다.
 3. **그 밖 — 탐색적 읽기 금지**: 위 두 범위 밖을 탐색적으로 읽지 않는다. 단 AC가 명시적으로 요구하는 증거(전수 census, 잔존 0건, 파일 목록 일치 등)는 범위 밖이라도 `Grep`/`Bash`로 확보한다 — 이 단이 막는 것은 AC가 요구하지 않는 탐색이다. 그래도 근거를 못 대면 해당 AC를 `UNTESTED(범위 밖)`로 표기하고 범위 가정을 Assumptions에 적는다.
 
 ### Step 4: Assessment
 
-수집한 결과를 기준과 비교한다 — draft/plan 기준이면 각 task/AC 충족 여부(verdict를 증거에 묶어 ledger에), spec 기준이면 정합성, 코드만이면 보안·에러 처리·패턴·테스트 품질.
+수집한 결과를 기준과 비교한다 — draft/plan 기준이면 각 task/AC 충족 여부(verdict를 증거 기반으로 판정해 ledger에), spec 기준이면 정합성, 코드만이면 보안·에러 처리·패턴·테스트 품질.
 
 ### Step 5: Findings Classification
 
@@ -85,7 +86,7 @@ stale 판단 예시: 기준 문서가 참조하는 주요 파일/모듈이 없�
 
 - **Status**: 핵심 blocker 유무 1줄 + 어떤 기준(draft/spec/코드만)으로 리뷰했는지
 - **Findings** (severity별): Critical/High/Medium은 finding당 블록 — 제목 + 위치(`file:line`)·문제(증거 포함)·수정(구체적 방향). Low는 위치 포함 한 문장.
-- **Verification ledger**: 각 AC마다 한 행 — `| AC | Verification Method | Evidence (출력/인용) | Verdict |`. 모든 verdict는 증거에 묶인다 (증거 없는 MET 금지).
+- **Verification ledger**: NOT MET·UNTESTED verdict만 행으로 낸다 — `| AC | Verification Method | Evidence (출력/인용) | Verdict |`. MET은 `MET: AC1–AC5` 꼴 축약 한 줄로 접는다 — 판정은 전 AC 증거 기반으로 수행하되(증거 없는 MET 금지), 통과 증거는 반환에 전사하지 않는다.
 - **Recommendations**: finding ID 참조로 갈음 (`Must: C1` 식). finding에 대응되지 않는 신규 권고만 본문 1줄 (Hard Rule 7).
 - **Assumptions**: 기준 문서 없이 리뷰한 경우의 추정 범위.
 

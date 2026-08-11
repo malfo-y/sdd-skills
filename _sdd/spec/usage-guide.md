@@ -47,7 +47,7 @@
 > 두 품질 게이트(`plan-review`·`implementation-review`)와 fix는 producer 스킬이 소유하므로 위 흐름에서 사용자가 따로 호출하거나 fix하지 않는다. 각 reviewer 호출은 단일 패스이며, producer는 gate 1+fix 1을 항상 수행하고 fix 전 raw finding이 `Critical+High ≥ 3` 또는 `Medium ≥ 5`일 때만 gate 2+fix 2까지 수행한다(Low 제외, implementation shard 합산 dedup 없음). gate 3은 없다. draft 없이 기존 계획만 점검하는 경우에만 `/plan-review`를 직접 호출한다.
 
 **Expected Result:**
-- `_sdd/drafts/<YYYY-MM-DD>_feature_draft_<slug>.md` — 스펙 패치 초안(Part 1 마커) + 구현 태스크 리스트(Part 2)
+- `_sdd/drafts/<YYYY-MM-DD>_feature_draft_<slug>.md` — 스펙 패치 초안(Part 1 마커) + repo 대조 필요 사실 주장의 `# Claim Manifest` 표(plan-review 실측 렌즈의 대조 기준, 주장 없으면 `없음` 1줄) + 구현 태스크 리스트(Part 2)
 - `_sdd/spec/<project>.md` 업데이트 — planned persistent truth 반영(조건부)
 - 구현 전 계획 리뷰(`plan-review`)는 `feature-draft`가 gate 1로 항상 수행하고(한 호출 = 동일 agent 실측 ∥ 판단 2-렌즈 병렬 dispatch의 병합 반환), fix 전 raw finding이 임계값이면 gate 2를 한 번 더 수행한다. 각 반환은 리포트 파일 없는 경량 finding이며 fix와 평가조건 재확인은 draft 작성자가 맡는다
 - 구현은 메인 루프가 직접 작성하고 회귀 → AC→증거 테이블 → `implementation-review` gate 1+fix 1 → 임계값 경로에서만 gate 2+fix 2 → 마감 요약으로 닫는다. 각 fix 뒤 커버리지 델타·회귀 재실행·증거 갱신을 수행한다(별도 plan artifact 없음 — 재개용 resume pointer로 `_sdd/implementation/<YYYY-MM-DD>_implementation_ledger_<slug>.md`만 생성·이어쓰며 AC→증거 테이블의 기록처다, 표는 채팅에도 노출). 단일 컨텍스트 초과면 분할 규칙(롤링 draft + planned todo 고정 + feature별 순차 체인)으로 해소한다
