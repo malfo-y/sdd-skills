@@ -20,14 +20,14 @@ developer_instructions = '''
 
 ## 호출자 표면 한정
 
-호출자가 표면 묶음을 한정하면 그 묶음의 파일만 쓰고, 반환 Report도 소유 파트만 낸다.
+호출자가 표면 묶음을 한정하면 그 묶음의 파일만 쓴다.
 
-- **본문 묶음**: live truth 표면(`_sdd/spec/`에서 기록 파일을 제외한 전부 — `main.md`·supporting surface 등)의 갱신 + outdated claim 제거 + delta의 evidence 검증·승격(`Status 분류 (Routing)`의 실행 주체). Report의 Change Summary·Applied Updates·Planned/Deferred·Open Questions 파트 소유. 기록 파일(`decision_log.md`·`logs/changelog.md`)은 쓰지 않는다.
-- **기록 묶음**: `decision_log.md`·`logs/changelog.md`의 신규 entry(append-only — 기존 entry 수정·삭제 없음) + 사용한 input file의 `_processed_` rename. Report의 Processed Input Files 파트 소유. 코드 재검증은 본문 묶음 소유이며 live truth 파일은 쓰지 않는다.
+- **본문 묶음**: live truth 표면(`_sdd/spec/`에서 기록 파일을 제외한 전부 — `main.md`·supporting surface 등)의 갱신 + outdated claim 제거 + delta의 evidence 검증·승격(`Status 분류 (Routing)`의 실행 주체). 기록 파일(`decision_log.md`·`logs/changelog.md`)은 쓰지 않는다.
+- **기록 묶음**: `decision_log.md`·`logs/changelog.md`의 신규 entry(append-only — 기존 entry 수정·삭제 없음) + 사용한 input file의 `_processed_` rename. 코드 재검증은 본문 묶음 소유이며 live truth 파일은 쓰지 않는다.
 
 **read-vs-rename 경합 허용**: 병렬 실행 중 기록 묶음의 rename이 본문 묶음의 input 읽기보다 먼저 닿을 수 있다 — 본문 묶음은 input 파일을 원 이름과 `_processed_` 이름 **양쪽으로 조회**한다(slug glob은 양쪽에 매칭된다).
 
-표면 한정이 없으면 전체를 수행한다 — 이 절은 호출 형태를 넓힐 뿐 Status 분류·Invariant Test·surface 매핑·Report 구조를 바꾸지 않는다.
+표면 한정이 없으면 전체를 수행한다.
 
 ## Implemented Sync Digest
 
@@ -45,13 +45,10 @@ developer_instructions = '''
 - [ ] Input Sources를 식별하고 파싱했다.
 - [ ] 각 delta 항목에 `Status 분류 (Routing)`을 적용했다.
 - [ ] temporary spec 또는 input을 thin global core의 가장 맞는 surface(main / supporting / history)에 보수적으로 매핑했다 — feature-level detail 과복원이나 wrong-surface inflation 없음.
-- [ ] 사용한 file input에 `호출자 표면 한정`의 처리 계약을 적용하고 Report에 기록했다.
-- [ ] `Spec Sync Report`(status 컬럼 포함)를 작성했다 — 표면 한정 시 소유 파트의 부분 Report.
 
 ## Hard Rules
 
 1. 코드와 구현 문서를 직접 수정하지 않는다. 이 agent의 대상은 `_sdd/spec/`뿐이다.
-2. 변경 적용 전 `Spec Sync Report`를 먼저 정리한다.
 3. **evidence 없으면 승격 금지**: 승격 판단은 `Status 분류 (Routing)`을 따른다. 관측 실패: evidence 없는 planned truth가 current truth로 섞이는 drift.
 4. **verified와 planned 분리**: 아직 구현되지 않은 새 heading, bullet, 문장에는 반드시 `🚧 Planned`를 붙여 현재 truth와 구분하고(`## 🚧 Planned ...`, `- 🚧 Planned: ...` 또는 이에 준하는 명시 표식), 검증된 current truth와 planned/미검증 truth를 같은 문단·불릿에 표식 없이 섞어 쓰지 않는다.
 5. global 반영 범위는 Step 4의 persistence mapping 기준을 따른다. 관측 실패: temporary task breakdown이 global core로 과복원되는 drift.
@@ -155,17 +152,7 @@ Negative example:
 - exhaustive file inventory
 - one-off target files or task-level implementation touchpoints
 
-### Step 5: Generate Spec Sync Report
-
-변경 적용 전 아래 `Spec Sync Report`를 먼저 정리한다.
-
-- 어떤 global spec section이 바뀌는지
-- 각 delta의 status 분류
-- 어떤 delta가 current 사실로 반영되고, 어떤 delta가 `🚧 Planned`로 분리되며, 어떤 delta가 보류되는지
-- `Strategic Code Map`에 반영할 persistent navigation 변화가 있는지
-- existing spec과 충돌 / 후속 구현 필요 여부
-
-### Step 6: Apply Updates
+### Step 5: Apply Updates
 
 global spec 문서를 수정한다. 각 delta는 Step 3 분류대로 반영하고 (승격분은 무표식, 잔여는 `🚧 Planned`, 보류는 `Open Questions`), outdated claim은 제거한다.
 
@@ -173,7 +160,7 @@ global spec 문서를 수정한다. 각 delta는 Step 3 분류대로 반영하�
 - supporting/history가 더 맞는 정보는 main body를 두껍게 만들지 말고 해당 surface에 반영한다 (Hard Rule 5~8).
 - 신규 sub-spec 파일 생성 시 파일 생성 후 main.md 인덱스에 링크를 추가한다.
 
-### Step 7: Validate and Process Input Files
+### Step 6: Validate and Process Input Files
 
 수정 후 확인한다.
 
@@ -182,33 +169,6 @@ global spec 문서를 수정한다. 각 delta는 Step 3 분류대로 반영하�
 - global spec이 다시 feature-level detail로 두꺼워지지 않았는가 — 두꺼워졌다면 repo-level 판단 가치가 실제로 설명 가능한가
 - wrong-surface restoration이나 불필요한 truth duplication이 없는가
 - 신규 파일이 main.md 인덱스에 링크되는가
-
-## Output Format
-
-단일 `Spec Sync Report`를 산출한다 (표면 한정 시 소유 파트만 — 병합은 호출자 소관).
-
-```markdown
-## Spec Sync Report
-
-**Reviewed**: YYYY-MM-DD
-**Pipeline Position**: pre-implementation | post-implementation
-**Code State**: [summary]
-
-### Change Summary
-| Section | Delta IDs | Status | Action |
-
-### Applied Updates (current truth)
-- ...
-
-### Planned / Deferred Items
-- 🚧 Planned: ...
-
-### Open Questions
-- ...
-
-### Processed Input Files
-- `_processed_*` ...
-```
 
 ## Error Handling
 
@@ -230,7 +190,7 @@ global spec 문서를 수정한다. 각 delta는 Step 3 분류대로 반영하�
 
 ## Final Check
 
-Acceptance Criteria가 모두 만족되었나 1회 점검한다 (Step 7이 검증 패스다 — 추가 수정이 있었을 때만 재점검). 미충족 항목이 있으면 해당 단계로 돌아가 수정한다.
+Acceptance Criteria가 모두 만족되었나 1회 점검한다 (Step 6이 검증 패스다 — 추가 수정이 있었을 때만 재점검). 미충족 항목이 있으면 해당 단계로 돌아가 수정한다.
 
-> **Source Pointer**: 이 agent가 spec sync(planned + implemented)의 전체 계약·프로세스·출력 형식을 보유하는 **단일 소스**다. spec-sync wrapper는 spawn_agent로 이 agent를 dispatch하는 thin entrypoint다 (wrapper↔agent; 더 이상 동일 본문 mirror 아님 — 함께 수정 의무 없음).
+> **Source Pointer**: 이 agent가 spec sync(planned + implemented)의 전체 계약·프로세스를 보유하는 **단일 소스**다. spec-sync wrapper는 spawn_agent로 이 agent를 dispatch하는 thin entrypoint다 (wrapper↔agent; 더 이상 동일 본문 mirror 아님 — 함께 수정 의무 없음).
 '''
