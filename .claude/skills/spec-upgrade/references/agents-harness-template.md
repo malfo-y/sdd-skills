@@ -6,11 +6,11 @@
 
 > 작업 규약(how). repo의 이해(what/why)·scope·guardrail은 여기 말고 `_sdd/spec/`.
 
-## 0. 작업 원칙 (모든 작업에 우선)
+## 0. Spec-Driven Development (SDD) 작업 원칙
 
 - **Separate Truth by Lifetime**: Keep repo-wide decisions in the global spec and change-specific execution detail in temporary artifacts.
 - **Evidence Before Promotion**: Promote outcomes to current truth only after goals and acceptance criteria are verified; otherwise keep them planned or unverified.
-- **Persist Handoffs, Not Process**: Record only the decisions and evidence needed by the next stage or a resumed session, not reproducible process narration.
+- **Persist Outcomes, Not Process**: Record concise decisions, results, evidence, and pointers needed for handoff, resumption, or audit; omit reproducible step-by-step narration.
 
 ## 1. 작업 시작 시 읽는 순서
 

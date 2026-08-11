@@ -2,7 +2,7 @@
 
 > Markdown 기반 skill bundle로 AI 에이전트의 Spec-Driven Development 워크플로우를 Claude Code와 Codex에서 공통 계약으로 실행한다.
 
-**Spec Version**: 4.7.2
+**Spec Version**: 4.7.3
 **Last Updated**: 2026-08-11
 **Status**: Approved
 **Canonical Role**: current thin global spec
@@ -126,7 +126,7 @@ SDD Skills의 설계는 다음 층으로 나뉜다.
 3. Artifact layer: `_sdd/` 아래의 persistent handoff contract
 4. Reference layer: README, `docs/`, global spec이 유지하는 설명과 경계
 
-이 위에 별도의 **Harness layer(`AGENTS.md`)** 가 놓인다. harness는 repo 작업 진입점이자 작업 규약(how) 레이어로, global spec(이해 = what/why) 위에서 작업 시작 시 먼저 읽는 surface다. global spec 본문을 키우지 않는 별도 레이어이며(둘은 같은 정보를 중복 보유하지 않는다), 작업 원칙·읽는 순서·검증 표준·워크플로우 단계 순서·판단 기준 포인터만 담는다. repo-specific 행동 트리거와 핵심 결정은 여전히 global spec Guardrails가 단일 소스다. harness는 산문 규약만이 아니라 그 규약을 실행하는 자산까지 포함하며, 그 자산은 두 방향으로 일한다 — 규약을 **강제**하거나(§5 work log 규약은 함께 설치되는 PreToolUse 커밋 게이트 훅으로 집행된다), 컨텍스트에서 사라진 규약을 **되돌려 놓는다**(compact·clear 뒤 SessionStart 훅이 `AGENTS.md` 전문을 재주입한다). 둘 다 모델 재량으로 건너뛸 수 없는 층이다(advisory 자산인 subagent watchdog nudge는 이 강제 층 밖의 보조 자산이다). 재주입은 "읽으라는 지시"가 아니라 내용 주입이다 — 지시는 재량이 남아 닫으려던 실패 모드를 그대로 재생산하고, 모델이 순순히 읽어도 Read 왕복으로 같은 분량이 들어와 비용 이점이 없다. 설치 계약은 위 Guardrails가 소유한다. §0은 SDD 고유 실패 방지 불변식 `Separate Truth by Lifetime`·`Evidence Before Promotion`·`Persist Handoffs, Not Process` 세 가지만 배포한다. `Evidence Before Promotion`은 goal과 acceptance criteria 검증을 current truth 승격 조건으로 두며, 모든 구현 후의 자동 `spec-sync`나 사람의 명시적 승인을 필수 조건으로 뜻하지 않는다. 일반 agent 원칙은 harness 배포 계약이 아니며, [docs/agentic_coding_principle.md](../../docs/agentic_coding_principle.md)는 참고 자산으로 유지한다. layer model과 사용 시점의 기준은 [docs/SDD_CONCEPT.md](../../docs/SDD_CONCEPT.md)와 [docs/SDD_WORKFLOW.md](../../docs/SDD_WORKFLOW.md)에 둔다.
+이 위에 별도의 **Harness layer(`AGENTS.md`)** 가 놓인다. harness는 repo 작업 진입점이자 작업 규약(how) 레이어로, global spec(이해 = what/why) 위에서 작업 시작 시 먼저 읽는 surface다. global spec 본문을 키우지 않는 별도 레이어이며(둘은 같은 정보를 중복 보유하지 않는다), 작업 원칙·읽는 순서·검증 표준·워크플로우 단계 순서·판단 기준 포인터만 담는다. repo-specific 행동 트리거와 핵심 결정은 여전히 global spec Guardrails가 단일 소스다. harness는 산문 규약만이 아니라 그 규약을 실행하는 자산까지 포함하며, 그 자산은 두 방향으로 일한다 — 규약을 **강제**하거나(§5 work log 규약은 함께 설치되는 PreToolUse 커밋 게이트 훅으로 집행된다), 컨텍스트에서 사라진 규약을 **되돌려 놓는다**(compact·clear 뒤 SessionStart 훅이 `AGENTS.md` 전문을 재주입한다). 둘 다 모델 재량으로 건너뛸 수 없는 층이다(advisory 자산인 subagent watchdog nudge는 이 강제 층 밖의 보조 자산이다). 재주입은 "읽으라는 지시"가 아니라 내용 주입이다 — 지시는 재량이 남아 닫으려던 실패 모드를 그대로 재생산하고, 모델이 순순히 읽어도 Read 왕복으로 같은 분량이 들어와 비용 이점이 없다. 설치 계약은 위 Guardrails가 소유한다. §0은 SDD 고유 실패 방지 불변식 `Separate Truth by Lifetime`·`Evidence Before Promotion`·`Persist Outcomes, Not Process` 세 가지만 배포한다. `Evidence Before Promotion`은 goal과 acceptance criteria 검증을 current truth 승격 조건으로 두며, 모든 구현 후의 자동 `spec-sync`나 사람의 명시적 승인을 필수 조건으로 뜻하지 않는다. `Persist Outcomes, Not Process`는 handoff·재개·감사에 필요한 간결한 결정·결과·evidence·pointer는 보존하되 재현 가능한 단계별 실행 서술은 제외한다. 일반 agent 원칙은 harness 배포 계약이 아니며, [docs/agentic_coding_principle.md](../../docs/agentic_coding_principle.md)는 참고 자산으로 유지한다. layer model과 사용 시점의 기준은 [docs/SDD_CONCEPT.md](../../docs/SDD_CONCEPT.md)와 [docs/SDD_WORKFLOW.md](../../docs/SDD_WORKFLOW.md)에 둔다.
 
 ### 유지해야 할 주요 결정
 
