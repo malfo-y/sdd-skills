@@ -40,7 +40,7 @@ model: inherit
 
 호출자가 렌즈를 한정하면 그 렌즈 소유분만 수행하고, 반환의 smell 판정도 소유 smell만 낸다.
 
-- **실측 렌즈**: Step 3 supporting context 계단 + `Verification Weakness` smell + draft 사실 주장의 repo 대조. 이 대조 소유는 판단 렌즈 소유 smell의 **사실 전제**(기존 파일의 수정 수용 가능성, 기존 로직/중복의 실재 여부 등)를 포함한다.
+- **실측 렌즈**: Step 3 supporting context 계단 + `Verification Weakness` smell + draft 사실 주장의 repo 대조. 이 대조 소유는 판단 렌즈 소유 smell의 **사실 전제**(기존 파일의 수정 수용 가능성, 기존 로직/중복의 실재 여부 등)를 포함한다. draft에 `# Claim Manifest`가 있으면 대조 기준은 manifest 행 전수 순회다(Step 3); 없으면(legacy) 산문에서 주장을 발굴하는 방식으로 대조한다.
 - **판단 렌즈**: 나머지 4 smell + 규모 판정 검사 + Step 4(Decision and Assumption). Step 3 계단을 밟지 않고 draft 내부 근거로만 판정하며, 사실 전제는 draft 문면 기준으로 가정 판정하고 UNKNOWN을 내지 않는다 — repo 근거가 필요한 반증은 실측 렌즈 반환에서 온다.
 
 자체 검증 Acceptance Criteria와 반환 형식 중 규모 판정 검사(AC2)·Step 4(AC3) 항목은 **소유 렌즈(판단)에만 적용된다** — 실측 렌즈 dispatch는 그 항목들을 자체 검증에서 제외한다.
@@ -78,17 +78,21 @@ Input 우선순위로 대상 draft를 정한다.
 
 ### Step 2: Inventory Draft Surface
 
-scope, task boundary, AC, Target Files(`[C]` 신규 파일 포함), Open Questions, decision markers(가정·대안·확신도·사용자 확인 필요), 조건부 `Propagation Surfaces`를 추출한다. 추출은 리뷰 판단용이다 — 반환에 전사하지 않는다.
+scope, task boundary, AC, Target Files(`[C]` 신규 파일 포함), `Claim Manifest`, Open Questions, decision markers(가정·대안·확신도·사용자 확인 필요), 조건부 `Propagation Surfaces`를 추출한다. 추출은 리뷰 판단용이다 — 반환에 전사하지 않는다.
 
 ### Step 3: Read Supporting Context
 
-supporting 컨텍스트는 아래 계단을 순서대로 밟는다. **상위 단계로 판정이 닫히면 하위 단계로 내려가지 않는다** — Read는 기본 동작이 아니라 앞 단계가 부족할 때의 수단이다.
+supporting 컨텍스트 읽기는 manifest 유무로 갈린다 — 있으면 아래 `Claim Manifest 순회` 문단을, 없으면 `Legacy 계단`을 따른다. Legacy 계단은 순서대로 밟으며 **상위 단계로 판정이 닫히면 하위 단계로 내려가지 않는다** — Read는 기본 동작이 아니라 앞 단계가 부족할 때의 수단이다.
 
 **Producer 계약 확인**:
 
 1. draft에 `Propagation Surfaces`가 있거나 AC 평가방법을 판정할 때 수행한다.
 2. 현재 runtime에 설치된 `feature-draft/SKILL.md`의 producer 규칙을 Read한다.
 3. source를 찾을 수 없으면 계약을 기억으로 재구성하지 않고 `Verification Weakness`를 `UNKNOWN`으로 두며 limitation 1줄을 반환한다.
+
+**Claim Manifest 순회 (draft에 manifest가 있을 때)**: Target Files·`Propagation Surfaces.Required surfaces`의 실재는 `Glob`으로 확인하고, `Propagation Surfaces.Discovery evidence`의 read-only query 재실행·기대 surface 집합 대조는 현행대로 수행하며, 사실 주장 대조는 **manifest 행 전수 순회**로 수행한다 — 각 행의 Query를 재실행해 Expected와 대조하고(표본 아님), 산문에서 새 대조 대상을 발굴하지 않는다. Query 결과로 판정이 닫히지 않는 파일만 `Read`하고, 그래도 부족하면 해당 smell을 `UNKNOWN`으로 두고 limitation 1줄을 기록한다. 산문에 `CM<n>` 참조 없는 repo-사실 주장이 보이면 repo 대조 없이 producer 계약 위반으로 `Verification Weakness`에 귀속한다(draft 문면 검사만).
+
+**Legacy 계단 (manifest가 없는 draft)**:
 
 1. `Glob` — Target Files와 `Propagation Surfaces.Required surfaces`의 exact path/pattern 존재·naming을 확인한다.
 2. `Grep` — AC가 지목한 content anchor(함수·심볼·문자열)의 실재와 `Discovery evidence`의 read-only query 결과가 적힌 기대 surface 집합과 일치하는지 확인한다.

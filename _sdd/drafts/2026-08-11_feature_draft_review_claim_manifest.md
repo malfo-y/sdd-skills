@@ -51,7 +51,7 @@
 
 실측 렌즈의 비용은 산문에서 주장을 발굴해 하나씩 repo 대조하는 데 있다 — 대조 대상 열거를 producer가 끝냈으므로 렌즈는 행 순회만 한다.
 
-**Contracts**: 실측 렌즈 대조 기준 — (1) manifest 있는 draft: Target Files·Required surfaces의 Glob 실재 확인은 현행 유지, content anchor·사실 전제 대조는 manifest 행 전수 순회(각 행 Query 재실행 → Expected 대조)로 수행한다. 산문에서 새 대조 대상을 발굴하지 않는다. (2) 산문에 `CM<n>` 참조 없는 repo-사실 주장이 보이면 repo 대조 없이 producer 계약 위반으로 `Verification Weakness`에 귀속한다(주장 누락 탐지 구멍 봉합 — draft 문면 검사만, 비용 저렴). (3) manifest 없는 draft: 현행 산문 발굴 방식 fallback. (4) Step 2 Inventory 추출 목록에 Claim Manifest를 포함한다 — 순회 대상 파악은 Step 2, 대조 실행은 Step 3. 렌즈의 출력 계약·smell 소유·"출력이 아니라 대조 범위" 원칙은 불변.
+**Contracts**: 실측 렌즈 대조 기준 — (1) manifest 있는 draft: Target Files·Required surfaces의 Glob 실재 확인과 Propagation `Discovery evidence` query 재실행 대조는 현행 유지, content anchor·사실 전제 대조는 manifest 행 전수 순회(각 행 Query 재실행 → Expected 대조)로 수행한다. 산문에서 새 대조 대상을 발굴하지 않는다. (2) 산문에 `CM<n>` 참조 없는 repo-사실 주장이 보이면 repo 대조 없이 producer 계약 위반으로 `Verification Weakness`에 귀속한다(주장 누락 탐지 구멍 봉합 — draft 문면 검사만, 비용 저렴). (3) manifest 없는 draft: 현행 산문 발굴 방식 fallback. (4) Step 2 Inventory 추출 목록에 Claim Manifest를 포함한다 — 순회 대상 파악은 Step 2, 대조 실행은 Step 3. 렌즈의 출력 계약·smell 소유·"출력이 아니라 대조 범위" 원칙은 불변.
 
 **Acceptance Criteria**:
 - [ ] AC1: `호출자 렌즈 한정` 절의 실측 렌즈 정의에 manifest 순회 대조 기준과 legacy fallback이 명시됐다. 평가(1등급): `grep -n "Claim Manifest" .claude/agents/plan-review-agent.md` ≥ 1 hit이 해당 절 범위에 있고, fallback 문구가 함께 있다.
