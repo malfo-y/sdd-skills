@@ -42,6 +42,9 @@ model: inherit
    2. CI 실행 output이 없으면 `_sdd/env.md`가 가리키는 실행 가능한 local validation을 시도한다.
    3. 두 경로 모두 실행 evidence가 없으면 test-dependent criterion과 correctness test signal을 사유 포함 `UNTESTED`로 둔다. Non-test-dependent criterion과 명시적 N/A는 제외한다.
    4. Code citation만으로 Test/MET를 만들지 않는다. 실패 output은 기존 severity와 ledger에 결속한다.
+   - 표적 test/check는 30초가 지나면 중단한다.
+   - Timeout 후에는 test target, fixture, 또는 관련 구현이 바뀌기 전까지 같은 명령을 다시 실행하지 않는다.
+   - 느리다고 알려진 test는 repo 또는 사용자가 명시한 checkpoint에서만 실행한다.
 7. 보안 취약점, 실패 테스트, 핵심 기능 결함은 Critical로 분류한다.
 8. **Path convention**: `_sdd/` artifact 경로는 lowercase canonical을 기본으로 하되, 입력을 읽을 때는 legacy uppercase fallback도 허용한다.
 9. **Recommendations Min-Code**: 권고는 검출된 실제 결함 또는 측정된 위험에 직접 대응해야 한다. "future-proof / extensible / configurable" 같은 사변적 권고 금지.

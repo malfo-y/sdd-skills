@@ -2,6 +2,10 @@
 
 > 이 파일은 `_sdd/spec/main.md`의 **본문이 바뀐 버전만** 기록한다 — 본문 무변경 sync(헤더 날짜만 갱신)는 entry를 남기지 않으므로 버전 번호에 결번이 생길 수 있다.
 
+#### v4.8.0 (2026-08-12)
+
+- **Minimal slow-test execution guard (post-implementation sync)**: 표적 test/check 30초 중단, 관련 변경 전 timeout 명령 재실행 금지, 선언된 checkpoint에서만 slow test 실행이라는 세 규칙을 여섯 Claude/Codex 실행 지침에 반영하고 mirror/TOML/diff 검증과 implementation-review를 통과했다.
+
 #### v4.7.3 (2026-08-11)
 
 - **하네스 보존 원칙을 결과·감사 중심으로 명확화 (post-implementation sync)**: 세 번째 SDD 하네스 원칙을 `Persist Handoffs, Not Process`에서 `Persist Outcomes, Not Process`로 변경했다. handoff·resumption·audit에 필요한 간결한 결정, 결과, evidence, pointer는 persistent 기록 대상으로 허용하고, 재현 가능한 단계별 process narration은 보존하지 않는다. 이 변경은 의무 work-log audit journaling을 유지하며 v4.7.2의 옛 명칭과 보존 범위 문장을 supersede한다.

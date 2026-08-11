@@ -1,5 +1,15 @@
 # Decision Log
 
+## 2026-08-12 - Minimal slow-test execution guard (v4.7.3 → v4.8.0, post-implementation sync)
+
+### Decision
+
+1. 표적 test/check는 30초가 지나면 중단한다.
+2. Timeout 후에는 test target, fixture, 또는 관련 구현이 바뀌기 전까지 같은 명령을 다시 실행하지 않는다.
+3. 느리다고 알려진 test는 repo 또는 사용자가 명시한 checkpoint에서만 실행한다.
+
+- **Evidence**: 세 문장이 implementation·implementation-review·pr-review의 Claude/Codex 지침 여섯 곳에 각각 1회 존재하며 mirror/TOML/diff 검증과 implementation-review를 통과했다.
+
 ## 2026-08-11 - 하네스 보존 원칙을 결과·감사 중심으로 명확화 (v4.7.2 → v4.7.3, post-implementation sync)
 
 ### Context
