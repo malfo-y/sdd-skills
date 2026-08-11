@@ -56,7 +56,7 @@
 **Acceptance Criteria**:
 - [ ] AC1: `호출자 렌즈 한정` 절의 실측 렌즈 정의에 manifest 순회 대조 기준과 legacy fallback이 명시됐다. 평가(1등급): `grep -n "Claim Manifest" .claude/agents/plan-review-agent.md` ≥ 1 hit이 해당 절 범위에 있고, fallback 문구가 함께 있다.
 - [ ] AC2: Step 3 계단에 manifest 행 순회(Query 재실행·Expected 대조)가 들어가고, CM 참조 없는 산문 주장의 `Verification Weakness` 귀속 규칙이 존재한다. 평가(2등급): reviewer가 Step 3 절을 인용해 세 요소(순회·fallback·귀속) 실재를 판정.
-- [ ] AC3: 판단 렌즈 정의·6-smell rubric 표·severity 표는 변경되지 않았다. 평가(1등급): `git diff`에서 해당 절의 행이 `+`/`-` 변경 라인으로 나타나지 않음을 확인(인접 절 수정에 따른 문맥 행 포함은 무방).
+- [ ] AC3: 판단 렌즈 정의·5-smell rubric 표·severity 표는 변경되지 않았다. 평가(1등급): `git diff`에서 해당 절의 행이 `+`/`-` 변경 라인으로 나타나지 않음을 확인(인접 절 수정에 따른 문맥 행 포함은 무방).
 
 **Target Files**:
 - [M] `.claude/agents/plan-review-agent.md` -- 실측 렌즈 정의(호출자 렌즈 한정 절)와 Step 3 계단 개편

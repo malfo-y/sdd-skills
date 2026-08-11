@@ -1,5 +1,32 @@
 # Decision Log
 
+## 2026-08-12 - Single-use Abstraction을 중복/DRY 축으로 통합 — plan-review 6→5 smell·simplicity 5→4 차원 (v4.7.3 → v4.7.4, post-implementation sync)
+
+### Context
+
+plan-review rubric의 `Single-use Abstraction` smell은 `DRY Risk`의 "작은 중복에 과한 추상화" 절과 조기 추상화 영역을 나눠 갖는 부분 중복이었다(사용자 코멘트). 또한 plan-review-agent 짝의 Severity Medium 행에는 Blocker Policy Hard Rule 3이 이미 소유한 판단을 재천명하는 방어적 사족("즉시 차단까지는 필요하지 않다")이 남아 있었다. reviewer 짝 대칭을 위해 simplicity-review의 `단일 사용처 추상화` 차원도 같은 축으로 함께 통합할 필요가 있었다.
+
+### Decision
+
+1. plan-review rubric을 6→5 smell로 통합한다: `Single-use Abstraction` 행을 삭제하고 `DRY Risk` Check가 단일 사용처 검사("한 곳에서만 쓰이는 helper, layer, config, interface")를 흡수하며 Principle Link에 YAGNI를 추가한다. 개수 리터럴은 `5 smell 전부`·`전체(5 smell)`·`5 Plan Smells`·`나머지 4 smell`로, Step 5 heading은 개수 제거형 `Smell Review`로 고정한다.
+2. simplicity-review 차원을 5→4로 통합한다: 1번 차원을 `중복 코드·단일 사용처 추상화 (Duplication & Single-use Abstraction)`로 합치되 두 검사 술어를 모두 보존한다. 참조 묶음 = 통합 차원 + 죽은 코드, 국소 묶음 불변, 차원 한정 없는 호출(pr-review 경로)은 전체 4차원 1회로 후방 호환을 유지한다.
+3. plan-review-agent 짝 Severity Medium 행의 "즉시 차단까지는 필요하지 않다" 문장을 삭제한다 — 차단 여부 판단은 Blocker Policy Hard Rule 3 단일 소유(방어적 사족 제거).
+4. 통합 차원명 내부 `·`과 구별하기 위해 orchestrator 렌즈 설명·pr-review-agent 경계 절·example의 차원 나열은 쉼표 구분(`중복 코드·단일 사용처 추상화, 죽은 코드, 도달 불가 에러 처리, 과잉압축`)으로 갱신한다.
+5. 이 결정은 2026-07-31의 차원 묶음 분할 결정(참조 3+국소 2)을 참조 묶음 구성(통합 차원+죽은 코드 2개)에 한해 부분 supersede한다 — 묶음 축과 병렬 dispatch 구조 자체는 유지한다.
+
+### Rationale / Evidence
+
+- 두 smell이 조기 추상화 영역을 분점하던 부분 중복을 흡수 통합으로 해소하되, 검사 술어는 전부 보존해 검출 손실이 없다 — 줄어드는 것은 rubric 행 수와 차원 판정 행뿐이다. reviewer 짝(plan-review↔simplicity) 대칭 유지를 위해 차원도 짝으로 통합했다.
+- implementation-review gate 1(correctness 5 shard + simplicity 2 묶음)은 H1 M2를 검출했고 fix 완료·검증됐다. H1은 `6-Smell` 대문자 변형이 case-sensitive census를 통과한 rename census 함정으로, case-insensitive 확장 재-census 0건으로 해소를 확인했다. gate 2 임계값 미도달.
+- draft AC 15건 전부 fresh grep evidence로 충족(ledger AC→증거 테이블). fast_regression 미설정 — `git diff --check` PASS로 갈음.
+
+### Changes
+
+- `.claude/agents/{plan-review-agent,simplicity-review-agent,pr-review-agent}.md`, `.codex/agents/{plan-review-agent,simplicity-review-agent,pr-review-agent}.toml` — rubric 6→5 smell·차원 5→4 통합, Medium 행 사족 삭제, 경계 절 쉼표 나열 (commits ba05e6c, 8571263)
+- `.claude`/`.codex`의 `skills/{plan-review,implementation-review,pr-review}/SKILL.md` + `pr-review/examples/sample-review.md` — 개수 리터럴·렌즈 설명·example 라벨 갱신 (총 14파일)
+- `_sdd/spec/main.md`, `_sdd/spec/components.md` — current truth 수치 갱신 및 spec version 4.7.4 반영 (본문 묶음 소유)
+- `_sdd/drafts/_processed_2026-08-11_feature_draft_merge_single_use_abstraction.md` — 사용 input 처리 표시
+
 ## 2026-08-11 - 하네스 보존 원칙을 결과·감사 중심으로 명확화 (v4.7.2 → v4.7.3, post-implementation sync)
 
 ### Context

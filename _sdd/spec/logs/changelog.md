@@ -2,6 +2,11 @@
 
 > 이 파일은 `_sdd/spec/main.md`의 **본문이 바뀐 버전만** 기록한다 — 본문 무변경 sync(헤더 날짜만 갱신)는 entry를 남기지 않으므로 버전 번호에 결번이 생길 수 있다.
 
+#### v4.7.4 (2026-08-12)
+
+- **Single-use Abstraction을 중복/DRY 축으로 통합 (post-implementation sync)**: plan-review rubric을 6→5 smell로 통합했다 — `Single-use Abstraction` 행을 삭제하고 `DRY Risk` Check가 단일 사용처 검사를 흡수하며 Principle Link에 YAGNI를 추가했다(Step 5 heading은 개수 제거형 `Smell Review`). reviewer 짝 대칭으로 simplicity-review 차원도 5→4로 통합해 1번 차원을 `중복 코드·단일 사용처 추상화 (Duplication & Single-use Abstraction)`로 합쳤다(검사 술어 전부 보존 — 검출 손실 없음). 참조 묶음 = 통합 차원 + 죽은 코드, 국소 묶음 불변, pr-review 경로는 전체 4차원 1회로 후방 호환 유지. plan-review-agent 짝 Severity Medium 행의 "즉시 차단까지는 필요하지 않다" 방어적 사족을 삭제했다(Blocker Policy Hard Rule 3 단일 소유). 2026-07-31 차원 묶음 분할 결정은 참조 묶음 구성에 한해 부분 supersede(묶음 축·병렬 구조 유지).
+- **전파·검증 evidence**: 통합 차원 나열은 쉼표 구분으로 orchestrator 렌즈 설명·pr-review-agent 경계 절·example까지 claude·codex 14파일 전파(commits ba05e6c·8571263). implementation-review gate 1 `H1 M2` fix 완료 — H1은 `6-Smell` 대문자 변형의 case-sensitive census 통과 함정으로 case-insensitive 확장 재-census 0건 확인, gate 2 임계값 미도달. draft AC 15건 전부 fresh grep evidence 충족, fast_regression 미설정으로 `git diff --check` PASS 갈음.
+
 #### v4.7.3 (2026-08-11)
 
 - **하네스 보존 원칙을 결과·감사 중심으로 명확화 (post-implementation sync)**: 세 번째 SDD 하네스 원칙을 `Persist Handoffs, Not Process`에서 `Persist Outcomes, Not Process`로 변경했다. handoff·resumption·audit에 필요한 간결한 결정, 결과, evidence, pointer는 persistent 기록 대상으로 허용하고, 재현 가능한 단계별 process narration은 보존하지 않는다. 이 변경은 의무 work-log audit journaling을 유지하며 v4.7.2의 옛 명칭과 보존 범위 문장을 supersede한다.
