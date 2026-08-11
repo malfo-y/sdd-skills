@@ -6,7 +6,7 @@ argument-hint: "[--model <active-model>] [--effort <active-effort>]"
 
 # Plan Review (2-렌즈 Orchestrator)
 
-이 스킬은 review-only orchestrator다. 사용자의 plan-review 요청을 `plan-review-agent` **2회 병렬 spawn**(실측 렌즈 ∥ 판단 렌즈)으로 위임하고 두 **경량 반환**을 병합해 사용자에게 전달한다. 전체 리뷰 프로세스·6-smell rubric·severity·반환 형식·렌즈 정의는 agent가 단일 소스로 보유한다. 리뷰는 단일 패스이며(렌즈 2개는 한 패스의 병렬 분해이지 loop가 아니다) 리포트 파일을 만들지 않는다. agent는 read-only leaf(파일을 쓰지 않음)라 동시 spawn이 안전하다.
+이 스킬은 review-only orchestrator다. 사용자의 plan-review 요청을 `plan-review-agent` **2회 병렬 spawn**(실측 렌즈 ∥ 판단 렌즈)으로 위임하고 두 **경량 반환**을 병합해 사용자에게 전달한다. 전체 리뷰 프로세스·5-smell rubric·severity·반환 형식·렌즈 정의는 agent가 단일 소스로 보유한다. 리뷰는 단일 패스이며(렌즈 2개는 한 패스의 병렬 분해이지 loop가 아니다) 리포트 파일을 만들지 않는다. agent는 read-only leaf(파일을 쓰지 않음)라 동시 spawn이 안전하다.
 
 ## Codex Runtime Adapter
 
@@ -76,4 +76,4 @@ review
 - 실제 감사·판정은 agent가 수행한다. agent가 지원하지 않는 동작을 orchestrator가 흉내내지 않는다.
 - agent가 노출하는 Blocker(Critical/High)·구현 전 차단 이슈를 orchestrator가 relay해 보존한다 (병합은 relay이지 gating이 아니다).
 
-> Source: 전체 계약·6-smell·severity·반환 형식은 `.codex/agents/plan-review-agent.toml`이 단일 소스로 보유한다 (wrapper↔agent; 동일 본문 mirror 아님).
+> Source: 전체 계약·5-smell·severity·반환 형식은 `.codex/agents/plan-review-agent.toml`이 단일 소스로 보유한다 (wrapper↔agent; 동일 본문 mirror 아님).

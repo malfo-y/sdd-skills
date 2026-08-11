@@ -1,5 +1,60 @@
 # Decision Log
 
+## 2026-08-12 - 리뷰 읽기 다이어트 — Claim Manifest 계약 + 위험 적응형 읽기·ledger MET 접기 (v4.8.1 → v4.8.2, post-implementation sync — main 머지 시 v4.7.5에서 개번)
+
+### Context
+
+병렬화가 완결된 상태에서 리뷰 벽시계는 pole 작성자의 "읽고 확인할 양"이 결정한다. plan-review 실측 렌즈는 draft 산문 전체에서 repo 대조가 필요한 주장을 발굴해 하나씩 확인했고, implementation-review Step 3 ①은 변경 파일을 상한 없이 전문 Read했으며, impl-review·pr-review ledger는 통과(MET) verdict까지 증거 행을 전사했다. 이 읽기·작성 비용을 확인 항목 무손실 조건으로 줄일 필요가 있었다(롤링 분할 F1+F2, 두 feature 모두 이번에 구현 완료 — 잔여 없음).
+
+### Decision
+
+1. **Claim Manifest 계약 신설 (F1)**: draft의 repo 대조 필요 사실 주장은 `# Claim Manifest` 표(`| ID | Claim | Query | Expected |`, 행 ID `CM<n>`)가 단일 소스다. AC 평가방법·산문은 `CM<n>` ID로 참조하고 재서술하지 않으며, Target Files·Propagation `Discovery evidence`와 중복 수록하지 않는다. 대조 필요 주장이 없으면 `없음` 1줄로 대체한다.
+2. **plan-review 실측 렌즈 개편 (F1)**: content anchor·사실 전제 대조는 manifest 행 전수 순회(각 행 Query 재실행 → Expected 대조)로 수행하고 산문에서 새 대조 대상을 발굴하지 않는다. `CM<n>` 참조 없는 repo-사실 주장은 repo 대조 없이 producer 계약 위반으로 `Verification Weakness`에 귀속한다. manifest 없는 legacy draft는 현행 산문 발굴 방식으로 fallback한다. 판단 렌즈·5-smell rubric·severity는 불변.
+3. **위험 적응형 읽기 (F2)**: implementation-review-agent Step 3 ①을 "diff hunk+주변 문맥 기본, 승격 트리거 시 파일 전문" 계단으로 개편한다. 승격 트리거 6종 — ①실행 semantics 파일 ②제어 흐름·상태·에러 경로 접촉 ③행동 AC ④고밀도 변경(사실상 재작성) ⑤hunk 검토 중 결함 의심 ⑥draft의 Open Questions·낮은 확신도 표기. 미승격 파일은 반환에 `hunk-scoped` 표기. 기준 문서 전문 Read·correctness 능동 검토 결속은 불변.
+4. **ledger MET 접기 (F2)**: implementation-review Verification ledger와 pr-review AC 검증 ledger는 문제 verdict(NOT MET·UNTESTED·PARTIAL·FAIL)만 증거 행을 유지하고 MET은 축약 한 줄(`MET: AC1–AC5` 꼴)로 접는다. 판정 의무("증거 없는 MET 금지")는 보존 — 통과 증거를 반환에 전사하지 않을 뿐이다.
+
+### Rationale / Evidence
+
+- F1은 실측 렌즈의 산문 발굴을 producer가 끝낸 열거의 행 순회로 대체한다 — 확인 항목 무손실, 줄어드는 것은 발굴 비용뿐. F2는 저위험 변경(산문·구조 AC·무신호)의 읽기를 hunk로 줄이고 통과 증거 전사를 접는다 — 탐지·판정 의무 보존, 감사 흔적만 희생.
+- 기각 대안: reviewer model 강등(과거 실측 효과 없음), 표본 검증(확인 항목 누락 방식 거부), 존재 확인 스크립트화(위장 PASS 위험).
+- 잔여 위험 수용: hunk 밖 원거리 불변식 파괴는 구조 AC+문서류+무신호 버킷에서 놓칠 수 있음 — 승격 트리거 ③⑤가 부분 완화. 속도 효과는 플러그인 갱신 후 실측 예정(planned 관측).
+- 검증: 사용자 지시 "최소한의 리뷰"에 따라 plan-review 게이트 생략, correctness 단일 dispatch ×2로 검증 — F1 M1+L1·F2 L1 fix 반영. 전 18 AC MET(fresh grep evidence), 구 문면 census case-insensitive 0건, 판정 의무 문면 역검증 통과.
+
+### Changes
+
+- `.claude/skills/feature-draft/SKILL.md`, `.codex/skills/feature-draft/SKILL.md` — Claim Manifest template 섹션·단일 소스 규칙 (commit 64caa42)
+- `.claude/agents/plan-review-agent.md`, `.codex/agents/plan-review-agent.toml` — 실측 렌즈 manifest 행 순회·legacy fallback·Verification Weakness 귀속 (commit 64caa42)
+- `.claude/agents/implementation-review-agent.md`, `.codex/agents/implementation-review-agent.toml` — Step 3 ① hunk 기본+승격 트리거 6종+`hunk-scoped` 표기, ledger MET 접기 (commit 81c889e)
+- `.claude/agents/pr-review-agent.md`, `.codex/agents/pr-review-agent.toml` — AC 검증 ledger MET 접기 (commit 81c889e)
+- `_sdd/drafts/_processed_2026-08-11_feature_draft_review_claim_manifest.md`, `_sdd/drafts/_processed_2026-08-12_feature_draft_adaptive_read_ledger_diet.md` — 사용 input 처리 표시 (F1·F2 모두 구현 완료, 롤링 잔여 없음)
+
+## 2026-08-12 - Single-use Abstraction을 중복/DRY 축으로 통합 — plan-review 6→5 smell·simplicity 5→4 차원 (v4.8.0 → v4.8.1, post-implementation sync — main 머지 시 v4.7.4에서 개번)
+
+### Context
+
+plan-review rubric의 `Single-use Abstraction` smell은 `DRY Risk`의 "작은 중복에 과한 추상화" 절과 조기 추상화 영역을 나눠 갖는 부분 중복이었다(사용자 코멘트). 또한 plan-review-agent 짝의 Severity Medium 행에는 Blocker Policy Hard Rule 3이 이미 소유한 판단을 재천명하는 방어적 사족("즉시 차단까지는 필요하지 않다")이 남아 있었다. reviewer 짝 대칭을 위해 simplicity-review의 `단일 사용처 추상화` 차원도 같은 축으로 함께 통합할 필요가 있었다.
+
+### Decision
+
+1. plan-review rubric을 6→5 smell로 통합한다: `Single-use Abstraction` 행을 삭제하고 `DRY Risk` Check가 단일 사용처 검사("한 곳에서만 쓰이는 helper, layer, config, interface")를 흡수하며 Principle Link에 YAGNI를 추가한다. 개수 리터럴은 `5 smell 전부`·`전체(5 smell)`·`5 Plan Smells`·`나머지 4 smell`로, Step 5 heading은 개수 제거형 `Smell Review`로 고정한다.
+2. simplicity-review 차원을 5→4로 통합한다: 1번 차원을 `중복 코드·단일 사용처 추상화 (Duplication & Single-use Abstraction)`로 합치되 두 검사 술어를 모두 보존한다. 참조 묶음 = 통합 차원 + 죽은 코드, 국소 묶음 불변, 차원 한정 없는 호출(pr-review 경로)은 전체 4차원 1회로 후방 호환을 유지한다.
+3. plan-review-agent 짝 Severity Medium 행의 "즉시 차단까지는 필요하지 않다" 문장을 삭제한다 — 차단 여부 판단은 Blocker Policy Hard Rule 3 단일 소유(방어적 사족 제거).
+4. 통합 차원명 내부 `·`과 구별하기 위해 orchestrator 렌즈 설명·pr-review-agent 경계 절·example의 차원 나열은 쉼표 구분(`중복 코드·단일 사용처 추상화, 죽은 코드, 도달 불가 에러 처리, 과잉압축`)으로 갱신한다.
+5. 이 결정은 2026-07-31의 차원 묶음 분할 결정(참조 3+국소 2)을 참조 묶음 구성(통합 차원+죽은 코드 2개)에 한해 부분 supersede한다 — 묶음 축과 병렬 dispatch 구조 자체는 유지한다.
+
+### Rationale / Evidence
+
+- 두 smell이 조기 추상화 영역을 분점하던 부분 중복을 흡수 통합으로 해소하되, 검사 술어는 전부 보존해 검출 손실이 없다 — 줄어드는 것은 rubric 행 수와 차원 판정 행뿐이다. reviewer 짝(plan-review↔simplicity) 대칭 유지를 위해 차원도 짝으로 통합했다.
+- implementation-review gate 1(correctness 5 shard + simplicity 2 묶음)은 H1 M2를 검출했고 fix 완료·검증됐다. H1은 `6-Smell` 대문자 변형이 case-sensitive census를 통과한 rename census 함정으로, case-insensitive 확장 재-census 0건으로 해소를 확인했다. gate 2 임계값 미도달.
+- draft AC 15건 전부 fresh grep evidence로 충족(ledger AC→증거 테이블). fast_regression 미설정 — `git diff --check` PASS로 갈음.
+
+### Changes
+
+- `.claude/agents/{plan-review-agent,simplicity-review-agent,pr-review-agent}.md`, `.codex/agents/{plan-review-agent,simplicity-review-agent,pr-review-agent}.toml` — rubric 6→5 smell·차원 5→4 통합, Medium 행 사족 삭제, 경계 절 쉼표 나열 (commits ba05e6c, 8571263)
+- `.claude`/`.codex`의 `skills/{plan-review,implementation-review,pr-review}/SKILL.md` + `pr-review/examples/sample-review.md` — 개수 리터럴·렌즈 설명·example 라벨 갱신 (총 14파일)
+- `_sdd/spec/main.md`, `_sdd/spec/components.md` — current truth 수치 갱신 및 spec version 반영(개번 후 4.8.1, 본문 묶음 소유)
+- `_sdd/drafts/_processed_2026-08-11_feature_draft_merge_single_use_abstraction.md` — 사용 input 처리 표시
+
 ## 2026-08-12 - Minimal slow-test execution guard (v4.7.3 → v4.8.0, post-implementation sync)
 
 ### Decision

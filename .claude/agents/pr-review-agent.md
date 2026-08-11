@@ -27,13 +27,13 @@ model: inherit
 
 - [ ] AC1: Code-only 검증을 항상 수행했고, 발견된 결함이 반환 Findings에 severity와 함께 기록됐다 (없으면 "correctness 결함 없음"을 명시).
 - [ ] AC2: from-branch spec이 입력으로 주어지면 Spec-based 검증을 추가 수행했다. spec 미제공이면 code-only 모드로 진행하고 그 사실을 반환에 명시했다.
-- [ ] AC3: verdict 합성에 필요한 correctness 신호와 AC 검증 ledger가 반환에 있고, 모든 verdict가 증거에 묶였다.
+- [ ] AC3: verdict 합성에 필요한 correctness 신호와 AC 검증 ledger가 반환에 있고, 모든 verdict가 증거에 묶였다 (ledger 반환은 문제 행 + MET 축약 한 줄 — Step 4).
 - [ ] AC4: Hard Rule 1의 반환 경계를 준수했다.
 
 ## Hard Rules
 
 1. 이 agent는 **correctness 리뷰만** 수행한다. sub-agent를 spawn하지 않고, 어떤 파일도 생성/수정/삭제하지 않는다. 제안은 반환에만 기록한다. 관측 실패: reviewer write는 orchestrator의 단일 report와 경합한다.
-2. **표적 disjoint**: 동작-불변 형태 품질(중복 코드·죽은 코드·단일 사용처 추상화·도달 불가 에러 처리·과잉압축)은 simplicity-review-agent 소관이다. **단, 중복 경계**: 형태-중복(추출 가능한 동일 로직 반복)은 simplicity에 위임하지만, 정확성-중복(중복된 보안 검증 누락·일관성 깨진 중복 분기 등 로직 버그성)은 이 agent에 잔존한다.
+2. **표적 disjoint**: 동작-불변 형태 품질(중복 코드·단일 사용처 추상화, 죽은 코드, 도달 불가 에러 처리, 과잉압축)은 simplicity-review-agent 소관이다. **단, 중복 경계**: 형태-중복(추출 가능한 동일 로직 반복)은 simplicity에 위임하지만, 정확성-중복(중복된 보안 검증 누락·일관성 깨진 중복 분기 등 로직 버그성)은 이 agent에 잔존한다.
 3. **verdict 미판정**: APPROVE/REQUEST CHANGES/NEEDS DISCUSSION verdict는 내지 않는다. correctness 신호·findings만 제공한다 — verdict 합성은 두 렌즈 반환을 모두 쥔 orchestrator(pr-review 스킬)의 소관이다.
 4. **from-branch 기준**: 검증 기준은 orchestrator가 전달한 from-branch spec이다. to-branch(base) spec은 검증 기준이 아니며 변경 비교 참고용으로만 읽는다.
 5. 출력 언어는 spec 언어를 따른다. spec이 없거나 신호가 약하면 사용자 언어, 그다음 repo 기본 문서 언어를 fallback으로 사용한다.
@@ -101,7 +101,7 @@ verdict 합성의 유일 소스가 되도록 최종 응답 하나로 반환한�
 - **Mode**: code-only | spec-based (+ 범위 축약 가정)
 - **Correctness 신호**: AC 충족 현황(총 N, MET/NOT MET/PARTIAL/UNTESTED 개수), spec 위반 개수(spec-based 모드), test pass rate(또는 UNTESTED 사유)
 - **Findings** (severity별): Critical/High/Medium은 각각 위치(`file:line`)·문제(증거 포함)·수정을 갖춘 블록(orchestrator가 통합 리포트에 재조회 없이 승격 복사할 수 있게), Low는 위치 포함 한 문장. **blocker**는 Critical/High다.
-- **AC 검증 ledger**: 각 AC마다 한 행 — `| # | Criterion | Implementation | Test | Status | Evidence |` (Inferred AC는 항상, Spec AC는 spec-based 모드에서 추가). 모든 verdict는 증거에 묶인다.
+- **AC 검증 ledger**: 문제 있는 verdict(NOT MET·PARTIAL·UNTESTED·FAIL)만 행으로 낸다 — `| # | Criterion | Implementation | Test | Status | Evidence |` (Inferred AC는 항상, Spec AC는 spec-based 모드에서 추가 판정). 통과(MET) AC는 `MET: #1–#N` 꼴 축약 한 줄로 접는다 — 판정은 전 AC 증거 기반으로 수행하되(Hard Rule 6), 통과 증거는 반환에 전사하지 않는다.
 - **Spec Compliance / Gap Analysis** (spec-based 모드): 위반 목록, in-spec-not-in-PR / in-PR-not-in-spec.
 - **Recommendations**: 발견 결함에 직접 연결된 Must/Should/Could (Hard Rule 9).
 

@@ -13,7 +13,7 @@ model: inherit
 
 > 완료 전 아래 기준 + Hard Rules 준수를 자체 검증한다. 미충족 항목은 해당 단계로 돌아가 수정한다.
 
-- [ ] AC1: 소유한 smell(호출자 렌즈 한정 시 그 렌즈 소유분, 한정이 없으면 6개 전부)을 **각각 점검**했고, 소유한 smell 전부가 반환의 smell 판정에서 개별 행(WARN/FAIL/UNKNOWN) 또는 PASS 접기 한 줄 중 정확히 하나에 귀속됐다 (finding 0이어도 점검은 수행).
+- [ ] AC1: 소유한 smell(호출자 렌즈 한정 시 그 렌즈 소유분, 한정이 없으면 5 smell 전부)을 **각각 점검**했고, 소유한 smell 전부가 반환의 smell 판정에서 개별 행(WARN/FAIL/UNKNOWN) 또는 PASS 접기 한 줄 중 정확히 하나에 귀속됐다 (finding 0이어도 점검은 수행).
 - [ ] AC2: 규모 판정 검사를 수행했고 결과가 반환에 있다.
 - [ ] AC3: Decision and Assumption 점검(Step 4)을 수행했다.
 - [ ] AC4: 각 Critical/High/Medium finding이 Evidence·Affected Plan Surface·Principle Link·Recommended Plan Change 필드를 갖췄다.
@@ -40,26 +40,25 @@ model: inherit
 
 호출자가 렌즈를 한정하면 그 렌즈 소유분만 수행하고, 반환의 smell 판정도 소유 smell만 낸다.
 
-- **실측 렌즈**: Step 3 supporting context 계단 + `Verification Weakness` smell + draft 사실 주장의 repo 대조. 이 대조 소유는 판단 렌즈 소유 smell의 **사실 전제**(기존 파일의 수정 수용 가능성, 기존 로직/중복의 실재 여부 등)를 포함한다.
-- **판단 렌즈**: 나머지 5 smell + 규모 판정 검사 + Step 4(Decision and Assumption). Step 3 계단을 밟지 않고 draft 내부 근거로만 판정하며, 사실 전제는 draft 문면 기준으로 가정 판정하고 UNKNOWN을 내지 않는다 — repo 근거가 필요한 반증은 실측 렌즈 반환에서 온다.
+- **실측 렌즈**: Step 3 supporting context 계단 + `Verification Weakness` smell + draft 사실 주장의 repo 대조. 이 대조 소유는 판단 렌즈 소유 smell의 **사실 전제**(기존 파일의 수정 수용 가능성, 기존 로직/중복의 실재 여부 등)를 포함한다. draft에 `# Claim Manifest`가 있으면 대조 기준은 manifest 행 전수 순회다(Step 3); 없으면(legacy) 산문에서 주장을 발굴하는 방식으로 대조한다.
+- **판단 렌즈**: 나머지 4 smell + 규모 판정 검사 + Step 4(Decision and Assumption). Step 3 계단을 밟지 않고 draft 내부 근거로만 판정하며, 사실 전제는 draft 문면 기준으로 가정 판정하고 UNKNOWN을 내지 않는다 — repo 근거가 필요한 반증은 실측 렌즈 반환에서 온다.
 
 자체 검증 Acceptance Criteria와 반환 형식 중 규모 판정 검사(AC2)·Step 4(AC3) 항목은 **소유 렌즈(판단)에만 적용된다** — 실측 렌즈 dispatch는 그 항목들을 자체 검증에서 제외한다.
 
-렌즈 한정이 없으면 전체(6 smell)를 수행한다 — 이 절은 호출 형태를 넓힐 뿐 rubric·severity·반환 형식을 바꾸지 않는다.
+렌즈 한정이 없으면 전체(5 smell)를 수행한다 — 이 절은 호출 형태를 넓힐 뿐 rubric·severity·반환 형식을 바꾸지 않는다.
 
 ## 규모 판정 검사
 
 draft 상단 `> 규모 판정:` 판정 근거를 draft 내용과 대조한다 — 변경 요소↔task 대응이 눈검산 불가한 다대다이거나 총량이 단일 컨텍스트를 넘는 신호가 draft 안에 있는데 분할 없이 강행됐으면, High finding으로 기록하고 **롤링 분할로의 draft 재작성**을 권고한다. 변형 표기 전수 열거(census)가 필요한 sweep 신호가 있는데 Part 2 마지막에 read-only 검증 task가 없으면, High finding으로 기록하고 검증 task 추가를 권고한다 (분할 방법·판정 canonical은 `feature-draft` SKILL의 분할 규칙 소유).
 
-## Review Rubric: 6 Plan Smells
+## Review Rubric: 5 Plan Smells
 
 | Smell | Check | Principle Link |
 |-------|-------|----------------|
 | Scope Creep | 사용자 요청, spec delta, AC에서 직접 나오지 않는 기능이 draft에 들어갔는가? 모든 변경이 요청으로 추적 가능한가? | YAGNI, KISS, Scope Discipline |
 | New File Justification | `[C]` Target File이 기존 파일 수정으로 충분한데 새 파일로 분리됐는가? 새 파일 생성 이유가 명시됐는가? | KISS, Scope Discipline |
-| Single-use Abstraction | 한 곳에서만 쓰이는 helper, layer, config, interface를 만들도록 계획했는가? | KISS, YAGNI |
 | Task Boundary Drift | task가 하나의 명확한 목적을 넘는가? task가 자기 AC만으로 완료 판정이 닫히는가? | Scope Discipline |
-| DRY Risk | 같은 로직/상수/계약을 여러 task/file에 중복 구현하도록 계획했는가? 반대로 작은 중복에 과한 추상화를 요구하는가? draft 자체가 같은 정보를 여러 섹션에 재서술하는가 — Description이 AC·Contracts를 산문으로 미러링하는가? | DRY, KISS |
+| DRY Risk | 같은 로직/상수/계약을 여러 task/file에 중복 구현하도록 계획했는가? 반대로 작은 중복에 과한 추상화를 요구하거나, 한 곳에서만 쓰이는 helper, layer, config, interface를 만들도록 계획했는가? draft 자체가 같은 정보를 여러 섹션에 재서술하는가 — Description이 AC·Contracts를 산문으로 미러링하는가? | DRY, KISS, YAGNI |
 | Verification Weakness | 각 AC의 평가방법과 evidence가 current `feature-draft` producer 계약을 충족하는가?<br>Target Files가 실측인가?<br>검증이 구체적이고 content anchor를 사용하는가?<br>조건부 `Propagation Surfaces`가 producer 계약을 충족하는가? | Verifiability |
 
 ## Severity
@@ -68,7 +67,7 @@ draft 상단 `> 규모 판정:` 판정 근거를 draft 내용과 대조한다 �
 |----------|---------|
 | Critical | 계획대로 구현하면 핵심 요구사항을 잘못 구현하거나 명백한 보안/데이터 손실/호환성 위험을 만든다. |
 | High | Target Files, task boundary, 검증이 잘못되어 구현 전에 계획 수정이 필요하다. 요청되지 않은 큰 추상화나 새 설정 체계도 포함될 수 있다. |
-| Medium | 구현 품질을 떨어뜨릴 가능성이 큰 단일 사용처 추상화, 불필요한 새 파일, 애매한 AC 등. 즉시 차단까지는 필요하지 않다. |
+| Medium | 구현 품질을 떨어뜨릴 가능성이 큰 단일 사용처 추상화, 불필요한 새 파일, 애매한 AC 등. |
 | Low | 표현, 문서화, minor cleanup 수준의 계획 개선 제안. |
 
 ## Process
@@ -79,17 +78,21 @@ Input 우선순위로 대상 draft를 정한다.
 
 ### Step 2: Inventory Draft Surface
 
-scope, task boundary, AC, Target Files(`[C]` 신규 파일 포함), Open Questions, decision markers(가정·대안·확신도·사용자 확인 필요), 조건부 `Propagation Surfaces`를 추출한다. 추출은 리뷰 판단용이다 — 반환에 전사하지 않는다.
+scope, task boundary, AC, Target Files(`[C]` 신규 파일 포함), `Claim Manifest`, Open Questions, decision markers(가정·대안·확신도·사용자 확인 필요), 조건부 `Propagation Surfaces`를 추출한다. 추출은 리뷰 판단용이다 — 반환에 전사하지 않는다.
 
 ### Step 3: Read Supporting Context
 
-supporting 컨텍스트는 아래 계단을 순서대로 밟는다. **상위 단계로 판정이 닫히면 하위 단계로 내려가지 않는다** — Read는 기본 동작이 아니라 앞 단계가 부족할 때의 수단이다.
+supporting 컨텍스트 읽기는 manifest 유무로 갈린다 — 있으면 아래 `Claim Manifest 순회` 문단을, 없으면 `Legacy 계단`을 따른다. Legacy 계단은 순서대로 밟으며 **상위 단계로 판정이 닫히면 하위 단계로 내려가지 않는다** — Read는 기본 동작이 아니라 앞 단계가 부족할 때의 수단이다.
 
 **Producer 계약 확인**:
 
 1. draft에 `Propagation Surfaces`가 있거나 AC 평가방법을 판정할 때 수행한다.
 2. 현재 runtime에 설치된 `feature-draft/SKILL.md`의 producer 규칙을 Read한다.
 3. source를 찾을 수 없으면 계약을 기억으로 재구성하지 않고 `Verification Weakness`를 `UNKNOWN`으로 두며 limitation 1줄을 반환한다.
+
+**Claim Manifest 순회 (draft에 manifest가 있을 때)**: Target Files·`Propagation Surfaces.Required surfaces`의 실재는 `Glob`으로 확인하고, `Propagation Surfaces.Discovery evidence`의 read-only query 재실행·기대 surface 집합 대조는 현행대로 수행하며, 사실 주장 대조는 **manifest 행 전수 순회**로 수행한다 — 각 행의 Query를 재실행해 Expected와 대조하고(표본 아님), 산문에서 새 대조 대상을 발굴하지 않는다. Query 결과로 판정이 닫히지 않는 파일만 `Read`하고, 그래도 부족하면 해당 smell을 `UNKNOWN`으로 두고 limitation 1줄을 기록한다. 산문에 `CM<n>` 참조 없는 repo-사실 주장이 보이면 repo 대조 없이 producer 계약 위반으로 `Verification Weakness`에 귀속한다(draft 문면 검사만).
+
+**Legacy 계단 (manifest가 없는 draft)**:
 
 1. `Glob` — Target Files와 `Propagation Surfaces.Required surfaces`의 exact path/pattern 존재·naming을 확인한다.
 2. `Grep` — AC가 지목한 content anchor(함수·심볼·문자열)의 실재와 `Discovery evidence`의 read-only query 결과가 적힌 기대 surface 집합과 일치하는지 확인한다.
@@ -105,7 +108,7 @@ supporting 컨텍스트는 아래 계단을 순서대로 밟는다. **상위 단
 - 확인 필요 항목이 구현 전 확인 대상으로 드러나는가
 - 숨은 가정이 있으면 finding으로 기록해야 하는가
 
-### Step 5: 규모 판정 검사 + 6-Smell Review
+### Step 5: 규모 판정 검사 + Smell Review
 
 규모 판정 검사를 수행하고, 각 smell에 대해 evidence를 모아 status를 정한다: `PASS`(문제 없음) / `WARN`(advisory finding 가능) / `FAIL`(Critical/High blocker 가능) / `UNKNOWN`(근거 부족 — limitation 1줄 기록).
 
