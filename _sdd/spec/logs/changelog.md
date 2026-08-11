@@ -2,6 +2,11 @@
 
 > 이 파일은 `_sdd/spec/main.md`의 **본문이 바뀐 버전만** 기록한다 — 본문 무변경 sync(헤더 날짜만 갱신)는 entry를 남기지 않으므로 버전 번호에 결번이 생길 수 있다.
 
+#### v4.7.3 (2026-08-11)
+
+- **하네스 보존 원칙을 결과·감사 중심으로 명확화 (post-implementation sync)**: 세 번째 SDD 하네스 원칙을 `Persist Handoffs, Not Process`에서 `Persist Outcomes, Not Process`로 변경했다. handoff·resumption·audit에 필요한 간결한 결정, 결과, evidence, pointer는 persistent 기록 대상으로 허용하고, 재현 가능한 단계별 process narration은 보존하지 않는다. 이 변경은 의무 work-log audit journaling을 유지하며 v4.7.2의 옛 명칭과 보존 범위 문장을 supersede한다.
+- **검증 evidence**: 정확한 새 문장이 `AGENTS.md`와 spec-create/spec-upgrade의 Claude·Codex harness template 4벌, 총 다섯 live surface에 모두 존재하고 기존 문구는 해당 표면에서 0건이다. 네 template은 byte-identical이며 implementation-review는 `C0 H0 M0 L0`과 work-log audit journaling 호환을 확인했다.
+
 #### v4.7.2 (2026-08-11)
 
 - **하네스 §0을 SDD 전용 3원칙으로 교체 (post-implementation sync)**: `AGENTS.md`와 spec-create/spec-upgrade의 Claude·Codex harness template 4벌에서 일반 agent 작업 원칙과 보조 문면을 제거하고, `Separate Truth by Lifetime`·`Evidence Before Promotion`·`Persist Handoffs, Not Process` 세 SDD failure-prevention invariant로 교체했다. evidence 기반 승격은 goal·AC 검증을 조건으로 하며 구현마다 자동 spec-sync하거나 사람 승인을 의무화하지 않는다.

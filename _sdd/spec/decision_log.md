@@ -1,5 +1,29 @@
 # Decision Log
 
+## 2026-08-11 - 하네스 보존 원칙을 결과·감사 중심으로 명확화 (v4.7.2 → v4.7.3, post-implementation sync)
+
+### Context
+
+v4.7.2는 SDD 하네스의 세 번째 원칙을 `Persist Handoffs, Not Process`로 두고 다음 단계나 재개에 필요한 결정과 evidence를 보존하도록 했다. 그러나 이 명칭은 보존 대상을 handoff로 좁게 읽게 할 수 있고, 의무 work log가 요구하는 결과·감사 기록까지 같은 원칙이 허용한다는 경계를 충분히 드러내지 못했다.
+
+### Decision
+
+1. 세 번째 SDD 하네스 원칙의 이름을 `Persist Outcomes, Not Process`로 변경한다.
+2. 결정, 결과, evidence, pointer 중 handoff·resumption·audit에 필요한 내용은 간결하게 기록한다.
+3. 재현 가능한 단계별 process narration은 persistent artifact에 보존하지 않는다.
+4. 이 결정은 v4.7.2의 `Persist Handoffs, Not Process` 명칭과 보존 범위 문장을 supersede한다. `Separate Truth by Lifetime`, `Evidence Before Promotion`, §1–§5 workflow contract와 의무 work-log audit journaling은 유지한다.
+
+### Rationale / Evidence
+
+- 보존 판단의 중심을 전달 행위가 아니라 지속 가치가 있는 outcome으로 두면 handoff뿐 아니라 재개와 감사에도 필요한 최소 기록을 같은 원칙으로 설명할 수 있다.
+- 정확한 새 문장은 `AGENTS.md`와 spec-create/spec-upgrade의 Claude·Codex harness template 4벌, 총 다섯 live surface에 모두 존재하고 기존 문구는 해당 표면에서 0건이다. 네 template은 byte-identical이다.
+- implementation-review는 Critical/High/Medium/Low 모두 0건으로 판정했고, 변경된 원칙이 의무 work-log audit journaling과 양립한다고 명시적으로 확인했다.
+
+### Changes
+
+- `AGENTS.md`, `.claude/skills/{spec-create,spec-upgrade}/references/agents-harness-template.md`, `.codex/skills/{spec-create,spec-upgrade}/references/agents-harness-template.md` — 세 번째 하네스 원칙의 명칭과 persistent 기록 범위 명확화
+- `_sdd/spec/main.md` — harness layer current truth와 spec version 4.7.3 반영 (본문 묶음 소유)
+
 ## 2026-08-11 - 하네스 §0을 SDD 전용 3원칙으로 교체 (v4.7.1 → v4.7.2, post-implementation sync)
 
 ### Context
