@@ -2,15 +2,18 @@
 
 > 이 파일은 `_sdd/spec/main.md`의 **본문이 바뀐 버전만** 기록한다 — 본문 무변경 sync(헤더 날짜만 갱신)는 entry를 남기지 않으므로 버전 번호에 결번이 생길 수 있다.
 
-#### v4.7.5 (2026-08-12)
+#### v4.8.2 (2026-08-12) — main 머지 시 v4.7.5에서 개번
 
 - **리뷰 읽기 다이어트 — Claim Manifest 계약 + 위험 적응형 읽기·ledger MET 접기 (post-implementation sync)**: 리뷰 벽시계를 결정하는 pole 작성자의 "읽고 확인할 양"을 확인 항목 무손실 조건으로 깎았다(롤링 분할 F1+F2 모두 완료). **F1 — Claim Manifest 계약(신규)**: draft의 repo 대조 필요 사실 주장은 `# Claim Manifest` 표(`CM<n>` 행)가 단일 소스이며 산문 재서술·Discovery evidence 중복 수록을 금지한다. plan-review 실측 렌즈는 산문 발굴 대신 manifest 행 전수 순회(Query 재실행→Expected 대조)로 대조하고, `CM<n>` 미참조 repo-사실 주장은 `Verification Weakness`로 귀속하며, manifest 없는 legacy draft는 산문 발굴 fallback을 유지한다. **F2 — 위험 적응형 읽기**: implementation-review Step 3 ①을 diff hunk 기본+승격 트리거 6종(실행 semantics·제어 흐름/상태/에러 경로·행동 AC·고밀도 변경·결함 의심·draft 위험 표기) 시 전문 계단으로 개편하고 미승격 파일은 `hunk-scoped` 표기(기준 문서 전문·능동 검토 불변). **F2 — ledger MET 접기**: impl-review·pr-review ledger는 문제 verdict만 증거 행, MET은 축약 한 줄 — 판정 의무("증거 없는 MET 금지")는 보존. 기각 대안: reviewer model 강등(실측 효과 없음)·표본 검증·존재 확인 스크립트화(위장 PASS 위험).
 - **검증 evidence·잔여 위험**: claude·codex 미러 짝 8파일 전파(commits 64caa42·81c889e). 사용자 지시 "최소한의 리뷰"로 plan-review 게이트 생략·correctness 단일 dispatch ×2 — F1 M1+L1·F2 L1 fix 반영, 전 18 AC MET fresh grep, 구 문면 census case-insensitive 0건·판정 의무 역검증 통과. 잔여 위험 수용: hunk 밖 원거리 불변식 파괴는 저위험 버킷에서 놓칠 수 있음(트리거 ③⑤ 부분 완화), 속도 효과는 플러그인 갱신 후 실측 예정.
 
-#### v4.7.4 (2026-08-12)
+#### v4.8.1 (2026-08-12) — main 머지 시 v4.7.4에서 개번
 
 - **Single-use Abstraction을 중복/DRY 축으로 통합 (post-implementation sync)**: plan-review rubric을 6→5 smell로 통합했다 — `Single-use Abstraction` 행을 삭제하고 `DRY Risk` Check가 단일 사용처 검사를 흡수하며 Principle Link에 YAGNI를 추가했다(Step 5 heading은 개수 제거형 `Smell Review`). reviewer 짝 대칭으로 simplicity-review 차원도 5→4로 통합해 1번 차원을 `중복 코드·단일 사용처 추상화 (Duplication & Single-use Abstraction)`로 합쳤다(검사 술어 전부 보존 — 검출 손실 없음). 참조 묶음 = 통합 차원 + 죽은 코드, 국소 묶음 불변, pr-review 경로는 전체 4차원 1회로 후방 호환 유지. plan-review-agent 짝 Severity Medium 행의 "즉시 차단까지는 필요하지 않다" 방어적 사족을 삭제했다(Blocker Policy Hard Rule 3 단일 소유). 2026-07-31 차원 묶음 분할 결정은 참조 묶음 구성에 한해 부분 supersede(묶음 축·병렬 구조 유지).
 - **전파·검증 evidence**: 통합 차원 나열은 쉼표 구분으로 orchestrator 렌즈 설명·pr-review-agent 경계 절·example까지 claude·codex 14파일 전파(commits ba05e6c·8571263). implementation-review gate 1 `H1 M2` fix 완료 — H1은 `6-Smell` 대문자 변형의 case-sensitive census 통과 함정으로 case-insensitive 확장 재-census 0건 확인, gate 2 임계값 미도달. draft AC 15건 전부 fresh grep evidence 충족, fast_regression 미설정으로 `git diff --check` PASS 갈음.
+#### v4.8.0 (2026-08-12)
+
+- **Minimal slow-test execution guard (post-implementation sync)**: 표적 test/check 30초 중단, 관련 변경 전 timeout 명령 재실행 금지, 선언된 checkpoint에서만 slow test 실행이라는 세 규칙을 여섯 Claude/Codex 실행 지침에 반영하고 mirror/TOML/diff 검증과 implementation-review를 통과했다.
 
 #### v4.7.3 (2026-08-11)
 

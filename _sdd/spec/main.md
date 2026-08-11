@@ -2,7 +2,7 @@
 
 > Markdown 기반 skill bundle로 AI 에이전트의 Spec-Driven Development 워크플로우를 Claude Code와 Codex에서 공통 계약으로 실행한다.
 
-**Spec Version**: 4.7.5
+**Spec Version**: 4.8.2
 **Last Updated**: 2026-08-12
 **Status**: Approved
 **Canonical Role**: current thin global spec
@@ -56,6 +56,7 @@ SDD Skills는 이 문제를 `SKILL.md = 실행 가능한 프롬프트`라는 관
 ### Guardrails
 
 - global spec은 thin decision document로 유지하고, execution detail은 `_sdd/drafts/`, `_sdd/implementation/`, `_sdd/pipeline/` 같은 temporary surface로 분리한다
+- 표적 test/check는 30초가 지나면 중단하고, timeout된 같은 명령은 test target·fixture·관련 구현이 바뀌기 전까지 재실행하지 않으며, 느리다고 알려진 test는 repo 또는 사용자가 명시한 checkpoint에서만 실행한다
 - 사용자 entrypoint는 skill layer에, 재사용 execution unit은 agent layer에 둔다. dispatch된 agent는 sub-agent를 다시 spawn하지 않는다(nesting 1단계 제한)
   - leaf dispatch가 필요한 execution은 `orchestrator(skill) + leaf/producer(agent)` 형태로 둔다(orchestrator skill만 dispatch하고, agent는 단일 단위/단일 산출물만 처리)
   - dispatch가 없는 단순 위임 execution만 `wrapper-backed skill + single-source agent` 형태로 둔다

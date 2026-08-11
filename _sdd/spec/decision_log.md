@@ -1,6 +1,6 @@
 # Decision Log
 
-## 2026-08-12 - 리뷰 읽기 다이어트 — Claim Manifest 계약 + 위험 적응형 읽기·ledger MET 접기 (v4.7.4 → v4.7.5, post-implementation sync)
+## 2026-08-12 - 리뷰 읽기 다이어트 — Claim Manifest 계약 + 위험 적응형 읽기·ledger MET 접기 (v4.8.1 → v4.8.2, post-implementation sync — main 머지 시 v4.7.5에서 개번)
 
 ### Context
 
@@ -28,7 +28,7 @@
 - `.claude/agents/pr-review-agent.md`, `.codex/agents/pr-review-agent.toml` — AC 검증 ledger MET 접기 (commit 81c889e)
 - `_sdd/drafts/_processed_2026-08-11_feature_draft_review_claim_manifest.md`, `_sdd/drafts/_processed_2026-08-12_feature_draft_adaptive_read_ledger_diet.md` — 사용 input 처리 표시 (F1·F2 모두 구현 완료, 롤링 잔여 없음)
 
-## 2026-08-12 - Single-use Abstraction을 중복/DRY 축으로 통합 — plan-review 6→5 smell·simplicity 5→4 차원 (v4.7.3 → v4.7.4, post-implementation sync)
+## 2026-08-12 - Single-use Abstraction을 중복/DRY 축으로 통합 — plan-review 6→5 smell·simplicity 5→4 차원 (v4.8.0 → v4.8.1, post-implementation sync — main 머지 시 v4.7.4에서 개번)
 
 ### Context
 
@@ -52,8 +52,18 @@ plan-review rubric의 `Single-use Abstraction` smell은 `DRY Risk`의 "작은 �
 
 - `.claude/agents/{plan-review-agent,simplicity-review-agent,pr-review-agent}.md`, `.codex/agents/{plan-review-agent,simplicity-review-agent,pr-review-agent}.toml` — rubric 6→5 smell·차원 5→4 통합, Medium 행 사족 삭제, 경계 절 쉼표 나열 (commits ba05e6c, 8571263)
 - `.claude`/`.codex`의 `skills/{plan-review,implementation-review,pr-review}/SKILL.md` + `pr-review/examples/sample-review.md` — 개수 리터럴·렌즈 설명·example 라벨 갱신 (총 14파일)
-- `_sdd/spec/main.md`, `_sdd/spec/components.md` — current truth 수치 갱신 및 spec version 4.7.4 반영 (본문 묶음 소유)
+- `_sdd/spec/main.md`, `_sdd/spec/components.md` — current truth 수치 갱신 및 spec version 반영(개번 후 4.8.1, 본문 묶음 소유)
 - `_sdd/drafts/_processed_2026-08-11_feature_draft_merge_single_use_abstraction.md` — 사용 input 처리 표시
+
+## 2026-08-12 - Minimal slow-test execution guard (v4.7.3 → v4.8.0, post-implementation sync)
+
+### Decision
+
+1. 표적 test/check는 30초가 지나면 중단한다.
+2. Timeout 후에는 test target, fixture, 또는 관련 구현이 바뀌기 전까지 같은 명령을 다시 실행하지 않는다.
+3. 느리다고 알려진 test는 repo 또는 사용자가 명시한 checkpoint에서만 실행한다.
+
+- **Evidence**: 세 문장이 implementation·implementation-review·pr-review의 Claude/Codex 지침 여섯 곳에 각각 1회 존재하며 mirror/TOML/diff 검증과 implementation-review를 통과했다.
 
 ## 2026-08-11 - 하네스 보존 원칙을 결과·감사 중심으로 명확화 (v4.7.2 → v4.7.3, post-implementation sync)
 
