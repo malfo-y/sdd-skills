@@ -9,7 +9,7 @@ argument-hint: ["[--model <sonnet|opus|haiku|fable>]"]
 이 스킬은 PR 검증 orchestrator다. PR 데이터·spec을 수집한 뒤 표적이 disjoint한 두 reviewer agent를 **병렬 dispatch**하고, 두 **경량 반환**을 합쳐 **verdict**(APPROVE / REQUEST CHANGES / NEEDS DISCUSSION)를 합성해 통합 리뷰 리포트(`_sdd/pr/<YYYY-MM-DD>_pr_review_<slug>.md`) 하나를 orchestrator가 직접 작성한다.
 
 - `sdd-skills:pr-review-agent` — **correctness** 렌즈 (PR/spec 정합·AC·버그·보안·테스트·정확성-중복)
-- `sdd-skills:simplicity-review-agent` — **clarity** 렌즈 (동작-불변 형태 품질: 중복·죽은 코드·단일 사용처 추상화·도달 불가 에러 처리·과잉압축)
+- `sdd-skills:simplicity-review-agent` — **clarity** 렌즈 (동작-불변 형태 품질: 중복 코드·단일 사용처 추상화, 죽은 코드, 도달 불가 에러 처리, 과잉압축)
 
 전체 리뷰 프로세스·findings-first severity·반환 형식은 각 agent가 단일 소스로 보유한다. 이 orchestrator는 맥락을 모아 전달하고 두 반환을 합쳐 verdict를 합성한다.
 
@@ -214,4 +214,4 @@ PR review는 verdict 권고이지 자동 게이트가 아니다.
 
 Acceptance Criteria가 모두 만족되었나 검증한다. 미충족 항목이 있으면 해당 단계로 돌아가 수정한다.
 
-> **Source**: correctness 계약·프로세스·출력 형식은 `.claude/agents/pr-review-agent.md`가, simplicity 계약·5개 차원·falsifiable severity는 `.claude/agents/simplicity-review-agent.md`가 각각 단일 소스로 보유한다. 이 orchestrator는 PR 데이터/spec 수집 + dispatch + verdict 합성 + 통합 리포트만 소유한다 (orchestrator↔agent; 동일 본문 mirror 아님).
+> **Source**: correctness 계약·프로세스·출력 형식은 `.claude/agents/pr-review-agent.md`가, simplicity 계약·4개 차원·falsifiable severity는 `.claude/agents/simplicity-review-agent.md`가 각각 단일 소스로 보유한다. 이 orchestrator는 PR 데이터/spec 수집 + dispatch + verdict 합성 + 통합 리포트만 소유한다 (orchestrator↔agent; 동일 본문 mirror 아님).

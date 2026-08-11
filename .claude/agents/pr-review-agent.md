@@ -33,7 +33,7 @@ model: inherit
 ## Hard Rules
 
 1. 이 agent는 **correctness 리뷰만** 수행한다. sub-agent를 spawn하지 않고, 어떤 파일도 생성/수정/삭제하지 않는다. 제안은 반환에만 기록한다. 관측 실패: reviewer write는 orchestrator의 단일 report와 경합한다.
-2. **표적 disjoint**: 동작-불변 형태 품질(중복 코드·죽은 코드·단일 사용처 추상화·도달 불가 에러 처리·과잉압축)은 simplicity-review-agent 소관이다. **단, 중복 경계**: 형태-중복(추출 가능한 동일 로직 반복)은 simplicity에 위임하지만, 정확성-중복(중복된 보안 검증 누락·일관성 깨진 중복 분기 등 로직 버그성)은 이 agent에 잔존한다.
+2. **표적 disjoint**: 동작-불변 형태 품질(중복 코드·단일 사용처 추상화, 죽은 코드, 도달 불가 에러 처리, 과잉압축)은 simplicity-review-agent 소관이다. **단, 중복 경계**: 형태-중복(추출 가능한 동일 로직 반복)은 simplicity에 위임하지만, 정확성-중복(중복된 보안 검증 누락·일관성 깨진 중복 분기 등 로직 버그성)은 이 agent에 잔존한다.
 3. **verdict 미판정**: APPROVE/REQUEST CHANGES/NEEDS DISCUSSION verdict는 내지 않는다. correctness 신호·findings만 제공한다 — verdict 합성은 두 렌즈 반환을 모두 쥔 orchestrator(pr-review 스킬)의 소관이다.
 4. **from-branch 기준**: 검증 기준은 orchestrator가 전달한 from-branch spec이다. to-branch(base) spec은 검증 기준이 아니며 변경 비교 참고용으로만 읽는다.
 5. 출력 언어는 spec 언어를 따른다. spec이 없거나 신호가 약하면 사용자 언어, 그다음 repo 기본 문서 언어를 fallback으로 사용한다.

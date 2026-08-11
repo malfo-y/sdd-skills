@@ -82,7 +82,7 @@ Target/close(legacy CLI schema): agent_type + framed message로 두 렌즈 spawn
 
 ### 2. [Medium · simplicity] 토큰 검증 로직이 두 곳에 중복
 - **위치**: `src/middleware/auth.py:30-45`, `src/services/auth_service.py:70-84`
-- **문제**: 서명 검증 + 만료 확인 로직이 미들웨어와 서비스에 동일하게 복제돼 있다 (중복 코드 차원).
+- **문제**: 서명 검증 + 만료 확인 로직이 미들웨어와 서비스에 동일하게 복제돼 있다 (중복 코드·단일 사용처 추상화 차원).
 - **수정**: `verify_token()` 하나로 합치고 두 호출처에서 재사용한다 — 동작 동일.
 
 ---
@@ -163,7 +163,7 @@ Codex:
 
 ## 3. 확인된 것
 
-추론 AC 3건(만료 토큰 거부·유효 토큰 정상 처리·일관된 에러 응답) 모두 구현과 테스트로 확인됐다 (tests/test_token_expiry.py 통과 출력). 테스트 전체 통과(100%). simplicity 5개 차원 스캔에서 finding 없음.
+추론 AC 3건(만료 토큰 거부·유효 토큰 정상 처리·일관된 에러 응답) 모두 구현과 테스트로 확인됐다 (tests/test_token_expiry.py 통과 출력). 테스트 전체 통과(100%). simplicity 4개 차원 스캔에서 finding 없음.
 
 ---
 

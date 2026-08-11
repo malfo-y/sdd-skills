@@ -13,7 +13,7 @@ model: inherit
 
 > 완료 전 아래 기준 + Hard Rules 준수를 자체 검증한다. 미충족 항목은 해당 단계로 돌아가 수정한다.
 
-- [ ] AC1: 소유한 smell(호출자 렌즈 한정 시 그 렌즈 소유분, 한정이 없으면 6개 전부)을 **각각 점검**했고, 소유한 smell 전부가 반환의 smell 판정에서 개별 행(WARN/FAIL/UNKNOWN) 또는 PASS 접기 한 줄 중 정확히 하나에 귀속됐다 (finding 0이어도 점검은 수행).
+- [ ] AC1: 소유한 smell(호출자 렌즈 한정 시 그 렌즈 소유분, 한정이 없으면 5 smell 전부)을 **각각 점검**했고, 소유한 smell 전부가 반환의 smell 판정에서 개별 행(WARN/FAIL/UNKNOWN) 또는 PASS 접기 한 줄 중 정확히 하나에 귀속됐다 (finding 0이어도 점검은 수행).
 - [ ] AC2: 규모 판정 검사를 수행했고 결과가 반환에 있다.
 - [ ] AC3: Decision and Assumption 점검(Step 4)을 수행했다.
 - [ ] AC4: 각 Critical/High/Medium finding이 Evidence·Affected Plan Surface·Principle Link·Recommended Plan Change 필드를 갖췄다.
@@ -41,25 +41,24 @@ model: inherit
 호출자가 렌즈를 한정하면 그 렌즈 소유분만 수행하고, 반환의 smell 판정도 소유 smell만 낸다.
 
 - **실측 렌즈**: Step 3 supporting context 계단 + `Verification Weakness` smell + draft 사실 주장의 repo 대조. 이 대조 소유는 판단 렌즈 소유 smell의 **사실 전제**(기존 파일의 수정 수용 가능성, 기존 로직/중복의 실재 여부 등)를 포함한다.
-- **판단 렌즈**: 나머지 5 smell + 규모 판정 검사 + Step 4(Decision and Assumption). Step 3 계단을 밟지 않고 draft 내부 근거로만 판정하며, 사실 전제는 draft 문면 기준으로 가정 판정하고 UNKNOWN을 내지 않는다 — repo 근거가 필요한 반증은 실측 렌즈 반환에서 온다.
+- **판단 렌즈**: 나머지 4 smell + 규모 판정 검사 + Step 4(Decision and Assumption). Step 3 계단을 밟지 않고 draft 내부 근거로만 판정하며, 사실 전제는 draft 문면 기준으로 가정 판정하고 UNKNOWN을 내지 않는다 — repo 근거가 필요한 반증은 실측 렌즈 반환에서 온다.
 
 자체 검증 Acceptance Criteria와 반환 형식 중 규모 판정 검사(AC2)·Step 4(AC3) 항목은 **소유 렌즈(판단)에만 적용된다** — 실측 렌즈 dispatch는 그 항목들을 자체 검증에서 제외한다.
 
-렌즈 한정이 없으면 전체(6 smell)를 수행한다 — 이 절은 호출 형태를 넓힐 뿐 rubric·severity·반환 형식을 바꾸지 않는다.
+렌즈 한정이 없으면 전체(5 smell)를 수행한다 — 이 절은 호출 형태를 넓힐 뿐 rubric·severity·반환 형식을 바꾸지 않는다.
 
 ## 규모 판정 검사
 
 draft 상단 `> 규모 판정:` 판정 근거를 draft 내용과 대조한다 — 변경 요소↔task 대응이 눈검산 불가한 다대다이거나 총량이 단일 컨텍스트를 넘는 신호가 draft 안에 있는데 분할 없이 강행됐으면, High finding으로 기록하고 **롤링 분할로의 draft 재작성**을 권고한다. 변형 표기 전수 열거(census)가 필요한 sweep 신호가 있는데 Part 2 마지막에 read-only 검증 task가 없으면, High finding으로 기록하고 검증 task 추가를 권고한다 (분할 방법·판정 canonical은 `feature-draft` SKILL의 분할 규칙 소유).
 
-## Review Rubric: 6 Plan Smells
+## Review Rubric: 5 Plan Smells
 
 | Smell | Check | Principle Link |
 |-------|-------|----------------|
 | Scope Creep | 사용자 요청, spec delta, AC에서 직접 나오지 않는 기능이 draft에 들어갔는가? 모든 변경이 요청으로 추적 가능한가? | YAGNI, KISS, Scope Discipline |
 | New File Justification | `[C]` Target File이 기존 파일 수정으로 충분한데 새 파일로 분리됐는가? 새 파일 생성 이유가 명시됐는가? | KISS, Scope Discipline |
-| Single-use Abstraction | 한 곳에서만 쓰이는 helper, layer, config, interface를 만들도록 계획했는가? | KISS, YAGNI |
 | Task Boundary Drift | task가 하나의 명확한 목적을 넘는가? task가 자기 AC만으로 완료 판정이 닫히는가? | Scope Discipline |
-| DRY Risk | 같은 로직/상수/계약을 여러 task/file에 중복 구현하도록 계획했는가? 반대로 작은 중복에 과한 추상화를 요구하는가? draft 자체가 같은 정보를 여러 섹션에 재서술하는가 — Description이 AC·Contracts를 산문으로 미러링하는가? | DRY, KISS |
+| DRY Risk | 같은 로직/상수/계약을 여러 task/file에 중복 구현하도록 계획했는가? 반대로 작은 중복에 과한 추상화를 요구하거나, 한 곳에서만 쓰이는 helper, layer, config, interface를 만들도록 계획했는가? draft 자체가 같은 정보를 여러 섹션에 재서술하는가 — Description이 AC·Contracts를 산문으로 미러링하는가? | DRY, KISS, YAGNI |
 | Verification Weakness | 각 AC의 평가방법과 evidence가 current `feature-draft` producer 계약을 충족하는가?<br>Target Files가 실측인가?<br>검증이 구체적이고 content anchor를 사용하는가?<br>조건부 `Propagation Surfaces`가 producer 계약을 충족하는가? | Verifiability |
 
 ## Severity
@@ -105,7 +104,7 @@ supporting 컨텍스트는 아래 계단을 순서대로 밟는다. **상위 단
 - 확인 필요 항목이 구현 전 확인 대상으로 드러나는가
 - 숨은 가정이 있으면 finding으로 기록해야 하는가
 
-### Step 5: 규모 판정 검사 + 6-Smell Review
+### Step 5: 규모 판정 검사 + Smell Review
 
 규모 판정 검사를 수행하고, 각 smell에 대해 evidence를 모아 status를 정한다: `PASS`(문제 없음) / `WARN`(advisory finding 가능) / `FAIL`(Critical/High blocker 가능) / `UNKNOWN`(근거 부족 — limitation 1줄 기록).
 

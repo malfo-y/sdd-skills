@@ -9,7 +9,7 @@ argument-hint: ["[--model <sonnet|opus|haiku|fable>]"]
 이 스킬은 review-only orchestrator다. 사용자의 implementation-review 요청을 두 렌즈의 reviewer agent에 **병렬 dispatch**하고, 경량 반환들과 합산 severity 요약을 사용자에게 relay한다. correctness는 기준 draft의 task 수에 따라 shard 여러 개로, simplicity는 차원 묶음 2개로 나뉜다(아래 실행 1·2).
 
 - `sdd-skills:implementation-review-agent` — **correctness** 렌즈 (AC 충족·버그·보안·spec drift — 기준 문서 적응)
-- `sdd-skills:simplicity-review-agent` — **clarity** 렌즈 (동작-불변 형태 품질: 중복·죽은 코드·단일 사용처 추상화·도달 불가 에러 처리·과잉압축)
+- `sdd-skills:simplicity-review-agent` — **clarity** 렌즈 (동작-불변 형태 품질: 중복 코드·단일 사용처 추상화, 죽은 코드, 도달 불가 에러 처리, 과잉압축)
 
 > **Review-only 경계**: 리뷰 프로세스·severity·반환 형식은 각 agent가 소유한다. 이 orchestrator는 맥락 수집·dispatch·결과 relay와 합산 요약만 수행한다. finding 반영·마감 판정은 호출자 소관이며 합집합 exit 판정은 하지 않는다.
 
@@ -44,4 +44,4 @@ reviewer들은 sub-agent를 spawn하지 않고 **어떤 파일도 쓰지 않는*
 - 실제 검증은 각 reviewer agent가 수행한다. agent가 지원하지 않는 동작을 orchestrator가 흉내내지 않는다.
 - reviewer들이 노출하는 Critical/High findings·blocker를 orchestrator가 relay해 보존한다 (합산 요약은 relay이지 gating이 아니다).
 
-> Source: correctness 계약·severity·반환 형식은 `.claude/agents/implementation-review-agent.md`가, simplicity 계약·5개 차원·falsifiable severity는 `.claude/agents/simplicity-review-agent.md`가 각각 단일 소스로 보유한다 (orchestrator↔agent; 동일 본문 mirror 아님).
+> Source: correctness 계약·severity·반환 형식은 `.claude/agents/implementation-review-agent.md`가, simplicity 계약·4개 차원·falsifiable severity는 `.claude/agents/simplicity-review-agent.md`가 각각 단일 소스로 보유한다 (orchestrator↔agent; 동일 본문 mirror 아님).
