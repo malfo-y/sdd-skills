@@ -50,6 +50,12 @@ TDD 기반 구현 실행 스킬. Task마다 test-first 순서를 지킨다 — *
 
 ## Process — task 단위로
 
+다음 제한은 RED·GREEN·회귀를 포함한 모든 test/check 실행에 공통 적용한다.
+
+- 표적 test/check는 30초가 지나면 중단한다.
+- Timeout 후에는 test target, fixture, 또는 관련 구현이 바뀌기 전까지 같은 명령을 다시 실행하지 않는다.
+- 느리다고 알려진 test는 repo 또는 사용자가 명시한 checkpoint에서만 실행한다.
+
 ### 1. Triage: 테스트가 필요한가
 
 각 task를 셋 중 하나로 분류한다. 기준은 구현 난이도가 아니다 — "간단한 구현이라서"는 (c) 자격이 아니다.
