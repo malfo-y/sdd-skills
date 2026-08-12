@@ -7,20 +7,7 @@ description: This skill should be used when the user asks to "feature draft", "d
 
 구현에 필요한 기능 명세 및 계획 작성. 단일 컨텍스트로 감당되는 변경의 기본 경로다. 산출물의 정의는 아래 Required Output이 전부다.
 
-## 분할 규칙 (작성 전 판정 + 작성 중 상시 감시)
-
-둘 중 하나에 해당하면 하나의 draft로 강행하지 않는다 — **분할한다**. 규모 초과의 해소 수단은 더 큰 파이프라인이 아니라 분할이다.
-
-1. **coverage 눈검산 불가**: 변경 요소(계약·수정 지점)와 task의 대응이 다대다로 얽혀 "모든 변경 요소가 어느 task에서 처리되는지"를 눈으로 검산할 수 없다.
-2. **단일 컨텍스트 초과**: 작업 총량이 한 세션에서 품질 저하 없이 끝날 규모를 넘는다.
-
-리트머스: **"머리 하나에 다 안 담기는가?"** 담기면 단일 draft, 안 담기면 쪼갠다. 새 contract/invariant(다른 코드·문서·미래 작업이 새로 의지하게 될 약속)가 생겨도, 소수이고 눈검산 가능하면 단일 draft 적격이다 — 해당 task의 `Contracts`에 적는다.
-
-**분할 방법 (롤링)**: 분할 필요 판정이면 이 draft 파일이 곧 분할 계획이다. Part 1 마커 내부에 분할 feature 목록(feature당 1줄 의도 + scope)을 적는다 — `spec-sync` 스킬이 마커 내부를 소비해 feature별 planned todo로 global spec에 고정한다. Part 2에는 **첫 feature의 task만** 작성한다. 나머지 feature는 각자 차례에 자기 draft를 새로 만든다.
-
-**census형 sweep은 분할 대상이 아니라 검증 대상이다**: rename/전파류처럼 같은 대상의 변형 표기(kebab/underscore/공백/글롭)가 여러 파일에 흩어져 전수 열거 없이는 수정 잔존이 재발하는 변경은, Part 2 마지막에 read-only 검증 task(변형 표기 전수 grep census를 AC로, Target Files `없음 (read-only 검증)`)를 필수로 둔다.
-
-판정 결과와 근거를 draft 상단에 1줄 기록한다 — 값은 "적격" 또는 "분할 필요 — 분할 계획 포함".
+**task의 정의**: task는 단일 의도를 가지고 자기 AC만으로 완료 판정이 닫히는 실행 단위다.
 
 ## Process
 
@@ -29,12 +16,27 @@ description: This skill should be used when the user asks to "feature draft", "d
    - **발동**: 로컬 탐색으로 닫히지 않고 답이 아키텍처·범위·Target Files를 바꾸는 unknown만 묻는다.
    - **순서**: 한 번에 하나씩, 뒤늦은 답이 앞선 결정을 가장 많이 무효화하는 질문부터 묻는다.
    - **무인 실행**: 가장 합당한 해석을 택해 결정과 근거를 Open Questions에 기록한다.
-3. **분할 판정**: 위 분할 규칙 점검. 판정 근거 1줄 확정 (census형 신호가 있으면 검증 task를 Part 2 마지막에 예약).
-4. **draft 작성**
+3. **task 만들기** — 계획의 본체다. 아래 순서로 짓는다.
+   - **열거**: 이번 변경이 만들거나 바꾸는 요소를 먼저 전수 열거한다 — 계약·수정 지점·1에서 식별한 동기화 표면. task부터 떠올리지 않는다. 열거가 끝나야 규모와 경계가 보인다.
+   - **배정**: 각 요소에 owner task를 **정확히 하나** 배정한다. 한 task가 여러 요소를 가져도 되지만, 한 요소가 두 task에 걸치면 경계를 다시 긋는다. 같은 로직·상수·계약을 두 task가 각자 구현하도록 계획했다면 그것도 요소 하나를 두 곳에 배정한 것이다. 의도가 두 문장이면 두 task로 쪼개고, 다른 task의 결과를 봐야 완료를 판정할 수 있어도 다시 긋는다.
+   - **순서**: 산출물 의존으로만 정한다 — 뒤 task가 앞 task의 산출물을 쓰면 그 순서로 놓고, 그런 의존이 없으면 순서에 의미를 두지 않는다(구현이 병렬로 진행해도 좋다는 신호다).
+4. **분할 판정**: 3의 요소↔task 대응을 눈으로 검산해 아래 분할 규칙을 점검한다. 판정 근거 1줄 확정 (census형 신호가 있으면 검증 task를 Part 2 마지막에 예약).
+5. **draft 작성**
    - **Template fidelity**: Required Output의 fenced template을 출발 skeleton으로 verbatim 복사하고 heading·marker·field order를 보존한다.
-   - **허용 변형**: placeholder와 예시 값을 실제 값으로 치환하고, Propagation row·Claim Manifest row·task block·AC·Target File row는 필요한 수만큼 반복한다. 조건이 성립하지 않는 `Propagation Surfaces`·`Open Questions` 섹션만 제거할 수 있다.
-   - **Task boundary**: task는 단일 의도를 가지고 자기 AC만으로 완료 판정이 닫히는 실행 단위다. 의도가 두 문장이면 두 task로 쪼개고, 다른 task의 결과를 봐야 완료를 판정할 수 있으면 경계를 다시 긋는다.
-5. **surface**: 저장 후 Open Questions 중 사용자 확인이 필요한 항목만 채팅에 1줄씩 노출한다. 없으면 "사용자 확인이 필요한 항목 없음" 1줄.
+   - **허용 변형**: placeholder와 예시 값을 실제 값으로 치환하고, Propagation row·task block·AC·Target File row는 필요한 수만큼 반복한다. 조건이 성립하지 않는 `Propagation Surfaces`·`Open Questions` 섹션만 제거할 수 있다.
+6. **surface**: 저장 후 Open Questions 중 사용자 확인이 필요한 항목만 채팅에 1줄씩 노출한다. 없으면 "사용자 확인이 필요한 항목 없음" 1줄.
+
+### 분할 규칙 (작성 전 판정 + 작성 중 상시 감시)
+
+변경 요소(계약·수정 지점)와 task의 대응이 다대다로 얽혀 "모든 변경 요소가 어느 task에서 처리되는지"를 눈으로 검산할 수 없으면(**coverage 눈검산 불가**), 하나의 draft로 강행하지 않는다 — **분할한다**. 해소 수단은 더 큰 파이프라인이 아니라 분할이다.
+
+새 contract/invariant(다른 코드·문서·미래 작업이 새로 의지하게 될 약속)가 생기는 것 자체는 분할 사유가 아니다 — 해당 task의 `Contracts`에 적는다.
+
+**분할 방법 (롤링)**: 분할 필요 판정이면 이 draft 파일이 곧 분할 계획이다. Part 1 마커 내부에 분할 feature 목록(feature당 1줄 의도 + scope)을 적는다 — `spec-sync` 스킬이 마커 내부를 소비해 feature별 planned todo로 global spec에 고정한다. Part 2에는 **첫 feature의 task만** 작성한다. 나머지 feature는 각자 차례에 자기 draft를 새로 만든다.
+
+**census형 sweep은 분할 대상이 아니라 검증 대상이다**: rename/전파류처럼 같은 대상의 변형 표기(kebab/underscore/공백/글롭)가 여러 파일에 흩어져 전수 열거 없이는 수정 잔존이 재발하는 변경은, Part 2 마지막에 read-only 검증 task(변형 표기 전수 grep census를 AC로, Target Files `없음 (read-only 검증)`)를 필수로 둔다.
+
+판정 결과와 근거를 draft 상단에 1줄 기록한다 — 값은 "적격" 또는 "분할 필요 — 분할 계획 포함".
 
 ## Required Output
 
@@ -65,13 +67,6 @@ description: This skill should be used when the user asks to "feature draft", "d
 |---|---|---|---|---|
 | P1 | ... | exact paths/patterns | read-only query + expected surface set | Task N |
 
-# Claim Manifest
-[repo 대조가 필요한 사실 주장(AC content anchor 실재, 기존 로직·중복 실재 등 사실 전제)을 행으로 모은다. 대조 필요 주장이 없으면 `없음 (대조 필요 주장 없음)` 1줄로 대체.]
-
-| ID | Claim | Query | Expected |
-|---|---|---|---|
-| CM1 | ... | read-only query | 기대 결과 |
-
 # Part 2: Tasks
 
 ### Task 1: [action-oriented title]
@@ -99,22 +94,21 @@ description: This skill should be used when the user asks to "feature draft", "d
   - **공통 기준**: 각 AC에 평가방법과 기대 evidence를 함께 쓰고, 이진 판정으로 닫으며, 외부 증거에 묶어 제3자가 반박 가능하게 한다.
 - **Target Files는 실측**: 현재 코드 탐색으로 확인한 경로만 적는다. 확정 불가면 `[TBD] <사유>`. 마커는 `[C]` Create / `[M]` Modify / `[D]` Delete.
 - **마커 보존**: `spec-update-todo-input` 마커 쌍을 유실하지 않는다 — `spec-sync` 입력 호환의 조건이다.
-- **Claim Manifest 단일 소스**: repo 대조가 필요한 사실 주장(AC content anchor 실재, 기존 로직·중복 실재 등 사실 전제)은 `# Claim Manifest` 표가 단일 소스다. AC 평가방법·Description·Contracts 산문은 그 주장을 `CM<n>` ID로 참조하고 query·expected를 재서술하지 않는다. Target Files·Propagation `Discovery evidence`는 기존 구조가 소유한다 — manifest에 중복 수록하지 않는다.
 - **조건부 propagation 표**
   - 발동: 동일 change element가 둘 이상의 동기화 표면에 걸릴 때만 `Propagation Surfaces`를 만든다.
   - 필드: `Required surfaces`는 exact path/pattern, `Discovery evidence`는 read-only query와 기대 surface 집합을 적는다.
   - 소유·연접: 각 행은 정확히 하나의 owner task를 가지며, 그 task의 Target Files와 AC가 required surface의 실행·검증을 닫는다.
   - 비발동: 일반 다중파일 변경만으로는 표를 만들지 않는다.
   - census 예외: 변형 표기 전수 제거가 필요할 때만 별도의 census read-only 검증 task 규칙을 적용한다.
-- **품질 게이트**: 작성 후 producer인 메인 루프가 `plan-review`를 호출하고 반환 finding을 severity로 갈라 반영한다. 각 gate 호출 내부는 **단일 패스**이며 reviewer와 사용자는 gate 재호출이나 fix를 소유하지 않는다.
-  1. **gate 1 → fix 1**: 첫 gate를 항상 호출한다. 반환된 Critical/High/Medium은 직접 반영한다. Low는 **저비용 AND 명백히 이득 AND 현재 draft scope 내** 세 조건을 모두 만족하는 것만 반영하고, 나머지는 advisory로 남긴다. `현재 draft scope 내`가 scope 확장을 막는 load-bearing 조건이다.
-  2. **조건 판정**: fix 전 gate 1의 raw 합산 finding에서 Low를 제외하고 **Critical+High ≥ 3 또는 Medium ≥ 5**인지 판정한다.
-  3. **gate 2 → fix 2**: 임계값에 도달한 경우에만 같은 `plan-review`를 두 번째 호출한다. 반환된 Critical/High/Medium을 직접 반영하고, Low에는 gate 1과 동일한 정책을 적용한다.
-  4. **검증 후 종료**: fix 2 뒤에는 gate 2 finding이 인용한 평가조건을 final draft에서 다시 확인하고 evidence와 해소되지 않은 finding을 남긴다. 세 번째 gate는 호출하지 않는다. gate 2의 fix 전 raw 합산 finding도 같은 임계값에 도달하면 마감 메시지에서 후속 `plan-review` 1회 수동 실행을 권고한다.
-
-  마감 메시지는 gate 2를 실행했으면 호출 1/2의 severity, fix, 검증 결과를 구분해 보고한다. gate 2를 실행하지 않았으면 gate 1 경로의 결과만 보고한다.
+- **품질 게이트**: 작성 후 producer인 메인 루프가 `plan-review`를 호출해 finding을 직접 반영한다 — 각 호출은 **단일 패스**이고 reviewer와 사용자는 재호출·fix를 소유하지 않는다.
+  - **gate 1 → fix 1** (항상): Critical/High/Medium은 반영하고, Low는 **저비용 AND 명백히 이득 AND 현재 draft scope 내** 셋을 모두 만족할 때만 반영하며 나머지는 advisory로 남긴다 (`현재 draft scope 내`가 scope 확장을 막는 load-bearing 조건).
+  - **gate 2 → fix 2** (조건부): fix 전 raw 합산 finding이 Low 제외 **Critical+High ≥ 3 또는 Medium ≥ 5**면 같은 게이트를 한 번 더 호출하고 같은 fix 정책을 적용한다. 이후 gate 2 finding이 인용한 평가조건을 final draft에서 재확인하고 evidence와 미해소 finding을 남긴다. gate 3은 없다 — gate 2도 임계값이면 마감에서 후속 `plan-review` 1회 수동 실행을 권고한다.
+  - 마감 메시지는 실행한 게이트의 severity·fix·검증 결과를 호출별로 구분해 보고한다.
 - **실행 인계**: `implementation` 스킬(메인 루프 직접 RED→GREEN 구현)로 인계한다. 구현 작성을 여러 갈래로 나눠야 할 규모로 드러나면 분할 규칙으로 돌아간다.
-- **Minimum-Code 기준**: task의 description과 AC는 요청 동작 또는 관측된 위험에 직접 추적되는 가장 작은 변경만 명세한다.
+- **Minimum-Code 기준**: task의 description과 AC는 요청 동작 또는 관측된 위험에 직접 추적되는 가장 작은 변경만 명세한다. 계획이 과잉으로 새는 자리 셋을 특히 본다.
+  - **파일 생성의 기본값은 "만들지 않음"이다**: 기존 파일 수정으로 닫히면 `[M]`이고, `[C]`는 왜 수정으로 안 되는지를 생성 이유에 적는다.
+  - **한 곳에서만 쓰일 helper·layer·config·interface를 계획하지 않는다**: 두 번째 사용처가 실재할 때 만든다.
+  - **같은 정보를 여러 섹션에 재서술하지 않는다**: Description·AC·`Contracts` 중 한 곳이 소유하고 나머지는 참조한다.
 
 ## Integration
 

@@ -1,5 +1,87 @@
 # Decision Log
 
+## 2026-08-12 - rubric 5 smell의 producer 대응 보강 — 복사가 아니라 작성 규칙으로 흡수
+
+### Context
+
+사용자 지적: `plan-review-agent`의 rubric은 draft가 지켜야 할 것을 알고 있는데 `feature-draft`에는 그 내용이 없어, 게이트가 잡을 결함을 안고 draft가 태어난다. 5 smell을 producer 대응과 대조한 실측 — `Verification Weakness`(AC 2등급·Target Files 실측·조건부 propagation)와 `Hidden Decision`(Process 2 무인 실행 → Open Questions)은 대응이 튼튼, `Requirement Fit`은 Process 3 열거(누락 방향) + Minimum-Code(과잉 방향)로 성립, `Task Boundary Drift`는 최상단 정의 + Process 3 배정으로 있으나 **중복 구현 축이 빠짐**, `Over-engineering`은 Minimum-Code **1줄뿐**.
+
+### Decision
+
+1. **rubric 복사 금지 (기각한 대안)**: 검사 술어를 producer로 복사하지 않는다. main.md의 "producer 정본 + verifier pointer"와 plan-review Hard Rule 5(producer 계약 재서술 금지)의 대칭이다 — 같은 술어를 양쪽이 보유하면 소유자가 둘이 되고 한쪽만 갱신된다. **producer는 작성 규칙(무엇을 한다), reviewer는 판정 술어(어떻게 판정한다)** 로 나눈다. 문장 단위 대조로 복사 0건을 확인했다(`중복 구현하도록 계획했는가`·`과한 추상화를 요구하거나`·`생성 이유가 없는가`·`산문으로 미러링하는가`·`하나의 명확한 목적을 넘는가` 전부 agent에만 1건).
+2. **Over-engineering → `Minimum-Code 기준` 확장 (1줄 → 4줄)**: 과잉이 새는 자리 셋을 명시한다 — 파일 생성의 기본값은 "만들지 않음"(`[C]`는 수정으로 안 되는 이유를 적는다) / 한 곳에서만 쓰일 helper·layer·config·interface 금지(두 번째 사용처가 실재할 때 만든다) / Description·AC·`Contracts` 간 재서술 금지(한 곳이 소유, 나머지는 참조).
+3. **중복 구현 축 → Process 3 배정이 흡수 (한 구절)**: "같은 로직·상수·계약을 두 task가 각자 구현하도록 계획했다면 그것도 요소 하나를 두 곳에 배정한 것이다." 별도 규칙을 만들지 않고 이미 있는 owner 배정 규칙의 사례로 편입했다 — Over-engineering의 중복 항목과 Task Boundary Drift가 같은 판정("요소↔task 1:1")으로 닫힌다.
+
+### Rationale / Evidence
+
+- 4줄 순증(113 → 117). 직전 결정이 "형식 규칙 과다"를 문제 삼았으므로, 새 절이나 rubric 미러가 아니라 **저자가 그 판단을 내리는 자리**(Process 3 배정 / `규칙`의 Minimum-Code)에만 붙였다.
+- 재서술 금지 항목은 실증이 있다 — 이번 세션 draft의 Task 1 `Contracts` 블록이 Change Summary 재서술이라고 simplicity 렌즈가 잡았고 fix에서 삭제했다.
+- 미러 byte-identical, structural check 40여 항목 회귀 ALL PASS. main.md 몸통 무변경(기존 §77 원칙의 적용이지 원칙 변경이 아니다) → 버전 bump 없음.
+
+### Changes
+
+- `.claude/skills/feature-draft/SKILL.md`, `.codex/skills/feature-draft/SKILL.md` — Process 3 배정 1구절 + Minimum-Code 3항목
+- `_sdd/spec/components.md` — `feature-draft` 행에 producer/reviewer 소유 분리 명시
+
+## 2026-08-12 - feature-draft 배치 정리 (사용자 직접 편집 — 아래 무게중심 이동 entry의 위치 상세를 supersede)
+
+문면 변경 없이 세 요소의 **자리만** 옮겼다. ① `task의 정의`를 `규칙` 절 불릿에서 **문서 최상단 단독 문장**(intro 바로 아래, Process 앞)으로 승격 — 절차보다 먼저 읽히는 정의여야 Process 3이 그 정의를 실행하는 절차로 읽힌다. ② `분할 규칙` 절을 Process **앞 h2**에서 **뒤 h3**으로 내림 — 분할 판정은 Process 4가 호출하는 하위 기준이지 Process와 대등한 독립 절이 아니다(참조 방향도 "위 분할 규칙" → "아래 분할 규칙"으로 정정). ③ `규칙` 절 첫 항목은 `AC가 핵심이다`로 복귀.
+
+근거: 앞선 entry의 결정 3("`규칙` 절 최상단으로 승격")은 정의를 형식 규칙 목록 안에 둬서 여전히 "형식 중 하나"로 읽혔다. 무게중심 이동의 **의도는 유지하되 배치를 그 의도에 맞춘 것**이며, 계약·판정 술어·리터럴은 전량 불변이다(structural check 40여 항목 회귀 ALL PASS, 미러 byte-identical). 반영 표면: `.claude`/`.codex` feature-draft SKILL 짝 + `components.md` `feature-draft` 행.
+
+## 2026-08-12 - feature-draft 무게중심 이동 — 계획 절차를 형식 규칙보다 앞에 둔다 (components.md only, main.md 몸통 무변경)
+
+### Context
+
+사용자 지적: "feature-draft에서 중요한 건 어떻게 task들을 만들고 계획을 세울 것인가인데, 정작 그거에 대한 얘기는 거의 없고 다른 규칙들만 잔뜩 들어가 있음." 실측이 이를 뒷받침했다 — 113줄 중 task 생성에 직접 쓰인 분량은 약 7줄(6%)이고, 나머지는 산출물 형식(template·마커·fidelity) 약 50줄과 절차 배관(게이트·분할 판정·propagation) 약 28줄이었다.
+
+원인은 **규칙이 실패가 legible한 곳에만 쌓였기 때문**이다. 마커 유실은 spec-sync를 깨고 미러 누락은 census에 걸려 매번 규칙이 한 줄씩 붙었지만, task를 잘못 쪼개는 실패는 형식상 완벽한 draft를 만들며 조용히 지나간다(`plan-review`의 `Task Boundary Drift`는 조잡한 경우만 잡는다). 즉 분포는 "무엇이 중요한가"가 아니라 "무엇이 걸렸는가"의 기록이었다.
+
+### Decision
+
+1. **생성 절차 승격 (이동)**: 이 repo가 실제로 쓰던 방법 — `_sdd/drafts/*`의 `> 규모 판정:` 40여 줄이 예외 없이 "변경 요소 N개가 task M개에 대응"으로 서술한다 — 은 지금까지 분할 규칙의 **사후 검사**(`coverage 눈검산`)로만 존재했다. 그 앞단(열거 → owner 배정)을 Process 3 `task 만들기`로 승격해 감사를 절차로 바꾼다. 새 판정 기준이 아니라 기존 판정의 생성 단계를 드러낸 것이다.
+2. **task 순서 규칙 신설 (새 producer 규칙 1건)**: 순서는 산출물 의존으로만 정하고, 의존이 없으면 순서에 의미를 두지 않는다(구현 병렬 가능 신호). 지금까지 draft가 순서를 소유하지 않아 `implementation`이 "의존이 문서 순서와 어긋나면 순서만 조정"으로 뒷수습하고 있었다.
+3. **품질 게이트 블록 압축 (형식)**: 4-step 번호 목록 + 마감 문단(7줄)을 3-bullet(4줄)로 접는다. 운영 사실은 전량 보존 — 단일 패스·Low 3조건·임계값 `Critical+High ≥ 3 또는 Medium ≥ 5`·평가조건 재확인·gate 3 없음·수동 후속 권고·호출별 구분 보고. 임계값 계약의 소유자는 main.md지만 런타임에는 SKILL만 읽히므로 삭제가 아니라 압축만 한다.
+
+### Rationale / Evidence
+
+- 순증 0: Process +3줄 / 규칙 −3줄로 총 113줄 유지. 무게중심만 옮겼다.
+- 절차 승격이 "산문 추가"보다 나은 이유: "task를 잘 나누세요" 류는 토큰만 늘고 행동을 안 바꾼다. 반면 열거→배정은 관측 가능한 산출물(대응표)을 만들고, 그 산출물이 이미 존재하는 분할 판정·`Propagation Surfaces`·census task의 공통 입력이 된다.
+- SDD 풀 체인 미적용: 사용자 판단("이정도는 sdd pipe 태우지 말고"). 표면이 미러 짝 2 + spec 1행으로 전수 열거되고 기존 structural check 40여 항목 회귀 ALL PASS로 닫혔다. 2번이 새 producer 규칙이라 엄밀히는 풀 체인 대상이었음을 기록한다.
+
+### Changes
+
+- `.claude/skills/feature-draft/SKILL.md`, `.codex/skills/feature-draft/SKILL.md` — Process 3 신설·단계 재번호(3~6)·게이트 압축 (byte-identical 미러)
+- `_sdd/spec/components.md` — `feature-draft` 행에 절차 소유 서술 반영
+
+## 2026-08-12 - draft/review 계약 다이어트 — Claim Manifest 철회 · 분할 판정 단일 기준화 · Hidden Decision 잔재 제거 (v4.10.0 → v4.11.0, post-implementation sync)
+
+### Context
+
+사용자가 `feature-draft`·`plan-review-agent` 문면에 코멘트 6건을 남겼다. 공통 축은 **평가할 수 없거나 값을 내지 못하는 계약이 지시문에 남아 있다**는 것이다 — ① Claim Manifest는 실사용에서 plan-review 시간 단축 효과가 없었고(도입 당일), ② 분할 규칙의 `단일 컨텍스트 초과`는 "애초에 제대로 평가가 가능한 영역이 아니"며, ③ 리트머스 "머리 하나에 다 안 담기는가?"는 의미가 전달되지 않고, ④ Hidden Decision 첫 술어는 2026-08-05 decisions/assumptions 계약 제거 뒤 대응 producer 슬롯 없이 남은 잔재다. ⑤ task 정의는 Process 하위 불릿에 파묻혀 읽히지 않는다.
+
+### Decision
+
+1. **Claim Manifest 계약 철회(도입 당일)**: producer 표면(템플릿 `# Claim Manifest` 섹션·`Claim Manifest 단일 소스` 규칙·허용 변형 문구)과 reviewer 분기(Step 2 inventory 항목·Step 3 manifest 행 전수 순회·`CM<n>` 미참조 주장의 `Verification Weakness` 귀속)를 전량 삭제한다. 실측 렌즈의 사실 주장 대조는 **산문 발굴 단일 경로**로 복귀한다.
+2. **분할 판정 단일 기준화**: 판정 술어는 `coverage 눈검산 불가` 하나다. `단일 컨텍스트 초과` 기준과 리트머스 문장, 두 기준을 전제하던 도입문 `둘 중 하나에 해당하면`을 삭제한다. 분할 메커니즘(롤링 분할·planned todo 고정·census 예외)과 "단일 컨텍스트 = 품질 전제"라는 **근거** 서술·스킬 소개문·frontmatter description은 존치한다 — 지운 것은 판정이지 이유가 아니다.
+3. **task 정의 승격**: 정의(단일 의도 + 자기 AC만으로 완료 판정이 닫히는 실행 단위)를 `규칙` 절 최상단 항목으로 올리고, Process 4 `Task boundary`에는 반증 테스트만 남긴다. 문면 rewrite는 하지 않는다(불명확의 원인은 내용이 아니라 위치).
+4. **Hidden Decision 잔재 제거**: rubric 첫 술어와 Step 2 `decision markers` 항목을 삭제해 술어 2개(Open Questions 처리 / 남은 숨은 가정)만 남긴다. 사라진 검사 대상은 `Verification Weakness`·`Over-engineering`·`Task Boundary Drift`가 이미 소유한다.
+
+### Rationale / Evidence
+
+- **Claim Manifest 철회의 비대칭**: 이득(reviewer 대조 범위 bounding)은 미관측이고 비용(producer의 draft별 표 작성 ceremony + reviewer의 manifest 유무 이중 분기)은 상시였다. 읽기 상한은 manifest가 아니라 Step 3 최소 읽기 규칙이 계속 소유하므로 철회로 잃는 통제는 없다. **사실 주장을 별도 구조에 선고정해 대조 범위를 좁히는 축은 재제안 금지**(main.md 리뷰 읽기 다이어트에 기록).
+- **평가 불가 기준 제거의 근거**: 모델은 자기 토큰 소비를 사전 예측할 수 없어 `단일 컨텍스트 초과` 판정이 임의적이었다. 남는 `coverage 눈검산 불가`는 draft 문면만으로 관측 가능하고, 규모가 크면 대응이 다대다로 얽히므로 구 기준 2를 대체로 포섭한다.
+- **검증**: 19 AC 전부 MET(structural check 40여 항목 RED→GREEN 전이 실측 — claim-literal 10→0, headings 7→6, split-predicate 6→0, br-count 2→1, census 12→0). plan-review gate 1 `H1 M5 L5` → gate 2 `H2 M4 L5`, fix 2회. implementation-review gate 1 `C0 H0 M4 L11`(correctness 5 shard + simplicity 2 묶음) → 임계값 미도달로 gate 2 없음, Medium 4건 fix.
+- **계약 오류 선언 1건**: Task 2 AC2가 요구하던 "예외 문장 원문 보존"이 틀린 가정이었다 — 기준이 하나로 축약된 뒤 `눈검산 가능하면 적격` 앞절은 상위 규칙의 재진술이라, load-bearing 내용(새 계약은 분할 사유 아님 + `Contracts` 기록) 보존으로 AC를 교체했다.
+- **기각 대안**: Hidden Decision 첫 술어에서 marker 열거만 지우고 술어를 남기는 안 — 근거 없는 검사 대상(가정 슬롯 없는 producer)에 대한 술어가 그대로 남아 기각.
+
+### Changes
+
+- `.claude/skills/feature-draft/SKILL.md`, `.codex/skills/feature-draft/SKILL.md` — manifest 3표면 제거·분할 규칙 단일 기준화·task 정의 승격 (byte-identical 미러)
+- `.claude/agents/plan-review-agent.md`, `.codex/agents/plan-review-agent.toml` — rubric Hidden Decision 행·Step 2 inventory·Step 3 사실 주장 대조 3문면
+- `_sdd/spec/main.md`(L78 잔재 서술·2-렌즈 대조 기준·입력 상한·리뷰 읽기 다이어트 3종→2종+철회 기록·planning precedence·규모 초과 guardrail), `_sdd/spec/components.md`(`feature-draft`·`plan-review` 행), `_sdd/spec/usage-guide.md`(draft 산출물 정의·분할 문면)
+- `_sdd/drafts/_processed_2026-08-12_feature_draft_draft_review_contract_diet.md` — 사용 input 처리 표시 (planned 잔여 없음)
+
 ## 2026-08-12 - spec-sync 직접 실행 전환 — agent 짝·표면 묶음 병렬 폐지 (v4.9.0 → v4.10.0, post-implementation sync)
 
 ### Context
