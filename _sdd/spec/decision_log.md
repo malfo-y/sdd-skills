@@ -1,5 +1,34 @@
 # Decision Log
 
+## 2026-08-12 - spec-sync 직접 실행 전환 — agent 짝·표면 묶음 병렬 폐지 (v4.9.0 → v4.10.0, post-implementation sync)
+
+### Context
+
+`spec-sync`는 orchestrator(skill) + leaf(agent) 구조였고, evidence 있는 implemented sync는 본문 ∥ 기록 표면 묶음 작성자 2-shard로 병렬 실행했다(v4.6.24). 그러나 spec sync가 쓰는 입력 — delta 목록, 분류 근거, 신규 버전, 결정 제목 — 은 **메인 루프가 이미 보유한 맥락**이라, agent 경유는 그 맥락을 digest로 선고정해 넘기고 agent가 spec 파일을 다시 읽게 만드는 왕복을 추가했다. 분할의 벽시계 이득은 v4.9.0까지도 `🚧 Planned`(미관측)로 남아 있었고, 분할 때문에 read-vs-rename 경합 회피·사후 정합 grep 같은 부속 계약만 늘었다. 사용자 판단("아무리 생각해도 agent로 할 이유가 없어")으로 구조를 되돌린다.
+
+### Decision
+
+1. **직접 실행 스킬**: `spec-sync`는 leaf 없이 메인 루프가 SKILL.md 본문을 그대로 수행한다. `.claude`/`.codex`의 `skills/spec-sync/SKILL.md` 짝(byte 동일)이 전체 계약·status 분류·Repo-wide Invariant Test의 단일 소스다.
+2. **agent 짝 폐지**: `spec-sync-agent`(claude md + codex toml)를 삭제하고 등록 3표면(`.claude-plugin/marketplace.json` agents 배열, `.codex/agents/README.md` Agent Set, `README.md` 계수 문구)에서 해제한다. 잔존 SDD agent는 4종이다.
+3. **표면 묶음 병렬 폐지**: 본문 ∥ 기록 2-shard, `호출자 표면 한정` 절, `Implemented Sync Digest` 선고정 handoff, read-vs-rename 양쪽 조회 규칙이 함께 사라진다. 쓰기-서로소 작성자 분할 **패턴 자체는 허용 형태로 유지**하되 현존 인스턴스는 0이다.
+4. **기록 책임 이관**: 폐지된 절이 소유하던 세 책임을 Process Step 5로 옮긴다 — live truth 갱신·outdated claim 제거(+ `main.md` 몸통 변경 시 헤더 `Spec Version` SemVer bump), `decision_log.md`(rationale 변화 시)·`logs/changelog.md`(몸통 변경 버전마다)의 append-only 신규 entry, 사용한 input file `_processed_` rename.
+5. **자체 정합 점검 존치**: 구 orchestrator 사후 검사 2종을 Step 6 자체 점검으로 남기되 조건을 분리한다 — 버전 일치는 몸통을 고친 sync에만, 기록 파일 삭제 줄 0은 기록 파일을 쓴 sync마다.
+6. **Hard Rules 연번 교정**: baseline이 1→3으로 건너뛰던 번호를 1~11 연번으로 고친다(술어 11개 보존, 이관 부작용 정리).
+
+### Rationale / Evidence
+
+- 폐지 근거 3종: 벽시계 이득 미관측(`main.md` `🚧 Planned` 항목), 맥락 왕복이 순손실, 사용자 명시 지시. 메인 루프 컨텍스트 격리 이득 상실은 수용한다.
+- 18 AC 전부 MET(fresh grep/awk/diff/`json.load`). plan-review gate 1 `H2 M6 L3` → gate 2 CLEAR(`M5 L4`), fix 2회. implementation-review gate 1 `M5 L6` → gate 2 correctness `M2`·simplicity `M7`, 범위 내 5건 fix.
+- 미반영 4건(근거 명시): Error Handling 표 재서술·Input Sources legacy fallback 이중·codex README 소유 경계 3중·Status 분류 도입문 압축은 모두 baseline agent 본문에서 그대로 이관된 문면이고 이번 draft의 Scope Out("sync 로직 자체는 문면 이관이지 내용 변경이 아니다")에 해당한다 — 후속 다이어트 후보.
+- census: live 표면에 `spec-sync-agent`·표면 묶음 어휘 잔존 0건(대소문자·구분자·계수 표기 변형 확장 포함).
+
+### Changes
+
+- `.claude/skills/spec-sync/SKILL.md`, `.codex/skills/spec-sync/SKILL.md` — 계약 단일 소스로 재작성 (commit bd3fcc0)
+- `.claude/agents/spec-sync-agent.md`, `.codex/agents/spec-sync-agent.toml` — 삭제
+- `.claude-plugin/marketplace.json`, `.codex/agents/README.md`, `README.md` — 등록 해제·계수 문구 정정
+- `_sdd/drafts/_processed_2026-08-12_feature_draft_spec_sync_direct.md`
+
 ## 2026-08-12 - plan-review 단순화 — 규모 판정 검사 폐지·Hard Rules 작성 룰 한정·rubric 축 재배분 (v4.8.2 → v4.9.0, post-implementation sync)
 
 ### Context
