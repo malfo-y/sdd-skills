@@ -1,5 +1,30 @@
 # Decision Log
 
+## 2026-08-13 - `Propagation Surfaces` 계약 폐기와 reviewer status 어휘 제거 (사용자 직접 편집 + dangling 정리)
+
+### Context
+
+사용자가 `.claude` 쪽 producer(`feature-draft/SKILL.md`)와 reviewer(`plan-review-agent.md`)를 직접 편집해 조건부 `Propagation Surfaces` 계약과 reviewer의 status 어휘를 걷어냈다. 2026-08-12 회차(decision_log 아래 entry)가 D&A 5필드만 제거하고 `Propagation Surfaces`는 "실측 실패 이력 기반"이라며 존치했던 결정을 **뒤집는다**. 미러 반영 요청을 받아 census를 돌린 결과, 계약이 producer·reviewer 밖 7개 표면에 더 살아 있었다.
+
+### Decision
+
+1. **`Propagation Surfaces` 전 표면 제거**(사용자 확정): producer·reviewer뿐 아니라 `docs/SDD_SPEC_DEFINITION.md` 한·영의 canonical 구조 항목 3(+ 4·5 재번호)과 스켈레톤, `spec-rewrite` 템플릿 짝, `components.md`·`main.md`의 계약 서술까지 전부 걷어낸다. 정의서만 남으면 그것을 만드는 producer가 없는 상태가 되고, 다음 작성자가 표를 다시 만든다.
+2. **dangling `UNKNOWN` → "근거 부족 시 finding 없음"**(사용자 확정): 사용자 편집으로 status 정의(Step 4)와 출력 슬롯(Step 5 `Smell 판정`)이 함께 사라졌는데 `UNKNOWN`을 쓰라는 지시만 Step 3과 렌즈 정의에 남았다 — Step 3이 "limitation 1줄을 기록"하라는데 Step 5 반환 항목에 그 슬롯이 없고 AC3가 항목 밖 열거를 금지하는 **자기모순**이었다. 되살리는 대신 제거 방향으로 닫았다(반환 축소라는 편집 의도와 정합). 반환은 Blocker Status·Findings 2항목이 됐다.
+3. **판정 표 보유 reviewer는 `simplicity-review` 하나**로 남긴다. `main.md`의 리뷰 반환 다이어트 서술이 두 reviewer의 판정 표를 함께 전제하고 있었으므로 그 문장을 현재 상태로 정정했다.
+
+### Rationale / Evidence
+
+- census가 아니었으면 7개 표면이 남았다 — 이번에도 rename/전파류의 변형 표면(정의서 한·영, 템플릿 짝, spec 서술)이 producer 1곳만 고쳐서는 닫히지 않는다는 관측이 반복됐다.
+- 사용자 편집을 미러에 옮길 때는 3-way가 아니라 **hunk 이식**을 썼다: 편집 전 `.claude` 본문과 codex 본문이 적응 delta 밖에서 동일하므로, 편집 hunk 6개를 codex에서 각각 **유일 매칭 확인 후** 치환했다(매칭 1회가 아니면 중단). 적응 delta(TOML 헤더·Codex Agent Boundary·Source Pointer·닫는 `'''`)는 손대지 않고 보존된다.
+- live 표면 census 잔존 0, 미러 3쌍 대조 통과, `git diff --check` 무출력(사용자 편집 줄의 trailing whitespace 제거 포함).
+
+### Changes
+
+- `{.claude,.codex}/skills/feature-draft/SKILL.md`, `{.claude,.codex}/agents/plan-review-agent.{md,toml}` — 계약·status 어휘 제거(사용자 편집 + 미러 이식 + dangling 정리)
+- `{.claude,.codex}/skills/spec-rewrite/references/template-compact.md` — 템플릿 섹션 삭제
+- `docs/SDD_SPEC_DEFINITION.md`, `docs/en/SDD_SPEC_DEFINITION.md` — 구조 항목 3 삭제·재번호·스켈레톤 정리
+- `_sdd/spec/components.md`(`feature-draft`·`plan-review` 행), `_sdd/spec/main.md` §3 — v4.12.0 → v4.13.0
+
 ## 2026-08-12 - reviewer 행(hang) 계측 → 셸 timeout 레버 기각, codex reviewer spawn 계약 드리프트 정정
 
 ### Context
