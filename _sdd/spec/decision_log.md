@@ -1,5 +1,29 @@
 # Decision Log
 
+## 2026-08-12 - reviewer 행(hang) 계측 → 셸 timeout 레버 기각, codex reviewer spawn 계약 드리프트 정정
+
+### Context
+
+사용자 관측: Codex에서 `plan-review`가 가끔 행에 걸린다(명령 미확인). Codex session log 전수 계측(`~/.codex/sessions`, `plan-review-agent` 포함 세션 306개)으로 원인을 갈랐다.
+
+### Decision
+
+1. **셸 timeout·명령 형태 레버는 기각**(재제안 금지): 턴 내부 120초+ 정체 68건 중 **61건이 `wait_agent`**(subagent 대기), 6건이 `request_user_input`(사람 대기), 셸 `exec`는 **1건**이며 그마저 리뷰 명령이 아니었다. `wait_agent` 608건의 최댓값은 **314초**이고 **600초 초과 0건**, 인자에 `timeout_ms: 600000`이 이미 박혀 있다 — 로그상 무한 행은 존재하지 않는다. 체감된 "행"은 reviewer가 3~5분 무출력으로 도는 구간이며, 이는 기존 watchdog 훅(5분+ 자기점검 nudge)이 이미 소유한 증상이다. 검토했다 철회한 안: 숫자 timeout 지시(Codex는 `timeout_ms` 보유·Claude Bash는 기본 120초 상한이라 신규 기능이 아니고, `timeout` 없는 스톡 macOS 소비 repo에서 래핑 지시는 모든 명령을 깨뜨린다), 데몬·watch 금지 1줄(이 데이터에서 0건 감소 — 4파일에 넣었다가 계측 후 되돌림).
+2. **codex reviewer 3종의 spawn 계약 모순 정정**: `plan-review`·`pr-review`·`simplicity-review`의 Codex Agent Boundary가 "bounded helper(`worker`/`explorer`) 외에는 spawn하지 않는다"로 helper를 **허용**하는데 같은 파일 Hard Rule 1은 spawn을 **전면 금지**했다. `components.md`의 `Codex custom agent runtime` 행이 이미 "agent는 leaf로 동작하며"라고 규정하므로 이는 신규 계약이 아니라 **agent 파일의 spec 드리프트**다. Boundary의 helper 허용절을 삭제해 금지 소유자를 Hard Rule 1 한 곳으로 되돌리고, 유일하게 HR1에 금지가 없던 `simplicity-review`에 형제와 같은 문면을 넣어 4종을 균일화했다.
+
+### Rationale / Evidence
+
+- Boundary에서 절을 지우자 모순과 중복 소유가 동시에 해소됐다 — 새 문장을 만들지 않고 삭제로 닫혔다.
+- `bounded helper` 잔존 0(`.codex/agents/`), spawn 금지가 4개 agent 각각 정확히 1곳(HR1)에 존재, TOML 블록 구조 무변경, `git diff --check` 무출력.
+- `explorer` fan-out을 실제로 쓰는 곳은 orchestrator인 `investigate` 스킬이며 reviewer leaf와 무관하다 — 이번 삭제로 깨지는 호출자 없음.
+- Claude 짝에는 이 문구가 없고 reviewer tools가 `Read/Glob/Grep`(+ 일부 `Bash`)이라 spawn 자체가 불가하다 → 미러 비대칭 아님.
+- `main.md`·`components.md` 몸통 무변경(스펙이 이미 옳았다) → 버전 bump·changelog entry 없음.
+
+### Changes
+
+- `.codex/agents/{plan-review,pr-review,simplicity-review}-agent.toml` — Boundary의 bounded helper 허용절 삭제
+- `.codex/agents/simplicity-review-agent.toml` — Hard Rule 1에 spawn 금지 추가(형제 3종과 동일 문면)
+
 ## 2026-08-12 - SDD 적용 범위 게이트 — 스펙 영향이 판정 기준, 애매하면 비대상
 
 ### Context
