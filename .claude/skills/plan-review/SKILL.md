@@ -1,6 +1,6 @@
 ---
 name: plan-review
-description: Use this skill to review a feature draft before coding, identify overengineering and sloppy-code risks, and return a findings-first verdict. Triggered by "plan review", "review plan", "draft review", "계획 리뷰", "플랜 리뷰", "구현 계획 리뷰", or when the user wants to check a draft against KISS/YAGNI/DRY/minimum-code principles before implementation.
+description: Use this skill to review a feature draft before coding, identify overengineering and sloppy-code risks, and return a findings-first verdict. Triggered by "plan review", "review plan", "draft review", "계획 리뷰", "플랜 리뷰", "구현 계획 리뷰", or when the user wants to check a draft for requirement fit, overengineering, hidden decisions, and weak verification before implementation.
 argument-hint: ["[--model <sonnet|opus|haiku|fable>]"]
 ---
 
@@ -17,7 +17,7 @@ argument-hint: ["[--model <sonnet|opus|haiku|fable>]"]
    - `Agent(subagent_type="sdd-skills:plan-review-agent", prompt=<요청 + 알려진 경로/컨텍스트 + 실측 렌즈 한정>)`
    - `Agent(subagent_type="sdd-skills:plan-review-agent", prompt=<요청 + 알려진 경로/컨텍스트 + 판단 렌즈 한정>)`
    - 대상 경로가 불명확하면 각 dispatch가 자체 Input 우선순위로 탐색하도록 위임한다.
-3. 두 반환을 병합해 relay한다: Blocker Status는 **하나라도 BLOCKED면 BLOCKED**, findings는 합산, smell 판정은 **합집합**(각 smell이 정확히 한 렌즈에 소유되므로 중복 없음), 규모 판정 검사 결과는 판단 렌즈 반환에서 온다. finding 반영은 호출자(draft 작성자) 소관이다.
+3. 두 반환을 병합해 relay한다: Blocker Status는 **하나라도 BLOCKED면 BLOCKED**, findings는 합산, smell 판정은 **합집합**(각 smell이 정확히 한 렌즈에 소유되므로 중복 없음)이다. finding 반영은 호출자(draft 작성자) 소관이다.
 
 ## 계약 (entrypoint 유지, 흉내 금지)
 
