@@ -1,5 +1,30 @@
 # Decision Log
 
+## 2026-08-12 - feature-draft 무게중심 이동 — 계획 절차를 형식 규칙보다 앞에 둔다 (components.md only, main.md 몸통 무변경)
+
+### Context
+
+사용자 지적: "feature-draft에서 중요한 건 어떻게 task들을 만들고 계획을 세울 것인가인데, 정작 그거에 대한 얘기는 거의 없고 다른 규칙들만 잔뜩 들어가 있음." 실측이 이를 뒷받침했다 — 113줄 중 task 생성에 직접 쓰인 분량은 약 7줄(6%)이고, 나머지는 산출물 형식(template·마커·fidelity) 약 50줄과 절차 배관(게이트·분할 판정·propagation) 약 28줄이었다.
+
+원인은 **규칙이 실패가 legible한 곳에만 쌓였기 때문**이다. 마커 유실은 spec-sync를 깨고 미러 누락은 census에 걸려 매번 규칙이 한 줄씩 붙었지만, task를 잘못 쪼개는 실패는 형식상 완벽한 draft를 만들며 조용히 지나간다(`plan-review`의 `Task Boundary Drift`는 조잡한 경우만 잡는다). 즉 분포는 "무엇이 중요한가"가 아니라 "무엇이 걸렸는가"의 기록이었다.
+
+### Decision
+
+1. **생성 절차 승격 (이동)**: 이 repo가 실제로 쓰던 방법 — `_sdd/drafts/*`의 `> 규모 판정:` 40여 줄이 예외 없이 "변경 요소 N개가 task M개에 대응"으로 서술한다 — 은 지금까지 분할 규칙의 **사후 검사**(`coverage 눈검산`)로만 존재했다. 그 앞단(열거 → owner 배정)을 Process 3 `task 만들기`로 승격해 감사를 절차로 바꾼다. 새 판정 기준이 아니라 기존 판정의 생성 단계를 드러낸 것이다.
+2. **task 순서 규칙 신설 (새 producer 규칙 1건)**: 순서는 산출물 의존으로만 정하고, 의존이 없으면 순서에 의미를 두지 않는다(구현 병렬 가능 신호). 지금까지 draft가 순서를 소유하지 않아 `implementation`이 "의존이 문서 순서와 어긋나면 순서만 조정"으로 뒷수습하고 있었다.
+3. **품질 게이트 블록 압축 (형식)**: 4-step 번호 목록 + 마감 문단(7줄)을 3-bullet(4줄)로 접는다. 운영 사실은 전량 보존 — 단일 패스·Low 3조건·임계값 `Critical+High ≥ 3 또는 Medium ≥ 5`·평가조건 재확인·gate 3 없음·수동 후속 권고·호출별 구분 보고. 임계값 계약의 소유자는 main.md지만 런타임에는 SKILL만 읽히므로 삭제가 아니라 압축만 한다.
+
+### Rationale / Evidence
+
+- 순증 0: Process +3줄 / 규칙 −3줄로 총 113줄 유지. 무게중심만 옮겼다.
+- 절차 승격이 "산문 추가"보다 나은 이유: "task를 잘 나누세요" 류는 토큰만 늘고 행동을 안 바꾼다. 반면 열거→배정은 관측 가능한 산출물(대응표)을 만들고, 그 산출물이 이미 존재하는 분할 판정·`Propagation Surfaces`·census task의 공통 입력이 된다.
+- SDD 풀 체인 미적용: 사용자 판단("이정도는 sdd pipe 태우지 말고"). 표면이 미러 짝 2 + spec 1행으로 전수 열거되고 기존 structural check 40여 항목 회귀 ALL PASS로 닫혔다. 2번이 새 producer 규칙이라 엄밀히는 풀 체인 대상이었음을 기록한다.
+
+### Changes
+
+- `.claude/skills/feature-draft/SKILL.md`, `.codex/skills/feature-draft/SKILL.md` — Process 3 신설·단계 재번호(3~6)·게이트 압축 (byte-identical 미러)
+- `_sdd/spec/components.md` — `feature-draft` 행에 절차 소유 서술 반영
+
 ## 2026-08-12 - draft/review 계약 다이어트 — Claim Manifest 철회 · 분할 판정 단일 기준화 · Hidden Decision 잔재 제거 (v4.10.0 → v4.11.0, post-implementation sync)
 
 ### Context

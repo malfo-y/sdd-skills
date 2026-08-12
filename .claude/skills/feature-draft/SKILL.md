@@ -26,12 +26,15 @@ description: This skill should be used when the user asks to "feature draft", "d
    - **발동**: 로컬 탐색으로 닫히지 않고 답이 아키텍처·범위·Target Files를 바꾸는 unknown만 묻는다.
    - **순서**: 한 번에 하나씩, 뒤늦은 답이 앞선 결정을 가장 많이 무효화하는 질문부터 묻는다.
    - **무인 실행**: 가장 합당한 해석을 택해 결정과 근거를 Open Questions에 기록한다.
-3. **분할 판정**: 위 분할 규칙 점검. 판정 근거 1줄 확정 (census형 신호가 있으면 검증 task를 Part 2 마지막에 예약).
-4. **draft 작성**
+3. **task 만들기** — 계획의 본체다. 아래 순서로 짓는다.
+   - **열거**: 이번 변경이 만들거나 바꾸는 요소를 먼저 전수 열거한다 — 계약·수정 지점·1에서 식별한 동기화 표면. task부터 떠올리지 않는다. 열거가 끝나야 규모와 경계가 보인다.
+   - **배정**: 각 요소에 owner task를 **정확히 하나** 배정한다. 한 task가 여러 요소를 가져도 되지만, 한 요소가 두 task에 걸치면 경계를 다시 긋는다. 의도가 두 문장이면 두 task로 쪼개고, 다른 task의 결과를 봐야 완료를 판정할 수 있어도 다시 긋는다.
+   - **순서**: 산출물 의존으로만 정한다 — 뒤 task가 앞 task의 산출물을 쓰면 그 순서로 놓고, 그런 의존이 없으면 순서에 의미를 두지 않는다(구현이 병렬로 진행해도 좋다는 신호다).
+4. **분할 판정**: 3의 요소↔task 대응을 눈으로 검산해 위 분할 규칙을 점검한다. 판정 근거 1줄 확정 (census형 신호가 있으면 검증 task를 Part 2 마지막에 예약).
+5. **draft 작성**
    - **Template fidelity**: Required Output의 fenced template을 출발 skeleton으로 verbatim 복사하고 heading·marker·field order를 보존한다.
    - **허용 변형**: placeholder와 예시 값을 실제 값으로 치환하고, Propagation row·task block·AC·Target File row는 필요한 수만큼 반복한다. 조건이 성립하지 않는 `Propagation Surfaces`·`Open Questions` 섹션만 제거할 수 있다.
-   - **Task boundary**: 의도가 두 문장이면 두 task로 쪼개고, 다른 task의 결과를 봐야 완료를 판정할 수 있으면 경계를 다시 긋는다.
-5. **surface**: 저장 후 Open Questions 중 사용자 확인이 필요한 항목만 채팅에 1줄씩 노출한다. 없으면 "사용자 확인이 필요한 항목 없음" 1줄.
+6. **surface**: 저장 후 Open Questions 중 사용자 확인이 필요한 항목만 채팅에 1줄씩 노출한다. 없으면 "사용자 확인이 필요한 항목 없음" 1줄.
 
 ## Required Output
 
@@ -96,13 +99,10 @@ description: This skill should be used when the user asks to "feature draft", "d
   - 소유·연접: 각 행은 정확히 하나의 owner task를 가지며, 그 task의 Target Files와 AC가 required surface의 실행·검증을 닫는다.
   - 비발동: 일반 다중파일 변경만으로는 표를 만들지 않는다.
   - census 예외: 변형 표기 전수 제거가 필요할 때만 별도의 census read-only 검증 task 규칙을 적용한다.
-- **품질 게이트**: 작성 후 producer인 메인 루프가 `plan-review`를 호출하고 반환 finding을 severity로 갈라 반영한다. 각 gate 호출 내부는 **단일 패스**이며 reviewer와 사용자는 gate 재호출이나 fix를 소유하지 않는다.
-  1. **gate 1 → fix 1**: 첫 gate를 항상 호출한다. 반환된 Critical/High/Medium은 직접 반영한다. Low는 **저비용 AND 명백히 이득 AND 현재 draft scope 내** 세 조건을 모두 만족하는 것만 반영하고, 나머지는 advisory로 남긴다. `현재 draft scope 내`가 scope 확장을 막는 load-bearing 조건이다.
-  2. **조건 판정**: fix 전 gate 1의 raw 합산 finding에서 Low를 제외하고 **Critical+High ≥ 3 또는 Medium ≥ 5**인지 판정한다.
-  3. **gate 2 → fix 2**: 임계값에 도달한 경우에만 같은 `plan-review`를 두 번째 호출한다. 반환된 Critical/High/Medium을 직접 반영하고, Low에는 gate 1과 동일한 정책을 적용한다.
-  4. **검증 후 종료**: fix 2 뒤에는 gate 2 finding이 인용한 평가조건을 final draft에서 다시 확인하고 evidence와 해소되지 않은 finding을 남긴다. 세 번째 gate는 호출하지 않는다. gate 2의 fix 전 raw 합산 finding도 같은 임계값에 도달하면 마감 메시지에서 후속 `plan-review` 1회 수동 실행을 권고한다.
-
-  마감 메시지는 gate 2를 실행했으면 호출 1/2의 severity, fix, 검증 결과를 구분해 보고한다. gate 2를 실행하지 않았으면 gate 1 경로의 결과만 보고한다.
+- **품질 게이트**: 작성 후 producer인 메인 루프가 `plan-review`를 호출해 finding을 직접 반영한다 — 각 호출은 **단일 패스**이고 reviewer와 사용자는 재호출·fix를 소유하지 않는다.
+  - **gate 1 → fix 1** (항상): Critical/High/Medium은 반영하고, Low는 **저비용 AND 명백히 이득 AND 현재 draft scope 내** 셋을 모두 만족할 때만 반영하며 나머지는 advisory로 남긴다 (`현재 draft scope 내`가 scope 확장을 막는 load-bearing 조건).
+  - **gate 2 → fix 2** (조건부): fix 전 raw 합산 finding이 Low 제외 **Critical+High ≥ 3 또는 Medium ≥ 5**면 같은 게이트를 한 번 더 호출하고 같은 fix 정책을 적용한다. 이후 gate 2 finding이 인용한 평가조건을 final draft에서 재확인하고 evidence와 미해소 finding을 남긴다. gate 3은 없다 — gate 2도 임계값이면 마감에서 후속 `plan-review` 1회 수동 실행을 권고한다.
+  - 마감 메시지는 실행한 게이트의 severity·fix·검증 결과를 호출별로 구분해 보고한다.
 - **실행 인계**: `implementation` 스킬(메인 루프 직접 RED→GREEN 구현)로 인계한다. 구현 작성을 여러 갈래로 나눠야 할 규모로 드러나면 분할 규칙으로 돌아간다.
 - **Minimum-Code 기준**: task의 description과 AC는 요청 동작 또는 관측된 위험에 직접 추적되는 가장 작은 변경만 명세한다.
 
