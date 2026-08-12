@@ -18,7 +18,7 @@ description: This skill should be used when the user asks to "feature draft", "d
    - **무인 실행**: 가장 합당한 해석을 택해 결정과 근거를 Open Questions에 기록한다.
 3. **task 만들기** — 계획의 본체다. 아래 순서로 짓는다.
    - **열거**: 이번 변경이 만들거나 바꾸는 요소를 먼저 전수 열거한다 — 계약·수정 지점·1에서 식별한 동기화 표면. task부터 떠올리지 않는다. 열거가 끝나야 규모와 경계가 보인다.
-   - **배정**: 각 요소에 owner task를 **정확히 하나** 배정한다. 한 task가 여러 요소를 가져도 되지만, 한 요소가 두 task에 걸치면 경계를 다시 긋는다. 의도가 두 문장이면 두 task로 쪼개고, 다른 task의 결과를 봐야 완료를 판정할 수 있어도 다시 긋는다.
+   - **배정**: 각 요소에 owner task를 **정확히 하나** 배정한다. 한 task가 여러 요소를 가져도 되지만, 한 요소가 두 task에 걸치면 경계를 다시 긋는다. 같은 로직·상수·계약을 두 task가 각자 구현하도록 계획했다면 그것도 요소 하나를 두 곳에 배정한 것이다. 의도가 두 문장이면 두 task로 쪼개고, 다른 task의 결과를 봐야 완료를 판정할 수 있어도 다시 긋는다.
    - **순서**: 산출물 의존으로만 정한다 — 뒤 task가 앞 task의 산출물을 쓰면 그 순서로 놓고, 그런 의존이 없으면 순서에 의미를 두지 않는다(구현이 병렬로 진행해도 좋다는 신호다).
 4. **분할 판정**: 3의 요소↔task 대응을 눈으로 검산해 아래 분할 규칙을 점검한다. 판정 근거 1줄 확정 (census형 신호가 있으면 검증 task를 Part 2 마지막에 예약).
 5. **draft 작성**
@@ -105,7 +105,10 @@ description: This skill should be used when the user asks to "feature draft", "d
   - **gate 2 → fix 2** (조건부): fix 전 raw 합산 finding이 Low 제외 **Critical+High ≥ 3 또는 Medium ≥ 5**면 같은 게이트를 한 번 더 호출하고 같은 fix 정책을 적용한다. 이후 gate 2 finding이 인용한 평가조건을 final draft에서 재확인하고 evidence와 미해소 finding을 남긴다. gate 3은 없다 — gate 2도 임계값이면 마감에서 후속 `plan-review` 1회 수동 실행을 권고한다.
   - 마감 메시지는 실행한 게이트의 severity·fix·검증 결과를 호출별로 구분해 보고한다.
 - **실행 인계**: `implementation` 스킬(메인 루프 직접 RED→GREEN 구현)로 인계한다. 구현 작성을 여러 갈래로 나눠야 할 규모로 드러나면 분할 규칙으로 돌아간다.
-- **Minimum-Code 기준**: task의 description과 AC는 요청 동작 또는 관측된 위험에 직접 추적되는 가장 작은 변경만 명세한다.
+- **Minimum-Code 기준**: task의 description과 AC는 요청 동작 또는 관측된 위험에 직접 추적되는 가장 작은 변경만 명세한다. 계획이 과잉으로 새는 자리 셋을 특히 본다.
+  - **파일 생성의 기본값은 "만들지 않음"이다**: 기존 파일 수정으로 닫히면 `[M]`이고, `[C]`는 왜 수정으로 안 되는지를 생성 이유에 적는다.
+  - **한 곳에서만 쓰일 helper·layer·config·interface를 계획하지 않는다**: 두 번째 사용처가 실재할 때 만든다.
+  - **같은 정보를 여러 섹션에 재서술하지 않는다**: Description·AC·`Contracts` 중 한 곳이 소유하고 나머지는 참조한다.
 
 ## Integration
 

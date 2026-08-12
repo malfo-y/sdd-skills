@@ -1,5 +1,28 @@
 # Decision Log
 
+## 2026-08-12 - rubric 5 smell의 producer 대응 보강 — 복사가 아니라 작성 규칙으로 흡수
+
+### Context
+
+사용자 지적: `plan-review-agent`의 rubric은 draft가 지켜야 할 것을 알고 있는데 `feature-draft`에는 그 내용이 없어, 게이트가 잡을 결함을 안고 draft가 태어난다. 5 smell을 producer 대응과 대조한 실측 — `Verification Weakness`(AC 2등급·Target Files 실측·조건부 propagation)와 `Hidden Decision`(Process 2 무인 실행 → Open Questions)은 대응이 튼튼, `Requirement Fit`은 Process 3 열거(누락 방향) + Minimum-Code(과잉 방향)로 성립, `Task Boundary Drift`는 최상단 정의 + Process 3 배정으로 있으나 **중복 구현 축이 빠짐**, `Over-engineering`은 Minimum-Code **1줄뿐**.
+
+### Decision
+
+1. **rubric 복사 금지 (기각한 대안)**: 검사 술어를 producer로 복사하지 않는다. main.md의 "producer 정본 + verifier pointer"와 plan-review Hard Rule 5(producer 계약 재서술 금지)의 대칭이다 — 같은 술어를 양쪽이 보유하면 소유자가 둘이 되고 한쪽만 갱신된다. **producer는 작성 규칙(무엇을 한다), reviewer는 판정 술어(어떻게 판정한다)** 로 나눈다. 문장 단위 대조로 복사 0건을 확인했다(`중복 구현하도록 계획했는가`·`과한 추상화를 요구하거나`·`생성 이유가 없는가`·`산문으로 미러링하는가`·`하나의 명확한 목적을 넘는가` 전부 agent에만 1건).
+2. **Over-engineering → `Minimum-Code 기준` 확장 (1줄 → 4줄)**: 과잉이 새는 자리 셋을 명시한다 — 파일 생성의 기본값은 "만들지 않음"(`[C]`는 수정으로 안 되는 이유를 적는다) / 한 곳에서만 쓰일 helper·layer·config·interface 금지(두 번째 사용처가 실재할 때 만든다) / Description·AC·`Contracts` 간 재서술 금지(한 곳이 소유, 나머지는 참조).
+3. **중복 구현 축 → Process 3 배정이 흡수 (한 구절)**: "같은 로직·상수·계약을 두 task가 각자 구현하도록 계획했다면 그것도 요소 하나를 두 곳에 배정한 것이다." 별도 규칙을 만들지 않고 이미 있는 owner 배정 규칙의 사례로 편입했다 — Over-engineering의 중복 항목과 Task Boundary Drift가 같은 판정("요소↔task 1:1")으로 닫힌다.
+
+### Rationale / Evidence
+
+- 4줄 순증(113 → 117). 직전 결정이 "형식 규칙 과다"를 문제 삼았으므로, 새 절이나 rubric 미러가 아니라 **저자가 그 판단을 내리는 자리**(Process 3 배정 / `규칙`의 Minimum-Code)에만 붙였다.
+- 재서술 금지 항목은 실증이 있다 — 이번 세션 draft의 Task 1 `Contracts` 블록이 Change Summary 재서술이라고 simplicity 렌즈가 잡았고 fix에서 삭제했다.
+- 미러 byte-identical, structural check 40여 항목 회귀 ALL PASS. main.md 몸통 무변경(기존 §77 원칙의 적용이지 원칙 변경이 아니다) → 버전 bump 없음.
+
+### Changes
+
+- `.claude/skills/feature-draft/SKILL.md`, `.codex/skills/feature-draft/SKILL.md` — Process 3 배정 1구절 + Minimum-Code 3항목
+- `_sdd/spec/components.md` — `feature-draft` 행에 producer/reviewer 소유 분리 명시
+
 ## 2026-08-12 - feature-draft 배치 정리 (사용자 직접 편집 — 아래 무게중심 이동 entry의 위치 상세를 supersede)
 
 문면 변경 없이 세 요소의 **자리만** 옮겼다. ① `task의 정의`를 `규칙` 절 불릿에서 **문서 최상단 단독 문장**(intro 바로 아래, Process 앞)으로 승격 — 절차보다 먼저 읽히는 정의여야 Process 3이 그 정의를 실행하는 절차로 읽힌다. ② `분할 규칙` 절을 Process **앞 h2**에서 **뒤 h3**으로 내림 — 분할 판정은 Process 4가 호출하는 하위 기준이지 Process와 대등한 독립 절이 아니다(참조 방향도 "위 분할 규칙" → "아래 분할 규칙"으로 정정). ③ `규칙` 절 첫 항목은 `AC가 핵심이다`로 복귀.
