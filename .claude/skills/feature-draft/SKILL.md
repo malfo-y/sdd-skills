@@ -93,6 +93,10 @@ description: This skill should be used when the user asks to "feature draft", "d
   - **2등급**: 명시 rubric + reviewer 판정 + 인용 근거로 판정한다.
   - **공통 기준**: 각 AC에 평가방법과 기대 evidence를 함께 쓰고, 이진 판정으로 닫으며, 외부 증거에 묶어 제3자가 반박 가능하게 한다.
 - **Target Files는 실측**: 현재 코드 탐색으로 확인한 경로만 적는다. 확정 불가면 `[TBD] <사유>`. 마커는 `[C]` Create / `[M]` Modify / `[D]` Delete.
+- **Minimum-Code 기준**: task의 description과 AC는 요청 동작 또는 관측된 위험에 직접 추적되는 가장 작은 변경만 명세한다. 계획이 과잉으로 새는 자리 셋을 특히 본다.
+  - **파일 생성의 기본값은 "만들지 않음"이다**: 기존 파일 수정으로 닫히면 `[M]`이고, `[C]`는 왜 수정으로 안 되는지를 생성 이유에 적는다.
+  - **한 곳에서만 쓰일 helper·layer·config·interface를 계획하지 않는다**: 두 번째 사용처가 실재할 때 만든다.
+  - **같은 정보를 여러 섹션에 재서술하지 않는다**: Description·AC·`Contracts` 중 한 곳이 소유하고 나머지는 참조한다.
 - **마커 보존**: `spec-update-todo-input` 마커 쌍을 유실하지 않는다 — `spec-sync` 입력 호환의 조건이다.
 - **조건부 propagation 표**
   - 발동: 동일 change element가 둘 이상의 동기화 표면에 걸릴 때만 `Propagation Surfaces`를 만든다.
@@ -105,10 +109,6 @@ description: This skill should be used when the user asks to "feature draft", "d
   - **gate 2 → fix 2** (조건부): fix 전 raw 합산 finding이 Low 제외 **Critical+High ≥ 3 또는 Medium ≥ 5**면 같은 게이트를 한 번 더 호출하고 같은 fix 정책을 적용한다. 이후 gate 2 finding이 인용한 평가조건을 final draft에서 재확인하고 evidence와 미해소 finding을 남긴다. gate 3은 없다 — gate 2도 임계값이면 마감에서 후속 `plan-review` 1회 수동 실행을 권고한다.
   - 마감 메시지는 실행한 게이트의 severity·fix·검증 결과를 호출별로 구분해 보고한다.
 - **실행 인계**: `implementation` 스킬(메인 루프 직접 RED→GREEN 구현)로 인계한다. 구현 작성을 여러 갈래로 나눠야 할 규모로 드러나면 분할 규칙으로 돌아간다.
-- **Minimum-Code 기준**: task의 description과 AC는 요청 동작 또는 관측된 위험에 직접 추적되는 가장 작은 변경만 명세한다. 계획이 과잉으로 새는 자리 셋을 특히 본다.
-  - **파일 생성의 기본값은 "만들지 않음"이다**: 기존 파일 수정으로 닫히면 `[M]`이고, `[C]`는 왜 수정으로 안 되는지를 생성 이유에 적는다.
-  - **한 곳에서만 쓰일 helper·layer·config·interface를 계획하지 않는다**: 두 번째 사용처가 실재할 때 만든다.
-  - **같은 정보를 여러 섹션에 재서술하지 않는다**: Description·AC·`Contracts` 중 한 곳이 소유하고 나머지는 참조한다.
 
 ## Integration
 
