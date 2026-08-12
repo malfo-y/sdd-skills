@@ -1,5 +1,11 @@
 # Decision Log
 
+## 2026-08-12 - feature-draft 배치 정리 (사용자 직접 편집 — 아래 무게중심 이동 entry의 위치 상세를 supersede)
+
+문면 변경 없이 세 요소의 **자리만** 옮겼다. ① `task의 정의`를 `규칙` 절 불릿에서 **문서 최상단 단독 문장**(intro 바로 아래, Process 앞)으로 승격 — 절차보다 먼저 읽히는 정의여야 Process 3이 그 정의를 실행하는 절차로 읽힌다. ② `분할 규칙` 절을 Process **앞 h2**에서 **뒤 h3**으로 내림 — 분할 판정은 Process 4가 호출하는 하위 기준이지 Process와 대등한 독립 절이 아니다(참조 방향도 "위 분할 규칙" → "아래 분할 규칙"으로 정정). ③ `규칙` 절 첫 항목은 `AC가 핵심이다`로 복귀.
+
+근거: 앞선 entry의 결정 3("`규칙` 절 최상단으로 승격")은 정의를 형식 규칙 목록 안에 둬서 여전히 "형식 중 하나"로 읽혔다. 무게중심 이동의 **의도는 유지하되 배치를 그 의도에 맞춘 것**이며, 계약·판정 술어·리터럴은 전량 불변이다(structural check 40여 항목 회귀 ALL PASS, 미러 byte-identical). 반영 표면: `.claude`/`.codex` feature-draft SKILL 짝 + `components.md` `feature-draft` 행.
+
 ## 2026-08-12 - feature-draft 무게중심 이동 — 계획 절차를 형식 규칙보다 앞에 둔다 (components.md only, main.md 몸통 무변경)
 
 ### Context
