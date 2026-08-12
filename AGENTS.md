@@ -22,11 +22,11 @@
 
 ## 3. SDD 워크플로우
 
-이 repo는 SDD를 따른다. 단계 순서:
+SDD는 **스펙에 영향을 주는 변경**에 적용된다 — 끝났을 때 `spec-sync`가 반영할 것이 있는 작업. 스펙이 그대로인 작업(읽기 전용 조사·질문 답변, 커밋되지 않는 일회성 산출물, 규약대로의 기계적 기록)은 SDD 대상이 아니며 요청받은 대로 바로 수행한다. 대상 여부가 애매하면 **비대상**으로 보고 바로 수행한다. 대상일 때의 단계 순서:
 discussion → feature-draft → plan-review → implementation → implementation-review → spec-sync
 `spec-sync`는 계획 반영과 구현 후 동기화의 단일 진입점이다. 각 단계의 구체 스킬은 **설치된 SDD 스킬**을 사용한다. ⚠️ 화살표의 각 단계 이름(discussion·feature-draft·implementation·spec-sync 등)은 **동명의 SDD 스킬**이다. 해당 단계 진입 시 그 스킬을 **호출**하고, 로직을 직접 재구현하지 않는다 — 스킬이 단일 소스다. 단 `plan-review`·`implementation-review` 단계는 각각 `feature-draft`·`implementation` 스킬이 자기 품질 게이트로 내부 수행하므로 별도로 호출하지 않는다. 스킬 미설치 환경에서만 SDD 개념으로 수동 수행한다. (스킬 카탈로그를 여기 복사하지 않는다 — 최신 스킬셋이 단일 소스이고, 복사본은 스킬 추가·개명을 따라가지 못해 낡은 목록이 실행을 오도한다.)
 
-**경량 경로 (light path)**: 아래 셋에 **모두** 해당하는 소규모 변경은 풀 체인 대신 **직접 구현 → 검증 → spec-sync**로 처리해도 된다 — ① 새 contract/invariant가 없다 ② 신규 파일이 없다(work log 제외) ③ 전파 표면(미러·섹션 리터럴·등록 목록)이 전수 열거되고 각각 diff/grep로 검증된다. 하나라도 아니거나 판정이 애매하면 풀 체인이 기본값이다. 새 계약·agent 반환 형식·dispatch 구조 변경, rename/전파류(census 필요), 신규 skill/agent 추가는 항상 풀 체인이다. 경량 경로에서도 브랜치·Execute→Verify(§2)·spec-sync·work log(§5)는 생략하지 않으며, 채택 시 판정 근거 1줄을 work log 항목에 남긴다.
+**경량 경로 (light path)**: 아래 셋에 **모두** 해당하는 소규모 변경은 풀 체인 대신 **직접 구현 → 검증 → spec-sync**로 처리해도 된다 — ① 새 contract/invariant가 없다 ② 신규 파일이 없다(work log 제외) ③ 전파 표면(예: 미러본·참조 리터럴·등록처)이 전수 열거되고 각각 diff/grep로 검증된다. 하나라도 아니거나 판정이 애매하면 풀 체인이 기본값이다. rename·전파류는 census가 변형형을 놓치기 쉬워 ③을 충족한 듯 보여도 항상 풀 체인이다. 경량 경로에서도 브랜치·Execute→Verify(§2)·spec-sync·work log(§5)는 생략하지 않으며, 채택 시 판정 근거 1줄을 work log 항목에 남긴다.
 
 ## 4. 판단 기준이 필요할 때 (가리키기, 복사 금지)
 
