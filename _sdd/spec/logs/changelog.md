@@ -2,6 +2,11 @@
 
 > 이 파일은 `_sdd/spec/main.md`의 **본문이 바뀐 버전만** 기록한다 — 본문 무변경 sync(헤더 날짜만 갱신)는 entry를 남기지 않으므로 버전 번호에 결번이 생길 수 있다.
 
+#### v4.11.0 (2026-08-12)
+
+- **draft/review 계약 다이어트 — Claim Manifest 철회 · 분할 판정 단일 기준화 · task 정의 승격 · Hidden Decision 잔재 제거 (post-implementation sync)**: 사용자 코멘트 6건을 근거로 "평가할 수 없거나 값을 내지 못하는 계약"을 지시문에서 제거했다. **Claim Manifest 계약은 도입 당일 철회** — producer 표면 3종과 reviewer의 manifest 전수 순회 분기를 전량 삭제하고 실측 렌즈의 사실 주장 대조를 산문 발굴 단일 경로로 복귀시켰다(이득 미관측 + producer ceremony·reviewer 이중 분기 상시 비용; 사실 주장 선고정 축은 재제안 금지). **분할 판정은 `coverage 눈검산 불가` 단일 기준**으로 축약했다 — 평가 불가한 `단일 컨텍스트 초과` 기준·리트머스·두 기준 전제 도입문을 삭제하되 분할 메커니즘과 "단일 컨텍스트 = 품질 전제" 근거 서술은 존치. **task 정의**를 Process 하위 불릿에서 `규칙` 절 최상단으로 승격(문면 불변). **Hidden Decision** rubric의 첫 술어와 Step 2 `decision markers` 항목을 삭제해 술어 2개만 남겼다(2026-08-05 계약 제거 후 producer 슬롯 없이 남은 잔재 — 사라진 검사 대상은 `Verification Weakness`·`Over-engineering`·`Task Boundary Drift`가 소유).
+- **검증 evidence**: 19 AC 전부 MET(structural check RED→GREEN 실측 — claim-literal 10→0, headings 7→6, split-predicate 6→0, `<br>` 2→1, 대소문자 census 12→0, 미러 `diff` rc=0, `git diff --check` 무출력). plan-review gate 1 `H1 M5 L5` → gate 2 `H2 M4 L5`(fix 2회). implementation-review gate 1 `C0 H0 M4 L11` → 임계값 미도달, Medium 4건 fix(spec 인계 열거 보강 2 + 문면 축약·재작성 2). 계약 오류 선언 1건(Task 2 AC2 원문 보존 가정 교체).
+
 #### v4.10.0 (2026-08-12)
 
 - **spec-sync 직접 실행 전환 — agent 짝·표면 묶음 병렬 폐지 (post-implementation sync)**: `spec-sync`를 orchestrator + leaf(agent) 구조에서 **메인 루프 직접 실행 스킬**로 되돌렸다. `.claude`/`.codex` `skills/spec-sync/SKILL.md` 짝(byte 동일)이 전체 계약·status 분류·Repo-wide Invariant Test의 단일 소스이고, `spec-sync-agent` 짝은 삭제 + 등록 3표면(marketplace.json agents·codex README Agent Set·README 계수 문구)에서 해제됐다(잔존 SDD agent 4종). 본문 ∥ 기록 2-shard 병렬, `호출자 표면 한정`, `Implemented Sync Digest` 선고정, read-vs-rename 회피 규칙이 함께 폐지됐다 — 쓰기-서로소 작성자 분할 패턴은 허용 형태로 남되 **현존 인스턴스 0**. 기록 책임(live truth + `Spec Version` bump / append-only entry / `_processed_` rename)은 Process Step 5로, 정합 점검 2종은 Step 6 자체 점검으로 이관하며 적용 조건을 분리했다(버전 일치 = 몸통 변경 sync, 삭제 줄 0 = 기록 파일을 쓴 sync). Hard Rules 연번 1~11 교정(술어 보존).

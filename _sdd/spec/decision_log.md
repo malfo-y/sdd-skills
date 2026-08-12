@@ -1,5 +1,33 @@
 # Decision Log
 
+## 2026-08-12 - draft/review 계약 다이어트 — Claim Manifest 철회 · 분할 판정 단일 기준화 · Hidden Decision 잔재 제거 (v4.10.0 → v4.11.0, post-implementation sync)
+
+### Context
+
+사용자가 `feature-draft`·`plan-review-agent` 문면에 코멘트 6건을 남겼다. 공통 축은 **평가할 수 없거나 값을 내지 못하는 계약이 지시문에 남아 있다**는 것이다 — ① Claim Manifest는 실사용에서 plan-review 시간 단축 효과가 없었고(도입 당일), ② 분할 규칙의 `단일 컨텍스트 초과`는 "애초에 제대로 평가가 가능한 영역이 아니"며, ③ 리트머스 "머리 하나에 다 안 담기는가?"는 의미가 전달되지 않고, ④ Hidden Decision 첫 술어는 2026-08-05 decisions/assumptions 계약 제거 뒤 대응 producer 슬롯 없이 남은 잔재다. ⑤ task 정의는 Process 하위 불릿에 파묻혀 읽히지 않는다.
+
+### Decision
+
+1. **Claim Manifest 계약 철회(도입 당일)**: producer 표면(템플릿 `# Claim Manifest` 섹션·`Claim Manifest 단일 소스` 규칙·허용 변형 문구)과 reviewer 분기(Step 2 inventory 항목·Step 3 manifest 행 전수 순회·`CM<n>` 미참조 주장의 `Verification Weakness` 귀속)를 전량 삭제한다. 실측 렌즈의 사실 주장 대조는 **산문 발굴 단일 경로**로 복귀한다.
+2. **분할 판정 단일 기준화**: 판정 술어는 `coverage 눈검산 불가` 하나다. `단일 컨텍스트 초과` 기준과 리트머스 문장, 두 기준을 전제하던 도입문 `둘 중 하나에 해당하면`을 삭제한다. 분할 메커니즘(롤링 분할·planned todo 고정·census 예외)과 "단일 컨텍스트 = 품질 전제"라는 **근거** 서술·스킬 소개문·frontmatter description은 존치한다 — 지운 것은 판정이지 이유가 아니다.
+3. **task 정의 승격**: 정의(단일 의도 + 자기 AC만으로 완료 판정이 닫히는 실행 단위)를 `규칙` 절 최상단 항목으로 올리고, Process 4 `Task boundary`에는 반증 테스트만 남긴다. 문면 rewrite는 하지 않는다(불명확의 원인은 내용이 아니라 위치).
+4. **Hidden Decision 잔재 제거**: rubric 첫 술어와 Step 2 `decision markers` 항목을 삭제해 술어 2개(Open Questions 처리 / 남은 숨은 가정)만 남긴다. 사라진 검사 대상은 `Verification Weakness`·`Over-engineering`·`Task Boundary Drift`가 이미 소유한다.
+
+### Rationale / Evidence
+
+- **Claim Manifest 철회의 비대칭**: 이득(reviewer 대조 범위 bounding)은 미관측이고 비용(producer의 draft별 표 작성 ceremony + reviewer의 manifest 유무 이중 분기)은 상시였다. 읽기 상한은 manifest가 아니라 Step 3 최소 읽기 규칙이 계속 소유하므로 철회로 잃는 통제는 없다. **사실 주장을 별도 구조에 선고정해 대조 범위를 좁히는 축은 재제안 금지**(main.md 리뷰 읽기 다이어트에 기록).
+- **평가 불가 기준 제거의 근거**: 모델은 자기 토큰 소비를 사전 예측할 수 없어 `단일 컨텍스트 초과` 판정이 임의적이었다. 남는 `coverage 눈검산 불가`는 draft 문면만으로 관측 가능하고, 규모가 크면 대응이 다대다로 얽히므로 구 기준 2를 대체로 포섭한다.
+- **검증**: 19 AC 전부 MET(structural check 40여 항목 RED→GREEN 전이 실측 — claim-literal 10→0, headings 7→6, split-predicate 6→0, br-count 2→1, census 12→0). plan-review gate 1 `H1 M5 L5` → gate 2 `H2 M4 L5`, fix 2회. implementation-review gate 1 `C0 H0 M4 L11`(correctness 5 shard + simplicity 2 묶음) → 임계값 미도달로 gate 2 없음, Medium 4건 fix.
+- **계약 오류 선언 1건**: Task 2 AC2가 요구하던 "예외 문장 원문 보존"이 틀린 가정이었다 — 기준이 하나로 축약된 뒤 `눈검산 가능하면 적격` 앞절은 상위 규칙의 재진술이라, load-bearing 내용(새 계약은 분할 사유 아님 + `Contracts` 기록) 보존으로 AC를 교체했다.
+- **기각 대안**: Hidden Decision 첫 술어에서 marker 열거만 지우고 술어를 남기는 안 — 근거 없는 검사 대상(가정 슬롯 없는 producer)에 대한 술어가 그대로 남아 기각.
+
+### Changes
+
+- `.claude/skills/feature-draft/SKILL.md`, `.codex/skills/feature-draft/SKILL.md` — manifest 3표면 제거·분할 규칙 단일 기준화·task 정의 승격 (byte-identical 미러)
+- `.claude/agents/plan-review-agent.md`, `.codex/agents/plan-review-agent.toml` — rubric Hidden Decision 행·Step 2 inventory·Step 3 사실 주장 대조 3문면
+- `_sdd/spec/main.md`(L78 잔재 서술·2-렌즈 대조 기준·입력 상한·리뷰 읽기 다이어트 3종→2종+철회 기록·planning precedence·규모 초과 guardrail), `_sdd/spec/components.md`(`feature-draft`·`plan-review` 행), `_sdd/spec/usage-guide.md`(draft 산출물 정의·분할 문면)
+- `_sdd/drafts/_processed_2026-08-12_feature_draft_draft_review_contract_diet.md` — 사용 input 처리 표시 (planned 잔여 없음)
+
 ## 2026-08-12 - spec-sync 직접 실행 전환 — agent 짝·표면 묶음 병렬 폐지 (v4.9.0 → v4.10.0, post-implementation sync)
 
 ### Context
