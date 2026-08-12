@@ -9,12 +9,9 @@ description: This skill should be used when the user asks to "feature draft", "d
 
 ## 분할 규칙 (작성 전 판정 + 작성 중 상시 감시)
 
-둘 중 하나에 해당하면 하나의 draft로 강행하지 않는다 — **분할한다**. 규모 초과의 해소 수단은 더 큰 파이프라인이 아니라 분할이다.
+변경 요소(계약·수정 지점)와 task의 대응이 다대다로 얽혀 "모든 변경 요소가 어느 task에서 처리되는지"를 눈으로 검산할 수 없으면(**coverage 눈검산 불가**), 하나의 draft로 강행하지 않는다 — **분할한다**. 해소 수단은 더 큰 파이프라인이 아니라 분할이다.
 
-1. **coverage 눈검산 불가**: 변경 요소(계약·수정 지점)와 task의 대응이 다대다로 얽혀 "모든 변경 요소가 어느 task에서 처리되는지"를 눈으로 검산할 수 없다.
-2. **단일 컨텍스트 초과**: 작업 총량이 한 세션에서 품질 저하 없이 끝날 규모를 넘는다.
-
-리트머스: **"머리 하나에 다 안 담기는가?"** 담기면 단일 draft, 안 담기면 쪼갠다. 새 contract/invariant(다른 코드·문서·미래 작업이 새로 의지하게 될 약속)가 생겨도, 소수이고 눈검산 가능하면 단일 draft 적격이다 — 해당 task의 `Contracts`에 적는다.
+새 contract/invariant(다른 코드·문서·미래 작업이 새로 의지하게 될 약속)가 생기는 것 자체는 분할 사유가 아니다 — 해당 task의 `Contracts`에 적는다.
 
 **분할 방법 (롤링)**: 분할 필요 판정이면 이 draft 파일이 곧 분할 계획이다. Part 1 마커 내부에 분할 feature 목록(feature당 1줄 의도 + scope)을 적는다 — `spec-sync` 스킬이 마커 내부를 소비해 feature별 planned todo로 global spec에 고정한다. Part 2에는 **첫 feature의 task만** 작성한다. 나머지 feature는 각자 차례에 자기 draft를 새로 만든다.
 
@@ -32,8 +29,8 @@ description: This skill should be used when the user asks to "feature draft", "d
 3. **분할 판정**: 위 분할 규칙 점검. 판정 근거 1줄 확정 (census형 신호가 있으면 검증 task를 Part 2 마지막에 예약).
 4. **draft 작성**
    - **Template fidelity**: Required Output의 fenced template을 출발 skeleton으로 verbatim 복사하고 heading·marker·field order를 보존한다.
-   - **허용 변형**: placeholder와 예시 값을 실제 값으로 치환하고, Propagation row·Claim Manifest row·task block·AC·Target File row는 필요한 수만큼 반복한다. 조건이 성립하지 않는 `Propagation Surfaces`·`Open Questions` 섹션만 제거할 수 있다.
-   - **Task boundary**: task는 단일 의도를 가지고 자기 AC만으로 완료 판정이 닫히는 실행 단위다. 의도가 두 문장이면 두 task로 쪼개고, 다른 task의 결과를 봐야 완료를 판정할 수 있으면 경계를 다시 긋는다.
+   - **허용 변형**: placeholder와 예시 값을 실제 값으로 치환하고, Propagation row·task block·AC·Target File row는 필요한 수만큼 반복한다. 조건이 성립하지 않는 `Propagation Surfaces`·`Open Questions` 섹션만 제거할 수 있다.
+   - **Task boundary**: 의도가 두 문장이면 두 task로 쪼개고, 다른 task의 결과를 봐야 완료를 판정할 수 있으면 경계를 다시 긋는다.
 5. **surface**: 저장 후 Open Questions 중 사용자 확인이 필요한 항목만 채팅에 1줄씩 노출한다. 없으면 "사용자 확인이 필요한 항목 없음" 1줄.
 
 ## Required Output
@@ -65,13 +62,6 @@ description: This skill should be used when the user asks to "feature draft", "d
 |---|---|---|---|---|
 | P1 | ... | exact paths/patterns | read-only query + expected surface set | Task N |
 
-# Claim Manifest
-[repo 대조가 필요한 사실 주장(AC content anchor 실재, 기존 로직·중복 실재 등 사실 전제)을 행으로 모은다. 대조 필요 주장이 없으면 `없음 (대조 필요 주장 없음)` 1줄로 대체.]
-
-| ID | Claim | Query | Expected |
-|---|---|---|---|
-| CM1 | ... | read-only query | 기대 결과 |
-
 # Part 2: Tasks
 
 ### Task 1: [action-oriented title]
@@ -93,13 +83,13 @@ description: This skill should be used when the user asks to "feature draft", "d
 
 ## 규칙
 
+- **task의 정의**: task는 단일 의도를 가지고 자기 AC만으로 완료 판정이 닫히는 실행 단위다.
 - **AC가 핵심이다**
   - **1등급**: 재현 가능한 test/check 출력으로 판정한다.
   - **2등급**: 명시 rubric + reviewer 판정 + 인용 근거로 판정한다.
   - **공통 기준**: 각 AC에 평가방법과 기대 evidence를 함께 쓰고, 이진 판정으로 닫으며, 외부 증거에 묶어 제3자가 반박 가능하게 한다.
 - **Target Files는 실측**: 현재 코드 탐색으로 확인한 경로만 적는다. 확정 불가면 `[TBD] <사유>`. 마커는 `[C]` Create / `[M]` Modify / `[D]` Delete.
 - **마커 보존**: `spec-update-todo-input` 마커 쌍을 유실하지 않는다 — `spec-sync` 입력 호환의 조건이다.
-- **Claim Manifest 단일 소스**: repo 대조가 필요한 사실 주장(AC content anchor 실재, 기존 로직·중복 실재 등 사실 전제)은 `# Claim Manifest` 표가 단일 소스다. AC 평가방법·Description·Contracts 산문은 그 주장을 `CM<n>` ID로 참조하고 query·expected를 재서술하지 않는다. Target Files·Propagation `Discovery evidence`는 기존 구조가 소유한다 — manifest에 중복 수록하지 않는다.
 - **조건부 propagation 표**
   - 발동: 동일 change element가 둘 이상의 동기화 표면에 걸릴 때만 `Propagation Surfaces`를 만든다.
   - 필드: `Required surfaces`는 exact path/pattern, `Discovery evidence`는 read-only query와 기대 surface 집합을 적는다.
