@@ -1,6 +1,6 @@
 ---
 name: plan-review
-description: Use this skill to review a feature draft before coding, identify overengineering and sloppy-code risks, and return a findings-first verdict. Triggered by "plan review", "review plan", "draft review", "계획 리뷰", "플랜 리뷰", "구현 계획 리뷰", or when the user wants to check a draft against KISS/YAGNI/DRY/minimum-code principles before implementation.
+description: Use this skill to review a feature draft before coding, identify overengineering and sloppy-code risks, and return a findings-first verdict. Triggered by "plan review", "review plan", "draft review", "계획 리뷰", "플랜 리뷰", "구현 계획 리뷰", or when the user wants to check a draft for requirement fit, overengineering, hidden decisions, and weak verification before implementation.
 argument-hint: "[--model <active-model>] [--effort <active-effort>]"
 ---
 
@@ -68,7 +68,7 @@ review
 1. 사용자 요청 + 리뷰 대상 draft 경로와 이미 아는 결정을 수집한다 (orchestrator는 새 분석 read를 하지 않는다).
 2. **두 렌즈를 동시 spawn한다** — message 구성·호출·수거 문법은 위 Codex Runtime Adapter 블록이 단일 소스다 (두 spawn은 렌즈 한정 슬롯만 다르다. 렌즈 소유 정의는 agent의 `호출자 렌즈 한정` 절이 단일 소스):
    - 반환된 두 task/agent의 final을 위 Runtime Adapter로 전부 수거한 뒤 결과를 기록한다. wait가 timeout이면 완료로 간주하지 말고 더 기다리거나, controlled stop/blocked 상태를 사용자에게 보고한 뒤에만 중단 여부를 결정한다. 대상 경로가 불명확하면 각 spawn이 자체 Input 우선순위로 탐색하도록 위임한다.
-3. 두 반환을 병합해 relay한다: Blocker Status는 **하나라도 BLOCKED면 BLOCKED**, findings는 합산, smell 판정은 **합집합**(각 smell이 정확히 한 렌즈에 소유되므로 중복 없음), 규모 판정 검사 결과는 판단 렌즈 반환에서 온다. finding 반영은 호출자(draft 작성자) 소관이다.
+3. 두 반환을 병합해 relay한다: Blocker Status는 **하나라도 BLOCKED면 BLOCKED**, findings는 합산, smell 판정은 **합집합**(각 smell이 정확히 한 렌즈에 소유되므로 중복 없음)이다. finding 반영은 호출자(draft 작성자) 소관이다.
 
 ## 계약 (entrypoint 유지, 흉내 금지)
 
