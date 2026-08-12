@@ -21,16 +21,10 @@
 - `implementation-review-agent`
 - `simplicity-review-agent`
 - `pr-review-agent`
-- `spec-sync-agent`
 
 ## Inline Writing
 
-장문 산출물은 별도 writing helper agent에 넘기지 않는다. caller가 같은 흐름에서 skeleton -> fill -> finalize를 수행한다.
-
-- `plan-review-agent`
-- `implementation-review-agent`
-- `simplicity-review-agent`
-- `pr-review-agent`
+장문 산출물은 별도 writing helper agent에 넘기지 않는다. caller가 같은 흐름에서 skeleton -> fill -> finalize를 수행한다. 위 Agent Set 전원에 적용된다.
 
 ## Invocation Contract
 
