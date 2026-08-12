@@ -2,6 +2,11 @@
 
 > 이 파일은 `_sdd/spec/main.md`의 **본문이 바뀐 버전만** 기록한다 — 본문 무변경 sync(헤더 날짜만 갱신)는 entry를 남기지 않으므로 버전 번호에 결번이 생길 수 있다.
 
+#### v4.10.0 (2026-08-12)
+
+- **spec-sync 직접 실행 전환 — agent 짝·표면 묶음 병렬 폐지 (post-implementation sync)**: `spec-sync`를 orchestrator + leaf(agent) 구조에서 **메인 루프 직접 실행 스킬**로 되돌렸다. `.claude`/`.codex` `skills/spec-sync/SKILL.md` 짝(byte 동일)이 전체 계약·status 분류·Repo-wide Invariant Test의 단일 소스이고, `spec-sync-agent` 짝은 삭제 + 등록 3표면(marketplace.json agents·codex README Agent Set·README 계수 문구)에서 해제됐다(잔존 SDD agent 4종). 본문 ∥ 기록 2-shard 병렬, `호출자 표면 한정`, `Implemented Sync Digest` 선고정, read-vs-rename 회피 규칙이 함께 폐지됐다 — 쓰기-서로소 작성자 분할 패턴은 허용 형태로 남되 **현존 인스턴스 0**. 기록 책임(live truth + `Spec Version` bump / append-only entry / `_processed_` rename)은 Process Step 5로, 정합 점검 2종은 Step 6 자체 점검으로 이관하며 적용 조건을 분리했다(버전 일치 = 몸통 변경 sync, 삭제 줄 0 = 기록 파일을 쓴 sync). Hard Rules 연번 1~11 교정(술어 보존).
+- **검증 evidence**: 18 AC 전부 MET(fresh grep/awk/diff/json parse, commit bd3fcc0). plan-review gate 1 `H2 M6 L3` → gate 2 CLEAR(`M5 L4`); implementation-review gate 1 `M5 L6` → gate 2 correctness `M2`·simplicity `M7`, 범위 내 5건 fix·baseline 이관 문면 4건은 Scope Out 근거로 미반영. live 표면 census 0건(변형 확장 포함), 다른 4 agent 등록·dispatch 온전.
+
 #### v4.9.0 (2026-08-12)
 
 - **plan-review 단순화 — 규모 판정 검사 폐지·Hard Rules 작성 룰 한정·rubric 축 재배분 (post-implementation sync)**: 리뷰어가 rubric 밖에서 수행하던 검사와 rubric과 겹치던 Hard Rules를 걷어내고 rubric 축을 재배분했다. **규모 판정 검사 폐지**: agent 짝의 전용 절·AC·Step 병기·반환 항목과 wrapper 2벌 relay 문구를 전부 제거 — 분할 판정 소유자는 `feature-draft` SKILL 단독이 되고 draft `> 규모 판정:` 리터럴은 producer 표면으로만 존치한다. **Hard Rules 7→5(작성 룰만)**: `New File Justification`·`Decision and Assumption Surfacing` 삭제(rubric 흡수), `Evidence-backed Minimum Code`→`Minimum Recommendation`(두 술어 보존), `Producer Contract Verification`은 재서술 금지 작성 룰로 축소. **rubric 5행 축 재배분(개수 불변)**: `Requirement Fit`(요청↔task/AC 정합성) / `Task Boundary Drift` / `Hidden Decision`(구 Step 4 + 구 Hard Rule 6 흡수) / `Over-engineering`(구 `DRY Risk` + `New File Justification` 통합) / `Verification Weakness`. 자체 검증 AC 5→3(렌즈별 AC 제외 규정 삭제), Step 3은 최소 읽기 산문 룰로 압축(manifest 전수 순회·legacy fallback·`UNKNOWN` 보존), Step 4 삭제로 6→5 Step, Error Handling 표→1문장, 반환 3항목(Blocker Status·Findings·Smell 판정). 트레이드오프 수용: 분할 없이 강행된 draft를 잡던 리뷰어 안전망이 사라진다(사용자 명시 지시).
