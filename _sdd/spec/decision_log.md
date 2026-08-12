@@ -1,5 +1,34 @@
 # Decision Log
 
+## 2026-08-12 - plan-review 단순화 — 규모 판정 검사 폐지·Hard Rules 작성 룰 한정·rubric 축 재배분 (v4.8.2 → v4.9.0, post-implementation sync)
+
+### Context
+
+`plan-review`가 계약을 늘려온 결과 세 가지 왜곡이 쌓였다(사용자 코멘트 번들). ① 규모 판정 검사는 리뷰어가 rubric 밖에서 수행하는 별도 검사였고, ② Hard Rules 4·5·6이 rubric 술어와 겹쳐 같은 판단이 두 표면에 있었으며, ③ rubric 5행 중 4행이 simplicity 축이라 계획 리뷰의 본령인 "사용자 요청↔task/AC 정합성"이 rubric에 없었다. 검사 표면을 rubric 한 곳으로 모으고 축을 재배분해 해소한다.
+
+### Decision
+
+1. **규모 판정 검사 폐지**: `plan-review`는 draft 상단 `> 규모 판정:` 줄을 더 이상 대조하지 않는다. agent 짝의 전용 절·AC·Step 병기·반환 항목과 wrapper 2벌의 relay 문구를 전부 제거한다. 분할 판정의 소유자는 `feature-draft` SKILL 단독이 되고, draft `> 규모 판정:` 리터럴은 producer 표면(feature-draft·spec-rewrite 템플릿·`docs/**/SDD_SPEC_DEFINITION.md`)으로만 존치한다.
+2. **Hard Rules 7→5, 작성 룰만 보유**: `New File Justification`·`Decision and Assumption Surfacing`을 삭제해 rubric에 흡수시키고, `Evidence-backed Minimum Code`를 `Minimum Recommendation`으로 정렬(두 술어 — 가장 작은 plan change + measured risk 추적 — 보존), `Producer Contract Verification`은 재서술 금지 작성 룰로 축소한다. 검사 술어는 rubric이 단독 소유한다.
+3. **rubric 축 재배분(5행 불변)**: `Requirement Fit`(요청↔task/AC 정합성, 누락·과잉 양방향) / `Task Boundary Drift` / `Hidden Decision`(신설 — 구 Step 4 + 구 Hard Rule 6 흡수) / `Over-engineering`(구 `DRY Risk` + `New File Justification` 통합) / `Verification Weakness`. 개수 리터럴 4종은 불변이므로 blast radius가 짝 안에 갇힌다.
+4. **자체 검증 AC 5→3**: 규모 판정 AC와 Step 4 AC를 삭제하고, 렌즈별 AC 제외 규정도 함께 삭제한다.
+5. **Process 축약**: Step 3을 최소 읽기 산문 룰로 압축(manifest 행 전수 순회·legacy fallback·`UNKNOWN` 보존), Step 4 삭제 후 번호를 당겨 6→5 Step으로 만들고, Error Handling 표를 1문장으로 대체한다.
+6. **반환 3항목**: `규모 판정 검사 결과`를 삭제해 Blocker Status·Findings·Smell 판정만 남기고, wrapper description의 목적 서술을 새 rubric 축에 맞춘다.
+
+### Rationale / Evidence
+
+- 같은 판단이 rubric·Hard Rules·Step에 흩어져 있으면 리뷰어가 표면마다 다르게 적용한다. 검사 술어를 rubric 단일 소유로 모으고 Hard Rules를 작성 룰(read-only·출력 언어·Blocker Policy·recommendation 크기·producer 계약 재구성 금지)로 한정하면 판정 주체가 한 곳이 된다.
+- rubric 행 수를 5행으로 유지한 이유는 개수 리터럴 4곳의 blast radius를 피하고 `[C]` 근거 검사가 과잉 설계와 같은 판단을 공유하기 때문이다. 흡수 무손실(구 Step 4 4항목, 구 `DRY Risk` 3술어 + `New File Justification` 2술어 전부 새 셀에서 식별)은 reviewer 판정으로 검증했다.
+- **트레이드오프 수용**: 규모 판정 검사가 사라지면 분할 없이 강행된 draft를 리뷰어가 잡아주던 안전망이 없어진다. 사용자 지시가 명시적이었고("규모 판정 검사는 그냥 하지 말자") 분할 판정은 producer 단독 소유로 정리했으므로 그대로 수용한다.
+- 검증: 18 AC 전부 MET(fresh grep/diff/tomllib). implementation-review gate 1 (opus-5) correctness 4 shard `H1 L2` / simplicity 2 묶음 `M4 L3` → fix 1회 반영 후 재검증 GREEN, 임계값 미달로 gate 2 미호출. H1은 codex intro 미러 drift였고 동기화 후 양쪽 구 문면 0건. census live 표면 0건, `> 규모 판정:` producer 리터럴 8건 생존.
+
+### Changes
+
+- `.claude/agents/plan-review-agent.md` — 계약 단일 소스 본문 재구성(규모 판정 절·AC·Hard Rules·rubric·Step·Error Handling) (commit bc26e5c)
+- `.codex/agents/plan-review-agent.toml` — 미러 3-way 반영(codex 델타 보존) (commit bc26e5c)
+- `.claude/skills/plan-review/SKILL.md`, `.codex/skills/plan-review/SKILL.md` — relay 문구 제거·description 축 정렬 (commit bc26e5c)
+- `_sdd/drafts/_processed_2026-08-12_feature_draft_plan_review_simplify.md` — 사용 input 처리 표시 (planned 잔여 없음)
+
 ## 2026-08-12 - 리뷰 읽기 다이어트 — Claim Manifest 계약 + 위험 적응형 읽기·ledger MET 접기 (v4.8.1 → v4.8.2, post-implementation sync — main 머지 시 v4.7.5에서 개번)
 
 ### Context
