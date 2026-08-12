@@ -34,13 +34,6 @@ Optional:
 - **Out**: ...
 <!-- spec-update-todo-input-end -->
 
-# Propagation Surfaces
-[동일 change element가 둘 이상의 동기화 표면(미러·등록·템플릿·문서 등)에 반영돼야 할 때만 작성하고, 없으면 섹션 생략.]
-
-| ID | Change element | Required surfaces | Discovery evidence | Owner task |
-|---|---|---|---|---|
-| P1 | ... | exact paths/patterns | read-only query + expected surface set | Task N |
-
 # Part 2: Tasks
 
 ### Task 1: [action-oriented title]

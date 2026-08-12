@@ -23,7 +23,7 @@ description: This skill should be used when the user asks to "feature draft", "d
 4. **분할 판정**: 3의 요소↔task 대응을 눈으로 검산해 아래 분할 규칙을 점검한다. 판정 근거 1줄 확정 (census형 신호가 있으면 검증 task를 Part 2 마지막에 예약).
 5. **draft 작성**
    - **Template fidelity**: Required Output의 fenced template을 출발 skeleton으로 verbatim 복사하고 heading·marker·field order를 보존한다.
-   - **허용 변형**: placeholder와 예시 값을 실제 값으로 치환하고, Propagation row·task block·AC·Target File row는 필요한 수만큼 반복한다. 조건이 성립하지 않는 `Propagation Surfaces`·`Open Questions` 섹션만 제거할 수 있다.
+   - **허용 변형**: placeholder와 예시 값을 실제 값으로 치환하고, Task block·AC·Target File row는 필요한 수만큼 반복한다.
 6. **surface**: 저장 후 Open Questions 중 사용자 확인이 필요한 항목만 채팅에 1줄씩 노출한다. 없으면 "사용자 확인이 필요한 항목 없음" 1줄.
 
 ### 분할 규칙 (작성 전 판정 + 작성 중 상시 감시)
@@ -60,13 +60,6 @@ description: This skill should be used when the user asks to "feature draft", "d
 - **Out**: ...
 <!-- spec-update-todo-input-end -->
 
-# Propagation Surfaces
-[동일 change element가 둘 이상의 동기화 표면(미러·등록·템플릿·문서 등)에 반영돼야 할 때만 작성하고, 없으면 섹션 생략.]
-
-| ID | Change element | Required surfaces | Discovery evidence | Owner task |
-|---|---|---|---|---|
-| P1 | ... | exact paths/patterns | read-only query + expected surface set | Task N |
-
 # Part 2: Tasks
 
 ### Task 1: [action-oriented title]
@@ -98,12 +91,6 @@ description: This skill should be used when the user asks to "feature draft", "d
   - **한 곳에서만 쓰일 helper·layer·config·interface를 계획하지 않는다**: 두 번째 사용처가 실재할 때 만든다.
   - **같은 정보를 여러 섹션에 재서술하지 않는다**: Description·AC·`Contracts` 중 한 곳이 소유하고 나머지는 참조한다.
 - **마커 보존**: `spec-update-todo-input` 마커 쌍을 유실하지 않는다 — `spec-sync` 입력 호환의 조건이다.
-- **조건부 propagation 표**
-  - 발동: 동일 change element가 둘 이상의 동기화 표면에 걸릴 때만 `Propagation Surfaces`를 만든다.
-  - 필드: `Required surfaces`는 exact path/pattern, `Discovery evidence`는 read-only query와 기대 surface 집합을 적는다.
-  - 소유·연접: 각 행은 정확히 하나의 owner task를 가지며, 그 task의 Target Files와 AC가 required surface의 실행·검증을 닫는다.
-  - 비발동: 일반 다중파일 변경만으로는 표를 만들지 않는다.
-  - census 예외: 변형 표기 전수 제거가 필요할 때만 별도의 census read-only 검증 task 규칙을 적용한다.
 - **품질 게이트**: 작성 후 producer인 메인 루프가 `plan-review`를 호출해 finding을 직접 반영한다 — 각 호출은 **단일 패스**이고 reviewer와 사용자는 재호출·fix를 소유하지 않는다.
   - **gate 1 → fix 1** (항상): Critical/High/Medium은 반영하고, Low는 **저비용 AND 명백히 이득 AND 현재 draft scope 내** 셋을 모두 만족할 때만 반영하며 나머지는 advisory로 남긴다 (`현재 draft scope 내`가 scope 확장을 막는 load-bearing 조건).
   - **gate 2 → fix 2** (조건부): fix 전 raw 합산 finding이 Low 제외 **Critical+High ≥ 3 또는 Medium ≥ 5**면 같은 게이트를 한 번 더 호출하고 같은 fix 정책을 적용한다. 이후 gate 2 finding이 인용한 평가조건을 final draft에서 재확인하고 evidence와 미해소 finding을 남긴다. gate 3은 없다 — gate 2도 임계값이면 마감에서 후속 `plan-review` 1회 수동 실행을 권고한다.
