@@ -75,7 +75,8 @@ scope, task boundary, AC, Target Files(`[C]` 신규 파일 포함), Open Questio
 
 각 smell별로 evidence를 모아 severity를 정한다.
 
-리뷰를 위한 supporting context는 판정에 필요한 최소한만 읽는다. `Glob`·`Grep`으로 닫히는 판정은 `Read`하지 않고, `Read`를 앞선 도구 호출과 함께 미리 당겨 부르지도 않는다. 그래도 근거가 부족하면 그 smell의 finding을 만들지 않는다 — 읽기를 더 확장하지 않는다.
+- 리뷰를 위한 supporting context는 판정에 필요한 최소한만 확인한다. 
+- 근거가 부족하면 그 smell의 finding을 만들지 않는다.
 
 ### Step 4: Return
 
