@@ -17,9 +17,11 @@
 - 이 축 셋(평가방법+기대 evidence 병기 / 이진 판정 / 외부 증거 결속)은 `docs/SDD_SPEC_DEFINITION.md` §6 rubric 사슬의 닻과 동일해, producer가 규칙을 바꿔도 축은 흔들리지 않는다.
 - dangling 포인터 census 잔존 0(`producer 계약을 충족`·`Step 3에서 원본을 확인`), 미러 짝 본문 동일, `git diff --check` 무출력. `main.md`·`components.md` 몸통 무변경(서술이 이미 "상세를 복제하지 않고 검사한다" 수준이라 정합) → 버전 bump·changelog entry 없음.
 
+3. **`content anchor` 술어 흡수 + 정의**(사용자 후속 지적): `검증이 구체적이고 content anchor를 사용하는가?`에서 앞 절은 새 술어의 "재현 가능한 출력"과 중복이고, 뒤 절은 중복이 아니라 새 술어가 잘못 흡수한 축이었다(`인용 가능한 위치`는 줄 번호를 연상시켜 anchor의 취지와 역행). 게다가 `content anchor`는 **repo 어디에도 정의가 없었다** — producer에도 정의서에도 없고 이 rubric과 반환 규칙 문장에서만 쓰였다(1번과 같은 부류의 결함). 별도 불릿을 지우고 첫 술어에 정의와 함께 흡수했다: `재현 가능한 출력 또는 content anchor(줄 번호가 아니라 파일·인용 문자열처럼 변경에 흔들리지 않는 앵커)`. 용어를 쓰는 자리에서 정의하므로 반환 규칙 문장과 spec 서술의 명칭이 그대로 유지된다. `Verification Weakness`는 3불릿 → 2불릿.
+
 ### Changes
 
-- `.claude/agents/plan-review-agent.md`, `.codex/agents/plan-review-agent.toml` — rubric `Verification Weakness` 첫 술어 + Hard Rule 5 후단
+- `.claude/agents/plan-review-agent.md`, `.codex/agents/plan-review-agent.toml` — rubric `Verification Weakness` 술어 2건 + Hard Rule 5 후단
 
 ## 2026-08-13 - `Propagation Surfaces` 계약 폐기와 reviewer status 어휘 제거 (사용자 직접 편집 + dangling 정리)
 
