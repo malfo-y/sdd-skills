@@ -4,9 +4,9 @@ description: Use this skill to review a feature draft before coding, identify ov
 argument-hint: "[--model <active-model>] [--effort <active-effort>]"
 ---
 
-# Plan Review (2-렌즈 Orchestrator)
+# Plan Review
 
-이 스킬은 review-only orchestrator다. 사용자의 plan-review 요청을 `plan-review-agent` **2회 병렬 spawn**(실측 렌즈 ∥ 판단 렌즈)으로 위임하고 두 **경량 반환**을 병합해 사용자에게 전달한다. 전체 리뷰 프로세스·5-smell rubric·severity·반환 형식·렌즈 정의는 agent가 단일 소스로 보유한다. 리뷰는 단일 패스이며(렌즈 2개는 한 패스의 병렬 분해이지 loop가 아니다) 리포트 파일을 만들지 않는다. agent는 read-only leaf(파일을 쓰지 않음)라 동시 spawn이 안전하다.
+이 스킬은 review-only orchestrator다. 사용자의 plan-review 요청을 `plan-review-agent`로 위임하고 반환을 정리해 사용자에게 전달한다. 리뷰는 단일 패스이며 리포트 파일을 만들지 않는다.
 
 ## Codex Runtime Adapter
 
@@ -36,18 +36,16 @@ Mailbox contract:
 아래 `r7f3a`는 예시 `run_id`이며 invocation마다 새 값으로 바꾼다.
 
 ```text
-spawn_agent({task_name: "plan_review_r7f3a_measurement", agent_type: "plan-review-agent", fork_turns: "none", message: "<framed payload: Runtime Boundary + Mode(review) + Input Data(사용자 요청 data, 알려진 경로/컨텍스트, 실측 렌즈 한정)>"})
-spawn_agent({task_name: "plan_review_r7f3a_judgment", agent_type: "plan-review-agent", fork_turns: "none", message: "<framed payload: Runtime Boundary + Mode(review) + Input Data(사용자 요청 data, 알려진 경로/컨텍스트, 판단 렌즈 한정)>"})
-wait_agent({timeout_ms: 600000})  // 남은 task의 final이 모두 도착할 때까지 반복
+spawn_agent({task_name: "plan_review_r7f3a", agent_type: "plan-review-agent", fork_turns: "none", message: "<framed payload: Runtime Boundary + Mode(review) + Input Data(사용자 요청 data, 알려진 경로/컨텍스트)>"})
+wait_agent({timeout_ms: 600000})  // final이 도착할 때까지 반복
 ```
 
 Target/close contract:
 
 ```text
-spawn_agent({agent_type: "plan-review-agent", message: "<framed payload: Runtime Boundary + Mode(review) + Input Data(사용자 요청 data, 알려진 경로/컨텍스트, 실측 렌즈 한정)>"})
-spawn_agent({agent_type: "plan-review-agent", message: "<framed payload: Runtime Boundary + Mode(review) + Input Data(사용자 요청 data, 알려진 경로/컨텍스트, 판단 렌즈 한정)>"})
-wait_agent({targets: [<실측_id>, <판단_id>], timeout_ms: 600000})
-close_agent({target: <각 완료 id>})
+spawn_agent({agent_type: "plan-review-agent", message: "<framed payload: Runtime Boundary + Mode(review) + Input Data(사용자 요청 data, 알려진 경로/컨텍스트)>"})
+wait_agent({targets: [<agent_id>], timeout_ms: 600000})
+close_agent({target: <완료 id>})
 ```
 
 ### Agent Message Boundary
@@ -66,14 +64,14 @@ review
 ## 실행
 
 1. 사용자 요청 + 리뷰 대상 draft 경로와 이미 아는 결정을 수집한다 (orchestrator는 새 분석 read를 하지 않는다).
-2. **두 렌즈를 동시 spawn한다** — message 구성·호출·수거 문법은 위 Codex Runtime Adapter 블록이 단일 소스다 (두 spawn은 렌즈 한정 슬롯만 다르다. 렌즈 소유 정의는 agent의 `호출자 렌즈 한정` 절이 단일 소스):
-   - 반환된 두 task/agent의 final을 위 Runtime Adapter로 전부 수거한 뒤 결과를 기록한다. wait가 timeout이면 완료로 간주하지 말고 더 기다리거나, controlled stop/blocked 상태를 사용자에게 보고한 뒤에만 중단 여부를 결정한다. 대상 경로가 불명확하면 각 spawn이 자체 Input 우선순위로 탐색하도록 위임한다.
-3. 두 반환을 병합해 relay한다: Blocker Status는 **하나라도 BLOCKED면 BLOCKED**, findings는 합산, smell 판정은 **합집합**(각 smell이 정확히 한 렌즈에 소유되므로 중복 없음)이다. finding 반영은 호출자(draft 작성자) 소관이다.
+2. 리뷰 agent를 spawn한다 — message 구성·호출·수거 문법은 위 Codex Runtime Adapter 블록이 단일 소스다:
+   - 반환된 task/agent의 final을 위 Runtime Adapter로 수거한 뒤 결과를 기록한다. wait가 timeout이면 완료로 간주하지 말고 더 기다리거나, controlled stop/blocked 상태를 사용자에게 보고한 뒤에만 중단 여부를 결정한다. 대상 경로가 불명확하면 리뷰 agent가 자체 Input 우선순위로 탐색하도록 위임한다.
+3. 반환을 정리해 relay한다: Blocker Status는 **하나라도 BLOCKED면 BLOCKED**, findings/smell 판정은 정리해 전달한다. finding 반영은 호출자(draft 작성자) 소관이다.
 
 ## 계약 (entrypoint 유지, 흉내 금지)
 
 - trigger(plan-review 호출) 계약은 이 orchestrator가 유지한다.
 - 실제 감사·판정은 agent가 수행한다. agent가 지원하지 않는 동작을 orchestrator가 흉내내지 않는다.
-- agent가 노출하는 Blocker(Critical/High)·구현 전 차단 이슈를 orchestrator가 relay해 보존한다 (병합은 relay이지 gating이 아니다).
+- agent가 노출하는 Blocker(Critical/High)·구현 전 차단 이슈를 orchestrator가 relay해 보존한다 (정리는 relay이지 gating이 아니다).
 
 > Source: 전체 계약·5-smell·severity·반환 형식은 `.codex/agents/plan-review-agent.toml`이 단일 소스로 보유한다 (wrapper↔agent; 동일 본문 mirror 아님).

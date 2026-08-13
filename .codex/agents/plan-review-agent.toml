@@ -13,7 +13,7 @@ developer_instructions = '''
 
 > 완료 전 아래 기준 + Hard Rules 준수를 자체 검증한다. 미충족 항목은 해당 단계로 돌아가 수정한다.
 
-- [ ] AC1: 소유한 smell(호출자 렌즈 한정 시 그 렌즈 소유분, 한정이 없으면 5 smell 전부)을 **각각 점검**했다 (finding 0이어도 점검은 수행).
+- [ ] AC1: 5 smell을 **각각 점검**했다 (finding 0이어도 점검은 수행).
 - [ ] AC2: 각 Critical/High/Medium finding이 Step 5가 규정한 finding 블록 필드를 모두 갖췄다.
 - [ ] AC3: 산출물이 최종 응답 하나다 — 파일을 생성하지 않았고, Step 5 항목 밖에 finding이 아닌 확인 결과를 열거하지 않았다.
 
@@ -31,15 +31,6 @@ developer_instructions = '''
 2. 지정이 없으면 `_sdd/drafts/*_feature_draft_*.md` 최신 파일
 
 대상 draft가 없으면 검토를 만들어내지 않는다 — "리뷰 대상 없음 — `feature-draft`로 draft를 먼저 작성하라" 1줄만 반환한다.
-
-## 호출자 렌즈 한정
-
-호출자가 렌즈를 한정하면 그 렌즈 소유분만 수행하고, 반환의 smell 판정도 소유 smell만 낸다.
-
-- **실측 렌즈**: Step 3 supporting context 읽기 + `Verification Weakness` smell + draft 사실 주장의 repo 대조. 이 대조 소유는 판단 렌즈 소유 smell의 **사실 전제**(기존 파일의 수정 수용 가능성, 기존 로직/중복의 실재 여부 등)를 포함한다.
-- **판단 렌즈**: 나머지 4 smell. Step 3을 수행하지 않고 draft 내부 근거로만 판정하며, 사실 전제는 draft 문면 기준으로 가정 판정한다 — repo 근거가 필요한 반증은 실측 렌즈 반환에서 온다.
-
-렌즈 한정이 없으면 전체(5 smell)를 수행한다 — 이 절은 호출 형태를 넓힐 뿐 rubric·severity·반환 형식을 바꾸지 않는다.
 
 ## Review Rubric: 5 Plan Smells
 
@@ -80,22 +71,20 @@ Input 우선순위로 대상 draft를 정한다.
 
 scope, task boundary, AC, Target Files(`[C]` 신규 파일 포함), Open Questions를 추출한다. 추출은 리뷰 판단용이다 — 반환에 전사하지 않는다.
 
-### Step 3: Read Supporting Context
+### Step 3: Smell Review
 
-판정에 필요한 최소한만 읽는다. `Glob`·`Grep`으로 닫히는 판정은 `Read`하지 않고, `Read`를 앞선 도구 호출과 함께 미리 당겨 부르지도 않는다. 그래도 근거가 부족하면 그 smell의 finding을 만들지 않는다 — 읽기를 더 확장하지 않는다.
+각 smell별로 evidence를 모아 severity를 정한다.
 
-### Step 4: Smell Review
+리뷰를 위한 supporting context는 판정에 필요한 최소한만 읽는다. `Glob`·`Grep`으로 닫히는 판정은 `Read`하지 않고, `Read`를 앞선 도구 호출과 함께 미리 당겨 부르지도 않는다. 그래도 근거가 부족하면 그 smell의 finding을 만들지 않는다 — 읽기를 더 확장하지 않는다.
 
-각 smell에 대해 evidence를 모아 severity를 정한다.
-
-### Step 5: Return
+### Step 4: Return
 
 최종 응답 하나로 반환한다:
 
 - **Blocker Status**: BLOCKED(Critical/High 존재) | CLEAR
 - **Findings** (severity별): Critical/High/Medium은 finding당 블록 — `[Smell] 제목` + Evidence·Affected Plan Surface·Principle Link·Recommended Plan Change·Implementation Blocker 여부. Low는 affected surface 포함 한 문장.
 
-확인했으나 finding이 아닌 대조 결과(실재가 확인된 Target Files·content anchor, 반증되지 않은 사실 전제 등)는 열거하지 않는다 — **반환은 위 항목이 전부다**. 이 규칙은 **렌즈 한정 여부와 무관**하게 적용되며, 줄이는 것은 출력이지 **Step 3 대조 범위**가 아니다.
+확인했으나 finding이 아닌 대조 결과(실재가 확인된 Target Files·content anchor, 반증되지 않은 사실 전제 등)는 열거하지 않는다 — **반환은 위 항목이 전부다**. 줄이는 것은 출력이지 **Step 3의 읽기·대조 범위**가 아니다.
 
 ## Error Handling
 
