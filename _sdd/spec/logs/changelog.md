@@ -2,6 +2,12 @@
 
 > 이 파일은 `_sdd/spec/main.md`의 **본문이 바뀐 버전만** 기록한다 — 본문 무변경 sync(헤더 날짜만 갱신)는 entry를 남기지 않으므로 버전 번호에 결번이 생길 수 있다.
 
+#### v4.14.0 (2026-08-13)
+
+- **`plan-review` 2-렌즈 분할 철회 — 단일 dispatch로 복귀 (사용자 직접 편집 → 미러·전 표면 전파)**: 사용자가 `.claude` agent·SKILL에서 실측 ∥ 판단 2-렌즈 분해를 제거했다. 근거는 누적 실측 — 벽시계 max를 **항상 실측 렌즈가 결정**했고(실측 ∥ 판단 = 320∥86 / 178∥122 / 114∥72s) 판단 렌즈는 병렬 그늘에서 유휴여서, 분해 이득이 dispatch·병합 고정비를 넘지 못했다. agent에서 `## 호출자 렌즈 한정` 절이 사라지고 Step 3(Read Supporting Context)이 Step 3(Smell Review)에 흡수되며 4-Step 구조가 됐다(읽기 규칙은 Smell Review 안에 존치). SKILL은 2회 병렬 dispatch → 1회 dispatch + relay. 이로써 `plan-review`는 **분할하지 않는 유일한 게이트**이고, 직교 2-렌즈(correctness ∥ simplicity)는 `pr-review`·`implementation-review`에만 남는다. 편집이 남긴 dangling 정리: AC1의 `호출자 렌즈 한정 시 그 렌즈 소유분`과 반환 규칙의 `렌즈 한정 여부와 무관`이 참조 대상을 잃어 각각 `5 smell 전부`·조건절 삭제로 닫았다. 전파 표면 8곳: `{.claude,.codex}` agent·SKILL 짝 4, `main.md`(§3 분할 축·읽기 상한·Claim Manifest 철회 기록·실행 분리·게이트 소유권 표 + 🚧 Planned 항목 해소), `components.md`(`plan-review` 행·skill/agent split 행), `usage-guide.md`.
+- **부수 정리**: `main.md` §3 읽기 상한 서술에 2026-08-13 이전 계약의 잔재(`UNKNOWN`+limitation 종료, 사실 주장 대조 단일 경로)가 남아 있어 현재 문면(`근거가 부족하면 그 smell의 finding을 만들지 않는다`)으로 정정했다.
+- **검증 evidence**: live 표면 census 잔존 0(`실측 ∥ 판단`·`실측/판단/호출자 렌즈`·plan-review `2-렌즈`, 기록물 제외). 미러 짝 — agent 본문 동일(적응 delta = TOML 헤더·Codex Agent Boundary·Source Pointer·닫는 `'''`), codex SKILL은 Runtime Adapter 2-spawn 예시(mailbox·target/close 양쪽)를 1-spawn으로 3-way 적응. `git diff --check` 무출력.
+
 #### v4.13.0 (2026-08-13)
 
 - **`Propagation Surfaces` 계약 전량 제거 + `plan-review` status 어휘 폐지 (사용자 직접 편집 → 미러·전 표면 전파)**: 사용자가 `.claude` producer(`feature-draft`)와 reviewer(`plan-review-agent`)에서 조건부 `Propagation Surfaces` 계약을 직접 삭제하고, reviewer의 rubric 표를 중첩 불릿으로 바꾸며 Step 3의 대조 3불릿(사실 주장 대조·실재 확인·Producer 계약 Read)과 status 어휘(`PASS`/`WARN`/`FAIL`/`UNKNOWN`)·Step 5 `Smell 판정` 행·그에 결속된 AC1 절반을 함께 제거했다. 이로써 **reviewer 반환은 Blocker Status·Findings 2항목**이 됐고 판정 표를 보유하는 reviewer는 `simplicity-review` 하나만 남았다. 편집이 남긴 dangling 참조 정리: Step 3·렌즈 정의에만 남아 있던 `UNKNOWN`은 정의(Step 4)와 출력 슬롯(Step 5)이 모두 사라져 "기록하라"와 "출력 금지"가 충돌했으므로, **근거 부족 시 그 smell의 finding을 만들지 않는다**로 닫았다(사용자 확정). 전파 표면 9곳: `{.claude,.codex}` `feature-draft/SKILL.md`·`plan-review-agent`·`spec-rewrite/references/template-compact.md`, `docs/SDD_SPEC_DEFINITION.md` 한·영(canonical 구조 항목 3 삭제 + 4·5 재번호 + 스켈레톤 섹션), `components.md` `feature-draft`·`plan-review` 행, `main.md` §3 producer↔reviewer 계약·리뷰 반환 다이어트 서술.

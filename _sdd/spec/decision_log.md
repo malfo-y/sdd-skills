@@ -1,5 +1,30 @@
 # Decision Log
 
+## 2026-08-13 - `plan-review` 2-렌즈 분할 철회 — 벽시계를 실측 렌즈가 항상 지배
+
+### Context
+
+사용자가 `.claude` agent·SKILL에서 실측 ∥ 판단 2-렌즈 분해를 직접 제거하고 미러·문서 반영을 요청했다. 이 결정은 2-렌즈 분할을 도입한 회차(v4.6.22 계열)와 그 효과를 `🚧 Planned`로 관측 중이던 항목을 **종결**한다.
+
+### Decision
+
+1. **2-렌즈 분할 철회, 단일 dispatch 복귀**: 누적 표본 3회의 벽시계 max를 **항상 실측 렌즈가 결정**했다(실측 ∥ 판단 = 320∥86 / 178∥122 / 114∥72s). 판단 렌즈는 병렬 그늘에서 유휴이므로 max(shard)가 실측 시간에 수렴하고, 분해 이득이 dispatch·병합 고정비를 넘지 못한다. 도입 시 기대값이던 ~30% 절감(단독 5회차 평균 294s → ~200s)은 이 구조에서 성립하지 않는다. **렌즈 축 분할은 이 실측을 뒤집는 새 근거 없이는 재제안 대상이 아니다** — 앞서 같은 이유로 되돌린 3-dispatch 재분할(실측 렌즈를 검증 ∥ 사실 전제로 재분할)과 같은 결론이다.
+2. **구조 결과**: `plan-review`는 **분할하지 않는 유일한 게이트**가 된다. 직교 2-렌즈(correctness ∥ simplicity)는 `pr-review`·`implementation-review`에만 남으며, 그 축은 이번 결정의 영향을 받지 않는다(분할 근거가 벽시계가 아니라 표적 disjoint다).
+3. **Step 구조 흡수**: `Step 3: Read Supporting Context`가 `Step 3: Smell Review`에 흡수돼 4-Step이 됐다 — 렌즈가 하나면 "읽는 단계"와 "판정하는 단계"를 나눌 이유가 없었다(분리의 목적이 판단 렌즈에게 Step 3 생략을 지시하는 것이었다). 최소 읽기 규칙 자체는 Smell Review 안에 그대로 존치한다.
+
+### Rationale / Evidence
+
+- 도입 회차가 세운 판정 밴드(max ≤ ~220s 지지 / ~300s+ 재고)로는 표본 1(320s 재고)과 표본 2(178s 지지)가 상반돼 확정이 미뤄지고 있었다. 이번 결정의 근거는 밴드가 아니라 **구조적 관측**이다 — 어느 표본에서도 판단 렌즈가 벽시계를 결정한 적이 없다.
+- 사용자 편집이 남긴 dangling 2건(AC1의 `호출자 렌즈 한정 시 그 렌즈 소유분`, 반환 규칙의 `렌즈 한정 여부와 무관`)은 참조 대상을 잃어 각각 `5 smell 전부`·조건절 삭제로 닫았다.
+- census로 spec 4표면이 추가로 드러났다(`main.md` 6곳·`components.md` 2곳·`usage-guide.md` 1곳) — 그중 `main.md` 읽기 상한 서술에는 어제 제거한 `UNKNOWN`+limitation 잔재까지 남아 있어 함께 정정했다.
+- live 표면 census 잔존 0, 미러 짝 대조 통과, `git diff --check` 무출력.
+
+### Changes
+
+- `{.claude,.codex}/agents/plan-review-agent.{md,toml}` — `호출자 렌즈 한정` 절 삭제, Step 3 흡수·재번호, AC1·반환 규칙 dangling 정리
+- `{.claude,.codex}/skills/plan-review/SKILL.md` — 2회 병렬 dispatch → 1회 dispatch(codex는 Runtime Adapter의 mailbox·target/close 예시 양쪽을 1-spawn으로 적응)
+- `_sdd/spec/main.md`(§3 4곳 + 실행 분리·게이트 소유권 표 + `🚧 Planned` 항목 해소), `components.md` 2행, `usage-guide.md` — v4.13.0 → v4.14.0
+
 ## 2026-08-13 - `Verification Weakness` 술어 자립 — 읽지 않는 문서를 가리키던 포인터 제거
 
 ### Context
