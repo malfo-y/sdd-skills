@@ -1,5 +1,26 @@
 # Decision Log
 
+## 2026-08-13 - `Verification Weakness` 술어 자립 — 읽지 않는 문서를 가리키던 포인터 제거
+
+### Context
+
+사용자 질문에서 드러났다: rubric의 `각 AC의 평가방법과 evidence가 current \`feature-draft\` producer 계약을 충족하는가?`에서 그 "계약"이 무엇인지 agent 문서만으로는 알 수 없다. `current`는 "기억으로 재구성하지 말고 그때 설치된 SKILL.md를 읽어 대조하라"는 뜻이었고, 그것을 실행시키던 Step 3 `Producer 계약` 불릿이 2026-08-13 Propagation 제거 회차에서 함께 삭제됐다. 결과: rubric은 계약 충족을 묻는데 읽으라는 지시가 없고 Hard Rule 5는 본문 재서술을 금지해, 판정 기준이 **모델 기억**이 되는 상태였다(삭제된 불릿이 정확히 막으려던 실패 모드).
+
+### Decision
+
+1. **rubric 술어를 자립시킨다**: `각 AC가 평가방법과 기대 evidence를 갖고, 이진 판정으로 닫히며, 외부 증거에 묶여 제3자가 반박 가능한가?` — producer의 공통 기준을 **판정 축으로만** 가져오고 상세(1등급/2등급 구분·작성 형식)는 복제하지 않는다. 기각한 대안: Step 3 Read 불릿 복원(정확하지만 방금 줄인 Step 3 읽기를 되돌린다).
+2. **Hard Rule 5 후단 정정**: "판정에 필요한 계약은 Step 3에서 원본을 확인한다"는 그 Step이 사라져 dangling이었다 → "rubric은 판정 축만 보유하고 상세는 producer가 단독 소유한다"로 교체.
+
+### Rationale / Evidence
+
+- "producer 정본 + verifier pointer" 원칙은 유지된다 — 바뀐 것은 pointer의 형태다. **읽어야 성립하는 참조**에서 **읽지 않고도 판정되는 축**으로 낮췄고, 복제 금지 대상(등급 구분·형식)은 그대로 producer가 소유한다.
+- 이 축 셋(평가방법+기대 evidence 병기 / 이진 판정 / 외부 증거 결속)은 `docs/SDD_SPEC_DEFINITION.md` §6 rubric 사슬의 닻과 동일해, producer가 규칙을 바꿔도 축은 흔들리지 않는다.
+- dangling 포인터 census 잔존 0(`producer 계약을 충족`·`Step 3에서 원본을 확인`), 미러 짝 본문 동일, `git diff --check` 무출력. `main.md`·`components.md` 몸통 무변경(서술이 이미 "상세를 복제하지 않고 검사한다" 수준이라 정합) → 버전 bump·changelog entry 없음.
+
+### Changes
+
+- `.claude/agents/plan-review-agent.md`, `.codex/agents/plan-review-agent.toml` — rubric `Verification Weakness` 첫 술어 + Hard Rule 5 후단
+
 ## 2026-08-13 - `Propagation Surfaces` 계약 폐기와 reviewer status 어휘 제거 (사용자 직접 편집 + dangling 정리)
 
 ### Context

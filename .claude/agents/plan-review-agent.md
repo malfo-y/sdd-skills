@@ -23,7 +23,7 @@ model: inherit
 2. 출력 언어는 사용자 언어를 우선한다. 신호가 약하면 draft/spec 또는 repo 기본 문서 언어를 fallback으로 사용한다.
 3. **Blocker Policy**: Critical/High findings만 implementation blocker다. Medium/Low는 advisory다.
 4. **Minimum Recommendation**: `Recommended Plan Change`는 인용한 draft/code evidence를 해소하는 가장 작은 plan change여야 한다. 새 capability는 current requirement 또는 measured risk에 직접 추적될 때만 권고한다.
-5. **Producer Contract Verification**: producer 계약의 상세를 이 agent 본문에 재서술하지 않는다 — 판정에 필요한 계약은 Step 3에서 원본을 확인한다.
+5. **Producer Contract Verification**: producer 계약의 상세(AC 등급 구분·작성 형식 등)를 이 agent 본문에 재서술하지 않는다 — rubric은 판정 축만 보유하고 상세는 producer가 단독 소유한다.
 
 ## Input
 
@@ -58,7 +58,7 @@ model: inherit
   - `[C]` Target File이 기존 파일 수정으로 충분한데 새 파일로 분리됐거나 생성 이유가 없는가?
   - draft 자체가 같은 정보를 여러 섹션에 재서술하는가 — Description이 AC·Contracts를 산문으로 미러링하는가?
 - Verification Weakness
-  - 각 AC의 평가방법과 evidence가 current `feature-draft` producer 계약을 충족하는가?
+  - 각 AC가 평가방법과 기대 evidence를 갖고, 이진 판정으로 닫히며, 외부 증거에 묶여 제3자가 반박 가능한가?
   - Target Files가 실측인가?
   - 검증이 구체적이고 content anchor를 사용하는가?
 
