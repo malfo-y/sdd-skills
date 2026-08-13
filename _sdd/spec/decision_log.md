@@ -1,5 +1,31 @@
 # Decision Log
 
+## 2026-08-13 - `Principle Link` 반환 필드 폐지 — 정의를 잃은 필드를 걷어낸다
+
+### Context
+
+`plan-review-agent`의 finding 블록 필드 `Principle Link`는 rubric 표의 `Principle Link` 열(smell별 KISS·YAGNI·DRY·Scope Discipline·Verifiability 값)이 단일 소스였다. 커밋 `bc26e5c`("rubric 축 재배분")가 rubric 표를 중첩 불릿으로 바꾸면서 그 열만 사라졌고, 반환 필드 이름은 남았다. 그 결과 reviewer는 **채울 값 목록 없이 필드 이름만 보고 매번 원칙명을 지어내는** 상태였다 — 정의 없는 필드는 분류 어휘를 고정하지 못하므로 필드가 의도한 일관된 분류를 제공하지 않는다.
+
+같은 회차에 자체 검증 AC2·AC3이 가리키는 `Step 5`도 dangling이었다. 2026-08-13 2-렌즈 철회로 Step이 하나 밀려 Return이 `Step 4`가 됐으나 AC의 참조가 따라가지 않았다.
+
+### Decision
+
+1. `plan-review-agent` 반환의 `Principle Link` 필드를 폐지한다. finding 블록은 `[Smell] 제목` + Evidence·Affected Plan Surface·Recommended Plan Change·Implementation Blocker 여부다. smell 이름 자체가 이미 분류 축이므로 별도 원칙 라벨은 중복이며, 출력 토큰이 리뷰 벽시계의 유일한 실질 레버라는 실측(아래)이 존치 부담을 더한다.
+2. 자체 검증 AC2·AC3의 `Step 5` 참조를 실제 Return 위치인 `Step 4`로 정정한다.
+3. 2026-08-11 결정 #2의 "`Principle Link` 반환 필드는 유지하되 값의 이름은 하네스 §0과 결합하지 않는다"를 supersede한다. 결합 해제 판단(하네스 §0 ↔ reviewer 어휘 분리)은 유지되며, 이 결정은 **필드 존치 판단만** 뒤집는다. reviewer-local 어휘 KISS·YAGNI·DRY·Scope Discipline·Verifiability는 소비처가 사라져 현존 인스턴스 0이다 — 필드 부활은 rubric 열 복원을 동반해야 하며 그 없이는 재제안 대상이 아니다.
+
+### Rationale / Evidence
+
+- 필드 정의 소실은 git 이력으로 확정했다 — `bc26e5c^`의 rubric은 `| Smell | Check | Principle Link |` 표이고 `bc26e5c` 이후 열이 없다. 현재 agent 본문 어디에도 값 목록이 없다(census 확인).
+- subagent transcript 46건 프로파일링 결과 리뷰 agent 벽시계 = 출력 토큰 / ≈65 tok/s이고 **도구 실행 시간은 총 0.7~2.0%**다(plan-review 평균 228s·14.9k tok). 반환 필드 하나를 줄이는 것은 벽시계에 직접 작용하는 몇 안 되는 레버 축에 속한다.
+- 검증: live 표면(`.claude/`·`.codex/`·`docs/`)의 `Principle Link` 잔존 0(변형형 `Principle-Link`·`principle_link`·소문자 포함), agent 짝의 `Step 5` 잔존 0, Step 헤딩 실제 범위 1~4로 AC 참조와 일치, claude↔codex 미러 본문 diff는 알려진 적응 delta 2건(Codex Agent Boundary·Source Pointer)만, `git diff --check` 무출력. `_sdd/implementation/`·`drafts/`·`work_log/`·`logs/changelog.md`의 언급은 append-only 이력이라 보존했다.
+- `main.md` 본문은 이 필드를 서술하지 않아 이 결정만으로는 본문 변경이 없다. 같은 회차에 처리한 하네스 §3 축 전환이 본문을 바꾸므로 두 결정이 v4.15.0 하나로 함께 기록된다.
+
+### Changes
+
+- `.claude/agents/plan-review-agent.md`, `.codex/agents/plan-review-agent.toml` — 반환 필드에서 `Principle Link` 삭제, AC2·AC3의 `Step 5` → `Step 4`
+- `_sdd/spec/logs/changelog.md` — v4.15.0 entry(하네스 §3 축 전환과 공유)
+
 ## 2026-08-13 - `plan-review` 2-렌즈 분할 철회 — 벽시계를 실측 렌즈가 항상 지배
 
 ### Context
