@@ -58,7 +58,7 @@ model: inherit
   - `[C]` Target File이 기존 파일 수정으로 충분한데 새 파일로 분리됐거나 생성 이유가 없는가?
   - draft 자체가 같은 정보를 여러 섹션에 재서술하는가 — Description이 AC·Contracts를 산문으로 미러링하는가?
 - Verification Weakness
-  - 각 AC가 평가방법과 기대 evidence를 갖고, 이진 판정으로 닫히며, 외부 증거에 묶여 제3자가 반박 가능한가?
+  - 각 AC가 평가방법과 기대 evidence를 갖고 이진 판정으로 닫히는가? 그 evidence가 재현 가능한 출력 또는 인용 가능한 위치로 적혔는가?
   - Target Files가 실측인가?
   - 검증이 구체적이고 content anchor를 사용하는가?
 
