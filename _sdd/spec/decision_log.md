@@ -1,5 +1,59 @@
 # Decision Log
 
+## 2026-08-13 - SDD 적용 판정을 사용자 요청으로 되돌린다 — 적용 범위 게이트·경량 경로 동시 폐지
+
+### Context
+
+v4.12.0(2026-08-12)은 하네스 §3에 **적용 범위 게이트**를 두어 SDD 대상 여부를 "스펙에 영향을 주는 변경인가"로 판정하게 했다. 이 판정은 모델이 **작업을 시작하기 전에 그 작업의 스펙 영향을 예측**해야 성립하는데, 예측이 빗나가면 회색지대에서 조용히 어긋난다. 여기에 성질 3조건 기반 **경량 경로**가 겹쳐 두 축(대상 판정 / 깊이 선택)이 각각 반대 방향의 "애매하면" 기본값을 갖는 구조였다.
+
+사용자가 하네스 §3을 직접 재작성해 두 장치를 함께 걷어냈다.
+
+### Decision
+
+1. SDD는 **사용자의 직간접 요청**으로 적용한다 — 단계 스킬 호출(`discussion`·`feature-draft` 등) 또는 "SDD로 구현/작업하자" 류 지시. 모델의 스펙 영향 예측은 판정 근거가 아니다.
+2. 요청이 없더라도 구현할 기능이 크거나 복잡하거나 스펙에 상당한 영향을 주는 작업이면 **SDD 적용 여부를 사용자에게 질문**한다. 그 외에는 비대상으로 보고 SDD 없이 바로 수행한다. 회색지대의 처리는 "조용히 비대상"에서 "질문"으로 바뀐다.
+3. **적용 범위 게이트**(v4.12.0)와 **경량 경로**(light path)를 폐지한다. 소규모 변경은 별도 경로가 아니라 비대상 → 직접 수행으로 흡수되며, 깊이 선택 축 자체가 사라진다.
+4. SDD 비적용 경로에서도 §2 작업 규약·검증 표준을 지키고, 스펙 변경이 생기면 `spec-sync` 호출 여부를 **사용자에게 확인받는다**.
+5. 단계 순서 문단을 산문에서 불릿 4개로 구조화한다(스킬 단일 소스·게이트 내부 수행·미설치 환경 수동 수행·카탈로그 복사 금지 — 내용 불변).
+
+### Rationale / Evidence
+
+- 경량 경로 폐지의 규율 손실을 표면별로 확인했다: 브랜치·Execute→Verify·work log는 §2·§5가 이미 무조건 소유해 손실이 없고, 경량 경로만 소유하던 것은 `spec-sync` 무조건 실행 하나다 — 이는 결정 #4의 "사용자 확인 후 실행"으로 대체된다. 판정 근거 1줄 work log 기록 의무는 판정 축이 사라져 함께 소멸한다.
+- 하네스 5벌 전파 정합: `AGENTS.md` ↔ 템플릿 4벌의 §3 문단이 동일하고 잔여 diff는 알려진 placeholder 적응 delta 4종(`<repo-name>`·`<test command>`·브랜치/커밋 규칙·섹션 번호)뿐이다. 템플릿 4벌은 바이트 동일(`744321c371f6`).
+- live 표면 census 잔존 0 — `경량 경로`·`light path`·`적용 범위 게이트`(기록물 제외). 소비 스킬 SKILL.md 4벌은 §3 본문을 인용하지 않아 변경 불요이고, §번호가 바뀌지 않아 `§0~§N` 리터럴도 무영향이다.
+
+### Changes
+
+- `AGENTS.md`, `{.claude,.codex}/skills/{spec-create,spec-upgrade}/references/agents-harness-template.md` — §3 재작성(사용자 직접 편집)
+- `_sdd/spec/main.md` — §2 불릿 2개(적용 범위 게이트·경량 경로)를 1개 + 폐지 하위 불릿로 교체, `Spec Version` 4.15.0
+- `_sdd/spec/logs/changelog.md` — v4.15.0 entry
+
+## 2026-08-13 - `Principle Link` 반환 필드 폐지 — 정의를 잃은 필드를 걷어낸다
+
+### Context
+
+`plan-review-agent`의 finding 블록 필드 `Principle Link`는 rubric 표의 `Principle Link` 열(smell별 KISS·YAGNI·DRY·Scope Discipline·Verifiability 값)이 단일 소스였다. 커밋 `bc26e5c`("rubric 축 재배분")가 rubric 표를 중첩 불릿으로 바꾸면서 그 열만 사라졌고, 반환 필드 이름은 남았다. 그 결과 reviewer는 **채울 값 목록 없이 필드 이름만 보고 매번 원칙명을 지어내는** 상태였다 — 정의 없는 필드는 분류 어휘를 고정하지 못하므로 필드가 의도한 일관된 분류를 제공하지 않는다.
+
+같은 회차에 자체 검증 AC2·AC3이 가리키는 `Step 5`도 dangling이었다. 2026-08-13 2-렌즈 철회로 Step이 하나 밀려 Return이 `Step 4`가 됐으나 AC의 참조가 따라가지 않았다.
+
+### Decision
+
+1. `plan-review-agent` 반환의 `Principle Link` 필드를 폐지한다. finding 블록은 `[Smell] 제목` + Evidence·Affected Plan Surface·Recommended Plan Change·Implementation Blocker 여부다. smell 이름 자체가 이미 분류 축이므로 별도 원칙 라벨은 중복이며, 출력 토큰이 리뷰 벽시계의 유일한 실질 레버라는 실측(아래)이 존치 부담을 더한다.
+2. 자체 검증 AC2·AC3의 `Step 5` 참조를 실제 Return 위치인 `Step 4`로 정정한다.
+3. 2026-08-11 결정 #2의 "`Principle Link` 반환 필드는 유지하되 값의 이름은 하네스 §0과 결합하지 않는다"를 supersede한다. 결합 해제 판단(하네스 §0 ↔ reviewer 어휘 분리)은 유지되며, 이 결정은 **필드 존치 판단만** 뒤집는다. reviewer-local 어휘 KISS·YAGNI·DRY·Scope Discipline·Verifiability는 소비처가 사라져 현존 인스턴스 0이다 — 필드 부활은 rubric 열 복원을 동반해야 하며 그 없이는 재제안 대상이 아니다.
+
+### Rationale / Evidence
+
+- 필드 정의 소실은 git 이력으로 확정했다 — `bc26e5c^`의 rubric은 `| Smell | Check | Principle Link |` 표이고 `bc26e5c` 이후 열이 없다. 현재 agent 본문 어디에도 값 목록이 없다(census 확인).
+- subagent transcript 46건 프로파일링 결과 리뷰 agent 벽시계 = 출력 토큰 / ≈65 tok/s이고 **도구 실행 시간은 총 0.7~2.0%**다(plan-review 평균 228s·14.9k tok). 반환 필드 하나를 줄이는 것은 벽시계에 직접 작용하는 몇 안 되는 레버 축에 속한다.
+- 검증: live 표면(`.claude/`·`.codex/`·`docs/`)의 `Principle Link` 잔존 0(변형형 `Principle-Link`·`principle_link`·소문자 포함), agent 짝의 `Step 5` 잔존 0, Step 헤딩 실제 범위 1~4로 AC 참조와 일치, claude↔codex 미러 본문 diff는 알려진 적응 delta 2건(Codex Agent Boundary·Source Pointer)만, `git diff --check` 무출력. `_sdd/implementation/`·`drafts/`·`work_log/`·`logs/changelog.md`의 언급은 append-only 이력이라 보존했다.
+- `main.md` 본문은 이 필드를 서술하지 않아 이 결정만으로는 본문 변경이 없다. 같은 회차에 처리한 하네스 §3 축 전환이 본문을 바꾸므로 두 결정이 v4.15.0 하나로 함께 기록된다.
+
+### Changes
+
+- `.claude/agents/plan-review-agent.md`, `.codex/agents/plan-review-agent.toml` — 반환 필드에서 `Principle Link` 삭제, AC2·AC3의 `Step 5` → `Step 4`
+- `_sdd/spec/logs/changelog.md` — v4.15.0 entry(하네스 §3 축 전환과 공유)
+
 ## 2026-08-13 - `plan-review` 2-렌즈 분할 철회 — 벽시계를 실측 렌즈가 항상 지배
 
 ### Context

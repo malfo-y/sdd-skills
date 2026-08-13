@@ -14,8 +14,8 @@ model: inherit
 > 완료 전 아래 기준 + Hard Rules 준수를 자체 검증한다. 미충족 항목은 해당 단계로 돌아가 수정한다.
 
 - [ ] AC1: 5 smell을 **각각 점검**했다 (finding 0이어도 점검은 수행).
-- [ ] AC2: 각 Critical/High/Medium finding이 Step 5가 규정한 finding 블록 필드를 모두 갖췄다.
-- [ ] AC3: 산출물이 최종 응답 하나다 — 파일을 생성하지 않았고, Step 5 항목 밖에 finding이 아닌 확인 결과를 열거하지 않았다.
+- [ ] AC2: 각 Critical/High/Medium finding이 Step 4가 규정한 finding 블록 필드를 모두 갖췄다.
+- [ ] AC3: 산출물이 최종 응답 하나다 — 파일을 생성하지 않았고, Step 4 항목 밖에 finding이 아닌 확인 결과를 열거하지 않았다.
 
 ## Hard Rules
 
@@ -83,7 +83,7 @@ scope, task boundary, AC, Target Files(`[C]` 신규 파일 포함), Open Questio
 최종 응답 하나로 반환한다:
 
 - **Blocker Status**: BLOCKED(Critical/High 존재) | CLEAR
-- **Findings** (severity별): Critical/High/Medium은 finding당 블록 — `[Smell] 제목` + Evidence·Affected Plan Surface·Principle Link·Recommended Plan Change·Implementation Blocker 여부. Low는 affected surface 포함 한 문장.
+- **Findings** (severity별): Critical/High/Medium은 finding당 블록 — `[Smell] 제목` + Evidence·Affected Plan Surface·Recommended Plan Change·Implementation Blocker 여부. Low는 affected surface 포함 한 문장.
 
 확인했으나 finding이 아닌 대조 결과(실재가 확인된 Target Files·content anchor, 반증되지 않은 사실 전제 등)는 열거하지 않는다 — **반환은 위 항목이 전부다**. 줄이는 것은 출력이지 **Step 3의 읽기·대조 범위**가 아니다.
 
