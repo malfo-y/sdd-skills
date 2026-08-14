@@ -6,7 +6,7 @@ argument-hint: "[--model <active-model>] [--effort <active-effort>]"
 
 # Plan Review
 
-이 스킬은 review-only orchestrator다. 사용자의 plan-review 요청을 `plan-review-agent`로 위임하고 반환을 정리해 사용자에게 전달한다. 리뷰는 단일 패스이며 리포트 파일을 만들지 않는다.
+이 스킬은 review-only orchestrator다. 사용자의 plan-review 요청에 대해 **병렬 gather(`plan-context-gatherer`) → 단일 판정(`plan-review-agent`)** 순서로 spawn하고 반환을 정리해 사용자에게 전달한다. 리뷰(판정)는 단일 패스이며 리포트 파일을 만들지 않는다(gather digest는 로컬 전용 산출물이다).
 
 ## Codex Runtime Adapter
 
@@ -63,10 +63,17 @@ review
 
 ## 실행
 
-1. 사용자 요청 + 리뷰 대상 draft 경로와 이미 아는 결정을 수집한다 (orchestrator는 새 분석 read를 하지 않는다).
-2. 리뷰 agent를 spawn한다 — message 구성·호출·수거 문법은 위 Codex Runtime Adapter 블록이 단일 소스다:
+1. 사용자 요청 + 리뷰 대상 draft 경로와 이미 아는 결정을 수집한다. orchestrator의 read는 **다음 단계의 shard 구성을 위한 대상 draft 1회 read만** 허용한다 — 코드 분석 read는 하지 않는다(분석은 agent들의 몫이다).
+2. **Gather phase** — draft 1회 read에서 Target Files 경로 전체(+draft가 명시 참조하는 spec anchor 파일)를 추출하고:
+   - 디렉토리 근접 기준으로 3~5개 파일씩(총량이 그보다 적으면 한 그룹), 최대 ~6그룹으로 묶는다.
+   - 그룹마다 `plan-context-gatherer`를 **병렬로 spawn**하고 전 gatherer final을 수거한다 — message 구성·호출·수거 문법은 위 Codex Runtime Adapter 블록이 단일 소스다 (mailbox contract의 `task_name`은 그룹별 고유 `plan_gather_<run_id>_<n>`).
+   - 각 message의 `## Input Data`: draft 경로 + 배정 파일 그룹(서로 겹치지 않게) + digest 출력 경로.
+   - digest 출력 경로는 `_sdd/pipeline/plan_review_gather/<draft-slug>/<그룹명>.md` — 재실행은 같은 경로를 덮어쓰며, 리뷰 후 삭제하지 않는다(사후 검시 자산).
+   - **Degrade**: Target Files가 비었거나 gather spawn이 전부 실패하면 gather를 생략하고 3의 단일 spawn으로 바로 진행한다. 일부만 실패하면 성공한 digest만으로 진행한다.
+3. 판정 agent(`plan-review-agent`)를 단일 spawn한다 — message 구성·호출·수거 문법은 위 Codex Runtime Adapter 블록이 단일 소스다:
+   - `## Input Data`에 요청 + 알려진 경로/컨텍스트 + **digest 경로 목록**을 넣는다. digest는 경로만 전달한다 — 발췌 본문을 message에 전사하지 않는다.
    - 반환된 task/agent의 final을 위 Runtime Adapter로 수거한 뒤 결과를 기록한다. wait가 timeout이면 완료로 간주하지 말고 더 기다리거나, controlled stop/blocked 상태를 사용자에게 보고한 뒤에만 중단 여부를 결정한다. 대상 경로가 불명확하면 리뷰 agent가 자체 Input 우선순위로 탐색하도록 위임한다.
-3. 반환을 정리해 relay한다: Blocker Status는 **하나라도 BLOCKED면 BLOCKED**, findings/smell 판정은 정리해 전달한다. finding 반영은 호출자(draft 작성자) 소관이다.
+4. 반환을 정리해 relay한다: Blocker Status는 **하나라도 BLOCKED면 BLOCKED**, findings/smell 판정은 정리해 전달한다. finding 반영은 호출자(draft 작성자) 소관이다.
 
 ## 계약 (entrypoint 유지, 흉내 금지)
 

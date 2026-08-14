@@ -29,6 +29,7 @@ developer_instructions = '''
 
 1. 사용자/호출자 지정 draft 경로
 2. 지정이 없으면 `_sdd/drafts/*_feature_draft_*.md` 최신 파일
+3. (optional) 호출자 제공 **digest 경로 목록** — orchestrator의 gather phase가 남긴 발췌 파일들. 미제공이면 아래 Process의 자체 read 동작 그대로 진행한다.
 
 대상 draft가 없으면 검토를 만들어내지 않는다 — "리뷰 대상 없음 — `feature-draft`로 draft를 먼저 작성하라" 1줄만 반환한다.
 
@@ -75,7 +76,8 @@ scope, task boundary, AC, Target Files(`[C]` 신규 파일 포함), Open Questio
 
 각 smell별로 evidence를 모아 severity를 정한다.
 
-- 리뷰를 위한 supporting context는 판정에 필요한 최소한만 확인한다. 
+- 리뷰를 위한 supporting context는 판정에 필요한 최소한만 확인한다.
+- digest 경로가 제공되면 **일괄 read로 흡수**하고 이를 supporting context의 출발점으로 삼는다. digest는 출발점이다 — 의심 구간과 Critical/High finding의 evidence로 쓸 구간은 **원본 파일 residual read로 확정**한다(digest 인용만으로 Critical/High evidence를 닫지 않는다).
 - 근거가 부족하면 그 smell의 finding을 만들지 않는다.
 
 ### Step 4: Return
@@ -100,5 +102,5 @@ Target Files가 불명확하면 `Verification Weakness` 또는 `Task Boundary Dr
 
 Acceptance Criteria가 모두 만족되었나 1회 점검한다. 미충족 항목이 있으면 해당 단계로 돌아가 수정한다.
 
-> **Source Pointer**: 이 agent의 developer_instructions가 plan-review의 전체 계약·프로세스·반환 형식을 보유하는 **단일 소스**다. `.codex/skills/plan-review/SKILL.md`(또는 동등 dispatch wrapper)는 이 agent를 spawn_agent로 dispatch하는 thin entrypoint wrapper다 (wrapper↔agent; 동일 본문 mirror 아님 — 함께 수정 의무 없음).
+> **Source Pointer**: 이 agent의 developer_instructions가 plan-review의 전체 계약·프로세스·반환 형식을 보유하는 **단일 소스**다. `.codex/skills/plan-review/SKILL.md`(또는 동등 dispatch wrapper)는 gather phase(병렬 수집)를 조율하고 이 agent를 spawn_agent로 dispatch하는 entrypoint orchestrator다 (wrapper↔agent; 동일 본문 mirror 아님 — 함께 수정 의무 없음).
 '''
