@@ -1,5 +1,26 @@
 # Decision Log
 
+## 2026-08-14 - plan-review에 gather phase를 도입한다 — 병목은 판정이 아니라 직렬 읽기
+
+### Context
+
+plan-review 게이트가 대형 draft에서 9~10분씩 걸렸다(실측 532/588s, reviewer tool 호출 22~25회 직렬). 2-렌즈 분할은 2026-08-13에 철회됐고 렌즈 축 재분할은 재제안 금지 상태라, 남은 해소 축을 사용자와 토론으로 탐색했다.
+
+### Decision
+
+읽기(수집)만 병렬화하고 판정은 단일 dispatch를 유지한다. orchestrator가 draft 1회 read로 Target Files를 그룹으로 묶어 신규 수집 전용 agent `plan-context-gatherer`(Read/Glob/Grep/Write, digest 출력 1파일만 write)를 병렬 dispatch → verbatim 발췌 digest를 `_sdd/pipeline/plan_review_gather/<draft-slug>/`에 남김(미삭제 — 사후 검시 자산, slug 덮어쓰기) → 판정 agent는 digest 경로만 받아 흡수하되 Critical/High evidence는 원본 residual read로 확정한다(digest 미제공 하위 호환 + degrade 규칙).
+
+### Rationale
+
+- 기각 1 — task-shard: plan-review smell 절반이 cross-task 전역 판정(Requirement Fit·Over-engineering 중복·Boundary)이라 shard가 스킬 존재 이유를 깎는다.
+- 기각 2 — smell별/2-렌즈 판정 분할: 모든 smell이 전역 컨텍스트를 요구해 분할해도 컨텍스트 절약이 0이고(N배 중복 읽기 + merge 부담), 2-렌즈는 철회 실측이 이미 있다.
+- 채택 근거: 병목의 실체가 "판단"이 아니라 "판단에 필요한 읽기 22~25회 직렬"이며, gather 대상은 draft Target Files로 사전 결정적이다. digest 위치는 scratchpad(Claude 전용)가 아니라 `_sdd/pipeline/`(양 런타임 쓰기 가능 + gitignored + 포렌식 가능)로 정했다. 정황 방증: 호출자가 좌표·결정을 미리 준 gate 1이 91s/tool 7회.
+- 벽시계 효과 판정은 plugin 캐시 지연으로 발효 후 누적 관측으로만 한다(🚧 Planned). 게이트 2 고정 임계의 규모 비례화는 직교 문제로 별도 feature(🚧 Planned).
+
+### Evidence
+
+draft `_sdd/drafts/2026-08-14_feature_draft_plan_review_parallel_gather.md`(plan-review gate: H1M2L1 → fix), ledger `_sdd/implementation/2026-08-14_implementation_ledger_plan_review_parallel_gather.md`(implementation-review gate: C0H0M2L6 → fix, AC 전 항목 충족), census — `plan-context-gatherer` 등재 표면 {claude agent·SKILL, marketplace, codex toml·SKILL·agents/README} 밖 잔존 0.
+
 ## 2026-08-13 - SDD 적용 판정을 사용자 요청으로 되돌린다 — 적용 범위 게이트·경량 경로 동시 폐지
 
 ### Context

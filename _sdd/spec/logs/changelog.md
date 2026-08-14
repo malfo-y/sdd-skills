@@ -2,6 +2,12 @@
 
 > 이 파일은 `_sdd/spec/main.md`의 **본문이 바뀐 버전만** 기록한다 — 본문 무변경 sync(헤더 날짜만 갱신)는 entry를 남기지 않으므로 버전 번호에 결번이 생길 수 있다.
 
+#### v4.16.0 (2026-08-14)
+
+- **`plan-review` gather phase 도입 — 읽기 병렬화, 판정은 단일 dispatch 유지**: 게이트 벽시계 병목이 판정이 아니라 reviewer의 직렬 supporting-context 읽기(tool 22~25회, 532/588s 실측)라는 진단에 따라, orchestrator(SKILL)가 draft 1회 read로 Target Files를 3~5파일 그룹(최대 ~6)으로 묶어 신규 수집 전용 agent `plan-context-gatherer`(Read/Glob/Grep/Write — Write는 digest 출력 1파일 한정, 판정·finding 금지)를 한 메시지 병렬 dispatch하는 구조로 개편했다. digest는 `_sdd/pipeline/plan_review_gather/<draft-slug>/`에 verbatim 발췌(파일당 ~150줄 상한, 초과분 좌표, 요약 대체 금지)로 남고 리뷰 후 삭제하지 않는다(사후 검시 자산, slug 덮어쓰기). 판정 `plan-review-agent`는 단일 dispatch 그대로 digest **경로만** 받아 병렬 Read 배치로 흡수하되 Critical/High evidence는 원본 residual read로 확정하고, digest 미제공 시 자체 read 하위 호환·degrade(Target Files 공백/전부 실패 → 단일 dispatch, 일부 실패 → 성공 digest만)를 갖는다. orchestrator read 규칙은 "새 분석 read 금지" → "대상 draft 1회 read만 허용(코드 read 금지)"으로 개정. task-shard·smell 분할·2-렌즈 재도입이 아니므로 렌즈 축 재제안 금지와 공존한다. 쓰기-서로소 작성자 분할 패턴의 현존 인스턴스가 0 → 1(gatherer 분할)이 됐다.
+- **전파·등록**: `plan-context-gatherer`를 marketplace agents 배열 + `.codex/agents/README.md` Agent Set에 등록(draft의 `.codex/README.md` 표기는 실측 부재로 `.codex/agents/README.md`로 정정 — 계획 이탈 1건). codex 미러는 3-way 적응(TOML gatherer 신규, plan-review-agent.toml digest 모드, codex SKILL gather phase는 Runtime Adapter 위임 + gather 고유 delta만). 이 repo `.gitignore`에 `_sdd/pipeline/` 라인이 실측 부재라 추가했다(AGENTS.md §2 서술과의 drift 해소).
+- **검증 evidence**: plan-review gate(H1 M2 L1 → fix 전량), implementation-review gate(correctness 5 shard ∥ simplicity 2 묶음: C0 H0 M2 L6 → M2 단일 재작성 fix + L3 fix, advisory 3 잔존), AC 1등급 전부 재현 grep 통과, census 잔존 0, `git diff --check` 무출력. 벽시계 효과 판정과 게이트 2 임계 비례화는 🚧 Planned로 분리.
+
 #### v4.15.0 (2026-08-13)
 
 - **SDD 적용 판정을 사용자 요청 기반으로 전환 · 적용 범위 게이트와 경량 경로 동시 폐지 (사용자 직접 편집 → 미러·spec 전파)**: 사용자가 하네스 §3을 직접 재작성했다. SDD는 **사용자의 직간접 요청**(단계 스킬 호출, "SDD로 구현/작업하자" 류 지시)으로 적용되고, 요청이 없어도 기능이 크거나 복잡하거나 스펙에 상당한 영향을 주면 **적용 여부를 사용자에게 질문**하며, 그 외에는 비대상으로 바로 수행한다. 이로써 v4.12.0의 적용 범위 게이트("스펙에 영향을 주는 변경"이면 대상 / 애매하면 비대상 — 모델이 스펙 영향을 예측해 판정)가 대체됐고, 성질 3조건 기반 **경량 경로(light path)** 문단은 통째로 삭제됐다(깊이 선택 축 소멸 — 소규모 변경은 비대상 → 직접 수행으로 흡수). 단계 순서 문단은 산문에서 불릿 4개로 구조화됐고(내용 불변), **비적용 경로에서도 §2 규약·검증 표준을 지키고 스펙 변경 시 `spec-sync` 호출 여부를 사용자에게 확인받는다**는 문장이 신설됐다 — 경량 경로가 소유하던 규율 중 브랜치·Execute→Verify·work log는 §2·§5가 이미 무조건 소유해 손실이 없고, spec-sync만 무조건 실행 → 확인 후 실행으로 완화됐다. 전파 표면 6곳: 하네스 5벌(`AGENTS.md` + `{.claude,.codex}/skills/{spec-create,spec-upgrade}/references/agents-harness-template.md`) + `main.md` §2 불릿(107·108행 2개 → 1개 + 폐지 하위 불릿).
