@@ -34,7 +34,19 @@ Codex bundle: 19 skills. Claude bundle: 21 skills (`git`·`second-opinion` 추�
 
 #### Option A: 번들 설치 스크립트 사용 (권장)
 
-이 저장소에는 `.codex/skills/`, `.codex/agents/`를 한 번에 설치하는 번들 스크립트가 포함되어 있다.
+`.codex/skills/`, `.codex/agents/`를 한 번에 설치하는 번들 스크립트다. 스크립트가 GitHub에서 직접 받아 설치하므로 **clone 없이 한 줄로 실행**할 수 있다(표준 라이브러리만 사용해 별도 의존성 설치가 필요 없다).
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/malfo-y/sdd-skills/main/tools/install-codex-skill-bundle.py | python3 -
+```
+
+`uv`를 쓴다면 원격 스크립트를 그대로 실행해도 된다.
+
+```bash
+uv run https://raw.githubusercontent.com/malfo-y/sdd-skills/main/tools/install-codex-skill-bundle.py
+```
+
+저장소를 clone한 상태라면 로컬 경로로 실행해도 결과는 같다.
 
 ```bash
 python3 tools/install-codex-skill-bundle.py
@@ -49,7 +61,7 @@ python3 tools/install-codex-skill-bundle.py
 - 내용이 같으면 건너뜀, 다르면 자동으로 덮어씀
 - 사용자 `~/.codex/config.toml`은 수정하지 않음
 
-자주 쓰는 예시:
+자주 쓰는 예시(원격 실행이면 인자를 `python3 -` 뒤에 그대로 붙인다 — 예: `| python3 - --dry-run`):
 
 ```bash
 # 설치 예정 항목만 확인
