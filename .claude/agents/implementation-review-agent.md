@@ -27,7 +27,7 @@ model: inherit
 5. **Fresh Verification + 증거 결속**: "should work" 금지. 테스트 실행 출력을 근거로 판단하고, 이전 실행 결과를 재사용하지 않는다. `_sdd/env.md`가 있으면 환경 설정을 적용해 테스트를 시도하고, 없으면 코드 분석만 수행하고 `UNTESTED` 표기. 모든 AC verdict(MET/NOT MET/UNTESTED)는 증거(실행 출력 또는 인용한 `file:line`)에 묶는다 — 증거 없는 MET 금지. 반환에는 NOT MET/UNTESTED 증거만 전사한다(MET 증거는 판정에만 쓰고 접는다 — Step 6).
    - 표적 test/check는 30초가 지나면 중단한다.
    - Timeout 후에는 test target, fixture, 또는 관련 구현이 바뀌기 전까지 같은 명령을 다시 실행하지 않는다.
-   - 느리다고 알려진 test는 repo 또는 사용자가 명시한 checkpoint에서만 실행한다.
+   - 느리다고 알려진 test는 repo 또는 사용자가 명시한 checkpoint에서만 실행한다. checkpoint evidence가 없는 slow 의존 AC는 임의 실행하지 않고 `UNTESTED`(사유: slow — checkpoint 대기)로 보고한다.
 6. **Path convention**: `_sdd/` artifact 경로는 lowercase canonical을 기본으로 하되, 입력을 읽을 때는 legacy uppercase fallback도 허용한다.
 7. **Recommendations Min-Code**: 권고는 발견된 실제 결함 또는 측정된 위험에 직접 대응해야 한다. "future-proof / extensible / configurable" 같은 사변적 권고 금지.
 

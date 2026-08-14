@@ -1,5 +1,19 @@
 # Decision Log
 
+## 2026-08-14 - 무거운 전체 테스트 실행에 사용자 확인 게이트를 세운다 — env.md lane 스키마는 비도입
+
+### Context
+
+8/11 토론이 fast/slow lane 계층 정책(결정 8건)을 닫았고 결정 4·5(30초 targeted 예산)는 8/12에 선행 반영됐다. 남은 미구현분: reviewer의 slow 이관(결정 6), checkpoint 미설정 fail-closed(결정 7·8). 별도로 사용자가 `940ab96`으로 하네스 §2에 "10초 테스트 fixture 분리" 규칙을 직접 커밋했는데, fixture 단일 수단 강제(토론의 변경 금지 제약 위반)와 템플릿 4벌 byte-parity 파손이 실측됐다.
+
+### Decision
+
+① `implementation` 마감 회귀 = 표적 + fast 기본, 무거운 전체 suite는 checkpoint 또는 **사용자 확인**일 때만(fail-closed의 확인 escape — 강행·조용한 skip 금지, 미실행 보고). ② reviewer는 checkpoint evidence 없는 slow 의존 AC를 `UNTESTED`로 이관. ③ 940ab96은 revert 대신 문구 정비(수단 자유화) + parity 복원으로 흡수. ④ env.md 정형 lane 스키마는 비도입 — 확인 게이트가 분류 오류 비용을 "한 번 묻기"로 낮춰 선언 인프라 없이 안전이 닫힌다(자유 서술 참조로 충분, 두 번째 사용처 실재 시 재검토).
+
+### Evidence
+
+draft `_sdd/drafts/2026-08-14_feature_draft_slow_test_execution_policy.md`(plan gate CLEAR M1L2→fix), ledger `_sdd/implementation/2026-08-14_implementation_ledger_slow_test_execution_policy.md`(impl gate C0H0M0L1, AC 전 충족), 템플릿 md5 4벌 1종.
+
 ## 2026-08-14 - plan-review에 gather phase를 도입한다 — 병목은 판정이 아니라 직렬 읽기
 
 ### Context
