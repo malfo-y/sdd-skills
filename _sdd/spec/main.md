@@ -2,7 +2,7 @@
 
 > Markdown 기반 skill bundle로 AI 에이전트의 Spec-Driven Development 워크플로우를 Claude Code와 Codex에서 공통 계약으로 실행한다.
 
-**Spec Version**: 4.16.0
+**Spec Version**: 4.17.0
 **Last Updated**: 2026-08-14
 **Status**: Approved
 **Canonical Role**: current thin global spec
@@ -56,7 +56,7 @@ SDD Skills는 이 문제를 `SKILL.md = 실행 가능한 프롬프트`라는 관
 ### Guardrails
 
 - global spec은 thin decision document로 유지하고, execution detail은 `_sdd/drafts/`, `_sdd/implementation/`, `_sdd/pipeline/` 같은 temporary surface로 분리한다
-- 표적 test/check는 30초가 지나면 중단하고, timeout된 같은 명령은 test target·fixture·관련 구현이 바뀌기 전까지 재실행하지 않으며, 느리다고 알려진 test는 repo 또는 사용자가 명시한 checkpoint에서만 실행한다
+- 표적 test/check는 30초가 지나면 중단하고, timeout된 같은 명령은 test target·fixture·관련 구현이 바뀌기 전까지 재실행하지 않으며, 느리다고 알려진 test는 repo 또는 사용자가 명시한 checkpoint에서만 실행한다. 2026-08-14에 이 계층에 두 규칙이 추가됐다(8/11 토론 결정 6·7·8의 실현): ① reviewer(`implementation-review-agent`·`pr-review-agent`)는 checkpoint evidence가 없는 slow 의존 AC를 임의 실행하지 않고 `UNTESTED`(사유: slow — checkpoint 대기)로 보고한다 ② `implementation` 마감 회귀는 표적 + fast 회귀(무거운 test 제외)가 기본이고, **무거운 test 포함 전체 suite는 repo 명시 checkpoint이거나 사용자 확인을 받은 경우에만** 실행한다 — 확인 없는 강행도 조용한 skip도 금지, 미실행분은 마감 요약에 보고, 애매하면 사용자에게 묻는다(fail-closed의 사용자 확인 escape). 하네스 §2는 설계층 규칙을 갖는다 — 10초 이상 걸리는 테스트는 분리해 두고(fixture·suite 분할 등 수단 자유) 기본 실행에서 제외한다(10초=개별 테스트 설계·분리 기준, 30초=targeted 명령 wall-clock 예산 — 층이 다른 공존 계약). `_sdd/env.md`의 정형 fast/slow lane 스키마는 도입하지 않았다 — 사용자 확인 게이트가 분류 오류 비용을 "한 번 묻기"로 낮춰 선언 인프라 없이 안전이 닫히며, env.md 자유 서술 참조로 충분하다(두 번째 사용처 실재 시 재검토)
 - 사용자 entrypoint는 skill layer에, 재사용 execution unit은 agent layer에 둔다. dispatch된 agent는 sub-agent를 다시 spawn하지 않는다(nesting 1단계 제한)
   - leaf dispatch가 필요한 execution은 `orchestrator(skill) + leaf/producer(agent)` 형태로 둔다(orchestrator skill만 dispatch하고, agent는 단일 단위/단일 산출물만 처리)
   - dispatch가 없는 단순 위임 execution만 `wrapper-backed skill + single-source agent` 형태로 둔다

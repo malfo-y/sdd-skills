@@ -2,6 +2,11 @@
 
 > 이 파일은 `_sdd/spec/main.md`의 **본문이 바뀐 버전만** 기록한다 — 본문 무변경 sync(헤더 날짜만 갱신)는 entry를 남기지 않으므로 버전 번호에 결번이 생길 수 있다.
 
+#### v4.17.0 (2026-08-14)
+
+- **느린 테스트 실행 정책 — 표적 기본 + 무거운 전체 실행 확인 게이트 (8/11 토론 결정 6·7·8 실현 + 사용자 커밋 `940ab96` 정비)**: `implementation` 마감 회귀를 "전체 suite가 있으면 실행"에서 **표적 + fast 회귀 기본, 무거운 test 포함 전체 suite는 repo 명시 checkpoint 또는 사용자 확인일 때만**으로 개정했다(강행·조용한 skip 금지, 미실행분 마감 요약 보고, 애매하면 질문 — fail-closed에 사용자 확인 escape). reviewer 2종(implementation-review·pr-review, claude·codex 4벌)에 checkpoint evidence 없는 slow 의존 AC의 `UNTESTED`(slow — checkpoint 대기) 이관을 명시했다. 사용자 직접 커밋 `940ab96`의 하네스 §2 규칙은 fixture 단일 수단 강제를 완화해 "10초 이상 테스트는 분리해 두고(fixture·suite 분할 등 수단 자유) 기본 실행에서 제외"로 정비하고, 그 커밋이 깨뜨린 하네스 템플릿 4벌 byte-parity를 복원했다(md5 1종). env.md 정형 fast/slow lane 스키마는 비도입(확인 게이트가 분류 오류 비용을 낮춰 YAGNI — 두 번째 사용처 실재 시 재검토). 10초(테스트 설계 기준)/30초(targeted 명령 예산)는 층이 다른 공존 계약로 명시. 결정 4·5의 30초 예산은 2026-08-12 선행 반영분.
+- **검증 evidence**: plan-review gate(CLEAR — M1 L2 → 전량 fix), implementation-review gate(correctness 4 shard ∥ simplicity 2 묶음: C0 H0 M0 L1 — fix 0, advisory 1 = pr-review 쪽 "checkpoint evidence" 용어 이원화). census — `전체 테스트 suite가 있으면`·`fixture를 붙여` live 잔존 0, `checkpoint 대기` 정확히 리뷰어 4벌, `분리해 두고` 정확히 하네스 5벌. 템플릿 md5 4벌 1종. `git diff --check` 무출력.
+
 #### v4.16.0 (2026-08-14)
 
 - **`plan-review` gather phase 도입 — 읽기 병렬화, 판정은 단일 dispatch 유지**: 게이트 벽시계 병목이 판정이 아니라 reviewer의 직렬 supporting-context 읽기(tool 22~25회, 532/588s 실측)라는 진단에 따라, orchestrator(SKILL)가 draft 1회 read로 Target Files를 3~5파일 그룹(최대 ~6)으로 묶어 신규 수집 전용 agent `plan-context-gatherer`(Read/Glob/Grep/Write — Write는 digest 출력 1파일 한정, 판정·finding 금지)를 한 메시지 병렬 dispatch하는 구조로 개편했다. digest는 `_sdd/pipeline/plan_review_gather/<draft-slug>/`에 verbatim 발췌(파일당 ~150줄 상한, 초과분 좌표, 요약 대체 금지)로 남고 리뷰 후 삭제하지 않는다(사후 검시 자산, slug 덮어쓰기). 판정 `plan-review-agent`는 단일 dispatch 그대로 digest **경로만** 받아 병렬 Read 배치로 흡수하되 Critical/High evidence는 원본 residual read로 확정하고, digest 미제공 시 자체 read 하위 호환·degrade(Target Files 공백/전부 실패 → 단일 dispatch, 일부 실패 → 성공 digest만)를 갖는다. orchestrator read 규칙은 "새 분석 read 금지" → "대상 draft 1회 read만 허용(코드 read 금지)"으로 개정. task-shard·smell 분할·2-렌즈 재도입이 아니므로 렌즈 축 재제안 금지와 공존한다. 쓰기-서로소 작성자 분할 패턴의 현존 인스턴스가 0 → 1(gatherer 분할)이 됐다.
