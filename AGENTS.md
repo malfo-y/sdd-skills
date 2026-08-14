@@ -15,7 +15,7 @@
 
 ## 2. 작업 규약 / 검증 표준
 
-- 10초 이상 걸리는 테스트는 fixture를 붙여 분리하고, 꼭 필요한 경우에만 돌리도록 설계 및 구현한다.
+- 10초 이상 걸리는 테스트는 분리해 두고(fixture·suite 분할 등 수단 자유), 기본 실행에서 제외해 꼭 필요한 경우에만 돌리도록 설계한다.
 - Execute → Verify 필수. 이 저장소는 전통적 테스트/빌드 프레임워크가 없다(마크다운·SKILL 자산 repo) — 유효한 검증 수단은 슬래시 커맨드 실제 호출·`git diff --check`·diff·grep·review이며, review-only로 닫지 않고 fix 또는 잔여 이슈 보고로 마무리한다. 작업을 닫기 전 그 단위를 `_sdd/work_log`에 기록한다(§5).
 - 브랜치: 기능 추가/변경 시작 시 main에서 `feat/`·`fix/`·`refactor/`·`docs/`·`chore/` 브랜치 생성 후 작업
 - 커밋/PR: Conventional Commits(`/git` 스킬) · 코드가 global spec과 어긋나면 코드보다 spec을 먼저 갱신
