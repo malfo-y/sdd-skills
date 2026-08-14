@@ -1,5 +1,19 @@
 # Decision Log
 
+## 2026-08-14 - goal-init 조건을 outcome 고도로 올린다 — D10 2분법을 3분법으로 개정 (v4.17.0 → v4.18.0)
+
+### Context
+
+goal-init이 만드는 `/goal` 조건 문자열에 브리틀 검증 디테일(스키마 predicate·허용 델타 전수 열거·baseline 수치)이 인라인돼, 사소한 현실 불일치에도 goal 재설정이 필요했다(dancepdd lmax16 실측 — 조건 2,331자, 실행 중 허용 델타 추가로 goal 1회 수정). 원인은 D10 "완료조건 자족 인라인" 압력. 순수 goal.md 포인터 조건은 도구 없는 평가자를 고무도장으로 만들어 기각.
+
+### Decision
+
+① D10을 3분법으로 개정 — 조건 문자열 = outcome 수준 DONE WHEN + 위조 어려운 anchor 1-2개 + 표준 레시피 참조 문구("검증 레시피의 명령 실제 출력이 transcript에 surface되고 전 항목 PASS") / 검증 레시피 = `goal.md` 신설 섹션(브리틀 디테일 소유, goal 재설정 없이 수정) / HOW = Loop Protocol(불변). ② drift 가드 = 표준 CONSTRAINT(레시피 변경 시 diff·사유 transcript 표시, 판정 약화는 사용자 승인) — immutable 고정은 유연성 목적을 죽여 기각. ③ 인라인/하강 판별 = 재설정 litmus("어긋나면 goal을 다시 세우는 게 마땅한가"), Step 3 판단 지침으로만(비-gate — self-check hard gate 3항목·5단계·4파일·비발동 불변).
+
+### Evidence
+
+토론 `_sdd/discussion/2026-08-14_discussion_goal_condition_altitude.md`(결정 5건), draft(plan gate H2 M2 L1 → 전량 fix), ledger `_sdd/implementation/2026-08-14_implementation_ledger_goal_condition_altitude.md`(impl gate correctness C0 H0 M0 전 AC MET, simplicity M3 → fix, AC→증거 테이블), census 잔존 0.
+
 ## 2026-08-14 - 무거운 전체 테스트 실행에 사용자 확인 게이트를 세운다 — env.md lane 스키마는 비도입
 
 ### Context

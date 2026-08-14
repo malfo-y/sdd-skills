@@ -44,7 +44,7 @@ description: This skill should be used when the user asks to set up a "/goal", "
 Process의 모든 단계에 횡단 적용되는 판단 지침. Hard Rules가 강제 금지라면, Key Principles는 판단 지침이다.
 
 - **Evaluator-first**: 완료조건은 항상 "도구 없이 transcript만 보는 평가자가 판정할 수 있는가"를 기준으로 작성한다. 판정 불가능한 표현은 측정 가능한 형태로 바꾼다.
-- **Condition vs HOW 분리**: 완료조건(WHAT/`DONE WHEN`/`CONSTRAINTS`/`STOP`)은 조건 문자열에 자족 인라인하고, 루프 행동(HOW)은 `goal.md`의 `Loop Protocol`에 둔다 (조건 비대화·평가자 노이즈 방지).
+- **3분법 분리 (Condition / 검증 레시피 / HOW)**: 완료조건(WHAT/`DONE WHEN`/`CONSTRAINTS`/`STOP`)은 outcome 수준으로 조건 문자열에 자족 인라인하고, 브리틀 검증 디테일(명령·기대 출력·수치 임계·허용 델타 열거)은 `goal.md`의 `검증 레시피` 섹션에, 루프 행동(HOW)은 `goal.md`의 `Loop Protocol`에 둔다 (조건 비대화·평가자 노이즈·불일치 시 goal 재설정 방지).
 - **AI-initiated divergence**: 가설은 사용자가 먼저 꺼낼 때까지 기다리지 않는다. AI가 권장안을 먼저 제시하고 2-3개 접근과 트레이드오프를 능동 발산한다 (discussion alternatives-initiation 패턴).
 - **파일 생성은 Harness Setup에서만**: Goal Intake/Divergence/Condition Crafting 단계에서는 파일을 만들지 않는다. 4파일 생성은 Harness Setup에서만 수행한다.
 - **YAGNI**: 5단계·4파일·분업형 조건 외의 옵션·설정·추상화를 추가하지 않는다.
@@ -67,7 +67,7 @@ Process의 모든 단계에 횡단 적용되는 판단 지침. Hard Rules가 강
 목표 달성 접근/가설을 **AI가 능동적으로 발산한다** (사용자가 먼저 꺼낼 때까지 기다리지 않는다 — discussion alternatives-initiation 패턴).
 
 - **권장안 먼저**: 2-3개의 구별되는 접근/가설을 제시하되, 중립 나열만 하지 않고 **권장안을 먼저 말하고 이유와 트레이드오프를 붙인다**.
-- **백로그 수집**: 발산한 가설들을 `experiments.md`의 초기 **pending 백로그**로 수집한다 (각 항목 = 가설 한 줄 + 검증 명령·판정조건). 단, 이 단계에서 파일을 만들지는 않는다 — 수집은 Harness Setup에서 기록한다.
+- **백로그 수집**: 발산한 가설들을 `experiments.md`의 초기 **pending 백로그**로 수집한다 (각 항목 = 가설 한 줄 + 검증 명령·판정조건 — 이 디테일은 `experiments.md`·`goal.md` 검증 레시피의 재료이지 조건 문자열 재료가 아니다). 단, 이 단계에서 파일을 만들지는 않는다 — 수집은 Harness Setup에서 기록한다.
 - 가설이 안 나오면 사용자에게 접근 후보를 직접 요청해 백로그를 구성한다.
 
 **Decision Gate 2→3**: pending 가설을 2개 이상 확보하면 Step 3으로 진행한다.
@@ -76,7 +76,12 @@ Process의 모든 단계에 횡단 적용되는 판단 지침. Hard Rules가 강
 
 5요소(목표 / 측정 가능 AC / 증명 방법 / 제약 / 종료 경계)를 **분업형 조건 문자열**로 응축한다.
 
-- **분업형 (C3, 템플릿 슬롯)**: 완료조건은 `DONE WHEN`(측정 가능 AC + 증명: 명령·기대 출력 인라인) / `CONSTRAINTS`(제약) / `STOP`(종료 경계 — N턴 무진척)로 작성하고, 루프 행동(HOW)은 조건 문자열에 넣지 않고 별도 `Loop Protocol`로 분리한다 (`references/harness-templates.md`의 `goal.md` 슬롯에 1:1 대응).
+- **분업형 (C3, 템플릿 슬롯)**: 완료조건을 세 슬롯으로 작성한다 (`references/harness-templates.md`의 `goal.md` 슬롯에 1:1 대응).
+  - `DONE WHEN`: outcome 수준 AC + 위조 어려운 anchor 1-2개 + 증명 표준 문구("`goal.md` 검증 레시피의 명령 실제 출력이 transcript에 surface되고 전 항목 PASS").
+  - `CONSTRAINTS`: 제약 + drift 가드 표준 문구(레시피 변경 시 diff·사유 표시, 판정 약화는 사용자 승인).
+  - `STOP`: 종료 경계 — N턴 무진척.
+  - 브리틀 디테일(검증 명령·기대 출력·수치)은 `goal.md` `검증 레시피`로, 루프 행동(HOW)은 `Loop Protocol`로 분리한다.
+- **재설정 litmus (판단 지침, 비-gate)**: 어떤 디테일의 인라인/하강이 애매하면 "이 디테일이 현실과 어긋났을 때 goal을 다시 세우는 게 마땅한가?"를 묻는다. Yes(목표 자체가 바뀜) → 조건 문자열에 인라인, No(검증 방법만 바뀜) → `goal.md` 검증 레시피로 내린다.
 - **평가자 적합성 self-check (hard gate — I1)**: 응축한 조건 문자열에 대해 3항목을 확인한다.
   - (a) 도구 없이 대화(transcript)만으로 판정 가능한가
   - (b) evidence(검증 명령·기대 출력)가 매 턴 surface되는가
@@ -89,7 +94,7 @@ Process의 모든 단계에 횡단 적용되는 판단 지침. Hard Rules가 강
 
 `_sdd/goal/<YYYY-MM-DD>_<slug>/`에 `references/harness-templates.md` 템플릿으로 **4파일을 생성한다**: `goal.md` / `experiments.md` / `journal.md` / `report.md`.
 
-- **`goal.md`**: 확정한 조건 문자열(`DONE WHEN`/`CONSTRAINTS`/`STOP`)을 `/goal` 조건 문자열 슬롯에 기입한다. `Loop Protocol`에는 preset이 없으면 template의 generic payload를, `preset=sdd`이면 SDD payload를 정확히 하나 삽입한다.
+- **`goal.md`**: 확정한 조건 문자열(`DONE WHEN`/`CONSTRAINTS`/`STOP`)을 `/goal` 조건 문자열 슬롯에, Condition Crafting에서 하강시킨 브리틀 검증 디테일을 `검증 레시피` 섹션에 기입한다. `Loop Protocol`에는 preset이 없으면 template의 generic payload를, `preset=sdd`이면 SDD payload를 정확히 하나 삽입한다.
 - **`experiments.md`**: Step 2에서 발산한 가설들을 pending 백로그로 기입한다.
 - **실행법 슬롯**: Codex 슬롯만 채운다 — 실행법 4요소는 Step 5 Handoff에 단일 소스로 정의한다 (Claude Code 슬롯은 그쪽 스킬이 채우므로 placeholder로 둔다).
 
@@ -110,7 +115,7 @@ Process의 모든 단계에 횡단 적용되는 판단 지침. Hard Rules가 강
 | 상황 | 대응 |
 |------|------|
 | 목표가 단발성/모호 (적합성 gate 실패) | 재정의 안내. 재정의 불가 시 중단하고 `/goal` 대신 단발 작업임을 알린다. |
-| 검증 명령이 명령+판정조건으로 확정되지 않음 | 진행을 차단한다 (hard gate). 명령과 판정조건이 둘 다 확정될 때까지 Condition Crafting을 통과시키지 않는다. |
+| 검증 명령이 명령+판정조건으로 확정되지 않음 | 진행을 차단한다 (hard gate). 명령과 판정조건이 둘 다 확정될 때까지 Condition Crafting을 통과시키지 않는다 — 확정된 명령·판정조건의 귀속처는 조건 문자열이 아니라 `goal.md` 검증 레시피다. |
 | 조건 문자열이 4,000자를 초과 | 응축 재시도. 4,000자 이하로 줄일 때까지 Handoff하지 않는다. |
 | Divergence에서 가설이 안 나옴 | 사용자에게 접근 후보를 직접 요청하고, 받은 후보로 백로그를 구성한다. |
 

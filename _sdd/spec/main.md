@@ -2,7 +2,7 @@
 
 > Markdown 기반 skill bundle로 AI 에이전트의 Spec-Driven Development 워크플로우를 Claude Code와 Codex에서 공통 계약으로 실행한다.
 
-**Spec Version**: 4.17.0
+**Spec Version**: 4.18.0
 **Last Updated**: 2026-08-14
 **Status**: Approved
 **Canonical Role**: current thin global spec
@@ -101,7 +101,7 @@ SDD Skills는 이 문제를 `SKILL.md = 실행 가능한 프롬프트`라는 관
   - Legacy alias와 Codex underscore custom agent ID는 canonical이 아니며 normalize하지 않는다
 - `sdd-autopilot`은 existing `goal-init(preset=sdd)`를 호출하는 setup-only thin entrypoint다. 사용자 목표와 관련 context를 runtime별 canonical 방식(Claude plugin-prefixed invocation / Codex active installed skill catalog)으로 전달하고, `goal-init`이 만든 자족적 조건 문자열·runtime 실행법·4파일 경로를 relay한 뒤 사용자 activation 경계에서 종료한다
   - setup에서는 initial `feature-draft`·`implementation`·`spec-sync`를 실행하지 않고 native goal을 활성화하지 않는다. current goal status도 조회하지 않으며 existing goal을 set·clear·pause·resume·replace·merge하거나 active goal 때문에 setup을 차단하지 않는다
-  - SDD preset은 generic `goal-init`의 Goal Intake → Divergence → Condition Crafting → Harness Setup → Handoff 5단계, condition self-check, `goal.md`·`experiments.md`·`journal.md`·`report.md` 4파일 계약을 그대로 재사용하고 `goal.md`의 `Loop Protocol` payload만 바꾼다
+  - SDD preset은 generic `goal-init`의 Goal Intake → Divergence → Condition Crafting → Harness Setup → Handoff 5단계, condition self-check, `goal.md`·`experiments.md`·`journal.md`·`report.md` 4파일 계약을 그대로 재사용하고 `goal.md`의 `Loop Protocol` payload만 바꾼다. `goal.md`는 조건 문자열(outcome 수준 DONE WHEN + 위조 어려운 anchor + 표준 레시피 참조 문구 + drift 가드 CONSTRAINT) / 검증 레시피(브리틀 검증 디테일 — goal 재설정 없이 수정 가능) / Loop Protocol(HOW)의 3분법 계약이다
   - 사용자가 native goal을 활성화한 뒤에는 미충족 `DONE WHEN` 또는 실패한 final integration proof gap에서 가장 작은 next feature를 골라 `feature-draft → implementation → (persistent 변경 시) spec-sync → evidence·gap 기록 → final integration proof`로 수렴한다. draft가 분할되면 current goal 안에서 smallest next unit을 계속 선택하며 nested `goal-init`은 만들지 않는다
   - formal Goal Contract·scope ID·Initial Feature Queue·status manifest·goal-level reviewer는 도입하지 않고, 조건·하네스 shape·loop payload의 단일 소스는 `goal-init`에 둔다
 - SDD 체인 진입은 **사용자 요청이 판정한다**(하네스 §3 canonical): SDD는 사용자의 직간접 요청 — 단계 스킬 호출(`discussion`·`feature-draft` 등) 또는 "SDD로 구현/작업하자" 류 지시 — 으로 적용된다. 요청이 없더라도 구현할 기능이 크거나 복잡하거나 스펙에 상당한 영향을 주는 작업이면 **SDD 적용 여부를 사용자에게 질문**하고, 그 외에는 비대상으로 보고 SDD 없이 바로 수행한다. 비적용 경로에서도 §2 작업 규약·검증 표준은 그대로 지키며, 스펙 변경이 생기면 `spec-sync` 호출 여부를 사용자에게 확인받는다. canonical은 하네스 §3이고 전파 표면은 `AGENTS.md` + `spec-create`·`spec-upgrade` 하네스 템플릿 4미러 = 5곳이라, 두 스킬이 초기화하는 모든 소비 repo의 하네스에 적용된다

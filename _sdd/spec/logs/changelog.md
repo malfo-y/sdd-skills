@@ -2,6 +2,11 @@
 
 > 이 파일은 `_sdd/spec/main.md`의 **본문이 바뀐 버전만** 기록한다 — 본문 무변경 sync(헤더 날짜만 갱신)는 entry를 남기지 않으므로 버전 번호에 결번이 생길 수 있다.
 
+#### v4.18.0 (2026-08-14)
+
+- **goal-init 조건 고도 분리 — D10 2분법 → 3분법(조건 / 검증 레시피 / HOW)**: `/goal` 조건 문자열의 브리틀 검증 디테일 인라인이 사소한 불일치마다 goal 재설정을 유발하는 문제(dancepdd lmax16 실측)를 해소했다. `goal.md`에 `검증 레시피` 섹션을 신설해 브리틀 디테일(검증 명령·기대 출력·수치 임계·허용 델타 열거)을 하강시키고, 조건 문자열은 outcome 수준 DONE WHEN + 위조 어려운 anchor 1-2개 + 표준 레시피 참조 문구 + drift 가드 CONSTRAINT(레시피 변경 diff·사유 표시, 판정 약화는 사용자 승인)로 쓴다. 인라인/하강 판별은 재설정 litmus를 Step 3 판단 지침으로 추가(비-gate — self-check hard gate 3항목·5단계·4파일 계약·비발동 불변). 전파: harness-templates.md D10·goal.md 템플릿("없으면 이 줄 삭제" 옵션 제거, drift 가드 상시 유지), SKILL.md(C3 슬롯별 전개·Step 2/4·Error Handling 귀속처 정합), 샘플 세션, Codex 미러 3파일 3-way(런타임 delta 보존).
+- **검증 evidence**: plan-review gate(H2 M2 L1 → 전량 fix — Codex SKILL.md identical 오판 교정·C3 미커버 해소), implementation-review gate(correctness 5 shard 전 AC MET C0 H0 M0, simplicity M3 L2 → M3+L1 fix, advisory 1), 구조 check 전 항목 RED→GREEN, 미러 parity 원시 diff = 런타임 delta 한정(diff-of-diffs), census 잔존 0, `git diff --check` 무출력.
+
 #### v4.17.0 (2026-08-14)
 
 - **느린 테스트 실행 정책 — 표적 기본 + 무거운 전체 실행 확인 게이트 (8/11 토론 결정 6·7·8 실현 + 사용자 커밋 `940ab96` 정비)**: `implementation` 마감 회귀를 "전체 suite가 있으면 실행"에서 **표적 + fast 회귀 기본, 무거운 test 포함 전체 suite는 repo 명시 checkpoint 또는 사용자 확인일 때만**으로 개정했다(강행·조용한 skip 금지, 미실행분 마감 요약 보고, 애매하면 질문 — fail-closed에 사용자 확인 escape). reviewer 2종(implementation-review·pr-review, claude·codex 4벌)에 checkpoint evidence 없는 slow 의존 AC의 `UNTESTED`(slow — checkpoint 대기) 이관을 명시했다. 사용자 직접 커밋 `940ab96`의 하네스 §2 규칙은 fixture 단일 수단 강제를 완화해 "10초 이상 테스트는 분리해 두고(fixture·suite 분할 등 수단 자유) 기본 실행에서 제외"로 정비하고, 그 커밋이 깨뜨린 하네스 템플릿 4벌 byte-parity를 복원했다(md5 1종). env.md 정형 fast/slow lane 스키마는 비도입(확인 게이트가 분류 오류 비용을 낮춰 YAGNI — 두 번째 사용처 실재 시 재검토). 10초(테스트 설계 기준)/30초(targeted 명령 예산)는 층이 다른 공존 계약로 명시. 실행 중 무겁게 드러난 테스트는 보고 + **분리·리팩토링 적극 권고**를 거쳐야 checkpoint 등록이 가능하다(결정 5 후반 실현 — slow 분류 escape hatch 차단). 결정 4의 30초 예산은 2026-08-12 선행 반영분.
