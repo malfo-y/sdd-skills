@@ -63,21 +63,25 @@ User: A, B 둘 다 백로그에 넣고 A부터 시작하죠.
 ### 3. Condition Crafting — 분업형 조건 문자열 응축 + 평가자 self-check
 
 이 단계는 5요소(목표/측정 가능 AC/증명/제약/종료 경계)를 `DONE WHEN`/`CONSTRAINTS`/`STOP` 분업형으로 응축하고,
-루프 행동(HOW)은 조건 문자열에 넣지 않습니다. 그 후 평가자 적합성 3항목 self-check를 적용합니다.
+브리틀 검증 디테일(명령·기대 출력·수치)은 `goal.md` `검증 레시피`로, 루프 행동(HOW)은 `Loop Protocol`로 분리합니다.
+그 후 평가자 적합성 3항목 self-check를 적용합니다.
 
 ```
-Claude: 조건 문자열로 응축합니다. 증명은 명령·기대 출력을 transcript에 surface하는 형태로 인라인합니다.
+Claude: 조건 문자열로 응축합니다. 재설정 litmus를 적용합니다 — "이 디테일이 어긋나면 goal을
+다시 세우는 게 마땅한가?" Yes → 인라인, No → 검증 레시피.
+- "20회 연속 통과"라는 outcome, 대상 스위트 경로 → 어긋나면 목표가 바뀜 → 인라인 (anchor).
+- pytest 정확한 명령·`100 passed` 기대 문자열 → 옵션·테스트 수가 바뀌어도 목표는 그대로 → 검증 레시피.
 
-DONE WHEN: tests/integration 스위트가 20회 연속 통과한다.
-  증명: `pytest tests/integration --count=20 -q` shows `100 passed` (혹은 동일 수의 passed, 0 failed)
-  20번 반복 출력에서 failed/error 0건임이 transcript에 보인다.
-CONSTRAINTS: 테스트를 skip/xfail 처리하거나 retry 플러그인으로 재시도해 통과시키지 않는다 (원인 수정으로만).
+DONE WHEN: tests/integration 스위트가 20회 연속 전부 통과한다. 증명: `goal.md` 검증 레시피의
+  명령 실제 출력이 transcript에 surface되고 전 항목 PASS다 (failed/error 0건이 출력에 보인다).
+CONSTRAINTS: 검증 레시피 변경 시 변경 diff·사유를 transcript에 표시하며, 판정을 약화하는 변경은
+  사용자 승인이 필요하다. 테스트를 skip/xfail 처리하거나 retry 플러그인으로 재시도해 통과시키지 않는다 (원인 수정으로만).
 STOP: after 6 turns without progress.
 
 평가자 적합성 self-check:
-- (a) 도구 없이 transcript만으로 판정 가능한가 → 예. `100 passed`/`0 failed` 문자열만 보면 판정됨.
-- (b) evidence가 매 턴 surface되는가 → 예. 매 턴 pytest 출력을 대화에 표시(Loop Protocol에 규정).
-- (c) 4,000자 이하인가 → 예 (실측 보고는 세션 말미).
+- (a) 도구 없이 transcript만으로 판정 가능한가 → 예. surface된 레시피 출력의 failed/error 0건만 보면 판정됨.
+- (b) evidence가 매 턴 surface되는가 → 예. 매 턴 레시피 명령 출력을 대화에 표시(Loop Protocol에 규정).
+- (c) 4,000자 이하인가 → 예.
 
 3항목 모두 통과 → 응축 확정.
 ```
@@ -92,18 +96,22 @@ STOP: after 6 turns without progress.
 
 | 파일 | 경로 | 내용 |
 |------|------|------|
-| `goal.md` | `_sdd/goal/2026-06-22_stabilize-flaky-integration-tests/goal.md` | 확정 조건 문자열 + Loop Protocol + 실행법(Claude 슬롯) |
+| `goal.md` | `_sdd/goal/2026-06-22_stabilize-flaky-integration-tests/goal.md` | 확정 조건 문자열 + 검증 레시피 + Loop Protocol + 실행법(Claude 슬롯) |
 | `experiments.md` | `_sdd/goal/2026-06-22_stabilize-flaky-integration-tests/experiments.md` | 가설 A, B를 pending 백로그로 기입 |
 | `journal.md` | `_sdd/goal/2026-06-22_stabilize-flaky-integration-tests/journal.md` | append-only, 초기 빈 헤더 |
 | `report.md` | `_sdd/goal/2026-06-22_stabilize-flaky-integration-tests/report.md` | conclusion-first, Status: STUCK(초기) |
 
-`goal.md` 핵심 (조건 문자열 슬롯 + Loop Protocol 분리):
+`goal.md` 핵심 (조건 문자열 / 검증 레시피 / Loop Protocol 3분법):
 
 ```markdown
 # Goal: flaky 통합 테스트 스위트 안정화
 
 ## `/goal` 조건 문자열
 (Step 3에서 확정한 `DONE WHEN`/`CONSTRAINTS`/`STOP` 조건 문자열을 그대로 기입)
+
+## 검증 레시피
+- 안정성 판정: `pytest tests/integration --count=20 -q` → `100 passed` (passed 수는 스위트 크기와 동일, failed/error 0)
+- 메인 에이전트가 매 턴 이 명령을 실행하고 출력을 대화에 surface한다.
 
 ## Loop Protocol
 매 턴 다음을 수행한다 (메인 에이전트용 HOW, 조건 문자열에 넣지 않는다):
@@ -138,8 +146,8 @@ STOP: after 6 turns without progress.
 Claude: 셋업 완료. 아래를 검토 후 직접 /goal에 거세요. (스킬은 /goal을 직접 발동하지 않습니다.)
 
 [최종 분업형 조건 문자열 — /goal에 그대로 입력]
-DONE WHEN: tests/integration 스위트가 20회 연속 통과한다. 증명: `pytest tests/integration --count=20 -q` shows `100 passed` (0 failed) in the transcript.
-CONSTRAINTS: skip/xfail/retry로 통과시키지 않는다 (원인 수정으로만).
+DONE WHEN: tests/integration 스위트가 20회 연속 전부 통과한다. 증명: `goal.md` 검증 레시피의 명령 실제 출력이 transcript에 surface되고 전 항목 PASS다 (failed/error 0건이 출력에 보인다).
+CONSTRAINTS: 검증 레시피 변경 시 변경 diff·사유를 transcript에 표시하며, 판정을 약화하는 변경은 사용자 승인이 필요하다. 테스트를 skip/xfail 처리하거나 retry 플러그인으로 재시도해 통과시키지 않는다 (원인 수정으로만).
 STOP: after 6 turns without progress.
 
 [Claude /goal 실행법]
@@ -156,6 +164,6 @@ STOP: after 6 turns without progress.
 ## 핵심 포인트 (이 예제가 보여주는 것)
 
 - **5단계 고정 진행**: Goal Intake(적합성 gate) → Divergence(AI 능동 발산) → Condition Crafting(분업형 응축 + self-check) → Harness Setup(4파일 생성) → Handoff(비발동).
-- **분업형 조건 문자열**: `DONE WHEN`은 명령·기대 출력을 transcript-surface 형태로 인라인(`pytest ... shows 100 passed in the transcript`), 루프 HOW는 `goal.md`의 `Loop Protocol`로 분리.
+- **3분법 조건 문자열**: `DONE WHEN`은 outcome + anchor + "검증 레시피 출력 surface·전 항목 PASS" 표준 문구, 브리틀 검증 디테일(pytest 명령·기대 문자열)은 `goal.md`의 `검증 레시피`로, 루프 HOW는 `Loop Protocol`로 분리. `CONSTRAINTS`에 drift 가드(레시피 변경 diff 표시·약화는 사용자 승인) 기본 포함.
 - **평가자 적합성 3항목**: 도구 없이 판정 · evidence 매 턴 surface · 4,000자 이하 — 모두 통과해야 Handoff.
 - **4파일 산출 경로**: `_sdd/goal/<YYYY-MM-DD>_<slug>/`의 `goal.md`/`experiments.md`/`journal.md`/`report.md`.

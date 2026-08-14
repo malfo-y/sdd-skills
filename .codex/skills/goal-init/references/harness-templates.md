@@ -5,8 +5,9 @@ SKILL.md Process(Harness Setup 단계)가 이 템플릿을 참조해 슬롯을 �
 
 `<...>` 는 생성 시 치환할 슬롯이다. 그 외 텍스트(헤딩·레이블·구조)는 그대로 유지한다. `<LOOP_PROTOCOL_PAYLOAD>`에는 아래 preset payload 중 정확히 하나를 삽입한다.
 
-분업 원칙(D10):
-- **완료조건**(`DONE WHEN`/`CONSTRAINTS`/`STOP`)은 `/goal` 조건 문자열에 자족 인라인 → 평가자(도구 없는 small fast model)가 transcript만으로 판정한다. 증명은 명령·기대 출력이 대화에 surface되는 형태로 인라인한다 (별도 VERIFY 슬롯 없음).
+분업 원칙(D10, 3분법):
+- **완료조건**(`DONE WHEN`/`CONSTRAINTS`/`STOP`)은 `/goal` 조건 문자열에 outcome 수준으로 자족 인라인 → 평가자(도구 없는 small fast model)가 transcript만으로 판정한다. 조건에는 위조 어려운 최소 anchor 1-2개(산출물 절대경로·테스트 exit 0류 안정적 사실)와 표준 레시피 참조 문구(아래 템플릿 DONE WHEN 슬롯), 그리고 drift 가드 CONSTRAINT(아래 템플릿)를 포함한다.
+- **검증 레시피**(브리틀 디테일 — 아래 템플릿 검증 레시피 슬롯 열거)는 `goal.md`의 `검증 레시피` 섹션 → 메인 에이전트가 매 턴 실행하고 출력을 대화에 surface한다. 레시피가 현실과 어긋나면(필드명·수치·경로 변화) goal 재설정 없이 이 섹션만 고친다.
 - **루프 행동(HOW)**은 `goal.md`의 `Loop Protocol` 섹션 → 메인 에이전트가 읽는다. 평가자가 매 턴 HOW 노이즈를 읽지 않도록 조건 문자열과 분리한다.
 
 ---
@@ -20,12 +21,15 @@ SKILL.md Process(Harness Setup 단계)가 이 템플릿을 참조해 슬롯을 �
 <무엇을 달성하려는지 1-2단락. 배경·왜 중요한지 포함.>
 
 ## `/goal` 조건 문자열
-> 아래 블록을 `/goal <조건>`에 그대로 넣는다. 평가자는 도구 없이 transcript만으로 판정하므로 자족적이어야 한다.
+> 아래 블록을 `/goal <조건>`에 그대로 넣는다. 평가자는 도구 없이 transcript만으로 판정하므로 자족적이어야 한다 — 단 자족의 단위는 outcome이다. 검증 명령·기대 출력·수치 등 브리틀 디테일은 여기 넣지 않고 아래 `검증 레시피` 섹션에 둔다.
 
-DONE WHEN: <측정 가능한 AC>. 증명: `<검증 명령>` shows `<기대 출력/판정>` in the transcript.
-<AC가 여럿이면 줄을 추가. 각 줄에 증명 명령·기대 출력을 인라인한다.>
-CONSTRAINTS: <지켜야 할 제약. 없으면 이 줄 삭제.>
+DONE WHEN: <outcome 수준 AC — 위조 어려운 anchor 1-2개(산출물 절대경로·테스트 exit 0류 안정적 사실) 포함>. 증명: `goal.md` 검증 레시피의 명령 실제 출력이 transcript에 surface되고 전 항목 PASS다.
+<AC가 여럿이면 줄을 추가. 각 줄은 outcome + anchor로 쓴다.>
+CONSTRAINTS: 검증 레시피 변경 시 변경 diff·사유를 transcript에 표시하며, 판정을 약화하는 변경은 사용자 승인이 필요하다. <그 외 지켜야 할 제약 — 없으면 이 문장만 유지.>
 STOP: after <N> turns without progress.
+
+## 검증 레시피
+<AC별 검증 명령·기대 출력·수치 임계·허용 델타 열거 등 브리틀 디테일 전부. 메인 에이전트가 매 턴 실행하고 출력을 대화에 surface한다.>
 
 ## Loop Protocol
 <LOOP_PROTOCOL_PAYLOAD>
