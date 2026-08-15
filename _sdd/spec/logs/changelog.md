@@ -839,3 +839,7 @@
 
 - spec-create, spec-rewrite, spec-upgrade에 2-Phase Generation 패턴 추가
 - 3개 미문서 스킬 추가 (spec-snapshot, guide-create, write-phased)
+
+## v4.21.0 (2026-08-15)
+
+- `implementation-review`·`pr-review` correctness 렌즈를 메인 루프 직접 수행으로 전환 — correctness agent 2종(claude/codex 4파일) 삭제·등록 해제, 잔존 agent는 `simplicity-review-agent` 1종. task별 correctness shard(1+N) 소멸, `--model`은 simplicity dispatch 한정. main.md §3 리뷰 관련 불릿(직교 2-렌즈 적용 지점·reviewer agent·읽기 다이어트 소유자)·비교표 렌즈 행·components.md 두 컴포넌트 행·Platform Notes 갱신.

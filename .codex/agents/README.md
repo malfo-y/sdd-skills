@@ -17,9 +17,7 @@
 
 ## Agent Set
 
-- `implementation-review-agent`
 - `simplicity-review-agent`
-- `pr-review-agent`
 
 ## Inline Writing
 

@@ -38,9 +38,7 @@
         "./.claude/skills/second-opinion"
       ],
       "agents": [
-        "./.claude/agents/implementation-review-agent.md",
-        "./.claude/agents/simplicity-review-agent.md",
-        "./.claude/agents/pr-review-agent.md"
+        "./.claude/agents/simplicity-review-agent.md"
       ]
     }
   ]

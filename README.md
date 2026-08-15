@@ -2,7 +2,7 @@
 
 Spec-Driven Development (SDD) workflow skills for Claude Code and Codex.
 
-Codex bundle: 19 skills. Claude bundle: 21 skills (`git`·`second-opinion` 추가). 양 번들 공통 custom agent 3종: `implementation-review` · `simplicity-review` · `pr-review` (`plan-review`는 agent 없는 직접 실행 스킬).
+Codex bundle: 19 skills. Claude bundle: 21 skills (`git`·`second-opinion` 추가). 양 번들 공통 custom agent 1종: `simplicity-review` (`plan-review`·`implementation-review`·`pr-review`의 correctness 리뷰는 agent 없이 메인 루프가 직접 수행).
 
 ## Documentation
 
@@ -117,12 +117,12 @@ codex --enable default_mode_request_user_input
 
 ## Subagent Model Override
 
-계획/구현 계열 스킬은 내부 subagent 호출에만 모델 override를 줄 수 있다. 옵션을 생략하면 현재 세션/agent 기본값을 그대로 상속한다.
+계획/구현 계열 스킬은 내부 subagent 호출에만 모델 override를 줄 수 있다. `implementation-review`·`pr-review`의 `--model`은 **simplicity dispatch에만** 적용된다 — correctness 리뷰는 메인 루프 직접 수행이라 override 대상이 아니다. 옵션을 생략하면 현재 세션/agent 기본값을 그대로 상속한다.
 
 적용 대상:
 
-- `implementation-review`
-- `pr-review`
+- `implementation-review` (simplicity dispatch 한정)
+- `pr-review` (simplicity dispatch 한정)
 
 Claude Code:
 

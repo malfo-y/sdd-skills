@@ -34,18 +34,18 @@ Claude: PR 리뷰를 시작합니다.
 - 통합 리포트 slug: auth_system
 ```
 
-### 병렬 dispatch와 verdict 합성
+### simplicity dispatch + 직접 correctness와 verdict 합성
 
 ```text
 Claude:
-## Parallel Dispatch
+## Simplicity Dispatch + 직접 Correctness
 
-Agent(subagent_type="sdd-skills:pr-review-agent")         → correctness 렌즈
-Agent(subagent_type="sdd-skills:simplicity-review-agent") → clarity 렌즈
+Agent(subagent_type="sdd-skills:simplicity-review-agent") → clarity 렌즈 dispatch
+(agent가 도는 동안 메인 루프가 correctness 리뷰를 직접 수행)
 
-두 agent 반환 요약:
-- correctness: AC MET 2 / NOT MET 1 / PARTIAL 1, test pass 95%, High 1·Med 1·Low 1 (finding당 위치·문제·수정 포함)
-- simplicity: Medium 1 (위치·현재 형태·제안 형태 포함)
+두 렌즈 결과 요약:
+- correctness (메인 루프 직접): AC MET 2 / NOT MET 1 / PARTIAL 1, test pass 95%, High 1·Med 1·Low 1 (finding당 위치·문제·수정 포함)
+- simplicity (agent 반환): Medium 1 (위치·현재 형태·제안 형태 포함)
 
 → Verdict: REQUEST CHANGES (correctness High 1 + simplicity Medium 1이 rationale에 기여)
 ```
@@ -122,8 +122,8 @@ Claude:
 - headRefName: fix/password-reset-expiry
 - gh pr diff --name-only 및 from-branch 트리에 _sdd/spec/ 없음
 
-→ code-only mode로 dispatch (spec 컨텍스트 없이)
-- correctness reviewer가 PR title/body/코멘트에서 AC를 추론해 검증
+→ code-only mode로 진행 (spec 컨텍스트 없이)
+- 메인 루프가 PR title/body/코멘트에서 AC를 추론해 correctness 검증
 ```
 
 ### code-only 리포트 예시
