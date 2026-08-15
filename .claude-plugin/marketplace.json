@@ -38,8 +38,6 @@
         "./.claude/skills/second-opinion"
       ],
       "agents": [
-        "./.claude/agents/plan-review-agent.md",
-        "./.claude/agents/plan-context-gatherer.md",
         "./.claude/agents/implementation-review-agent.md",
         "./.claude/agents/simplicity-review-agent.md",
         "./.claude/agents/pr-review-agent.md"
