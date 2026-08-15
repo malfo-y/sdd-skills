@@ -3446,3 +3446,9 @@ sdd-autopilot의 review-fix 루프가 선택적으로 동작하여, 리뷰만 �
 - `.claude/skills/sdd-autopilot/SKILL.md` -- Hard Rule #9 추가, Review-Fix 루프 필수 사이클 강화, implementation-review 조건부 핵심 단계
 - `.claude/skills/sdd-autopilot/references/pipeline-templates.md` -- 모든 템플릿에 Hard Rule #9 적용, 핵심 단계에 implementation-review 추가
 - `_sdd/spec/main.md` -- v3.2.0 → v3.3.0
+
+## 2026-08-15: implementation-review·pr-review correctness 직접 실행 전환 (v4.21.0)
+
+- **결정**: 두 리뷰 스킬의 correctness 렌즈를 dispatch agent에서 메인 루프 직접 수행으로 전환하고, `implementation-review-agent`·`pr-review-agent`(claude/codex 4파일)를 삭제·등록 해제한다. simplicity 렌즈만 `simplicity-review-agent` dispatch로 잔존한다(implementation-review는 2묶음, pr-review는 통짜 1회 — 불변). simplicity를 먼저 띄우고 correctness를 병행해 벽시계는 두 작업의 max. implementation-review의 task별 correctness shard(1+N)·연접 relay·correctness digest는 소멸. `--model` override는 simplicity dispatch 한정으로 축소. correctness 계약(기준 문서 적응·읽기 계단·Fresh Verification·ledger MET 접기)의 단일 소스는 각 SKILL.md로 이동.
+- **근거**: plan-review 직접 실행 전환(같은 날 오전, v4.20.0)과 동일 — 로드된 읽기 규칙을 dispatch된 agent가 무시한 원격 실측 이후 "읽기 통제는 순종이 아니라 구조로". 사용자가 두 게이트의 체감 지연을 보고하고 전환을 지시했다. 셀프 리뷰 편향(implementation-review는 producer가 자기 구현을 검증)은 사용자 결정으로 감수 — 검출의 실체는 rubric+증거 결속이고 독립 시선은 simplicity agent·`second-opinion`.
+- **포인터**: `_sdd/drafts/_processed_2026-08-15_feature_draft_review_direct_execution.md`, PR(브랜치 refactor/review-direct-execution)

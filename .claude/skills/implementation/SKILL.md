@@ -122,9 +122,9 @@ RED 관찰 후에는 테스트를 통과시키기 위해 테스트를 약화·�
     1. **gate 1 → fix 1**: 첫 gate를 항상 호출한다. 반환된 Critical/High/Medium을 직접 반영한다. Low는 렌즈별 기존 정책을 적용한다.
         - **correctness 렌즈 Low**: **저비용 AND 명백히 이득 AND 현재 change scope 내** 세 조건을 모두 만족하는 것만 fix하고, 나머지는 마감 요약에 advisory로 남긴다. `현재 change scope 내`가 scope 확장을 막는 load-bearing 조건이다.
         - **simplicity 렌즈 Low**(주관적 취향): fix 대상이 아니며 advisory로만 남긴다.
-    2. **조건 판정**: fix 전 gate 1의 raw shard 합산 finding을 dedup하지 않고, Low를 제외해 **Critical+High ≥ 3 또는 Medium ≥ 5**인지 판정한다.
+    2. **조건 판정**: fix 전 gate 1의 raw 합산 finding(직접 correctness finding + simplicity 반환)을 dedup하지 않고, Low를 제외해 **Critical+High ≥ 3 또는 Medium ≥ 5**인지 판정한다.
     3. **gate 2 → fix 2**: 임계값에 도달한 경우에만 같은 `implementation-review`를 두 번째 호출한다. Critical/High/Medium을 직접 반영하고 Low에는 gate 1과 동일한 렌즈별 정책을 적용한다.
-    4. **fix 검증 후 종료**: 각 fix는 **§4 커버리지 델타 → 회귀 재실행 → 변경된 AC 증거 갱신** 순서로 닫는다. fix 2 뒤에는 gate 2 finding별 표적 검증까지 수행하고, 해소되지 않은 finding을 남긴 채 종료한다. 세 번째 gate는 호출하지 않는다. gate 2의 fix 전 raw shard 합산 finding도 같은 임계값에 도달하면 마감 요약에서 후속 `implementation-review` 1회 수동 실행을 권고한다.
+    4. **fix 검증 후 종료**: 각 fix는 **§4 커버리지 델타 → 회귀 재실행 → 변경된 AC 증거 갱신** 순서로 닫는다. fix 2 뒤에는 gate 2 finding별 표적 검증까지 수행하고, 해소되지 않은 finding을 남긴 채 종료한다. 세 번째 gate는 호출하지 않는다. gate 2의 fix 전 raw 합산 finding도 같은 임계값에 도달하면 마감 요약에서 후속 `implementation-review` 1회 수동 실행을 권고한다.
 4. **마감 요약**: 계약 오류 선언·대상 파일 밖 수정이 있었으면 요약한다. gate 2를 실행했으면 호출 1/2의 severity·fix·검증과 해소되지 않은 finding을 구분하고, 실행하지 않았으면 gate 1 결과만 보고한다.
 
 ## Integration
