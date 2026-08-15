@@ -1,5 +1,19 @@
 # Decision Log
 
+## 2026-08-15 - plan-review를 agent 0개 직접 실행 스킬로 전환한다 — 읽기 통제는 순종이 아니라 구조
+
+### Context
+
+gather phase(v4.16.0) → digest 신뢰 규칙(v4.19.0)의 교정 사슬 끝에서, **로드된 규칙이 그대로 무시되는** 실측이 나왔다(소비 repo, opus-5 판정자가 digest를 두고 원본 전량 재독 7분+). 문면을 강화(Hard Rule 승격)해도 같은 층의 확률 게임이라는 사용자 판단.
+
+### Decision
+
+판정 agent·gatherer 모두 폐지, `plan-review`를 직접 실행 스킬로 전환(판정·수집 = 메인 루프). SKILL.md가 전체 계약 단일 소스. 병렬 읽기는 메인 루프 tool call 배칭으로, 컨텍스트 절약은 Grep 선행 + 선택적 구간 읽기로 대체. 셀프 리뷰 편향은 감수(rubric + evidence 의무가 검출력의 실적 원천, 독립 시선은 `second-opinion`). 기각 대안: Hard Rule 승격(같은 층), 무도구 판정자(codex 도구 박탈 불가로 반쪽), PreToolUse 훅 차단(allowlist 배관 대비 이득 없음 — 사용자 결정), gatherer만 존치(배칭으로 동일 달성).
+
+### Evidence
+
+draft `_sdd/drafts/2026-08-15_feature_draft_plan_review_direct_execution.md`(plan gate 2회: BLOCKED H1M1L1→fix, CLEAR M1L1→fix), ledger 동일 slug(impl gate C0H0M2L4 → M2 fix: Error Handling 사족·README 죽은 계약 — census skill명 표기 함정 재현). 삭제 census 4변형 0행·docs 0.
+
 ## 2026-08-15 - plan-review 판정 agent의 읽기를 digest·인용 앵커에 결박한다
 
 ### Context
