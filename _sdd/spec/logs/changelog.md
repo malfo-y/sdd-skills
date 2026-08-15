@@ -2,6 +2,11 @@
 
 > 이 파일은 `_sdd/spec/main.md`의 **본문이 바뀐 버전만** 기록한다 — 본문 무변경 sync(헤더 날짜만 갱신)는 entry를 남기지 않으므로 버전 번호에 결번이 생길 수 있다.
 
+#### v4.19.0 (2026-08-15)
+
+- **plan-review 판정 agent 읽기 다이어트 — digest 신뢰 격상 + spec anchor 한정 + 기록물 금독**: gather phase 발효 후 첫 소비 repo 실측(사용자 관측, 원격 GPU 서버)에서 판정 agent가 digest를 받고도 원본 코드를 재독(구 "Critical/High evidence는 원본 residual read로 확정" 의무가 전면 재검증 지시로 작동)해 도입 전보다 느려지는 역효과와, draft가 인용하지 않은 spec 표면 로밍(비용이 스펙 크기에 비례 — 실측 main.md 78K·decision_log 441K)이 관측됐다. Step 3 읽기 규칙을 3건 개정: ① digest 발췌 = verbatim + 앵커 = 원본 동급 evidence, 발췌가 담은 구간 재독 금지, residual read는 좌표-only 구간·발췌 밖 문맥 2경우 한정 ② spec은 draft 명시 인용 파일·섹션만(미인용 spec 대조·finding 금지, 어긋남 감시는 spec-review 소관) ③ 기록물(decision_log·logs/·prev/) 금독. claude·codex 짝 3-way(어휘 delta 보존). Claim Manifest 재제안 금지와 무관 — producer ceremony 없이 reviewer 읽기 범위만 규정.
+- **검증 evidence**: plan-review gate CLEAR finding 0(신구조 실측 — gather 46s + 판정 61s), implementation-review gate(correctness 2 shard ∥ simplicity 2 묶음) **C0 H0 M0 L0**. census — 구 문면 live 잔존 0, `동급 evidence` hit 정확히 agent 2벌, 변형형(`residual read` 단독)은 gatherer의 좌표 handoff 서술뿐(정합). `git diff --check` 무출력.
+
 #### v4.18.0 (2026-08-14)
 
 - **goal-init 조건 고도 분리 — D10 2분법 → 3분법(조건 / 검증 레시피 / HOW)**: `/goal` 조건 문자열의 브리틀 검증 디테일 인라인이 사소한 불일치마다 goal 재설정을 유발하는 문제(dancepdd lmax16 실측)를 해소했다. `goal.md`에 `검증 레시피` 섹션을 신설해 브리틀 디테일(검증 명령·기대 출력·수치 임계·허용 델타 열거)을 하강시키고, 조건 문자열은 outcome 수준 DONE WHEN + 위조 어려운 anchor 1-2개 + 표준 레시피 참조 문구 + drift 가드 CONSTRAINT(레시피 변경 diff·사유 표시, 판정 약화는 사용자 승인)로 쓴다. 인라인/하강 판별은 재설정 litmus를 Step 3 판단 지침으로 추가(비-gate — self-check hard gate 3항목·5단계·4파일 계약·비발동 불변). 전파: harness-templates.md D10·goal.md 템플릿("없으면 이 줄 삭제" 옵션 제거, drift 가드 상시 유지), SKILL.md(C3 슬롯별 전개·Step 2/4·Error Handling 귀속처 정합), 샘플 세션, Codex 미러 3파일 3-way(런타임 delta 보존).
