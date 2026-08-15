@@ -1,5 +1,20 @@
 # Decision Log
 
+## 2026-08-15 - plan-review 판정 agent의 읽기를 digest·인용 앵커에 결박한다
+
+### Context
+
+gather phase(v4.16.0) 발효 후 첫 소비 repo 게이트에서 사용자가 역효과 2종을 관측했다: 판정 agent가 digest를 받고도 원본 코드를 처음부터 재독(도입 전보다 느려짐), spec이 커질수록 미인용 spec 표면 로밍이 리뷰 시간을 지배. 원인은 문면 — "Critical/High evidence는 원본 residual read로 확정"이 전면 재검증 지시로 읽혔고, spec 읽기 범위 규정이 없었다.
+
+### Decision
+
+① digest 발췌(verbatim + `경로:줄범위` 앵커)는 원본 인용과 동급 evidence — 발췌가 담은 구간 재독 금지, residual read는 좌표-only 구간·발췌 밖 문맥 2경우 한정. ② spec은 draft 명시 인용 파일·섹션만 읽는다 — 미인용 spec 대조 금지, 전 스펙 어긋남 감시는 spec-review 소관. ③ 기록물(decision_log·logs/·prev/) 금독. false CLEAR 방어는 reviewer 재독이 아니라 gatherer의 verbatim·앵커 계약이 담당한다. Claim Manifest 철회(producer 선고정 ceremony)와 다른 축 — reviewer 읽기 범위 규칙이라 producer 부담 0.
+
+### Evidence
+
+draft `_sdd/drafts/2026-08-15_feature_draft_plan_review_digest_trust.md`(plan gate CLEAR 0건 — 신구조 gather 46s + 판정 61s), ledger 동일 slug(impl gate C0H0M0L0), census 잔존 0.
+
+
 ## 2026-08-14 - goal-init 조건을 outcome 고도로 올린다 — D10 2분법을 3분법으로 개정 (v4.17.0 → v4.18.0)
 
 ### Context
