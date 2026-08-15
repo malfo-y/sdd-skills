@@ -77,7 +77,8 @@ scope, task boundary, AC, Target Files(`[C]` 신규 파일 포함), Open Questio
 각 smell별로 evidence를 모아 severity를 정한다.
 
 - 리뷰를 위한 supporting context는 판정에 필요한 최소한만 확인한다.
-- digest 경로가 제공되면 **한 메시지의 병렬 Read 배치로 일괄 흡수**하고 이를 supporting context의 출발점으로 삼는다. digest는 출발점이다 — 의심 구간과 Critical/High finding의 evidence로 쓸 구간은 **원본 파일 residual read로 확정**한다(digest 인용만으로 Critical/High evidence를 닫지 않는다).
+- digest 경로가 제공되면 **한 메시지의 병렬 Read 배치로 일괄 흡수**한다. digest 발췌는 `경로:줄범위` 앵커가 붙은 verbatim이므로 **원본 인용과 동급 evidence다** — Critical/High 포함 모든 severity의 evidence로 그대로 인용하고, 발췌가 이미 담은 구간을 원본에서 다시 읽지 않는다. residual read는 두 경우만 수행한다: 판정에 필요한 구간이 digest에 좌표로만 남았을 때(발췌 상한 초과분), 발췌 범위 밖 문맥 없이는 판정이 닫히지 않을 때.
+- spec surface(`_sdd/spec/*`)는 **draft가 명시 인용한 파일·섹션만** 읽는다. 인용 없는 spec 대조는 수행하지 않고 그로 인한 finding도 만들지 않는다 — 전 스펙 대비 어긋남 감시는 `spec-review` 소관이다. 기록물(`decision_log.md`·`logs/`·`prev/`)은 **리뷰 입력이 아니다** — 읽지 않는다.
 - 근거가 부족하면 그 smell의 finding을 만들지 않는다.
 
 ### Step 4: Return
