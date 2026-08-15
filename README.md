@@ -2,7 +2,7 @@
 
 Spec-Driven Development (SDD) workflow skills for Claude Code and Codex.
 
-Codex bundle: 19 skills. Claude bundle: 21 skills (`git`·`second-opinion` 추가). 양 번들 공통 custom agent 4종: `plan-review` · `implementation-review` · `simplicity-review` · `pr-review`.
+Codex bundle: 19 skills. Claude bundle: 21 skills (`git`·`second-opinion` 추가). 양 번들 공통 custom agent 3종: `implementation-review` · `simplicity-review` · `pr-review` (`plan-review`는 agent 없는 직접 실행 스킬).
 
 ## Documentation
 
@@ -122,20 +122,17 @@ codex --enable default_mode_request_user_input
 적용 대상:
 
 - `implementation-review`
-- `plan-review`
 - `pr-review`
 
 Claude Code:
 
 ```text
-/plan-review --model sonnet
 /implementation-review --model opus
 ```
 
 Codex:
 
 ```text
-/plan-review --model gpt-5.6-sol --effort low
 /implementation-review --model gpt-5.6-terra --effort max
 /pr-review --model gpt-5.6-sol --effort ultra
 ```

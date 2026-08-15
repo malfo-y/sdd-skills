@@ -17,8 +17,6 @@
 
 ## Agent Set
 
-- `plan-review-agent`
-- `plan-context-gatherer`
 - `implementation-review-agent`
 - `simplicity-review-agent`
 - `pr-review-agent`

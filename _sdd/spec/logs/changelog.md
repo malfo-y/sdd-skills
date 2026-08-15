@@ -2,6 +2,11 @@
 
 > 이 파일은 `_sdd/spec/main.md`의 **본문이 바뀐 버전만** 기록한다 — 본문 무변경 sync(헤더 날짜만 갱신)는 entry를 남기지 않으므로 버전 번호에 결번이 생길 수 있다.
 
+#### v4.20.0 (2026-08-15)
+
+- **plan-review를 agent 0개 직접 실행 스킬로 전환 — gather phase·판정 agent 폐지**: v4.19.0 읽기 규칙이 **로드된 상태로 무시**된 실측(소비 repo, opus-5 판정자 원본 전량 재독 7분+)으로, 읽기 통제를 dispatch된 agent의 순종에 맡기는 층 자체를 폐기했다. 판정·수집 모두 메인 루프가 수행하고 SKILL.md(claude·codex 짝)가 5-smell rubric·Severity·Blocker Policy·반환 형식·읽기 지침(독립 Read/Grep 한 메시지 배칭, Grep 선행 선택적 읽기, spec은 draft 인용 anchor만, 기록물 금독)의 단일 소스다. `plan-review-agent`·`plan-context-gatherer` 4파일 삭제, marketplace·codex agents/README 등록 해제, `--model` override 계약 폐지(reviewer agent는 3종이 된다). 기각 대안: Hard Rule 승격·무도구 판정자(codex 도구 박탈 불가)·PreToolUse 훅 차단·gatherer 존치(병렬 읽기는 배칭으로 동일 달성). 셀프 리뷰 편향은 사용자 결정으로 감수(독립 시선은 `second-opinion`). 쓰기-서로소 작성자 분할 인스턴스 1→0, gather·반환 다이어트(plan-review-agent) 누적 관측 2건 종결.
+- **검증 evidence**: plan gate 2회(BLOCKED H1M1L1→fix / CLEAR M1L1→fix), implementation-review gate(correctness 4 shard ∥ simplicity 2 묶음) C0 H0 **M2** L4 → M2 fix(Error Handling 무동작 재참조 삭제, 루트 README 죽은 계약 정비 — census가 skill명 표기를 못 잡는 기존 함정의 재현 사례). 삭제 census 4변형(kebab/underscore) live 표면 0행·docs 0. `git diff --check` 무출력.
+
 #### v4.19.0 (2026-08-15)
 
 - **plan-review 판정 agent 읽기 다이어트 — digest 신뢰 격상 + spec anchor 한정 + 기록물 금독**: gather phase 발효 후 첫 소비 repo 실측(사용자 관측, 원격 GPU 서버)에서 판정 agent가 digest를 받고도 원본 코드를 재독(구 "Critical/High evidence는 원본 residual read로 확정" 의무가 전면 재검증 지시로 작동)해 도입 전보다 느려지는 역효과와, draft가 인용하지 않은 spec 표면 로밍(비용이 스펙 크기에 비례 — 실측 main.md 78K·decision_log 441K)이 관측됐다. Step 3 읽기 규칙을 3건 개정: ① digest 발췌 = verbatim + 앵커 = 원본 동급 evidence, 발췌가 담은 구간 재독 금지, residual read는 좌표-only 구간·발췌 밖 문맥 2경우 한정 ② spec은 draft 명시 인용 파일·섹션만(미인용 spec 대조·finding 금지, 어긋남 감시는 spec-review 소관) ③ 기록물(decision_log·logs/·prev/) 금독. claude·codex 짝 3-way(어휘 delta 보존). Claim Manifest 재제안 금지와 무관 — producer ceremony 없이 reviewer 읽기 범위만 규정.
