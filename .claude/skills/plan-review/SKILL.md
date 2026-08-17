@@ -71,5 +71,5 @@ Target Files가 불명확하면 `Verification Weakness` 또는 `Task Boundary Dr
 
 ## Integration
 
-- `feature-draft`: 리뷰 대상이자 호출 주체 — 자기 품질 게이트로 이 리뷰를 수행하고, finding 반영은 작성자 소관
+- `feature-draft`: 리뷰 대상이자 호출 주체 — 자기 품질 게이트로 이 리뷰를 수행하고, finding 반영은 작성자 소관. 게이트로 호출된 경우 이 리뷰의 반환은 중간 산출물이다 — 반환 직후 사용자 입력을 기다리지 않고 호출 스킬의 fix 단계로 복귀한다.
 - `implementation`: Critical/High blocker가 없을 때 후속 실행

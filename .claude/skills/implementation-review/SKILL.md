@@ -86,6 +86,6 @@ stale 판단 예시: 기준 문서가 참조하는 주요 파일/모듈이 없�
 
 ## Integration
 
-- `implementation`: 주 리뷰 대상이자 호출 주체 — 마감 품질 게이트로 이 리뷰를 수행하며, finding 반영은 호출자 소관
+- `implementation`: 주 리뷰 대상이자 호출 주체 — 마감 품질 게이트로 이 리뷰를 수행하며, finding 반영은 호출자 소관. 게이트로 호출된 경우 이 리뷰의 보고는 중간 산출물이다 — 보고 직후 사용자 입력을 기다리지 않고 호출 스킬의 fix 단계로 복귀한다.
 - `simplicity-review-agent`: clarity 렌즈 dispatch 대상 — 계약·차원·severity의 단일 소스
 - `spec-sync`: 리뷰 결과상 스펙 변경이 필요할 때 후속 스킬로 안내
