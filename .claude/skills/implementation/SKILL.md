@@ -118,7 +118,7 @@ RED 관찰 후에는 테스트를 통과시키기 위해 테스트를 약화·�
    | Task | AC | 판정 | 증거 |
    |------|----|------|------|
 
-3. **품질 게이트**: producer인 메인 루프가 `implementation-review`를 호출하고 finding을 직접 반영한다. 각 gate 호출 내부는 **단일 패스**이며 reviewer와 사용자는 gate 재호출이나 fix를 소유하지 않는다.
+3. **품질 게이트**: producer인 메인 루프가 `implementation-review`를 호출하고 finding을 직접 반영한다. 각 gate 호출 내부는 **단일 패스**이며 reviewer와 사용자는 gate 재호출이나 fix를 소유하지 않는다. 게이트 반환은 중간 산출물이며 사용자 입력 대기 지점이 아니다 — 반환 직후 같은 흐름에서 fix를 시작하고, 조건 판정과 gate 2 실행도 묻지 않고 이어서 수행한 뒤 마감 요약으로만 닫는다.
     1. **gate 1 → fix 1**: 첫 gate를 항상 호출한다. 반환된 Critical/High/Medium을 직접 반영한다. Low는 렌즈별 기존 정책을 적용한다.
         - **correctness 렌즈 Low**: **저비용 AND 명백히 이득 AND 현재 change scope 내** 세 조건을 모두 만족하는 것만 fix하고, 나머지는 마감 요약에 advisory로 남긴다. `현재 change scope 내`가 scope 확장을 막는 load-bearing 조건이다.
         - **simplicity 렌즈 Low**(주관적 취향): fix 대상이 아니며 advisory로만 남긴다.

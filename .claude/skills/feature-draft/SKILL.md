@@ -94,6 +94,7 @@ description: This skill should be used when the user asks to "feature draft", "d
 - **품질 게이트**: 작성 후 producer인 메인 루프가 `plan-review`를 호출해 finding을 직접 반영한다 — 각 호출은 **단일 패스**이고 reviewer와 사용자는 재호출·fix를 소유하지 않는다.
   - **gate 1 → fix 1** (항상): Critical/High/Medium은 반영하고, Low는 **저비용 AND 명백히 이득 AND 현재 draft scope 내** 셋을 모두 만족할 때만 반영하며 나머지는 advisory로 남긴다 (`현재 draft scope 내`가 scope 확장을 막는 load-bearing 조건).
   - **gate 2 → fix 2** (조건부): fix 전 raw 합산 finding이 Low 제외 **Critical+High ≥ 3 또는 Medium ≥ 5**면 같은 게이트를 한 번 더 호출하고 같은 fix 정책을 적용한다. 이후 gate 2 finding이 인용한 평가조건을 final draft에서 재확인하고 evidence와 미해소 finding을 남긴다. gate 3은 없다 — gate 2도 임계값이면 마감에서 후속 `plan-review` 1회 수동 실행을 권고한다.
+  - **루프 지속**: 게이트 반환은 중간 산출물이며 사용자 입력 대기 지점이 아니다 — 반환 직후 같은 흐름에서 fix를 시작하고, gate 2 조건 판정과 실행도 묻지 않고 이어서 수행한 뒤 마감 메시지로만 닫는다.
   - 마감 메시지는 실행한 게이트의 severity·fix·검증 결과를 호출별로 구분해 보고한다.
 - **실행 인계**: `implementation` 스킬(메인 루프 직접 RED→GREEN 구현)로 인계한다. 구현 작성을 여러 갈래로 나눠야 할 규모로 드러나면 분할 규칙으로 돌아간다.
 
