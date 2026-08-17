@@ -19,12 +19,13 @@ description: "Use this skill when the user asks to \"init ralph\", \"ralph loop\
 
 > 프로세스 완료 후 아래 기준을 자체 검증한다. 미충족 항목은 해당 단계로 돌아가 수정한다.
 
-- [ ] AC1: `ralph/` 디렉토리에 6개 파일 생성 (`config.sh`, `PROMPT.md`, `run.sh`, `state.md`, `CHECKS.md`, `decisions.md`)
-- [ ] AC2: `PROMPT.md`에 7개 phase(또는 커스터마이즈된 등가 집합) 각각의 목적·실행 명령·전환 조건이 기술되고, `run.sh`의 `VALID_PHASES`가 그 집합과 일치한다
-- [ ] AC3: `run.sh`가 `bash -n`을 통과하고 실행 권한을 가진다
+- [ ] AC1: `ralph/` 디렉토리에 7개 파일 생성 (`config.sh`, `verify.sh`, `PROMPT.md`, `run.sh`, `state.md`, `CHECKS.md`, `decisions.md`)
+- [ ] AC2: `PROMPT.md`에 7개 phase(또는 커스터마이즈된 등가 집합) 각각의 목적·실행 명령·전환 조건이 기술되고, `run.sh`의 `VALID_PHASES`가 그 집합과 일치하며 `ADJUST_PHASE`가 그 집합의 phase다
+- [ ] AC3: `run.sh`와 `verify.sh`가 `bash -n`을 통과하고 실행 권한을 가진다
 - [ ] AC4: Step 8의 검사 범위에 미충전 `<...>` 슬롯이 0건이다
 - [ ] AC5: `CHECKS.md`의 모든 항목 통과
-- [ ] AC6: `PROMPT.md`가 `final_report.md`를 근거 기반의 보고서 형태로 작성하도록 강제한다
+- [ ] AC6: `PROMPT.md`가 에스컬레이션 종료를 포함한 모든 DONE 경로에서 `final_report.md`를 근거 기반의 보고서 형태로 작성하도록 강제한다
+- [ ] AC7: `run.sh`의 DONE 게이트가 `final_report.md`의 `Final status:`를 확인하고, PASS 주장 시 `bash ralph/verify.sh` exit 0을 추가 요구한다
 
 ## Hard Rules
 
@@ -66,7 +67,7 @@ State transitions:
 
 > Phase 이름은 프로젝트에 맞게 변경 가능 (예: ML은 TRAINING/VALIDATING, 테스트는 TESTING/VERIFYING).
 
-**Escalation**: 같은 원인 3회 실패 → DONE + "STUCK" 메시지. 진단 불가 → DONE + "UNKNOWN ERROR". 외부 조치 필요 → DONE + 설명.
+**Escalation**: 같은 원인 3회 실패 → `Final status: STUCK` 리포트 작성 후 DONE. 진단 불가 → 같은 방식으로 `UNKNOWN ERROR`. 외부 조치 필요 → 리포트에 설명 후 DONE. 모든 DONE 경로는 final_report.md를 남긴다 — run.sh의 DONE 게이트가 리포트 없는 DONE을 reject한다.
 
 ---
 
@@ -117,9 +118,18 @@ Project: <project name>
 - [ ] `LLM_TIMEOUT_SECONDS`, `MAX_LLM_FAILURES`, `MAX_RUNTIME_MINUTES`, `MAX_ITERATIONS` defined
 - [ ] PROMPT.md에서 참조하는 모든 변수가 정의됨
 
+## verify.sh
+- [ ] Step 2에서 확정한 검증 명령이 그대로 들어 있고 exit code로 판정한다
+- [ ] `bash -n ralph/verify.sh` passes; file is executable
+- [ ] 미충전 슬롯 없음
+
 ## PROMPT.md
 - [ ] Anti-recursion warning present
-- [ ] Success criteria are machine-checkable (command + pass condition)
+- [ ] `_sdd/` 수정 금지 명시
+- [ ] Success criteria가 `bash ralph/verify.sh` exit 0을 판정의 단일 소스로 참조
+- [ ] Self-correction 편집 금지 구역(Success Criteria·Escalation·verify.sh) 명시
+- [ ] action.sh Rules에 장기 실행 in-run 조기 종료 가드 규칙 존재
+- [ ] Escalation 경로도 `Final status:`를 담은 final_report.md 작성 후 DONE 전환하도록 명시
 - [ ] SMOKE_TEST phase with repeat gate (ADJUSTING → SMOKE_TEST)
 - [ ] Core phases present
 - [ ] Main execution command using config.sh variables
@@ -133,7 +143,8 @@ Project: <project name>
 - [ ] claude CLI invocation present
 - [ ] `--reset` flag, `LLM_TIMEOUT_SECONDS`, DONE detection present
 - [ ] DONE detection runs after the action.sh execution block
-- [ ] `VALID_PHASES` matches the phase names defined in PROMPT.md
+- [ ] DONE 게이트: `Final status:` 확인 + PASS 주장 시 `bash ralph/verify.sh` exit 0 요구, reject 시 `ADJUST_PHASE`로 복귀
+- [ ] `VALID_PHASES` matches the phase names defined in PROMPT.md; `ADJUST_PHASE` is one of them
 - [ ] `bash -n ralph/run.sh` passes; file is executable
 
 ## state.md
@@ -143,7 +154,7 @@ Project: <project name>
 - [ ] File exists with a header and one initial entry
 ```
 
-### Step 4: Generate `ralph/config.sh`
+### Step 4: Generate `ralph/config.sh` and `ralph/verify.sh`
 
 **고정 변수** (항상 포함):
 ```bash
@@ -167,6 +178,17 @@ MAX_ITERATIONS=200       # runaway backstop (fast no-progress spin burns tokens,
 - 카테고리별 주석 헤더로 그룹화
 - 프로젝트가 실제 사용하는 변수만 포함
 
+**`ralph/verify.sh`**: Step 2 hard gate에서 확정한 검증 명령을 고정 실행 파일로 굳힌다. 루프의 성공 판정 단일 소스이며, 루프 LLM은 이 파일을 편집하지 않는다(PROMPT.md 편집 금지 구역이 강제). 생성 후 `chmod +x ralph/verify.sh`.
+
+```bash
+#!/usr/bin/env bash
+# Ralph verification recipe -- fixed at init. The loop LLM must NOT edit this file.
+# Exit 0 = success criteria met. Non-zero = not met.
+set -euo pipefail
+cd "$(dirname "$0")/.."
+<Step 2에서 확정한 검증 명령 + 판정 조건 (exit code 또는 출력 패턴 grep). 여러 조건이면 순차 나열 -- set -e가 첫 실패에서 non-zero로 끝낸다>
+```
+
 ### Step 5: Generate `ralph/PROMPT.md`
 
 State Machine Reference 섹션을 프로젝트에 맞게 변환하여, 아래 골격대로 `ralph/PROMPT.md`를 생성한다. 섹션 구조는 고정이고 `<...>`만 프로젝트별로 채운다.
@@ -174,7 +196,7 @@ State Machine Reference 섹션을 프로젝트에 맞게 변환하여, 아래 �
 ```markdown
 # Ralph Loop Instructions — <project name>
 
-IMPORTANT: Do NOT invoke any skills, modes, or slash commands. Do NOT use the Skill tool. You are inside a standalone automation loop — not an interactive session.
+IMPORTANT: Do NOT invoke any skills, modes, or slash commands. Do NOT use the Skill tool. You are inside a standalone automation loop — not an interactive session. `_sdd/`는 읽기 전용이다 — 수정 금지.
 
 ## Project Context
 - Config: `ralph/config.sh` — 모든 실행 명령은 이 변수를 사용한다 (하드코딩 금지)
@@ -182,12 +204,14 @@ IMPORTANT: Do NOT invoke any skills, modes, or slash commands. Do NOT use the Sk
 - Results: `ralph/results/`
 
 ## Success Criteria
-- <Step 2 hard gate에서 확정한 기계 검증 가능한 명령어 + 판정 조건 (exit code / 출력 패턴)>
+- 판정의 단일 소스는 `bash ralph/verify.sh`다 — exit 0이면 충족. <verify.sh가 검증하는 내용 1줄 요약>
+- `ralph/verify.sh`는 init 시점에 고정된 검증 레시피다 — 편집 금지.
 
 ## Phases
 <SETUP / SMOKE_TEST / EXECUTING / CHECKING / ANALYZING / ADJUSTING / DONE 를 프로젝트에 맞게 변환.
 각 phase마다: 목적, 실행 명령(config.sh 변수 사용), 전환 조건.
-SMOKE_TEST 실패 시 ADJUSTING → SMOKE_TEST repeat gate를 명시한다.>
+SMOKE_TEST 실패 시 ADJUSTING → SMOKE_TEST repeat gate를 명시한다.
+CHECKING 계열 phase의 검증 명령은 `bash ralph/verify.sh`를 포함한다.>
 
 ## Iteration Protocol
 1. `ralph/config.sh` 읽기
@@ -206,14 +230,16 @@ SMOKE_TEST 실패 시 ADJUSTING → SMOKE_TEST repeat gate를 명시한다.>
 - `set -euo pipefail`, `source ralph/config.sh`, `mkdir -p ralph/results`, `export PYTHONUNBUFFERED=1`
 - 출력은 `2>&1 | tee ralph/results/<name>.log`로 기록한다
 - 검증 단계(CHECKING 계열)의 action.sh는 다음 iteration에서 읽을 짧은 요약을 `ralph/results/verification_summary.md`에 남긴다 — 판정 결과, 핵심 수치, 실패 시 에러 시그니처만 (전체 로그 복사 금지)
+- 장기 실행(수십 분 이상) 명령은 로그를 주기 감시해 발산·NaN·무진척 시 프로세스를 조기 종료하는 가드를 action.sh 안에 포함한다 — 실패를 수 시간 뒤가 아니라 초기에 감지한다
 
 ## Known Errors
 <`uname -s`로 플랫폼 감지. Darwin이면 E1(macOS timeout 패턴) 포함. Step 1에서 발견한 프로젝트 고유 에러 추가>
 
 ## Escalation & Self-correction
-- 같은 원인 3회 실패 → phase를 DONE으로 바꾸고 "STUCK" + 사유 기록
-- 진단 불가 → DONE + "UNKNOWN ERROR". 외부 조치 필요 → DONE + 설명
-- 같은 원인 2회 이상 실패 시 PROMPT.md 자체 targeted edit 허용
+- 같은 원인 3회 실패 → `Final status: STUCK` + 사유를 담은 final_report.md를 작성한 뒤 phase를 DONE으로 바꾼다
+- 진단 불가 → 같은 방식으로 `Final status: UNKNOWN ERROR`. 외부 조치 필요 → 리포트에 설명 후 DONE
+- run.sh의 DONE 게이트: final_report.md가 없거나 `Final status:`가 없으면, 또는 `Final status: PASS`인데 `bash ralph/verify.sh`가 실패하면 DONE은 reject되고 phase가 되돌아간다
+- 같은 원인 2회 이상 실패 시 PROMPT.md 자체 targeted edit 허용 — 단 **Success Criteria·Escalation & Self-correction 섹션과 `ralph/verify.sh`는 편집 금지**다. 성공 기준이 잘못됐다고 판단되면 고치지 말고 `Final status: STUCK`으로 에스컬레이션하고 사유를 리포트에 남긴다
 
 ## Final Report (ANALYZING phase)
 `verification_summary.md`, `decisions.md`, 핵심 실행 로그, `state.md`를 근거로 `ralph/results/final_report.md`를 작성한다. 결론 우선(conclusion-first)으로 쓰고, 테스트 로그 마지막 줄 복사나 한 줄 bullet 나열로 끝내지 않는다. 구조:
@@ -236,7 +262,7 @@ SMOKE_TEST 실패 시 ADJUSTING → SMOKE_TEST repeat gate를 명시한다.>
 
 ### Step 6: Generate `ralph/run.sh`
 
-아래 템플릿을 **거의 그대로** `ralph/run.sh`에 복사한다. `chmod +x ralph/run.sh` 실행. 허용 수정은 하나뿐이다 — Step 5에서 phase 이름을 커스터마이즈했으면 `VALID_PHASES`를 PROMPT.md에 정의한 phase 집합과 동일하게 맞춘다 (불일치 시 `validate_state_file`이 정상 상태를 reject한다).
+아래 템플릿을 **거의 그대로** `ralph/run.sh`에 복사한다. `chmod +x ralph/run.sh` 실행. 허용 수정은 둘뿐이다 — Step 5에서 phase 이름을 커스터마이즈했으면 `VALID_PHASES`를 PROMPT.md에 정의한 phase 집합과 동일하게 맞추고(불일치 시 `validate_state_file`이 정상 상태를 reject한다), `ADJUST_PHASE`를 그 집합의 진단·수정 phase 이름으로 맞춘다.
 
 ```bash
 #!/usr/bin/env bash
@@ -452,6 +478,20 @@ PY
 }
 
 VALID_PHASES="SETUP SMOKE_TEST EXECUTING CHECKING ANALYZING ADJUSTING DONE"
+ADJUST_PHASE="ADJUSTING"  # fallback phase when a DONE claim is rejected by the gate below
+
+case " ${VALID_PHASES} " in
+  *" ${ADJUST_PHASE} "*) ;;
+  *) echo "[ralph] ERROR: ADJUST_PHASE '${ADJUST_PHASE}' is not in VALID_PHASES." >&2; exit 1 ;;
+esac
+
+set_state_note() {
+  if grep -q '^notes:' ralph/state.md 2>/dev/null; then
+    sed -i.bak "s/^notes:.*/notes: $1/" ralph/state.md && rm -f ralph/state.md.bak
+  else
+    echo "notes: $1" >> ralph/state.md
+  fi
+}
 
 validate_state_file() {
   local state_file="ralph/state.md"
@@ -496,11 +536,7 @@ while :; do
   if [ -n "${LIMIT_MSG}" ]; then
     echo "[ralph] Stopping: ${LIMIT_MSG}."
     echo "[ralph] phase is left untouched -- raise the limit in ralph/config.sh and rerun to continue."
-    if grep -q '^notes:' ralph/state.md 2>/dev/null; then
-      sed -i.bak "s/^notes:.*/notes: Stopped by run.sh -- ${LIMIT_MSG}./" ralph/state.md && rm -f ralph/state.md.bak
-    else
-      echo "notes: Stopped by run.sh -- ${LIMIT_MSG}." >> ralph/state.md
-    fi
+    set_state_note "Stopped by run.sh -- ${LIMIT_MSG}."
     exit 1
   fi
 
@@ -627,11 +663,32 @@ for line in sys.stdin:
   echo ""
   echo "--- Iteration #${ITERATION} complete ---"
 
-  # Check if state is DONE (LLM decided we're finished). Checked after the action
-  # so a DONE-transitioning iteration still gets its action.sh executed.
+  # DONE gate. Checked after the action so a DONE-transitioning iteration still
+  # gets its action.sh executed. The phase string alone is not enough: a final
+  # report must exist, and a claimed PASS must survive the fixed verify recipe.
   if grep -Eq '^phase:[[:space:]]*DONE[[:space:]]*$' ralph/state.md 2>/dev/null; then
-    echo "[ralph] State is DONE. Exiting loop."
-    break
+    REPORT="ralph/results/final_report.md"
+    REJECT_REASON=""
+    if [ ! -s "${REPORT}" ] || ! grep -q 'Final status:' "${REPORT}"; then
+      REJECT_REASON="final_report.md missing or lacks 'Final status:'"
+    elif grep -q 'Final status:.*PASS' "${REPORT}"; then
+      set +e
+      bash ralph/verify.sh
+      VERIFY_EXIT=$?
+      set -e
+      if [ ${VERIFY_EXIT} -ne 0 ]; then
+        REJECT_REASON="Final status claims PASS but verify.sh failed (exit ${VERIFY_EXIT})"
+      fi
+    fi
+
+    if [ -n "${REJECT_REASON}" ]; then
+      echo "[ralph] DONE rejected: ${REJECT_REASON}. Reverting phase to ${ADJUST_PHASE}."
+      sed -i.bak "s/^phase:.*/phase: ${ADJUST_PHASE}/" ralph/state.md && rm -f ralph/state.md.bak
+      set_state_note "DONE rejected by run.sh -- ${REJECT_REASON}."
+    else
+      echo "[ralph] State is DONE (final report present, verification ok). Exiting loop."
+      break
+    fi
   fi
 
   sleep 3
@@ -663,9 +720,9 @@ Append-only. One entry per iteration: what was decided and why.
 
 ### Step 8: Verify Against CHECKS.md and Summarize
 
-1. **문법 검사**: `bash -n ralph/run.sh`와 `bash -n ralph/config.sh`를 실행한다. 실패하면 해당 파일을 수정한 후 재실행한다 (최대 2회).
+1. **문법 검사**: `bash -n ralph/run.sh`·`bash -n ralph/config.sh`·`bash -n ralph/verify.sh`를 실행한다. 실패하면 해당 파일을 수정한 후 재실행한다 (최대 2회).
 2. **미충전 슬롯 검사**: 아래 범위에 `<...>` 형태의 미충전 슬롯이 0건인지 확인한다.
-   - `ralph/config.sh`·`ralph/run.sh`·`ralph/state.md`·`ralph/CHECKS.md`: 파일 전체를 `grep -nE '<[^>]+>'`
+   - `ralph/config.sh`·`ralph/verify.sh`·`ralph/run.sh`·`ralph/state.md`·`ralph/CHECKS.md`: 파일 전체를 `grep -nE '<[^>]+>'`
    - `ralph/PROMPT.md`: **문서 시작부터 `## Iteration Protocol` 직전까지**(H1 제목의 `<project name>` 포함) + `## Known Errors` 섹션에 같은 패턴을 적용한다. 그 밖의 `<...>`(`## action.sh Rules`의 `<name>.log`, `## Final Report` 이하)는 루프 LLM을 향한 서식 지시이므로 검사하지 않는다.
 3. `ralph/CHECKS.md`의 각 항목을 `Grep`/`Read`로 검증한다. 실패 항목은 해당 파일을 수정한 후 재검증 (최대 2회).
 4. 검증 완료 후 `CHECKS.md`의 `[ ]`를 `[x]` (통과) 또는 `[!]` (수정 후 통과)로 업데이트한다.
@@ -677,6 +734,7 @@ Ralph loop initialized (TDD verified)!
 Files created:
   ralph/CHECKS.md    — Acceptance criteria (verified)
   ralph/config.sh    — Process configuration (edit before running)
+  ralph/verify.sh    — Fixed verification recipe (single source of pass/fail)
   ralph/PROMPT.md    — LLM instructions for the automation loop
   ralph/run.sh       — Loop controller script
   ralph/state.md     — Initial state (SETUP, iteration 0)
@@ -689,6 +747,7 @@ Next steps:
   1. Review and edit ralph/config.sh
   2. Run: bash ralph/run.sh
   3. Fresh restart: bash ralph/run.sh --reset
+  4. 종료 후 결과 확인: ralph/results/final_report.md (Final status + evidence)
 ```
 
 ## Error Handling
