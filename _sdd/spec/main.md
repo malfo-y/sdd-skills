@@ -2,7 +2,7 @@
 
 > Markdown 기반 skill bundle로 AI 에이전트의 Spec-Driven Development 워크플로우를 Claude Code와 Codex에서 공통 계약으로 실행한다.
 
-**Spec Version**: 4.23.0
+**Spec Version**: 4.24.0
 **Last Updated**: 2026-08-18
 **Status**: Approved
 **Canonical Role**: current thin global spec
@@ -40,11 +40,11 @@ SDD Skills는 이 문제를 `SKILL.md = 실행 가능한 프롬프트`라는 관
 
 ### In Scope
 
-- `.claude/skills/`, `.codex/skills/`의 사용자 진입점과 workflow contract
+- `.claude/skills/`, `plugins/sdd-skills-codex/skills/`의 사용자 진입점과 workflow contract
 - 스킬 `references/`의 재사용 계약 문서 (예: simplicity 계약 `implementation-review/references/simplicity-contract.md`)
 - global spec, temporary spec, `_sdd/` artifact layout, decision log, changelog
 - README와 `docs/`의 개념/정의/워크플로우/가이드 문서
-- Claude plugin 구조와 Codex bundle/config 배포 규약
+- Claude plugin 구조(`.claude-plugin/`, 마켓 `sdd-skills`)와 Codex plugin 구조(`.agents/plugins/marketplace.json` + `plugins/sdd-skills-codex/`, 마켓·플러그인 `sdd-skills-codex` — Codex가 `.claude-plugin`을 legacy marketplace로도 읽으므로 이름을 분리) 및 bundle/config 배포 규약
 
 ### Non-goals
 

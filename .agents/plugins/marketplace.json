@@ -1,0 +1,20 @@
+{
+  "name": "sdd-skills-codex",
+  "interface": {
+    "displayName": "SDD Skills for Codex"
+  },
+  "plugins": [
+    {
+      "name": "sdd-skills-codex",
+      "source": {
+        "source": "local",
+        "path": "./plugins/sdd-skills-codex"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}

@@ -9,5 +9,8 @@ _sdd/implementation/*
 _sdd/pipeline/
 _sdd/pr/*
 
-.agents
+.agents/*
+!.agents/plugins/
+.agents/plugins/*
+!.agents/plugins/marketplace.json
 .sdd-workbench

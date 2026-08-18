@@ -19,7 +19,7 @@ import zipfile
 
 DEFAULT_REF = "main"
 DEFAULT_REPO = "malfo-y/sdd-skills"
-DEFAULT_SKILLS_ROOT = ".codex/skills"
+DEFAULT_SKILLS_ROOT = "plugins/sdd-skills-codex/skills"
 DEFAULT_AGENTS_ROOT = ".codex/agents"
 MANIFEST_NAME = ".sdd-skill-bundle-manifest.json"
 # "sdd" substring도 "_sdd"를 포섭

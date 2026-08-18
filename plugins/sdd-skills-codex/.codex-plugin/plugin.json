@@ -1,0 +1,26 @@
+{
+  "name": "sdd-skills-codex",
+  "description": "SDD (Spec-Driven Development) workflow skills for Codex — 스펙 생성/관리, 구현 계획/실행, PR 리뷰, 토론",
+  "version": "1.0.0",
+  "author": {
+    "name": "malfo-y",
+    "email": "malfo.y@kakaocorp.com"
+  },
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "SDD Skills",
+    "shortDescription": "Spec-driven development workflows for Codex",
+    "longDescription": "Create and maintain specifications, plan changes, implement them, and review the results with reusable SDD workflow skills.",
+    "developerName": "malfo-y",
+    "category": "Productivity",
+    "capabilities": [
+      "Interactive",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "Create an SDD spec for this repository.",
+      "Plan and implement this change using SDD.",
+      "Review this implementation against its spec."
+    ]
+  }
+}

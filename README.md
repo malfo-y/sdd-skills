@@ -2,7 +2,7 @@
 
 Spec-Driven Development (SDD) workflow skills for Claude Code and Codex.
 
-Codex bundle: 19 skills. Claude bundle: 21 skills (`git`·`second-opinion` 추가). custom agent는 없다 — `plan-review`·`implementation-review`·`pr-review`의 correctness 리뷰는 메인 루프가 직접 수행하고, simplicity 리뷰는 스킬 내장 계약(`implementation-review/references/simplicity-contract.md`)을 프롬프트로 주입한 범용 subagent가 수행한다. 그래서 양 번들 모두 skills-only로 배포된다.
+Codex bundle: 19 skills. Claude bundle: 21 skills (`git`·`second-opinion` 추가). custom agent는 없다 — `plan-review`·`implementation-review`·`pr-review`의 correctness 리뷰는 메인 루프가 직접 수행하고, simplicity 리뷰는 스킬 내장 계약(`implementation-review/references/simplicity-contract.md`)을 프롬프트로 주입한 범용 subagent가 수행한다. 그래서 양 번들 모두 skills-only로 배포된다. Claude는 `.claude-plugin/marketplace.json`(`sdd-skills`), Codex는 `.agents/plugins/marketplace.json`(`sdd-skills-codex` — Codex가 `.claude-plugin`을 legacy marketplace로도 읽으므로 이름을 분리)으로 각각 플러그인 배포한다. Codex 스킬 소스는 `plugins/sdd-skills-codex/skills/`다.
 
 ## Documentation
 
@@ -32,9 +32,27 @@ Codex bundle: 19 skills. Claude bundle: 21 skills (`git`·`second-opinion` 추�
 
 ### Codex
 
-#### Option A: 번들 설치 스크립트 사용 (권장)
+#### Option A: GitHub 플러그인 설치 (권장)
 
-`.codex/skills/`를 한 번에 설치하는 번들 스크립트다. 스크립트가 GitHub에서 직접 받아 설치하므로 **clone 없이 한 줄로 실행**할 수 있다(표준 라이브러리만 사용해 별도 의존성 설치가 필요 없다).
+GitHub 저장소를 Codex marketplace로 등록한 뒤 네이티브 플러그인을 설치한다.
+
+```bash
+codex plugin marketplace add malfo-y/sdd-skills
+codex plugin add sdd-skills-codex@sdd-skills-codex
+```
+
+설치 상태는 아래 명령으로 확인할 수 있다.
+
+```bash
+codex plugin marketplace list
+codex plugin list
+```
+
+이 플러그인은 skills-only다. 설치만으로 lifecycle 훅이 활성화되지 않으며, 훅은 `spec-create`·`spec-upgrade` 실행 시 대상 저장소에 project-local로 설치한다. 설치 후에는 Codex를 재시작하거나 새 task를 열어 스킬을 로드한다.
+
+#### Option B: 번들 설치 스크립트 사용 (fallback)
+
+`codex plugin` 명령을 사용할 수 없는 환경에서는 `plugins/sdd-skills-codex/skills/`를 한 번에 설치하는 번들 스크립트를 사용한다. 스크립트가 GitHub에서 직접 받아 설치하므로 **clone 없이 한 줄로 실행**할 수 있다(표준 라이브러리만 사용해 별도 의존성 설치가 필요 없다).
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/malfo-y/sdd-skills/main/tools/install-codex-skill-bundle.py | python3 -
@@ -79,33 +97,9 @@ python3 tools/install-codex-skill-bundle.py --dest ~/.codex
 
 설치 후에는 Codex를 재시작해야 새 스킬을 인식한다.
 
-#### Option B: LobeHub Skills Marketplace 경유 설치
-
-1. Node.js 설치 (`npx` 필요):
-
-```bash
-brew install node
-```
-
-2. Codex에 아래 프롬프트 입력:
-
-```text
-Curl https://lobehub.com/skills/plurigrid-asi-skill-installer/skill.md, then follow the instructions to set up LobeHub Skills Marketplace and install the skill. Once installed, read the SKILL.md file in the installed directory and follow its instructions to complete the task.
-```
-
-3. Codex 재시작
-
-4. Codex에 아래 프롬프트 입력:
-
-```text
-https://github.com/malfo-y/sdd-skills/tree/main/.codex/skills 에 있는 스킬들을 설치해 줘
-```
-
-5. Codex 재시작
-
 #### Option C: 수동 설치
 
-`.codex/skills/`를 `$CODEX_HOME/skills/`에 복사한다. (`$CODEX_HOME` 기본값: `~/.codex`)
+`plugins/sdd-skills-codex/skills/`를 `$CODEX_HOME/skills/`에 복사한다. (`$CODEX_HOME` 기본값: `~/.codex`)
 
 #### Codex discussion 스킬 사용 조건
 
