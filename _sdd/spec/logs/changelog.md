@@ -847,3 +847,7 @@
 ## v4.22.0 (2026-08-18)
 
 - custom agent 전면 폐지(0종) — `simplicity-review-agent`를 `implementation-review/references/simplicity-contract.md`(미러 2벌)로 이동하고, `implementation-review`·`pr-review`가 계약 전문을 verbatim 주입한 범용 subagent(claude `general-purpose`·codex `explorer`)를 dispatch한다. 동기는 Codex 플러그인/Agent Plugins 1.0의 custom agent 비번들 제약 — 양 번들 skills-only화. `.claude/agents/`·`.codex/agents/` 삭제, marketplace agents 배열 제거, README·installer skills-only 전환. main.md 관련 불릿(2-렌즈·잔존 agent·canonical invocation·비교표·Planned 관측)·components.md 두 리뷰 행·Platform Notes·코드 지도 갱신.
+
+## v4.23.0 (2026-08-18)
+
+- spec-rewrite: main.md 다이어트 — §2 Guardrails 거대 불릿(3~4KB급)을 결정+가드+포인터로 압축(폐지 구조의 도입~폐지 서사·실측 수치는 decision_log 포인터로 이관), §2↔§3 이중 서술 4주제(게이트·test-first·2-렌즈·plan-review) 해소(결정 캐노니컬=§3 비교표, 집행 문면=§2), 스킬 계약 상세 열거(승격 트리거·ledger 필드·훅 설치 상세)를 소유자 포인터로 대체. 재제안 금지 조항·결정·Why는 전량 보존. 부수 drift 수정: custom agent 폐지(v4.22.0) 미반영 잔존 표면(agent layer 어휘·wrapper-backed 서술·실행 분리 행·핵심 설계 layer 목록·parity 제약) 갱신. 80KB → 60KB, 2500B+ 줄 0개.

@@ -1,53 +1,37 @@
-# Spec Rewrite Report — Scoped Guardrails Legibility Polish
+# Rewrite Report — main.md 다이어트 (2026-08-18, v4.23.0)
 
-**Date**: 2026-06-12
-**Target**: `_sdd/spec/main.md` §2 Scope / Non-goals / Guardrails (Guardrails bullet legibility only)
-**Type**: scoped polish (NOT full rewrite)
-**Plan**: `_sdd/spec/logs/spec-rewrite-plan.md`
+## Metric Scorecard (전 → 후)
 
-## Diagnosis Summary (Step 1)
-직전 review→update-done→upgrade로 spec은 이미 thin·canonical 정합. 4 공통축 + rewrite 고유 4축 모두 PASS. 유일 결함은 §2 Guardrails 일부 bullet이 한 문장에 다중 결정을 담은 run-on이라 legibility만 저하. → full rewrite 회피, scoped polish만 수행 (Error Handling "잘 구조화된 spec" 경로).
-
-## Metric Scorecard
-
-| 축 | Before | After | 비고 |
-|----|--------|-------|------|
-| Thinness | PASS | PASS | bullet 수·내용 동일, 줄바꿈만 추가. 비대화 없음 |
-| Decision-bearing truth | PASS | PASS | 모든 절 §2 body 잔류. log 이동 0 |
-| Anti-duplication | PASS | PASS | 신규 중복 0 |
-| Navigation + surface fit | PASS | PASS | 동일 surface 내 가독성만 ↑ |
-| Component Separation | PASS | PASS | 미변경 |
-| Findability | PASS | PASS | 미변경 |
-| Boundary Clarity | PASS | PASS | 미변경 |
-| Canonical Fit | PASS | PASS+ | run-on 6개 → lead+sub 구조로 결정 경계 명료화 |
+| 축 | 전 | 후 | 근거 |
+|---|---|---|---|
+| Thinness | 2/5 | 4/5 | 80KB → 61.7KB(-23%), 2500B 초과 줄 7 → 0 |
+| Decision-bearing truth | 4/5 | 4/5 | 결정·가드·재제안 금지 조항 전량 보존, 서사만 decision_log 포인터화 |
+| Anti-duplication | 2/5 | 4/5 | §2↔§3 이중 서술 4주제 해소, 훅 설치·ledger·승격 트리거 상세는 소유자 포인터로 |
+| Navigation + surface fit | 3/5 | 4/5 | 불릿당 규모 축소로 §2 스캔 가능성 회복, 인덱스·Supporting Surfaces 불변 |
+| Component Separation | 4/5 | 4/5 | 파일 구조 불변 |
+| Findability | 2/5 | 4/5 | 거대 불릿 해체 |
+| Boundary Clarity | 4/5 | 4/5 | 불변 |
+| Canonical Fit | 2/5 | 4/5 | feature-level 상세가 SKILL/components/reference 포인터로 하강 |
 
 ## Canonical-fit 평가
-global spec은 여전히 `개념 + 경계 + 결정` thin 문서. polish는 결정의 가독성만 높였고 feature-level usage/contract/inventory 유입 없음. Hard Rule 5(재비대화 금지) 준수 — 총 정보량 동일, 표현 구조만 개선.
 
-## Pruning / Move / Split 결과
-- Pruning: 없음 (내용 삭제 0)
-- Move(body→log): 없음 (rationale 전량 body 잔류, Hard Rule 1 비해당)
-- Split: 6개 run-on bullet을 lead 문장 + nested sub-bullet으로 분할
-  - L59 → lead + 3 sub (orchestrator형 / wrapper형 / producer orchestrator)
-  - L62(현 L65) → lead + 2 sub (thin entrypoint / 대화입력 forwarding)
-  - L63(현 L68) → lead + 3 sub (producer 자체소유 / 공통 loop 정책 / fix=재dispatch)
-  - L64(현 L72) → lead + 1 sub (미통과 reject/regenerate)
-  - L65(현 L74) → lead + 2 sub (kebab-case canonical / legacy alias reject)
-  - L68(현 L79) → lead + 3 sub (Checkpoint boundary / adaptive final review / missing=schema violation)
+- global spec은 `개념 + 경계 + 결정` 중심으로 복원됐다. §2 = 집행 문면(행동 규칙+가드), §3 비교표 = 결정+이유 캐노니컬로 역할 분리.
+- 폐지 구조 서사는 "폐지 + 근거 1~2문장 + 재제안 금지 + decision_log 날짜 포인터" 형태로 통일. 압축 전 전 서사의 decision_log entry 실재를 grep으로 확인(2026-08-12/13/14/15/18, 2026-07-22) — 신규 이동 entry 필요 없음.
 
-## Rationale Preservation
-원본 절 ↔ 결과 sub-bullet 1:1 대조 검증 통과. `code` span(`feature-draft`, `Checkpoint`, `critical=high=medium=0`, agent 이름 등)·inline 링크·`orchestrator-contract.md §6` citation 전부 유지. component-level `Why`/`Source`는 §2 대상 아님(미변경).
+## Plan 대비 deviation
 
-## Body vs Log Placement
-이 작업은 legibility 재배치이지 pruning이 아니므로 decision-bearing 내용 전량 §2 body 잔류가 의도된 결과. log/report로 내린 rationale 없음. 메타 메모(scorecard/deviation)만 본 report에 기록.
+1. **목표 규모 미달**: plan 40±10KB 대비 61.7KB에서 중지 — 잔여 질량이 결정·가드 본문이라 추가 압축은 rationale 손실 위험(plan의 "무리한 추가 압축 금지" 원칙 우선). 의도적 중지.
+2. **drift 수정 추가 수행**(plan 밖): 당일 v4.22.0(custom agent 폐지)이 못 미친 stale 표면 5곳(§1 agent layer 어휘·wrapper-backed guardrail·§3 실행 분리 행·핵심 설계 layer 목록·parity 제약)을 현재 truth로 갱신 — 창작이 아니라 기존 결정(v4.22.0)의 반영.
+3. §2↔§3 dedup 4주제 중 override 주제는 §2=런타임 문법, §3=결정으로 이미 역할이 갈려 있어 무변경(중복 아님 판정).
 
-## 링크/경로 유효성
-§2 내 링크 미변경(`docs/SDD_SPEC_DEFINITION.md`, `docs/SDD_WORKFLOW.md`, `../env.md`) — edit 대상 bullet 밖이라 깨짐 없음.
+## 보존 검증
 
-## Plan 대비 Deviation
-- 계획된 6개 bullet만 수정, 그 외 §2/§3/타 파일 무수정 — 계획 일치.
-- Minor: L68→현 L81 분할 시 "처리한다 (1개" 앞 공백 1칸 제거("처리한다(1개")로 정규화. 의미 무관 표기 정리.
-- 그 외 deviation 없음.
+- 재제안 금지 조항 6건 전량 잔존 확인(grep): 렌즈/task 재분할·수집 agent 재도입·Claim Manifest 축·사실 선고정 축·규모 판정 reviewer 복귀·2-렌즈.
+- Source·Why·inline citation·링크 무결(스크립트 검증 broken links 0).
+- append-only 검증: decision_log·changelog 삭제 줄 0.
 
-## Unresolved Warning
-- 없음. missing canonical core 없음(자동 생성 비해당). ambiguity 없음.
+## Unresolved / Warnings
+
+- components.md row 29(implementation-review)가 3KB+ — "상세 reference" 역할 내이나 행 단위 가독 한계. 차기 검토 후보.
+- usage-guide.md 미진단 — 차기.
+- 목표 밴드(40±10KB) 대비 잔여 20KB는 §3 비교표(23행)와 §2 잔여 규칙이 보유 — 추가 다이어트는 결정 자체의 하강(예: 비교표 행의 supporting surface 분리)이 필요해 별도 판단 사안.
