@@ -40,7 +40,7 @@ Claude: PR 리뷰를 시작합니다.
 Claude:
 ## Simplicity Dispatch + 직접 Correctness
 
-Agent(subagent_type="sdd-skills:simplicity-review-agent") → clarity 렌즈 dispatch
+Agent(subagent_type="general-purpose") → simplicity 계약(reference 전문 verbatim) + PR Review Input을 prompt로 전달해 clarity 렌즈 dispatch
 (agent가 도는 동안 메인 루프가 correctness 리뷰를 직접 수행)
 
 두 렌즈 결과 요약:

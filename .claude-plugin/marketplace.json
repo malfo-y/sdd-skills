@@ -36,9 +36,6 @@
         "./.claude/skills/sdd-autopilot",
         "./.claude/skills/investigate",
         "./.claude/skills/second-opinion"
-      ],
-      "agents": [
-        "./.claude/agents/simplicity-review-agent.md"
       ]
     }
   ]
