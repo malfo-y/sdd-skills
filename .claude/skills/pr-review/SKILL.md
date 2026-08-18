@@ -6,7 +6,7 @@ argument-hint: ["[--model <sonnet|opus|haiku|fable>]"]
 
 # PR Review (직접 correctness + simplicity dispatch + Verdict)
 
-이 스킬은 PR 데이터·spec을 수집한 뒤, **correctness 리뷰를 메인 루프가 직접 수행**하고 **clarity 렌즈만** `sdd-skills:simplicity-review-agent`로 dispatch한다 (동작-불변 형태 품질 — 계약·차원·severity는 agent가 단일 소스). 두 렌즈 결과를 합쳐 **verdict**(APPROVE / REQUEST CHANGES / NEEDS DISCUSSION)를 합성해 통합 리뷰 리포트(`_sdd/pr/<YYYY-MM-DD>_pr_review_<slug>.md`) 하나를 작성한다.
+이 스킬은 PR 데이터·spec을 수집한 뒤, **correctness 리뷰를 메인 루프가 직접 수행**하고 **clarity 렌즈만** 범용 subagent(`Agent(subagent_type="general-purpose")`)로 dispatch한다 (동작-불변 형태 품질 — 계약·차원·severity는 `implementation-review` 스킬의 `references/simplicity-contract.md`가 단일 소스이며, dispatch prompt에 전문을 verbatim 포함한다). 두 렌즈 결과를 합쳐 **verdict**(APPROVE / REQUEST CHANGES / NEEDS DISCUSSION)를 합성해 통합 리뷰 리포트(`_sdd/pr/<YYYY-MM-DD>_pr_review_<slug>.md`) 하나를 작성한다.
 
 > **경계**: 자동 게이트는 도입하지 않는다 — PR review는 인간 리뷰 보조다. verdict는 두 렌즈 신호를 모두 쥔 메인 루프가 합성한다.
 
@@ -15,7 +15,7 @@ argument-hint: ["[--model <sonnet|opus|haiku|fable>]"]
 - [ ] AC1: `_sdd/pr/<YYYY-MM-DD>_pr_review_<slug>.md` 통합 리뷰 리포트가 Output Format에 맞게 생성되었다
 - [ ] AC2: Verdict(APPROVE / REQUEST CHANGES / NEEDS DISCUSSION)가 두 렌즈 요약을 근거로 부여되었다
 - [ ] AC3: correctness 검증(코드 품질·에러 처리·테스트·보안, spec 존재 시 spec AC·compliance·gap)을 메인 루프가 Correctness 리뷰 절의 절차대로 직접 수행했다
-- [ ] AC4: `simplicity-review-agent`를 PR 변경 파일 컨텍스트(PR Review Input)로 dispatch했다
+- [ ] AC4: simplicity 계약(reference 전문 verbatim)을 담은 범용 subagent를 PR 변경 파일 컨텍스트(PR Review Input)로 dispatch했다
 - [ ] AC5: 두 렌즈의 finding이 Step 4 합류 규칙대로 통합 리포트에 합류했다
 - [ ] AC6: `--model <name>` 인자가 있으면 simplicity dispatch에 model을 적용했다 (correctness는 메인 루프 직접 수행이라 적용 대상이 아니다 — 그 사실을 안내)
 
@@ -77,13 +77,13 @@ from-branch(head)의 spec을 검증 기준으로 삼는다.
 
 ### Step 3: Simplicity Dispatch + 직접 Correctness
 
-**simplicity dispatch를 먼저 띄운다** (`sdd-skills:` prefix 필수 — plugin 설치 스킬의 agent 호출 규약):
+**simplicity dispatch를 먼저 띄운다**:
 
 ```
-Agent(subagent_type="sdd-skills:simplicity-review-agent")
+Agent(subagent_type="general-purpose")
 ```
 
-Step 1·2의 결과로 `PR Review Input`을 채워 dispatch message에 전달한다. `--model <name>`이 있으면 이 dispatch에 적용한다 — `<name>`은 `sonnet`·`opus`·`haiku`·`fable` 중 하나여야 하며, 그 외 값이면 dispatch하지 않고 허용값을 안내한다.
+dispatch prompt는 `../implementation-review/references/simplicity-contract.md`(이 스킬 디렉토리 기준 상대 경로 — sibling 스킬의 reference)를 Read해 **계약 전문을 verbatim으로 앞에 싣고**(요약·재구성 금지, 차원 한정 없음 — 전체 4차원), 이어서 Step 1·2의 결과로 채운 `PR Review Input`을 전달한다. `--model <name>`이 있으면 이 dispatch에 적용한다 — `<name>`은 `sonnet`·`opus`·`haiku`·`fable` 중 하나여야 하며, 그 외 값이면 dispatch하지 않고 허용값을 안내한다.
 
 **agent가 도는 동안 메인 루프가 correctness 리뷰를 직접 수행한다** (아래 Correctness 리뷰). 반환을 수거하면 Step 4 verdict로 간다. 서로 독립인 Read/Grep은 한 메시지에 배칭하고, `Grep`으로 좌표를 먼저 잡은 뒤 관련 구간만 선택적으로 `Read`한다.
 
@@ -248,4 +248,4 @@ PR review는 verdict 권고이지 자동 게이트가 아니다.
 
 Acceptance Criteria가 모두 만족되었나 검증한다. 미충족 항목이 있으면 해당 단계로 돌아가 수정한다.
 
-> **Source**: simplicity 계약·4개 차원·falsifiable severity는 `.claude/agents/simplicity-review-agent.md`가 단일 소스로 보유한다. correctness 계약·verdict 합성·통합 리포트는 이 SKILL.md가 단일 소스다.
+> **Source**: simplicity 계약·4개 차원·falsifiable severity는 `implementation-review` 스킬의 `references/simplicity-contract.md`가 단일 소스로 보유한다. correctness 계약·verdict 합성·통합 리포트는 이 SKILL.md가 단일 소스다.

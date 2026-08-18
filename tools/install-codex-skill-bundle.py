@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Install the Codex skill bundle (skills + agents) from a GitHub repo."""
+"""Install the Codex skill bundle from a GitHub repo (skills-only; prunes legacy agents)."""
 
 from __future__ import annotations
 
@@ -290,9 +290,10 @@ def _discover_skills(repo_root: str, skills_root: str, include_hidden: bool) -> 
 
 
 def _discover_agents(repo_root: str, agents_root: str) -> list[tuple[str, str]]:
+    # The bundle is skills-only; an agents root is optional legacy surface.
     root_dir = os.path.join(repo_root, agents_root)
     if not os.path.isdir(root_dir):
-        raise InstallError(f"Agents root not found: {agents_root}")
+        return []
     discovered = []
     for entry in sorted(os.listdir(root_dir)):
         agent_path = os.path.join(root_dir, entry)
@@ -301,8 +302,6 @@ def _discover_agents(repo_root: str, agents_root: str) -> list[tuple[str, str]]:
         if not entry.endswith(".toml"):
             continue
         discovered.append((entry, agent_path))
-    if not discovered:
-        raise InstallError(f"No agents found under: {agents_root}")
     return discovered
 
 

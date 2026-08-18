@@ -40,8 +40,8 @@ Codex: PR 리뷰를 시작합니다.
 Codex:
 ## Simplicity Spawn + 직접 Correctness
 
-Mailbox(Desktop/current CLI): invocation별 run_id가 들어간 parent-tree 고유 task_name + agent_type + fork_turns: "none" + framed message로 simplicity 단일 spawn → target 없는 mailbox wait 반복 → close 없음
-Target/close(legacy CLI schema): agent_type + framed message로 simplicity 단일 spawn → target wait → final 기록 → 완료 handle close
+Mailbox(Desktop/current CLI): invocation별 run_id가 들어간 parent-tree 고유 task_name + agent_type: "explorer" + fork_turns: "none" + framed message(simplicity 계약 전문 verbatim + PR Review Input)로 단일 spawn → target 없는 mailbox wait 반복 → close 없음
+Target/close(legacy CLI schema): agent_type: "explorer" + 같은 framed message로 단일 spawn → target wait → final 기록 → 완료 handle close
 활성 schema가 어느 contract인지 확정할 수 없으면 spawn하지 않고 schema blocker를 보고한다.
 (agent가 도는 동안 메인 루프가 correctness 리뷰를 직접 수행)
 

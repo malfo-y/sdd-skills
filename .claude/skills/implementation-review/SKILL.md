@@ -6,13 +6,13 @@ argument-hint: ["[--model <sonnet|opus|haiku|fable>]"]
 
 # Implementation Review (직접 correctness + simplicity dispatch, Review-only)
 
-이 스킬의 **correctness 렌즈는 메인 루프가 직접 수행**하고, **clarity 렌즈만** `sdd-skills:simplicity-review-agent`로 dispatch한다 (동작-불변 형태 품질 — 계약·차원·severity는 agent가 단일 소스). review-only다 — 어떤 파일도 수정하지 않으며, finding 반영·마감 판정은 호출자 소관이다.
+이 스킬의 **correctness 렌즈는 메인 루프가 직접 수행**하고, **clarity 렌즈만** 범용 subagent(`Agent(subagent_type="general-purpose")`)로 dispatch한다. dispatch prompt에는 `references/simplicity-contract.md`(이 스킬 디렉토리)를 Read해 **전문을 verbatim 포함**한다 — 요약·재구성 금지, 계약·차원·severity는 그 reference가 단일 소스다. review-only다 — 어떤 파일도 수정하지 않으며, finding 반영·마감 판정은 호출자 소관이다.
 
 `--model <name>` 인자는 **simplicity dispatch에만** 적용한다. `<name>`은 `sonnet`·`opus`·`haiku`·`fable` 중 하나여야 하며, 그 외 값이면 dispatch하지 않고 허용값을 안내한다. 미지정 시 생략한다(세션 기본값 상속). correctness는 메인 루프 직접 수행이라 override 대상이 아니다.
 
 ## 실행 순서
 
-1. **simplicity dispatch를 먼저 띄운다** — 차원 **묶음마다 1회**(참조 ∥ 국소), 한 메시지에 병렬로. 각 dispatch는 **전체 변경 대상**이다(묶음 정의·범위 불변 근거는 agent의 `호출자 차원 한정` 절이 단일 소스). prompt에는 요청·경로와 **대화에만 있는 맥락 digest**를 담는다 — plan이 있으면 경로와 필요한 맥락만 짧게, 없으면 이번 세션에서 무엇을·왜 구현했는지와 리뷰 범위(agent는 이번 세션 대화를 직접 읽지 못한다). 대상 경로가 불명확하면 agent가 자체 Input 우선순위로 탐색하도록 위임한다.
+1. **simplicity dispatch를 먼저 띄운다** — 차원 **묶음마다 1회**(참조 ∥ 국소), 한 메시지에 병렬로. 각 dispatch는 **전체 변경 대상**이다(묶음 정의·범위 불변 근거는 reference의 `호출자 차원 한정` 절이 단일 소스). prompt는 **reference 계약 전문(verbatim) → 차원 묶음 한정 → 요청·경로와 대화에만 있는 맥락 digest** 순서로 구성한다 — plan이 있으면 경로와 필요한 맥락만 짧게, 없으면 이번 세션에서 무엇을·왜 구현했는지와 리뷰 범위(agent는 이번 세션 대화를 직접 읽지 못한다). 대상 경로가 불명확하면 agent가 자체 Input 우선순위로 탐색하도록 위임한다.
 2. **agent가 도는 동안 메인 루프가 correctness 리뷰를 직접 수행한다** (아래 Correctness 리뷰).
 3. 반환을 수거해 **합산 보고**한다 (아래 보고).
 
@@ -87,5 +87,5 @@ stale 판단 예시: 기준 문서가 참조하는 주요 파일/모듈이 없�
 ## Integration
 
 - `implementation`: 주 리뷰 대상이자 호출 주체 — 마감 품질 게이트로 이 리뷰를 수행하며, finding 반영은 호출자 소관. 게이트로 호출된 경우 이 리뷰의 보고는 중간 산출물이다 — 보고 직후 사용자 입력을 기다리지 않고 호출 스킬의 fix 단계로 복귀한다.
-- `simplicity-review-agent`: clarity 렌즈 dispatch 대상 — 계약·차원·severity의 단일 소스
+- `references/simplicity-contract.md`: clarity 렌즈 계약의 단일 소스 — dispatch prompt에 verbatim 포함되며, `pr-review`도 sibling 경로로 같은 파일을 소비한다
 - `spec-sync`: 리뷰 결과상 스펙 변경이 필요할 때 후속 스킬로 안내

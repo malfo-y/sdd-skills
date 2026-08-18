@@ -2,7 +2,7 @@
 
 Spec-Driven Development (SDD) workflow skills for Claude Code and Codex.
 
-Codex bundle: 19 skills. Claude bundle: 21 skills (`git`·`second-opinion` 추가). 양 번들 공통 custom agent 1종: `simplicity-review` (`plan-review`·`implementation-review`·`pr-review`의 correctness 리뷰는 agent 없이 메인 루프가 직접 수행).
+Codex bundle: 19 skills. Claude bundle: 21 skills (`git`·`second-opinion` 추가). custom agent는 없다 — `plan-review`·`implementation-review`·`pr-review`의 correctness 리뷰는 메인 루프가 직접 수행하고, simplicity 리뷰는 스킬 내장 계약(`implementation-review/references/simplicity-contract.md`)을 프롬프트로 주입한 범용 subagent가 수행한다. 그래서 양 번들 모두 skills-only로 배포된다.
 
 ## Documentation
 
@@ -34,7 +34,7 @@ Codex bundle: 19 skills. Claude bundle: 21 skills (`git`·`second-opinion` 추�
 
 #### Option A: 번들 설치 스크립트 사용 (권장)
 
-`.codex/skills/`, `.codex/agents/`를 한 번에 설치하는 번들 스크립트다. 스크립트가 GitHub에서 직접 받아 설치하므로 **clone 없이 한 줄로 실행**할 수 있다(표준 라이브러리만 사용해 별도 의존성 설치가 필요 없다).
+`.codex/skills/`를 한 번에 설치하는 번들 스크립트다. 스크립트가 GitHub에서 직접 받아 설치하므로 **clone 없이 한 줄로 실행**할 수 있다(표준 라이브러리만 사용해 별도 의존성 설치가 필요 없다).
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/malfo-y/sdd-skills/main/tools/install-codex-skill-bundle.py | python3 -
@@ -56,8 +56,8 @@ python3 tools/install-codex-skill-bundle.py
 
 - 기본 repo: `malfo-y/sdd-skills`
 - 기본 ref: `main`
-- 기본 설치 경로: `~/.codex/skills` (`agents`는 `~/.codex/agents`)
-- 기존에 같은 이름의 스킬/에이전트가 있으면 내용을 비교
+- 기본 설치 경로: `~/.codex/skills`
+- 기존에 같은 이름의 스킬이 있으면 내용을 비교
 - 내용이 같으면 건너뜀, 다르면 자동으로 덮어씀
 - 사용자 `~/.codex/config.toml`은 수정하지 않음
 
@@ -67,7 +67,7 @@ python3 tools/install-codex-skill-bundle.py
 # 설치 예정 항목만 확인
 python3 tools/install-codex-skill-bundle.py --dry-run
 
-# 이미 설치된 스킬/에이전트를 내용과 상관없이 전부 교체
+# 이미 설치된 스킬을 내용과 상관없이 전부 교체
 python3 tools/install-codex-skill-bundle.py --force
 
 # 다른 포크/브랜치에서 설치
@@ -105,7 +105,7 @@ https://github.com/malfo-y/sdd-skills/tree/main/.codex/skills 에 있는 스킬�
 
 #### Option C: 수동 설치
 
-`.codex/skills/`는 `$CODEX_HOME/skills/`, `.codex/agents/`는 `$CODEX_HOME/agents/`에 복사한다. (`$CODEX_HOME` 기본값: `~/.codex`)
+`.codex/skills/`를 `$CODEX_HOME/skills/`에 복사한다. (`$CODEX_HOME` 기본값: `~/.codex`)
 
 #### Codex discussion 스킬 사용 조건
 
