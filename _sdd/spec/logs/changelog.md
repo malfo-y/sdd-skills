@@ -850,4 +850,4 @@
 
 ## v4.23.0 (2026-08-18)
 
-- spec-rewrite: main.md 다이어트 — §2 Guardrails 거대 불릿(3~4KB급)을 결정+가드+포인터로 압축(폐지 구조의 도입~폐지 서사·실측 수치는 decision_log 포인터로 이관), §2↔§3 이중 서술 4주제(게이트·test-first·2-렌즈·plan-review) 해소(결정 캐노니컬=§3 비교표, 집행 문면=§2), 스킬 계약 상세 열거(승격 트리거·ledger 필드·훅 설치 상세)를 소유자 포인터로 대체. 재제안 금지 조항·결정·Why는 전량 보존. 부수 drift 수정: custom agent 폐지(v4.22.0) 미반영 잔존 표면(agent layer 어휘·wrapper-backed 서술·실행 분리 행·핵심 설계 layer 목록·parity 제약) 갱신. 80KB → 60KB, 2500B+ 줄 0개.
+- spec-rewrite: main.md 다이어트 — 본문을 **현재 스펙만**으로 재정렬한다. 폐지 구조의 이력·서사·실측 수치(gather phase·Claim Manifest·2-렌즈 철회·1+N shard·full 레인·경량 경로·종결된 관측 3건)를 본문에서 제거(핵심 결정·이력은 decision_log가 소유), 재제안 금지 가드는 1줄 형태로 존치. §2↔§3 이중 서술 4주제 해소(결정 캐노니컬=§3 비교표, 집행 문면=§2), 스킬 계약 상세 열거(승격 트리거·ledger 필드·훅 설치 상세)를 소유자 포인터로 대체. 부수 drift 수정: custom agent 폐지(v4.22.0) 미반영 잔존 표면 갱신. 80KB → 53KB(-34%), 2500B+ 줄 7 → 0.

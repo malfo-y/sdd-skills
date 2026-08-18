@@ -3470,6 +3470,7 @@ sdd-autopilot의 review-fix 루프가 선택적으로 동작하여, 리뷰만 �
 ## 2026-08-18 - spec-rewrite: main.md 다이어트 (v4.22.0 → v4.23.0, structure-only)
 
 - **배경**: main.md가 197줄/80KB로 자칭 thin global spec과 괴리 — 폐지 구조(gather phase·Claim Manifest·2-렌즈·1+N shard)의 도입~폐지 서사와 실측 수치, 스킬 계약 상세 열거, §2↔§3 이중 서술이 본문에 누적됐다.
-- **결정**: 결정·가드·재제안 금지 조항·Why는 전량 본문 보존하고, 서사·수치는 대응 decision_log entry 포인터로 압축한다(전 서사의 entry 실재를 확인 후 압축 — 신규 이동분 없음). §2는 집행 문면, §3 비교표는 결정+이유의 캐노니컬로 역할을 가른다. 파일 분할 없음.
-- **부수 drift 수정**: custom agent 폐지(같은 날 v4.22.0)가 못 미친 표면 — §1 agent layer 어휘, wrapper-backed guardrail(사문 처리), §3 실행 분리 행·핵심 설계 layer 목록, 운영 제약 parity 문장.
-- **결과**: 80KB → 60KB(-25%), 2500B 초과 줄 7개 → 0개. 산출물: `logs/spec-rewrite-plan.md`(사전 계획)·`logs/rewrite_report.md`.
+- **결정**: main.md는 **현재 스펙만** 기록한다(사용자 지시로 1차 압축 후 강화) — 폐지 구조의 이력·서사·실측 수치는 본문에서 제거하고 decision_log가 단독 소유하며, 재제안 금지 가드는 1줄 형태로 본문 존치한다. §2는 집행 문면, §3 비교표는 결정+이유의 캐노니컬로 역할을 가른다. 파일 분할 없음. 제거 전 전 서사의 decision_log entry 실재를 확인했다(신규 이동분 없음).
+- **본문에서 제거된 이력**(이 log가 정본): gather phase 도입~폐지(08-13/14/15), Claim Manifest 철회(08-12), 2-렌즈 분할 철회(08-13), correctness 1+N shard 소멸(08-15), full 레인 삭제·-lite 개명(07-22), 적용 범위 게이트·경량 경로 폐지(08-13), 종결된 관측 3건(2-렌즈·plan-review 반환 다이어트·gather 벽시계), custom agent 폐지 연대기(08-15/18), wrapper-backed 패턴 사문.
+- **부수 drift 수정**: custom agent 폐지(같은 날 v4.22.0)가 못 미친 표면 — §1 agent layer 어휘, wrapper-backed guardrail, §3 실행 분리 행·핵심 설계 layer 목록, 운영 제약 parity 문장.
+- **결과**: 80KB → 53KB(-34%), 2500B 초과 줄 7개 → 0개. 산출물: `logs/spec-rewrite-plan.md`(사전 계획)·`logs/rewrite_report.md`.

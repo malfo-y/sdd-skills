@@ -1,10 +1,12 @@
 # Rewrite Report — main.md 다이어트 (2026-08-18, v4.23.0)
 
+> 2-pass 실행: 1차(보수적 압축, 61.7KB) 후 사용자 지시("main.md는 현재 스펙만, 핵심 결정은 decision_log")로 2차 과감 압축 — 이력·서사·수치 전면 제거, 재제안 금지 가드는 1줄 존치. 최종 53KB.
+
 ## Metric Scorecard (전 → 후)
 
 | 축 | 전 | 후 | 근거 |
 |---|---|---|---|
-| Thinness | 2/5 | 4/5 | 80KB → 61.7KB(-23%), 2500B 초과 줄 7 → 0 |
+| Thinness | 2/5 | 5/5 | 80KB → 53KB(-34%), 2500B 초과 줄 7 → 0, 이력 서술 잔존 2건(가드 근거 1줄씩) |
 | Decision-bearing truth | 4/5 | 4/5 | 결정·가드·재제안 금지 조항 전량 보존, 서사만 decision_log 포인터화 |
 | Anti-duplication | 2/5 | 4/5 | §2↔§3 이중 서술 4주제 해소, 훅 설치·ledger·승격 트리거 상세는 소유자 포인터로 |
 | Navigation + surface fit | 3/5 | 4/5 | 불릿당 규모 축소로 §2 스캔 가능성 회복, 인덱스·Supporting Surfaces 불변 |
@@ -20,15 +22,15 @@
 
 ## Plan 대비 deviation
 
-1. **목표 규모 미달**: plan 40±10KB 대비 61.7KB에서 중지 — 잔여 질량이 결정·가드 본문이라 추가 압축은 rationale 손실 위험(plan의 "무리한 추가 압축 금지" 원칙 우선). 의도적 중지.
+1. **압축 강도 변경**(사용자 지시): plan의 "서사는 포인터화" 원칙을 "이력·서사·수치 본문 제거, decision_log 단독 소유"로 강화 — 종결 관측 3건·full 레인 이력·경량 경로 폐지 서사·custom agent 폐지 연대기·canonical invocation 종료 서술을 본문에서 삭제. 제거 목록은 decision_log 2026-08-18 spec-rewrite entry가 정본으로 보유.
 2. **drift 수정 추가 수행**(plan 밖): 당일 v4.22.0(custom agent 폐지)이 못 미친 stale 표면 5곳(§1 agent layer 어휘·wrapper-backed guardrail·§3 실행 분리 행·핵심 설계 layer 목록·parity 제약)을 현재 truth로 갱신 — 창작이 아니라 기존 결정(v4.22.0)의 반영.
 3. §2↔§3 dedup 4주제 중 override 주제는 §2=런타임 문법, §3=결정으로 이미 역할이 갈려 있어 무변경(중복 아님 판정).
 
 ## 보존 검증
 
-- 재제안 금지 조항 6건 전량 잔존 확인(grep): 렌즈/task 재분할·수집 agent 재도입·Claim Manifest 축·사실 선고정 축·규모 판정 reviewer 복귀·2-렌즈.
-- Source·Why·inline citation·링크 무결(스크립트 검증 broken links 0).
-- append-only 검증: decision_log·changelog 삭제 줄 0.
+- 재제안 금지 가드 잔존(grep): 렌즈/task 축 재분할·수집 agent 재도입(plan-review 불릿에 2종 통합), 사실 선고정 축(구 Claim Manifest), 규모 판정 reviewer 복귀 금지 — 각 1줄 형태.
+- 핵심 원칙 문구 잔존: "읽기 통제는 순종이 아니라 구조로"·"쓰기 집합 서로소"·"변이 확인"·load-bearing conjunct·full-lane-final 복구 tag.
+- Source·Why·inline citation·링크 무결(broken links 0), append-only 검증(merged 이력 삭제 줄 0 — 이번 branch의 미머지 entry 수치 갱신만 수행).
 
 ## Unresolved / Warnings
 
