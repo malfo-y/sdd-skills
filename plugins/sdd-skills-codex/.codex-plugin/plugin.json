@@ -5,5 +5,22 @@
   "author": {
     "name": "malfo-y",
     "email": "malfo.y@kakaocorp.com"
+  },
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "SDD Skills",
+    "shortDescription": "Spec-driven development workflows for Codex",
+    "longDescription": "Create and maintain specifications, plan changes, implement them, and review the results with reusable SDD workflow skills.",
+    "developerName": "malfo-y",
+    "category": "Productivity",
+    "capabilities": [
+      "Interactive",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "Create an SDD spec for this repository.",
+      "Plan and implement this change using SDD.",
+      "Review this implementation against its spec."
+    ]
   }
 }

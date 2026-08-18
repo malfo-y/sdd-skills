@@ -7,7 +7,7 @@
 ## Runtime
 
 - 기본 작업 대상: Markdown 문서, `SKILL.md`, 예시/참고 문서
-- 주요 디렉토리: `.codex/skills/`, `.claude/skills/`, `_sdd/`, 루트 문서
+- 주요 디렉토리: `plugins/sdd-skills-codex/skills/`, `.claude/skills/`, `_sdd/`, 루트 문서
 
 ## Environment Variables
 
@@ -17,6 +17,6 @@
 ## Setup Commands
 
 - 저장소 상태 확인: `git status`
-- 스킬 파일 탐색: `rg --files .codex/skills`
+- 스킬 파일 탐색: `rg --files plugins/sdd-skills-codex/skills`
 - 문서 위생 확인: `git diff --check`
 - 구조 확인: `find _sdd/spec -maxdepth 2 -type f | sort`
