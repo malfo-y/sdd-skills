@@ -3466,3 +3466,11 @@ sdd-autopilot의 review-fix 루프가 선택적으로 동작하여, 리뷰만 �
 - **결정**: ① agent 본문을 `implementation-review/references/simplicity-contract.md`(claude/codex 미러, 동일 문면)로 이동해 계약 단일 소스로 삼고, 호출 스킬(`implementation-review`·`pr-review` 4벌)이 전문을 dispatch prompt에 verbatim 포함한다. ② dispatch 대상은 런타임 내장 agent type — claude `general-purpose`, codex native `explorer`(Runtime Adapter의 mailbox/target-close 계약 불변). ③ read-only(Read/Glob/Grep만·파일 수정 금지·재spawn 금지)는 tools 제한이 아니라 계약 문면의 프롬프트 규칙이다(codex는 원래 tools를 못 깎아 동일 수준이었고, claude는 이 수준으로 하향 — 사용자 논의로 수용). ④ `.claude/agents/`·`.codex/agents/` 삭제, marketplace.json agents 배열 제거, README·installer skills-only 전환(installer는 legacy 설치본 prune 지원 유지). custom agent 0종.
 - **evidence**: structural check 49/49(양 미러), 삭제 census 변형 전수 grep 잔존 0(의도 잔존 4건 명시), installer 함수 검증+변이 확인. 게이트 자체를 새 방식(general-purpose+계약 주입 2 dispatch)으로 수행해 첫 실전 검증 — 두 dispatch 모두 차원 한정·반환 형식·read-only 준수. draft `_processed_2026-08-18_feature_draft_agentless_simplicity_dispatch.md`, gate 1: correctness Low 1·simplicity Low 1(advisory 존치).
 - **범위 밖(불변)**: 계약 내용 자체(4차원·falsifiable severity·반환 형식 — 문면 보존으로 반환 다이어트 관측 연속성 유지), plan-review 등 직접 실행 스킬, Agent Plugins 표준 매니페스트 신설(별도 판단).
+
+## 2026-08-18 - spec-rewrite: main.md 다이어트 (v4.22.0 → v4.23.0, structure-only)
+
+- **배경**: main.md가 197줄/80KB로 자칭 thin global spec과 괴리 — 폐지 구조(gather phase·Claim Manifest·2-렌즈·1+N shard)의 도입~폐지 서사와 실측 수치, 스킬 계약 상세 열거, §2↔§3 이중 서술이 본문에 누적됐다.
+- **결정**: main.md는 **현재 스펙만** 기록한다(사용자 지시로 1차 압축 후 강화) — 폐지 구조의 이력·서사·실측 수치는 본문에서 제거하고 decision_log가 단독 소유하며, 재제안 금지 가드는 1줄 형태로 본문 존치한다. §2는 집행 문면, §3 비교표는 결정+이유의 캐노니컬로 역할을 가른다. 파일 분할 없음. 제거 전 전 서사의 decision_log entry 실재를 확인했다(신규 이동분 없음).
+- **본문에서 제거된 이력**(이 log가 정본): gather phase 도입~폐지(08-13/14/15), Claim Manifest 철회(08-12), 2-렌즈 분할 철회(08-13), correctness 1+N shard 소멸(08-15), full 레인 삭제·-lite 개명(07-22), 적용 범위 게이트·경량 경로 폐지(08-13), 종결된 관측 3건(2-렌즈·plan-review 반환 다이어트·gather 벽시계), custom agent 폐지 연대기(08-15/18), wrapper-backed 패턴 사문.
+- **부수 drift 수정**: custom agent 폐지(같은 날 v4.22.0)가 못 미친 표면 — §1 agent layer 어휘, wrapper-backed guardrail, §3 실행 분리 행·핵심 설계 layer 목록, 운영 제약 parity 문장.
+- **결과**: 80KB → 53KB(-34%), 2500B 초과 줄 7개 → 0개. 산출물: `logs/spec-rewrite-plan.md`(사전 계획)·`logs/rewrite_report.md`.

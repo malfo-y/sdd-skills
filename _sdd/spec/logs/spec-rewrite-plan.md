@@ -1,43 +1,50 @@
-# Spec Rewrite Plan — Scoped Guardrails Legibility Polish
+# Spec Rewrite Plan — main.md 다이어트 (2026-08-18)
 
-**Date**: 2026-06-12
-**Scope**: `_sdd/spec/main.md` §2 Scope / Non-goals / Guardrails — Guardrails bullet legibility만
-**Type**: scoped polish (NOT full rewrite). 직전 review→update-done→upgrade로 spec은 이미 thin·canonical 정합.
-**Canonical-fit rationale**: 구조/분할/경계 모두 PASS 상태. 유일 결함은 일부 Guardrail bullet이 한 문장에 다중 결정을 담은 run-on이라 legibility만 저하. 구조 재편·파일 분할·내용 이동 없음.
+## 진단 요약 (canonical-fit rationale)
 
-## 4-Core Axis Pre-judgment (무엇을 줄이고 무엇을 보존)
-- `Thinness`: 유지 — bullet 수·총량 동일. 분할은 줄바꿈만 추가, 본문 비대화 아님 (Hard Rule 5 준수).
-- `Decision-bearing truth`: 100% 보존 — 모든 절(clause)·`code`·링크·rationale를 sub-bullet로 옮기되 surface(§2 body) 그대로 유지. body→log 이동 없음.
-- `Anti-duplication`: 변화 없음 — 새 중복 생성 안 함.
-- `Navigation + surface fit`: 변화 없음 — 같은 §2 surface 내 가독성만 개선.
+- main.md 197줄 / 80KB. 자칭 thin global spec이나 §2 Guardrails와 §3 비교표가 스킬 계약 상세·폐지 구조 서사·실측 내러티브를 본문에 보유해 Canonical Fit 위반.
+- Scorecard: Thinness 2/5 · Decision-bearing 4/5 · Anti-dup 2/5 · Nav/surface 3/5 · Component Separation 4/5 · Findability 2/5 · Boundary Clarity 4/5 · Canonical Fit 2/5.
+- 3대 비대 원인: ① §2↔§3 이중 서술(같은 결정을 Guardrail 산문과 비교표 행이 각각 보유) ② 폐지 구조의 전체 서사 잔존(gather phase 3세대 서사·Claim Manifest·2-렌즈 철회·1+N shard — 결정은 "폐지 + 재제안 금지"인데 도입~폐지 내러티브 전체가 본문) ③ 스킬 계약 상세 재서술(승격 트리거 6종 열거·7필드 열거·ledger 필드 구성·PROMPT 규칙 등 — SKILL/components.md가 이미 단일 소스 선언됨).
 
-## Body / Log Placement Rule
-- 이 작업은 **legibility 재배치**이지 rationale pruning이 아니다. 따라서 decision-bearing 내용은 전부 §2 body에 잔류. `decision_log`/`rewrite_report`로 내리는 rationale 없음 (Hard Rule 1 비해당).
-- 메타 메모(이 polish의 deviation/scorecard)만 `rewrite_report.md`에 기록.
+## main에 남길 것 (보존 원칙)
 
-## Split Map (대상 bullet, 모두 lead 문장 + nested sub-bullet 구조로)
-대상 = 3절 이상 또는 rule+exception 구조의 run-on bullet. 절은 1:1 보존, 추가/삭제 없음.
+- §1 전체(문제 정의·컨셉·대안 표) — 무변경.
+- §2: 각 Guardrail의 **행동 규칙 + 결정 1~3문장 + 재제안 금지 가드 + 소유자 포인터**. 모든 재제안 금지 조항(2-렌즈 재분할·Claim Manifest·사실 선고정 축·규모 판정 reviewer 복귀 금지 등)은 문장 단위로 보존한다.
+- §3 비교표: 결정·이유의 캐노니컬 표면으로 유지(행 압축은 §2와의 중복 해소분만).
+- 운영 제약: 관측 상태(Planned/종결/음성 n=1 등 판정 상태)와 판정 기준은 유지, 회차별 수치 내러티브는 압축.
+- Hard Rule 2 대상(Source·Why·inline citation) 전부 유지.
 
-1. **L59** skill/agent layer + nesting + orchestrator/wrapper 형태 + producer orchestrator → lead(layer+nesting) + sub(orchestrator형 / wrapper형 / producer orchestrator) 3 sub-bullet
-2. **L62** wrapper-backed skill 계약 → lead(entrypoint/artifact 유지+흉내 금지) + sub(thin entrypoint·agent 단일소스 / 대화입력 forwarding) 2 sub-bullet
-3. **L63** review/validation workflow loop → lead(review-only 금지) + sub(producer 자체 소유 / 공통 loop 정책 차용 / fix=재dispatch·단일작성자) 3 sub-bullet
-4. **L64** autopilot plan-review gate → lead(gate 통과 필수) + sub(미통과 시 reject/regenerate) 1 sub-bullet
-5. **L65** canonical agent invocation → lead(canonical 이름만) + sub(kebab-case canonical / legacy alias reject) 2 sub-bullet
-6. **L68** multi-phase execution gate → lead(execution gate) + sub(Checkpoint group boundary / adaptive final review / missing Checkpoint=schema violation) 3 sub-bullet
+## 이동/압축할 것 (placement rule)
 
-비대상(이미 단문·가독): L58, L60, L61, L66, L67, L69, L70, L71, L72, L73 — 손대지 않음.
+- **§2↔§3 중복**: 결정+이유는 §3 비교표가 소유, §2는 행동 규칙(집행 문면)만 소유 — 동일 명제 이중 서술 제거. 게이트 정책·test-first·2-렌즈·override 4주제.
+- **폐지 구조 서사**: gather phase(:83)·Claim Manifest(:90)·1+N shard·2-렌즈 철회(:82,:182)의 도입~폐지 내러티브는 "폐지됨 + 근거 요약 1문장 + 재제안 금지 + decision_log 날짜 포인터"로 압축. 서사 원문은 이미 decision_log에 있음(신규 이동 불필요 — 포인터 확인 후 없는 것만 decision_log 신규 entry로 내림).
+- **스킬 계약 상세**: 승격 트리거 6종·7필드·ledger 필드·PROMPT 상세 열거는 소유자(SKILL/components.md 행) 포인터로 대체 — main에는 규칙의 존재와 형태(예: "hunk 기본 + 트리거 승격 + hunk-scoped 표기")만.
+- **관측 로그(:179-185)**: 판정 상태·기준·다음 행동만 남기고 회차 수치 서사는 decision_log 포인터로.
 
-## Ambiguity / Risk / Unresolved
-- Risk: nested bullet은 본 문서가 주로 flat bullet/table 스타일이나, §2 run-on에 한해 가독성 이득이 명확. 표준 마크다운이라 렌더 안전.
-- Risk: 절 분할 시 의미 누락 위험 → 검증 단계에서 원본 대비 절 단위 대조.
-- Unresolved: 없음.
+## Split map
 
-## Target Files
-- `_sdd/spec/main.md` (§2 Guardrails만)
+- 파일 분할 없음 — 기존 main/components/usage-guide/기록물 구조 유지(Hard Rule 9). main.md 내부 압축만.
 
-## 실행 순서 / Deviation 규칙
-1. 이 plan 저장 (현재 단계)
-2. main.md §2 6개 bullet in-place 분할 edit
-3. 절 보존 검증 (원본 절 ↔ 결과 sub-bullet 1:1)
-4. `rewrite_report.md` 작성 (scorecard + deviation)
-- Deviation 발생 시 report에 기록. 계획 외 bullet/섹션은 건드리지 않음.
+## Ambiguity / Risk
+
+- **최대 위험 = rationale 손실**: 이 spec의 거대 불릿들은 사용자가 의도적으로 축적한 가드·supersede 서사다. 압축 시 "결정·가드·재제안 금지"는 전량 보존하고 "서사·수치"만 내린다. 문장 단위 보존 목록을 실행 중 대조한다.
+- decision_log에 대응 entry가 없는 서사가 발견되면 임의 삭제하지 않고 decision_log에 신규 entry로 먼저 내린 뒤 본문을 압축한다(창작 아님 — 이동).
+- 목표 규모: main.md 80KB → 40±10KB. 무리한 추가 압축으로 결정을 깎지 않는다.
+
+## 실행 순서 + deviation 규칙
+
+1. §2 Guardrails 불릿별 압축(대응 decision_log entry 확인 → 없으면 이동 entry 작성 → 본문 압축) — 대형 불릿 순(:83, :63, :88, :59, :78-79, :90-92, :94-96).
+2. §2↔§3 중복 4주제 해소.
+3. 운영 제약 압축.
+4. 링크·앵커 검증, version bump + changelog, rewrite_report 작성.
+- deviation은 rewrite_report에 plan 대비 항목별 기록.
+
+## 대상 파일
+
+- `_sdd/spec/main.md` (본문 압축) / `_sdd/spec/decision_log.md` (append-only 이동 entry, 필요분만) / `_sdd/spec/logs/changelog.md` (version entry) / `_sdd/spec/logs/rewrite_report.md` (신규 갱신)
+- components.md·usage-guide.md는 이번 범위 밖(components 행 비대는 "상세 reference" 역할 내 — 차기 검토 warning으로만 남김).
+
+## Warning으로만 남길 것
+
+- components.md row 29(implementation-review)가 3KB+로 행 단위 가독 한계 — 이번엔 미조정.
+- usage-guide.md 미진단 — 차기.
