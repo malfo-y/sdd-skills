@@ -2,7 +2,7 @@
 
 Spec-Driven Development (SDD) workflow skills for Claude Code and Codex.
 
-Codex bundle: 19 skills. Claude bundle: 21 skills (`git`·`second-opinion` 추가). custom agent는 없다 — `plan-review`·`implementation-review`·`pr-review`의 correctness 리뷰는 메인 루프가 직접 수행하고, simplicity 리뷰는 스킬 내장 계약(`implementation-review/references/simplicity-contract.md`)을 프롬프트로 주입한 범용 subagent가 수행한다. 그래서 양 번들 모두 skills-only로 배포된다.
+Codex bundle: 19 skills. Claude bundle: 21 skills (`git`·`second-opinion` 추가). custom agent는 없다 — `plan-review`·`implementation-review`·`pr-review`의 correctness 리뷰는 메인 루프가 직접 수행하고, simplicity 리뷰는 스킬 내장 계약(`implementation-review/references/simplicity-contract.md`)을 프롬프트로 주입한 범용 subagent가 수행한다. 그래서 양 번들 모두 skills-only로 배포된다. Claude는 `.claude-plugin/marketplace.json`(`sdd-skills`), Codex는 `.agents/plugins/marketplace.json`(`sdd-skills-codex` — Codex가 `.claude-plugin`을 legacy marketplace로도 읽으므로 이름을 분리)으로 각각 플러그인 배포한다. Codex 스킬 소스는 `plugins/sdd-skills-codex/skills/`다.
 
 ## Documentation
 
@@ -34,7 +34,7 @@ Codex bundle: 19 skills. Claude bundle: 21 skills (`git`·`second-opinion` 추�
 
 #### Option A: 번들 설치 스크립트 사용 (권장)
 
-`.codex/skills/`를 한 번에 설치하는 번들 스크립트다. 스크립트가 GitHub에서 직접 받아 설치하므로 **clone 없이 한 줄로 실행**할 수 있다(표준 라이브러리만 사용해 별도 의존성 설치가 필요 없다).
+`plugins/sdd-skills-codex/skills/`를 한 번에 설치하는 번들 스크립트다. 스크립트가 GitHub에서 직접 받아 설치하므로 **clone 없이 한 줄로 실행**할 수 있다(표준 라이브러리만 사용해 별도 의존성 설치가 필요 없다).
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/malfo-y/sdd-skills/main/tools/install-codex-skill-bundle.py | python3 -
@@ -98,14 +98,14 @@ Curl https://lobehub.com/skills/plurigrid-asi-skill-installer/skill.md, then fol
 4. Codex에 아래 프롬프트 입력:
 
 ```text
-https://github.com/malfo-y/sdd-skills/tree/main/.codex/skills 에 있는 스킬들을 설치해 줘
+https://github.com/malfo-y/sdd-skills/tree/main/plugins/sdd-skills-codex/skills 에 있는 스킬들을 설치해 줘
 ```
 
 5. Codex 재시작
 
 #### Option C: 수동 설치
 
-`.codex/skills/`를 `$CODEX_HOME/skills/`에 복사한다. (`$CODEX_HOME` 기본값: `~/.codex`)
+`plugins/sdd-skills-codex/skills/`를 `$CODEX_HOME/skills/`에 복사한다. (`$CODEX_HOME` 기본값: `~/.codex`)
 
 #### Codex discussion 스킬 사용 조건
 

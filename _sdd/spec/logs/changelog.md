@@ -851,3 +851,7 @@
 ## v4.23.0 (2026-08-18)
 
 - spec-rewrite: main.md 다이어트 — 본문을 **현재 스펙만**으로 재정렬한다. 폐지 구조의 이력·서사·실측 수치(gather phase·Claim Manifest·2-렌즈 철회·1+N shard·full 레인·경량 경로·종결된 관측 3건)를 본문에서 제거(핵심 결정·이력은 decision_log가 소유), 재제안 금지 가드는 1줄 형태로 존치. §2↔§3 이중 서술 4주제 해소(결정 캐노니컬=§3 비교표, 집행 문면=§2), 스킬 계약 상세 열거(승격 트리거·ledger 필드·훅 설치 상세)를 소유자 포인터로 대체. 부수 drift 수정: custom agent 폐지(v4.22.0) 미반영 잔존 표면 갱신. 80KB → 53KB(-34%), 2500B+ 줄 7 → 0.
+
+## v4.24.0 (2026-08-18)
+
+- Codex 플러그인 레이아웃 공존 — `.codex/skills/`(19개)를 `plugins/sdd-skills-codex/skills/`로 이동(내용 불변 rename), Codex manifest 2개 신설(`.agents/plugins/marketplace.json`·`plugins/sdd-skills-codex/.codex-plugin/plugin.json`, 이름 `sdd-skills-codex` — Codex가 `.claude-plugin`을 legacy로도 읽어 클코 마켓 `sdd-skills`와 이름 분리). installer skills root·README·spec 경로 참조 갱신. `.codex/`는 dogfooding `hooks.json`만 보유. 클코 배포 불변.

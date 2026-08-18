@@ -3474,3 +3474,9 @@ sdd-autopilot의 review-fix 루프가 선택적으로 동작하여, 리뷰만 �
 - **본문에서 제거된 이력**(이 log가 정본): gather phase 도입~폐지(08-13/14/15), Claim Manifest 철회(08-12), 2-렌즈 분할 철회(08-13), correctness 1+N shard 소멸(08-15), full 레인 삭제·-lite 개명(07-22), 적용 범위 게이트·경량 경로 폐지(08-13), 종결된 관측 3건(2-렌즈·plan-review 반환 다이어트·gather 벽시계), custom agent 폐지 연대기(08-15/18), wrapper-backed 패턴 사문.
 - **부수 drift 수정**: custom agent 폐지(같은 날 v4.22.0)가 못 미친 표면 — §1 agent layer 어휘, wrapper-backed guardrail, §3 실행 분리 행·핵심 설계 layer 목록, 운영 제약 parity 문장.
 - **결과**: 80KB → 53KB(-34%), 2500B 초과 줄 7개 → 0개. 산출물: `logs/spec-rewrite-plan.md`(사전 계획)·`logs/rewrite_report.md`.
+
+## 2026-08-18 - Codex 플러그인 레이아웃 공존: skills를 plugins/sdd-skills-codex로 이사 (v4.23.0 → v4.24.0, post-implementation)
+
+- **배경**: Codex 플러그인은 스킬 발견 위치가 `skills/`로 고정(closed schema)이라 repo 루트 기준 `plugins/<name>/skills/` 실파일이 필요하고, 클코는 경로 자유(`.claude/skills/` 명시 등록)라 양측이 한 repo에 공존 가능하다. Codex가 `.claude-plugin/marketplace.json`을 legacy marketplace로도 읽을 수 있어 이름 충돌 위험이 있다.
+- **결정**: ① `.codex/skills/` 19개를 `plugins/sdd-skills-codex/skills/`로 전체 이동(git rename, 내용 불변 — 미러 관리 방식 3-way 적응 불변) ② Codex 마켓·플러그인 이름은 `sdd-skills-codex`로 클코 마켓(`sdd-skills`)과 분리 ③ manifest는 Codex 요구 구조(`.codex-plugin/plugin.json`)만 생성, Agent Plugins 1.0 root `plugin.json` 병설은 설치 실측 후 별도 판단(YAGNI) ④ `.codex/`는 dogfooding `hooks.json`만 보유 ⑤ installer skills root 갱신(구경로 수동 설치 사용자 연속성 유지). Codex 훅의 플러그인 번들링은 위치 규약 실측 후 별도 feature.
+- **evidence**: structural check 14/14(양성 대조 포함), git rename 54건, installer 함수 19 발견, census 잔존 전건 의도 분류. gate 1: correctness 0(UNTESTED 1 — codex manifest 스키마 실수용은 설치 실측 대기)·simplicity 2묶음 PASS. draft `_processed_2026-08-18_feature_draft_codex_plugin_layout.md`.
