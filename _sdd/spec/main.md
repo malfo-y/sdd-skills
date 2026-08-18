@@ -2,7 +2,7 @@
 
 > Markdown 기반 skill bundle로 AI 에이전트의 Spec-Driven Development 워크플로우를 Claude Code와 Codex에서 공통 계약으로 실행한다.
 
-**Spec Version**: 4.24.0
+**Spec Version**: 4.25.0
 **Last Updated**: 2026-08-18
 **Status**: Approved
 **Canonical Role**: current thin global spec
@@ -56,7 +56,7 @@ SDD Skills는 이 문제를 `SKILL.md = 실행 가능한 프롬프트`라는 관
 ### Guardrails
 
 - global spec은 thin decision document로 유지하고, execution detail은 `_sdd/drafts/`, `_sdd/implementation/`, `_sdd/pipeline/` 같은 temporary surface로 분리한다
-- 표적 test/check는 30초가 지나면 중단하고, timeout된 같은 명령은 test target·fixture·관련 구현이 바뀌기 전까지 재실행하지 않으며, 느리다고 알려진 test는 repo 또는 사용자가 명시한 checkpoint에서만 실행한다. ① 리뷰 correctness 수행자는 checkpoint evidence 없는 slow 의존 AC를 임의 실행하지 않고 `UNTESTED`(사유: slow — checkpoint 대기)로 보고한다 ② `implementation` 마감 회귀는 표적 + fast 회귀가 기본이고, **무거운 test 포함 전체 suite는 repo 명시 checkpoint이거나 사용자 확인을 받은 경우에만** 실행한다 — 확인 없는 강행도 조용한 skip도 금지, 미실행분은 마감 요약에 보고, 애매하면 묻는다 ③ 실행 중 무겁게 드러난 테스트는 보고와 함께 **분리·리팩토링을 적극 권고**하고, 본질적으로 느리다는 근거가 있을 때만 checkpoint 한정 실행으로 등록한다(slow 분류를 escape hatch로 쓰지 않는다). 하네스 §2의 10초는 개별 테스트 설계·분리 기준, 30초는 targeted 명령 wall-clock 예산 — 층이 다른 공존 계약이다. 정형 fast/slow lane 스키마는 비도입(사용자 확인 게이트로 안전이 닫힌다)
+- 표적 test/check는 30초가 지나면 중단하고, timeout된 같은 명령은 test target·fixture·관련 구현이 바뀌기 전까지 재실행하지 않으며, 느리다고 알려진 test는 repo 또는 사용자가 명시한 checkpoint에서만 실행한다. ① 리뷰 correctness 수행자는 checkpoint evidence 없는 slow 의존 AC를 임의 실행하지 않고 `UNTESTED`(사유: slow — checkpoint 대기)로 보고한다 ② `implementation` 마감 회귀는 이번 변경 관련 표적 test/check + fast 회귀(무거운 test 제외)만 실행하고, 무거운 test·전체 suite는 실행하지 않는다 ③ 실행 중 무겁게 드러난 테스트는 보고와 함께 **분리·리팩토링을 적극 권고**하고, 본질적으로 느리다는 근거가 있을 때만 checkpoint 한정 실행으로 등록한다(slow 분류를 escape hatch로 쓰지 않는다). 하네스 §2의 10초는 개별 테스트 설계·분리 기준, 30초는 targeted 명령 wall-clock 예산 — 층이 다른 공존 계약이다. 정형 fast/slow lane 스키마는 비도입한다(개별 test 분리 기준과 마감 fast-only 계약으로 실행 경계가 닫힌다)
 - 사용자 entrypoint는 skill layer에 두고, 재사용 execution 계약은 스킬 `references/` 문서가 소유한다(dispatch는 런타임 내장 agent type에 계약을 프롬프트로 주입 — custom agent 없음). dispatch된 agent는 sub-agent를 다시 spawn하지 않는다(nesting 1단계 제한)
   - leaf dispatch가 필요한 execution은 `orchestrator(skill) + leaf(계약 주입 범용 agent)` 형태로 둔다(orchestrator skill만 dispatch하고, leaf는 단일 단위/단일 산출물만 처리)
   - **실행 경제 — 해소 수단은 턴 접기(배칭)와 1단계 leaf fan-out이다**: 체감 지연의 지배 성분은 dispatch 왕복이 아니라 턴 수만큼 반복되는 추론과 최종 리포트 생성이다. 중첩 fan-out은 비대상이고, 병렬 분해는 메인 루프의 1단계 leaf dispatch로만 한다 — 기본형은 read-only leaf, 파일을 쓰는 leaf의 병렬은 **쓰기 집합이 서로소로 증명된 작성자 분할**에 한해 허용한다(안전성의 근거는 "안 쓴다"가 아니라 "서로소다"). review·구현 계열 SKILL은 **서로 의존하지 않는 read-only 호출의 한 메시지 배칭을 지시형으로 요구한다** — 앞 결과를 봐야 대상이 정해지는 호출만 다음 턴, 쓰기·상태 변경 호출은 배칭 비대상, **배칭은 읽을 대상을 늘리지 않는다**. 지시형(배칭)과 허가형(독립 task 병렬 진행)은 한 문장에 섞지 않고, task 안의 RED→GREEN 순서는 병렬 여부와 무관하게 유지된다. 규칙 문면은 런타임별 tool 이름에 의존하지 않는다

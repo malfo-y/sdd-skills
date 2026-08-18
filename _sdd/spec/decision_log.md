@@ -3480,3 +3480,10 @@ sdd-autopilot의 review-fix 루프가 선택적으로 동작하여, 리뷰만 �
 - **배경**: Codex 플러그인은 스킬 발견 위치가 `skills/`로 고정(closed schema)이라 repo 루트 기준 `plugins/<name>/skills/` 실파일이 필요하고, 클코는 경로 자유(`.claude/skills/` 명시 등록)라 양측이 한 repo에 공존 가능하다. Codex가 `.claude-plugin/marketplace.json`을 legacy marketplace로도 읽을 수 있어 이름 충돌 위험이 있다.
 - **결정**: ① `.codex/skills/` 19개를 `plugins/sdd-skills-codex/skills/`로 전체 이동(git rename, 내용 불변 — 미러 관리 방식 3-way 적응 불변) ② Codex 마켓·플러그인 이름은 `sdd-skills-codex`로 클코 마켓(`sdd-skills`)과 분리 ③ manifest는 Codex 요구 구조(`.codex-plugin/plugin.json`)만 생성, Agent Plugins 1.0 root `plugin.json` 병설은 설치 실측 후 별도 판단(YAGNI) ④ `.codex/`는 dogfooding `hooks.json`만 보유 ⑤ installer skills root 갱신(구경로 수동 설치 사용자 연속성 유지). Codex 훅의 플러그인 번들링은 위치 규약 실측 후 별도 feature.
 - **evidence**: structural check 14/14(양성 대조 포함), git rename 54건, installer 함수 19 발견, census 잔존 전건 의도 분류. gate 1: correctness 0(UNTESTED 1 — codex manifest 스키마 실수용은 설치 실측 대기)·simplicity 2묶음 PASS. draft `_processed_2026-08-18_feature_draft_codex_plugin_layout.md`.
+
+## 2026-08-18 - implementation 마감 회귀를 fast-only로 고정 (v4.24.0 → v4.25.0, post-implementation)
+
+- **배경**: 마감 회귀가 기본적으로 fast였지만 repo checkpoint 또는 사용자 확인으로 무거운 전체 suite를 실행하는 분기가 남아 있어 종료 비용과 사용자 질문이 다시 커질 수 있었다. 사용자가 해당 분기를 제거하고 항상 빠른 회귀만 수행하도록 결정했다.
+- **결정**: `implementation` 마감 회귀는 이번 변경 관련 표적 test/check + fast 회귀(무거운 test 제외)만 실행한다. 무거운 test·전체 suite 실행, 실행 확인 질문, 미실행분 보고 의무를 마감 계약에서 제거한다.
+- **불변**: 표적 명령 30초 상한, review correctness의 slow 의존 AC `UNTESTED`, 실행 중 느리게 드러난 테스트의 분리·리팩토링 권고와 본질적 slow test의 checkpoint 한정 규칙은 유지한다.
+- **evidence**: Claude/Codex `implementation/SKILL.md` byte parity, 양 skill quick validator PASS, 제거 문구 census 0.
