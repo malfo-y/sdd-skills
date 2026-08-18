@@ -855,3 +855,7 @@
 ## v4.24.0 (2026-08-18)
 
 - Codex 플러그인 레이아웃 공존 — `.codex/skills/`(19개)를 `plugins/sdd-skills-codex/skills/`로 이동(내용 불변 rename), Codex manifest 2개 신설(`.agents/plugins/marketplace.json`·`plugins/sdd-skills-codex/.codex-plugin/plugin.json`, 이름 `sdd-skills-codex` — Codex가 `.claude-plugin`을 legacy로도 읽어 클코 마켓 `sdd-skills`와 이름 분리). installer skills root·README·spec 경로 참조 갱신. `.codex/`는 dogfooding `hooks.json`만 보유. 클코 배포 불변.
+
+## v4.25.0 (2026-08-18)
+
+- `implementation` 마감 회귀를 이번 변경 관련 표적 test/check + fast 회귀로 고정했다. repo checkpoint나 사용자 확인을 받아 무거운 전체 suite를 실행하던 분기를 제거했으며, 30초 표적 명령 상한·review slow `UNTESTED`·느린 테스트 분리 권고는 유지한다. Claude/Codex `implementation` 미러와 main.md slow-test guardrail을 동기화했다.
