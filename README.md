@@ -36,6 +36,16 @@ Codex bundle: 19 skills. Claude bundle: 21 skills (`git`·`second-opinion` 추�
 
 GitHub 저장소를 Codex marketplace로 등록한 뒤 네이티브 플러그인을 설치한다.
 
+기존 번들 스크립트나 수동 복사 방식으로 설치했다면 먼저 legacy 스킬을 확인하고 제거한다. 기본 실행은 preview-only이며 `--yes`를 붙이면 대상 항목을 `$CODEX_HOME/legacy-sdd-backup-<UTC>`로 옮겨 활성 경로에서 제거한다. 목록에 표시되지 않은 개인 스킬과 Codex 플러그인 캐시는 건드리지 않는다.
+
+```bash
+# 삭제 예정 항목 확인
+curl -fsSL https://raw.githubusercontent.com/malfo-y/sdd-skills/main/tools/uninstall-codex-skill-bundle.py | python3 -
+
+# 확인한 legacy 스킬 제거
+curl -fsSL https://raw.githubusercontent.com/malfo-y/sdd-skills/main/tools/uninstall-codex-skill-bundle.py | python3 - --yes
+```
+
 ```bash
 codex plugin marketplace add malfo-y/sdd-skills
 codex plugin add sdd-skills-codex@sdd-skills-codex
