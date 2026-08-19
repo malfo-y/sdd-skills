@@ -859,3 +859,7 @@
 ## v4.25.0 (2026-08-18)
 
 - `implementation` 마감 회귀를 이번 변경 관련 표적 test/check + fast 회귀로 고정했다. repo checkpoint나 사용자 확인을 받아 무거운 전체 suite를 실행하던 분기를 제거했으며, 30초 표적 명령 상한·review slow `UNTESTED`·느린 테스트 분리 권고는 유지한다. Claude/Codex `implementation` 미러와 main.md slow-test guardrail을 동기화했다.
+
+## v4.26.0 (2026-08-19)
+
+- Codex multi-agent adapter에서 `agent_type`을 필수 lifecycle 필드가 아닌 선택적 role selector로 교정했다. active schema가 role 값을 지원할 때만 추가하고, 미지원 시 framed `message` 계약을 주입한 범용 sub-agent를 사용한다. `implementation-review`·`pr-review`의 simplicity dispatch와 `investigate`·`write-phased` helper가 현재 mailbox schema에서 불필요한 blocker/fallback으로 빠지지 않도록 Codex 스킬 4개와 PR 예시·component/runtime spec을 동기화했으며, Codex plugin을 1.0.1로 올렸다.
