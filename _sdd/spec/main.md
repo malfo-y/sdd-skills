@@ -2,8 +2,8 @@
 
 > Markdown 기반 skill bundle로 AI 에이전트의 Spec-Driven Development 워크플로우를 Claude Code와 Codex에서 공통 계약으로 실행한다.
 
-**Spec Version**: 4.26.0
-**Last Updated**: 2026-08-18
+**Spec Version**: 4.27.0
+**Last Updated**: 2026-08-19
 **Status**: Approved
 **Canonical Role**: current thin global spec
 
@@ -89,6 +89,7 @@ SDD Skills는 이 문제를 `SKILL.md = 실행 가능한 프롬프트`라는 관
   - 모든 `implementation` 실행은 **resume-only implementation ledger**(`_sdd/implementation/*_implementation_ledger_*.md`, 같은 slug 이어쓰기)를 생성한다 — 목적은 감사 로그가 아니라 compact/세션 재개 후 다음 행동을 결정하는 resume pointer라, 기록 기준은 **재실행으로 복원할 수 없는 사실만**이다(필드 구성·4단계 상태·재개 규칙의 canonical surface는 `implementation` SKILL). 재개 시 미완료 task는 ledger 상태를 신뢰하지 않고 fresh 재판정한다. reviewer들은 ledger를 소비하지 않는다(fresh verification 원칙 불변). 문서 표면은 `docs/SDD_SPEC_DEFINITION.md` §6 증거 기록처 문장과 `docs/AUTOPILOT_GUIDE.md` 산출물 목록(각 ko·en)이다
   - 테스트 불변 규칙: RED 관찰 후에는 테스트를 통과시키기 위해 테스트를 약화·수정하지 않는다. 계약이 틀렸다고 판단되면 선언을 남기고 테스트 수정 → 재-RED 후 구현으로 돌아가며, 같은 task에서 선언이 반복되면 구현 중단 + draft 복귀다. 이 규칙은 델타 테스트에도 동일하게 적용되며, RED가 없는 델타 테스트에서는 구제 절차의 "RED 재관찰"이 변이 확인 재수행으로 대체된다(대체 규칙의 소유자는 커버리지 델타 절이고 불변 규칙 본문은 무변경이다)
 - 스킬의 dispatch는 런타임 내장 agent type(Claude `general-purpose`, Codex `explorer`)만 사용한다
+- 모든 SDD 파이프라인 스킬의 SKILL.md는 실행 종료 전 자체 검증하는 `## Acceptance Criteria` 섹션을 갖는다 — 실행자가 종료 전 미충족 항목을 해당 단계로 되돌아가 수정하는 스킬 drift 방지 완료 계약이다(`## Goal`은 권장 표면). AC는 그 스킬의 완료 신호 섹션(Required Output·반환·마감·보고 등)을 참조로 결속하고 상세를 재서술하지 않으며, 작성 체크리스트 canonical은 [docs/SKILL_AUTHORING_NORMS.md](../../docs/SKILL_AUTHORING_NORMS.md)다
 - `sdd-autopilot`은 existing `goal-init(preset=sdd)`를 호출하는 setup-only thin entrypoint다. 사용자 목표와 관련 context를 runtime별 canonical 방식(Claude plugin-prefixed invocation / Codex active installed skill catalog)으로 전달하고, `goal-init`이 만든 자족적 조건 문자열·runtime 실행법·4파일 경로를 relay한 뒤 사용자 activation 경계에서 종료한다
   - setup에서는 initial `feature-draft`·`implementation`·`spec-sync`를 실행하지 않고 native goal을 활성화하지 않는다. current goal status도 조회하지 않으며 existing goal을 set·clear·pause·resume·replace·merge하거나 active goal 때문에 setup을 차단하지 않는다
   - SDD preset은 generic `goal-init`의 Goal Intake → Divergence → Condition Crafting → Harness Setup → Handoff 5단계, condition self-check, `goal.md`·`experiments.md`·`journal.md`·`report.md` 4파일 계약을 그대로 재사용하고 `goal.md`의 `Loop Protocol` payload만 바꾼다. `goal.md`는 조건 문자열(outcome 수준 DONE WHEN + 위조 어려운 anchor + 표준 레시피 참조 문구 + drift 가드 CONSTRAINT) / 검증 레시피(브리틀 검증 디테일 — goal 재설정 없이 수정 가능) / Loop Protocol(HOW)의 3분법 계약이다

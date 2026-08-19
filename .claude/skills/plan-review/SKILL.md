@@ -7,6 +7,19 @@ description: Use this skill to review a feature draft before coding, identify ov
 
 이 스킬은 **메인 루프가 직접 수행**한다 — feature draft를 5-smell rubric으로 **단일 패스** 감사하고 결과를 채팅 반환 하나로 낸다. 서브에이전트를 dispatch하지 않고, 리포트 파일을 만들지 않으며, 대상 draft·코드를 수정하지 않는다 — finding 반영은 producer(draft 작성자) 소관이다. `--model`·`--effort` 류 인자가 오면 적용 대상(서브에이전트)이 없음을 1줄 안내하고 무시한다.
 
+## Goal
+
+대상 feature draft를 5-smell rubric으로 단일 패스 감사하고, 어떤 파일도 수정하지 않은 채 Blocker Status와 severity별 findings를 채팅 반환 하나로 낸다.
+
+## Acceptance Criteria
+
+> 프로세스 완료 후 아래 기준을 자체 검증한다. 미충족 항목은 해당 단계로 돌아가 수정한다.
+
+- [ ] AC1: Input 우선순위로 대상 draft를 확정했다 — 대상 부재면 지정된 1줄 반환만 하고 종료했다.
+- [ ] AC2: 5 smell을 각각 **단일 패스**로 점검했다 (finding 0인 smell 포함, 재점검 루프 없음).
+- [ ] AC3: 각 finding이 인용 evidence에 묶였고, 근거 부족 smell은 finding을 만들지 않았다 (읽기 지침 참조).
+- [ ] AC4: 산출물이 "반환" 섹션 형식의 채팅 반환 하나뿐이다 — 리포트 파일 생성·서브에이전트 dispatch·대상 draft/코드 수정이 없다.
+
 ## Input
 
 1. 사용자/호출자 지정 draft 경로

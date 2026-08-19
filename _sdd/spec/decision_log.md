@@ -1,5 +1,19 @@
 # Decision Log
 
+## 2026-08-19 - SDD 파이프라인 스킬의 Goal/AC 완료 계약을 복원한다 (v4.26.0 → v4.27.0)
+
+### Context
+
+agent→skill 전환(F1~F5)에서 orchestrator의 return-schema 검증이 orchestrator와 함께 삭제되며, 전환 4종(feature-draft·plan-review·implementation·implementation-review)만 `## Goal`·`## Acceptance Criteria`가 없는 상태로 남았다(전 스킬 grep 실측 — AC 결손은 정확히 이 4종뿐). SKILL_AUTHORING_NORMS "AC 필수" 위반이자, 실행자가 스킬을 임의 축약·이탈하는 drift의 관측 원인(사용자 보고).
+
+### Decision
+
+4종 원본+codex 미러 8파일에 `## Goal` + self-check blockquote 포함 `## Acceptance Criteria`를 intro 직후 삽입한다. AC는 기존 완료 신호 섹션(Required Output·반환·마감·보고)의 승격으로, 상세를 재서술하지 않고 소유 섹션을 참조로 결속하며 새 프로세스 단계를 발명하지 않는다. guardrail로 "전 SDD 파이프라인 스킬 SKILL.md는 AC 자체 검증 섹션 필수(Goal은 권장)"를 신설한다. 미러는 3-way merge(spawn 어휘·Codex Runtime Adapter delta 보존).
+
+### Evidence
+
+draft `_sdd/drafts/2026-08-19_feature_draft_ex_orchestrator_goal_ac.md`(plan gate 1회 M1L2→fix), ledger 동일 slug(impl gate: correctness M1 + simplicity M1 → fix, gate 2 임계 미달). census 16/16·구조 check 8×PASS·회귀 5 passed.
+
 ## 2026-08-15 - plan-review를 agent 0개 직접 실행 스킬로 전환한다 — 읽기 통제는 순종이 아니라 구조
 
 ### Context
