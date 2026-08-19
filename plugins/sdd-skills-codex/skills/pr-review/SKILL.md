@@ -6,7 +6,7 @@ argument-hint: "[--model <active-model>] [--effort <active-effort>]"
 
 # PR Review (직접 correctness + simplicity spawn + Verdict)
 
-이 스킬은 PR 데이터·spec을 수집한 뒤, **correctness 리뷰를 메인 루프가 직접 수행**하고 **clarity 렌즈만** native `explorer` agent로 spawn한다 (동작-불변 형태 품질 — 계약·차원·severity는 `implementation-review` 스킬의 `references/simplicity-contract.md`가 단일 소스이며, spawn message에 전문을 verbatim 포함한다). 두 렌즈 결과를 합쳐 **verdict**(APPROVE / REQUEST CHANGES / NEEDS DISCUSSION)를 합성해 통합 리뷰 리포트(`_sdd/pr/<YYYY-MM-DD>_pr_review_<slug>.md`) 하나를 작성한다.
+이 스킬은 PR 데이터·spec을 수집한 뒤, **correctness 리뷰를 메인 루프가 직접 수행**하고 **clarity 렌즈만** 범용 sub-agent로 spawn한다 (동작-불변 형태 품질 — 계약·차원·severity는 `implementation-review` 스킬의 `references/simplicity-contract.md`가 단일 소스이며, spawn message에 전문을 verbatim 포함한다). 두 렌즈 결과를 합쳐 **verdict**(APPROVE / REQUEST CHANGES / NEEDS DISCUSSION)를 합성해 통합 리뷰 리포트(`_sdd/pr/<YYYY-MM-DD>_pr_review_<slug>.md`) 하나를 작성한다.
 
 > **경계**: 자동 게이트는 도입하지 않는다 — PR review는 인간 리뷰 보조다. verdict는 두 렌즈 신호를 모두 쥔 메인 루프가 합성한다.
 
@@ -15,7 +15,7 @@ argument-hint: "[--model <active-model>] [--effort <active-effort>]"
 - [ ] AC1: `_sdd/pr/<YYYY-MM-DD>_pr_review_<slug>.md` 통합 리뷰 리포트가 Output Format에 맞게 생성되었다
 - [ ] AC2: Verdict(APPROVE / REQUEST CHANGES / NEEDS DISCUSSION)가 두 렌즈 요약을 근거로 부여되었다
 - [ ] AC3: correctness 검증(코드 품질·에러 처리·테스트·보안, spec 존재 시 spec AC·compliance·gap)을 메인 루프가 Correctness 리뷰 절의 절차대로 직접 수행했다
-- [ ] AC4: simplicity 계약(reference 전문 verbatim)을 담은 native `explorer` agent를 PR 변경 파일 컨텍스트(PR Review Input)로 spawn했다
+- [ ] AC4: simplicity 계약(reference 전문 verbatim)을 담은 범용 sub-agent를 PR 변경 파일 컨텍스트(PR Review Input)로 spawn했다
 - [ ] AC5: 두 렌즈의 finding이 Step 4 합류 규칙대로 통합 리포트에 합류했다
 - [ ] AC6: `--model`/`--effort` 인자가 있으면 simplicity spawn에 적용했다 (correctness는 메인 루프 직접 수행이라 적용 대상이 아니다 — 그 사실을 안내)
 
@@ -31,11 +31,11 @@ argument-hint: "[--model <active-model>] [--effort <active-effort>]"
 
 런타임이 skill-internal agent dispatch를 허용하는 경우, 이 스킬의 직접 호출은 simplicity spawn 범위에 대한 사용자 요청으로 처리한다. 현재 런타임 정책이 명시적 sub-agent 허가를 추가로 요구하면, spawn 전에 사용자에게 위임 허가를 요청한다.
 
-spawn 전에 **active tool schema를 직접 확인**하고 아래 두 contract 중 정확히 하나만 선택한다. 없는 lifecycle tool을 찾으려고 `tool_search`하지 않으며, 두 contract의 필드나 lifecycle 호출을 섞지 않는다.
+spawn 전에 **active tool schema를 직접 확인**하고 아래 두 lifecycle contract 중 정확히 하나만 선택한다. 없는 lifecycle tool을 찾으려고 `tool_search`하지 않으며, 두 contract의 필드나 lifecycle 호출을 섞지 않는다. `agent_type`은 lifecycle 필드가 아니라 **선택적 role selector**다 — active schema가 `"explorer"` 값을 지원할 때만 추가하고, 필드가 없거나 해당 값을 지원하지 않으면 생략한다. 생략해도 simplicity 역할·read-only 경계는 framed `message`의 계약 전문이 부여하므로 blocker가 아니다.
 
-- **Mailbox contract (Desktop/current CLI)**: `spawn_agent`가 `task_name`/`fork_turns`를 요구하거나 `wait_agent`에 `targets`가 없다. invocation마다 짧은 lowercase `run_id`를 만들고, 같은 parent tree의 재실행까지 포함해 고유한 `task_name`에 그 값을 넣는다. spawn에 이 `task_name`, `agent_type`, `fork_turns: "none"`, `message`를 전달한다. `wait_agent({timeout_ms: 600000})` mailbox를 반복 호출해 final을 수거한다. 완료 agent는 닫지 않는다. 통제된 중단이 필요할 때만 노출된 `interrupt_agent`를 사용한다.
-- **Target/close contract (legacy CLI schema)**: `wait_agent`가 `targets`를 지원하고 `close_agent`도 노출된다. `agent_type`/`message`로 spawn하고 target wait로 final을 수거한 뒤 완료 handle을 닫는다.
-- 어느 contract도 완전하지 않거나 둘 중 하나로 확정할 수 없으면 spawn하지 않고 **schema blocker**를 보고한 뒤, correctness 직접 리뷰만으로 리포트를 작성하고 누락 렌즈를 명시한다.
+- **Mailbox contract (Desktop/current CLI)**: `spawn_agent`가 `task_name`/`fork_turns`를 요구하거나 `wait_agent`에 `targets`가 없다. invocation마다 짧은 lowercase `run_id`를 만들고, 같은 parent tree의 재실행까지 포함해 고유한 `task_name`에 그 값을 넣는다. spawn에 이 `task_name`, `fork_turns: "none"`, `message`를 전달하고, 지원되는 경우에만 `agent_type: "explorer"`를 추가한다. `wait_agent({timeout_ms: 600000})` mailbox를 반복 호출해 final을 수거한다. 완료 agent는 닫지 않는다. 통제된 중단이 필요할 때만 노출된 `interrupt_agent`를 사용한다.
+- **Target/close contract (legacy CLI schema)**: `wait_agent`가 `targets`를 지원하고 `close_agent`도 노출된다. `message`로 spawn하고, 지원되는 경우에만 `agent_type: "explorer"`를 추가한 뒤 target wait로 final을 수거하고 완료 handle을 닫는다.
+- 어느 lifecycle contract도 완전하지 않거나 둘 중 하나로 확정할 수 없으면 spawn하지 않고 **schema blocker**를 보고한 뒤, correctness 직접 리뷰만으로 리포트를 작성하고 누락 렌즈를 명시한다. `agent_type` 부재만으로는 이 분기를 타지 않는다.
 
 실행 surface 이름이 아니라 schema가 contract를 결정한다.
 
@@ -48,14 +48,14 @@ spawn 전에 **active tool schema를 직접 확인**하고 아래 두 contract �
 Mailbox contract (아래 `r7f3a`는 예시 `run_id`):
 
 ```text
-spawn_agent({task_name: "pr_review_r7f3a_simplicity", agent_type: "explorer", fork_turns: "none", message: "<framed payload: simplicity 계약 전문(verbatim) + Mode + Input Data>"})
+spawn_agent({task_name: "pr_review_r7f3a_simplicity", fork_turns: "none", message: "<framed payload: simplicity 계약 전문(verbatim) + Mode + Input Data>"})
 wait_agent({timeout_ms: 600000})  // final이 도착할 때까지 반복
 ```
 
 Target/close contract:
 
 ```text
-spawn_agent({agent_type: "explorer", message: "<framed payload: simplicity 계약 전문(verbatim) + Mode + Input Data>"})
+spawn_agent({message: "<framed payload: simplicity 계약 전문(verbatim) + Mode + Input Data>"})
 wait_agent({targets: ["<simplicity_id>"], timeout_ms: 600000})
 close_agent({target: "<simplicity_id>"})
 ```

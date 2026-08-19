@@ -3487,3 +3487,10 @@ sdd-autopilot의 review-fix 루프가 선택적으로 동작하여, 리뷰만 �
 - **결정**: `implementation` 마감 회귀는 이번 변경 관련 표적 test/check + fast 회귀(무거운 test 제외)만 실행한다. 무거운 test·전체 suite 실행, 실행 확인 질문, 미실행분 보고 의무를 마감 계약에서 제거한다.
 - **불변**: 표적 명령 30초 상한, review correctness의 slow 의존 AC `UNTESTED`, 실행 중 느리게 드러난 테스트의 분리·리팩토링 권고와 본질적 slow test의 checkpoint 한정 규칙은 유지한다.
 - **evidence**: Claude/Codex `implementation/SKILL.md` byte parity, 양 skill quick validator PASS, 제거 문구 census 0.
+
+## 2026-08-19 - Codex agent role selector를 lifecycle 계약에서 분리 (v4.25.0 → v4.26.0, post-implementation)
+
+- **배경**: Codex plugin 실사용에서 `implementation-review`가 simplicity dispatch 직전 `agent_type` 필드 미지원으로 schema blocker를 보고하고 correctness-only로 강등됐다. 설치 캐시와 repo source는 byte-identical이었고, 현재 mailbox `spawn_agent` schema는 `task_name`·`fork_turns`·`message`를 제공하지만 `agent_type`을 제공하지 않아 stale 설치가 아니라 runtime adapter 계약 drift로 확인됐다.
+- **결정**: ① mailbox/target-close는 lifecycle contract만 결정한다 ② `agent_type`은 active schema가 요청 역할 값을 지원할 때만 추가하는 선택적 role selector이며, 부재만으로 blocker/fallback하지 않는다 ③ role selector가 없으면 simplicity/read-only/쓰기 집합 등 역할 경계를 framed `message`에 주입한 범용 sub-agent를 사용한다 ④ lifecycle 자체가 불완전하거나 사용자가 요청한 model·reasoning override가 미지원인 기존 fail-closed는 유지한다.
+- **범위**: Codex `implementation-review`·`pr-review`·`investigate`·`write-phased` Runtime Adapter와 PR 예시, component/runtime spec. Claude dispatch 계약과 simplicity 4차원·severity·반환 형식은 불변이다. Codex plugin version은 1.0.1이다.
+- **evidence**: mandatory `agent_type` payload example 0, optional-role/부재-nonblocker 구조 census, `investigate`·`write-phased` quick validator PASS, plugin validator PASS, `git diff --check` PASS. review 스킬 2개 quick validator는 기존 `argument-hint` 허용목록 불일치로 미통과했으며 본 변경의 plugin validator와 구조 검증으로 보완했다.

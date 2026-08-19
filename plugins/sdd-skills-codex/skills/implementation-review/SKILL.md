@@ -6,17 +6,17 @@ argument-hint: "[--model <active-model>] [--effort <active-effort>]"
 
 # Implementation Review (직접 correctness + simplicity spawn, Review-only)
 
-이 스킬의 **correctness 렌즈는 메인 루프가 직접 수행**하고, **clarity 렌즈만** native `explorer` agent로 spawn한다. spawn message에는 `references/simplicity-contract.md`(이 스킬 디렉토리)를 Read해 **계약 전문을 verbatim 포함**한다 — 요약·재구성 금지, 계약·차원·severity는 그 reference가 단일 소스다. review-only다 — 어떤 파일도 수정하지 않으며, finding 반영·마감 판정은 호출자 소관이다.
+이 스킬의 **correctness 렌즈는 메인 루프가 직접 수행**하고, **clarity 렌즈만** 범용 sub-agent로 spawn한다. spawn message에는 `references/simplicity-contract.md`(이 스킬 디렉토리)를 Read해 **계약 전문을 verbatim 포함**한다 — 요약·재구성 금지, 계약·차원·severity는 그 reference가 단일 소스다. review-only다 — 어떤 파일도 수정하지 않으며, finding 반영·마감 판정은 호출자 소관이다.
 
 ## Codex Runtime Adapter (simplicity spawn 전용)
 
 런타임이 skill-internal agent dispatch를 허용하는 경우, 이 스킬의 직접 호출은 simplicity spawn 범위에 대한 사용자 요청으로 처리한다. 현재 런타임 정책이 명시적 sub-agent 허가를 추가로 요구하면, spawn 전에 사용자에게 위임 허가를 요청한다.
 
-spawn 전에 **active tool schema를 직접 확인**하고 아래 두 contract 중 정확히 하나만 선택한다. 없는 lifecycle tool을 찾으려고 `tool_search`하지 않으며, 두 contract의 필드나 lifecycle 호출을 섞지 않는다.
+spawn 전에 **active tool schema를 직접 확인**하고 아래 두 lifecycle contract 중 정확히 하나만 선택한다. 없는 lifecycle tool을 찾으려고 `tool_search`하지 않으며, 두 contract의 필드나 lifecycle 호출을 섞지 않는다. `agent_type`은 lifecycle 필드가 아니라 **선택적 role selector**다 — active schema가 `"explorer"` 값을 지원할 때만 추가하고, 필드가 없거나 해당 값을 지원하지 않으면 생략한다. 생략해도 simplicity 역할·read-only 경계는 framed `message`의 계약 전문이 부여하므로 blocker가 아니다.
 
-- **Mailbox contract (Desktop/current CLI)**: `spawn_agent`가 `task_name`/`fork_turns`를 요구하거나 `wait_agent`에 `targets`가 없다. invocation마다 짧은 lowercase `run_id`를 만들고, 같은 parent tree의 재실행까지 포함해 고유한 `task_name`에 그 값을 넣는다. 각 spawn에 이 `task_name`, `agent_type`, `fork_turns: "none"`, `message`를 전달한다. `wait_agent({timeout_ms: 600000})` mailbox를 반복 호출해 남은 task final을 모두 수거한다. 완료 agent는 닫지 않는다. 통제된 중단이 필요할 때만 노출된 `interrupt_agent`를 사용한다.
-- **Target/close contract (legacy CLI schema)**: `wait_agent`가 `targets`를 지원하고 `close_agent`도 노출된다. `agent_type`/`message`로 spawn하고 target wait로 final을 수거한 뒤 완료 handle을 닫는다.
-- 어느 contract도 완전하지 않거나 둘 중 하나로 확정할 수 없으면 spawn하지 않고 **schema blocker**를 보고한 뒤, correctness 직접 리뷰만 수행하고 누락 렌즈를 명시한다.
+- **Mailbox contract (Desktop/current CLI)**: `spawn_agent`가 `task_name`/`fork_turns`를 요구하거나 `wait_agent`에 `targets`가 없다. invocation마다 짧은 lowercase `run_id`를 만들고, 같은 parent tree의 재실행까지 포함해 고유한 `task_name`에 그 값을 넣는다. 각 spawn에 이 `task_name`, `fork_turns: "none"`, `message`를 전달하고, 지원되는 경우에만 `agent_type: "explorer"`를 추가한다. `wait_agent({timeout_ms: 600000})` mailbox를 반복 호출해 남은 task final을 모두 수거한다. 완료 agent는 닫지 않는다. 통제된 중단이 필요할 때만 노출된 `interrupt_agent`를 사용한다.
+- **Target/close contract (legacy CLI schema)**: `wait_agent`가 `targets`를 지원하고 `close_agent`도 노출된다. `message`로 spawn하고, 지원되는 경우에만 `agent_type: "explorer"`를 추가한 뒤 target wait로 final을 수거하고 완료 handle을 닫는다.
+- 어느 lifecycle contract도 완전하지 않거나 둘 중 하나로 확정할 수 없으면 spawn하지 않고 **schema blocker**를 보고한 뒤, correctness 직접 리뷰만 수행하고 누락 렌즈를 명시한다. `agent_type` 부재만으로는 이 분기를 타지 않는다.
 
 실행 surface 이름이 아니라 schema가 contract를 결정한다.
 
@@ -29,16 +29,16 @@ spawn 전에 **active tool schema를 직접 확인**하고 아래 두 contract �
 Mailbox contract (아래 `r7f3a`는 예시 `run_id`):
 
 ```text
-spawn_agent({task_name: "implementation_review_r7f3a_simplicity_reference", agent_type: "explorer", fork_turns: "none", message: "<framed payload: simplicity 계약 전문(verbatim) + Mode + Input Data(+ 참조 묶음 한정)>"})
-spawn_agent({task_name: "implementation_review_r7f3a_simplicity_local", agent_type: "explorer", fork_turns: "none", message: "<framed payload: simplicity 계약 전문(verbatim) + Mode + Input Data(+ 국소 묶음 한정)>"})
+spawn_agent({task_name: "implementation_review_r7f3a_simplicity_reference", fork_turns: "none", message: "<framed payload: simplicity 계약 전문(verbatim) + Mode + Input Data(+ 참조 묶음 한정)>"})
+spawn_agent({task_name: "implementation_review_r7f3a_simplicity_local", fork_turns: "none", message: "<framed payload: simplicity 계약 전문(verbatim) + Mode + Input Data(+ 국소 묶음 한정)>"})
 wait_agent({timeout_ms: 600000})  // 남은 task의 final이 모두 도착할 때까지 반복
 ```
 
 Target/close contract:
 
 ```text
-spawn_agent({agent_type: "explorer", message: "<framed payload: simplicity 계약 전문(verbatim) + ... (+ 참조 묶음 한정)>"})
-spawn_agent({agent_type: "explorer", message: "<framed payload: simplicity 계약 전문(verbatim) + ... (+ 국소 묶음 한정)>"})
+spawn_agent({message: "<framed payload: simplicity 계약 전문(verbatim) + ... (+ 참조 묶음 한정)>"})
+spawn_agent({message: "<framed payload: simplicity 계약 전문(verbatim) + ... (+ 국소 묶음 한정)>"})
 wait_agent({targets: [<simplicity_묶음_id...>], timeout_ms: 600000})
 close_agent({target: <각 완료 id>})
 ```
