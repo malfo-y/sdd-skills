@@ -10,6 +10,20 @@ argument-hint: ["[--model <sonnet|opus|haiku|fable>]"]
 
 `--model <name>` 인자는 **simplicity dispatch에만** 적용한다. `<name>`은 `sonnet`·`opus`·`haiku`·`fable` 중 하나여야 하며, 그 외 값이면 dispatch하지 않고 허용값을 안내한다. 미지정 시 생략한다(세션 기본값 상속). correctness는 메인 루프 직접 수행이라 override 대상이 아니다.
 
+## Goal
+
+구현 변경을 simplicity(dispatch)·correctness(직접 수행) 두 렌즈로 리뷰하고, 어떤 파일도 수정하지 않은 채 모든 AC verdict가 증거에 묶인 합산 보고 하나를 낸다.
+
+## Acceptance Criteria
+
+> 프로세스 완료 후 아래 기준을 자체 검증한다. 미충족 항목은 해당 단계로 돌아가 수정한다.
+
+- [ ] AC1: 실행 순서를 지켰다 — simplicity dispatch를 먼저 띄우고(reference 계약 전문 verbatim 포함), 그동안 correctness를 직접 수행했다.
+- [ ] AC2: correctness 판정 기준이 기준 문서 적응 규칙으로 정해졌고, 읽기 범위 3단 계단 밖 탐색적 읽기가 없다.
+- [ ] AC3: 모든 AC verdict(MET/NOT MET/UNTESTED)가 fresh 증거(실행 출력 또는 `file:line`)에 묶였다 — 증거 없는 MET 없음 (Fresh Verification 참조).
+- [ ] AC4: 산출물이 "보고" 섹션 형식의 합산 보고 하나뿐이고, 어떤 파일도 수정하지 않았다.
+- [ ] AC5: simplicity 반환 실패 시 Error Handling대로 누락 렌즈를 명시하고 재실행을 안내했다.
+
 ## 실행 순서
 
 1. **simplicity dispatch를 먼저 띄운다** — 차원 **묶음마다 1회**(참조 ∥ 국소), 한 메시지에 병렬로. 각 dispatch는 **전체 변경 대상**이다(묶음 정의·범위 불변 근거는 reference의 `호출자 차원 한정` 절이 단일 소스). prompt는 **reference 계약 전문(verbatim) → 차원 묶음 한정 → 요청·경로와 대화에만 있는 맥락 digest** 순서로 구성한다 — plan이 있으면 경로와 필요한 맥락만 짧게, 없으면 이번 세션에서 무엇을·왜 구현했는지와 리뷰 범위(agent는 이번 세션 대화를 직접 읽지 못한다). 대상 경로가 불명확하면 agent가 자체 Input 우선순위로 탐색하도록 위임한다.

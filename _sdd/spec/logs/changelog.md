@@ -863,3 +863,8 @@
 ## v4.26.0 (2026-08-19)
 
 - Codex multi-agent adapter에서 `agent_type`을 필수 lifecycle 필드가 아닌 선택적 role selector로 교정했다. active schema가 role 값을 지원할 때만 추가하고, 미지원 시 framed `message` 계약을 주입한 범용 sub-agent를 사용한다. `implementation-review`·`pr-review`의 simplicity dispatch와 `investigate`·`write-phased` helper가 현재 mailbox schema에서 불필요한 blocker/fallback으로 빠지지 않도록 Codex 스킬 4개와 PR 예시·component/runtime spec을 동기화했으며, Codex plugin을 1.0.1로 올렸다.
+
+## v4.27.0 (2026-08-19)
+
+- **ex-orchestrator 스킬 4종에 Goal + Acceptance Criteria 완료 계약 복원**: agent→skill 전환(F1~F5) 때 orchestrator return-schema 검증과 함께 사라졌던 완료 계약을 `feature-draft`·`plan-review`·`implementation`·`implementation-review` SKILL.md에 복원했다(원본 4 + codex 미러 4 = 8파일, 3-way merge로 codex 적응 delta 보존). 각 스킬 intro 직후 `## Goal` + self-check blockquote를 가진 `## Acceptance Criteria`를 두고, AC는 기존 완료 신호 섹션(Required Output·반환·마감·보고)을 참조로 결속해 상세를 재서술하지 않는다. 이로써 전 SDD 파이프라인 스킬이 `## Acceptance Criteria`를 보유(guardrail 신설, 작성 체크리스트 canonical은 docs/SKILL_AUTHORING_NORMS.md).
+- **검증 evidence**: heading census 8파일×2종=16/16, 위치·blockquote 구조 check 8×PASS, diff 순수 삽입(codex delta 무손상), `git ls-files` 8/8 추적, 회귀 `pytest tools/tests/` 5 passed. plan gate 1회(M1→fix: invariant 과대 서술 축소), impl gate 1회(correctness M1: plan-review AC 단일 패스 누락 / simplicity M1: implementation Goal 마감 4단계 재서술 — 둘 다 fix, gate 2 임계 미달).

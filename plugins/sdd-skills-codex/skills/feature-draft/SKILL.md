@@ -9,6 +9,20 @@ description: This skill should be used when the user asks to "feature draft", "d
 
 **task의 정의**: task는 단일 의도를 가지고 자기 AC만으로 완료 판정이 닫히는 실행 단위다.
 
+## Goal
+
+이번 대화의 요구사항을 falsifiable AC와 실측 Target Files를 가진 task 집합으로 전환해 `_sdd/drafts/` draft 파일 하나로 남기고, `plan-review` 게이트까지 통과한 상태로 `implementation`에 인계 가능하게 만든다.
+
+## Acceptance Criteria
+
+> 프로세스 완료 후 아래 기준을 자체 검증한다. 미충족 항목은 해당 단계로 돌아가 수정한다.
+
+- [ ] AC1: draft 파일이 Required Output의 경로 규약과 fenced template 구조(마커 쌍 포함)대로 생성되었다.
+- [ ] AC2: 규모 판정 1줄이 draft 상단에 기록되었다 (분할 규칙 참조 — 분할 필요면 Part 1에 분할 계획, Part 2에 첫 feature만).
+- [ ] AC3: 모든 변경 요소에 owner task가 정확히 하나 배정되었고(Process 3 검산), 각 task의 AC가 "규칙"의 등급·공통 기준을 따른다.
+- [ ] AC4: `plan-review` 게이트를 품질 게이트 규칙대로 실행하고 fix를 반영했다 (gate 2 조건 판정 포함).
+- [ ] AC5: Open Questions 중 사용자 확인 필요 항목만 채팅에 노출했다 (없으면 "없음" 1줄).
+
 ## Process
 
 1. **맥락 수집**: 요구사항의 원천은 이번 대화다(메인 루프가 이미 보유). spec/코드 탐색은 Target Files와 AC를 실측으로 뒷받침할 만큼만 한다. 동일 change element가 둘 이상의 동기화 표면에 걸리는지 함께 식별한다.

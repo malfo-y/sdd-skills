@@ -8,6 +8,20 @@ argument-hint: "[--model <active-model>] [--effort <active-effort>]"
 
 이 스킬의 **correctness 렌즈는 메인 루프가 직접 수행**하고, **clarity 렌즈만** 범용 sub-agent로 spawn한다. spawn message에는 `references/simplicity-contract.md`(이 스킬 디렉토리)를 Read해 **계약 전문을 verbatim 포함**한다 — 요약·재구성 금지, 계약·차원·severity는 그 reference가 단일 소스다. review-only다 — 어떤 파일도 수정하지 않으며, finding 반영·마감 판정은 호출자 소관이다.
 
+## Goal
+
+구현 변경을 simplicity(spawn)·correctness(직접 수행) 두 렌즈로 리뷰하고, 어떤 파일도 수정하지 않은 채 모든 AC verdict가 증거에 묶인 합산 보고 하나를 낸다.
+
+## Acceptance Criteria
+
+> 프로세스 완료 후 아래 기준을 자체 검증한다. 미충족 항목은 해당 단계로 돌아가 수정한다.
+
+- [ ] AC1: 실행 순서를 지켰다 — simplicity spawn을 먼저 띄우고(reference 계약 전문 verbatim 포함, Codex Runtime Adapter 준수), 그동안 correctness를 직접 수행했다.
+- [ ] AC2: correctness 판정 기준이 기준 문서 적응 규칙으로 정해졌고, 읽기 범위 3단 계단 밖 탐색적 읽기가 없다.
+- [ ] AC3: 모든 AC verdict(MET/NOT MET/UNTESTED)가 fresh 증거(실행 출력 또는 `file:line`)에 묶였다 — 증거 없는 MET 없음 (Fresh Verification 참조).
+- [ ] AC4: 산출물이 "보고" 섹션 형식의 합산 보고 하나뿐이고, 어떤 파일도 수정하지 않았다.
+- [ ] AC5: simplicity 반환 실패(schema blocker 포함) 시 Error Handling대로 누락 렌즈를 명시하고 재실행을 안내했다.
+
 ## Codex Runtime Adapter (simplicity spawn 전용)
 
 런타임이 skill-internal agent dispatch를 허용하는 경우, 이 스킬의 직접 호출은 simplicity spawn 범위에 대한 사용자 요청으로 처리한다. 현재 런타임 정책이 명시적 sub-agent 허가를 추가로 요구하면, spawn 전에 사용자에게 위임 허가를 요청한다.
