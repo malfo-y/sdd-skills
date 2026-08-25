@@ -23,7 +23,7 @@ description: This skill should be used when the user asks to set up a "/goal", "
 - [ ] AC2: 목표 달성 접근/가설 2개 이상이 발산되어 `experiments.md` 백로그에 수집되었다.
 - [ ] AC3: 완료조건 문자열이 평가자 적합성 self-check(도구 없이 판정·evidence 매 턴 surface·4,000자 이하)를 통과했다.
 - [ ] AC4: `_sdd/goal/<YYYY-MM-DD>_<slug>/`에 4파일(`goal.md`/`experiments.md`/`journal.md`/`report.md`)이 생성되었다.
-- [ ] AC5: 조건 문자열 + Claude `/goal` 실행법 + 생성한 4파일의 개별 경로를 핸드오프로 제시했고, “goal을 활성화하지 않았으며 기존 goal 상태도 변경하지 않았다”는 불변식을 표시했으며, 스킬이 `/goal`을 직접 발동하지 않았다.
+- [ ] AC5: 조건 문자열 전문을 생략·요약 없이 별도 코드 블록으로 화면에 직접 출력하고, Claude `/goal` 실행법 + 생성한 4파일의 개별 경로를 핸드오프로 제시했으며, “goal을 활성화하지 않았으며 기존 goal 상태도 변경하지 않았다”는 불변식을 표시했고, 스킬이 `/goal`을 직접 발동하지 않았다.
 - [ ] AC6: `preset=sdd` 입력이면 기존 5단계·4파일·self-check를 그대로 수행하고 `references/harness-templates.md`의 SDD Loop Protocol payload를 선택했다.
 
 ## Hard Rules
@@ -102,7 +102,9 @@ Process의 모든 단계에 횡단 적용되는 판단 지침. Hard Rules가 강
 
 ### Step 5: Handoff
 
-확정한 **조건 문자열**, **Claude `/goal` 실행법**, 생성한 `goal.md`·`experiments.md`·`journal.md`·`report.md`의 **개별 경로**를 사용자에게 제시한다.
+확정한 **조건 문자열 전문**, **Claude `/goal` 실행법**, 생성한 `goal.md`·`experiments.md`·`journal.md`·`report.md`의 **개별 경로**를 사용자에게 제시한다.
+
+- **조건 문자열 화면 출력**: `DONE WHEN`·`CONSTRAINTS`·`STOP`을 모두 포함한 전문을 생략·요약 없이 별도 코드 블록으로 화면에 직접 출력한다. `goal.md` 경로만 안내하거나 일부를 `...`로 줄여 대신하지 않는다.
 
 - **Claude 실행법**: (a) workspace trust + hooks가 활성화되어 있어야 `/goal` 루프가 동작한다. (b) 라이프사이클은 `/goal set`(목표 설정)·`/goal status`(진행 확인)·`/goal clear`(종료)이며, `clear`는 별칭(`stop`·`off`·`reset` 등)으로도 호출할 수 있다. (c) 세션을 멈췄다 `--resume`/`--continue`로 이어가면 active goal이 복원되며 턴·타이머·토큰 카운터가 리셋된다. (d) 평가자는 조건 문자열을 4,000자 상한으로 읽으므로, 그 안에서 도구 없이 판정 가능한 evidence가 매 턴 surface되어야 한다.
 - **스킬은 `/goal`을 직접 발동하지 않는다 (I2)**. 핸드오프는 조건 문자열 + 실행법 제시까지이며, 사용자가 조건을 검토한 뒤 **직접 발동한다**.
