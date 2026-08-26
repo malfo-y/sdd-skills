@@ -22,7 +22,7 @@ description: This skill should be used when the user asks to set up a "/goal", "
 - [ ] AC1: 목표가 `/goal` 적합성 gate(verifiable end state가 있는 멀티턴 작업)를 통과했다.
 - [ ] AC2: 목표 달성 접근/가설 2개 이상이 발산되어 `experiments.md` 백로그에 수집되었다.
 - [ ] AC3: 완료조건 문자열이 평가자 적합성 self-check(도구 없이 판정·evidence 매 턴 surface·4,000자 이하)를 통과했다.
-- [ ] AC4: `_sdd/goal/<YYYY-MM-DD>_<slug>/`에 4파일(`goal.md`/`experiments.md`/`journal.md`/`report.md`)이 생성되었다.
+- [ ] AC4: `_sdd/goal/<YYYY-MM-DD>_<slug>/`에 4파일(`goal.md`/`experiments.md`/`journal.md`/`report.md`)이 생성되었고, `goal.md`에 Step 1에서 확정한 수준(`unattended` | `attended`)의 `자율 수행 위임` 섹션이 있다.
 - [ ] AC5: 조건 문자열 전문을 생략·요약 없이 별도 코드 블록으로 화면에 직접 출력하고, Claude `/goal` 실행법 + 생성한 4파일의 개별 경로를 핸드오프로 제시했으며, “goal을 활성화하지 않았으며 기존 goal 상태도 변경하지 않았다”는 불변식을 표시했고, 스킬이 `/goal`을 직접 발동하지 않았다.
 - [ ] AC6: `preset=sdd` 입력이면 기존 5단계·4파일·self-check를 그대로 수행하고 `references/harness-templates.md`의 SDD Loop Protocol payload를 선택했다.
 
@@ -46,6 +46,7 @@ Process의 모든 단계에 횡단 적용되는 판단 지침. Hard Rules가 강
 - **Evaluator-first**: 완료조건은 항상 "도구 없이 transcript만 보는 평가자가 판정할 수 있는가"를 기준으로 작성한다. 판정 불가능한 표현은 측정 가능한 형태로 바꾼다.
 - **3분법 분리 (Condition / 검증 레시피 / HOW)**: 완료조건(WHAT/`DONE WHEN`/`CONSTRAINTS`/`STOP`)은 outcome 수준으로 조건 문자열에 자족 인라인하고, 브리틀 검증 디테일(명령·기대 출력·수치 임계·허용 델타 열거)은 `goal.md`의 `검증 레시피` 섹션에, 루프 행동(HOW)은 `goal.md`의 `Loop Protocol`에 둔다 (조건 비대화·평가자 노이즈·불일치 시 goal 재설정 방지).
 - **AI-initiated divergence**: 가설은 사용자가 먼저 꺼낼 때까지 기다리지 않는다. AI가 권장안을 먼저 제시하고 2-3개 접근과 트레이드오프를 능동 발산한다 (discussion alternatives-initiation 패턴).
+- **위임은 durable authorization**: 루프 중 확인 요청은 사용자가 답할 수 없어 무진척과 같다. commit·push·BC 제출처럼 확인이 필요한 행동은 Goal Intake에서 미리 `자율 수행 위임`의 사전 승인/제외로 갈라 `goal.md`에 둔다.
 - **파일 생성은 Harness Setup에서만**: Goal Intake/Divergence/Condition Crafting 단계에서는 파일을 만들지 않는다. 4파일 생성은 Harness Setup에서만 수행한다.
 - **YAGNI**: 5단계·4파일·분업형 조건 외의 옵션·설정·추상화를 추가하지 않는다.
 
@@ -59,6 +60,8 @@ Process의 모든 단계에 횡단 적용되는 판단 지침. Hard Rules가 강
 
 - **적합성 gate 기준**: "**verifiable end state가 있는 멀티턴 작업인가**" — (1) 달성 여부를 transcript에서 판정할 수 있는 종료 상태가 있고, (2) 한 번의 답변으로 끝나지 않는 반복 작업이어야 한다.
 - **실패 분기**: "한 줄 수정"·"오타 고치기" 같은 단발성 작업이거나 종료 상태가 모호하면, 측정 가능한 종료 상태를 갖도록 **재정의를 안내**한다. 재정의가 불가능하면 `/goal` 대신 단발 작업임을 알리고 **중단한다 (I3)**.
+
+- **자율 수준 확정**: 사용자 원문에 자율 수행 신호("알아서", "자율", "무인", "확인 없이", "묻지 말고" 등)가 있으면 `unattended`로 확정하고 되묻지 않는다. 신호가 없으면 `AskUserQuestion` 1회로 `unattended`(권장) | `attended`를 정한다. 사용자가 사전 승인/제외 목록(템플릿 기본값)을 조정하면 반영한다.
 
 **Decision Gate 1→2**: 적합성 gate를 통과한 목표가 확정되면 Step 2로 진행한다. ELSE 재정의 안내; 재정의 불가 시 중단한다.
 
@@ -78,7 +81,7 @@ Process의 모든 단계에 횡단 적용되는 판단 지침. Hard Rules가 강
 
 - **분업형 (C3, 템플릿 슬롯)**: 완료조건을 세 슬롯으로 작성한다 (`references/harness-templates.md`의 `goal.md` 슬롯에 1:1 대응).
   - `DONE WHEN`: outcome 수준 AC + 위조 어려운 anchor 1-2개 + 증명 표준 문구("`goal.md` 검증 레시피의 명령 실제 출력이 transcript에 surface되고 전 항목 PASS").
-  - `CONSTRAINTS`: 제약 + drift 가드 표준 문구(레시피 변경 시 diff·사유 표시, 판정 약화는 사용자 승인).
+  - `CONSTRAINTS`: 제약 + 템플릿의 표준 문구(drift 가드·위임).
   - `STOP`: 종료 경계 — N턴 무진척.
   - 브리틀 디테일(검증 명령·기대 출력·수치)은 `goal.md` `검증 레시피`로, 루프 행동(HOW)은 `Loop Protocol`로 분리한다.
 - **재설정 litmus (판단 지침, 비-gate)**: 어떤 디테일의 인라인/하강이 애매하면 "이 디테일이 현실과 어긋났을 때 goal을 다시 세우는 게 마땅한가?"를 묻는다. Yes(목표 자체가 바뀜) → 조건 문자열에 인라인, No(검증 방법만 바뀜) → `goal.md` 검증 레시피로 내린다.
@@ -96,6 +99,7 @@ Process의 모든 단계에 횡단 적용되는 판단 지침. Hard Rules가 강
 
 - **`goal.md`**: 확정한 조건 문자열(`DONE WHEN`/`CONSTRAINTS`/`STOP`)을 `/goal` 조건 문자열 슬롯에, Condition Crafting에서 하강시킨 브리틀 검증 디테일을 `검증 레시피` 섹션에 기입한다. `Loop Protocol`에는 preset이 없으면 template의 generic payload를, `preset=sdd`이면 SDD payload를 정확히 하나 삽입한다.
 - **`experiments.md`**: Step 2에서 발산한 가설들을 pending 백로그로 기입한다.
+- **`자율 수행 위임`**: Step 1에서 확정한 수준과 사전 승인/제외 목록(템플릿 기본값 + 사용자 조정)을 `goal.md`의 해당 섹션에 기입한다.
 - **실행법 슬롯**: Claude Code 슬롯만 채운다 (Codex 슬롯은 Codex 스킬이 자기 슬롯을 채우므로 placeholder로 둔다).
 
 **Decision Gate 4→5**: 4파일 생성이 완료되면 Step 5로 진행한다.

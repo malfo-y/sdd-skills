@@ -44,6 +44,7 @@
 - **기존 goal 불간섭**: current goal status를 조회하지 않고, 기존 goal을 변경·clear·pause·replace·merge하거나 active goal 때문에 setup을 차단하지 않습니다.
 - **Handoff 불변식**: 결과에는 “goal을 활성화하지 않았으며 기존 goal 상태도 변경하지 않았다”가 항상 표시됩니다.
 - **Producer ownership**: 활성화 후 각 feature의 계획·구현 품질 게이트와 fix는 계속 `feature-draft`·`implementation`이 소유합니다.
+- **자율 수행 위임**: `goal.md`의 `자율 수행 위임` 섹션이 루프 중 commit·push·BC 제출 같은 행동의 사전 승인입니다. 수준(`unattended`/`attended`)과 사전 승인·항상 확인 목록은 그 섹션이 단일 소스이며, 사전 승인 범위의 행동은 확인 요청 없이 진행됩니다.
 - **기존 harness 재사용**: `goal.md`·`experiments.md`·`journal.md`·`report.md`의 역할과 형식을 유지하며 별도 queue/state-machine schema를 만들지 않습니다.
 
 ## 5. 사용법
@@ -65,7 +66,7 @@
 
 | 시점 | 사용자가 하는 것 |
 |------|----------------|
-| Goal Intake/Condition Crafting | 목표와 DONE WHEN을 확정하는 질문에 답변 |
+| Goal Intake/Condition Crafting | 목표와 DONE WHEN을 확정하는 질문에 답변, 자율 수준(`unattended`/`attended`)과 자율 수행 위임의 사전 승인·제외 범위 확정 |
 | Handoff | 조건 문자열과 4파일 harness 검토 |
 | Activation | native `/goal`을 직접 활성화할지와 시점을 결정 |
 | 실행 중 | 필요할 때 `/goal status`·`pause`·`resume`·`clear` 사용 |

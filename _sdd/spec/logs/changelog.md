@@ -2,6 +2,11 @@
 
 > 이 파일은 `_sdd/spec/main.md`의 **본문이 바뀐 버전만** 기록한다 — 본문 무변경 sync(헤더 날짜만 갱신)는 entry를 남기지 않으므로 버전 번호에 결번이 생길 수 있다.
 
+#### v4.29.0 (2026-08-26)
+
+- **goal 하네스 자율 수행 위임(Autonomy Grant)**: native `/goal` 루프 중 commit·push·BC 제출 앞에서 사용자 확인을 요청하며 턴을 끝내는 문제(출처는 goal-init이 아니라 하류 — `git` CONFIRM 대기·런타임 규범·bc-mcp 안내). `goal.md`에 `자율 수행 위임` 섹션(durable authorization: 수준 `unattended`|`attended`, 사전 승인·항상 확인 목록, 질문 대체 규칙 3분기)을 추가하고, CONSTRAINTS 표준 문구에 "사전 승인 범위 행동에 확인 요청하며 턴을 끝내지 않는다"(평가자 판정 가능) 추가, goal-init Goal Intake가 수준을 확정(원문 신호면 무질문·없으면 1회 질문), Harness Setup이 섹션 기입, `git` 스킬 CONFIRM이 위임을 인정(AC3·AC4·Hard Rule·Phase 4 in-place). sdd-autopilot relay·예제·가이드 ko/en·codex 미러 동기화. §3 goal.md 계약을 3분법→4분할로 갱신.
+- **검증 evidence**: structural check 18/18(RED 11 FAIL→GREEN; 미러 기준선은 `rtk proxy diff`), plan gate CLEAR M2(외부 사실 대조로 rtk 필터 오탐 기준선 적발)→fix, implementation-review gate 1 correctness M2·simplicity M6(Medium 8→gate 2), gate 2 simplicity M3 + correctness 1 → fix·표적 검증.
+
 #### v4.28.0 (2026-08-26)
 
 - **리뷰 스킬 correctness 행동 바닥(evidence floor)**: 약한 모델(opus-4.8급)이 `plan-review`·`implementation-review`의 correctness를 사실상 건너뛰는 관측에 대해, 산문 순종이 아니라 흔적이 남는 행동 바닥 2종을 도입했다. ① `plan-review`: draft가 지목한 외부 사실(Target Files·content anchor·`[C]` 사유 전제·명시 인용 spec 절)을 판정 전 전부 실재 대조해야 근거 부족 판정·finding 0이 허용되고(AC2가 그 흔적을 판정), 읽기 확장 금지는 유지. ② `implementation-review`: 통과 AC를 `MET: AC1–AC5`로 접던 것을 AC당 증거 포인터 한 줄로 변경(본문 전사는 여전히 없음; `pr-review` 접기는 불변). 스크래치 파일·의사코드·새 AC 추가 없음(Codex 호환). §3 producer↔reviewer 계약·읽기 상한·ledger 다이어트 서술과 components 두 행 갱신.

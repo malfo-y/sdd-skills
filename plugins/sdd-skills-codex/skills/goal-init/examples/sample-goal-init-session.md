@@ -75,7 +75,7 @@ Codex: 조건 문자열로 응축합니다. 재설정 litmus를 적용합니다 
 DONE WHEN: tests/integration 스위트가 20회 연속 전부 통과한다. 증명: `goal.md` 검증 레시피의
   명령 실제 출력이 transcript에 surface되고 전 항목 PASS다 (failed/error 0건이 출력에 보인다).
 CONSTRAINTS: 검증 레시피 변경 시 변경 diff·사유를 transcript에 표시하며, 판정을 약화하는 변경은
-  사용자 승인이 필요하다. 테스트를 skip/xfail 처리하거나 retry 플러그인으로 재시도해 통과시키지 않는다 (원인 수정으로만).
+  사용자 승인이 필요하다. `goal.md` 자율 수행 위임의 사전 승인 범위에 있는 행동에 대해 사용자 확인을 요청하며 턴을 끝내지 않는다. 테스트를 skip/xfail 처리하거나 retry 플러그인으로 재시도해 통과시키지 않는다 (원인 수정으로만).
 STOP: after 6 turns without progress.
 
 평가자 적합성 self-check:
@@ -113,6 +113,11 @@ STOP: after 6 turns without progress.
 - 안정성 판정: `pytest tests/integration --count=20 -q` → `100 passed` (passed 수는 스위트 크기와 동일, failed/error 0)
 - 메인 에이전트가 매 턴 이 명령을 실행하고 출력을 대화에 surface한다.
 
+## 자율 수행 위임
+- 수준: unattended ("알아서 안정화해줘" 원문 신호)
+- 사전 승인: 브랜치 생성·commit·feature 브랜치 push·PR 생성 / pytest·스크립트 실행 / repo 안 파일 수정 / 검증 레시피의 동등·강화 변경
+- 항상 확인(제외): main 직접 push·force-push / PR merge / 판정 약화 레시피 변경 / 시크릿 취급
+
 ## Loop Protocol
 매 턴 다음을 수행한다 (메인 에이전트용 HOW, 조건 문자열에 넣지 않는다):
 1. `experiments.md`의 pending 가설 하나를 골라 시도한다.
@@ -147,7 +152,7 @@ Codex: 셋업 완료. 아래를 검토 후 직접 /goal에 거세요. (스킬은
 
 [최종 분업형 조건 문자열 — /goal에 그대로 입력]
 DONE WHEN: tests/integration 스위트가 20회 연속 전부 통과한다. 증명: `goal.md` 검증 레시피의 명령 실제 출력이 transcript에 surface되고 전 항목 PASS다 (failed/error 0건이 출력에 보인다).
-CONSTRAINTS: 검증 레시피 변경 시 변경 diff·사유를 transcript에 표시하며, 판정을 약화하는 변경은 사용자 승인이 필요하다. 테스트를 skip/xfail 처리하거나 retry 플러그인으로 재시도해 통과시키지 않는다 (원인 수정으로만).
+CONSTRAINTS: 검증 레시피 변경 시 변경 diff·사유를 transcript에 표시하며, 판정을 약화하는 변경은 사용자 승인이 필요하다. `goal.md` 자율 수행 위임의 사전 승인 범위에 있는 행동에 대해 사용자 확인을 요청하며 턴을 끝내지 않는다. 테스트를 skip/xfail 처리하거나 retry 플러그인으로 재시도해 통과시키지 않는다 (원인 수정으로만).
 STOP: after 6 turns without progress.
 
 [Codex /goal 실행법]
@@ -167,3 +172,4 @@ STOP: after 6 turns without progress.
 - **3분법 조건 문자열**: `DONE WHEN`은 outcome + anchor + "검증 레시피 출력 surface·전 항목 PASS" 표준 문구, 브리틀 검증 디테일(pytest 명령·기대 문자열)은 `goal.md`의 `검증 레시피`로, 루프 HOW는 `Loop Protocol`로 분리. `CONSTRAINTS`에 drift 가드(레시피 변경 diff 표시·약화는 사용자 승인) 기본 포함.
 - **평가자 적합성 3항목**: 도구 없이 판정 · evidence 매 턴 surface · 4,000자 이하 — 모두 통과해야 Handoff.
 - **4파일 산출 경로**: `_sdd/goal/<YYYY-MM-DD>_<slug>/`의 `goal.md`/`experiments.md`/`journal.md`/`report.md`.
+- **자율 수행 위임**: 원문의 "알아서" 신호로 `unattended` 확정 → `goal.md`에 사전 승인/제외 목록 기입. 루프 중 commit·push는 이 위임으로 확인 없이 진행되고, 제외 목록만 사용자 승인 대상.

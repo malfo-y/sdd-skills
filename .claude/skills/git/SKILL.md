@@ -11,8 +11,8 @@ One command to handle your entire git workflow: status check, semantic commit gr
 > 프로세스 완료 후 아래 기준을 자체 검증한다. 미충족 항목은 해당 단계로 돌아가 수정한다.
 - [ ] AC1: ASSESS 단계에서 branch, sync, working tree, graph 상태를 모두 파악했다
 - [ ] AC2: 변경사항을 의미 단위로 semantic grouping 하고, 각 그룹에 Conventional Commits 형식 메시지를 작성했다
-- [ ] AC3: CONFIRM 단계에서 커밋 그룹, diff 요약, 브랜치/push 계획을 사용자에게 보여주고 승인을 받았다
-- [ ] AC4: 사용자 확인 없이 push/commit/rebase를 실행하지 않았다
+- [ ] AC3: CONFIRM 단계에서 커밋 그룹, diff 요약, 브랜치/push 계획을 사용자에게 보여주고 승인(또는 Phase 3 goal 위임)을 받았다
+- [ ] AC4: 사용자 확인(또는 Phase 3 goal 위임) 없이 push/commit/rebase를 실행하지 않았다
 
 ## 5-Phase Workflow
 
@@ -24,7 +24,7 @@ One command to handle your entire git workflow: status check, semantic commit gr
 5. REPORT  → show result summary
 ```
 
-> **Hard Rule**: Always show the plan and get confirmation before executing. Never auto-push without the user seeing what will happen.
+> **Hard Rule**: Always show the plan before executing. Get confirmation unless the Phase 3 goal-delegation exception applies. Never auto-push without the user seeing what will happen.
 
 ---
 
@@ -104,7 +104,13 @@ test -f .git/MERGE_HEAD && echo "MERGE_IN_PROGRESS"
 
 ## Phase 3: CONFIRM
 
-실행 전 반드시 전체 계획을 보여주고 승인받는다. **절대 생략 불가.**
+실행 전 반드시 전체 계획을 보여준다. **계획 표시는 절대 생략 불가.** 승인은 아래 예외를 제외하고 받는다.
+
+**예외(goal 위임)** — 아래 두 조건이 모두 참일 때만 적용한다.
+- 이번 대화가 Loop Protocol로 활성 goal 하네스를 읽고 있다.
+- 그 `goal.md`의 `자율 수행 위임` 사전 승인 목록에 commit·push가 있다.
+
+적용 시: 계획은 동일하게 표시하되 승인 대기 없이 EXECUTE로 진행한다. 단, 섹션의 "항상 확인" 목록은 위임과 무관하게 승인 대상이다.
 
 ```
 🔄 Proposed Git Actions
@@ -130,7 +136,7 @@ Proceed? (y/n/edit)
 
 ## Phase 4: EXECUTE
 
-사용자 승인 후 순서대로 실행:
+승인(또는 goal 위임) 후 순서대로 실행:
 
 ```
 1. 관련 없는 변경 stash (필요시)
