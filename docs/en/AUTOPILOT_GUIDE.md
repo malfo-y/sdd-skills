@@ -44,6 +44,7 @@ If `feature-draft` splits again during execution, it does not create a nested `g
 - **Existing goal remains untouched**: setup does not read current goal status, mutate, clear, pause, replace, or merge an existing goal, and it does not block because a goal is active.
 - **Handoff invariant**: the result always states that the goal was not activated and the existing goal state was not changed.
 - **Producer ownership**: after activation, `feature-draft` and `implementation` continue to own their plan and implementation quality gates and fixes.
+- **Autonomy Grant**: the `자율 수행 위임` (Autonomy Grant) section of `goal.md` is the user's standing pre-approval for in-loop actions such as commit, push, and BC job submission. The level (`unattended`/`attended`) and the pre-approved / always-confirm lists live only in that section; pre-approved actions proceed without asking.
 - **Existing harness reused**: the roles and formats of `goal.md`, `experiments.md`, `journal.md`, and `report.md` remain unchanged; no separate queue or state-machine schema is introduced.
 
 ## 5. Usage
@@ -65,7 +66,7 @@ A native goal is appropriate for a multi-turn task with a verifiable end state. 
 
 | Stage | What the user does |
 |-------|--------------------|
-| Goal Intake / Condition Crafting | Answer questions that define the outcome and DONE WHEN items |
+| Goal Intake / Condition Crafting | Answer questions that define the outcome and DONE WHEN items; fix the autonomy level (`unattended`/`attended`) and the pre-approved / always-confirm scope of the Autonomy Grant |
 | Handoff | Review the condition string and four-file harness |
 | Activation | Decide whether and when to activate the native `/goal` |
 | During execution | Use `/goal status`, `pause`, `resume`, or `clear` when needed |

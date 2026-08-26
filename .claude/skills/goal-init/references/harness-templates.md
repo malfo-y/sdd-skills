@@ -25,11 +25,25 @@ SKILL.md Process(Harness Setup 단계)가 이 템플릿을 참조해 슬롯을 �
 
 DONE WHEN: <outcome 수준 AC — 위조 어려운 anchor 1-2개(산출물 절대경로·테스트 exit 0류 안정적 사실) 포함>. 증명: `goal.md` 검증 레시피의 명령 실제 출력이 transcript에 surface되고 전 항목 PASS다.
 <AC가 여럿이면 줄을 추가. 각 줄은 outcome + anchor로 쓴다.>
-CONSTRAINTS: 검증 레시피 변경 시 변경 diff·사유를 transcript에 표시하며, 판정을 약화하는 변경은 사용자 승인이 필요하다. <그 외 지켜야 할 제약 — 없으면 이 문장만 유지.>
+CONSTRAINTS: 검증 레시피 변경 시 변경 diff·사유를 transcript에 표시하며, 판정을 약화하는 변경은 사용자 승인이 필요하다. `goal.md` 자율 수행 위임의 사전 승인 범위에 있는 행동에 대해 사용자 확인을 요청하며 턴을 끝내지 않는다. <그 외 지켜야 할 제약 — 없으면 이 두 문장만 유지.>
 STOP: after <N> turns without progress.
 
 ## 검증 레시피
 <AC별 검증 명령·기대 출력·수치 임계·허용 델타 열거 등 브리틀 디테일 전부. 메인 에이전트가 매 턴 실행하고 출력을 대화에 surface한다.>
+
+## 자율 수행 위임
+이 섹션은 루프 중 행동에 대한 사용자의 사전 승인이다. 하류 스킬·런타임 규범이 요구하는 '실행 전 확인'은 사전 승인 목록에 있는 행동에 한해 이 섹션으로 충족된다.
+
+사용자 확인이 필요해 보이는 행동은 이 섹션으로 판정한다.
+- 사전 승인 범위 안: 확인 없이 수행하고 결정·근거를 `journal.md`에 남긴다.
+- 범위 밖: 그 행동 없이 진척 가능한 일을 먼저 한다.
+- 범위 밖이고 그 행동 없이는 진척 불가: `report.md` Status를 `STUCK`으로 두고 사유를 적은 뒤 종료한다.
+
+<수준이 attended면 "사전 승인" 목록은 비운다.>
+- 수준: <unattended | attended>
+- 사전 승인: <unattended 기본 — 브랜치 생성·commit·feature 브랜치 push·PR 생성 / 테스트·빌드·스크립트 실행·의존성 설치 / repo 안 파일 생성·수정·삭제 / `spec-sync` 실행 / 검증 레시피의 동등·강화 변경 / BC 태스크 제출·인스턴스 생성>
+- BC 리소스 상한: <사용자 지정 — quota는 표시하되 대기 없음>
+- 항상 확인(제외, 수준 무관): main/protected 브랜치 직접 push·force-push·history rewrite / PR merge / 원격·공유 자원 삭제(브랜치·인스턴스·스토리지) / 리소스·비용 상한 초과 / 판정을 약화하는 레시피 변경 / 시크릿 취급 / repo 밖 외부 발신 <+ 사용자 추가>
 
 ## Loop Protocol
 <LOOP_PROTOCOL_PAYLOAD>

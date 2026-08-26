@@ -16,7 +16,7 @@ description: "SDD goal harness 셋업 entrypoint. /sdd-autopilot으로 기능 �
 - [ ] AC1: 사용자 원문과 관련 context를 `goal-init(preset=sdd)`에 전달하고, `goal-init`의 기존 5단계·condition self-check·4파일 setup을 완료했다.
 - [ ] AC2: 생성된 `goal.md`가 runtime-local `goal-init` template의 SDD Loop Protocol payload를 사용한다.
 - [ ] AC3: setup 중 initial `feature-draft`·`implementation`·`spec-sync` 실행, current native goal status 조회, native goal 상태 변경이 모두 0건이다.
-- [ ] AC4: 조건 문자열·runtime 실행법·4파일의 개별 경로·setup 불변식을 relay했고, native goal 활성화 여부와 시점은 사용자가 결정한다.
+- [ ] AC4: 조건 문자열·자율 수행 위임(수준·사전 승인 범위)·runtime 실행법·4파일의 개별 경로·setup 불변식을 relay했고, native goal 활성화 여부와 시점은 사용자가 결정한다.
 
 ## Hard Rules
 
@@ -39,7 +39,7 @@ description: "SDD goal harness 셋업 entrypoint. /sdd-autopilot으로 기능 �
 
 ### Step 3: Handoff relay
 
-`goal-init`이 확정한 조건 문자열, Claude `/goal` 실행법, 생성한 `goal.md`·`experiments.md`·`journal.md`·`report.md`의 개별 경로를 사용자에게 제시한다. 마지막에 다음 사실을 그대로 표시하고 종료한다.
+`goal-init`이 확정한 조건 문자열, `goal.md`의 자율 수행 위임(수준·사전 승인 범위), Claude `/goal` 실행법, 생성한 `goal.md`·`experiments.md`·`journal.md`·`report.md`의 개별 경로를 사용자에게 제시한다. 마지막에 다음 사실을 그대로 표시하고 종료한다.
 
 > goal을 활성화하지 않았으며 기존 goal 상태도 변경하지 않았다.
 
