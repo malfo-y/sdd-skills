@@ -16,7 +16,7 @@ description: Use this skill to review a feature draft before coding, identify ov
 > 프로세스 완료 후 아래 기준을 자체 검증한다. 미충족 항목은 해당 단계로 돌아가 수정한다.
 
 - [ ] AC1: Input 우선순위로 대상 draft를 확정했다 — 대상 부재면 지정된 1줄 반환만 하고 종료했다.
-- [ ] AC2: 5 smell을 각각 **단일 패스**로 점검했다 (finding 0인 smell 포함, 재점검 루프 없음).
+- [ ] AC2: 5 smell을 각각 **단일 패스**로 점검했다 (finding 0인 smell 포함, 재점검 루프 없음). 또한 draft가 지목한 외부 사실의 대조 호출이 smell 판정에 **앞서** 실제로 있었다 (읽기 지침 참조).
 - [ ] AC3: 각 finding이 인용 evidence에 묶였고, 근거 부족 smell은 finding을 만들지 않았다 (읽기 지침 참조).
 - [ ] AC4: 산출물이 "반환" 섹션 형식의 채팅 반환 하나뿐이다 — 리포트 파일 생성·agent spawn·대상 draft/코드 수정이 없다.
 
@@ -32,7 +32,7 @@ description: Use this skill to review a feature draft before coding, identify ov
 - 서로 독립인 파일 읽기·검색은 가능한 한 함께 배칭한다 — 앞 결과를 봐야 대상이 정해지는 호출만 다음 턴이다.
 - 검색으로 좌표를 먼저 잡고 관련 구간만 선택적으로 읽는다 — 파일 전문 읽기는 판정에 전문이 필요할 때만.
 - spec surface(`_sdd/spec/*`)는 draft가 **명시 인용한** 파일·섹션만 읽는다. 인용 없는 spec 대조는 수행하지 않는다 — 전 스펙 대비 어긋남 감시는 `spec-review` 소관이다. 기록물(`decision_log.md`·`logs/`·`prev/`)은 읽지 않는다.
-- 근거가 부족하면 읽기를 확장하지 않고 그 smell의 finding을 만들지 않는다.
+- draft가 주장하는 외부 사실 — Target Files 경로, content anchor, `[C]` 생성 사유의 전제, 명시 인용한 spec 절 — 은 판정 전에 검색/읽기로 전부 실재를 대조한다. 대조 없이 내리는 근거 부족 판정은 없다. 대조를 마친 뒤에도 근거가 부족하면 읽기를 더 확장하지 않고 그 smell의 finding을 만들지 않는다.
 
 ## Review Rubric: 5 Plan Smells
 

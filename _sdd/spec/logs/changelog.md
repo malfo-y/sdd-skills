@@ -2,6 +2,11 @@
 
 > 이 파일은 `_sdd/spec/main.md`의 **본문이 바뀐 버전만** 기록한다 — 본문 무변경 sync(헤더 날짜만 갱신)는 entry를 남기지 않으므로 버전 번호에 결번이 생길 수 있다.
 
+#### v4.28.0 (2026-08-26)
+
+- **리뷰 스킬 correctness 행동 바닥(evidence floor)**: 약한 모델(opus-4.8급)이 `plan-review`·`implementation-review`의 correctness를 사실상 건너뛰는 관측에 대해, 산문 순종이 아니라 흔적이 남는 행동 바닥 2종을 도입했다. ① `plan-review`: draft가 지목한 외부 사실(Target Files·content anchor·`[C]` 사유 전제·명시 인용 spec 절)을 판정 전 전부 실재 대조해야 근거 부족 판정·finding 0이 허용되고(AC2가 그 흔적을 판정), 읽기 확장 금지는 유지. ② `implementation-review`: 통과 AC를 `MET: AC1–AC5`로 접던 것을 AC당 증거 포인터 한 줄로 변경(본문 전사는 여전히 없음; `pr-review` 접기는 불변). 스크래치 파일·의사코드·새 AC 추가 없음(Codex 호환). §3 producer↔reviewer 계약·읽기 상한·ledger 다이어트 서술과 components 두 행 갱신.
+- **검증 evidence**: structural check 12/12(RED 8 FAIL→GREEN, 변이 확인 1회, 계약 오류 선언 1회 — codex 어휘 hunk 기준선을 정규화 비교로 재정의), plan gate CLEAR M2 L1→fix, implementation-review gate correctness 0·simplicity M2 L3→M fix(3중 서술 삭제·AC2 분리).
+
 #### v4.20.0 (2026-08-15)
 
 - **plan-review를 agent 0개 직접 실행 스킬로 전환 — gather phase·판정 agent 폐지**: v4.19.0 읽기 규칙이 **로드된 상태로 무시**된 실측(소비 repo, opus-5 판정자 원본 전량 재독 7분+)으로, 읽기 통제를 dispatch된 agent의 순종에 맡기는 층 자체를 폐기했다. 판정·수집 모두 메인 루프가 수행하고 SKILL.md(claude·codex 짝)가 5-smell rubric·Severity·Blocker Policy·반환 형식·읽기 지침(독립 Read/Grep 한 메시지 배칭, Grep 선행 선택적 읽기, spec은 draft 인용 anchor만, 기록물 금독)의 단일 소스다. `plan-review-agent`·`plan-context-gatherer` 4파일 삭제, marketplace·codex agents/README 등록 해제, `--model` override 계약 폐지(reviewer agent는 3종이 된다). 기각 대안: Hard Rule 승격·무도구 판정자(codex 도구 박탈 불가)·PreToolUse 훅 차단·gatherer 존치(병렬 읽기는 배칭으로 동일 달성). 셀프 리뷰 편향은 사용자 결정으로 감수(독립 시선은 `second-opinion`). 쓰기-서로소 작성자 분할 인스턴스 1→0, gather·반환 다이어트(plan-review-agent) 누적 관측 2건 종결.
