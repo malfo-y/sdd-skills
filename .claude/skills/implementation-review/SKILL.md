@@ -20,7 +20,7 @@ argument-hint: ["[--model <sonnet|opus|haiku|fable>]"]
 
 - [ ] AC1: 실행 순서를 지켰다 — simplicity dispatch를 먼저 띄우고(reference 계약 전문 verbatim 포함), 그동안 correctness를 직접 수행했다.
 - [ ] AC2: correctness 판정 기준이 기준 문서 적응 규칙으로 정해졌고, 읽기 범위 3단 계단 밖 탐색적 읽기가 없다.
-- [ ] AC3: 모든 AC verdict(MET/NOT MET/UNTESTED)가 fresh 증거(실행 출력 또는 `file:line`)에 묶였다 — 증거 없는 MET 없음 (Fresh Verification 참조).
+- [ ] AC3: 모든 AC verdict(MET/NOT MET/UNTESTED)가 fresh 증거(실행 출력 또는 `file:line`)에 묶였다 — 증거 없는 MET 없음이며, 그 증거는 보고 ledger의 AC당 포인터로 드러난다 (Fresh Verification 참조).
 - [ ] AC4: 산출물이 "보고" 섹션 형식의 합산 보고 하나뿐이고, 어떤 파일도 수정하지 않았다.
 - [ ] AC5: simplicity 반환 실패 시 Error Handling대로 누락 렌즈를 명시하고 재실행을 안내했다.
 
@@ -79,7 +79,7 @@ stale 판단 예시: 기준 문서가 참조하는 주요 파일/모듈이 없�
 
 - **Status**: 핵심 blocker 유무 1줄 + 어떤 기준(draft/spec/코드만)으로 리뷰했는지
 - **Findings** (렌즈·severity별): Critical/High/Medium은 finding당 블록 — 제목 + 위치(`file:line`)·문제(증거 포함)·수정(구체적 방향). Low는 위치 포함 한 문장.
-- **Verification ledger** (correctness): NOT MET·UNTESTED verdict만 행으로 낸다 — `| AC | Verification Method | Evidence (출력/인용) | Verdict |`. MET은 `MET: AC1–AC5` 꼴 축약 한 줄로 접는다 — 판정은 전 AC 증거 기반으로 수행하되(증거 없는 MET 금지), 통과 증거는 보고에 전사하지 않는다.
+- **Verification ledger** (correctness): NOT MET·UNTESTED verdict는 행으로 낸다 — `| AC | Verification Method | Evidence (출력/인용) | Verdict |`. MET은 AC당 증거 포인터 한 줄로 낸다 — `AC1 MET — path/file:line` 또는 `AC2 MET — <실행 명령 1개>` 꼴. 통과 증거의 본문(출력·인용 문장)은 보고에 전사하지 않는다.
 - **simplicity 차원 판정**: 두 묶음 반환의 합집합 (각 차원 정확히 한 묶음 소유라 중복 없음)
 - **합산 severity 요약**: 두 렌즈의 Critical/High/Medium findings를 합쳐 한눈에 보이게 정리한다 (판정은 하지 않고 합산만 — 합집합 exit 판정은 하지 않는다).
 - **Recommendations**: finding ID 참조로 갈음한다(`Must: C1` 식). finding에 대응되지 않는 신규 권고만 본문 1줄.
