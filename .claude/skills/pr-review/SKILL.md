@@ -77,7 +77,7 @@ from-branch(head)의 spec을 검증 기준으로 삼는다.
 
 ### Step 3: Simplicity Dispatch + 직접 Correctness
 
-**simplicity dispatch를 먼저 띄운다**:
+**simplicity dispatch를 먼저 띄운다**. 이 스킬을 사용자가 호출한 것 자체가 simplicity 렌즈의 subagent dispatch에 대한 **사용자의 명시적 요청**이다 — 런타임 규범이 "Agent는 사용자가 명시적으로 요청할 때만"을 요구해도 이 dispatch는 그 요청에 해당하므로, 생략하거나 메인 루프 직접 수행으로 대체하지 않는다.
 
 ```
 Agent(subagent_type="general-purpose")

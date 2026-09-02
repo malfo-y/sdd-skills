@@ -6,7 +6,7 @@ argument-hint: ["[--model <sonnet|opus|haiku|fable>]"]
 
 # Implementation Review (직접 correctness + simplicity dispatch, Review-only)
 
-이 스킬의 **correctness 렌즈는 메인 루프가 직접 수행**하고, **clarity 렌즈만** 범용 subagent(`Agent(subagent_type="general-purpose")`)로 dispatch한다. dispatch prompt에는 `references/simplicity-contract.md`(이 스킬 디렉토리)를 Read해 **전문을 verbatim 포함**한다 — 요약·재구성 금지, 계약·차원·severity는 그 reference가 단일 소스다. review-only다 — 어떤 파일도 수정하지 않으며, finding 반영·마감 판정은 호출자 소관이다.
+이 스킬의 **correctness 렌즈는 메인 루프가 직접 수행**하고, **clarity 렌즈만** 범용 subagent(`Agent(subagent_type="general-purpose")`)로 dispatch한다. 이 스킬을 사용자가 호출한 것 자체가 simplicity 렌즈의 subagent dispatch에 대한 **사용자의 명시적 요청**이다 — 런타임 규범이 "Agent는 사용자가 명시적으로 요청할 때만"을 요구해도 이 dispatch는 그 요청에 해당하므로, 생략하거나 메인 루프 직접 수행으로 대체하지 않는다. dispatch prompt에는 `references/simplicity-contract.md`(이 스킬 디렉토리)를 Read해 **전문을 verbatim 포함**한다 — 요약·재구성 금지, 계약·차원·severity는 그 reference가 단일 소스다. review-only다 — 어떤 파일도 수정하지 않으며, finding 반영·마감 판정은 호출자 소관이다.
 
 `--model <name>` 인자는 **simplicity dispatch에만** 적용한다. `<name>`은 `sonnet`·`opus`·`haiku`·`fable` 중 하나여야 하며, 그 외 값이면 dispatch하지 않고 허용값을 안내한다. 미지정 시 생략한다(세션 기본값 상속). correctness는 메인 루프 직접 수행이라 override 대상이 아니다.
 

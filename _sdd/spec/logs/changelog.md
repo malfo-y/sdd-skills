@@ -2,6 +2,11 @@
 
 > 이 파일은 `_sdd/spec/main.md`의 **본문이 바뀐 버전만** 기록한다 — 본문 무변경 sync(헤더 날짜만 갱신)는 entry를 남기지 않으므로 버전 번호에 결번이 생길 수 있다.
 
+#### v4.30.0 (2026-09-02)
+
+- **simplicity dispatch를 사용자 명시 요청으로 선언**: opus-5 시스템 프롬프트의 "Agent 도구는 사용자가 명시적으로 요청할 때만" 규범 때문에 `implementation-review`·`pr-review`의 simplicity subagent가 뜨지 않는 관측. 두 SKILL.md(claude)에 "스킬 호출 자체가 simplicity dispatch에 대한 사용자의 명시적 요청이며 생략·직접 수행 대체 불가" 한 문장을 추가했다 — codex 미러는 Runtime Adapter 첫 문장이 이미 같은 취지라 무변경. `context: fork` 스킬 승격(구조 해법)은 codex 플러그인 제약으로 보류.
+- **검증 evidence**: grep으로 문장 실재 2/2, `git diff --check` 무출력. 효과 계측은 플러그인 갱신 후 opus-5 세션에서 simplicity dispatch 발생 여부로.
+
 #### v4.29.0 (2026-08-26)
 
 - **goal 하네스 자율 수행 위임(Autonomy Grant)**: native `/goal` 루프 중 commit·push·BC 제출 앞에서 사용자 확인을 요청하며 턴을 끝내는 문제(출처는 goal-init이 아니라 하류 — `git` CONFIRM 대기·런타임 규범·bc-mcp 안내). `goal.md`에 `자율 수행 위임` 섹션(durable authorization: 수준 `unattended`|`attended`, 사전 승인·항상 확인 목록, 질문 대체 규칙 3분기)을 추가하고, CONSTRAINTS 표준 문구에 "사전 승인 범위 행동에 확인 요청하며 턴을 끝내지 않는다"(평가자 판정 가능) 추가, goal-init Goal Intake가 수준을 확정(원문 신호면 무질문·없으면 1회 질문), Harness Setup이 섹션 기입, `git` 스킬 CONFIRM이 위임을 인정(AC3·AC4·Hard Rule·Phase 4 in-place). sdd-autopilot relay·예제·가이드 ko/en·codex 미러 동기화. §3 goal.md 계약을 3분법→4분할로 갱신.
