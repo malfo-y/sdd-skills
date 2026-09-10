@@ -32,7 +32,6 @@
         "./.claude/skills/spec-summary",
         "./.claude/skills/spec-sync",
         "./.claude/skills/spec-upgrade",
-        "./.claude/skills/write-phased",
         "./.claude/skills/sdd-autopilot",
         "./.claude/skills/investigate",
         "./.claude/skills/second-opinion"
