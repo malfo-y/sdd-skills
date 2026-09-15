@@ -52,8 +52,22 @@ stale 판단 예시: 기준 문서가 참조하는 주요 파일/모듈이 없�
 서로 독립인 Read/Grep은 한 메시지에 배칭하고, `Grep`으로 좌표를 먼저 잡은 뒤 관련 구간만 선택적으로 `Read`한다. 이 스킬을 `implementation` 마감 게이트로 수행하는 경우 메인 루프가 방금 구현한 파일 내용을 이미 보유한다 — 보유한 내용은 재독하지 않고, 판정은 아래 계단이 요구하는 fresh 증거(diff·실행 출력)에 묶는다.
 
 1. **변경 집합 + 기준 문서 — 변경 파일은 hunk 기본, 위험 신호 시 전문 승격**
-   - `git status --short --untracked-files=all`로 working tree·index·untracked의 합집합을 확인한다. unstaged는 `git diff`, staged는 `git diff --cached`, 신규 untracked는 전문으로 읽는다. 미커밋 집합이 비었을 때만 호출자 지정 base 또는 `git log`로 확인한 이번 구현 시작점 대비 `<base>..HEAD` diff를 사용한다. 호출자가 지정한 scope와 시작 시 dirty paths로 이번 변경을 구분하고, draft `Target Files`와 실제 변경의 차이·불확실한 귀속은 Assumptions에 명시한다. Target Files로 실제 변경을 대체하지 않는다.
-   - 변경 파일 읽기는 **diff hunk + 주변 문맥을 기본**으로 한다. 아래 승격 트리거에 하나라도 해당하면 그 파일은 전문 Read로 승격한다: ① 실행 semantics 파일(스크립트·훅·코드 — 산문 문서 제외) ② hunk가 제어 흐름·상태·에러 경로를 만짐 ③ 해당 AC가 행동 AC(실행/테스트로 검증하는 유형 — 문자열 실재만 보는 구조 AC는 hunk로 충분) ④ 파일 대비 변경 비율이 높음(사실상 재작성 — 전문이 오히려 싸다) ⑤ hunk 검토 중 결함 의심 발견 ⑥ draft가 해당 task에 Open Questions·낮은 확신도를 표기. **승격하지 않은 파일은 보고에 `hunk-scoped`로 표기한다.**
+   - 호출자 scope와 이번 구현 시작점(base commit·최초 dirty 범위)을 확인한다. 지정 base가 없으면 `git log`와 작업 맥락으로 식별하고, 확정할 수 없으면 추정 범위와 미검증 항목을 보고한다. 현재 dirty 유무와 무관하게 **이번 범위의 커밋 변경 + staged + unstaged + untracked**를 함께 대조한다. 최초 dirty에 이미 있던 변경과 다른 작업의 변경은 제외하되, 같은 파일에 이번 작업이 더한 hunk는 포함한다. 귀속이 불확실한 hunk는 Assumptions에 남긴다. draft Target Files로 실제 변경을 대체하지 않는다.
+   - 아래 명령으로 후보를 확인한 뒤, 같은 범위의 `git diff <base> HEAD`, `git diff --cached`, `git diff`와 untracked 전문을 읽는다. `<base>`는 확인한 구현 시작점이다. 파일 목록의 합집합만으로 hunk 귀속을 판정하지 않는다.
+
+     ```bash
+     git diff --name-only <base> HEAD
+     git diff --cached --name-only
+     git diff --name-only
+     git ls-files --others --exclude-standard
+     ```
+   - 변경 파일은 **diff hunk + 주변 문맥**이 기본이다. 다음 중 하나라도 해당하면 해당 파일을 전문 읽기로 승격한다. 미승격 파일은 `hunk-scoped`로 보고한다.
+     - 실행 semantics 파일: 코드·스크립트·훅(산문 문서 제외).
+     - hunk가 제어 흐름·상태·에러 경로를 변경.
+     - 해당 AC가 실행/테스트로 검증하는 행동 AC(문자열 실재만 보는 구조 AC 제외).
+     - 변경 비율이 높아 사실상 재작성.
+     - hunk 검토 중 결함 의심 발견.
+     - draft가 해당 task에 Open Questions·낮은 확신도를 표기.
    - 기준 문서 자체는 전문 Read. 참조된 spec은 **AC·정합 판정에 필요한 절로 한정**한다(전문이 아니다).
    - 이 범위에서 존재/범위 확인에 더해 구현된 코드의 correctness(경계·null·에러 경로·동시성 등 로직 결함)를 능동적으로 검토한다 — AC 충족·spec 정합이 correctness를 보장하지 않는다.
    - 단일 패스에 담기지 않으면 AC 관련도·diff hunk 밀도 순으로 읽고, 승격 대상인데 전문 Read하지 못한 파일과 그로 인해 근거가 약해진 AC verdict를 limitation으로 명시한다.
@@ -85,8 +99,7 @@ stale 판단 예시: 기준 문서가 참조하는 주요 파일/모듈이 없�
 - **Verification ledger** (correctness): NOT MET·UNTESTED verdict는 행으로 낸다 — `| AC | Verification Method | Evidence (출력/인용) | Verdict |`. MET은 AC당 증거 포인터 한 줄로 낸다 — `AC1 MET — path/file:line` 또는 `AC2 MET — <실행 명령 1개>` 꼴. 통과 증거의 본문(출력·인용 문장)은 보고에 전사하지 않는다.
 - **simplicity 차원 판정**: 두 묶음 반환의 합집합 (각 차원 정확히 한 묶음 소유라 중복 없음)
 - **합산 severity 요약**: 두 렌즈의 Critical/High/Medium findings를 합쳐 한눈에 보이게 정리한다 (판정은 하지 않고 합산만 — 합집합 exit 판정은 하지 않는다).
-- **Recommendations**: finding ID 참조로 갈음한다(`Must: C1` 식). finding에 대응되지 않는 신규 권고만 본문 1줄.
-- **Assumptions**: 기준 문서 없이 리뷰한 경우의 추정 범위.
+- **Assumptions / Limitations**: 추정 범위·미검토 항목·누락 렌즈와 사유. 재개 조건이나 finding으로 표현되지 않는 필수 후속 조치가 있으면 여기에 적는다. finding의 수정 방향을 별도 권고 목록으로 반복하지 않는다.
 
 확인했으나 finding이 아닌 대조 결과는 열거하지 않는다 — 보고는 위 항목이 전부다. 줄이는 것은 출력이지 점검·대조 범위가 아니다.
 

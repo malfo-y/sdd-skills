@@ -14,7 +14,7 @@
 ```text
 /sdd-autopilot <기능 목표>
   → goal-init(preset=sdd)
-  → Goal Intake → Divergence → Condition Crafting → Harness Setup → Handoff
+  → 목표·권한·검증 기준 확인 → 하네스 작성·검증 → Handoff
   → 조건 문자열 + 4-file harness 제시 (아직 비활성)
 
 사용자가 검토 후 native /goal 활성화
@@ -22,7 +22,7 @@
   → 모든 DONE WHEN + final integration proof 통과 시 성공; STOP/STUCK은 미완료 종료
 ```
 
-`goal-init`의 기존 5단계, evaluator self-check(도구 없이 판정·evidence surface·4,000자 이하), 4파일 형식은 generic 경로와 같습니다. SDD preset은 `goal.md`의 Loop Protocol payload만 바꿉니다.
+`goal-init`의 판단 기준, evaluator self-check(도구 없이 판정·evidence surface·4,000자 이하), 4파일 형식은 generic 경로와 같습니다. 대화 순서와 가설 개수는 고정하지 않으며 이미 제공된 정보는 재사용합니다. SDD preset은 `goal.md`의 Loop Protocol payload만 바꿉니다.
 
 ## 3. SDD Loop Protocol
 
@@ -66,7 +66,7 @@
 
 | 시점 | 사용자가 하는 것 |
 |------|----------------|
-| Goal Intake/Condition Crafting | 목표와 DONE WHEN을 확정하는 질문에 답변, 자율 수준(`unattended`/`attended`)과 자율 수행 위임의 사전 승인·제외 범위 확정 |
+| 목표·조건 확인 | 목표와 DONE WHEN을 확정하는 질문에 답변, 자율 수준(`unattended`/`attended`)과 자율 수행 위임의 사전 승인·제외 범위 확정 |
 | Handoff | 조건 문자열과 4파일 harness 검토 |
 | Activation | native `/goal`을 직접 활성화할지와 시점을 결정 |
 | 실행 중 | 필요할 때 `/goal status`·`pause`·`resume`·`clear` 사용 |
@@ -88,7 +88,7 @@
 
 ## 8. 관련 스킬
 
-- `goal-init` — 5단계 condition/harness setup의 canonical owner; SDD preset payload 포함
+- `goal-init` — 결과 중심 condition/harness setup의 canonical owner; SDD preset payload 포함
 - `feature-draft` — 활성 goal이 선택한 next feature의 명세와 분할 규칙
 - `implementation` — draft를 RED→GREEN으로 구현하고 내부 품질 게이트 수행
 - `spec-sync` — persistent 변경의 global spec 동기화

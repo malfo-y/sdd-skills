@@ -3,129 +3,61 @@ name: goal-init
 description: This skill should be used when the user asks to set up a "/goal", "goal 조건", "goal init", "goal-init", "set up goal", "goal helper", "goal 설정", "goal 목표", wants to craft a good `/goal` completion condition, or to scaffold the 4-file goal harness for a native `/goal` loop. Conversational helper that crafts the condition string and harness; it does not invoke `/goal` itself.
 ---
 
-# goal-init - `/goal` 조건 + 실행 하네스 셋업
-
-| Workflow | Position | When |
-|----------|----------|------|
-| Any | Standalone | `/goal`에 걸 좋은 완료조건 문자열과 4파일 실행 하네스를 한 번의 대화로 셋업 |
-
-네이티브 `/goal`(조건 충족까지 매 턴 자동 반복하는 평가자 기반 루프)에 걸 **자족적 완료조건 문자열**과 그 조건이 참조할 **4파일 실행 하네스**(`_sdd/goal/<YYYY-MM-DD>_<slug>/`)를 대화형으로 함께 만든다. discussion식 대화형 단일 스킬이다 — 신규 agent를 위임하지 않고, `AskUserQuestion` 기반 단일 대화 루프로 진행하며, 파일 생성은 Harness Setup 단계에서만 한다. **스킬은 `/goal`을 직접 발동하지 않는다** — 사용자가 조건을 검토한 뒤 직접 발동한다.
+# Goal Init
 
 ## Goal
 
-사용자의 멀티턴 목표를, (1) 평가자가 도구 없이 transcript만으로 판정 가능한 자족적 완료조건 문자열과 (2) 그 조건이 참조하는 4파일 실행 하네스로 전환해, 사용자가 검토 후 직접 `/goal`에 걸 수 있는 상태로 핸드오프한다.
+네이티브 `/goal`에 사용할 자족적 완료조건과 4파일 실행 하네스를 대화형으로 준비한다. 사용자가 이미 제공한 목표·접근·제약은 재사용하고, 결과를 바꿀 미확정 정보만 확인한다. 질문은 `AskUserQuestion`을 사용하며 메인 루프가 직접 수행한다.
+
+## Boundaries
+
+- setup은 조건·하네스 준비와 Handoff까지다. `/goal` 활성화는 사용자가 한다. 기존 goal 상태를 조회·변경하거나 active goal 때문에 setup을 막지 않는다.
+- `preset=sdd`는 하네스의 Loop Protocol만 선택한다. setup 중 feature-draft·implementation·spec-sync나 initial feature를 실행하지 않는다.
+- 산출물은 `_sdd/goal/<YYYY-MM-DD>_<slug>/`의 `goal.md`·`experiments.md`·`journal.md`·`report.md`다. 다른 경로의 산출물이나 ralph의 bash 루프·run.sh·컨테이너를 추가하지 않는다. 상위 하네스의 work log는 그 규약을 따른다.
+
+## Decision Criteria
+
+대화 순서는 상황에 맞게 정한다. 다음 기준을 충족하는 데 이미 충분한 정보가 있으면 추가 질문이나 형식적인 단계 전이 없이 하네스를 작성한다.
+
+- **적합성**: transcript의 증거로 종료 상태를 판정할 수 있는 멀티턴 작업이어야 한다. 단발 작업이면 그 사실을 안내한다. 종료 상태가 모호하면 구체화를 돕고, 끝내 정할 수 없으면 setup 미완료로 종료한다.
+- **자율 수준 확정**: 이미 확정한 수준·승인/제외 범위는 재사용한다. 수준이 미정일 때 사용자 원문에 자율 수행 신호("알아서", "자율", "무인", "확인 없이", "묻지 말고" 등)가 있으면 `unattended`로 확정하고 되묻지 않는다. 수준도 신호도 없으면 `AskUserQuestion` 1회로 `unattended`(권장) | `attended`를 정한다. 사용자가 사전 승인/제외 목록(템플릿 기본값)을 조정하면 반영한다.
+- **접근 선택**: 원인이나 해결 경로가 열려 있으면 구별되는 가설·검증법·트레이드오프를 비교하고 권장안을 제시한다. 접근이 확정돼 있으면 선택된 접근과 남은 불확실성만 기록한다. 가설 수를 채우기 위해 대안을 만들지 않는다. Generic 루프에는 실행 가능한 다음 시도가 있어야 하며, SDD 루프의 접근 후보는 미충족 목표에서 다음 feature를 선택하는 데 참고한다.
+- **완료조건과 실행의 분리**: outcome은 조건 문자열에, 검증 명령·기대 출력·수치 임계 등 실행 세부사항은 `goal.md`의 검증 레시피에, 루프 행동은 Loop Protocol에 둔다. 세부사항이 현실과 달라졌을 때 목표를 다시 정해야 하면 조건에, 검증 방법만 바꾸면 되면 레시피에 둔다.
+
+## Condition Self-check
+
+조건 문자열은 `DONE WHEN`(outcome과 위조 어려운 anchor 1–2개), `CONSTRAINTS`(제약·레시피 drift 가드·위임), `STOP`(무진척 종료 경계)으로 작성한다. template의 표준 증명·제약 문구를 사용하고 다음을 모두 확인한다.
+
+1. 도구 없이 transcript만 보는 평가자가 목표 달성 여부를 판정할 수 있다.
+2. 매 턴 허용된 검증의 실제 출력 또는 기존 evidence의 유효성·미실행 사유를 표시하고, 최종 PASS에는 모든 필수 검증의 유효한 증거를 요구한다.
+3. 조건 문자열이 4,000자 이하다.
+
+미충족이면 조건을 보완한다. 입력·환경 부족으로 해결할 수 없으면 누락과 필요한 다음 조치를 알리고 미완료로 종료한다.
+
+## Harness Setup
+
+목표·권한·검증 기준이 정해졌으면 작성 직전에 `references/harness-templates.md`를 읽고 4파일을 만든다. template의 슬롯·반복 규칙을 따르며, 선택한 Loop Protocol payload를 정확히 하나 적용한다.
+
+- `goal.md`: 조건 문자열, 검증 레시피, 확정한 자율 수행 위임, generic 또는 `preset=sdd` Loop Protocol, 아래 Handoff의 자기 런타임 실행법.
+- `experiments.md`: 선택한 접근과 필요한 가설을 검증 방법과 함께 기록한다. 항목 수는 실제 다음 시도에 맞춘다.
+- `journal.md`: append-only 기록의 초기 구조.
+- `report.md`: 아직 목표 달성을 검증하지 않았음을 표시하는 초기 보고 구조.
+
+## Handoff
+
+조건 문자열 전문을 생략·요약 없이 별도 코드 블록으로 화면에 출력하고, 아래 실행법과 생성한 4파일의 개별 경로를 제시한다. `goal.md` 경로만으로 조건 문자열을 대신하지 않는다.
+
+- **Claude 실행법**: (a) workspace trust + hooks가 활성화되어 있어야 `/goal` 루프가 동작한다. (b) 라이프사이클은 `/goal set`(목표 설정)·`/goal status`(진행 확인)·`/goal clear`(종료)이며, `clear`는 별칭(`stop`·`off`·`reset` 등)으로도 호출할 수 있다. (c) 세션을 멈췄다 `--resume`/`--continue`로 이어가면 active goal이 복원되며 턴·타이머·토큰 카운터가 리셋된다. (d) 평가자는 조건 문자열을 4,000자 상한으로 읽으므로, 그 안에서 도구 없이 판정 가능한 evidence가 매 턴 surface되어야 한다.
+- setup 경계를 실제로 지켰으면 “goal을 활성화하지 않았으며 기존 goal 상태도 변경하지 않았다”를 명시한다. 위반이 있었다면 사실과 미충족 기준을 보고하며 성공으로 표시하지 않는다.
 
 ## Acceptance Criteria
 
-> 정상 setup 완료 기준이다. 종료 전 검증과 실패·중단 처리는 Final Check를 따른다.
-
-- [ ] AC1: 목표가 `/goal` 적합성 gate(verifiable end state가 있는 멀티턴 작업)를 통과했다.
-- [ ] AC2: 목표 달성 접근/가설 2개 이상이 발산되어 `experiments.md` 백로그에 수집되었다.
-- [ ] AC3: 완료조건 문자열이 평가자 적합성 self-check(도구 없이 판정·evidence 매 턴 surface·4,000자 이하)를 통과했다.
-- [ ] AC4: `_sdd/goal/<YYYY-MM-DD>_<slug>/`에 4파일(`goal.md`/`experiments.md`/`journal.md`/`report.md`)이 생성되었고, `goal.md`에 Step 1에서 확정한 수준(`unattended` | `attended`)의 `자율 수행 위임` 섹션이 있다.
-- [ ] AC5: 조건 문자열 전문을 생략·요약 없이 별도 코드 블록으로 화면에 직접 출력하고, Claude `/goal` 실행법 + 생성한 4파일의 개별 경로를 핸드오프로 제시했으며, “goal을 활성화하지 않았으며 기존 goal 상태도 변경하지 않았다”는 불변식을 표시했고, 스킬이 `/goal`을 직접 발동하지 않았다.
-- [ ] AC6: `preset=sdd` 입력이면 기존 5단계·4파일·self-check를 그대로 수행하고 `references/harness-templates.md`의 SDD Loop Protocol payload를 선택했다.
-
-## Hard Rules
-
-1. **비발동 (I2)**: 스킬은 `/goal`을 직접 발동하지 않는다. Handoff는 조건 문자열 + 실행법 제시까지이며, 발동은 사용자가 검토 후 직접 한다.
-2. **평가자 자족성 / 4,000자 (I1)**: 완료조건(`DONE WHEN`/`CONSTRAINTS`/`STOP`)은 도구 없이 transcript만으로 판정 가능해야 하고 4,000자 이하여야 한다. 이 두 조건을 통과하지 못하면 Handoff하지 않는다.
-3. **적합성 gate (I3)**: Goal Intake의 적합성 gate를 통과하지 못한 목표로는 Divergence를 진행하지 않는다.
-4. **ralph 불간섭**: `ralph-loop-init` 스킬을 건드리지 않는다. bash `while-true` 루프·`run.sh`·컨테이너 격리를 차용하지 않는다.
-5. **산출 경로**: 4파일은 `_sdd/goal/<YYYY-MM-DD>_<slug>/`에만 생성한다. 그 외 경로에 산출물을 만들지 않는다.
-6. **SDD preset setup 경계**: `preset=sdd`는 Loop Protocol payload만 바꾸는 HOW preset이다.
-   - setup에서 `feature-draft`·`implementation`·`spec-sync`를 호출하지 않는다.
-   - initial feature를 만들지 않는다.
-   - current native goal status를 조회하거나 변경하지 않는다.
-   - active goal 때문에 setup을 중단하지 않는다.
-
-## Key Principles
-
-Process의 모든 단계에 횡단 적용되는 판단 지침. Hard Rules가 강제 금지라면, Key Principles는 판단 지침이다.
-
-- **Evaluator-first**: 완료조건은 항상 "도구 없이 transcript만 보는 평가자가 판정할 수 있는가"를 기준으로 작성한다. 판정 불가능한 표현은 측정 가능한 형태로 바꾼다.
-- **3분법 분리 (Condition / 검증 레시피 / HOW)**: 완료조건(WHAT/`DONE WHEN`/`CONSTRAINTS`/`STOP`)은 outcome 수준으로 조건 문자열에 자족 인라인하고, 브리틀 검증 디테일(명령·기대 출력·수치 임계·허용 델타 열거)은 `goal.md`의 `검증 레시피` 섹션에, 루프 행동(HOW)은 `goal.md`의 `Loop Protocol`에 둔다 (조건 비대화·평가자 노이즈·불일치 시 goal 재설정 방지).
-- **AI-initiated divergence**: 가설은 사용자가 먼저 꺼낼 때까지 기다리지 않는다. AI가 권장안을 먼저 제시하고 2-3개 접근과 트레이드오프를 능동 발산한다 (discussion alternatives-initiation 패턴).
-- **위임은 durable authorization**: 루프 중 확인 요청은 사용자가 답할 수 없어 무진척과 같다. commit·push·BC 제출처럼 확인이 필요한 행동은 Goal Intake에서 미리 `자율 수행 위임`의 사전 승인/제외로 갈라 `goal.md`에 둔다.
-- **파일 생성은 Harness Setup에서만**: Goal Intake/Divergence/Condition Crafting 단계에서는 파일을 만들지 않는다. 4파일 생성은 Harness Setup에서만 수행한다.
-- **YAGNI**: 5단계·4파일·분업형 조건 외의 옵션·설정·추상화를 추가하지 않는다.
-
-## Process
-
-> 5단계를 순서대로 진행하며, 각 단계 끝의 Decision Gate를 통과해야 다음 단계로 넘어간다. 단계 순서와 Gate 전이는 고정이다.
-
-### Step 1: Goal Intake
-
-사용자의 목표를 수집한 뒤, `/goal` 적합성 hard gate를 적용한다.
-
-- **적합성 gate 기준**: "**verifiable end state가 있는 멀티턴 작업인가**" — (1) 달성 여부를 transcript에서 판정할 수 있는 종료 상태가 있고, (2) 한 번의 답변으로 끝나지 않는 반복 작업이어야 한다.
-- **실패 분기**: "한 줄 수정"·"오타 고치기" 같은 단발성 작업이거나 종료 상태가 모호하면, 측정 가능한 종료 상태를 갖도록 **재정의를 안내**한다. 재정의가 불가능하면 `/goal` 대신 단발 작업임을 알리고 **중단한다 (I3)**.
-
-- **자율 수준 확정**: 사용자 원문에 자율 수행 신호("알아서", "자율", "무인", "확인 없이", "묻지 말고" 등)가 있으면 `unattended`로 확정하고 되묻지 않는다. 신호가 없으면 `AskUserQuestion` 1회로 `unattended`(권장) | `attended`를 정한다. 사용자가 사전 승인/제외 목록(템플릿 기본값)을 조정하면 반영한다.
-
-**Decision Gate 1→2**: 적합성 gate를 통과한 목표가 확정되면 Step 2로 진행한다. ELSE 재정의 안내; 재정의 불가 시 중단한다.
-
-### Step 2: Divergence
-
-목표 달성 접근/가설을 **AI가 능동적으로 발산한다** (사용자가 먼저 꺼낼 때까지 기다리지 않는다 — discussion alternatives-initiation 패턴).
-
-- **권장안 먼저**: 2-3개의 구별되는 접근/가설을 제시하되, 중립 나열만 하지 않고 **권장안을 먼저 말하고 이유와 트레이드오프를 붙인다**.
-- **백로그 수집**: 발산한 가설들을 `experiments.md`의 초기 **pending 백로그**로 수집한다 (각 항목 = 가설 한 줄 + 검증 명령·판정조건 — 이 디테일은 `experiments.md`·`goal.md` 검증 레시피의 재료이지 조건 문자열 재료가 아니다). 단, 이 단계에서 파일을 만들지는 않는다 — 수집은 Harness Setup에서 기록한다.
-- 가설이 안 나오면 사용자에게 접근 후보를 직접 요청해 백로그를 구성한다.
-
-**Decision Gate 2→3**: pending 가설을 2개 이상 확보하면 Step 3으로 진행한다.
-
-### Step 3: Condition Crafting
-
-5요소(목표 / 측정 가능 AC / 증명 방법 / 제약 / 종료 경계)를 **분업형 조건 문자열**로 응축한다.
-
-- **분업형 (C3, 템플릿 슬롯)**: 완료조건을 세 슬롯으로 작성한다 (`references/harness-templates.md`의 `goal.md` 슬롯에 1:1 대응).
-  - `DONE WHEN`: outcome 수준 AC + 위조 어려운 anchor 1-2개 + 증명 표준 문구("`goal.md` 검증 레시피의 명령 실제 출력이 transcript에 surface되고 전 항목 PASS").
-  - `CONSTRAINTS`: 제약 + 템플릿의 표준 문구(drift 가드·위임).
-  - `STOP`: 종료 경계 — N턴 무진척.
-  - 브리틀 디테일(검증 명령·기대 출력·수치)은 `goal.md` `검증 레시피`로, 루프 행동(HOW)은 `Loop Protocol`로 분리한다.
-- **재설정 litmus (판단 지침, 비-gate)**: 어떤 디테일의 인라인/하강이 애매하면 "이 디테일이 현실과 어긋났을 때 goal을 다시 세우는 게 마땅한가?"를 묻는다. Yes(목표 자체가 바뀜) → 조건 문자열에 인라인, No(검증 방법만 바뀜) → `goal.md` 검증 레시피로 내린다.
-- **평가자 적합성 self-check (hard gate — I1)**: 응축한 조건 문자열에 대해 3항목을 확인한다.
-  - (a) 도구 없이 대화(transcript)만으로 판정 가능한가
-  - (b) 매 턴 실제 검증 출력 또는 기존 evidence·미실행 사유가 surface되는가 (`goal.md` 검증 레시피의 실행 경계 준수)
-  - (c) 4,000자 이하인가
-  - 하나라도 실패하면 **응축을 재시도한다** (3항목을 모두 통과할 때까지 통과시키지 않는다).
-
-**Decision Gate 3→4**: self-check 3항목(도구 없이 판정 · evidence 매 턴 surface · 4,000자 이하)을 모두 통과하면 Step 4로 진행한다. ELSE 응축 재시도 (hard gate).
-
-### Step 4: Harness Setup
-
-`_sdd/goal/<YYYY-MM-DD>_<slug>/`에 `references/harness-templates.md` 템플릿으로 **4파일을 생성한다**: `goal.md` / `experiments.md` / `journal.md` / `report.md`.
-
-- **`goal.md`**: 확정한 조건 문자열(`DONE WHEN`/`CONSTRAINTS`/`STOP`)을 `/goal` 조건 문자열 슬롯에, Condition Crafting에서 하강시킨 브리틀 검증 디테일을 `검증 레시피` 섹션에 기입한다. `Loop Protocol`에는 preset이 없으면 template의 generic payload를, `preset=sdd`이면 SDD payload를 정확히 하나 삽입한다.
-- **`experiments.md`**: Step 2에서 발산한 가설들을 pending 백로그로 기입한다.
-- **`자율 수행 위임`**: Step 1에서 확정한 수준과 사전 승인/제외 목록(템플릿 기본값 + 사용자 조정)을 `goal.md`의 해당 섹션에 기입한다.
-- **실행법 슬롯**: Step 5의 Claude 실행법 4요소로 Claude Code 슬롯만 채운다 (Codex 슬롯은 Codex 스킬이 자기 슬롯을 채우므로 placeholder로 둔다).
-
-**Decision Gate 4→5**: 4파일 생성이 완료되면 Step 5로 진행한다.
-
-### Step 5: Handoff
-
-확정한 **조건 문자열 전문**, **Claude `/goal` 실행법**, 생성한 `goal.md`·`experiments.md`·`journal.md`·`report.md`의 **개별 경로**를 사용자에게 제시한다.
-
-- **조건 문자열 화면 출력**: `DONE WHEN`·`CONSTRAINTS`·`STOP`을 모두 포함한 전문을 생략·요약 없이 별도 코드 블록으로 화면에 직접 출력한다. `goal.md` 경로만 안내하거나 일부를 `...`로 줄여 대신하지 않는다.
-
-- **Claude 실행법**: (a) workspace trust + hooks가 활성화되어 있어야 `/goal` 루프가 동작한다. (b) 라이프사이클은 `/goal set`(목표 설정)·`/goal status`(진행 확인)·`/goal clear`(종료)이며, `clear`는 별칭(`stop`·`off`·`reset` 등)으로도 호출할 수 있다. (c) 세션을 멈췄다 `--resume`/`--continue`로 이어가면 active goal이 복원되며 턴·타이머·토큰 카운터가 리셋된다. (d) 평가자는 조건 문자열을 4,000자 상한으로 읽으므로, 그 안에서 도구 없이 판정 가능한 evidence가 매 턴 surface되어야 한다.
-- **스킬은 `/goal`을 직접 발동하지 않는다 (I2)**. 핸드오프는 조건 문자열 + 실행법 제시까지이며, 사용자가 조건을 검토한 뒤 **직접 발동한다**.
-- **Setup invariant**: “goal을 활성화하지 않았으며 기존 goal 상태도 변경하지 않았다”를 실제로 지켰을 때 명시한다. 위반이 있었다면 그 사실을 보고하고 setup 성공으로 표시하지 않는다. 이를 확인하기 위한 status 조회는 하지 않는다.
-
-**Decision Gate (종료)**: 조건 문자열 + Claude 실행법 제시가 완료되면 종료한다.
-
-## Error Handling
-
-| 상황 | 대응 |
-|------|------|
-| 목표가 단발성/모호 (적합성 gate 실패) | 재정의 안내. 재정의 불가 시 중단하고 `/goal` 대신 단발 작업임을 알린다. |
-| 검증 명령이 명령+판정조건으로 확정되지 않음 | 진행을 차단한다 (hard gate). 명령과 판정조건이 둘 다 확정될 때까지 Condition Crafting을 통과시키지 않는다 — 확정된 명령·판정조건의 귀속처는 조건 문자열이 아니라 `goal.md` 검증 레시피다. |
-| 조건 문자열이 4,000자를 초과 | 응축 재시도. 4,000자 이하로 줄일 때까지 Handoff하지 않는다. |
-| Divergence에서 가설이 안 나옴 | 사용자에게 접근 후보를 직접 요청하고, 받은 후보로 백로그를 구성한다. |
-| 4파일 생성이 외부 blocker로 실패 | 생성된 경로·실패 원인·미충족 AC를 보고하고 미완료 종료한다. producer 실행이나 native goal 발동으로 우회하지 않는다. |
+- [ ] 목표·권한·접근 선택이 Decision Criteria에 부합하고 사용자 선호를 임의로 만들지 않았다.
+- [ ] 조건 문자열이 Condition Self-check를 통과했다.
+- [ ] 4파일이 Harness Setup 계약대로 생성됐고 선택한 preset과 자율 수행 위임이 반영됐다.
+- [ ] Handoff의 조건 전문·런타임 실행법·개별 경로·실제 setup 상태를 전달했다.
+- [ ] Boundaries를 지켰다.
 
 ## Final Check
 
-선택한 preset에 적용되는 AC를 검증한다. 정상 완료 경로의 수정 가능한 누락은 해당 단계에서 보완한다. Error Handling의 실패·중단 경로는 사유와 미충족 AC를 보고하고 종료한다. 이미 발생한 비발동·status 조회·상태 변경 금지 위반은 산출물 수정으로 소급 충족할 수 없으며, 발생 사실을 보고하고 성공 완료로 표시하지 않는다.
+완료 전에 적용되는 Acceptance Criteria를 한 번 점검한다. 수정 가능한 누락은 보완하고, 비대상·입력 부족·사용자 중단은 이유와 남은 일을 보고한다. 이미 발생한 경계 위반은 사후 수행으로 소급 충족하지 않는다.

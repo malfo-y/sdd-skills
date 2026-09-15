@@ -13,7 +13,7 @@ description: "SDD goal harness 셋업 entrypoint. /sdd-autopilot으로 기능 �
 
 > 정상 setup 완료 기준이다. 종료 전 검증과 실패·중단 처리는 Final Check를 따른다.
 
-- [ ] AC1: 사용자 원문과 관련 context를 `goal-init(preset=sdd)`에 전달하고, `goal-init`의 기존 5단계·condition self-check·4파일 setup을 완료했다.
+- [ ] AC1: 사용자 원문과 관련 context를 `goal-init(preset=sdd)`에 전달하고, `goal-init`의 판단 기준·condition self-check·4파일 setup을 완료했다.
 - [ ] AC2: 생성된 `goal.md`가 runtime-local `goal-init` template의 SDD Loop Protocol payload를 사용한다.
 - [ ] AC3: setup 중 initial `feature-draft`·`implementation`·`spec-sync` 실행, current native goal status 조회, native goal 상태 변경이 모두 0건이다.
 - [ ] AC4: 조건 문자열·자율 수행 위임(수준·사전 승인 범위)·runtime 실행법·4파일의 개별 경로·setup 불변식을 relay했고, native goal 활성화 여부와 시점은 사용자가 결정한다.
@@ -35,7 +35,7 @@ description: "SDD goal harness 셋업 entrypoint. /sdd-autopilot으로 기능 �
 
 ### Step 2: goal-init 실행
 
-`sdd-skills:goal-init`을 `preset=sdd` 입력으로 호출해 그대로 수행한다. 기존 5단계와 모든 Decision Gate를 통과하고 4파일을 생성할 때까지 산출물 정의를 이 스킬에서 재구현하지 않는다.
+`sdd-skills:goal-init`을 `preset=sdd` 입력으로 호출해 그대로 수행한다. 목표·권한·조건 self-check를 충족하고 4파일을 생성할 때까지 산출물 정의를 이 스킬에서 재구현하지 않는다.
 
 ### Step 3: Handoff relay
 

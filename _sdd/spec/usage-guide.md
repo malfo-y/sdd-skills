@@ -63,7 +63,7 @@
 ```
 
 **Expected Result:**
-- `sdd-autopilot`이 사용자 목표와 관련 context를 `goal-init(preset=sdd)`에 전달하고, 기존 5단계·condition self-check를 거쳐 `_sdd/goal/<YYYY-MM-DD>_<slug>/` 아래 `goal.md`·`experiments.md`·`journal.md`·`report.md`를 생성한다
+- `sdd-autopilot`이 사용자 목표와 관련 context를 `goal-init(preset=sdd)`에 전달하고, 목표·권한·접근의 판단 기준과 condition self-check에 따라 `_sdd/goal/<YYYY-MM-DD>_<slug>/` 아래 `goal.md`·`experiments.md`·`journal.md`·`report.md`를 생성한다
 - handoff에는 자족적 조건 문자열, runtime 실행법, 네 파일의 개별 경로와 “goal을 활성화하지 않았으며 기존 goal 상태도 변경하지 않았다”는 불변식이 표시된다. 사용자가 내용을 검토하고 native goal activation 여부와 시점을 결정한다
 - setup 중 initial `feature-draft`·`implementation`·`spec-sync`는 실행되지 않는다. current goal status를 조회하지 않고 existing goal을 변경하거나 active goal 때문에 setup을 차단하지도 않는다
 - activation 뒤 SDD Loop Protocol은 미충족 `DONE WHEN` 또는 실패한 final integration proof gap에서 가장 작은 next feature를 선택하고, 필요 시 reviewed `feature-draft`를 만든 뒤 `implementation` → persistent 변경 시 `spec-sync` → evidence·완료 feature·남은 gap·next action 기록을 반복한다

@@ -1,7 +1,7 @@
 # Sample goal-init Session
 
 이 예제는 "flaky 통합 테스트 안정화" 목표에 대한 goal-init 스킬 실행 세션을 보여줍니다.
-5단계(Goal Intake → Divergence → Condition Crafting → Harness Setup → Handoff)가 어떻게 진행되어
+열린 원인 탐색에서 필요한 정보를 확인하고 하네스를 작성해
 4파일 하네스 + 분업형 조건 문자열이 나오는지 1개 시나리오로 보입니다.
 
 ## Session Flow
@@ -34,11 +34,10 @@ Codex: 적합성을 확인합니다.
 User: 1 (20회)
 ```
 
-**Decision Gate 1→2 통과**: verifiable end state(20회 연속 통과) 있는 멀티턴 작업 확정.
 
 ### 2. Divergence — AI가 접근/가설을 능동 발산
 
-이 단계는 권장안을 먼저 말하고 2개 이상 접근/가설을 발산해 `experiments.md` pending 백로그로 모읍니다.
+이 예제는 원인이 열려 있어 권장안과 구별되는 가설을 비교하고 `experiments.md` pending 백로그로 모읍니다.
 
 ```
 Codex: 안정화 접근을 먼저 발산합니다 (권장안 먼저).
@@ -59,7 +58,6 @@ A를 1순위로 권장합니다. B를 함께 백로그에 둘까요?
 User: A, B 둘 다 백로그에 넣고 A부터 시작하죠.
 ```
 
-**Decision Gate 2→3 통과**: pending 가설 2개 이상(A, B; C는 후보) 확보.
 
 ### 3. Condition Crafting — 분업형 조건 문자열 응축 + 평가자 self-check
 
@@ -87,7 +85,6 @@ STOP: after 6 turns without progress.
 3항목 모두 통과 → 응축 확정.
 ```
 
-**Decision Gate 3→4 통과**: self-check 3항목(도구 없이 판정 · evidence 매 턴 surface · 4,000자 이하) 통과.
 
 ### 4. Harness Setup — 4파일 생성
 
@@ -147,7 +144,6 @@ STOP: after 6 turns without progress.
 ## Done
 ```
 
-**Decision Gate 4→5 통과**: 4파일 생성 완료.
 
 ### 5. Handoff — 조건 문자열 + Codex 실행법 제시 (스킬은 /goal 비발동)
 
@@ -173,12 +169,15 @@ goal을 활성화하지 않았으며 기존 goal 상태도 변경하지 않았�
 검토 후 발동 여부는 형님이 결정하세요.
 ```
 
-**Decision Gate (종료)**: 조건 문자열 + Codex 실행법 제시 완료 → 종료.
 
 ## 핵심 포인트 (이 예제가 보여주는 것)
 
-- **5단계 고정 진행**: Goal Intake(적합성 gate) → Divergence(AI 능동 발산) → Condition Crafting(분업형 응축 + self-check) → Harness Setup(4파일 생성) → Handoff(비발동).
+- **상황에 맞는 진행**: 아래 대화는 한 예다. 접근과 검증이 이미 정해져 있으면 재수집·대안 개수 채우기 없이 조건을 점검하고 하네스를 완성한다.
 - **3분법 조건 문자열**: `DONE WHEN`은 outcome + anchor + "검증 레시피 출력 surface·전 항목 PASS" 표준 문구, 브리틀 검증 디테일(pytest 명령·기대 문자열)은 `goal.md`의 `검증 레시피`로, 루프 HOW는 `Loop Protocol`로 분리. `CONSTRAINTS`에 drift 가드(레시피 변경 diff 표시·약화는 사용자 승인) 기본 포함.
 - **평가자 적합성 3항목**: 도구 없이 판정 · evidence 매 턴 surface · 4,000자 이하 — 모두 통과해야 Handoff.
 - **4파일 산출 경로**: `_sdd/goal/<YYYY-MM-DD>_<slug>/`의 `goal.md`/`experiments.md`/`journal.md`/`report.md`.
 - **자율 수행 위임**: 원문의 "알아서" 신호로 `unattended` 확정 → `goal.md`에 사전 승인/제외 목록 기입. 루프 중 commit·push는 이 위임으로 확인 없이 진행되고, 제외 목록만 사용자 승인 대상.
+
+## 접근이 확정된 입력
+
+사용자가 “정해진 API 교체 계획대로 진행하고, 제공한 회귀 명령 통과를 완료조건으로 goal 하네스를 만들어줘. 자율 수행 범위도 아래와 같아”라고 요청하면 해당 정보로 조건과 권한을 확인한다. 새 대안 2개를 요구하지 않고 선택된 접근을 experiments에 기록한다. 적합성과 조건 self-check를 통과한 뒤 네 파일과 조건 전문을 전달하며 goal을 활성화하지 않는다.
