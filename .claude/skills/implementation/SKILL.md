@@ -54,7 +54,7 @@ TDD 기반 구현 실행 스킬. 변경 task마다 test-first 순서를 지킨�
   - 헤더: source(draft 경로 또는 inline 요청 요약)·구현 시작점(base commit과 기존 dirty 범위)·전체 status.
   - task별 필수 정보: 상태·triage(또는 read-only 검증)와 근거·RED/GREEN 명령과 판정 신호·계약 오류 선언 횟수·커버리지 델타 처리. 적용되지 않는 검증 단계는 N/A로 둔다.
   - 계획 이탈·새 발견·대상 파일 밖 수정은 발생했을 때 task ID와 `내용 → 이유 → 처리`로 기록한다. 계약 가정 오류는 선언 횟수와 이유에 기록한다. 짧으면 task 행에, 길면 같은 task의 별도 블록에 둔다.
-  - 명령 출력 전문과 서술형 진행기는 복사하지 않는다. AC 증거는 마감 2를 따른다.
+  - 명령 출력 전문과 서술형 진행기는 복사하지 않는다.
 - **상태**: task당 `READY → RED_CONFIRMED → GREEN_CONFIRMED → DELTA_CLOSED` 네 단계만 쓴다. (c) test-free task는 RED/GREEN 단계가 없으므로 커버리지 델타를 닫으면 `READY → DELTA_CLOSED`로 직행한다. read-only 검증 task도 fresh PASS 증거를 기록하면 `READY → DELTA_CLOSED`로 직행하며, FAIL·실행 불가면 READY에 판정과 사유를 남긴다. 각 단계 성공 직후 해당 task 기록을 갱신한다.
 - **재개 규칙**: ledger로 상태를 복원할 때, 미완료(비 DELTA_CLOSED) task는 상태를 신뢰하지 않고 그 task의 테스트/check를 fresh 실행해 재판정한다. DELTA_CLOSED task는 ledger를 신뢰하되 현재 diff와 모순이 보이면 같은 방식으로 fresh 실행해 재확인한다.
 - **마감 통합**: 품질 게이트 fix가 있었으면 마지막에 `Review fix delta` 블록 하나로 기록한다 — AC→증거 테이블의 기록처 규칙은 마감 2가 소유한다.
@@ -137,7 +137,7 @@ RED 관찰 후에는 테스트를 통과시키기 위해 테스트를 약화·�
    - **호출 조건**: gate 1은 항상 호출한다. fix 전 raw 합산 finding(직접 correctness + simplicity)을 dedup하지 않고 Low를 제외해 **Critical+High ≥ 3 또는 Medium ≥ 5**이면, fix 1 검증 후 gate 2를 호출한다. 세 번째 gate는 호출하지 않는다.
    - **각 호출의 fix 정책**: Critical/High/Medium은 직접 반영한다. correctness Low는 **저비용 AND 명백히 이득 AND 현재 change scope 내**인 것만 반영한다. simplicity Low는 advisory로만 남긴다.
    - **각 fix의 검증 순서**: §4 커버리지 델타 → 이번 변경 관련 표적 test/check 재실행 → 변경된 AC 증거 갱신. 문서·테스트만 고친 fix도 재검증한다. fix 2 뒤에는 gate 2 finding별 표적 검증까지 수행한다.
-   - **상한 도달**: gate 2의 fix 전 raw 수치도 같은 임계값이면 후속 implementation-review 1회 수동 실행을 권고한다. 해소되지 않은 finding은 마감에 남긴다.
+   - **상한 도달**: gate 2의 fix 전 raw 수치도 같은 임계값이면 후속 implementation-review 1회 수동 실행을 권고한다.
 
 4. **마감 요약**: 계약 오류 선언·대상 파일 밖 수정이 있었으면 요약한다. gate 2를 실행했으면 호출 1/2의 severity·fix·검증과 해소되지 않은 finding을 구분하고, 실행하지 않았으면 gate 1 결과만 보고한다.
 

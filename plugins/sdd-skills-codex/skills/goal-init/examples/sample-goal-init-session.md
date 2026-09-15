@@ -172,7 +172,7 @@ goal을 활성화하지 않았으며 기존 goal 상태도 변경하지 않았�
 
 ## 핵심 포인트 (이 예제가 보여주는 것)
 
-- **상황에 맞는 진행**: 아래 대화는 한 예다. 접근과 검증이 이미 정해져 있으면 재수집·대안 개수 채우기 없이 조건을 점검하고 하네스를 완성한다.
+- **상황에 맞는 진행**: 위 대화는 한 예다. 접근과 검증이 이미 정해져 있으면 재수집·대안 개수 채우기 없이 조건을 점검하고 하네스를 완성한다.
 - **3분법 조건 문자열**: `DONE WHEN`은 outcome + anchor + "검증 레시피 출력 surface·전 항목 PASS" 표준 문구, 브리틀 검증 디테일(pytest 명령·기대 문자열)은 `goal.md`의 `검증 레시피`로, 루프 HOW는 `Loop Protocol`로 분리. `CONSTRAINTS`에 drift 가드(레시피 변경 diff 표시·약화는 사용자 승인) 기본 포함.
 - **평가자 적합성 3항목**: 도구 없이 판정 · evidence 매 턴 surface · 4,000자 이하 — 모두 통과해야 Handoff.
 - **4파일 산출 경로**: `_sdd/goal/<YYYY-MM-DD>_<slug>/`의 `goal.md`/`experiments.md`/`journal.md`/`report.md`.

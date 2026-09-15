@@ -19,9 +19,10 @@ description: This skill should be used when the user asks to set up a "/goal", "
 
 대화 순서는 상황에 맞게 정한다. 다음 기준을 충족하는 데 이미 충분한 정보가 있으면 추가 질문이나 형식적인 단계 전이 없이 하네스를 작성한다.
 
-- **적합성**: transcript의 증거로 종료 상태를 판정할 수 있는 멀티턴 작업이어야 한다. 단발 작업이면 그 사실을 안내한다. 종료 상태가 모호하면 구체화를 돕고, 끝내 정할 수 없으면 setup 미완료로 종료한다.
+- **적합성**: transcript의 증거로 종료 상태를 판정할 수 있는 멀티턴 작업이어야 한다. 단발 작업이면 그 사실을 안내한다. 종료 상태가 모호하면 구체화를 돕고, 끝내 정할 수 없으면 setup 미완료다.
 - **자율 수준 확정**: 이미 확정한 수준·승인/제외 범위는 재사용한다. 수준이 미정일 때 사용자 원문에 자율 수행 신호("알아서", "자율", "무인", "확인 없이", "묻지 말고" 등)가 있으면 `unattended`로 확정하고 되묻지 않는다. 수준도 신호도 없으면 `AskUserQuestion` 1회로 `unattended`(권장) | `attended`를 정한다. 사용자가 사전 승인/제외 목록(템플릿 기본값)을 조정하면 반영한다.
 - **접근 선택**: 원인이나 해결 경로가 열려 있으면 구별되는 가설·검증법·트레이드오프를 비교하고 권장안을 제시한다. 접근이 확정돼 있으면 선택된 접근과 남은 불확실성만 기록한다. 가설 수를 채우기 위해 대안을 만들지 않는다. Generic 루프에는 실행 가능한 다음 시도가 있어야 하며, SDD 루프의 접근 후보는 미충족 목표에서 다음 feature를 선택하는 데 참고한다.
+- **검증 확정**: 각 `DONE WHEN`에 대응하는 검증 명령과 판정조건이 확정돼야 하네스를 작성한다. 사용자가 제공했으면 그대로 쓰고, 없으면 확인하며, 끝내 정할 수 없으면 setup 미완료다.
 - **완료조건과 실행의 분리**: outcome은 조건 문자열에, 검증 명령·기대 출력·수치 임계 등 실행 세부사항은 `goal.md`의 검증 레시피에, 루프 행동은 Loop Protocol에 둔다. 세부사항이 현실과 달라졌을 때 목표를 다시 정해야 하면 조건에, 검증 방법만 바꾸면 되면 레시피에 둔다.
 
 ## Condition Self-check
@@ -32,14 +33,14 @@ description: This skill should be used when the user asks to set up a "/goal", "
 2. 매 턴 허용된 검증의 실제 출력 또는 기존 evidence의 유효성·미실행 사유를 표시하고, 최종 PASS에는 모든 필수 검증의 유효한 증거를 요구한다.
 3. 조건 문자열이 4,000자 이하다.
 
-미충족이면 조건을 보완한다. 입력·환경 부족으로 해결할 수 없으면 누락과 필요한 다음 조치를 알리고 미완료로 종료한다.
+미충족이면 조건을 보완한다. 입력·환경 부족으로 해결할 수 없으면 누락과 필요한 다음 조치를 알린다.
 
 ## Harness Setup
 
 목표·권한·검증 기준이 정해졌으면 작성 직전에 `references/harness-templates.md`를 읽고 4파일을 만든다. template의 슬롯·반복 규칙을 따르며, 선택한 Loop Protocol payload를 정확히 하나 적용한다.
 
 - `goal.md`: 조건 문자열, 검증 레시피, 확정한 자율 수행 위임, generic 또는 `preset=sdd` Loop Protocol, 아래 Handoff의 자기 런타임 실행법.
-- `experiments.md`: 선택한 접근과 필요한 가설을 검증 방법과 함께 기록한다. 항목 수는 실제 다음 시도에 맞춘다.
+- `experiments.md`: 선택한 접근과 필요한 가설을 검증 방법과 함께 기록한다.
 - `journal.md`: append-only 기록의 초기 구조.
 - `report.md`: 아직 목표 달성을 검증하지 않았음을 표시하는 초기 보고 구조.
 
@@ -52,7 +53,7 @@ description: This skill should be used when the user asks to set up a "/goal", "
 
 ## Acceptance Criteria
 
-- [ ] 목표·권한·접근 선택이 Decision Criteria에 부합하고 사용자 선호를 임의로 만들지 않았다.
+- [ ] 목표·권한·접근·검증 선택이 Decision Criteria에 부합하고 사용자 선호를 임의로 만들지 않았다.
 - [ ] 조건 문자열이 Condition Self-check를 통과했다.
 - [ ] 4파일이 Harness Setup 계약대로 생성됐고 선택한 preset과 자율 수행 위임이 반영됐다.
 - [ ] Handoff의 조건 전문·런타임 실행법·개별 경로·실제 setup 상태를 전달했다.

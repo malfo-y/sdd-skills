@@ -34,7 +34,7 @@ simplicity reviewer에는 다음 4필드를 전달한다. 메인은 PR metadata�
 - **Changed Files**: 비어 있지 않은 PR 변경 파일 목록.
 - **PR Diff**: 같은 baseline에서 수집한 비어 있지 않은 PR diff.
 - **Baseline**: `headRefOid`와 그 SHA의 코드·spec을 읽을 경로/방법, 현재 checkout 사용 가능 여부.
-- **Relevant Context**: 변경 목적과 동작 보존 판단에 필요한 제약·저자 설명·대화 맥락. 관련 spec은 핵심 내용과 같은 SHA의 경로를 전달하고, 추가 관련 맥락이 없으면 `NONE`으로 표시한다. spec bundle·검증 출력 전문·리포트 slug를 필수 payload로 복사하지 않는다.
+- **Relevant Context**: 변경 목적과 동작 보존 판단에 필요한 제약·저자 설명·대화 맥락. 관련 spec은 핵심 내용과 같은 SHA의 경로를 전달하고, 추가 관련 맥락이 없으면 `NONE`으로 표시한다.
 
 ## Process
 
@@ -62,7 +62,7 @@ gh pr diff [PR] --name-only
 gh pr view [PR] --json headRefOid --jq '.headRefOid'
 ```
 
-수집 전후의 head SHA가 baseline과 일치하는지 확인한다. 달라졌으면 새 SHA를 기준으로 데이터 전체를 다시 수집하며, 일관된 snapshot을 확보하지 못하면 혼합 데이터로 판정하지 않고 blocker를 보고한다. 코드·spec 읽기 경로는 `PR Review Input`의 Baseline에 전달하고, 검증 대상 SHA와 실행 output은 메인이 correctness 증거로 관리한다.
+수집 전후의 head SHA가 baseline과 일치하는지 확인한다. 달라졌으면 새 SHA를 기준으로 데이터 전체를 다시 수집하며, 일관된 snapshot을 확보하지 못하면 혼합 데이터로 판정하지 않고 blocker를 보고한다. 코드·spec 읽기 경로는 `PR Review Input`의 Baseline에 전달한다.
 
 `_sdd/pr/` 디렉토리가 없으면 생성한다. 통합 리포트의 `slug`는 소문자 snake_case(영문 소문자, 숫자, `_`)로 정한다. 같은 날짜·slug 파일이 이미 있으면 `_2`, `_3` 등 빈 suffix를 골라 이전 리포트를 보존한다. 기존 리포트 갱신을 사용자가 명시한 경우에만 그 파일을 갱신한다.
 
@@ -239,7 +239,6 @@ MET: <통과 AC ID만 나열 또는 없음>
 | Multiple spec files in from-branch | canonical index와 링크된 하위 spec을 읽는다. 그래도 범위 선택이 모호하고 verdict에 영향을 주면 짧게 확인한다. 그 외에는 canonical index로 진행하고 가정을 기록한다 |
 | Existing review file | Step 1의 충돌 규칙으로 새 slug를 정한다. 명시적 갱신 요청 없이는 기존 파일 보존 |
 | Already merged PR | 허용 (retroactive review). merge 상태 표기 |
-| 반복 변경이 많거나 복잡한 PR | Correctness 리뷰의 위험·AC 기준을 적용하고 미검토 범위와 판정 한계를 명시한다 |
 
 ## Error Handling
 

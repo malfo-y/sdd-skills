@@ -3,7 +3,7 @@
 goal-init이 `_sdd/goal/<YYYY-MM-DD>_<slug>/`에 생성하는 4파일 하네스의 단일 소스 템플릿이다.
 SKILL.md의 Harness Setup가 이 템플릿을 참조해 슬롯을 채운다. Codex 미러 스킬도 동일 템플릿을 references로 복사 사용한다.
 
-`<...>` 는 생성 시 치환할 슬롯이다. 그 외 텍스트(헤딩·레이블·구조)는 그대로 유지한다. experiments의 항목은 실제 접근·가설 수만큼 반복하며 완료된 시도가 없으면 Done 항목은 비운다. `<LOOP_PROTOCOL_PAYLOAD>`에는 아래 preset payload 중 정확히 하나를 삽입한다.
+`<...>` 는 생성 시 치환할 슬롯이다. 그 외 텍스트(헤딩·레이블·구조)는 그대로 유지한다. `<LOOP_PROTOCOL_PAYLOAD>`에는 아래 preset payload 중 정확히 하나를 삽입한다.
 
 분업 원칙(D10, 3분법):
 - **완료조건**(`DONE WHEN`/`CONSTRAINTS`/`STOP`)은 `/goal` 조건 문자열에 outcome 수준으로 자족 인라인 → 평가자(도구 없는 small fast model)가 transcript만으로 판정한다. 조건에는 위조 어려운 최소 anchor 1-2개(산출물 절대경로·테스트 exit 0류 안정적 사실)와 표준 레시피 참조 문구(아래 템플릿 DONE WHEN 슬롯), 그리고 drift 가드 CONSTRAINT(아래 템플릿)를 포함한다.
@@ -91,7 +91,7 @@ STOP: after <N> turns without progress.
 
 ## 2. `experiments.md` 템플릿
 
-접근·가설 큐. 자동 루프와 사용자 수동 추가가 공용으로 쓴다. 각 항목 = 실행할 접근/가설 한 줄 + 검증 방법(명령/판정조건) + 상태. 선택된 접근만 있어도 되며 항목 수의 하한은 없다.
+접근·가설 큐. 자동 루프와 사용자 수동 추가가 공용으로 쓴다. 각 항목 = 실행할 접근/가설 한 줄 + 검증 방법(명령/판정조건) + 상태. 선택된 접근만 있어도 되며 항목 수의 하한은 없다. 완료된 시도가 없으면 Done은 비운다.
 
 ```markdown
 # Experiments

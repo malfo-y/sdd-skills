@@ -30,7 +30,7 @@ Claude: PR 리뷰를 시작합니다.
 - 커밋: 2개
 - 수집 전후 headRefOid 일치: abc1234
 - 통합 리포트 slug: auth_system (같은 날짜의 기존 파일이 있으면 auth_system_2)
-- Validation Evidence: CI output 없음; Local NOT_RUN
+- 검증 evidence: CI output 없음; Local NOT_RUN
 
 ## from-branch spec 로드
 - PR diff에 spec 변경 없음; git ls-tree -r --name-only abc1234 -- _sdd/spec/로 기존 spec 확인
@@ -40,7 +40,7 @@ Claude: PR 리뷰를 시작합니다.
 
 ### leaf 입력의 범위
 
-메인은 위 PR metadata·spec·검증 상태·slug를 관리한다. simplicity에는 Changed Files, PR Diff, Baseline(abc1234와 같은 SHA 읽기 경로), Relevant Context(인증 경계와 동작 보존에 필요한 저자 설명)만 전달한다. spec bundle과 검증 출력은 메인의 correctness 증거이며 payload에 일괄 복사하지 않는다.
+메인은 위 PR metadata·spec·검증 상태·slug를 관리한다. simplicity에는 Changed Files, PR Diff, Baseline(abc1234와 같은 SHA 읽기 경로), Relevant Context(인증 경계와 동작 보존에 필요한 저자 설명)만 전달한다.
 
 ### simplicity dispatch + 직접 correctness와 verdict 합성
 
@@ -145,7 +145,7 @@ Claude:
 - headRefName: fix/password-reset-expiry
 - baseline headRefOid: def5678
 - git ls-tree -r --name-only def5678 -- _sdd/spec/ 성공, spec 파일 없음 (ABSENT)
-- Validation Evidence: CI output 없음; Local NOT_RUN
+- 검증 evidence: CI output 없음; Local NOT_RUN
 
 → code-only mode로 진행 (spec 컨텍스트 없이)
 - simplicity 렌즈를 시작한 뒤 메인 루프가 PR title/body/코멘트에서 AC를 추론해 correctness 검증
