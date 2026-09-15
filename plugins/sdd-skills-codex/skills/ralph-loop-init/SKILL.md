@@ -17,10 +17,10 @@ description: Use this skill when the user asks to "init ralph", "ralph loop", "s
 
 ## Acceptance Criteria
 
-> 프로세스 완료 후 아래 기준을 자체 검증한다. 미충족 항목은 해당 단계로 돌아가 수정한다.
+> 초기화 완료 전 아래 기준을 자체 검증한다. 미충족 항목의 수정과 미완료 종료는 Step 8의 재시도 상한을 따른다.
 
 - [ ] AC1: `ralph/` 디렉토리에 7개 파일 생성 (`config.sh`, `verify.sh`, `PROMPT.md`, `run.sh`, `state.md`, `CHECKS.md`, `decisions.md`)
-- [ ] AC2: `PROMPT.md`에 7개 phase(또는 커스터마이즈된 등가 집합) 각각의 목적·실행 명령·전환 조건이 기술되고, `run.sh`의 `VALID_PHASES`가 그 집합과 일치하며 `ADJUST_PHASE`가 그 집합의 phase다
+- [ ] AC2: `PROMPT.md`에 7개 phase(또는 `SETUP`·`DONE`을 유지한 커스터마이즈 집합) 각각의 목적·실행 명령·전환 조건이 기술되고, `run.sh`의 `VALID_PHASES`가 그 집합과 일치하며 `ADJUST_PHASE`가 그 집합의 phase다
 - [ ] AC3: `run.sh`와 `verify.sh`가 `bash -n`을 통과하고 실행 권한을 가진다
 - [ ] AC4: Step 8의 검사 범위에 미충전 `<...>` 슬롯이 0건이다
 - [ ] AC5: `CHECKS.md`의 모든 항목 통과
@@ -63,7 +63,7 @@ State transitions:
 | **ADJUSTING** | 에러 진단 + 수정 | SMOKE_TEST / EXECUTING / CHECKING (retry) |
 | **DONE** | 최종 요약 | — |
 
-> Phase 이름은 프로젝트에 맞게 변경 가능하다 (예: ML은 TRAINING/VALIDATING, 테스트는 TESTING/VERIFYING).
+> `SETUP`·`DONE`은 시작·종료 예약 이름으로 유지한다. 중간 phase 이름만 프로젝트에 맞게 변경할 수 있다 (예: ML은 TRAINING/VALIDATING, 테스트는 TESTING/VERIFYING).
 
 **Escalation**: 같은 원인 3회 실패 → `Final status: STUCK` 리포트 작성 후 DONE. 진단 불가 → 같은 방식으로 `UNKNOWN ERROR`. 외부 조치 필요 → 리포트에 설명 후 DONE. 모든 DONE 경로는 final_report.md를 남긴다 — run.sh의 DONE 게이트가 리포트 없는 DONE을 reject한다.
 
@@ -125,7 +125,7 @@ Project: <project name>
 - [ ] action.sh Rules에 장기 실행 in-run 조기 종료 가드 규칙 존재
 - [ ] Escalation 경로도 `Final status:`를 담은 final_report.md 작성 후 DONE 전환하도록 명시
 - [ ] SMOKE_TEST phase with repeat gate (ADJUSTING → SMOKE_TEST)
-- [ ] Core phases present
+- [ ] Core phases present; `SETUP` and `DONE` keep their reserved names
 - [ ] Main execution command using config.sh variables
 - [ ] Known Errors section present
 - [ ] action.sh Rules section present (including `verification_summary.md`)
@@ -138,7 +138,7 @@ Project: <project name>
 - [ ] `--reset` flag, `LLM_TIMEOUT_SECONDS`, DONE detection present
 - [ ] DONE detection runs after the action.sh execution block
 - [ ] DONE 게이트: `Final status:` 확인 + PASS 주장 시 `bash ralph/verify.sh` exit 0 요구, reject 시 `ADJUST_PHASE`로 복귀
-- [ ] `VALID_PHASES` matches the phase names defined in PROMPT.md; `ADJUST_PHASE` is one of them
+- [ ] `VALID_PHASES` matches PROMPT.md and includes reserved `SETUP` and `DONE`; `ADJUST_PHASE` is one of the intermediate phases
 - [ ] `bash -n ralph/run.sh` passes; file is executable
 
 ## state.md
@@ -256,7 +256,7 @@ CHECKING 계열 phase의 검증 명령은 `bash ralph/verify.sh`를 포함한다
 
 ### Step 6: Generate `ralph/run.sh`
 
-아래 템플릿 구조를 기준으로 `ralph/run.sh`를 생성하고 `chmod +x ralph/run.sh`를 실행한다. Step 5에서 phase 이름을 커스터마이즈했으면 `VALID_PHASES`를 PROMPT.md에 정의한 phase 집합과 동일하게 맞추고(불일치 시 `validate_state_file`이 정상 상태를 reject한다), `ADJUST_PHASE`를 그 집합의 진단·수정 phase 이름으로 맞춘다.
+아래 템플릿 구조를 기준으로 `ralph/run.sh`를 생성하고 `chmod +x ralph/run.sh`를 실행한다. Step 5에서 중간 phase 이름을 커스터마이즈했으면 (`SETUP`·`DONE`은 유지) `VALID_PHASES`를 PROMPT.md에 정의한 phase 집합과 동일하게 맞추고(불일치 시 `validate_state_file`이 정상 상태를 reject한다), `ADJUST_PHASE`를 그 집합의 중간 진단·수정 phase 이름으로 맞춘다.
 
 ```bash
 #!/usr/bin/env bash
@@ -302,26 +302,6 @@ while [ $# -gt 0 ]; do
   esac
   shift
 done
-
-if [ ${RESET} -eq 1 ]; then
-  INIT_TS="$(date -u '+%Y-%m-%dT%H:%M:%SZ')"
-  echo "[ralph] --reset enabled: clearing previous artifacts."
-  rm -rf ralph/results
-  rm -f ralph/action.sh
-  cat > ralph/state.md <<EOF
-phase: SETUP
-iteration: 0
-initialized_at: ${INIT_TS}
-notes: Initial state. Ralph loop initialized.
-EOF
-  cat > ralph/decisions.md <<EOF
-# Ralph Decision Log
-
-Append-only. One entry per iteration: what was decided and why.
-
-- ${INIT_TS} | SETUP | Loop reset. No decisions recorded yet.
-EOF
-fi
 
 if [ -f ralph/config.sh ]; then
   # shellcheck source=/dev/null
@@ -410,6 +390,26 @@ acquire_lock() {
 
 acquire_lock || exit 1
 trap cleanup_lock EXIT INT TERM
+
+if [ ${RESET} -eq 1 ]; then
+  INIT_TS="$(date -u '+%Y-%m-%dT%H:%M:%SZ')"
+  echo "[ralph] --reset enabled: clearing previous artifacts."
+  rm -rf ralph/results
+  rm -f ralph/action.sh
+  cat > ralph/state.md <<EOF
+phase: SETUP
+iteration: 0
+initialized_at: ${INIT_TS}
+notes: Initial state. Ralph loop initialized.
+EOF
+  cat > ralph/decisions.md <<EOF
+# Ralph Decision Log
+
+Append-only. One entry per iteration: what was decided and why.
+
+- ${INIT_TS} | SETUP | Loop reset. No decisions recorded yet.
+EOF
+fi
 
 run_llm_with_timeout() {
   local timeout_seconds="$1"
@@ -539,7 +539,7 @@ while :; do
   echo "=========================================="
 
   echo "[ralph] Phase 1: Codex analyzing state and writing action..."
-  cp ralph/state.md ralph/results/state_backup.md 2>/dev/null || true
+  cp ralph/state.md ralph/results/state_backup.md
   set +e
   run_llm_with_timeout "${LLM_TIMEOUT_SECONDS}" "ralph/PROMPT.md" \
     codex exec --json --dangerously-bypass-approvals-and-sandbox -C "$(pwd)" -o "${LAST_MESSAGE_FILE}" - \
@@ -554,6 +554,9 @@ while :; do
   fi
 
   if [ ${LLM_EXIT} -ne 0 ]; then
+    # A failed LLM turn cannot commit a phase transition or a pending action.
+    cp ralph/results/state_backup.md ralph/state.md
+    rm -f ralph/action.sh
     LLM_FAIL_COUNT=$((LLM_FAIL_COUNT + 1))
     if [ ${LLM_EXIT} -eq 124 ]; then
       echo "[ralph] LLM step exceeded timeout (${LLM_TIMEOUT_SECONDS}s)."
@@ -670,16 +673,18 @@ Append-only. One entry per iteration: what was decided and why.
 
 ### Step 8: Verify Against CHECKS.md and Summarize
 
-1. **문법 검사**: `bash -n ralph/run.sh`·`bash -n ralph/config.sh`·`bash -n ralph/verify.sh`를 실행한다. 실패하면 해당 파일을 수정한 후 재실행한다 (최대 2회).
+최초 검증 후 수정·재검증은 이 초기화 호출 전체에서 최대 2회다. 단계 재진입이나 Final Check에서 횟수를 초기화하지 않는다. 상한 소진 또는 외부 blocker로 검증을 마칠 수 없으면 실패·미검증 항목, 근거, 생성된 파일 상태를 보고하고 **미완료**로 종료한다. 통과하지 않은 항목은 체크하거나 성공 요약으로 표시하지 않는다.
+
+1. **문법 검사**: `bash -n ralph/run.sh`·`bash -n ralph/config.sh`·`bash -n ralph/verify.sh`를 실행한다.
 2. **미충전 슬롯 검사**: 아래 범위에 `<...>` 형태의 미충전 슬롯이 0건인지 확인한다.
    - `ralph/config.sh`·`ralph/verify.sh`·`ralph/run.sh`·`ralph/state.md`·`ralph/CHECKS.md`: 파일 전체를 `grep -nE '<[^>]+>'`
    - `ralph/PROMPT.md`: **문서 시작부터 `## Iteration Protocol` 직전까지**(H1 제목의 `<project name>` 포함) + `## Known Errors` 섹션에 같은 패턴을 적용한다. 그 밖의 `<...>`(`## action.sh Rules`의 `<name>.log`, `## Final Report` 이하)는 루프 LLM을 향한 서식 지시이므로 검사하지 않는다.
-3. `ralph/CHECKS.md`의 각 항목을 검증한다. 실패 항목은 해당 파일을 수정한 후 재검증한다 (최대 2회).
-4. 검증 완료 후 `CHECKS.md`의 `[ ]`를 `[x]` 또는 `[!]`로 업데이트한다.
-5. `mkdir -p ralph/results` 후 요약을 출력한다.
+3. `ralph/CHECKS.md`의 각 항목을 검증한다. 실패 항목은 위 재시도 상한 안에서 수정·재검증한다.
+4. 통과한 `CHECKS.md` 항목만 `[x]` (통과) 또는 `[!]` (수정 후 통과)로 업데이트한다. 미통과 항목은 `[ ]`로 남긴다.
+5. 모든 AC가 충족되면 `mkdir -p ralph/results` 후 성공 요약을 출력한다.
 
 ```text
-Ralph loop initialized (Codex verified)!
+Ralph loop initialized (checks verified)!
 
 Files created:
   ralph/CHECKS.md    - Acceptance criteria (verified)
@@ -706,9 +711,9 @@ Next steps:
 |------|------|
 | 진입점 미발견 | 오류 보고 후 스킬 종료 |
 | `_sdd/spec` 미존재 | 코드 기반 탐색으로 진행, 경고 출력 |
-| CHECKS.md 검증 실패 | 실패 파일 수정, 재검증 (최대 2회) |
+| 초기화 검증 실패 | Step 8의 수정·재검증 상한과 미완료 종료 규칙을 따른다 |
 | 복수 진입점 발견 | 가장 유력한 진입점 자동 선택, 판단 근거 기록 |
 
 ## Final Check
 
-Acceptance Criteria가 모두 만족되었나 검증한다. 미충족 항목이 있으면 해당 단계로 돌아가 수정한다.
+선택한 경로의 Acceptance Criteria를 검증한다. 초기화 성공은 모든 AC 통과 시에만 보고한다. 미충족 항목은 Step 8의 남은 재시도 안에서 수정하고, 상한 소진·외부 blocker는 근거와 함께 미완료로 종료한다.

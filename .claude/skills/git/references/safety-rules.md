@@ -22,7 +22,8 @@
 - `git checkout -- .`
 - `git clean -f`
 - `git branch -D`
-- `git push --force`
+
+Force-push는 위 Force Push 절을 따른다. 승인은 금지된 작업을 허용하지 않는다.
 
 ## Conflict Resolution
 
@@ -43,4 +44,4 @@
 
 ## Stash Safety
 
-커밋 그룹에 포함되지 않는 변경사항은 stash로 보호한 뒤 작업 완료 후 복원한다.
+작업을 막는 미커밋 변경만 안전하게 보존한다. rebase 전에는 관련 변경도 dirty 전제조건에 포함된다. stash를 쓰면 기존 stash와 구분할 식별자·대상·staged/unstaged 상태를 기록하고, 필요한 untracked 파일도 빠뜨리지 않는다. 이번 stash만 복원하고 파일·index 보존을 확인한 뒤 제거한다. 충돌·실패 시 stash를 남겨 복구할 수 있게 하고 후속 push를 중단한다. 기존 stash나 승인 범위 밖 변경을 임의로 삭제하지 않는다.

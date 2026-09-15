@@ -14,7 +14,7 @@
 
 ## 2. Writing Rules
 
-- `SKILL.md` Step 5에서 이 파일을 Read한 뒤 §3의 fenced skeleton을 verbatim 복사한다. title·metadata·section order를 유지하고 placeholder만 source-grounded content로 치환한다.
+- `SKILL.md` Step 5에서 이 파일을 Read한 뒤 §3의 fenced skeleton을 복사한다. 문서 언어에 맞춰 title·heading·표시 label은 번역할 수 있지만 계층·순서·metadata 필드 의미·필수 5개 section을 유지한다. 그 외에는 placeholder만 source-grounded content로 치환한다.
 - spec은 purpose/boundary/decision의 primary source다. concrete behavior는 code/test/interface evidence로 보강하고 본문에 `[filepath:symbolName]` citation을 둔다.
 - source로 확인되지 않은 API, error, scenario, invariant는 만들지 않는다. 필요한 gap은 assumption/unknown으로 표시한다.
 - optional appendix는 관련 evidence가 있을 때만 유지한다.

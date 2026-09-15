@@ -45,10 +45,7 @@ Claude:
       package.json (+2, -1)
 
 2️⃣ Untracked (skip):
-   ?  src/utils/helper.ts — 커밋에 포함하시겠습니까?
-
-3️⃣ Push:
-   → git push origin feature/user-auth
+   ?  src/utils/helper.ts — 이번 commit 대상에서 제외하고 보존
 
 Proceed? (y/n/edit)
 ━━━━━━━━━━━━━━━━━━━━━━
@@ -60,12 +57,13 @@ User: y
 
 ```
 Claude:
-[1/3] git add src/auth/login.ts src/auth/token.ts src/auth/types.ts
+[1/3] 기존 staging을 기록하고, index가 auth 그룹만 포함하는지 diff 확인
+      git add src/auth/login.ts src/auth/token.ts src/auth/types.ts
       git commit -m "feat(auth): add JWT login and refresh endpoints"  ✅ [a1b2c3d]
-[2/3] git add README.md
-      git commit -m "docs(readme): add authentication setup guide"     ✅ [e4f5g6h]
-[3/3] git add package.json
-      git commit -m "chore(deps): add jsonwebtoken dependency"          ✅ [i7j8k9l]
+[2/3] git add README.md → index가 README 그룹만 포함하는지 diff 확인
+      git commit -m "docs(readme): add authentication setup guide"     ✅ [e4f5a6b]
+[3/3] git add package.json → index가 deps 그룹만 포함하는지 diff 확인
+      git commit -m "chore(deps): add jsonwebtoken dependency"          ✅ [c7d8e9f]
 ```
 
 ### 4. REPORT — 결과 요약
@@ -76,8 +74,9 @@ Claude:
 🌿 Branch: feature/user-auth
 📝 Commits: 3
    • feat(auth): add JWT login and refresh endpoints  [a1b2c3d]
-   • docs(readme): add authentication setup guide      [e4f5g6h]
-   • chore(deps): add jsonwebtoken dependency           [i7j8k9l]
-📡 Pushed to: origin/feature/user-auth
+   • docs(readme): add authentication setup guide      [e4f5a6b]
+   • chore(deps): add jsonwebtoken dependency           [c7d8e9f]
+📡 Push: 요청 없음 — 실행하지 않음
+📁 Preserved: src/utils/helper.ts (untracked)
 ━━━━━━━━━━━━━━━━━━━━━━
 ```

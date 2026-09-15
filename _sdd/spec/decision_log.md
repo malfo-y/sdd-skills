@@ -3526,3 +3526,16 @@ sdd-autopilot의 review-fix 루프가 선택적으로 동작하여, 리뷰만 �
 - **배경**: opus-5 시스템 프롬프트에 "Agent 도구는 사용자가 명시적으로 요청할 때만" 규범이 있어, `implementation-review`·`pr-review` SKILL.md의 dispatch 지시가 그 아래 등급으로 밀려 simplicity subagent가 뜨지 않는다.
 - **결정**: 문구 해법 채택 — 두 SKILL.md에 "스킬 호출 자체가 simplicity dispatch에 대한 사용자의 명시적 요청"임을 선언(스킬 본문은 사용자 지시로 취급되므로 사실 진술). codex 미러는 Runtime Adapter 첫 문장이 이미 동일 취지. 대안 ① `context: fork`+`agent:` 스킬로 승격해 하네스가 subagent를 띄우게 하는 구조 해법은 codex 플러그인 제약으로 사용자가 보류. 대안 ② simplicity도 직접 수행은 작성 컨텍스트가 자기 코드 단순성을 판정해 렌즈를 죽이므로 기각.
 - **evidence**: 문장 실재 grep 2/2. 효과는 플러그인 갱신 후 opus-5 세션 실측으로 확인 — 실패하면 ①을 재검토한다.
+
+
+## 2026-09-15 — 스킬 지시의 적용·종료·소유권 명료화
+
+- 결정: 사용자가 승인한 전체 스킬 개선에서 성공 AC와 비대상/외부 blocker/과거 위반을 구분하고, 검증-only task는 fresh check로 닫는다. 표시 언어 번역은 구조·의미를 보존하며, second-opinion은 외부 Codex adapter의 좁은 예외를 명시한다.
+- 이유: 동일 상황의 상충 지시와 중복 확인을 줄이면서 검증·권한 경계를 유지한다. 입력 처리 rename은 일회성 제출물로, append-only 검증은 이번 실행 delta로 한정한다.
+- 상태: 설계 결정 반영; 스킬 배포 반영과 검증 진행 중. 실제 모델 성능 효과는 미검증.
+- 근거: [전체 리뷰](../../docs/reviews/2026-09-15-skill-instructions/README.md).
+
+### 2026-09-15 구현 결과
+
+- 20개 스킬/38개 진입점에 73개 finding 처리 완료(적용 60·정리 13). 소스·reference parity와 YAML·링크를 검증했으며 Ralph 실행 template는 7 tests/16 runtime scenarios PASS로 확인했다.
+- 통합 gate의 Medium 3개를 수정했다. 계약 인용 1단어 차이의 절차 제한과 실제 Astra/Fable 행동 미검증은 [처리 내역](../../docs/reviews/2026-09-15-skill-instructions/implementation-dispositions.md)에 남겼다. 설치 cache·외부 서비스를 변경하지 않았다.

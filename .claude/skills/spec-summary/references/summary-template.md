@@ -1,6 +1,6 @@
 # Summary Output Interface
 
-Copy only the fenced skeleton below. Preserve its title, heading order, and field order; replace placeholders with verified evidence and remove the optional appendix when no relevant current artifact exists.
+Copy only the fenced skeleton below. Preserve its hierarchy, heading order, and field order; replace placeholders with verified evidence and remove the optional appendix when no relevant current artifact exists. Titles, headings, and display labels may be translated into the selected document language while preserving their meaning and structure.
 
 ```markdown
 # <Project Name>: Reader-Facing Whitepaper

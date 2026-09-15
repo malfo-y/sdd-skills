@@ -27,8 +27,8 @@ description: This skill should be used when the user asks to "summarize spec", "
 
 ## Hard Rules
 
-1. 허용된 write는 `_sdd/spec/summary.md`와 Step 7이 활성화한 README managed block뿐이다. 나머지 `_sdd/spec/`·repository surface는 read-only다.
-2. 문서 언어는 기존 spec/docs를 따르고, 없으면 한국어를 기본으로 한다.
+1. 이 스킬의 산출물은 `_sdd/spec/summary.md`와 Step 7이 활성화한 README managed block으로 한정한다. 그 외 원본 spec·code·config·test는 수정하지 않는다. 상위 하네스의 작업 기록 의무는 별도로 따른다.
+2. 문서 언어는 사용자 지정을 우선하고, 없으면 기존 spec/docs를 따르며, 둘 다 없으면 한국어를 기본으로 한다.
 3. 근거 없는 일반론으로 code claim을 채우지 않는다.
 
 ## Input Sources
@@ -72,17 +72,23 @@ authoritative source를 요약본으로 대체하거나 과거 변경 이력을 
 
 ### Step 6: Load the Output Interface and Write
 
-작성 직전에 runtime-local `references/summary-template.md`를 **Read**한다. 그 파일의 fenced output skeleton을 verbatim 복사해 title·heading·order를 유지하고, 확인한 evidence로 slot을 채운다. optional appendix는 Step 3의 선택 결과를 적용한다. reference 내용을 기억이나 이 본문으로 재구성하지 않는다.
+작성 직전에 runtime-local `references/summary-template.md`를 **Read**한다. 그 파일의 fenced output skeleton을 복사하고, reference가 허용한 표시 문구 번역 외에는 title·heading·order를 유지하며 확인한 evidence로 slot을 채운다. optional appendix는 Step 3의 선택 결과를 적용한다. reference 내용을 기억이나 이 본문으로 재구성하지 않는다.
 
 장문이면 main loop가 skeleton을 먼저 저장하고 section slot을 순서대로 채운 뒤 placeholder를 제거해 finalize한다.
 
 ### Step 7: Optional README Sync
 
-사용자가 README sync를 명시적으로 요청한 경우에만 `spec-summary` managed block을 갱신하고, block 밖 내용은 보존한다.
+사용자가 README sync를 명시적으로 요청한 경우에만 `README.md`에 아래 경계를 적용한다.
+
+- marker는 `<!-- SPEC-SUMMARY:START -->`와 `<!-- SPEC-SUMMARY:END -->`다.
+- 각 marker가 정확히 한 번 있고 시작이 끝보다 앞서면 그 사이 내용만 갱신한다. marker와 block 밖 bytes는 보존한다.
+- 둘 다 없으면 기존 내용 끝에 필요한 줄바꿈과 marker block을 한 번 추가한다. README가 없으면 이 block으로 생성한다. 기존 일반 summary 절이나 유사한 주석을 managed block으로 추정하지 않는다.
+- marker 중복·누락·역순이면 README 수정만 보류하고 해당 위치와 이유를 보고한다. `_sdd/spec/summary.md` 작성·검증은 마친다.
+- 재실행은 같은 block을 갱신하며 새 block을 추가하지 않는다.
 
 ### Step 8: Verify
 
-Acceptance Criteria와 output file을 직접 대조하고, 미충족 항목을 같은 흐름에서 수정한다.
+선택한 경로의 Acceptance Criteria와 output file을 직접 대조하고, 보완 가능한 미충족 항목을 같은 흐름에서 수정한다.
 
 ## Output Contract
 
@@ -99,4 +105,4 @@ Acceptance Criteria와 output file을 직접 대조하고, 미충족 항목을 �
 
 ## Final Check
 
-Acceptance Criteria를 모두 만족하고 `_sdd/spec/summary.md` 외 비요청 surface를 수정하지 않았는지 확인한다.
+선택한 경로의 Acceptance Criteria를 대조하고 이 스킬의 변경이 허용 산출물 범위 안인지 확인한다. 복구 가능한 누락은 수정한다. spec 부재나 README 보류는 이유와 완료한 범위를 보고하며 전체 성공으로 처리하지 않는다.

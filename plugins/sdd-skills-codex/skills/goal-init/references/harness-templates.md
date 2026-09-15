@@ -7,7 +7,7 @@ SKILL.md Process(Harness Setup 단계)가 이 템플릿을 참조해 슬롯을 �
 
 분업 원칙(D10, 3분법):
 - **완료조건**(`DONE WHEN`/`CONSTRAINTS`/`STOP`)은 `/goal` 조건 문자열에 outcome 수준으로 자족 인라인 → 평가자(도구 없는 small fast model)가 transcript만으로 판정한다. 조건에는 위조 어려운 최소 anchor 1-2개(산출물 절대경로·테스트 exit 0류 안정적 사실)와 표준 레시피 참조 문구(아래 템플릿 DONE WHEN 슬롯), 그리고 drift 가드 CONSTRAINT(아래 템플릿)를 포함한다.
-- **검증 레시피**(브리틀 디테일 — 아래 템플릿 검증 레시피 슬롯 열거)는 `goal.md`의 `검증 레시피` 섹션 → 메인 에이전트가 매 턴 실행하고 출력을 대화에 surface한다. 레시피가 현실과 어긋나면(필드명·수치·경로 변화) goal 재설정 없이 이 섹션만 고친다.
+- **검증 레시피**(브리틀 디테일 — 아래 템플릿 검증 레시피 슬롯 열거)는 `goal.md`의 `검증 레시피` 섹션 → 메인 에이전트가 아래 실행 규칙에 따라 evidence를 대화에 surface한다. 레시피가 현실과 어긋나면(필드명·수치·경로 변화) goal 재설정 없이 이 섹션만 고친다.
 - **루프 행동(HOW)**은 `goal.md`의 `Loop Protocol` 섹션 → 메인 에이전트가 읽는다. 평가자가 매 턴 HOW 노이즈를 읽지 않도록 조건 문자열과 분리한다.
 
 ---
@@ -29,7 +29,9 @@ CONSTRAINTS: 검증 레시피 변경 시 변경 diff·사유를 transcript에 �
 STOP: after <N> turns without progress.
 
 ## 검증 레시피
-<AC별 검증 명령·기대 출력·수치 임계·허용 델타 열거 등 브리틀 디테일 전부. 메인 에이전트가 매 턴 실행하고 출력을 대화에 surface한다.>
+매 턴 이번 진척에 필요한 허용된 검증을 실행하고 실제 출력을 대화에 표시한다. 실행하지 않은 필수 검증은 기존 evidence와 그 유효성·미실행 사유를 표시한다. repo의 slow/checkpoint·timeout 재실행 제한을 따르며, 매 턴 전체 명령을 재실행하지 않는다. 최종 PASS에는 모든 필수 검증의 유효한 실행 증거가 필요하다.
+
+<AC별 검증 명령·기대 출력·수치 임계·허용 델타·실행 checkpoint 등 브리틀 디테일 전부.>
 
 ## 자율 수행 위임
 이 섹션은 루프 중 행동에 대한 사용자의 사전 승인이다. 하류 스킬·런타임 규범이 요구하는 '실행 전 확인'은 사전 승인 목록에 있는 행동에 한해 이 섹션으로 충족된다.
@@ -37,7 +39,7 @@ STOP: after <N> turns without progress.
 사용자 확인이 필요해 보이는 행동은 이 섹션으로 판정한다.
 - 사전 승인 범위 안: 확인 없이 수행하고 결정·근거를 `journal.md`에 남긴다.
 - 범위 밖: 그 행동 없이 진척 가능한 일을 먼저 한다.
-- 범위 밖이고 그 행동 없이는 진척 불가: `report.md` Status를 `STUCK`으로 두고 사유를 적은 뒤 종료한다.
+- 범위 밖이고 그 행동 없이는 진척 불가: `report.md` Status를 `STUCK`으로 두고 사유를 적은 뒤 미완료로 종료한다. native goal lifecycle 처리는 활성 런타임 규범을 따른다.
 
 <수준이 attended면 "사전 승인" 목록은 비운다.>
 - 수준: <unattended | attended>
@@ -48,18 +50,16 @@ STOP: after <N> turns without progress.
 ## Loop Protocol
 <LOOP_PROTOCOL_PAYLOAD>
 
-> Setup invariant: goal을 활성화하지 않았으며 기존 goal 상태도 변경하지 않았다.
+> Setup invariant: <비발동·상태 보존을 지켰으면 "goal을 활성화하지 않았으며 기존 goal 상태도 변경하지 않았다."를 기입. 위반이 있었다면 사실과 미충족 AC를 기록하고 setup 성공으로 표시하지 않는다.>
 
 ## 실행법
-<!-- Codex 슬롯은 이 Codex 스킬용으로 채워져 있고, Claude Code 슬롯은 placeholder다. goal-init 실행 시 자기 런타임 슬롯만 최종 산출 goal.md에 반영한다. -->
+<!-- SKILL.md Step 5의 실행법으로 자기 런타임 슬롯만 채운다. 다른 런타임 슬롯은 placeholder로 둔다. -->
 
 ### Claude Code
-<Claude Code에서의 활성화·실행 명령 placeholder>
+<Claude Code 스킬이면 SKILL.md Step 5의 Claude 실행법 4요소를 기입; 아니면 placeholder 유지>
 
 ### Codex
-1. goals 기능 활성화: `codex features enable goals` (features.goals).
-2. 라이프사이클: `set`(목표 설정)·`status`(진행 확인)·`clear`(종료) + 필요 시 `pause`·`resume`.
-3. continuation은 thread-scoped이며 안전 경계 안에서만 이어간다 (evidence-based — 각 턴의 검증 출력을 근거로 진행).
+<Codex 스킬이면 SKILL.md Step 5의 Codex 실행법 4요소를 기입; 아니면 placeholder 유지>
 ```
 
 ### Loop Protocol preset payloads
@@ -69,9 +69,10 @@ STOP: after <N> turns without progress.
 ```markdown
 매 턴 다음을 수행한다 (이 섹션은 메인 에이전트용 HOW이며 조건 문자열에 넣지 않는다):
 1. `experiments.md`의 pending 가설 하나를 골라 시도한다.
-2. 해당 가설의 검증 명령을 실행하고 **출력을 대화에 그대로 표시**한다 (평가자가 transcript에서 본다).
+2. `검증 레시피`의 실행 규칙에 따라 해당 가설의 evidence를 대화에 표시한다.
 3. 시도·검증 결과를 `journal.md`에 append한다.
-4. pending 큐가 비었는데 목표 미완이면, 새 가설을 brainstorm해 `experiments.md` pending에 append한다.
+4. 모든 `DONE WHEN`의 검증을 통과하면 성공 종료한다. STOP 또는 위임 범위의 STUCK 경계에 도달하면 `report.md`에 사유를 기록하고 미완료로 종료한다. native goal lifecycle 처리는 활성 런타임 규범을 따른다.
+5. 그 외에는 pending 큐가 비었으면 새 가설을 brainstorm해 `experiments.md` pending에 append하고 다음 턴을 진행한다.
 ```
 
 #### SDD payload (`preset=sdd`)
@@ -82,8 +83,8 @@ STOP: after <N> turns without progress.
 2. 그 feature의 reviewed draft가 없으면 `feature-draft`를 실행한다. draft가 분할되면 현재 native goal 안에서 가장 작은 next unit을 고르고 nested `goal-init`은 만들지 않는다.
 3. 선택한 draft를 `implementation`으로 구현하고 producer-owned 품질 게이트 결과까지 닫는다.
 4. persistent 변경이 있으면 `spec-sync`를 실행한다.
-5. 검증 출력을 대화에 표시하고 evidence·완료 feature·남은 gap·next action을 `journal.md`에 append한 뒤 `report.md`를 갱신한다.
-6. 모든 `DONE WHEN`과 final integration proof가 통과했을 때만 종료한다. 아니면 1단계로 돌아간다.
+5. `검증 레시피`의 실행 규칙에 따라 evidence를 대화에 표시하고 evidence·완료 feature·남은 gap·next action을 `journal.md`에 append한 뒤 `report.md`를 갱신한다.
+6. 모든 `DONE WHEN`과 final integration proof가 통과했을 때만 성공 종료한다. STOP 또는 위임 범위의 STUCK 경계에 도달하면 `report.md`에 사유를 기록하고 미완료로 종료한다. native goal lifecycle 처리는 활성 런타임 규범을 따른다. 그 외에는 1단계로 돌아간다.
 ```
 
 ---

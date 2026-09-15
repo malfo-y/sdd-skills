@@ -26,7 +26,7 @@ spec과 code evidence를 바탕으로 특정 feature의 deep-dive 기술 가이�
 
 ## Hard Rules
 
-1. 생성 가능한 파일은 `_sdd/guides/<YYYY-MM-DD>_guide_<slug>.md`뿐이며 `_sdd/spec/`, application code, config, test는 read-only다.
+1. 이 스킬의 기능 가이드 산출물은 `_sdd/guides/<YYYY-MM-DD>_guide_<slug>.md`로 한정하며 `_sdd/spec/`, application code, config, test는 수정하지 않는다. 상위 하네스의 작업 기록 의무는 별도로 따른다.
 2. 문서 언어는 사용자 지정을 우선하고, 없으면 existing spec/docs를 따른다.
 
 ## Input Sources
@@ -62,7 +62,7 @@ feature의 problem, value, scope, guardrail, decision을 관련 spec에서 수�
 
 ### Step 5: Load the Output Interface and Write
 
-작성 직전에 runtime-local `references/output-format.md`를 **Read**한다. 그 reference의 fenced required skeleton을 verbatim 복사해 heading·field order를 유지하고 source evidence로 slot을 채운다. 근거 없는 optional appendix는 제거하고, schema·citation·confidence 판단은 reference rubric을 적용한다. reference 내용을 기억이나 이 본문으로 재구성하지 않는다.
+작성 직전에 runtime-local `references/output-format.md`를 **Read**한다. 그 reference의 fenced required skeleton을 복사하고, reference가 허용한 표시 문구 번역 외에는 heading·field order를 유지하며 source evidence로 slot을 채운다. 근거 없는 optional appendix는 제거하고, schema·citation·confidence 판단은 reference rubric을 적용한다. reference 내용을 기억이나 이 본문으로 재구성하지 않는다.
 
 장문이면 main loop가 skeleton을 먼저 저장하고 section slot을 순서대로 채운 뒤 placeholder를 제거해 finalize한다. 여러 feature면 현재 파일의 검증까지 끝낸 후 다음 파일로 간다.
 
@@ -88,4 +88,4 @@ feature의 problem, value, scope, guardrail, decision을 관련 spec에서 수�
 
 ## Final Check
 
-Acceptance Criteria를 모두 만족하고 allowed output 외 repository surface가 수정되지 않았는지 확인한다.
+선택한 경로의 Acceptance Criteria를 대조하고 이 스킬의 변경이 가이드 산출물 범위 안인지 확인한다. 복구 가능한 누락은 수정하고, 근거 부족으로 제한한 내용이나 미완료 항목은 보고한다.

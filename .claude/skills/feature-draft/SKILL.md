@@ -15,11 +15,11 @@ description: This skill should be used when the user asks to "feature draft", "d
 
 ## Acceptance Criteria
 
-> 프로세스 완료 후 아래 기준을 자체 검증한다. 미충족 항목은 해당 단계로 돌아가 수정한다.
+> 선택한 경로의 기준을 자체 검증하고 보완 가능한 누락은 수정한다. 외부 blocker나 게이트 미완료는 사유와 남은 작업을 보고하며, 과거 절차 위반을 소급 충족하거나 게이트 호출 상한을 늘리지 않는다.
 
 - [ ] AC1: draft 파일이 Required Output의 경로 규약과 fenced template 구조(마커 쌍 포함)대로 생성되었다.
 - [ ] AC2: 규모 판정 1줄이 draft 상단에 기록되었다 (분할 규칙 참조 — 분할 필요면 Part 1에 분할 계획, Part 2에 첫 feature만).
-- [ ] AC3: 모든 변경 요소에 owner task가 정확히 하나 배정되었고(Process 3 검산), 각 task의 AC가 "규칙"의 등급·공통 기준을 따른다.
+- [ ] AC3: 현재 feature의 모든 변경 요소에 owner task가 정확히 하나 배정되었고(Process 3 검산·분할 규칙 참조), 각 task의 AC가 "규칙"의 등급·공통 기준을 따른다.
 - [ ] AC4: `plan-review` 게이트를 품질 게이트 규칙대로 실행하고 fix를 반영했다 (gate 2 조건 판정 포함).
 - [ ] AC5: Open Questions 중 사용자 확인 필요 항목만 채팅에 노출했다 (없으면 "없음" 1줄).
 
@@ -32,7 +32,7 @@ description: This skill should be used when the user asks to "feature draft", "d
    - **무인 실행**: 가장 합당한 해석을 택해 결정과 근거를 Open Questions에 기록한다.
 3. **task 만들기** — 계획의 본체다. 아래 순서로 짓는다.
    - **열거**: 이번 변경이 만들거나 바꾸는 요소를 먼저 전수 열거한다 — 계약·수정 지점·1에서 식별한 동기화 표면. task부터 떠올리지 않는다. 열거가 끝나야 규모와 경계가 보인다.
-   - **배정**: 각 요소에 owner task를 **정확히 하나** 배정한다. 한 task가 여러 요소를 가져도 되지만, 한 요소가 두 task에 걸치면 경계를 다시 긋는다. 같은 로직·상수·계약을 두 task가 각자 구현하도록 계획했다면 그것도 요소 하나를 두 곳에 배정한 것이다. 의도가 두 문장이면 두 task로 쪼개고, 다른 task의 결과를 봐야 완료를 판정할 수 있어도 다시 긋는다.
+   - **배정**: 각 요소에 owner task를 **정확히 하나** 배정한다. 한 task가 여러 요소를 가져도 되지만, 한 요소가 두 task에 걸치면 경계를 다시 긋는다. 같은 로직·상수·계약을 두 task가 각자 구현하도록 계획했다면 그것도 요소 하나를 두 곳에 배정한 것이다. 의도가 두 문장이면 두 task로 쪼갠다. 선행 task의 확정된 산출물을 입력으로 쓰는 것은 허용한다(census 검증 포함). 자기 AC로 판정하지 못하고 다른 task의 미완료 작업이나 향후 판정에 기대면 경계를 다시 긋는다.
    - **순서**: 산출물 의존으로만 정한다 — 뒤 task가 앞 task의 산출물을 쓰면 그 순서로 놓고, 그런 의존이 없으면 순서에 의미를 두지 않는다(구현이 병렬로 진행해도 좋다는 신호다).
 4. **분할 판정**: 3의 요소↔task 대응을 눈으로 검산해 아래 분할 규칙을 점검한다. 판정 근거 1줄 확정 (census형 신호가 있으면 검증 task를 Part 2 마지막에 예약).
 5. **draft 작성**
@@ -46,7 +46,7 @@ description: This skill should be used when the user asks to "feature draft", "d
 
 새 contract/invariant(다른 코드·문서·미래 작업이 새로 의지하게 될 약속)가 생기는 것 자체는 분할 사유가 아니다 — 해당 task의 `Contracts`에 적는다.
 
-**분할 방법 (롤링)**: 분할 필요 판정이면 이 draft 파일이 곧 분할 계획이다. Part 1 마커 내부에 분할 feature 목록(feature당 1줄 의도 + scope)을 적는다 — `spec-sync` 스킬이 마커 내부를 소비해 feature별 planned todo로 global spec에 고정한다. Part 2에는 **첫 feature의 task만** 작성한다. 나머지 feature는 각자 차례에 자기 draft를 새로 만든다.
+**분할 방법 (롤링)**: 분할 필요 판정이면 이 draft 파일이 곧 분할 계획이다. Part 1 마커 내부에 분할 feature 목록(feature당 1줄 의도 + scope)을 적는다 — `spec-sync` 스킬이 마커 내부를 소비해 feature별 planned todo로 global spec에 고정한다. Part 2에는 **첫 feature의 task만** 작성하고, AC3의 task 단위 검산도 이 현재 feature 범위에 적용한다. 나머지 변경 범위는 Part 1의 feature별 scope에 보존하고, 각자 차례에 자기 draft를 새로 만든다.
 
 **census형 sweep은 분할 대상이 아니라 검증 대상이다**: rename/전파류처럼 같은 대상의 변형 표기(kebab/underscore/공백/글롭)가 여러 파일에 흩어져 전수 열거 없이는 수정 잔존이 재발하는 변경은, Part 2 마지막에 read-only 검증 task(변형 표기 전수 grep census를 AC로, Target Files `없음 (read-only 검증)`)를 필수로 둔다.
 
@@ -108,7 +108,8 @@ description: This skill should be used when the user asks to "feature draft", "d
 - **품질 게이트**: 작성 후 producer인 메인 루프가 `plan-review`를 호출해 finding을 직접 반영한다 — 각 호출은 **단일 패스**이고 reviewer와 사용자는 재호출·fix를 소유하지 않는다.
   - **gate 1 → fix 1** (항상): Critical/High/Medium은 반영하고, Low는 **저비용 AND 명백히 이득 AND 현재 draft scope 내** 셋을 모두 만족할 때만 반영하며 나머지는 advisory로 남긴다 (`현재 draft scope 내`가 scope 확장을 막는 load-bearing 조건).
   - **gate 2 → fix 2** (조건부): fix 전 raw 합산 finding이 Low 제외 **Critical+High ≥ 3 또는 Medium ≥ 5**면 같은 게이트를 한 번 더 호출하고 같은 fix 정책을 적용한다. 이후 gate 2 finding이 인용한 평가조건을 final draft에서 재확인하고 evidence와 미해소 finding을 남긴다. gate 3은 없다 — gate 2도 임계값이면 마감에서 후속 `plan-review` 1회 수동 실행을 권고한다.
-  - **루프 지속**: 게이트 반환은 중간 산출물이며 사용자 입력 대기 지점이 아니다 — 반환 직후 같은 흐름에서 fix를 시작하고, gate 2 조건 판정과 실행도 묻지 않고 이어서 수행한 뒤 마감 메시지로만 닫는다.
+  - **미완료 게이트**: 리뷰가 미완료를 반환하면 확보된 findings를 위 fix 정책으로 처리하고 사유·잔여 작업을 보고한다. 해당 호출은 횟수에 포함하되 통과로 세지 않으며, 복구용 자동 재호출이나 완료 상태의 구현 인계 없이 닫는다.
+  - **루프 지속**: 정상 게이트 반환은 중간 산출물이며 사용자 입력 대기 지점이 아니다 — 반환 직후 같은 흐름에서 fix를 시작하고, gate 2 조건 판정과 실행도 묻지 않고 이어서 수행한 뒤 마감 메시지로만 닫는다.
   - 마감 메시지는 실행한 게이트의 severity·fix·검증 결과를 호출별로 구분해 보고한다.
 - **실행 인계**: `implementation` 스킬(메인 루프 직접 RED→GREEN 구현)로 인계한다. 구현 작성을 여러 갈래로 나눠야 할 규모로 드러나면 분할 규칙으로 돌아간다.
 

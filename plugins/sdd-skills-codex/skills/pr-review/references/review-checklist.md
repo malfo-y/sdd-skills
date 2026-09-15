@@ -16,9 +16,10 @@ Verification checklist used by the `pr-review` skill.
 
 ### Test Verification
 ```markdown
-- [ ] Before running local tests, check `_sdd/env.md` and apply environment (conda/env vars/services)
+- [ ] Bind code/spec reads and CI/local evidence to the baseline `headRefOid`; preserve dirty user work
+- [ ] Before local tests, verify HEAD and relevant working-tree state, then apply the baseline `_sdd/env.md` environment
 - [ ] Corresponding tests exist for new/changed functionality
-- [ ] All tests pass (CI or local)
+- [ ] Same-baseline execution output supports test results; otherwise mark test-dependent criteria `UNTESTED` (SKILL.md verification budget applies)
 - [ ] Test coverage for newly added code is verified
 - [ ] Error path and boundary condition tests exist
 ```
@@ -64,4 +65,4 @@ Verification checklist used by the `pr-review` skill.
 
 ## Verdict Criteria
 
-Canonical verdict criteria live in `../SKILL.md` Step 4. Apply that table after collecting both reviewer returns; do not maintain a second verdict list here.
+Canonical verdict criteria live in `../SKILL.md` Step 4. Apply its normal or limited-result branch after direct correctness review and simplicity collection; do not maintain a second verdict list here. Spec `ABSENT` requires a successful tree lookup; `UNREADABLE` and missing lenses remain explicit limitations. Put problem AC rows and the folded MET line only in the report ledger slot.

@@ -5,22 +5,22 @@ description: Use this skill when the user asks to "implement the plan", "start i
 
 # Implementation
 
-TDD 기반 구현 실행 스킬. Task마다 test-first 순서를 지킨다 — **실패를 먼저 관찰하고(RED), 최소 구현으로 통과시킨다(GREEN)**. 테스트는 필요한 task에만 만든다(아래 Triage).
+TDD 기반 구현 실행 스킬. 변경 task마다 test-first 순서를 지킨다 — **실패를 먼저 관찰하고(RED), 최소 구현으로 통과시킨다(GREEN)**. 테스트는 필요한 task에만 만든다(아래 Triage).
 
 **작성자 불변식**: 코드와 테스트는 메인 루프가 직접 작성한다. 탐색·조사 같은 read-only 보조 agent는 필요하면 자유롭게 쓴다 — 경계는 "작성의 위임"이다. 구현 작성 자체를 여러 갈래로 나눠야 할 규모면 중단·분할 규칙을 따른다.
 
 ## Goal
 
-입력 task 집합을 task마다 Triage→RED→GREEN→커버리지 델타로 실행하고, 마감 4단계까지 닫아 모든 AC 판정이 외부 증거에 묶인 상태로 종료한다.
+입력 task 집합을 변경 task는 Triage→RED→GREEN→커버리지 델타로, read-only 검증 task는 fresh 검증으로 실행하고, 마감 4단계까지 닫아 모든 AC 판정이 외부 증거에 묶인 상태로 종료한다.
 
 ## Acceptance Criteria
 
-> 프로세스 완료 후 아래 기준을 자체 검증한다. 미충족 항목은 해당 단계로 돌아가 수정한다.
+> 종료 전 선택한 경로에 적용되는 기준을 자체 검증한다. 복구 가능한 누락은 보완한다. 외부 blocker·중단·분할은 미완료 범위와 인계를 보고하며, 과거 RED 순서·작성 위임 위반은 해당 프로세스 AC를 미충족으로 남긴다. 현재 상태를 검증해도 과거 준수로 소급하지 않는다.
 
 - [ ] AC1: ledger가 생성(재개면 이어쓰기)되어 task별 최종 상태를 반영한다 (Implementation Ledger 참조).
-- [ ] AC2: 각 task가 Triage 분류를 거쳤고, (a)/(b) task는 RED 실패를 관찰한 뒤에만 구현을 시작했으며 GREEN 통과 출력을 캡처했다.
-- [ ] AC3: 각 task의 커버리지 델타(§4)를 diff 실측으로 닫았다 — (c) task 포함.
-- [ ] AC4: 마감 1~4를 순서대로 수행했다 — 회귀 1회, AC→증거 테이블(증거 없는 "충족" 없음), `implementation-review` 게이트+fix, 마감 요약.
+- [ ] AC2: 각 변경 task가 Triage 분류를 거쳤고, (a)/(b)는 RED 실패를 관찰한 뒤에만 구현을 시작했으며 GREEN 통과 출력을 캡처했다. read-only 검증 task는 아래 전용 경로의 fresh 판정 증거가 있다.
+- [ ] AC3: 각 변경 task의 커버리지 델타(§4)를 diff 실측으로 닫았다 — (c) task 포함.
+- [ ] AC4: 정상 완료 경로에서 마감 1~4를 순서대로 수행했다 — 회귀 1회, AC→증거 테이블(증거 없는 "충족" 없음), `implementation-review` 게이트+fix, 마감 요약.
 - [ ] AC5: 코드·테스트 작성을 위임하지 않았다 (작성자 불변식).
 - [ ] AC6: 중단·분할 규칙 발동 시 강행하지 않고 해당 규칙의 마감·반환·인계를 따랐다.
 
@@ -52,14 +52,14 @@ TDD 기반 구현 실행 스킬. Task마다 test-first 순서를 지킨다 — *
 
 - **기록 기준**: 재실행으로 복원할 수 없는 사실만 기록한다.
   - 헤더: source(draft 경로 또는 inline 요청 요약)·시작 시점 dirty paths(`git status` 요약)·전체 status.
-  - task별 1행: 상태·triage 분류와 근거 1줄·RED/GREEN 명령과 판정 신호 1줄·계약 오류 선언 횟수·계획 이탈·발견·대상 파일 밖 수정·커버리지 델타 항목 수와 처리.
+  - task별 1행: 상태·triage 분류(또는 read-only 검증)와 근거 1줄·RED/GREEN 명령과 판정 신호 1줄·계약 오류 선언 횟수·계획 이탈·발견·대상 파일 밖 수정·커버리지 델타 항목 수와 처리.
   - **계획 이탈·발견**
     - 대상: source draft/inline task에서 달라진 판단 또는 새 edge case.
     - 형식: `건수; 내용 → 이유 → 처리`.
     - 없음: `0`.
     - 제외: 테스트/check 가정 오류는 `계약 오류 선언 횟수`에 기록한다.
   - 명령 출력 전문과 서술형 진행기는 기록하지 않는다 — 재실행으로 알 수 있는 것은 ledger의 몫이 아니다.
-- **상태**: task당 `READY → RED_CONFIRMED → GREEN_CONFIRMED → DELTA_CLOSED` 네 단계만 쓴다. (c) test-free task는 RED/GREEN 단계가 없으므로 커버리지 델타를 닫으면 `READY → DELTA_CLOSED`로 직행한다. 각 단계 성공 직후 해당 task 행만 갱신한다.
+- **상태**: task당 `READY → RED_CONFIRMED → GREEN_CONFIRMED → DELTA_CLOSED` 네 단계만 쓴다. (c) test-free task는 RED/GREEN 단계가 없으므로 커버리지 델타를 닫으면 `READY → DELTA_CLOSED`로 직행한다. read-only 검증 task도 fresh PASS 증거를 기록하면 `READY → DELTA_CLOSED`로 직행하며, FAIL·실행 불가면 READY에 판정과 사유를 남긴다. 각 단계 성공 직후 해당 task 행만 갱신한다.
 - **재개 규칙**: ledger로 상태를 복원할 때, 미완료(비 DELTA_CLOSED) task는 상태를 신뢰하지 않고 그 task의 테스트/check를 fresh 실행해 재판정한다. DELTA_CLOSED task는 ledger를 신뢰하되 현재 diff와 모순이 보이면 같은 방식으로 fresh 실행해 재확인한다.
 - **마감 통합**: 품질 게이트 fix가 있었으면 마지막에 `Review fix delta` 블록 하나로 기록한다 — AC→증거 테이블의 기록처 규칙은 마감 2가 소유한다.
 
@@ -72,9 +72,13 @@ TDD 기반 구현 실행 스킬. Task마다 test-first 순서를 지킨다 — *
 - 느리다고 알려진 test는 repo 또는 사용자가 명시한 checkpoint에서만 실행한다.
 - 실행 중 무겁게 드러난 테스트(무겁지 않다고 봤던 것 포함)는 그 사실을 보고하고, slow 분류로 숨기기 전에 **테스트 분리·리팩토링(fixture·suite 분할 등)을 사용자에게 적극 권고한다** — 본질적으로 느리다는 근거가 있을 때만 checkpoint 한정 실행으로 등록한다.
 
+### Read-only 검증 task
+
+입력에서 대상 파일을 `없음 (read-only 검증)`으로 명시한 task는 요구된 검사를 fresh 실행해 PASS/FAIL 증거로 닫는다. 선행 RED나 실패를 만들기 위한 변경은 요구하지 않는다. FAIL이면 관련 구현 task로 귀속해 수정·검증 후 이 검사를 다시 실행한다. 귀속할 구현 task가 없거나 실행 조건이 없으면 미충족/보류와 이유를 보고한다. 이 경로에는 §1~5를 적용하지 않는다. 다음 task를 진행하고 task 집합이 끝나면 마감한다.
+
 ### 1. Triage: 테스트가 필요한가
 
-각 task를 셋 중 하나로 분류한다. 기준은 구현 난이도가 아니다 — "간단한 구현이라서"는 (c) 자격이 아니다.
+각 변경 task를 셋 중 하나로 분류한다. 기준은 구현 난이도가 아니다 — "간단한 구현이라서"는 (c) 자격이 아니다.
 
 - **(a) test**: 테스트 프레임워크로 실패하는 테스트를 쓸 수 있는 task.
 - **(b) structural-check**: 프레임워크 없는 자산(문서·설정 등)이지만, grep·diff·명령 exit code로 충족 여부를 판정하는 check를 만들 수 있는 task.
@@ -133,7 +137,7 @@ RED 관찰 후에는 테스트를 통과시키기 위해 테스트를 약화·�
    | Task | AC | 판정 | 증거 |
    |------|----|------|------|
 
-3. **품질 게이트**: producer인 메인 루프가 `implementation-review`를 호출하고 finding을 직접 반영한다. 각 gate 호출 내부는 **단일 패스**이며 reviewer와 사용자는 gate 재호출이나 fix를 소유하지 않는다. 게이트 반환은 중간 산출물이며 사용자 입력 대기 지점이 아니다 — 반환 직후 같은 흐름에서 fix를 시작하고, 조건 판정과 gate 2 실행도 묻지 않고 이어서 수행한 뒤 마감 요약으로만 닫는다.
+3. **품질 게이트**: producer인 메인 루프가 `implementation-review`에 이번 source draft 경로 또는 inline task AC와 현재 변경 범위를 전달해 호출하고 finding을 직접 반영한다. 각 gate 호출 내부는 **단일 패스**이며 reviewer와 사용자는 gate 재호출이나 fix를 소유하지 않는다. 게이트 반환은 중간 산출물이며 사용자 입력 대기 지점이 아니다 — 반환 직후 같은 흐름에서 fix를 시작하고, 조건 판정과 gate 2 실행도 묻지 않고 이어서 수행한 뒤 마감 요약으로만 닫는다.
     1. **gate 1 → fix 1**: 첫 gate를 항상 호출한다. 반환된 Critical/High/Medium을 직접 반영한다. Low는 렌즈별 기존 정책을 적용한다.
         - **correctness 렌즈 Low**: **저비용 AND 명백히 이득 AND 현재 change scope 내** 세 조건을 모두 만족하는 것만 fix하고, 나머지는 마감 요약에 advisory로 남긴다. `현재 change scope 내`가 scope 확장을 막는 load-bearing 조건이다.
         - **simplicity 렌즈 Low**(주관적 취향): fix 대상이 아니며 advisory로만 남긴다.

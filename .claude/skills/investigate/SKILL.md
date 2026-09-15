@@ -11,7 +11,7 @@ description: "Use this skill when the user asks to \"investigate\", \"debug\", \
 
 ## Acceptance Criteria
 
-> 프로세스 완료 후 아래 기준을 자체 검증한다. 미충족 항목은 해당 단계로 돌아가 수정한다.
+> 정상 완료 기준이다. 미충족 항목의 보완·잔여 보고는 Final Check를 따른다.
 
 - [ ] AC1: 근본원인이 식별되었다 (증상 패치가 아닌 원인 수정)
 - [ ] AC2: 수정 후 테스트가 통과한다 (Fresh Verification)
@@ -33,7 +33,7 @@ description: "Use this skill when the user asks to \"investigate\", \"debug\", \
 
 ### Step 1: Problem Definition (인라인, 대화 기반)
 
-1. 사용자 입력·대화에서 증상, 재현 조건, 기대 동작, 이미 시도한 가설을 추출한다. (이 입력은 대화에서 태어나므로 sub-agent가 못 읽는다 — orchestrator가 직접 정리한다.)
+1. 사용자 입력·대화에서 증상, 재현 조건, 기대 동작, 이미 시도하거나 배제한 가설을 직접 정리한다. 파일에 없는 대화 맥락도 보존한다.
 2. `_sdd/env.md` 존재 시 환경 설정을 적용한다.
 3. 문제 범위를 확정하고 기록한다 (scope lock 기준).
 
@@ -42,6 +42,8 @@ description: "Use this skill when the user asks to \"investigate\", \"debug\", \
 기본은 **인라인 순차 증거 수집**이다: `Grep`/`Glob`/`Read`/`Bash`로 에러 메시지·스택 트레이스·관련 코드 경로·최근 변경(`git log`/`git diff`)·관련 테스트를 수집하고 가설을 세운다.
 
 **넓고·모호할 때만**(경쟁 가설이 여럿 / 출처가 불분명 / 탐색 범위가 큼) read-only `Explore` agent를 **병렬 fan-out**한다 (`Agent(subagent_type="Explore", ...)`를 한 메시지에서 동시 호출). lane은 케이스에 맞게 선택한다 (리지드 분기 없음):
+
+각 lane에 Step 1의 관련 증상·재현 조건·기대 동작·이미 시도하거나 배제한 가설·scope를 짧은 digest로 전달하고, 해당 lane의 탐색 질문과 read-only 경계를 명시한다. 전체 대화를 복사하지 않는다.
 
 - **가설-lane** (anti-anchoring): 경쟁 가설을 lane별로 분리해 각 Explore가 독립적으로 한 가설을 검증 + 가설 없는 독립 탐지 lane 1개를 둬 앵커링 바이어스를 막는다.
 - **영역-lane** (broad sweep): 코드 영역·증거 출처(에러 경로 / 최근 변경 / 의존·설정 / 테스트)별로 Explore가 동시 sweep한다.
@@ -77,6 +79,6 @@ description: "Use this skill when the user asks to \"investigate\", \"debug\", \
 
 ## Final Check
 
-Acceptance Criteria가 모두 만족되었나 검증한다. 미충족 항목이 있으면 해당 단계로 돌아가 수정한다.
+Acceptance Criteria를 검증하고, 실행 가능한 테스트 실패나 복구 가능한 누락은 해당 단계에서 보완한 뒤 fresh verification을 수행한다. 환경 제약으로 테스트를 실행할 수 없으면 `UNTESTED`, 미충족 AC2, 필요한 환경과 잔여 검증을 보고하고 반환한다. 코드 분석을 테스트 통과로 대체하거나, 같은 환경 제약을 이유로 수정을 반복하지 않는다.
 
 > **Role Pointer**: 이 스킬은 메인 루프 orchestrator다. 탐색 fan-out 단위는 빌트인 범용 read-only `Explore` agent를 재사용하며 별도 custom leaf agent를 두지 않는다. (구 `investigate-agent`는 제거됨 — 전체 디버깅 계약을 이 skill이 인라인 소유한다.)

@@ -11,7 +11,7 @@ Claude:
 📊 Git Status Dashboard
 ━━━━━━━━━━━━━━━━━━━━━━
 🌿 Branch: feat/pt2i_to_face_swap_train → origin/feat/pt2i_to_face_swap_train
-📡 Sync:   0 ahead, 0 behind  ✅
+📡 Sync:   0 ahead, 0 behind (마지막 fetch 기준)
 📈 Graph:  clean
 
 📁 Changes:
@@ -22,4 +22,4 @@ Claude:
 ━━━━━━━━━━━━━━━━━━━━━━
 ```
 
-`/git status`는 Phase 1 (ASSESS)만 수행하고 종료한다. 커밋/푸시 없음.
+`/git status`는 Phase 1 (ASSESS)만 수행하고 종료한다. fetch·commit·push 없이 로컬 상태만 읽는다. AC1만 적용한다.

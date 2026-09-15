@@ -18,9 +18,9 @@ dispatch 전 active tool schema에서 lifecycle contract 하나를 선택한다.
 실제 Codex 호출은 `prompt`가 아니라 `message`를 사용한다:
 
 ```text
-Mailbox: spawn_agent({task_name: "investigate_r7f3a_error_path", fork_turns: "none", message: "<구체적 read-only 탐색 질문 + read-only 경계>"})  // r7f3a는 invocation마다 교체
+Mailbox: spawn_agent({task_name: "investigate_r7f3a_error_path", fork_turns: "none", message: "<Step 1의 관련 맥락 digest + 구체적 탐색 질문 + read-only 경계>"})  // r7f3a는 invocation마다 교체
 Mailbox: wait_agent({timeout_ms: 600000})  // remaining이 빌 때까지 반복, close 없음
-Target/close: spawn_agent({message: "<구체적 read-only 탐색 질문 + read-only 경계>"})
+Target/close: spawn_agent({message: "<Step 1의 관련 맥락 digest + 구체적 탐색 질문 + read-only 경계>"})
 Target/close: wait_agent({targets: ["<agent_id>"], timeout_ms: 600000}) → final 기록 → close_agent({target: "<완료 agent_id>"})
 ```
 
@@ -50,7 +50,7 @@ Target/close: wait_agent({targets: ["<agent_id>"], timeout_ms: 600000}) → fina
 
 ### Step 1: Problem Definition (인라인, 대화 기반)
 
-1. 사용자 입력·대화에서 증상, 재현 조건, 기대 동작, 이미 시도한 가설을 추출한다. (이 입력은 대화에서 태어나므로 sub-agent가 못 읽는다 — orchestrator가 직접 정리한다.)
+1. 사용자 입력·대화에서 증상, 재현 조건, 기대 동작, 이미 시도하거나 배제한 가설을 직접 정리한다. 파일에 없는 대화 맥락도 보존한다.
 2. `_sdd/env.md` 존재 시 환경 설정을 적용한다.
 3. 문제 범위를 확정하고 기록한다 (scope lock 기준).
 4. intent를 기록한다.
@@ -64,10 +64,12 @@ Target/close: wait_agent({targets: ["<agent_id>"], timeout_ms: 600000}) → fina
 
 **넓고·모호할 때만**(경쟁 가설이 여럿 / 출처가 불분명 / 탐색 범위가 큼) read-only explorer 역할을 **병렬 spawn**한다. 각 lane의 task/agent 식별자를 remaining set으로 관리하고, 선택한 Runtime Adapter가 final status를 반환한 explorer만 핵심 사실을 기록한 뒤 제거한다. timeout은 완료로 간주하지 않으며, remaining이 빌 때까지 더 기다리거나 controlled stop/blocked 상태를 기록한다. lane은 케이스에 맞게 선택한다 (리지드 분기 없음):
 
+각 lane에 Step 1의 관련 증상·재현 조건·기대 동작·이미 시도하거나 배제한 가설·scope를 짧은 digest로 전달하고, 해당 lane의 탐색 질문과 read-only 경계를 명시한다. 전체 대화를 복사하지 않는다.
+
 - **가설-lane** (anti-anchoring): 경쟁 가설을 lane별로 분리해 각 explorer가 독립적으로 한 가설을 검증 + 가설 없는 독립 탐지 lane 1개를 둬 앵커링 바이어스를 막는다.
 - **영역-lane** (broad sweep): 코드 영역·증거 출처(에러 경로 / 최근 변경 / 의존·설정 / 테스트)별로 explorer가 동시 sweep한다.
 
-런타임에 `explorer` 역할이 미가용하면 **순차 인라인 증거 수집으로 graceful degrade**한다(정확성 동일, 병렬만 상실). **단순 단일파일 버그·명확한 에러는 fan-out 없이 인라인 순차**로 진행한다(불필요한 fan-out 회피).
+fan-out 가능 여부와 fallback은 Codex Runtime Adapter를 따른다. **단순 단일파일 버그·명확한 에러는 fan-out 없이 인라인 순차**로 진행한다(불필요한 fan-out 회피).
 
 ### Step 3: Root Cause Synthesis (인라인)
 

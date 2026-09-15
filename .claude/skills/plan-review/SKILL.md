@@ -13,7 +13,7 @@ description: Use this skill to review a feature draft before coding, identify ov
 
 ## Acceptance Criteria
 
-> 프로세스 완료 후 아래 기준을 자체 검증한다. 미충족 항목은 해당 단계로 돌아가 수정한다.
+> 대상 부재는 Input의 1줄 반환으로 닫는다. 리뷰를 수행한 경우 아래 기준을 자체 검증하고, 미수행 점검·반환 누락만 단일 패스 안에서 보완한다. 이미 발생한 순서·권한 경계 위반은 재실행으로 소급 충족하지 않고 반환 절의 미완료 경로로 닫는다.
 
 - [ ] AC1: Input 우선순위로 대상 draft를 확정했다 — 대상 부재면 지정된 1줄 반환만 하고 종료했다.
 - [ ] AC2: 5 smell을 각각 **단일 패스**로 점검했다 (finding 0인 smell 포함, 재점검 루프 없음). 또한 draft가 지목한 외부 사실의 대조 호출이 smell 판정에 **앞서** 실제로 있었다 (읽기 지침 참조).
@@ -71,12 +71,14 @@ description: Use this skill to review a feature draft before coding, identify ov
 
 ## 반환
 
-채팅 반환 하나가 전부다:
+대상 부재는 Input의 지정 문구를 반환한다. 계약 위반이나 외부 blocker로 리뷰를 완료할 수 없으면 `리뷰 미완료 — <사유>` 1줄과 계약을 지켜 확정한 findings만 반환한다. 미완료를 `CLEAR`로 표시하지 않는다.
+
+정상 완료는 다음 채팅 반환 하나가 전부다:
 
 - **Blocker Status**: BLOCKED(Critical/High 존재) | CLEAR
 - **Findings** (severity별): Critical/High/Medium은 finding당 블록 — `[Smell] 제목` + Evidence·Affected Plan Surface·Recommended Plan Change·Implementation Blocker 여부. Low는 affected surface 포함 한 문장.
 
-확인했으나 finding이 아닌 대조 결과(실재가 확인된 Target Files·content anchor, 반증되지 않은 사실 전제 등)는 열거하지 않는다 — 반환은 위 항목이 전부다. 줄이는 것은 출력이지 점검·대조 범위가 아니다.
+확인했으나 finding이 아닌 대조 결과(실재가 확인된 Target Files·content anchor, 반증되지 않은 사실 전제 등)는 열거하지 않는다 — 정상 반환은 위 항목이 전부다. 줄이는 것은 출력이지 점검·대조 범위가 아니다.
 
 ## Error Handling
 
@@ -84,5 +86,5 @@ Target Files가 불명확하면 `Verification Weakness` 또는 `Task Boundary Dr
 
 ## Integration
 
-- `feature-draft`: 리뷰 대상이자 호출 주체 — 자기 품질 게이트로 이 리뷰를 수행하고, finding 반영은 작성자 소관. 게이트로 호출된 경우 이 리뷰의 반환은 중간 산출물이다 — 반환 직후 사용자 입력을 기다리지 않고 호출 스킬의 fix 단계로 복귀한다.
-- `implementation`: Critical/High blocker가 없을 때 후속 실행
+- `feature-draft`: 리뷰 대상이자 호출 주체 — 자기 품질 게이트로 이 리뷰를 수행하고, finding 반영은 작성자 소관. 게이트로 호출된 경우 이 리뷰의 반환은 중간 산출물이다 — 정상·미완료 반환 모두 사용자 입력을 기다리지 않고 호출 스킬로 복귀해 producer의 품질 게이트 규칙을 따른다.
+- `implementation`: 리뷰가 정상 완료되고 Critical/High blocker가 없을 때 후속 실행

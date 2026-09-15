@@ -1,6 +1,6 @@
 ---
 name: spec-rewrite
-description: This skill should be used when the user asks to "rewrite spec", "refactor spec", "simplify spec", "split spec into files", "clean up spec", "review spec quality", or equivalent phrases indicating they want to reorganize an overly long/complex spec by pruning noise, splitting into hierarchical files, and explicitly listing ambiguities/problems.
+description: This skill should be used when the user asks to "rewrite spec", "refactor spec", "simplify spec", "split spec into files", "clean up spec", or equivalent phrases indicating they want to reorganize an overly long/complex spec by pruning noise, splitting into hierarchical files, and explicitly listing ambiguities/problems. For quality review without requested rewriting, use spec-review.
 ---
 
 # spec-rewrite
@@ -70,7 +70,7 @@ rewrite 고유 진단 축:
 - global spec인지 temporary spec인지 문서 목적이 선명한가
 - global spec이면 `배경/개념`, `경계`, `결정`이 선명한가
 - feature-level usage/contract/reference/inventory가 global 본문을 오염시키는가
-- temporary spec이면 delta / touchpoints / validation linkage가 보이는가
+- temporary spec이면 task·AC·Target Files와 검증 증거의 연결이 보이는가 (legacy 기록물의 기존 delta ID와 연결도 보존한다)
 - appendix/reference가 본문을 대체하지 않는가
 - code map이 exhaustive inventory인지, 아니면 entrypoint / invariant hotspot / extension point / validation surface 중심의 strategic hint인지
 
@@ -91,18 +91,20 @@ plan에는 아래를 포함한다.
 - rewrite 대상 파일 목록
 - 실행 순서와 deviation 기록 규칙
 
-multi-file 분할이 필요할 때 축 선택:
+global portion을 여러 global 문서로 분할할 때 축 선택:
 
 | repo 성격 | 분할 축 | 예시 |
 |-----------|---------|------|
 | 독립적인 사용자 기능/endpoint가 여러 개 | domain | `auth.md`, `payments.md` |
 | 기능은 단일에 가까우나 repo가 큼 | topic | `architecture.md`, `data-conventions.md` |
 
-어떤 축이든 각 파일에 담는 건 global-level 결정만이다.
+이 global 분할 파일에는 global-level 결정만 담는다. temporary portion의 task·AC·Target Files와 실행 상세는 temporary surface에 보존한다.
 
 ### Step 3: Rewrite the Spec
 
-> Asset load: 실제 target shape를 재구성할 때만 `references/template-compact.md`를 읽는다. fenced skeleton을 verbatim 복사해 heading·marker·field order를 보존하고, placeholder 치환·필요한 row/task 반복·조건부 block 제거만 허용한다.
+> Asset load: global shape는 `references/template-compact.md`를 읽는다. temporary shape는 현재 runtime의 skill catalog가 제공하는 `feature-draft` 위치에서 `Required Output`과 연결된 조건부 block·분할 규칙을 읽는다. 저장소 source 경로를 설치 경로로 가정하지 않는다. 이는 형식 참조이며 `feature-draft`나 planning gate를 실행하지 않는다. 해당 계약을 읽을 수 없으면 temporary 원본을 보존하고 재작성 한계를 보고한다.
+
+읽은 canonical skeleton의 heading·marker·field order를 보존하고, placeholder 치환·필요한 row/task 반복·조건부 block 제거만 허용한다.
 
 원칙:
 
@@ -145,4 +147,4 @@ multi-file 분할이 필요할 때 축 선택:
 
 ## Final Check
 
-Acceptance Criteria가 모두 만족되었나 검증한다. 미충족 항목이 있으면 해당 단계로 돌아가 수정한다.
+선택한 경로에 적용되는 Acceptance Criteria를 검증한다. no-rewrite exit에는 계획·재작성·리포트 작성 의무를 적용하지 않는다. 보완 가능한 누락은 수정하고, 외부 blocker나 미해결 항목은 제한 결과와 다음 조치로 보고한다. 재작성 전 계획 저장을 놓쳤다면 사후 작성으로 선저장 조건을 충족했다고 보고하지 않는다.

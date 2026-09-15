@@ -56,7 +56,7 @@ chore: package.json         → chore(deps): add elasticsearch client
 ## Edge Cases
 
 ### 단일 파일, 여러 성격의 변경
-`git add -p`를 사용해 hunk 단위로 분리 가능하나, 경계가 모호하면 가장 관련 깊은 그룹에 포함한다.
+`git add -p`로 hunk 단위 분리를 검토한다. 경계가 모호하면 그룹 계획을 조정하고 변경된 범위의 승인을 확인한다. index 분리·보존 절차는 SKILL.md의 Phase 4를 따른다.
 
 ### 설정 파일 + 코드 변경
 설정 변경이 코드 변경의 직접적 결과라면 함께 묶는다. 독립적 설정 변경은 `chore` 커밋으로 분리한다.

@@ -16,7 +16,7 @@ description: This skill should be used when the user asks to "update spec with f
 
 ## Acceptance Criteria
 
-> 프로세스 완료 후 아래 기준 + Hard Rules 준수를 자체 검증한다. 미충족 항목은 해당 단계로 돌아가 수정한다.
+> 완료 시 아래 기준과 Hard Rules를 Step 6에서 검증한다. 미충족 항목 처리는 Final Check를 따른다.
 
 - [ ] Input Sources를 식별하고 파싱했다.
 - [ ] 각 delta 항목에 `Status 분류 (Routing)`을 적용했다.
@@ -24,7 +24,7 @@ description: This skill should be used when the user asks to "update spec with f
 
 ## Hard Rules
 
-1. 코드와 구현 문서를 직접 수정하지 않는다. 이 스킬이 쓰는 대상은 `_sdd/spec/`과 소비한 input file의 rename뿐이다.
+1. 코드와 구현 문서를 직접 수정하지 않는다. 이 스킬이 쓰는 대상은 `_sdd/spec/`과 Step 5에서 정한 소비 완료 입력의 rename뿐이다.
 2. **evidence 없으면 승격 금지**: 승격 판단은 `Status 분류 (Routing)`을 따른다. 관측 실패: evidence 없는 planned truth가 current truth로 섞이는 drift.
 3. **verified와 planned 분리**: 아직 구현되지 않은 새 heading, bullet, 문장에는 반드시 `🚧 Planned`를 붙여 현재 truth와 구분하고(`## 🚧 Planned ...`, `- 🚧 Planned: ...` 또는 이에 준하는 명시 표식), 검증된 current truth와 planned/미검증 truth를 같은 문단·불릿에 표식 없이 섞어 쓰지 않는다.
 4. global 반영 범위는 Step 4의 persistence mapping 기준을 따른다. 관측 실패: temporary task breakdown이 global core로 과복원되는 drift.
@@ -90,6 +90,8 @@ Negative example:
 - feature draft Part 1 `Spec Delta` (+ 구현 후라면 task AC 충족 evidence)
 - `_sdd/implementation/*` 산출물 존재 여부 → 구현 전/후 판별
 
+기록 파일(`decision_log.md` 또는 발견한 legacy history, `logs/changelog.md`)의 실행 시작 내용을 비교 기준으로 확보한다. 기존 미커밋 변경도 포함한 현재 내용이 기준이며, 새 영구 snapshot 파일을 만들 필요는 없다.
+
 ### Step 2: Gather Context
 
 다음을 읽는다.
@@ -132,13 +134,15 @@ Negative example:
 
 세 표면을 순서대로 쓴다.
 
-1. **live truth**: live truth 파일(`_sdd/spec/`에서 기록 파일을 제외한 전부)을 수정한다. 각 delta는 Step 3 분류대로 반영하고 (승격분은 무표식, 잔여는 `🚧 Planned`, 보류는 `Open Questions`), outdated claim은 제거한다.
+1. **live truth**: Step 4에서 선택한 `_sdd/spec/`의 live truth 파일을 수정한다(기록 파일과 사용자 입력 원문 제외). 각 delta는 Step 3 분류대로 반영하고 (승격분은 무표식, 잔여는 `🚧 Planned`, 보류는 `Open Questions`), outdated claim은 제거한다.
    - 기존 문체와 언어를 맞추고, 중복 서술을 만들지 않는다.
    - `main.md`의 헤더 밖 문서 몸통이 바뀌었으면 헤더의 `Spec Version`을 SemVer로 올린다.
 2. **기록**: 기존 entry는 수정·삭제하지 않고 신규 entry만 **append-only**로 추가한다.
    - `decision_log.md`: rationale 변화가 있을 때만 최소 entry.
    - `logs/changelog.md`: `main.md` 몸통이 바뀐 버전마다 entry(위에서 올린 버전과 동일).
-3. **input file 처리**: 이번 sync에 사용한 input file을 `_processed_` prefix로 rename한다.
+3. **input file 처리**: 반영·제외·보류 결과와 위치 또는 사유를 남겨 소비를 마친 일회성 제출물(`user_spec.md`, `user_draft.md` 등), 또는 사용자가 소비 후 rename 대상으로 명시한 파일만 `_processed_` prefix로 rename한다. 원문 내용은 보존한다.
+   - 코드, 진행 중 draft, 구현 evidence, canonical history는 읽었더라도 rename하지 않는다.
+   - 이미 `_processed_` prefix가 있으면 재접두하지 않고, 목적지 파일이 있으면 원본과 목적지를 모두 보존한다. 두 경우 모두 rename을 건너뛴 사유를 보고한다.
 
 ### Step 6: Validate and Self-check
 
@@ -150,10 +154,10 @@ Negative example:
 - wrong-surface restoration이나 불필요한 truth duplication이 없는가
 - 신규 파일이 main.md 인덱스에 링크되는가
 
-정합 점검 2종(grep):
+기록 정합도 확인한다:
 
 - `main.md` 몸통을 고쳤다면 헤더 버전과 `logs/changelog.md` 최신 entry 버전이 **일치**하는가
-- 기록 파일을 썼다면 `git diff`에서 `decision_log.md`·`logs/changelog.md`의 **삭제 줄이 0**인가 (append-only 위반 탐지)
+- 기록 파일을 썼다면 Step 1의 실행 시작 내용과 비교해, 이번 변경이 기존 entry 수정·삭제 없이 신규 entry만 추가했는가. 일반 `git diff`의 시작 전 변경은 이번 위반으로 판단하거나 복원하지 않고 별도 보고한다. 시작 기준점을 확보하지 못했다면 append-only 검증 제한을 명시한다.
 
 ## Error Handling
 
@@ -175,4 +179,4 @@ Negative example:
 
 ## Final Check
 
-Acceptance Criteria가 모두 만족되었나 1회 점검한다 (Step 6이 검증 패스다 — 추가 수정이 있었을 때만 재점검). 미충족 항목이 있으면 해당 단계로 돌아가 수정한다.
+Step 6에서 이번 실행에 해당하는 Acceptance Criteria와 Hard Rules를 점검한다. 복구 가능한 누락은 해당 단계에서 보완하고, 추가 수정이 있을 때만 재점검한다. 외부 blocker나 검증 제한은 미충족 항목·사유·다음 조치로 보고하며, 과거 절차나 시작 전 사용자 변경을 소급 수정해 성공으로 만들지 않는다.

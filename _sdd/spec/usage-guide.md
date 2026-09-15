@@ -67,7 +67,7 @@
 - handoff에는 자족적 조건 문자열, runtime 실행법, 네 파일의 개별 경로와 “goal을 활성화하지 않았으며 기존 goal 상태도 변경하지 않았다”는 불변식이 표시된다. 사용자가 내용을 검토하고 native goal activation 여부와 시점을 결정한다
 - setup 중 initial `feature-draft`·`implementation`·`spec-sync`는 실행되지 않는다. current goal status를 조회하지 않고 existing goal을 변경하거나 active goal 때문에 setup을 차단하지도 않는다
 - activation 뒤 SDD Loop Protocol은 미충족 `DONE WHEN` 또는 실패한 final integration proof gap에서 가장 작은 next feature를 선택하고, 필요 시 reviewed `feature-draft`를 만든 뒤 `implementation` → persistent 변경 시 `spec-sync` → evidence·완료 feature·남은 gap·next action 기록을 반복한다
-- draft가 분할되면 같은 native goal 안에서 smallest next unit을 계속 선택하며 nested `goal-init`을 만들지 않는다. 모든 `DONE WHEN`과 final integration proof가 통과해야 종료한다
+- draft가 분할되면 같은 native goal 안에서 smallest next unit을 계속 선택하며 nested `goal-init`을 만들지 않는다. 모든 `DONE WHEN`과 final integration proof 통과는 성공 종료 조건이다. STOP/STUCK은 미완료 사유·다음 행동을 남기고 native lifecycle 규칙에 따라 종료한다
 - `feature-draft`와 `implementation`의 품질 게이트는 각 producer가 소유한다. 별도 Goal Contract, Initial Feature Queue, status manifest, goal-level reviewer는 생성하지 않는다
 
 ### Scenario 3: PR 기반 스펙 동기화

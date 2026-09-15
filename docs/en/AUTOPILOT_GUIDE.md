@@ -1,7 +1,7 @@
 # SDD-Autopilot User Guide
 
-**Version**: 3.0.0
-**Date**: 2026-08-10
+**Version**: 3.1.0
+**Date**: 2026-09-15
 
 ## 1. Overview
 
@@ -19,7 +19,7 @@ Planning, implementation, and spec synchronization repeat only inside the native
 
 User reviews and activates the native /goal
   → the SDD Loop Protocol repeats feature-sized SDD paths as needed
-  → stop only after every DONE WHEN item and the final integration proof pass
+  → succeed after every DONE WHEN item and the final integration proof pass; STOP/STUCK ends incomplete
 ```
 
 The existing five `goal-init` stages, evaluator self-check (tool-free judgment, surfaced evidence, and at most 4,000 characters), and four-file format stay the same as the generic path. The SDD preset changes only the Loop Protocol payload in `goal.md`.
@@ -32,8 +32,8 @@ The active native goal follows this order on every turn:
 2. If no reviewed draft exists, run `feature-draft`. If it splits, choose the smallest next unit inside the current goal.
 3. Execute the selected draft with `implementation`, including its producer-owned quality gate.
 4. Run `spec-sync` when persistent changes exist.
-5. Surface verification output and record the evidence, completed feature, remaining gap, and next action in the journal/report.
-6. Finish only when every `DONE WHEN` item and the final integration proof pass; otherwise return to step 1.
+5. Surface current verification evidence and whether checks were rerun; record the completed feature, remaining gap, and next action in the journal/report. Run checks according to the recipe’s change scope and checkpoints.
+6. Finish successfully when every `DONE WHEN` item and the final integration proof pass. For STOP/STUCK, record the incomplete reason and next action and follow native lifecycle rules. Otherwise return to step 1.
 
 If `feature-draft` splits again during execution, it does not create a nested `goal-init`. The current native goal keeps selecting the next smallest feature through the same Loop Protocol.
 
@@ -42,7 +42,7 @@ If `feature-draft` splits again during execution, it does not create a nested `g
 - **Setup only**: initial `feature-draft`, `implementation`, and `spec-sync` do not run during `/sdd-autopilot` setup.
 - **User activation**: the skill never activates the native goal itself.
 - **Existing goal remains untouched**: setup does not read current goal status, mutate, clear, pause, replace, or merge an existing goal, and it does not block because a goal is active.
-- **Handoff invariant**: the result always states that the goal was not activated and the existing goal state was not changed.
+- **Handoff invariant**: state that the goal was not activated and the existing goal state was not changed only when this was observed. Report any violation and unmet criterion truthfully. Reuse an already delivered handoff.
 - **Producer ownership**: after activation, `feature-draft` and `implementation` continue to own their plan and implementation quality gates and fixes.
 - **Autonomy Grant**: the `자율 수행 위임` (Autonomy Grant) section of `goal.md` is the user's standing pre-approval for in-loop actions such as commit, push, and BC job submission. The level (`unattended`/`attended`) and the pre-approved / always-confirm lists live only in that section; pre-approved actions proceed without asking.
 - **Existing harness reused**: the roles and formats of `goal.md`, `experiments.md`, `journal.md`, and `report.md` remain unchanged; no separate queue or state-machine schema is introduced.
