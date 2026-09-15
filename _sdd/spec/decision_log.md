@@ -3539,3 +3539,17 @@ sdd-autopilot의 review-fix 루프가 선택적으로 동작하여, 리뷰만 �
 
 - 20개 스킬/38개 진입점에 73개 finding 처리 완료(적용 60·정리 13). 소스·reference parity와 YAML·링크를 검증했으며 Ralph 실행 template는 7 tests/16 runtime scenarios PASS로 확인했다.
 - 통합 gate의 Medium 3개를 수정했다. 계약 인용 1단어 차이의 절차 제한과 실제 Astra/Fable 행동 미검증은 [처리 내역](../../docs/reviews/2026-09-15-skill-instructions/implementation-dispositions.md)에 남겼다. 설치 cache·외부 서비스를 변경하지 않았다.
+
+
+## 2026-09-15 — discussion 결과·경계 중심 재설계 승인
+
+- 결정: 사용자 승인 DP-01~06을 반영해 질문 가이드의 별도 실행 규칙을 제거하고, coverage/phase·비판 질문 횟수·단일 서브프로젝트·미결 카테고리 중심 종료 강제를 의사결정 기준으로 전환한다. 요약의 핵심 맥락·결정·근거·미결은 보존하고 전체 라운드 로그는 요청/감사 필요에 한정한다.
+- 이유: 필요한 정보와 완료 기준은 고정하면서 상황에 맞는 대화 방식의 선택을 허용한다. 긴 지시 자체가 모델 성능을 저하시킨다는 가정이나 실제 불편 보고를 근거로 삼지 않는다.
+- 상태: 🚧 Planned. 소스 반영과 검증 후 supporting spec의 current truth로 승격한다. 실제 Astra/Fable 행동 개선은 별도 측정 대상이다.
+- 포인터: [리뷰 DP-01~06](../../docs/reviews/2026-09-15-skill-instructions/discussion-purpose-review.md).
+
+### discussion 재설계 소스 검증 결과
+
+- 양 runtime 본문·질문 가이드·요약 템플릿·세션 예시에 DP-01~06을 반영했다. 본문이 실행 판단을 소유하고 template이 결과 형식을 소유한다. 초기 배경·근거 유형·미결 카테고리·read-only·사용자 종료·부분 저장·Final Check를 보존했다.
+- YAML, 참조 파일 실재, template/example 구조, 두 reference의 byte parity, Runtime 외 본문의 동일성, 파일 권한과 diff 위생을 확인해 supporting spec을 소스 기준 current truth로 승격했다. usage-guide의 기존 최대 10라운드 표기도 교정했다.
+- 실제 모델의 질문 수·결정 품질·속도 개선은 미검증이다. 세부 검증과 implementation review 결과는 [처리 내역](../../docs/reviews/2026-09-15-skill-instructions/discussion-purpose-dispositions.md)이 소유한다.

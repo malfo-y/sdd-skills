@@ -4,6 +4,8 @@
 
 **수정 결과:** [73개 항목의 처리 내역과 검증](./implementation-dispositions.md). 아래 원문 위치·미적용 표현·manifest는 리뷰 당시 snapshot으로 보존한다.
 
+**후속 설계 리뷰:** [discussion — 목적·경계·결과물과 절차의 강제 수준](./discussion-purpose-review.md). 수정 후 `3d0d68e` 기준의 정합성 수정 권고 1건과 설계 변경 후보 5건이며, 아래 최초 리뷰 집계와 별개다. 사용자 승인 후의 [재설계 적용·검증 내역](./discussion-purpose-dispositions.md)을 별도 기록한다. 실제 행동 비교 실험은 미수행.
+
 - 모델: gpt-6-astra. 기준 커밋: `be6c5a1f014b3e37d386127966b0bb6de3549587`.
 - 대상: Claude 20개 + Codex 18개 = SKILL.md 38개, 이름 기준 20종. `git`·`second-opinion`의 Codex 짝 부재는 정상 배포 범위다. 사용자의 전역 설치 스킬은 범위 밖이다.
 - 방법: 스킬별 runtime 짝을 묶은 병렬 리뷰 → 메인 작성자의 문서 검토·공유 계약 대조·중복 소유권 통합. 같은 모델의 병렬 리뷰이므로 모델 다양성 검증은 아니다.

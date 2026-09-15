@@ -894,3 +894,10 @@
 
 - 저장소의 20개 스킬·38개 SKILL과 직접 자산에 지시 명료화를 반영했다. Ralph 실패 턴 rollback·lock 이후 reset·backup 실패 중단을 실제 추출 template의 격리 회귀로 검증했다(7 tests/16 scenarios PASS).
 - 73개 finding의 처리 위치, gate fix, 검사기 기존 메타데이터 제한과 모델 행동 미검증은 [처리 내역](../../../docs/reviews/2026-09-15-skill-instructions/implementation-dispositions.md)에 기록했다.
+
+
+## 2026-09-15 — discussion 결과·경계 중심 재설계
+
+- 고정 coverage/phase·비판 질문 횟수·단일 서브프로젝트·미결 카테고리 중심 종료를 판단 기준으로 전환했다. 질문 가이드는 예시만 제공하고 요약의 전체 대화 로그는 조건부로 변경했다.
+- 양 runtime 본문·reference·예시와 supporting components/usage-guide를 동기화했다. main.md 몸통은 변경하지 않았으며 이 기록은 별도 spec version bump를 만들지 않는다. 실제 모델 효과는 미검증이다.
+- 검증·게이트·잔여 사항: [처리 내역](../../../docs/reviews/2026-09-15-skill-instructions/discussion-purpose-dispositions.md).
