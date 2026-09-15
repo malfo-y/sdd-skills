@@ -1,6 +1,6 @@
 # GitHub CLI (`gh`) Commands Reference
 
-`gh` CLI command reference used by the `pr-spec-patch` skill.
+`gh` CLI command reference used by the `pr-review` skill.
 
 ---
 
@@ -54,7 +54,7 @@ no pull requests found for branch "feature/my-branch"
 ## PR Metadata Collection
 
 ```bash
-gh pr view [PR_NUMBER] --json title,body,author,state,url,additions,deletions,changedFiles,headRefName,baseRefName,commits,comments,reviews
+gh pr view [PR_NUMBER] --json title,body,author,state,url,additions,deletions,changedFiles,headRefName,headRefOid,baseRefName,commits,statusCheckRollup
 ```
 
 **JSON field descriptions:**
@@ -69,11 +69,11 @@ gh pr view [PR_NUMBER] --json title,body,author,state,url,additions,deletions,ch
 | `additions` | number | Lines added |
 | `deletions` | number | Lines deleted |
 | `changedFiles` | number | Number of changed files |
-| `headRefName` | string | Source branch name |
+| `headRefName` | string | Source branch name (not an identity check) |
+| `headRefOid` | string | Fixed review baseline SHA |
+| `statusCheckRollup` | array | CI status summary; actual output and execution SHA are checked separately |
 | `baseRefName` | string | Target branch name |
 | `commits` | array | Commit list (each with `oid`, `messageHeadline`) |
-| `comments` | array | PR comments |
-| `reviews` | array | Review list |
 
 **Output example:**
 ```json
@@ -89,6 +89,7 @@ gh pr view [PR_NUMBER] --json title,body,author,state,url,additions,deletions,ch
   "deletions": 123,
   "changedFiles": 12,
   "headRefName": "feature/auth-system",
+  "headRefOid": "def5678abc9012",
   "baseRefName": "main",
   "commits": [
     {
@@ -96,14 +97,35 @@ gh pr view [PR_NUMBER] --json title,body,author,state,url,additions,deletions,ch
       "messageHeadline": "feat: implement JWT auth service"
     },
     {
-      "oid": "def5678ghi9012",
+      "oid": "def5678abc9012",
       "messageHeadline": "fix: token refresh bug on session expiry"
     }
   ],
-  "comments": [],
-  "reviews": []
+  "statusCheckRollup": []
 }
 ```
+
+---
+
+## Baseline and Discussion
+
+The process and failure states in `../SKILL.md` are canonical. Collect PR data between checks that `headRefOid` still equals the pinned SHA; if it changed, recollect the snapshot. Branch-name equality is insufficient.
+
+```bash
+gh pr view [PR_NUMBER] --json headRefOid --jq '.headRefOid'
+git rev-parse HEAD
+git status --porcelain
+gh pr view [PR_NUMBER] --json comments,reviews --jq '{comments: [.comments[] | {author: .author.login, body}], reviews: [.reviews[] | {author: .author.login, body}]}'
+```
+
+Read the spec tree even when the PR diff has no spec changes:
+
+```bash
+git ls-tree -r --name-only [HEAD_SHA] -- _sdd/spec/
+git show [HEAD_SHA]:_sdd/spec/main.md
+```
+
+Use the pinned SHA, not a moving branch name. A successful empty tree lookup means `ABSENT`; command/read failure means `UNREADABLE` until an equivalent SHA read succeeds. Preserve the current checkout and dirty user files; local validation requires the same baseline and clean relevant inputs.
 
 ---
 
@@ -207,7 +229,7 @@ gh pr view 42 --json title --jq '.title'
 gh pr view 42 --json commits --jq '.commits[].messageHeadline'
 
 # HEAD commit SHA
-gh pr view 42 --json commits --jq '.commits[-1].oid'
+gh pr view 42 --json headRefOid --jq '.headRefOid'
 ```
 
 ### PR Status Check
@@ -227,14 +249,4 @@ gh api repos/{owner}/{repo}/pulls/42/comments
 
 ## Tips for Large PRs
 
-When `changedFiles` is 50 or more:
-
-1. Check the file list first with `--name-only`
-2. Group by directory to understand change scope
-3. Only check diffs for files related to components documented in the spec
-4. Selectively check per-file diffs instead of the full diff:
-
-```bash
-# Check diff for specific directory only
-gh pr diff 42 | grep -A 50 "^diff --git a/src/services/"
-```
+When `changedFiles` is 50 or more, follow `../SKILL.md` scope reduction: group the changed files by directory/component, prioritize spec-related areas, and record the coverage assumption. Select complete relevant diff sections; fixed-line excerpts may truncate a finding's evidence.

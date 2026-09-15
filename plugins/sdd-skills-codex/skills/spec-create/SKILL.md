@@ -1,6 +1,6 @@
 ---
 name: spec-create
-description: This skill should be used when the user asks to "create a spec", "write a spec document", "generate SDD", "create software design document", "document the project", "create spec for project", or mentions "_sdd" directory, specification documents, or project documentation needs.
+description: This skill should be used when the user asks to "create a spec", "write a spec document", "generate SDD", "create software design document", "document the project", "create spec for project", or wants to create or initialize a project-wide SDD spec. Mere mentions of "_sdd", explanation requests, and reviews of an existing spec do not trigger this skill.
 ---
 
 # spec-create
@@ -21,8 +21,8 @@ description: This skill should be used when the user asks to "create a spec", "w
 - [ ] 코드베이스가 있으면 primary navigation axis를 하나 선택했고, 유용할 때만 compact `Strategic Code Map`을 appendix 또는 supporting file로 배치했다.
 - [ ] supporting information은 필요할 때만 appendix 또는 별도 supporting file로 분리했다.
 - [ ] 코드베이스가 있으면 스펙이 실제 코드 구조와 naming을 반영한다.
-- [ ] 필요한 경우에만 `AGENTS.md`(하네스 템플릿 기반 §0~§5 채움), `CLAUDE.md`(`→ AGENTS.md 참조` 포인터), `_sdd/env.md`(비밀값 금지 경고 포함), `.gitignore`(`SDD-WORKSPACE` 마커로 process artifact ignore)를 최소 범위로 생성/보강했다.
-- [ ] `AGENTS.md`·`CLAUDE.md` 생성/보강 시 SDD-HARNESS 마커 멱등 병합을 적용했고(부재→생성, 존재→맨 위 prepend·기존 보존, 마커 블록 존재→블록만 교체), legacy `## SDD란` 블록은 하네스로 흡수·제거했다.
+- [ ] Step 3에서 선택한 부트스트랩 산출물만 해당 계약에 따라 생성/보강했고, 미선택 항목은 비대상으로 구분했다.
+- [ ] `AGENTS.md`·`CLAUDE.md` 생성/보강 시 Step 3c의 마커 병합·legacy 보존/흡수 규칙을 적용했다.
 - [ ] 하네스를 생성/병합했으면 Step 3e의 local hook installation contract를 적용했다.
 
 ## SDD Lens
@@ -70,7 +70,7 @@ Negative example:
 1. `src/`, `tests/` 등 구현 코드 파일은 수정하지 않는다.
 2. 문서 언어는 기존 스펙/문서를 따른다. 기존 스펙이 없으면 한국어를 기본으로 한다.
 3. 스펙 출력은 `_sdd/spec/`에만 저장한다.
-4. `AGENTS.md`, `CLAUDE.md`는 없을 때 SDD-HARNESS 마커 블록으로 생성하고, 이미 있으면 마커 멱등 병합(맨 위 prepend·기존 보존, 마커 블록 존재 시 블록만 교체)한다. `_sdd/env.md`는 없을 때 생성하고 이미 있으면 필수 안내 문구가 빠진 경우에만 최소 수정한다. 하네스를 생성/병합하면 Step 3e의 local hook installation contract를 적용한다.
+4. 부트스트랩 산출물의 선택·생성·병합은 Step 3을 따른다. 미선택 파일은 생성/수정하지 않는다.
 5. 거버넌스 문서는 기본적으로 lowercase canonical `decision_log.md`까지만 사용한다. legacy uppercase `DECISION_LOG.md`는 read-only fallback으로만 취급한다.
 6. global spec을 feature-level usage/validation/reference 문서로 부풀리지 않는다.
 7. `Strategic Code Map`을 exhaustive file tree, component catalog, API reference, 구현 narrative로 만들지 않는다.
@@ -148,7 +148,7 @@ global spec core는 항상 유지한다.
 
 ### Step 3: Bootstrap Workspace Guidance
 
-필요 시 아래 파일을 보강한다. 단 훅 자산은 재량이 아니다 — `AGENTS.md` 하네스를 생성/병합하면 항상 함께 설치한다(3e).
+사용자 요청과 기존 작업 안내의 누락을 근거로 아래 파일 중 생성/보강 대상을 선택한다. 기존 안내로 충분하면 이 단계를 건너뛴다. 선택한 파일에만 3a–3e를 적용하되, `AGENTS.md` 하네스 생성/병합을 선택하면 `CLAUDE.md` 포인터·`.gitignore`와 양 runtime 훅 자산도 함께 적용한다. `_sdd/env.md`는 선택 시 없으면 생성하고, 있으면 필수 안내 누락만 최소 보강한다.
 
 - `AGENTS.md` — SDD 작업 하네스 본체
 - `CLAUDE.md` — `→ AGENTS.md 참조` 포인터
@@ -158,17 +158,18 @@ global spec core는 항상 유지한다.
 
 #### 3a. AGENTS.md 하네스 생성
 
-하네스 템플릿 `references/agents-harness-template.md`를 **Read**한다. `SDD-HARNESS:START`~`SDD-HARNESS:END` 마커 블록을 **글자 그대로(verbatim) 복사**해 `AGENTS.md` 본문으로 쓴다 — 템플릿 상단의 관리용 주석(`<!-- 이 파일은 … -->`)만 제외한다. 블록의 어떤 줄도 추가·삭제·재배열·요약하지 않는다. 기억이나 이 SKILL 본문으로 **재구성하지 않는다** — 재구성하면 템플릿 변경(새 §·경고 줄 등)이 산출물에 누락된다.
+하네스 템플릿 `references/agents-harness-template.md`를 **Read**한다. `SDD-HARNESS:START`~`SDD-HARNESS:END` 마커 블록을 **글자 그대로(verbatim) 복사**해 `AGENTS.md` 본문으로 쓴다 — 템플릿 상단의 관리용 주석(`<!-- 이 파일은 … -->`)만 제외한다. 아래 슬롯 처리 예외 외에는 블록의 어떤 줄도 추가·삭제·재배열·요약하지 않는다. 기억이나 이 SKILL 본문으로 **재구성하지 않는다** — 재구성하면 템플릿 변경(새 §·경고 줄 등)이 산출물에 누락된다.
 
 그다음 아래 `<…>` 꺾쇠 슬롯만 repo 맥락으로 치환한다(슬롯 없는 줄은 글자 그대로 유지).
 
 - `<repo-name>` — repo 이름
 - `<test command>` — 테스트 실행 명령 (없으면 해당 줄 삭제)
 - `<lint command>` — 린트/타입체크 명령 (없으면 해당 줄에서 삭제)
+- `<브랜치 규칙, 예: main에서 feature/fix/exp/... 브랜치>` — repo의 브랜치 규칙
 - `<커밋·PR 규칙>` — repo의 커밋/PR 규칙
 - spec §`<scope 섹션>` / §`<decisions 섹션>` — 작성한 global spec의 실제 섹션 이름
 
-§0 작업 원칙 4개는 영어 원문 그대로 유지한다. §3 워크플로우 단계 순서와 §4 ⚠️ 경계 문구(repo-specific 불변 규칙은 spec Guardrails가 단일 소스)는 그대로 둔다.
+§0 작업 원칙은 영어 원문 그대로 유지한다. §3 워크플로우 단계 순서와 §4 ⚠️ 경계 문구(repo-specific 불변 규칙은 spec Guardrails가 단일 소스)는 그대로 둔다.
 
 legacy `## SDD란` 참조 블록은 생성하지 않는다. 그 정보(SDD 개념·워크플로우 안내) 역할은 하네스 §3 워크플로우 + §4 판단 기준이 흡수한다.
 
@@ -187,8 +188,10 @@ legacy `## SDD란` 참조 블록은 생성하지 않는다. 그 정보(SDD 개�
 `AGENTS.md`·`CLAUDE.md` 각각에 아래 절차를 적용한다.
 
 - 파일 부재 → SDD-HARNESS 마커 블록만으로 새 파일 생성.
-- 파일 존재 + 마커 블록 없음 → 마커 블록을 **파일 맨 위에 prepend**하고, 마커 밖 기존 내용은 아래에 그대로 보존한다. 기존 파일의 legacy `## SDD란` 블록은 하네스가 흡수·대체하므로 제거하고, 기존 테스트/커밋 규칙 등 중복 항목은 하네스 슬롯으로 흡수한다. SDD와 무관한 사용자 고유 내용은 보존한다.
-- 파일 존재 + 마커 블록 있음 → **그 마커 블록만 교체**하고 마커 밖 내용은 건드리지 않는다(마커-only 교체 = 멱등, 재실행해도 블록이 중복 누적되지 않는다).
+- 파일 존재 + 마커 블록 없음 → 마커 블록을 **파일 맨 위에 prepend**한다.
+- 파일 존재 + 마커 블록 있음 → **그 마커 블록만 교체**한다(멱등, 재실행 시 중복 누적 없음).
+
+두 경로 모두 마커 밖 원문을 보존한다. 유일한 제거 예외는 **과거 SDD 부트스트랩 생성물로 식별되고 내용이 하네스에 전부 흡수된 중복 블록**이다. `## SDD란`이라는 제목이나 테스트/커밋 규칙의 중복만으로는 제거하지 않는다. 출처·경계가 불명확하거나 사용자 고유 수정이 섞였으면 원문을 보존하고 잔여 중복을 보고한다. 사용자 내용 삭제가 기존 승인 범위에 없으면 승인을 받는다.
 
 #### 3d. .gitignore 보강
 
@@ -254,7 +257,7 @@ spec 작성 직전에 선택한 runtime-local asset만 **Read**한다. 선택한
 
 ### Step 5: Validate and Save
 
-마지막으로 아래를 점검한다.
+마지막으로 아래를 점검한다. 부트스트랩 검사는 Step 3에서 선택한 산출물에만 적용한다.
 
 - spec 구조가 프로젝트 규모와 navigation need에 맞는가
 - multi-file이면 single-file default를 벗어난 이유가 실제로 설명되었는가
@@ -263,10 +266,10 @@ spec 작성 직전에 선택한 runtime-local asset만 **Read**한다. 선택한
 - `Strategic Code Map`이 있다면 compact navigation hint이며 exhaustive inventory로 변질되지 않았는가
 - 코드베이스와 naming/경로가 크게 어긋나지 않는가
 - `AGENTS.md`가 하네스 §0~§5 슬롯을 채워 생성/병합되었고, `CLAUDE.md`가 포인터인가
-- 생성/병합 결과 `AGENTS.md`·`CLAUDE.md`에 하네스와 별개의 중복 `## SDD란` 블록이 남지 않았는가(legacy 흡수·제거, SDD 무관 사용자 내용 보존)
+- `AGENTS.md`·`CLAUDE.md`의 legacy 처리와 잔여 보고가 Step 3c의 보존/흡수 규칙을 따르는가
 - 마커 블록이 재실행 시 중복 누적 없이 블록만 교체되는가(멱등)
 - `.gitignore`가 `SDD-WORKSPACE` 마커 블록으로 process artifact를 ignore하고, `_sdd/env.md`에 비밀값 금지 경고가 있는가
-- 하네스를 설치했다면 local `references/hook-installation.md`의 `Verify` checklist를 모두 만족하고 재실행 시 runtime별 diff가 없는가
+- 하네스를 설치했다면 local `references/hook-installation.md`의 `Verification and Report`에 따라 runtime별 등록·검증·acceptance 상태를 구분했는가
 
 ## Output Contract
 
@@ -299,8 +302,8 @@ spec 작성 직전에 선택한 runtime-local asset만 **Read**한다. 선택한
 | 코드베이스 없음 | greenfield/spec-only 문서로 계속 진행하고 low confidence 영역을 표시 |
 | 기존 스펙 존재 | 기존 파일 갱신 |
 | canonical 구조 불명확 | 후보를 비교하고 사용자 확인 |
-| 환경 정보 부족 | `_sdd/env.md`에 TODO 기반 최소 가이드 생성 |
+| 환경 정보 부족 | Step 3에서 `_sdd/env.md`를 선택했다면 TODO 기반 최소 가이드 생성 |
 
 ## Final Check
 
-Acceptance Criteria가 모두 만족되었나 검증한다. 미충족 항목이 있으면 해당 단계로 돌아가 수정한다.
+선택한 경로의 Acceptance Criteria를 검증하고, 현재 입력과 권한으로 보완할 수 있는 누락은 해당 단계에서 수정한다. hook의 skipped/partial 또는 trust 대기는 local `references/hook-installation.md`의 종료·보고 규칙을 따른다. 그 밖에 외부 입력이 필요한 잔여 항목도 원문을 보존하고 제한 결과로 종료하며, 완전 완료로 보고하지 않는다.

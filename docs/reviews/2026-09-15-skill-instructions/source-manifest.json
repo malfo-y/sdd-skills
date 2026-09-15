@@ -1,0 +1,201 @@
+{
+  "commit": "be6c5a1f014b3e37d386127966b0bb6de3549587",
+  "date": "2026-09-15",
+  "skills": {
+    "discussion": [
+      ".claude/skills/discussion/SKILL.md",
+      "plugins/sdd-skills-codex/skills/discussion/SKILL.md"
+    ],
+    "feature-draft": [
+      ".claude/skills/feature-draft/SKILL.md",
+      "plugins/sdd-skills-codex/skills/feature-draft/SKILL.md"
+    ],
+    "git": [
+      ".claude/skills/git/SKILL.md"
+    ],
+    "goal-init": [
+      ".claude/skills/goal-init/SKILL.md",
+      "plugins/sdd-skills-codex/skills/goal-init/SKILL.md"
+    ],
+    "guide-create": [
+      ".claude/skills/guide-create/SKILL.md",
+      "plugins/sdd-skills-codex/skills/guide-create/SKILL.md"
+    ],
+    "implementation": [
+      ".claude/skills/implementation/SKILL.md",
+      "plugins/sdd-skills-codex/skills/implementation/SKILL.md"
+    ],
+    "implementation-review": [
+      ".claude/skills/implementation-review/SKILL.md",
+      "plugins/sdd-skills-codex/skills/implementation-review/SKILL.md"
+    ],
+    "investigate": [
+      ".claude/skills/investigate/SKILL.md",
+      "plugins/sdd-skills-codex/skills/investigate/SKILL.md"
+    ],
+    "plan-review": [
+      ".claude/skills/plan-review/SKILL.md",
+      "plugins/sdd-skills-codex/skills/plan-review/SKILL.md"
+    ],
+    "pr-review": [
+      ".claude/skills/pr-review/SKILL.md",
+      "plugins/sdd-skills-codex/skills/pr-review/SKILL.md"
+    ],
+    "ralph-loop-init": [
+      ".claude/skills/ralph-loop-init/SKILL.md",
+      "plugins/sdd-skills-codex/skills/ralph-loop-init/SKILL.md"
+    ],
+    "sdd-autopilot": [
+      ".claude/skills/sdd-autopilot/SKILL.md",
+      "plugins/sdd-skills-codex/skills/sdd-autopilot/SKILL.md"
+    ],
+    "second-opinion": [
+      ".claude/skills/second-opinion/SKILL.md"
+    ],
+    "spec-create": [
+      ".claude/skills/spec-create/SKILL.md",
+      "plugins/sdd-skills-codex/skills/spec-create/SKILL.md"
+    ],
+    "spec-review": [
+      ".claude/skills/spec-review/SKILL.md",
+      "plugins/sdd-skills-codex/skills/spec-review/SKILL.md"
+    ],
+    "spec-rewrite": [
+      ".claude/skills/spec-rewrite/SKILL.md",
+      "plugins/sdd-skills-codex/skills/spec-rewrite/SKILL.md"
+    ],
+    "spec-snapshot": [
+      ".claude/skills/spec-snapshot/SKILL.md",
+      "plugins/sdd-skills-codex/skills/spec-snapshot/SKILL.md"
+    ],
+    "spec-summary": [
+      ".claude/skills/spec-summary/SKILL.md",
+      "plugins/sdd-skills-codex/skills/spec-summary/SKILL.md"
+    ],
+    "spec-sync": [
+      ".claude/skills/spec-sync/SKILL.md",
+      "plugins/sdd-skills-codex/skills/spec-sync/SKILL.md"
+    ],
+    "spec-upgrade": [
+      ".claude/skills/spec-upgrade/SKILL.md",
+      "plugins/sdd-skills-codex/skills/spec-upgrade/SKILL.md"
+    ]
+  },
+  "source_sha256": {
+    ".claude/skills/discussion/SKILL.md": "8c968af3c34bd76025d1165dce90c1e5add9b8acec1d016a616b6824dc4c0110",
+    ".claude/skills/discussion/examples/sample-discussion-session.md": "523b2bcb18c7a2e6c69d96f4e16fcce607d260dce559cd0716ccfaa4f07b53bc",
+    ".claude/skills/discussion/references/discussion-question-guide.md": "091874c2bb36286c0eff4d440f09f7495ded3c2c2b0c744b292028d1b821b4bd",
+    ".claude/skills/discussion/references/summary-template.md": "8527117e97ad967ef104e483cbce9c18eb659f7e27641280dbc37990ceee1033",
+    ".claude/skills/feature-draft/SKILL.md": "41f820cac67face30ef303ff1084fb54ac3ee267e0ebcf61cea45db864c7325f",
+    ".claude/skills/git/SKILL.md": "8a7acbd35e3f793b9be4e77fa975a8235f787b66604a1654abcd512ffe1ca5dd",
+    ".claude/skills/git/examples/sample-branch-cleanup-session.md": "00bdac83917ac84dd1e297374fec5d9ea3cd26561ecae29225b3cfbc50589c2d",
+    ".claude/skills/git/examples/sample-commit-session.md": "8179d3af41b1009f0ba7506ccc8d539402e5ca948272e7e6277f32e0bf734a0d",
+    ".claude/skills/git/examples/sample-status-session.md": "f701bc01567f39976dff15084d6a86223c0b9ddb5e7b990d30bb8d56d0198014",
+    ".claude/skills/git/references/conventional-commits.md": "e9bb22ed7ec004f01983d74cc1074b779453d299bfdbf5e556a3985add54de78",
+    ".claude/skills/git/references/safety-rules.md": "574e3046556b9e32dfbd4af55a43ba94964d3e223eaaa45a401bd040ba16059a",
+    ".claude/skills/git/references/semantic-grouping.md": "2628b5afe1737e3feea2b68903d1f32b9265578ce61debb8918fa0e2d1cf12e0",
+    ".claude/skills/goal-init/SKILL.md": "c77fa0d6d922e630ef3abdbe1f5cd28af2789073809703fb5b9f53e5a744b4b6",
+    ".claude/skills/goal-init/examples/sample-goal-init-session.md": "3761b2e81147e35b0344b62f08d95f61b299fdc0024c9fd30e440688f8ab71b3",
+    ".claude/skills/goal-init/references/harness-templates.md": "48e28a379af0fb2ef4b7e7a6533bd33a7071101b3244a5c5644ad9712da9889e",
+    ".claude/skills/guide-create/SKILL.md": "708020f1232e77bfc5138d393898f4a6143224dce65207c69310ad54402783a5",
+    ".claude/skills/guide-create/references/output-format.md": "e68469aec7faff32c9a785655949a3d8e58091576d6e4d5df179ca1de0cde875",
+    ".claude/skills/implementation/SKILL.md": "1d81aba029575e9506ec7ee1512aab3529e2279a87d1e3a3c95bf8d11e8099a4",
+    ".claude/skills/implementation-review/SKILL.md": "069a54e4b794b9e673cc2627ab2a7695295278b481cbf9b8f32cca30b804d965",
+    ".claude/skills/implementation-review/references/simplicity-contract.md": "a8f874437573056468771113a41312d117fc6fb64cfcb1bfd97bd5f91368dda7",
+    ".claude/skills/investigate/SKILL.md": "a5621c5e1254eb7179eef8c94e2328177bd5fa6a89138d5118929d4592751342",
+    ".claude/skills/plan-review/SKILL.md": "c0e359262f393cce29baa93118e3aa5d9cf0d47a9f4a0648fb5bd3a907253379",
+    ".claude/skills/pr-review/SKILL.md": "7c0a408c09b5b359b8cdaa952d151d5cfaba0f2699d13ab2a2c26c1cb5240dac",
+    ".claude/skills/pr-review/examples/sample-review.md": "615af0d0851d2c6b1a1826b1bc7ae8dcc5844fd5490bd31d6e00e4e66c839909",
+    ".claude/skills/pr-review/references/gh-commands.md": "0825fb6dbcf8c6a62268059546c27e425508d84885dc39de80303d75d13b3204",
+    ".claude/skills/pr-review/references/review-checklist.md": "6589d6410a1b8c7bea4d491dd63510a4e004998fcb687dcef4b63b3177976672",
+    ".claude/skills/ralph-loop-init/SKILL.md": "93d8645baad1155419fdc5fc24090a15c43d86c792877dcf96f8034a4e2b23c6",
+    ".claude/skills/sdd-autopilot/SKILL.md": "08fad75e112dd134687d59c415c33366bad747d59f1a683a2879ade1d4c8f174",
+    ".claude/skills/second-opinion/SKILL.md": "44d14167ff0bcc1630bd08821ecf26d53fde548b7a5a2e290fc69b80d1bcf121",
+    ".claude/skills/spec-create/SKILL.md": "ae3e8439d9f6a81d74fbf530e8510b2cb9e6adff0717edc27bcd9871bc84e698",
+    ".claude/skills/spec-create/examples/additional-specs.md": "ec05c933d16af26270ae0c1c4030e62917b77635120aba9b333a798c1c07a9d9",
+    ".claude/skills/spec-create/examples/complex-project-spec.md": "93856f4732c713f2e249351b3f8b6f57dc91ff9415eaab57b6baed2e0697b94f",
+    ".claude/skills/spec-create/examples/simple-project-spec.md": "76a2672a0a99c09ff1ebc0b4f69ecaf2eb9e8f82ba6a4f2b0fe2fae21fc0b506",
+    ".claude/skills/spec-create/references/agents-harness-template.md": "f2c02efb67d3df5e2287159116cce62f0f8c620760170da372b99d0c303d83aa",
+    ".claude/skills/spec-create/references/hook-installation.md": "637c08089ac52287f3120bdf72386d0f8f81d09b4f8184fb7440f027798048d3",
+    ".claude/skills/spec-create/references/hooks/agent-watchdog.sh": "9c5fcc53de9688db8416e2907b12543c14d826d15240d36a8185ddaf3a83e85a",
+    ".claude/skills/spec-create/references/hooks/harness-context.sh": "b37601d19313b6c6e0a556075ba810e6309bcee54ae27826b8e712d30d3a1d4c",
+    ".claude/skills/spec-create/references/hooks/worklog-context.sh": "dab1cc69edbec471953cb315f2306fd6c703c49480a8b10a6701c6c8211af996",
+    ".claude/skills/spec-create/references/hooks/worklog-gate.sh": "8cfa88ff7f6e6a25d9ae8b7ee40d8020caa4785a3de3b9454f381e6a18d8f476",
+    ".claude/skills/spec-create/references/template-compact.md": "cb9f1bbdb3280e41acf146e6bf265f20120b82caa97f443091ecf9338a9a3958",
+    ".claude/skills/spec-create/references/template-full.md": "662f7f8ce0dec2bde1482e786cd0490faca8ec861fd4d188ae03f9e5078b9fdb",
+    ".claude/skills/spec-review/SKILL.md": "4074a1d657a3ee41e6e16815cd55a7ab6fe81e1a9a9e58b2d4e5699e5f5be922",
+    ".claude/skills/spec-rewrite/SKILL.md": "135ad1a3520ad965c32e08f52c6bbcffaa8dfd4438d1c5b02db0a1c0799e2a00",
+    ".claude/skills/spec-rewrite/references/rewrite-checklist.md": "3d98d0f2fe0a89bf8f86244fe7483cee8ec7adcecd670a534124373200d5a819",
+    ".claude/skills/spec-rewrite/references/spec-format.md": "b142e915e75d16ca6cb408bdf4e400f84e1730d317d5f654ac55301b1666b973",
+    ".claude/skills/spec-rewrite/references/template-compact.md": "826597146225f39e77962ee7fcd266d13749a75e91ea9d7abe1a738218fa59fe",
+    ".claude/skills/spec-snapshot/SKILL.md": "584d8208f926be808b0034e1cf1ddb89c8d9b59a9431cb83373ebf83ac6b379d",
+    ".claude/skills/spec-summary/SKILL.md": "fe21ee49aca68136e3c6bc754e4f535702d84f6bbd8133a133b1ebb3f0c51583",
+    ".claude/skills/spec-summary/references/summary-template.md": "8d3885423b7228ffd223db27513aa24a417fb1b4741b45b0e3509d875179b535",
+    ".claude/skills/spec-sync/SKILL.md": "2215257dadb8f95f3c9031e43dc32f699de8c72942e7c9438b8814dfaeaa075d",
+    ".claude/skills/spec-upgrade/SKILL.md": "fdbcf165e1ae53e1f58fe2180a361223046ce067309f80291de01915a28407d3",
+    ".claude/skills/spec-upgrade/examples/after-upgrade.md": "a0c14ab9d9126e99d620d3b27fa7f3479f3bc1ae5cee5b8f6c38b5daa0e9271d",
+    ".claude/skills/spec-upgrade/references/agents-harness-template.md": "f2c02efb67d3df5e2287159116cce62f0f8c620760170da372b99d0c303d83aa",
+    ".claude/skills/spec-upgrade/references/hook-installation.md": "637c08089ac52287f3120bdf72386d0f8f81d09b4f8184fb7440f027798048d3",
+    ".claude/skills/spec-upgrade/references/hooks/agent-watchdog.sh": "9c5fcc53de9688db8416e2907b12543c14d826d15240d36a8185ddaf3a83e85a",
+    ".claude/skills/spec-upgrade/references/hooks/harness-context.sh": "b37601d19313b6c6e0a556075ba810e6309bcee54ae27826b8e712d30d3a1d4c",
+    ".claude/skills/spec-upgrade/references/hooks/worklog-context.sh": "dab1cc69edbec471953cb315f2306fd6c703c49480a8b10a6701c6c8211af996",
+    ".claude/skills/spec-upgrade/references/hooks/worklog-gate.sh": "8cfa88ff7f6e6a25d9ae8b7ee40d8020caa4785a3de3b9454f381e6a18d8f476",
+    ".claude/skills/spec-upgrade/references/spec-format.md": "04f4bacade3f8d1014515056305cd92e36907fd18bc0c5b4e56d98ad3d1f51e0",
+    ".claude/skills/spec-upgrade/references/template-compact.md": "65684882342a5c8d0a90c130a57f0aa6e126857e410e70fdb5e2b9becb01c373",
+    ".claude/skills/spec-upgrade/references/template-full.md": "a7cf80d62f978d05eb1031cedd2dad28211e38bb8c31ab3a4a7bce81e3f2749c",
+    ".claude/skills/spec-upgrade/references/upgrade-mapping.md": "36593c9bc47d755bc013c4c7f763d0f5c9503dd3c424d4ea08010b63d1d370e5",
+    "plugins/sdd-skills-codex/skills/discussion/SKILL.md": "3464e2580093a62c4785ab1cd5b0f73f7476616aaae073c2c31b6f8f59ecdf07",
+    "plugins/sdd-skills-codex/skills/discussion/examples/sample-discussion-session.md": "d0faf712e00670cb648ee0132da253e656edab879240f0a46070e89b270efc5c",
+    "plugins/sdd-skills-codex/skills/discussion/references/discussion-question-guide.md": "ed5e5ec7d4665c19dc6296b0da2007f2cda1fc8837b31d4c0de10bc94d65d400",
+    "plugins/sdd-skills-codex/skills/discussion/references/summary-template.md": "8527117e97ad967ef104e483cbce9c18eb659f7e27641280dbc37990ceee1033",
+    "plugins/sdd-skills-codex/skills/feature-draft/SKILL.md": "41f820cac67face30ef303ff1084fb54ac3ee267e0ebcf61cea45db864c7325f",
+    "plugins/sdd-skills-codex/skills/goal-init/SKILL.md": "7c591d9c79d618a6fa28cd4d1ab082f5208f1c5553e0694aa771f2bab0714bd6",
+    "plugins/sdd-skills-codex/skills/goal-init/examples/sample-goal-init-session.md": "3d3e5da211de68843f4e9c3a307e9e389ad0c9966076ee14507bdd91eb7586a3",
+    "plugins/sdd-skills-codex/skills/goal-init/references/harness-templates.md": "9616161845c7025dd7a6770334358b638079fbb24e055374f84b8ba17639abc2",
+    "plugins/sdd-skills-codex/skills/guide-create/SKILL.md": "708020f1232e77bfc5138d393898f4a6143224dce65207c69310ad54402783a5",
+    "plugins/sdd-skills-codex/skills/guide-create/references/output-format.md": "e68469aec7faff32c9a785655949a3d8e58091576d6e4d5df179ca1de0cde875",
+    "plugins/sdd-skills-codex/skills/implementation/SKILL.md": "1d81aba029575e9506ec7ee1512aab3529e2279a87d1e3a3c95bf8d11e8099a4",
+    "plugins/sdd-skills-codex/skills/implementation-review/SKILL.md": "b0e0ecd5592d32dbb0ee63d9176ec41faacf232082649fd0b5f1df5540697156",
+    "plugins/sdd-skills-codex/skills/implementation-review/references/simplicity-contract.md": "a8f874437573056468771113a41312d117fc6fb64cfcb1bfd97bd5f91368dda7",
+    "plugins/sdd-skills-codex/skills/investigate/SKILL.md": "50f9cc238932a53695fd6143c1f61ae1c92dafa0bf86dd8b213f93b31951ac3b",
+    "plugins/sdd-skills-codex/skills/plan-review/SKILL.md": "c5cbcf0c09b7ebfb4bb882ca925a5f3158a06786d99b3959ec4f2d939515adb2",
+    "plugins/sdd-skills-codex/skills/pr-review/SKILL.md": "b0c3ce8a06104aba6bde5b0092dbca4c0b08ffec9abe3e58b125f1102c2d9b84",
+    "plugins/sdd-skills-codex/skills/pr-review/examples/sample-review.md": "c74eea8b245b70ed144133ea825034acc5ac9179c1ee4673cc2155efc060312a",
+    "plugins/sdd-skills-codex/skills/pr-review/references/review-checklist.md": "6589d6410a1b8c7bea4d491dd63510a4e004998fcb687dcef4b63b3177976672",
+    "plugins/sdd-skills-codex/skills/ralph-loop-init/SKILL.md": "77ec36abbd75976fb472ee3d46643118fe0af1e099851aa692fe84a16860af54",
+    "plugins/sdd-skills-codex/skills/sdd-autopilot/SKILL.md": "cf6be31093fe6c197ee18711d8695775427dd0111c18a8166ca44cea586a8994",
+    "plugins/sdd-skills-codex/skills/spec-create/SKILL.md": "ae3e8439d9f6a81d74fbf530e8510b2cb9e6adff0717edc27bcd9871bc84e698",
+    "plugins/sdd-skills-codex/skills/spec-create/examples/additional-specs.md": "ec05c933d16af26270ae0c1c4030e62917b77635120aba9b333a798c1c07a9d9",
+    "plugins/sdd-skills-codex/skills/spec-create/examples/complex-project-spec.md": "93856f4732c713f2e249351b3f8b6f57dc91ff9415eaab57b6baed2e0697b94f",
+    "plugins/sdd-skills-codex/skills/spec-create/examples/simple-project-spec.md": "76a2672a0a99c09ff1ebc0b4f69ecaf2eb9e8f82ba6a4f2b0fe2fae21fc0b506",
+    "plugins/sdd-skills-codex/skills/spec-create/references/agents-harness-template.md": "f2c02efb67d3df5e2287159116cce62f0f8c620760170da372b99d0c303d83aa",
+    "plugins/sdd-skills-codex/skills/spec-create/references/hook-installation.md": "637c08089ac52287f3120bdf72386d0f8f81d09b4f8184fb7440f027798048d3",
+    "plugins/sdd-skills-codex/skills/spec-create/references/hooks/agent-watchdog.sh": "9c5fcc53de9688db8416e2907b12543c14d826d15240d36a8185ddaf3a83e85a",
+    "plugins/sdd-skills-codex/skills/spec-create/references/hooks/harness-context.sh": "b37601d19313b6c6e0a556075ba810e6309bcee54ae27826b8e712d30d3a1d4c",
+    "plugins/sdd-skills-codex/skills/spec-create/references/hooks/worklog-context.sh": "dab1cc69edbec471953cb315f2306fd6c703c49480a8b10a6701c6c8211af996",
+    "plugins/sdd-skills-codex/skills/spec-create/references/hooks/worklog-gate.sh": "8cfa88ff7f6e6a25d9ae8b7ee40d8020caa4785a3de3b9454f381e6a18d8f476",
+    "plugins/sdd-skills-codex/skills/spec-create/references/template-compact.md": "b5de2741a2ffe04f0a1bb791bddd7386aa9a0526a1f5191cd69e6db20c7ab149",
+    "plugins/sdd-skills-codex/skills/spec-create/references/template-full.md": "5dbea1320ae27232ad971a76fca36d736fa4ef23ef9715bd4b00f50b17e80ac1",
+    "plugins/sdd-skills-codex/skills/spec-review/SKILL.md": "4074a1d657a3ee41e6e16815cd55a7ab6fe81e1a9a9e58b2d4e5699e5f5be922",
+    "plugins/sdd-skills-codex/skills/spec-rewrite/SKILL.md": "135ad1a3520ad965c32e08f52c6bbcffaa8dfd4438d1c5b02db0a1c0799e2a00",
+    "plugins/sdd-skills-codex/skills/spec-rewrite/references/rewrite-checklist.md": "3d98d0f2fe0a89bf8f86244fe7483cee8ec7adcecd670a534124373200d5a819",
+    "plugins/sdd-skills-codex/skills/spec-rewrite/references/spec-format.md": "b142e915e75d16ca6cb408bdf4e400f84e1730d317d5f654ac55301b1666b973",
+    "plugins/sdd-skills-codex/skills/spec-rewrite/references/template-compact.md": "aa33133426bef5b01dc76786b237f6785baa52a5c88209a6ef7e684cf580a850",
+    "plugins/sdd-skills-codex/skills/spec-snapshot/SKILL.md": "10a6ce48eea46468fdb1a492039bb9081936fe96d93c4ed89a6712b95b67057e",
+    "plugins/sdd-skills-codex/skills/spec-summary/SKILL.md": "fe21ee49aca68136e3c6bc754e4f535702d84f6bbd8133a133b1ebb3f0c51583",
+    "plugins/sdd-skills-codex/skills/spec-summary/references/summary-template.md": "8d3885423b7228ffd223db27513aa24a417fb1b4741b45b0e3509d875179b535",
+    "plugins/sdd-skills-codex/skills/spec-sync/SKILL.md": "2215257dadb8f95f3c9031e43dc32f699de8c72942e7c9438b8814dfaeaa075d",
+    "plugins/sdd-skills-codex/skills/spec-upgrade/SKILL.md": "fdbcf165e1ae53e1f58fe2180a361223046ce067309f80291de01915a28407d3",
+    "plugins/sdd-skills-codex/skills/spec-upgrade/examples/after-upgrade.md": "a0c14ab9d9126e99d620d3b27fa7f3479f3bc1ae5cee5b8f6c38b5daa0e9271d",
+    "plugins/sdd-skills-codex/skills/spec-upgrade/references/agents-harness-template.md": "f2c02efb67d3df5e2287159116cce62f0f8c620760170da372b99d0c303d83aa",
+    "plugins/sdd-skills-codex/skills/spec-upgrade/references/hook-installation.md": "637c08089ac52287f3120bdf72386d0f8f81d09b4f8184fb7440f027798048d3",
+    "plugins/sdd-skills-codex/skills/spec-upgrade/references/hooks/agent-watchdog.sh": "9c5fcc53de9688db8416e2907b12543c14d826d15240d36a8185ddaf3a83e85a",
+    "plugins/sdd-skills-codex/skills/spec-upgrade/references/hooks/harness-context.sh": "b37601d19313b6c6e0a556075ba810e6309bcee54ae27826b8e712d30d3a1d4c",
+    "plugins/sdd-skills-codex/skills/spec-upgrade/references/hooks/worklog-context.sh": "dab1cc69edbec471953cb315f2306fd6c703c49480a8b10a6701c6c8211af996",
+    "plugins/sdd-skills-codex/skills/spec-upgrade/references/hooks/worklog-gate.sh": "8cfa88ff7f6e6a25d9ae8b7ee40d8020caa4785a3de3b9454f381e6a18d8f476",
+    "plugins/sdd-skills-codex/skills/spec-upgrade/references/spec-format.md": "04f4bacade3f8d1014515056305cd92e36907fd18bc0c5b4e56d98ad3d1f51e0",
+    "plugins/sdd-skills-codex/skills/spec-upgrade/references/template-compact.md": "f7429a407a7aca9539c5b8f4a5b6dfcab74721474394131849d172d669212cb3",
+    "plugins/sdd-skills-codex/skills/spec-upgrade/references/template-full.md": "a7cf80d62f978d05eb1031cedd2dad28211e38bb8c31ab3a4a7bce81e3f2749c",
+    "plugins/sdd-skills-codex/skills/spec-upgrade/references/upgrade-mapping.md": "36593c9bc47d755bc013c4c7f763d0f5c9503dd3c424d4ea08010b63d1d370e5"
+  }
+}

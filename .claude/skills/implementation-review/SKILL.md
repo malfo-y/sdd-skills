@@ -16,17 +16,19 @@ argument-hint: ["[--model <sonnet|opus|haiku|fable>]"]
 
 ## Acceptance Criteria
 
-> 프로세스 완료 후 아래 기준을 자체 검증한다. 미충족 항목은 해당 단계로 돌아가 수정한다.
+> 종료 전 선택한 경로에 적용되는 기준을 자체 검증하고 복구 가능한 보고 누락을 보완한다. 이미 발생한 순서·read-only 위반은 사실과 영향을 보고하고 해당 AC를 미충족으로 남기며, 사후 수행으로 소급 충족하거나 새 gate를 호출하지 않는다.
 
-- [ ] AC1: 실행 순서를 지켰다 — simplicity dispatch를 먼저 띄우고(reference 계약 전문 verbatim 포함), 그동안 correctness를 직접 수행했다.
+- [ ] AC1: 정상 dispatch 경로에서 실행 순서를 지켰다 — simplicity dispatch를 먼저 띄우고(reference 계약 전문 verbatim 포함), 그동안 correctness를 직접 수행했다.
 - [ ] AC2: correctness 판정 기준이 기준 문서 적응 규칙으로 정해졌고, 읽기 범위 3단 계단 밖 탐색적 읽기가 없다.
 - [ ] AC3: 모든 AC verdict(MET/NOT MET/UNTESTED)가 fresh 증거(실행 출력 또는 `file:line`)에 묶였다 — 증거 없는 MET 없음이며, 그 증거는 보고 ledger의 AC당 포인터로 드러난다 (Fresh Verification 참조).
 - [ ] AC4: 산출물이 "보고" 섹션 형식의 합산 보고 하나뿐이고, 어떤 파일도 수정하지 않았다.
-- [ ] AC5: simplicity 반환 실패 시 Error Handling대로 누락 렌즈를 명시하고 재실행을 안내했다.
+- [ ] AC5: simplicity dispatch blocker 또는 반환 실패 시 Error Handling의 제한 보고로 종료했다.
 
 ## 실행 순서
 
-1. **simplicity dispatch를 먼저 띄운다** — 차원 **묶음마다 1회**(참조 ∥ 국소), 한 메시지에 병렬로. 각 dispatch는 **전체 변경 대상**이다(묶음 정의·범위 불변 근거는 reference의 `호출자 차원 한정` 절이 단일 소스). prompt는 **reference 계약 전문(verbatim) → 차원 묶음 한정 → 요청·경로와 대화에만 있는 맥락 digest** 순서로 구성한다 — plan이 있으면 경로와 필요한 맥락만 짧게, 없으면 이번 세션에서 무엇을·왜 구현했는지와 리뷰 범위(agent는 이번 세션 대화를 직접 읽지 못한다). 대상 경로가 불명확하면 agent가 자체 Input 우선순위로 탐색하도록 위임한다.
+dispatch 준비에서는 아래 기준 적응·읽기 범위 ①의 범위 확인만 수행해 현재 AC와 변경 집합을 정한다.
+
+1. **simplicity dispatch를 먼저 띄운다** — 차원 **묶음마다 1회**(참조 ∥ 국소), 한 메시지에 병렬로. 각 dispatch는 **전체 변경 대상**이다(묶음 정의·범위 불변 근거는 reference의 `호출자 차원 한정` 절이 단일 소스). prompt는 **reference 계약 전문(verbatim) → 차원 묶음 한정 → 요청·경로와 대화에만 있는 맥락 digest** 순서로 구성한다 — plan이 있으면 경로와 필요한 맥락만 짧게, 없으면 이번 세션에서 무엇을·왜 구현했는지와 리뷰 범위(agent는 이번 세션 대화를 직접 읽지 못한다).
 2. **agent가 도는 동안 메인 루프가 correctness 리뷰를 직접 수행한다** (아래 Correctness 리뷰).
 3. 반환을 수거해 **합산 보고**한다 (아래 보고).
 
@@ -38,18 +40,19 @@ AC 충족·로직 결함·spec 정합을 본다. 형태-중복(추출 가능한 
 
 리뷰 기준은 있는 것에 맞춰 적응한다 — 기준이 없다고 중단하지 않는다.
 
-1. **draft/plan 있음**: 호출자 지정 경로 또는 `_sdd/drafts/*_feature_draft_*.md` 최신. 각 task의 AC가 검증 기준이다.
-2. **spec만 있음**: `_sdd/spec/*.md`의 요구사항·플로우·제약과의 정합을 검증한다.
-3. **둘 다 없음**: `git log`/`git diff` 변경 범위 기준으로 보안·에러 처리·코드 패턴·테스트 품질을 검토하고, 추정 범위를 Assumptions로 보고에 명시한다.
+1. **호출자가 기준을 지정함**: 지정한 draft/plan 또는 inline task AC와 현재 scope를 우선한다. inline AC를 다른 최신 draft로 대체하지 않는다.
+2. **지정 기준 없음, draft/plan 있음**: `_sdd/drafts/*_feature_draft_*.md` 중 이번 변경과 관련된 최신 문서의 task AC를 사용한다.
+3. **관련 draft 없이 spec만 있음**: `_sdd/spec/*.md`의 요구사항·플로우·제약과의 정합을 검증한다.
+4. **어느 기준도 없음**: `git log`/`git diff` 변경 범위 기준으로 보안·에러 처리·코드 패턴·테스트 품질을 검토하고, 추정 범위를 Assumptions로 보고에 명시한다.
 
-stale 판단 예시: 기준 문서가 참조하는 주요 파일/모듈이 없음, 문서 구조와 현재 코드 구조가 크게 다름. stale이면 다음 단계 기준으로 낮추고 그 사실을 High 또는 Medium finding으로 기록한다.
+stale 판단 예시: 기준 문서가 참조하는 주요 파일/모듈이 없음, 문서 구조와 현재 코드 구조가 크게 다름. discovery한 문서가 stale이면 다음 단계 기준으로 낮추고 그 사실을 High 또는 Medium finding으로 기록한다. 호출자가 지정한 기준은 임의 교체하지 않고, stale 때문에 판정할 수 없는 AC를 사유와 함께 UNTESTED로 남긴다.
 
 ### 읽기 범위 (3단 계단)
 
 서로 독립인 Read/Grep은 한 메시지에 배칭하고, `Grep`으로 좌표를 먼저 잡은 뒤 관련 구간만 선택적으로 `Read`한다. 이 스킬을 `implementation` 마감 게이트로 수행하는 경우 메인 루프가 방금 구현한 파일 내용을 이미 보유한다 — 보유한 내용은 재독하지 않고, 판정은 아래 계단이 요구하는 fresh 증거(diff·실행 출력)에 묶는다.
 
 1. **변경 집합 + 기준 문서 — 변경 파일은 hunk 기본, 위험 신호 시 전문 승격**
-   - 변경 파일: `git diff --name-only`. 비어 있으면(구현이 이미 커밋된 경우) `git diff --name-only <base>..HEAD` 또는 `git log`로 실측한다. draft/plan이 있으면 그 `Target Files`.
+   - `git status --short --untracked-files=all`로 working tree·index·untracked의 합집합을 확인한다. unstaged는 `git diff`, staged는 `git diff --cached`, 신규 untracked는 전문으로 읽는다. 미커밋 집합이 비었을 때만 호출자 지정 base 또는 `git log`로 확인한 이번 구현 시작점 대비 `<base>..HEAD` diff를 사용한다. 호출자가 지정한 scope와 시작 시 dirty paths로 이번 변경을 구분하고, draft `Target Files`와 실제 변경의 차이·불확실한 귀속은 Assumptions에 명시한다. Target Files로 실제 변경을 대체하지 않는다.
    - 변경 파일 읽기는 **diff hunk + 주변 문맥을 기본**으로 한다. 아래 승격 트리거에 하나라도 해당하면 그 파일은 전문 Read로 승격한다: ① 실행 semantics 파일(스크립트·훅·코드 — 산문 문서 제외) ② hunk가 제어 흐름·상태·에러 경로를 만짐 ③ 해당 AC가 행동 AC(실행/테스트로 검증하는 유형 — 문자열 실재만 보는 구조 AC는 hunk로 충분) ④ 파일 대비 변경 비율이 높음(사실상 재작성 — 전문이 오히려 싸다) ⑤ hunk 검토 중 결함 의심 발견 ⑥ draft가 해당 task에 Open Questions·낮은 확신도를 표기. **승격하지 않은 파일은 보고에 `hunk-scoped`로 표기한다.**
    - 기준 문서 자체는 전문 Read. 참조된 spec은 **AC·정합 판정에 필요한 절로 한정**한다(전문이 아니다).
    - 이 범위에서 존재/범위 확인에 더해 구현된 코드의 correctness(경계·null·에러 경로·동시성 등 로직 결함)를 능동적으로 검토한다 — AC 충족·spec 정합이 correctness를 보장하지 않는다.
@@ -59,7 +62,7 @@ stale 판단 예시: 기준 문서가 참조하는 주요 파일/모듈이 없�
 
 ### Fresh Verification + 증거 결속
 
-"should work" 금지. 테스트 실행 출력을 근거로 판단하고, 이전 실행 결과를 재사용하지 않는다. `_sdd/env.md`가 있으면 환경 설정을 적용해 테스트를 시도하고, 없으면 코드 분석만 수행하고 `UNTESTED` 표기. 모든 AC verdict(MET/NOT MET/UNTESTED)는 증거(실행 출력 또는 인용한 `file:line`)에 묶는다 — 증거 없는 MET 금지.
+"should work" 금지. 테스트 실행 출력을 근거로 판단하고, 이전 실행 결과를 재사용하지 않는다. `_sdd/env.md`가 있으면 우선 적용한다. 없으면 사용자·기준 문서·프로젝트에서 확인한 검증 명령과 실행 조건을 사용한다. 환경·권한을 추측하지 않으며, 실행 조건을 확보하지 못한 AC만 사유와 함께 `UNTESTED`로 남긴다. 실행 의존 AC는 코드 분석만으로 MET 처리하지 않는다. 모든 AC verdict(MET/NOT MET/UNTESTED)는 증거(실행 출력 또는 인용한 `file:line`)에 묶는다 — 증거 없는 MET 금지.
 
 - 표적 test/check는 30초가 지나면 중단한다. Timeout 후에는 test target, fixture, 또는 관련 구현이 바뀌기 전까지 같은 명령을 다시 실행하지 않는다.
 - 느리다고 알려진 test는 repo 또는 사용자가 명시한 checkpoint에서만 실행한다. checkpoint evidence가 없는 slow 의존 AC는 임의 실행하지 않고 `UNTESTED`(사유: slow — checkpoint 대기)로 보고한다.
@@ -77,7 +80,7 @@ stale 판단 예시: 기준 문서가 참조하는 주요 파일/모듈이 없�
 
 두 렌즈 결과를 하나로 모아 보고한다 (correctness 항목은 직접 수행 결과, simplicity 항목은 agent 반환 relay):
 
-- **Status**: 핵심 blocker 유무 1줄 + 어떤 기준(draft/spec/코드만)으로 리뷰했는지
+- **Status**: 핵심 blocker 유무 1줄 + 어떤 기준(지정 draft·inline AC/발견 draft/spec/코드만)으로 리뷰했는지
 - **Findings** (렌즈·severity별): Critical/High/Medium은 finding당 블록 — 제목 + 위치(`file:line`)·문제(증거 포함)·수정(구체적 방향). Low는 위치 포함 한 문장.
 - **Verification ledger** (correctness): NOT MET·UNTESTED verdict는 행으로 낸다 — `| AC | Verification Method | Evidence (출력/인용) | Verdict |`. MET은 AC당 증거 포인터 한 줄로 낸다 — `AC1 MET — path/file:line` 또는 `AC2 MET — <실행 명령 1개>` 꼴. 통과 증거의 본문(출력·인용 문장)은 보고에 전사하지 않는다.
 - **simplicity 차원 판정**: 두 묶음 반환의 합집합 (각 차원 정확히 한 묶음 소유라 중복 없음)
@@ -91,12 +94,12 @@ stale 판단 예시: 기준 문서가 참조하는 주요 파일/모듈이 없�
 
 | 상황 | 대응 |
 |------|------|
-| 테스트 실행 실패 | `_sdd/env.md` 확인 후 실패 사실과 원인을 보고에 기록 |
-| 기준 문서 stale | 기준 문서 적응 규칙대로 강등 + finding 기록 |
+| 테스트 실행 실패 | Fresh Verification의 실행 조건을 확인하고 실패 사실과 원인을 보고에 기록 |
+| 기준 문서 stale | 기준 문서 적응 규칙대로 처리 |
 | Spec이 비구조화 | 전체적 정합성 판단으로 전환하고 한계를 적는다 |
 | 대규모 코드베이스 | 읽기 범위 계단 ①의 초과 대응을 따른다 |
 | 기준이 모호함 | UNTESTED로 표시하고 판단 근거를 적는다 |
-| simplicity 반환 실패 | correctness 결과로 보고를 작성하되 누락 렌즈를 명시하고 재실행을 안내 |
+| simplicity dispatch blocker 또는 반환 실패 | correctness 결과와 누락 렌즈·사유를 제한 보고로 반환한다. 같은 호출에서 재dispatch하지 않으며, blocker 해소 후 재실행 또는 producer의 gate 정책으로 인계한다 |
 
 ## Integration
 

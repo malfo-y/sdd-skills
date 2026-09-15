@@ -17,7 +17,7 @@ description: This skill should be used when the user asks to set up a "/goal", "
 
 ## Acceptance Criteria
 
-> 프로세스 완료 후 아래 기준을 자체 검증한다. 미충족 항목은 해당 단계로 돌아가 수정한다.
+> 정상 setup 완료 기준이다. 종료 전 검증과 실패·중단 처리는 Final Check를 따른다.
 
 - [ ] AC1: 목표가 `/goal` 적합성 gate(verifiable end state가 있는 멀티턴 작업)를 통과했다.
 - [ ] AC2: 목표 달성 접근/가설 2개 이상이 발산되어 `experiments.md` 백로그에 수집되었다.
@@ -87,7 +87,7 @@ Process의 모든 단계에 횡단 적용되는 판단 지침. Hard Rules가 강
 - **재설정 litmus (판단 지침, 비-gate)**: 어떤 디테일의 인라인/하강이 애매하면 "이 디테일이 현실과 어긋났을 때 goal을 다시 세우는 게 마땅한가?"를 묻는다. Yes(목표 자체가 바뀜) → 조건 문자열에 인라인, No(검증 방법만 바뀜) → `goal.md` 검증 레시피로 내린다.
 - **평가자 적합성 self-check (hard gate — I1)**: 응축한 조건 문자열에 대해 3항목을 확인한다.
   - (a) 도구 없이 대화(transcript)만으로 판정 가능한가
-  - (b) evidence(검증 명령·기대 출력)가 매 턴 surface되는가
+  - (b) 매 턴 실제 검증 출력 또는 기존 evidence·미실행 사유가 surface되는가 (`goal.md` 검증 레시피의 실행 경계 준수)
   - (c) 4,000자 이하인가
   - 하나라도 실패하면 **응축을 재시도한다** (3항목을 모두 통과할 때까지 통과시키지 않는다).
 
@@ -100,7 +100,7 @@ Process의 모든 단계에 횡단 적용되는 판단 지침. Hard Rules가 강
 - **`goal.md`**: 확정한 조건 문자열(`DONE WHEN`/`CONSTRAINTS`/`STOP`)을 `/goal` 조건 문자열 슬롯에, Condition Crafting에서 하강시킨 브리틀 검증 디테일을 `검증 레시피` 섹션에 기입한다. `Loop Protocol`에는 preset이 없으면 template의 generic payload를, `preset=sdd`이면 SDD payload를 정확히 하나 삽입한다.
 - **`experiments.md`**: Step 2에서 발산한 가설들을 pending 백로그로 기입한다.
 - **`자율 수행 위임`**: Step 1에서 확정한 수준과 사전 승인/제외 목록(템플릿 기본값 + 사용자 조정)을 `goal.md`의 해당 섹션에 기입한다.
-- **실행법 슬롯**: Claude Code 슬롯만 채운다 (Codex 슬롯은 Codex 스킬이 자기 슬롯을 채우므로 placeholder로 둔다).
+- **실행법 슬롯**: Step 5의 Claude 실행법 4요소로 Claude Code 슬롯만 채운다 (Codex 슬롯은 Codex 스킬이 자기 슬롯을 채우므로 placeholder로 둔다).
 
 **Decision Gate 4→5**: 4파일 생성이 완료되면 Step 5로 진행한다.
 
@@ -112,7 +112,7 @@ Process의 모든 단계에 횡단 적용되는 판단 지침. Hard Rules가 강
 
 - **Claude 실행법**: (a) workspace trust + hooks가 활성화되어 있어야 `/goal` 루프가 동작한다. (b) 라이프사이클은 `/goal set`(목표 설정)·`/goal status`(진행 확인)·`/goal clear`(종료)이며, `clear`는 별칭(`stop`·`off`·`reset` 등)으로도 호출할 수 있다. (c) 세션을 멈췄다 `--resume`/`--continue`로 이어가면 active goal이 복원되며 턴·타이머·토큰 카운터가 리셋된다. (d) 평가자는 조건 문자열을 4,000자 상한으로 읽으므로, 그 안에서 도구 없이 판정 가능한 evidence가 매 턴 surface되어야 한다.
 - **스킬은 `/goal`을 직접 발동하지 않는다 (I2)**. 핸드오프는 조건 문자열 + 실행법 제시까지이며, 사용자가 조건을 검토한 뒤 **직접 발동한다**.
-- **Setup invariant**: “goal을 활성화하지 않았으며 기존 goal 상태도 변경하지 않았다”를 항상 명시한다. 이를 확인하기 위한 status 조회는 하지 않는다.
+- **Setup invariant**: “goal을 활성화하지 않았으며 기존 goal 상태도 변경하지 않았다”를 실제로 지켰을 때 명시한다. 위반이 있었다면 그 사실을 보고하고 setup 성공으로 표시하지 않는다. 이를 확인하기 위한 status 조회는 하지 않는다.
 
 **Decision Gate (종료)**: 조건 문자열 + Claude 실행법 제시가 완료되면 종료한다.
 
@@ -124,7 +124,8 @@ Process의 모든 단계에 횡단 적용되는 판단 지침. Hard Rules가 강
 | 검증 명령이 명령+판정조건으로 확정되지 않음 | 진행을 차단한다 (hard gate). 명령과 판정조건이 둘 다 확정될 때까지 Condition Crafting을 통과시키지 않는다 — 확정된 명령·판정조건의 귀속처는 조건 문자열이 아니라 `goal.md` 검증 레시피다. |
 | 조건 문자열이 4,000자를 초과 | 응축 재시도. 4,000자 이하로 줄일 때까지 Handoff하지 않는다. |
 | Divergence에서 가설이 안 나옴 | 사용자에게 접근 후보를 직접 요청하고, 받은 후보로 백로그를 구성한다. |
+| 4파일 생성이 외부 blocker로 실패 | 생성된 경로·실패 원인·미충족 AC를 보고하고 미완료 종료한다. producer 실행이나 native goal 발동으로 우회하지 않는다. |
 
 ## Final Check
 
-Acceptance Criteria가 모두 만족되었나 검증한다. 미충족 항목이 있으면 해당 단계로 돌아가 수정한다.
+선택한 preset에 적용되는 AC를 검증한다. 정상 완료 경로의 수정 가능한 누락은 해당 단계에서 보완한다. Error Handling의 실패·중단 경로는 사유와 미충족 AC를 보고하고 종료한다. 이미 발생한 비발동·status 조회·상태 변경 금지 위반은 산출물 수정으로 소급 충족할 수 없으며, 발생 사실을 보고하고 성공 완료로 표시하지 않는다.

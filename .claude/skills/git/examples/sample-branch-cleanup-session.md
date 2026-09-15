@@ -13,8 +13,8 @@ Claude:
 📊 Git Status Dashboard
 ━━━━━━━━━━━━━━━━━━━━━━
 🌿 Branch: feature/add-search → origin/feature/add-search
-📡 Sync:   3 ahead, 5 behind  🔄
-⚠️ Graph:  diverged (rebase recommended)
+📡 Sync:   0 ahead, 0 behind (origin/feature/add-search)
+⚠️ Base:   origin/dev에 새 commit 5개; feature commit 3개 재배치 후보
 
 📁 Changes:
   Staged: none
@@ -31,30 +31,30 @@ Claude:
 ━━━━━━━━━━━━━━━━━━━━━━
 
 1️⃣ Graph cleanup:
-   → git pull --rebase origin dev
-   (5 commits behind, 3 local commits → rebase onto latest dev)
+   → git rebase origin/dev
+   (fetch로 확인한 origin/dev 위로 이미 push된 feature commit 3개 재배치)
 
 2️⃣ Push:
    → git push --force-with-lease origin feature/add-search
-   (rebase 후 force push 필요)
+   (추가 제안: 게시된 history 변경을 remote에 반영)
 
-Proceed? (y/n)
+위 history rewrite와 force-with-lease push를 각각 승인하시겠습니까? (y/n)
 ━━━━━━━━━━━━━━━━━━━━━━
 
-User: y
+User: 둘 다 승인
 ```
 
 ### 3. EXECUTE & REPORT
 
 ```
 Claude:
-[1/2] git pull --rebase origin dev  ✅ (5 commits applied, no conflicts)
+[1/2] git rebase origin/dev  ✅ (feature commit 3개 재배치, 충돌 없음)
 [2/2] git push --force-with-lease   ✅
 
 ✅ Git Actions Complete
 ━━━━━━━━━━━━━━━━━━━━━━
 🌿 Branch: feature/add-search
-🔄 Rebased: 3 local commits onto latest dev (5 new upstream commits)
+🔄 Rebased: 3 feature commits onto latest dev (5 new upstream commits)
 📡 Pushed to: origin/feature/add-search (force-with-lease)
 ━━━━━━━━━━━━━━━━━━━━━━
 ```

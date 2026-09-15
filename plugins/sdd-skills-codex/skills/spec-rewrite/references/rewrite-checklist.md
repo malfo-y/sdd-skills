@@ -18,7 +18,7 @@
 
 ## Temporary Spec
 
-- Does the artifact preserve the exact `Temporary Spec Target Shape` from `template-compact.md`, including only the conditional blocks whose trigger is met?
+- Does the artifact follow same-runtime `feature-draft` Required Output and its conditional-block rules while preserving the source tasks, contracts, AC, Target Files, and evidence links?
 - Does each acceptance criterion state reproducible evidence or a named review rubric?
 - Are execution details kept in the temporary artifact rather than lifted into the global spec?
-- For an oversized rolling split, does each Part 1 feature retain its one-line intent and scope while Part 2 details only the current feature?
+- If a rolling split is needed, does it follow the same canonical owner’s split rules without losing deferred scope?

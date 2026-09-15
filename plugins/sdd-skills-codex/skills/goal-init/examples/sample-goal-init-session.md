@@ -16,7 +16,8 @@ User: /goal 셋업하고 싶어요
 Codex: 네이티브 /goal에 걸 완료조건과 4파일 실행 하네스를 함께 셋업합니다.
 달성하려는 목표가 무엇인가요?
 
-User: CI에서 가끔 깨지는 통합 테스트 스위트가 있어요. 이걸 안정화하고 싶어요.
+User: CI에서 가끔 깨지는 통합 테스트 스위트가 있어요. 알아서 안정화해줘.
+반복 통합 검증은 수정 후보가 준비된 checkpoint에서 실행해요.
 
 Codex: 적합성을 확인합니다.
 - 종료 상태가 transcript에서 판정 가능한가? → "테스트를 N회 연속 실행해 전부 통과" 형태로 판정 가능
@@ -70,7 +71,7 @@ User: A, B 둘 다 백로그에 넣고 A부터 시작하죠.
 Codex: 조건 문자열로 응축합니다. 재설정 litmus를 적용합니다 — "이 디테일이 어긋나면 goal을
 다시 세우는 게 마땅한가?" Yes → 인라인, No → 검증 레시피.
 - "20회 연속 통과"라는 outcome, 대상 스위트 경로 → 어긋나면 목표가 바뀜 → 인라인 (anchor).
-- pytest 정확한 명령·`100 passed` 기대 문자열 → 옵션·테스트 수가 바뀌어도 목표는 그대로 → 검증 레시피.
+- pytest 정확한 명령·passed 기대 개수 → 옵션·테스트 수가 바뀌어도 목표는 그대로 → 검증 레시피.
 
 DONE WHEN: tests/integration 스위트가 20회 연속 전부 통과한다. 증명: `goal.md` 검증 레시피의
   명령 실제 출력이 transcript에 surface되고 전 항목 PASS다 (failed/error 0건이 출력에 보인다).
@@ -79,8 +80,8 @@ CONSTRAINTS: 검증 레시피 변경 시 변경 diff·사유를 transcript에 �
 STOP: after 6 turns without progress.
 
 평가자 적합성 self-check:
-- (a) 도구 없이 transcript만으로 판정 가능한가 → 예. surface된 레시피 출력의 failed/error 0건만 보면 판정됨.
-- (b) evidence가 매 턴 surface되는가 → 예. 매 턴 레시피 명령 출력을 대화에 표시(Loop Protocol에 규정).
+- (a) 도구 없이 transcript만으로 판정 가능한가 → 예. 20회 실행된 대상·passed 개수·failed/error 0건이 출력에 보임.
+- (b) evidence가 매 턴 surface되는가 → 예. 허용된 검증의 실제 출력 또는 기존 evidence·미실행 사유를 매 턴 표시.
 - (c) 4,000자 이하인가 → 예.
 
 3항목 모두 통과 → 응축 확정.
@@ -110,8 +111,10 @@ STOP: after 6 turns without progress.
 (Step 3에서 확정한 `DONE WHEN`/`CONSTRAINTS`/`STOP` 조건 문자열을 그대로 기입)
 
 ## 검증 레시피
-- 안정성 판정: `pytest tests/integration --count=20 -q` → `100 passed` (passed 수는 스위트 크기와 동일, failed/error 0)
-- 메인 에이전트가 매 턴 이 명령을 실행하고 출력을 대화에 surface한다.
+매 턴 이번 진척에 필요한 허용된 검증을 실행하고 실제 출력을 표시한다. 실행하지 않은 필수 검증은 기존 evidence와 그 유효성·미실행 사유를 표시한다. repo의 slow/checkpoint·timeout 재실행 제한을 따른다. 최종 PASS에는 모든 필수 검증의 유효한 실행 증거가 필요하다.
+
+- 안정성 판정: `pytest tests/integration --count=20 -q` → passed 수 = 스위트 테스트 수 × 20, failed/error 0. pytest-repeat가 설치된 예제 환경을 전제한다.
+- 실행 checkpoint: 사용자 지정대로 수정 후보가 준비된 시점. 매 턴 이 통합 명령을 재실행하지 않는다.
 
 ## 자율 수행 위임
 - 수준: unattended ("알아서 안정화해줘" 원문 신호)
@@ -121,9 +124,10 @@ STOP: after 6 turns without progress.
 ## Loop Protocol
 매 턴 다음을 수행한다 (메인 에이전트용 HOW, 조건 문자열에 넣지 않는다):
 1. `experiments.md`의 pending 가설 하나를 골라 시도한다.
-2. 검증 명령을 실행하고 출력을 대화에 그대로 표시한다.
+2. 검증 레시피의 실행 규칙에 따라 해당 가설의 evidence를 대화에 표시한다.
 3. 시도·결과를 `journal.md`에 append한다.
-4. pending 큐가 비었는데 미완이면 새 가설을 brainstorm해 pending에 append한다.
+4. 모든 DONE WHEN 검증을 통과하면 성공 종료한다. STOP/STUCK 경계면 사유를 report.md에 기록하고 미완료로 종료한다. native goal lifecycle은 활성 런타임 규범을 따른다.
+5. 그 외에는 pending 큐가 비었으면 새 가설을 추가하고 다음 턴을 진행한다.
 
 ## 실행법
 ### Codex
@@ -160,7 +164,12 @@ STOP: after 6 turns without progress.
 2. 라이프사이클: `/goal set <조건>`(목표 설정)·`/goal status`(진행 확인)·`/goal clear`(종료). 위 조건 문자열을 set에 그대로 넣어 발동.
 3. 중간에 멈췄다 이어가려면 `/goal pause`·`/goal resume`. continuation은 thread-scoped이며 안전 경계 안에서 evidence-based로 이어간다.
 
-하네스: _sdd/goal/2026-06-22_stabilize-flaky-integration-tests/ (4파일)
+하네스:
+- _sdd/goal/2026-06-22_stabilize-flaky-integration-tests/goal.md
+- _sdd/goal/2026-06-22_stabilize-flaky-integration-tests/experiments.md
+- _sdd/goal/2026-06-22_stabilize-flaky-integration-tests/journal.md
+- _sdd/goal/2026-06-22_stabilize-flaky-integration-tests/report.md
+goal을 활성화하지 않았으며 기존 goal 상태도 변경하지 않았다.
 검토 후 발동 여부는 형님이 결정하세요.
 ```
 

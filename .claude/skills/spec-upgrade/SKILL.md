@@ -13,6 +13,8 @@ description: This skill should be used when the user asks to "upgrade spec", "mi
 
 ## Acceptance Criteria
 
+아래는 Step 1에서 upgrade로 판정해 migration을 수행하는 경로에 적용한다. 이관/비대상 종료에는 Step 1의 보고만 적용한다.
+
 - [ ] canonical spec과 업그레이드 대상 파일 집합을 확정했다.
 - [ ] 공통 코어 4축(`Thinness`, `Decision-bearing truth`, `Anti-duplication`, `Navigation + surface fit`) 기준으로 현재 문서를 읽었다.
 - [ ] migration 시작 전에 이 작업이 upgrade인지 rewrite인지 경계를 판정하고 결과를 먼저 보고했다.
@@ -23,9 +25,9 @@ description: This skill should be used when the user asks to "upgrade spec", "mi
 - [ ] 멀티파일 spec이면 index와 supporting file의 역할이 더 명확해졌다.
 - [ ] `AGENTS.md`가 하네스 템플릿(§0~§5) 기준으로 존재한다 (부재/부분존재 시 SDD-HARNESS 마커 멱등 병합으로 생성/보강).
 - [ ] `CLAUDE.md`가 `→ AGENTS.md 참조` 마커 포인터 블록을 가진다 (부재 시 생성, 기존 파일이면 prepend).
-- [ ] 병합 결과 `AGENTS.md`·`CLAUDE.md`에 하네스와 별개의 중복 `## SDD란` 블록이 남지 않는다 (기존 산출물 흡수·제거, SDD 무관 사용자 내용은 보존).
+- [ ] `AGENTS.md`·`CLAUDE.md`의 legacy 처리가 Step 6의 보존/흡수 규칙을 따른다.
 - [ ] `.gitignore`에 `SDD-WORKSPACE` 마커 블록이 존재한다 (부재/부분존재 시 process artifact ignore를 멱등 병합).
-- [ ] 하네스를 병합했으면 Step 6의 local hook installation contract를 적용하고 partial/legacy 설치를 current 두-runtime 상태로 보완했다.
+- [ ] 하네스를 병합했으면 Step 6의 local hook installation contract를 적용하고 runtime별 등록·검증·acceptance 상태를 구분했다.
 
 ## SDD Lens
 
@@ -61,7 +63,7 @@ description: This skill should be used when the user asks to "upgrade spec", "mi
 
 ### Step 1: Rewrite Boundary Judgment
 
-먼저 아래를 본다.
+먼저 업그레이드할 기존 spec이 있는지 확인한다. 없으면 `spec-create`를 권장하고 **비대상으로 종료**한다. spec이 있으면 아래를 본다.
 
 - 현재 작업의 핵심이 legacy-to-canonical migration인가
 - 아니면 구조 재설계, 대규모 분할, 역할 재정의, log/history 분리 같은 rewrite 성격이 더 강한가
@@ -70,6 +72,8 @@ description: This skill should be used when the user asks to "upgrade spec", "mi
 
 - section-heavy 또는 inventory-heavy 문서를 current model로 줄이는 것이 주된 작업이면 `spec-upgrade`
 - domain/topic 재분할, 문서군 재배치, rationale rescue 중심 pruning이면 `spec-rewrite`
+
+`spec-rewrite` 판정이면 대상·근거·후속 스킬을 보고하고 **이관으로 종료**한다. 이관/비대상 경로에서는 Step 2–7의 migration·하네스·훅을 실행하지 않는다. 사용자 요청에 후속 스킬 실행까지 포함돼 있으면 이 결과를 넘겨 해당 스킬로 계속한다.
 
 #### Asset Load: Upgrade Mapping
 
@@ -131,23 +135,21 @@ migration 작성 직전에 선택한 runtime-local asset만 **Read**한다. 선�
 
 ### Step 6: Harness Merge (AGENTS.md / CLAUDE.md / .gitignore / 훅 자산)
 
-작업 하네스(`AGENTS.md`)가 하네스 템플릿(`references/agents-harness-template.md`) 기준으로 존재하도록 SDD-HARNESS 마커 기반 멱등 병합을 적용한다. spec-upgrade 자체에는 `## SDD란` 같은 삽입 로직이 없다. 여기서 만나는 기존 `## SDD란` 블록은 spec-upgrade가 만든 게 아니라 **과거 spec-create 부트스트랩으로 생긴 소비 repo의 산출물**이며, 이 step은 그것을 삭제 로직 제거가 아니라 **병합 시 하네스 슬롯으로 흡수**한다.
+작업 하네스(`AGENTS.md`)가 하네스 템플릿(`references/agents-harness-template.md`) 기준으로 존재하도록 SDD-HARNESS 마커 기반 멱등 병합을 적용한다. legacy `## SDD란` 블록은 새로 생성하지 않으며, 기존 블록에는 아래 보존/흡수 규칙을 적용한다.
 
-> **하네스 블록은 항상 verbatim 복사다.** 아래 병합 규칙에서 쓰는 '마커 블록'은 매번 `references/agents-harness-template.md`를 **Read**해 `SDD-HARNESS:START`~`SDD-HARNESS:END`를 **글자 그대로 복사**한 것이다(상단 관리용 주석만 제외). `<…>` 꺾쇠 슬롯만 repo 값으로 치환하고, 그 외 어떤 줄도 추가·삭제·재배열·요약하지 않는다. 기억이나 이 SKILL 본문으로 **재구성하지 않는다** — 재구성하면 템플릿 변경(새 §·경고 줄 등)이 산출물에 누락된다.
+> **하네스 블록은 항상 verbatim 복사다.** 아래 병합 규칙에서 쓰는 '마커 블록'은 매번 `references/agents-harness-template.md`를 **Read**해 `SDD-HARNESS:START`~`SDD-HARNESS:END`를 **글자 그대로 복사**한 것이다(상단 관리용 주석만 제외). repo 변수 슬롯만 치환하고, reference가 명시한 test/lint 부재 시 조건부 삭제만 허용한다. §5의 날짜·제목·모델명 등 향후 work-log 작성용 슬롯은 그대로 둔다. 그 외 어떤 줄도 추가·삭제·재배열·요약하지 않는다. 기억이나 이 SKILL 본문으로 **재구성하지 않는다** — 재구성하면 템플릿 변경(새 §·경고 줄 등)이 산출물에 누락된다.
 
 `AGENTS.md` 병합 규칙:
 
-- **부재** → 위 마커 블록을 **verbatim 복사**해 새 `AGENTS.md`로 쓰고, §0~§5 `<…>` 슬롯만 repo 맥락(`<repo-name>`, `<test command>`, `<lint command>`, spec §`<…>` 등)으로 치환한다.
-- **존재(마커 없음)** → 마커 블록을 파일 **맨 위에 prepend**한다. 마커 밖 기존 내용은 아래에 그대로 보존한다.
-- **마커 블록 존재** → **그 마커 블록만 교체**한다(마커-only 교체). 마커 밖 내용은 건드리지 않는다. 재실행해도 블록이 중복 적층되지 않는다(멱등).
-- **중복 흡수**: 기존 `AGENTS.md`에 하네스 슬롯과 겹치는 항목(테스트 명령 등)이나 과거 spec-create 부트스트랩으로 생긴 legacy `## SDD란` 블록이 있으면, 그 정보를 하네스 슬롯(§2 검증 표준 / §3 워크플로우 / §4 판단 기준)으로 흡수하고 마커 밖 중복본은 제거한다. SDD와 무관한 사용자 고유 내용은 보존한다.
+- **부재** → 위 복사·치환 규칙으로 새 `AGENTS.md`를 쓴다.
+- **존재(마커 없음)** → 마커 블록을 파일 **맨 위에 prepend**한다.
+- **마커 블록 존재** → **그 마커 블록만 교체**한다. 재실행해도 블록이 중복 적층되지 않는다(멱등).
 
 `CLAUDE.md` 병합 규칙:
 
 - 부재면 아래 한 줄 포인터를 SDD-HARNESS 마커 블록으로 감싸 생성하고, 존재하면 그 마커 포인터 블록을 맨 위 prepend한다(마커 블록이 이미 있으면 그 블록만 교체). 포인터 본문은 `> 이 repo의 작업 하네스는 \`AGENTS.md\` 단일 소스다. 작업 전 \`AGENTS.md\`를 먼저 읽는다.`로 spec-create와 동일하게 한다.
-- 기존 `CLAUDE.md`에 과거 spec-create 부트스트랩으로 생긴 legacy `## SDD란` 블록이 있으면 AGENTS.md 하네스로 일원화하여 흡수·제거한다. SDD와 무관한 사용자 고유 내용은 보존한다.
 
-병합 후 `AGENTS.md`·`CLAUDE.md` 어디에도 하네스와 별개의 중복 `## SDD란` 블록이 남지 않아야 한다.
+**보존/흡수 규칙** (`AGENTS.md`·`CLAUDE.md` 공통): 마커 밖 원문을 보존한다. 유일한 제거 예외는 **과거 SDD 부트스트랩 생성물로 식별되고 내용이 하네스에 전부 흡수된 중복 블록**이다. `## SDD란`이라는 제목이나 테스트/커밋 규칙의 중복만으로는 제거하지 않는다. 출처·경계가 불명확하거나 사용자 고유 수정이 섞였으면 원문을 보존하고 잔여 중복을 보고한다. 사용자 내용 삭제가 기존 승인 범위에 없으면 승인을 받는다.
 
 `.gitignore` 병합 규칙:
 
@@ -169,9 +171,8 @@ env.md 비밀값 경고는 하네스 §2에 포함돼 있어 AGENTS.md 병합으
 훅 설치는 `AGENTS.md` 하네스 병합과 동일 조건이다. 하네스를 병합하면 Claude Code와 Codex 등록을 함께 설치하며 별도 opt-in으로 다루지 않는다.
 
 1. 호출 중인 skill package의 `references/hook-installation.md`를 **Read**하고 전부 적용한다.
-2. Claude-only·Codex-only·과거 command/matcher 같은 partial 또는 legacy 설치는 reference의 current 두 runtime 정의로 보완한다.
-3. 사용자 설정을 보존하면서 재실행 시 두 runtime의 diff가 없도록 만든다.
-4. reference의 `Verification and Report`로 검증하고 runtime별 결과를 알린다.
+2. Claude-only·Codex-only·과거 command/matcher 같은 partial 또는 legacy 설치를 reference의 current 두 runtime 정의로 보완한다. malformed 설정의 skip과 보존은 reference를 따른다.
+3. reference의 `Verification and Report`로 멱등성을 검증하고 runtime별 결과를 알린다.
 
 upgrade가 소유하는 것은 부분 설치의 repair 판단이다. hook event·matcher·settings merge·runtime definition·trust 계약은 local reference를 따르며 `spec-create`의 존재에 의존하거나 이 본문에서 fallback을 재구성하지 않는다.
 
@@ -184,13 +185,13 @@ upgrade가 소유하는 것은 부분 설치의 repair 판단이다. hook event�
 - feature-level detail을 global 본문에서 걷어냈는가
 - implementation inventory를 그대로 옮겨 적지 않았는가
 - Step 1 경계 판정을 어기고 rewrite 문제를 upgrade로 덮지 않았는가
-- `AGENTS.md`가 하네스(§0~§5) 마커 블록을 가지고, `CLAUDE.md`가 포인터 마커 블록을 가지며, 하네스와 별개의 중복 `## SDD란` 블록이 남지 않았는가
+- `AGENTS.md`가 하네스(§0~§5) 마커 블록을 가지고, `CLAUDE.md`가 포인터 마커 블록을 가지며, Step 6의 보존/흡수 규칙을 따르는가
 - `.gitignore`가 `SDD-WORKSPACE` 마커 블록으로 process artifact를 ignore하는가
-- 하네스를 병합했다면 local `references/hook-installation.md`의 `Verify` checklist를 모두 만족하고 partial 설치가 보완됐으며 재실행 시 두 runtime의 diff가 없는가
+- 하네스를 병합했다면 local `references/hook-installation.md`의 `Verification and Report`에 따라 runtime별 등록·검증·acceptance 상태를 구분했는가
 
 ## Output Contract
 
-최종 보고에는 아래가 포함되어야 한다.
+이관/비대상 보고는 Step 1을 따른다. migration을 수행했다면 최종 보고에 아래를 포함한다.
 
 - 업그레이드 대상 파일
 - rewrite boundary judgment와 근거
@@ -205,12 +206,12 @@ upgrade가 소유하는 것은 부분 설치의 repair 판단이다. hook event�
 
 | 상황 | 대응 |
 |------|------|
-| spec 없음 | `/spec-create` 먼저 권장 |
+| spec 없음 | Step 1의 비대상 종료 |
 | 이미 thin model에 가까움 | 부족한 항목만 보강 |
 | canonical 후보 다수 | migration checkpoint에서 확인 |
 | 코드베이스 없음 | 문서 기반 업그레이드로 진행하고 근거 수준을 명시 |
-| 구조 재편이 핵심 문제 | `spec-rewrite` 후보로 보고 |
+| 구조 재편이 핵심 문제 | Step 1의 이관 종료 |
 
 ## Final Check
 
-Acceptance Criteria가 모두 만족되었나 검증한다. 미충족 항목이 있으면 해당 단계로 돌아가 수정한다.
+선택한 경로의 Acceptance Criteria를 검증하고, 현재 입력과 권한으로 보완할 수 있는 누락은 해당 단계에서 수정한다. hook의 skipped/partial 또는 trust 대기는 local `references/hook-installation.md`의 종료·보고 규칙을 따른다. 그 밖에 외부 입력이 필요한 잔여 항목도 원문을 보존하고 제한 결과로 종료하며, 완전 완료로 보고하지 않는다.

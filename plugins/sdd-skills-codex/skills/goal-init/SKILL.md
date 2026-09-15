@@ -9,7 +9,7 @@ description: This skill should be used when the user asks to set up a "/goal", "
 |----------|----------|------|
 | Any | Standalone | `/goal`에 걸 좋은 완료조건 문자열과 4파일 실행 하네스를 한 번의 대화로 셋업 |
 
-네이티브 `/goal`(조건 충족까지 매 턴 자동 반복하는 평가자 기반 루프)에 걸 **자족적 완료조건 문자열**과 그 조건이 참조할 **4파일 실행 하네스**(`_sdd/goal/<YYYY-MM-DD>_<slug>/`)를 대화형으로 함께 만든다. discussion식 대화형 단일 스킬이다 — 신규 agent를 위임하지 않고, ask 기반 단일 대화 루프로 진행하며, 파일 생성은 Harness Setup 단계에서만 한다. **스킬은 `/goal`을 직접 발동하지 않는다** — 사용자가 조건을 검토한 뒤 직접 발동한다.
+네이티브 `/goal`(조건 충족까지 매 턴 자동 반복하는 평가자 기반 루프)에 걸 **자족적 완료조건 문자열**과 그 조건이 참조할 **4파일 실행 하네스**(`_sdd/goal/<YYYY-MM-DD>_<slug>/`)를 대화형으로 함께 만든다. discussion식 대화형 단일 스킬이다 — 신규 agent를 위임하지 않고, 활성 런타임의 질문 수단을 쓰는 단일 대화 루프로 진행하며, 파일 생성은 Harness Setup 단계에서만 한다. **스킬은 `/goal`을 직접 발동하지 않는다** — 사용자가 조건을 검토한 뒤 직접 발동한다.
 
 ## Goal
 
@@ -17,7 +17,7 @@ description: This skill should be used when the user asks to set up a "/goal", "
 
 ## Acceptance Criteria
 
-> 프로세스 완료 후 아래 기준을 자체 검증한다. 미충족 항목은 해당 단계로 돌아가 수정한다.
+> 정상 setup 완료 기준이다. 종료 전 검증과 실패·중단 처리는 Final Check를 따른다.
 
 - [ ] AC1: 목표가 `/goal` 적합성 gate(verifiable end state가 있는 멀티턴 작업)를 통과했다.
 - [ ] AC2: 목표 달성 접근/가설 2개 이상이 발산되어 `experiments.md` 백로그에 수집되었다.
@@ -61,7 +61,7 @@ Process의 모든 단계에 횡단 적용되는 판단 지침. Hard Rules가 강
 - **적합성 gate 기준**: "**verifiable end state가 있는 멀티턴 작업인가**" — (1) 달성 여부를 transcript에서 판정할 수 있는 종료 상태가 있고, (2) 한 번의 답변으로 끝나지 않는 반복 작업이어야 한다.
 - **실패 분기**: "한 줄 수정"·"오타 고치기" 같은 단발성 작업이거나 종료 상태가 모호하면, 측정 가능한 종료 상태를 갖도록 **재정의를 안내**한다. 재정의가 불가능하면 `/goal` 대신 단발 작업임을 알리고 **중단한다 (I3)**.
 
-- **자율 수준 확정**: 사용자 원문에 자율 수행 신호("알아서", "자율", "무인", "확인 없이", "묻지 말고" 등)가 있으면 `unattended`로 확정하고 되묻지 않는다. 신호가 없으면 `AskUserQuestion` 1회로 `unattended`(권장) | `attended`를 정한다. 사용자가 사전 승인/제외 목록(템플릿 기본값)을 조정하면 반영한다.
+- **자율 수준 확정**: 사용자 원문에 자율 수행 신호("알아서", "자율", "무인", "확인 없이", "묻지 말고" 등)가 있으면 `unattended`로 확정하고 되묻지 않는다. 신호가 없으면 활성 런타임에서 허용하는 질문 수단으로 1회 확인해 `unattended`(권장) | `attended`를 정한다. 승인 질문을 허용하는 전용 도구가 없으면 일반 대화로 묻고 답을 기다린다. 무응답을 승인으로 해석하지 않는다. 사용자가 사전 승인/제외 목록(템플릿 기본값)을 조정하면 반영한다.
 
 **Decision Gate 1→2**: 적합성 gate를 통과한 목표가 확정되면 Step 2로 진행한다. ELSE 재정의 안내; 재정의 불가 시 중단한다.
 
@@ -87,7 +87,7 @@ Process의 모든 단계에 횡단 적용되는 판단 지침. Hard Rules가 강
 - **재설정 litmus (판단 지침, 비-gate)**: 어떤 디테일의 인라인/하강이 애매하면 "이 디테일이 현실과 어긋났을 때 goal을 다시 세우는 게 마땅한가?"를 묻는다. Yes(목표 자체가 바뀜) → 조건 문자열에 인라인, No(검증 방법만 바뀜) → `goal.md` 검증 레시피로 내린다.
 - **평가자 적합성 self-check (hard gate — I1)**: 응축한 조건 문자열에 대해 3항목을 확인한다.
   - (a) 도구 없이 대화(transcript)만으로 판정 가능한가
-  - (b) evidence(검증 명령·기대 출력)가 매 턴 surface되는가
+  - (b) 매 턴 실제 검증 출력 또는 기존 evidence·미실행 사유가 surface되는가 (`goal.md` 검증 레시피의 실행 경계 준수)
   - (c) 4,000자 이하인가
   - 하나라도 실패하면 **응축을 재시도한다** (3항목을 모두 통과할 때까지 통과시키지 않는다).
 
@@ -110,9 +110,9 @@ Process의 모든 단계에 횡단 적용되는 판단 지침. Hard Rules가 강
 
 - **조건 문자열 화면 출력**: `DONE WHEN`·`CONSTRAINTS`·`STOP`을 모두 포함한 전문을 생략·요약 없이 별도 코드 블록으로 화면에 직접 출력한다. `goal.md` 경로만 안내하거나 일부를 `...`로 줄여 대신하지 않는다.
 
-- **Codex 실행법**: (a) `codex features enable goals`(또는 config의 `features.goals`)로 goals 기능을 활성화한다. (b) 라이프사이클은 `set`(목표 설정)·`status`(진행 확인)·`clear`(종료)이며, 중간에 멈췄다 이어가려면 `pause`·`resume`를 쓴다. (c) continuation은 thread-scoped state로 유지되며, 안전 경계(turn 종료·idle·no queued input) 안에서만 다음 턴으로 이어진다. (d) 진행은 evidence-based다 — 매 턴 검증 명령의 출력을 대화에 surface해 평가자가 그 증거로 완료를 판정한다.
+- **Codex 실행법**: (a) `codex features enable goals`(또는 config의 `features.goals`)로 goals 기능을 활성화한다. (b) 라이프사이클은 `set`(목표 설정)·`status`(진행 확인)·`clear`(종료)이며, 중간에 멈췄다 이어가려면 `pause`·`resume`를 쓴다. (c) continuation은 thread-scoped state로 유지되며, 안전 경계(turn 종료·idle·no queued input) 안에서만 다음 턴으로 이어진다. (d) 진행은 evidence-based다 — 매 턴 검증 레시피의 실행 경계에 따라 evidence를 대화에 surface하고, 평가자는 그 증거로 완료를 판정한다.
 - **스킬은 `/goal`을 직접 발동하지 않는다 (I2)**. 핸드오프는 조건 문자열 + 실행법 제시까지이며, 사용자가 조건을 검토한 뒤 **직접 발동한다**.
-- **Setup invariant**: “goal을 활성화하지 않았으며 기존 goal 상태도 변경하지 않았다”를 항상 명시한다. 이를 확인하기 위한 status 조회는 하지 않는다.
+- **Setup invariant**: “goal을 활성화하지 않았으며 기존 goal 상태도 변경하지 않았다”를 실제로 지켰을 때 명시한다. 위반이 있었다면 그 사실을 보고하고 setup 성공으로 표시하지 않는다. 이를 확인하기 위한 status 조회는 하지 않는다.
 
 **Decision Gate (종료)**: 조건 문자열 + Codex 실행법 제시가 완료되면 종료한다.
 
@@ -124,7 +124,8 @@ Process의 모든 단계에 횡단 적용되는 판단 지침. Hard Rules가 강
 | 검증 명령이 명령+판정조건으로 확정되지 않음 | 진행을 차단한다 (hard gate). 명령과 판정조건이 둘 다 확정될 때까지 Condition Crafting을 통과시키지 않는다 — 확정된 명령·판정조건의 귀속처는 조건 문자열이 아니라 `goal.md` 검증 레시피다. |
 | 조건 문자열이 4,000자를 초과 | 응축 재시도. 4,000자 이하로 줄일 때까지 Handoff하지 않는다. |
 | Divergence에서 가설이 안 나옴 | 사용자에게 접근 후보를 직접 요청하고, 받은 후보로 백로그를 구성한다. |
+| 4파일 생성이 외부 blocker로 실패 | 생성된 경로·실패 원인·미충족 AC를 보고하고 미완료 종료한다. producer 실행이나 native goal 발동으로 우회하지 않는다. |
 
 ## Final Check
 
-Acceptance Criteria가 모두 만족되었나 검증한다. 미충족 항목이 있으면 해당 단계로 돌아가 수정한다.
+선택한 preset에 적용되는 AC를 검증한다. 정상 완료 경로의 수정 가능한 누락은 해당 단계에서 보완한다. Error Handling의 실패·중단 경로는 사유와 미충족 AC를 보고하고 종료한다. 이미 발생한 비발동·status 조회·상태 변경 금지 위반은 산출물 수정으로 소급 충족할 수 없으며, 발생 사실을 보고하고 성공 완료로 표시하지 않는다.

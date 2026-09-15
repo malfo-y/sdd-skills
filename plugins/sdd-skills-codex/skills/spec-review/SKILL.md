@@ -60,6 +60,8 @@ description: This skill should be used when the user asks to "review spec", "spe
 
 ### Temporary Spec Quality
 
+구체 형식 대조가 필요하면 현재 runtime의 skill catalog가 제공하는 `feature-draft`의 `Required Output`을 읽는다. 읽을 수 없으면 그 형식 검증의 한계를 보고하며, 로컬 사본을 정본으로 만들지 않는다.
+
 공통 코어 4축을 temporary rubric으로 본다.
 
 - `Thinness`: delta 실행에 필요한 정보만 남기고 있는가
@@ -83,6 +85,8 @@ description: This skill should be used when the user asks to "review spec", "spe
 - global spec에는 repo-wide persistent information만 남고, feature-level execution detail은 temporary surface에 머무는가
 
 ## Process
+
+서로 의존하지 않는 read-only 호출은 한 메시지로 묶는다. 앞 결과로 대상이 정해지는 호출과 쓰기·상태 변경은 분리하며, 배칭 때문에 읽을 범위를 넓히지 않는다.
 
 ### Step 1: Scope and Spec Type Selection
 
@@ -114,7 +118,7 @@ spec type 판별 규칙:
 
 - 실제 구현된 기능과 spec 주장 비교
 - implementation 문서와의 정합성 비교
-- delta ID와 validation evidence의 연결 확인
+- 현행 draft는 task/AC와 validation evidence의 연결을 확인한다. delta ID가 있는 legacy 기록물은 해당 ID의 연결을 확인하며, 현행 draft에 delta ID를 요구하지 않는다.
 - path/reference가 실제 코드와 맞는지 확인
 - `Strategic Code Map`이 있다면 현재 코드의 entrypoint / hotspot / validation surface와 맞는지 확인
 
@@ -217,4 +221,4 @@ Decision은 spec 변경 필요 여부라는 단일 축에서 아래 precedence�
 
 ## Final Check
 
-Acceptance Criteria가 모두 만족되었나 1회 점검한다. 미충족 항목이 있으면 해당 단계로 돌아가 수정한다.
+선택한 리뷰 범위에 적용되는 Acceptance Criteria를 1회 점검한다. 보완 가능한 리뷰·리포트 누락은 수정하고, 접근 실패나 증거 부족은 한계와 다음 조치를 보고한다. 검토 대상 spec과 코드는 수정하지 않는다.

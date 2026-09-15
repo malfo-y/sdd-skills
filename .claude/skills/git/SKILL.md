@@ -8,11 +8,11 @@ description: Smart Git workflow automation. Use this skill whenever the user say
 One command to handle your entire git workflow: status check, semantic commit grouping, smart branching, push, and graph cleanup.
 
 ## Acceptance Criteria
-> 프로세스 완료 후 아래 기준을 자체 검증한다. 미충족 항목은 해당 단계로 돌아가 수정한다.
+> 진입 시 Shorthand Modes로 요청 범위를 정하고, 종료 전 그 경로에 적용되는 기준만 검증한다.
 - [ ] AC1: ASSESS 단계에서 branch, sync, working tree, graph 상태를 모두 파악했다
-- [ ] AC2: 변경사항을 의미 단위로 semantic grouping 하고, 각 그룹에 Conventional Commits 형식 메시지를 작성했다
-- [ ] AC3: CONFIRM 단계에서 커밋 그룹, diff 요약, 브랜치/push 계획을 사용자에게 보여주고 승인(또는 Phase 3 goal 위임)을 받았다
-- [ ] AC4: 사용자 확인(또는 Phase 3 goal 위임) 없이 push/commit/rebase를 실행하지 않았다
+- [ ] AC2 (commit 생성 시): 변경을 의미 단위로 묶고 Conventional Commits 메시지를 작성했으며, 실제 commit 내용이 승인된 그룹과 일치한다
+- [ ] AC3 (mutation 시): 실행 대상·diff 요약·순서를 표시하고, Phase 3에 따라 각 행동의 승인을 확인했다
+- [ ] AC4 (mutation 시): 승인된 행동만 실행하고 결과와 기존 변경 보존을 확인했다
 
 ## 5-Phase Workflow
 
@@ -24,7 +24,7 @@ One command to handle your entire git workflow: status check, semantic commit gr
 5. REPORT  → show result summary
 ```
 
-> **Hard Rule**: Always show the plan before executing. Get confirmation unless the Phase 3 goal-delegation exception applies. Never auto-push without the user seeing what will happen.
+> **Hard Rule**: Mutation 전에 구체적인 계획을 표시한다. 행동별 기존 승인 인정과 추가 확인은 Phase 3, 위험 작업의 제한은 [safety-rules.md](references/safety-rules.md)가 소유한다.
 
 ---
 
@@ -35,16 +35,19 @@ One command to handle your entire git workflow: status check, semantic commit gr
 ```bash
 git branch --show-current
 git remote -v
-git fetch --quiet 2>/dev/null
 git rev-list --left-right --count HEAD...@{upstream} 2>/dev/null
 git status --porcelain=v2 --branch
 git log --oneline --graph --all -15
 # 진행 중인 rebase/merge 확인
-test -d .git/rebase-merge || test -d .git/rebase-apply && echo "REBASE_IN_PROGRESS"
-test -f .git/MERGE_HEAD && echo "MERGE_IN_PROGRESS"
+if test -d "$(git rev-parse --git-path rebase-merge)" || test -d "$(git rev-parse --git-path rebase-apply)"; then
+  echo "REBASE_IN_PROGRESS"
+fi
+test -f "$(git rev-parse --git-path MERGE_HEAD)" && echo "MERGE_IN_PROGRESS"
 ```
 
 파악할 정보: branch(현재/upstream), sync(ahead/behind), working_tree(M/A/D/?), graph_health, in_progress 여부.
+
+status 모드는 로컬 정보만 읽으며 sync는 마지막 fetch 기준임을 표시한다. mutation 계획에 최신 remote 상태가 필요하면 fetch 후 다시 판정하고, 실패·upstream 부재를 clean/synced로 해석하지 않는다. 진행 중인 rebase/merge가 있으면 새 cleanup을 시작하지 않는다. 상태 요청은 보고만 하고, 변경 요청은 기존 작업의 계속/중단 범위를 확인한다.
 
 결과를 Status Dashboard로 요약 표시:
 
@@ -66,7 +69,7 @@ test -f .git/MERGE_HEAD && echo "MERGE_IN_PROGRESS"
 
 ### 2a. Semantic Change Grouping
 
-`git diff --stat`, `git diff --cached --stat`으로 전체 변경 파악 후 논리 단위로 그룹핑.
+commit 생성 모드에서 `git diff`와 `git diff --cached`의 내용·stat을 확인해 논리 단위로 그룹핑한다. 시작 시 staged/unstaged 구분과 partial staging을 기록해 승인 범위 밖 변경을 보존한다.
 
 | 기준 | 설명 |
 |------|------|
@@ -98,32 +101,33 @@ test -f .git/MERGE_HEAD && echo "MERGE_IN_PROGRESS"
 | Messy graph, feature branch | `git rebase <base-branch>` |
 | main/master/develop | **절대 force-rebase 금지** |
 
-> 안전 규칙 상세: `references/safety-rules.md` 참조
+rebase/pull은 작업트리와 index의 전제조건을 확인한다. dirty라면 승인된 변경을 먼저 commit하거나 필요한 미커밋 변경 전체를 보존·복원하는 순서를 계획에 넣는다. 설정된 autostash를 가정하지 않는다.
+
+> mutation 전에 [safety-rules.md](references/safety-rules.md)를 읽는다. 위 전략은 후보이며 rebase 승인을 대신하지 않는다.
 
 ---
 
 ## Phase 3: CONFIRM
 
-실행 전 반드시 전체 계획을 보여준다. **계획 표시는 절대 생략 불가.** 승인은 아래 예외를 제외하고 받는다.
+실행 대상과 순서를 먼저 보여주고 각 행동의 승인을 판정한다.
 
-**예외(goal 위임)** — 아래 두 조건이 모두 참일 때만 적용한다.
-- 이번 대화가 Loop Protocol로 활성 goal 하네스를 읽고 있다.
-- 그 `goal.md`의 `자율 수행 위임` 사전 승인 목록에 commit·push가 있다.
-
-적용 시: 계획은 동일하게 표시하되 승인 대기 없이 EXECUTE로 진행한다. 단, 섹션의 "항상 확인" 목록은 위임과 무관하게 승인 대상이다.
+- 현재 대화에서 해당 대상·범위를 명시적으로 승인했다면 같은 비파괴적 행동을 재확인하지 않는다.
+- 활성 goal의 `goal.md`를 Loop Protocol로 읽었다면 `자율 수행 위임`의 사전 승인 목록을 **행동별로** 적용한다. commit 승인만으로 push·rebase를 승인한 것으로 보지 않는다.
+- protected branch 작업·force-push·history rewrite·파괴적 작업은 safety 규칙의 금지와 별도 명시적 승인을 적용한다. goal의 “항상 확인” 항목은 사전 위임으로 대체하지 않는다.
+- 범위 밖 행동은 제외한다. 요청 완료에 꼭 필요하면 그 행동과 이유만 질문하고, 이미 승인된 독립 작업은 진행한다. 계획이 바뀌면 변경분의 승인도 다시 판정한다.
 
 ```
 🔄 Proposed Git Actions
 ━━━━━━━━━━━━━━━━━━━━━━
-1️⃣ Graph cleanup: git pull --rebase (2 commits behind)
-2️⃣ Create branch: feature/add-user-auth
-3️⃣ Commits (3):
+1️⃣ Create branch: feature/add-user-auth
+2️⃣ Commits (3):
    ┌─ feat(auth): add JWT login and refresh endpoints
    │  src/auth/login.ts, src/auth/token.ts, src/auth/types.ts
    ├─ docs(readme): add authentication setup guide
    │  README.md
    └─ chore(deps): add jsonwebtoken dependency
       package.json
+3️⃣ Graph cleanup: git rebase origin/main (commit 후 clean 상태에서 실행)
 4️⃣ Push: git push -u origin feature/add-user-auth
 
 Proceed? (y/n/edit)
@@ -136,26 +140,17 @@ Proceed? (y/n/edit)
 
 ## Phase 4: EXECUTE
 
-승인(또는 goal 위임) 후 순서대로 실행:
+승인된 계획의 전제조건과 순서대로 실행한다. 아래 항목은 필요한 행동에만 적용한다.
 
-```
-1. 관련 없는 변경 stash (필요시)
-2. Graph cleanup (pull/rebase)
-3. 새 브랜치 생성 (필요시)
-4. 각 커밋 그룹별:
-   a. git add <files>
-   b. git commit -m "<message>"
-5. git push [-u origin <branch>]
-6. Stash pop (필요시)
-```
-
-부분 파일 스테이징: `git add -p <file>`. Hunk 경계 모호하면 전체 파일을 가장 관련 높은 그룹에 커밋.
+1. 기존 변경·index를 보존하고 필요한 브랜치를 생성한다. 보존/복원은 safety reference의 Stash Safety를 따른다.
+2. 각 commit 직전에 index가 **현재 승인 그룹의 파일·hunk만** 포함하는지 `git diff --cached`로 확인한다. 다른 그룹이 이미 staged되어 있으면 작업트리 내용을 버리지 않고 분리한다. partial staging은 `git add -p` 등을 사용하며, hunk 경계가 모호하면 그룹 계획을 조정한다. 전체 파일을 임의로 끼워 넣지 않는다.
+3. `git commit` 후 실제 commit diff를 계획과 대조한다. 남은 그룹의 staging과 이번 commit에 포함되지 않은 사용자 staging을 보존·복원한다.
+4. 계획한 pull/rebase는 clean 전제조건이 충족된 시점에만 실행한다. 실패·충돌 시 후속 push를 중단한다.
+5. 이번 작업에서 보존한 변경을 복원하고 파일·index 상태를 확인한다. 승인된 push가 있으면 로컬 작업 성공 후 실행하고 remote sync 결과를 확인한다.
 
 ### Conflict Resolution
 
-1. `git diff --name-only --diff-filter=U`로 충돌 목록
-2. 한쪽만 의미 있는 변경 → 해당 쪽 채택 / 다른 섹션 변경 → 양쪽 병합
-3. 같은 줄 변경 → 사용자에게 제시: `⚠️ Conflict in <file> — Which version? (ours / theirs / both / manual)`
+[safety-rules.md의 Conflict Resolution](references/safety-rules.md#conflict-resolution)을 따른다. 해결 후 해당 작업을 계속하고 결과를 검증한 뒤 남은 승인 작업으로 돌아간다. 미해결이면 완료로 보고하지 않는다.
 
 ---
 
@@ -167,8 +162,8 @@ Proceed? (y/n/edit)
 🌿 Branch: feature/add-user-auth (new)
 📝 Commits: 3
    • feat(auth): add JWT login and refresh endpoints  [a1b2c3d]
-   • docs(readme): add authentication setup guide      [e4f5g6h]
-   • chore(deps): add jsonwebtoken dependency           [i7j8k9l]
+   • docs(readme): add authentication setup guide      [e4f5a6b]
+   • chore(deps): add jsonwebtoken dependency           [c7d8e9f]
 📡 Pushed to: origin/feature/add-user-auth
 ━━━━━━━━━━━━━━━━━━━━━━
 ```
@@ -180,7 +175,7 @@ Proceed? (y/n/edit)
 | 상황 | 처리 |
 |------|------|
 | Protected branch (main/master/develop/release/*) | force-push 금지, 대안 제시 |
-| Empty working tree | `✅ Working tree clean` 표시, 종료 |
+| Empty working tree | clean 사실을 표시하되 ahead commit의 push·graph 정리·브랜치 작업이 남으면 계속한다. 요청 작업이 없을 때만 종료 |
 | Untracked files | 분석 포함. build artifact면 `.gitignore` 제안 |
 | Large binary (>1MB) | 경고, git-lfs 제안 |
 | Detached HEAD | 경고, 브랜치 생성 권유 |
@@ -193,13 +188,13 @@ Proceed? (y/n/edit)
 | Command | Behavior |
 |---------|----------|
 | `/git`, `/git status` | Phase 1 only (dashboard) |
-| `/git commit`, "커밋해줘" | Full workflow (Phase 1-5) |
-| `/git push`, "푸시해줘" | Check sync + push |
-| `/git cleanup`, "git 정리" | Graph cleanup (rebase, linearize) |
+| `/git commit`, "커밋해줘" | Phase 1–5 중 commit 생성에 필요한 단계. push는 별도 요청/승인 시만 |
+| `/git push`, "푸시해줘" | sync 확인 → push 계획·승인 판정 → 실행·보고. 새 commit은 만들지 않음 |
+| `/git cleanup`, "git 정리" | graph cleanup 계획·별도 승인 → 실행·보고. push는 별도 요청/승인 시만 |
 | `/git branch <name>` | Create branch, move uncommitted changes |
-| `/git all` | Stage all → group → commit → push (confirms first) |
+| `/git all` | 전체 변경 분석 → 그룹 계획·승인 판정 → 그룹별 stage/commit → push |
 
 ## Final Check
 
-Acceptance Criteria가 모두 만족되었나 검증한다. 미충족 항목이 있으면 해당 단계로 돌아가 수정한다.
+선택한 모드의 AC만 검증한다. 복구 가능한 누락은 보완한다. 외부 실패·승인 대기·미해결 충돌은 완료한 행동과 남은 작업을 구분해 보고하며, 원인이 바뀌지 않은 실패를 반복하지 않는다. 이미 발생한 승인·보존 위반을 소급 충족으로 표시하지 않는다.
 

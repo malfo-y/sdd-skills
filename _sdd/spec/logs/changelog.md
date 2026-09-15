@@ -883,3 +883,14 @@
 
 - **ex-orchestrator 스킬 4종에 Goal + Acceptance Criteria 완료 계약 복원**: agent→skill 전환(F1~F5) 때 orchestrator return-schema 검증과 함께 사라졌던 완료 계약을 `feature-draft`·`plan-review`·`implementation`·`implementation-review` SKILL.md에 복원했다(원본 4 + codex 미러 4 = 8파일, 3-way merge로 codex 적응 delta 보존). 각 스킬 intro 직후 `## Goal` + self-check blockquote를 가진 `## Acceptance Criteria`를 두고, AC는 기존 완료 신호 섹션(Required Output·반환·마감·보고)을 참조로 결속해 상세를 재서술하지 않는다. 이로써 전 SDD 파이프라인 스킬이 `## Acceptance Criteria`를 보유(guardrail 신설, 작성 체크리스트 canonical은 docs/SKILL_AUTHORING_NORMS.md).
 - **검증 evidence**: heading census 8파일×2종=16/16, 위치·blockquote 구조 check 8×PASS, diff 순수 삽입(codex delta 무손상), `git ls-files` 8/8 추적, 회귀 `pytest tools/tests/` 5 passed. plan gate 1회(M1→fix: invariant 과대 서술 축소), impl gate 1회(correctness M1: plan-review AC 단일 패스 누락 / simplicity M1: implementation Goal 마감 4단계 재서술 — 둘 다 fix, gate 2 임계 미달).
+
+
+## 4.31.0 — 2026-09-15
+
+- 전체 스킬 리뷰를 바탕으로 경로별 AC 종료, read-only 검증 task, 표시 언어 보존, 외부 second-opinion adapter의 설계 경계를 명료화했다.
+- 스킬/문서 배포 반영은 진행 중이며 검증 후 실행 ledger에 증거를 기록한다. Astra/Fable 행동 개선은 아직 측정하지 않았다.
+
+### 4.31.0 구현 검증 결과
+
+- 저장소의 20개 스킬·38개 SKILL과 직접 자산에 지시 명료화를 반영했다. Ralph 실패 턴 rollback·lock 이후 reset·backup 실패 중단을 실제 추출 template의 격리 회귀로 검증했다(7 tests/16 scenarios PASS).
+- 73개 finding의 처리 위치, gate fix, 검사기 기존 메타데이터 제한과 모델 행동 미검증은 [처리 내역](../../../docs/reviews/2026-09-15-skill-instructions/implementation-dispositions.md)에 기록했다.

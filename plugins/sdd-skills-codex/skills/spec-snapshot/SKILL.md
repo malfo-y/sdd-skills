@@ -30,7 +30,7 @@ description: This skill should be used when the user asks to "spec snapshot", "s
 1. `_sdd/spec/` 존재를 확인한다. 없으면 Error Handling으로 종료한다.
 2. 모든 source `.md`의 sorted relative path와 SHA-256을 manifest로 기록한다.
 3. root `summary.md`에 reserved delimiter `<!-- SPEC-SNAPSHOT-METADATA:START -->` 또는 `<!-- SPEC-SNAPSHOT-METADATA:END -->`가 있으면 destination을 만들기 전에 종료한다.
-4. 표시할 target language는 사용자 지정값을 우선하고, 없으면 source 언어를 사용한다.
+4. target language는 현재 요청의 지정값, 기존 대화에서 확정된 값 순으로 선택한다. 명시적 번역 요청인데 목표 언어를 확정할 수 없을 때만 한 번 묻고, 답을 받기 전에는 destination을 만들지 않는다. 그 외 언어 미지정 snapshot/export는 source 언어를 사용한다.
 5. filesystem `lang-slug`는 target language를 lowercase ASCII로 바꾼 영문·숫자를 남기고, 그 밖의 연속 문자를 `_`로 치환한 뒤 앞뒤 `_`를 제거해 만든다. 빈 값은 `lang`을 쓰고 final slug가 `^[a-z0-9]+(?:_[a-z0-9]+)*$`인지 확인한다.
 6. local time `YYYY-MM-DDTHH-MM_<lang-slug>`을 기본 destination으로 잡는다.
 7. 같은 directory가 있으면 `-02`, `-03` 순으로 첫 unused suffix를 선택한다.
@@ -101,4 +101,4 @@ destination `summary.md` 맨 앞에 아래 marker block을 정확히 한 번 쓴
 
 ## Final Check
 
-Acceptance Criteria와 Step 4를 완료하고 source tree가 수정되지 않았음을 보고한다.
+성공 보고 전 Acceptance Criteria와 Step 4를 완료하고 source tree가 수정되지 않았음을 확인한다. 복구 가능한 destination 누락은 보완하되 source manifest 불일치를 새 기준으로 덮어 완료 처리하지 않는다. 입력 대기·원본 부재·충돌 등으로 종료하면 이유와 완료한 범위만 보고한다.

@@ -11,7 +11,7 @@ description: "SDD goal harness 셋업 entrypoint. /sdd-autopilot으로 기능 �
 
 ## Acceptance Criteria
 
-> 완료 전 아래 기준을 자체 검증한다. 미충족 항목이 있으면 해당 단계로 돌아가 수정한다.
+> 정상 setup 완료 기준이다. 종료 전 검증과 실패·중단 처리는 Final Check를 따른다.
 
 - [ ] AC1: 사용자 원문과 관련 context를 `goal-init(preset=sdd)`에 전달하고, `goal-init`의 기존 5단계·condition self-check·4파일 setup을 완료했다.
 - [ ] AC2: 생성된 `goal.md`가 runtime-local `goal-init` template의 SDD Loop Protocol payload를 사용한다.
@@ -38,9 +38,9 @@ active skill catalog에서 설치된 `goal-init`을 이름으로 선택해 `pres
 
 ### Step 3: Handoff relay
 
-`goal-init`이 확정한 조건 문자열, `goal.md`의 자율 수행 위임(수준·사전 승인 범위), Codex `/goal` 실행법, 생성한 `goal.md`·`experiments.md`·`journal.md`·`report.md`의 개별 경로를 사용자에게 제시한다. 마지막에 다음 사실을 그대로 표시하고 종료한다.
+`goal-init`의 Handoff를 최종 relay로 사용한다. 이미 사용자에게 표시된 항목은 반복하지 않고 자율 수행 위임 등 누락된 필수 항목만 보충한다. 사용자에게 아직 보이지 않은 반환이면 Handoff 전문을 전달한다.
 
-> goal을 활성화하지 않았으며 기존 goal 상태도 변경하지 않았다.
+최종 전달에는 조건 문자열 전문·자율 수행 위임(수준·사전 승인 범위)·Codex `/goal` 실행법·4파일 개별 경로·setup 불변식이 모두 있어야 한다. 비발동·상태 보존을 지켰을 때만 “goal을 활성화하지 않았으며 기존 goal 상태도 변경하지 않았다”를 표시한다. 위반이 있었다면 발생 사실을 보고하고 setup 성공으로 표시하지 않는다.
 
 사용자가 내용을 검토한 뒤 native goal 활성화 여부와 시점을 직접 결정한다.
 
@@ -53,4 +53,4 @@ active skill catalog에서 설치된 `goal-init`을 이름으로 선택해 `pres
 
 ## Final Check
 
-Acceptance Criteria가 모두 만족되었나 검증한다. 미충족 항목이 있으면 해당 단계로 돌아가 수정한다.
+선택한 경로의 AC를 검증한다. 정상 완료 경로의 수정 가능한 누락은 해당 단계에서 보완한다. Error Handling의 실패·중단 경로는 사유와 미충족 AC를 보고하고 종료한다. 이미 발생한 AC3 위반은 재실행이나 산출물 수정으로 소급 충족할 수 없으며, 발생 사실을 보고하고 성공 완료로 표시하지 않는다.

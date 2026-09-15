@@ -60,7 +60,7 @@ Preserve unrelated top-level keys, events, groups, and user hook handlers. Re-ru
 
 ### Malformed JSON
 
-If one settings file cannot be parsed, preserve its bytes and skip registration for that runtime. Continue copying all four scripts and continue the merge for the other runtime. Record the skipped runtime and partial failure in the final report.
+If one settings file cannot be parsed, preserve its bytes and skip registration for that runtime. Continue copying all four scripts and continue the merge for the other runtime. Record the skipped runtime and partial failure in the final report. Finish the other safe installation work, then return the partial result; do not retry the skipped registration until the input is corrected. A partial result is not a complete installation.
 
 ## Runtime Definitions
 
@@ -142,23 +142,26 @@ Codex hook commands run from the session working directory, so resolve the share
 
 ## Codex Trust Boundary
 
-Codex hooks require version 0.124.0+ and a trusted project `.codex/` layer. A non-managed exact definition does not run until the user reviews and trusts it through `/hooks`; changing the definition requires review again. Do not approve trust automatically and do not modify user-global Codex settings.
+Codex hooks require version 0.124.0+ and a trusted project `.codex/` layer. A non-managed exact definition does not run until the user reviews and trusts it through `/hooks`; changing the definition requires review again. Do not approve trust automatically, bypass trust, or modify user-global Codex settings. Without evidence that the current exact definition has been reviewed and trusted, runtime acceptance remains `pending user trust`; structural checks alone cannot complete acceptance. Finish document and registration preparation and safe verification before leaving `/hooks` review as the user’s remaining action.
 
 ## Verification and Report
 
 ### Verify
 
 - Installed scripts are byte-identical to the four local assets.
-- Each runtime's SDD hook groups exactly match its complete `Runtime Definition`.
-- Existing unrelated keys and handlers remain, mixed non-SDD handlers retain their original event/matcher, and a malformed file remains byte-identical.
-- A second merge produces no runtime-specific diff or duplicate SDD handler.
+- For each registered runtime, SDD hook groups exactly match its complete `Runtime Definition`, and a second merge produces no diff or duplicate SDD handler.
+- For a skipped runtime, verify the original file remains byte-identical and report the parse failure instead of requiring registration checks.
+- Existing unrelated keys and handlers remain, and mixed non-SDD handlers retain their original event/matcher.
+- Assess runtime acceptance separately from installation checks. Apply `Codex Trust Boundary` to the current definition, and claim lifecycle execution only with observed evidence. Missing trust or execution evidence remains pending/unverified, without repeated installation attempts.
 
 ### Report
 
 - Common:
   - script placement
-  - each runtime's status: `created | replaced | already current | skipped`
-  - parse failures and any partial result
+  - each runtime's registration status: `created | replaced | already current | skipped`
+  - installation verification results, parse failures, and any partial result
+  - each runtime's acceptance evidence or remaining requirement; for Codex use `pending user trust` when the trust boundary is not satisfied
+  - remaining user action for partial or pending acceptance; do not label either as complete acceptance
 - Claude Code notices:
   - `.claude/settings.json` is committed project configuration
   - the gate applies to the session's first `git commit`, and `SDD_SKIP_WORKLOG=1` bypasses it

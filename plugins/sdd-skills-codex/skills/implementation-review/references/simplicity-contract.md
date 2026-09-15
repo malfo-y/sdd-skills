@@ -12,7 +12,7 @@
 
 ## Acceptance Criteria
 
-> 완료 전 아래 기준 + Hard Rules 준수를 자체 검증한다. 미충족 항목은 해당 단계로 돌아가 수정한다.
+> 종료 전 아래 기준과 Hard Rules를 자체 검증하고 복구 가능한 반환 누락을 보완한다. 증거·범위 부족은 Assumptions에 한계로 남기고, 이미 발생한 read-only 위반은 미충족으로 보고한다. 사후 수행으로 과거 준수를 만들지 않는다.
 
 - [ ] AC1: 소유한 차원(호출자 차원 한정 시 그 묶음, 한정이 없으면 4개 전부)을 **각각 능동 스캔**했고, 소유한 차원 전부가 반환의 차원 판정에서 개별 행(finding 있음) 또는 PASS 접기 한 줄 중 정확히 하나에 귀속됐다 (finding 0이어도 스캔은 수행).
 - [ ] AC2: 각 Medium+ finding이 차원·위치·현재 형태·제안 형태를 갖췄다.
@@ -23,10 +23,10 @@
 1. **단순성 리뷰만** 수행한다. 제안은 반환에만 기록한다.
 2. **표적 disjoint**: correctness 차원(AC 충족 여부·버그·보안 취약점·spec drift)은 리뷰하지 않는다. 그것은 호출 스킬의 메인 루프(직접 correctness 리뷰) 소관이다. 같은 코드를 보더라도 동작-불변 형태만 본다.
 3. **차원 한정**: 리뷰 차원은 Review Dimensions의 차원이다(호출자 차원 한정 시 그중 소유 묶음). 소유하지 않은 차원으로 finding을 내지 않는다.
-4. **Falsifiable-only**: 동작 변화 없이 더 단순한 동등 형태를 **구체적으로 제시하지 못하면 finding을 내지 않는다.** 막연한 "더 단순할 수 있다"는 금지 — 대안 형태를 인용 코드로 보여야 한다.
+4. **Falsifiable-only gating**: Medium+는 동작 변화 없이 더 단순한 동등 형태를 구체적으로 제시해야 한다 — 대안 형태를 인용 코드로 보인다. 객관적 위반을 입증하지 못한 취향은 소유 차원 안에서만 Low advisory로 허용한다. 막연한 "더 단순할 수 있다"는 버린다.
 5. 출력 언어는 사용자 언어를 우선한다. 신호가 약하면 repo 기본 문서 언어를 fallback으로 사용한다.
 6. **Path convention**: `_sdd/` artifact 경로는 lowercase canonical을 기본으로 하되, 입력을 읽을 때는 legacy uppercase fallback도 허용한다.
-7. **Recommendations Min-Code**: 권고는 검출된 실제 단순성 위반에 직접 대응해야 한다. "future-proof / extensible / configurable" 같은 사변적 권고 금지.
+7. **Recommendations Min-Code**: Medium+ 권고는 검출된 실제 단순성 위반에 직접 대응해야 한다. Low는 Severity Rules의 범위로 제한한다. "future-proof / extensible / configurable" 같은 사변적 권고 금지.
 
 ## Review Dimensions
 
@@ -52,8 +52,8 @@
 
 severity는 `Critical / High / Medium / Low` 네 단계 표기를 쓰되, simplicity finding은 falsifiable 여부(Hard Rule 4)로 분류한다.
 
-- **Medium (gating, 기본값)**: 4개 차원의 **객관적으로 반증 가능한 위반** — 구체 사례 + 더 단순한 동등 형태를 제시할 수 있는 것. 호출자의 fix 대상이다 (체인에서는 메인 루프가 fix 1회로 반영).
-- **Low (advisory)**: **주관적 취향** — naming 호불호처럼 동작-불변 동등 형태를 객관 증거로 제시할 수 없는 것. 로그/후속 권고 대상이며 게이팅하지 않는다.
+- **Medium (gating, 기본값)**: 4개 차원의 **객관적으로 반증 가능한 위반** — 구체 사례 + 더 단순한 동등 형태를 제시할 수 있는 것. 호출자의 fix 대상이다.
+- **Low (advisory)**: **소유 차원 안의 주관적 취향** — 예: 객관적인 과잉압축 위반으로 입증할 수 없는 줄바꿈 선호. naming 등 네 차원 밖 취향은 제외한다. 로그/후속 권고 대상이며 게이팅하지 않는다.
 - **High / Critical (escalation)**: 기본값은 Medium이다. 단순성 위반이 광범위하게 반복되어 유지보수를 실질적으로 위협하면 High로 escalate할 수 있다.
 
 ## Process
@@ -68,7 +68,7 @@ severity는 `Critical / High / Medium / Low` 네 단계 표기를 쓰되, simpli
 
 ### Step 3: Falsifiability Gate
 
-후보 finding마다 Hard Rule 4를 적용한다.
+후보마다 Hard Rule 4로 Medium+의 객관적 위반과 차원 내 Low advisory를 구분하고, 어느 쪽도 아닌 후보는 버린다.
 
 ### Step 4: Classify + Return
 
@@ -76,10 +76,10 @@ severity는 `Critical / High / Medium / Low` 네 단계 표기를 쓰되, simpli
 
 - **Findings** (severity별): Medium+는 finding당 블록 — 제목 + 차원·위치(`file:line`)·현재 형태(인용/요약)·제안 형태(더 단순한 동등 형태, 구체 코드/변형). Low는 위치 포함 한 문장.
 - **차원 판정**: finding이 있는 차원만 `<차원> — finding N건` 행으로 낸다. 나머지는 `PASS: <차원 이름 나열>` 한 줄로 접는다.
-- **Assumptions**: 범위 불확정 시 가정.
+- **Assumptions**: 범위 가정·증거 부족·미검토 차원·절차 위반. 미검토 차원은 PASS로 접지 않는다.
 
 확인했으나 finding이 아닌 스캔 결과(문제 없음을 확인한 지점·파일 목록 등)는 열거하지 않는다 — **반환은 위 항목이 전부다**. 이 규칙은 **차원 한정 여부와 무관**하게 적용되며, 줄이는 것은 출력이지 **Step 2 스캔 범위**가 아니다.
 
 ## Final Check
 
-Acceptance Criteria가 모두 만족되었나 1회 점검한다. 미충족 항목이 있으면 해당 단계로 돌아가 수정한다.
+Acceptance Criteria의 종료 규칙에 따라 1회 점검하고 반환한다.
