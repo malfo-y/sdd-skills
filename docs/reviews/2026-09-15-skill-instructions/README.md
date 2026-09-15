@@ -8,7 +8,7 @@
 - 대상: Claude 20개 + Codex 18개 = SKILL.md 38개, 이름 기준 20종. `git`·`second-opinion`의 Codex 짝 부재는 정상 배포 범위다. 사용자의 전역 설치 스킬은 범위 밖이다.
 - 방법: 스킬별 runtime 짝을 묶은 병렬 리뷰 → 메인 작성자의 문서 검토·공유 계약 대조·중복 소유권 통합. 같은 모델의 병렬 리뷰이므로 모델 다양성 검증은 아니다.
 - [공통 기준](./review-criteria.md): 적용 조건 / 충돌·우선순위 / 확인·승인 / 중복·소유권 / 완료·복구 / 절차 필요성.
-- [원본 manifest](./source-manifest.json): SKILL·reference·example·script 파일 116개의 SHA-256. 모든 reference/script를 전문 감사했다는 뜻은 아니며, 실제 읽은 범위는 각 문서에 기록했다.
+- [원본 manifest](./source-manifest.json): SKILL·reference·example·script 파일 115개의 SHA-256. 모든 reference/script를 전문 감사했다는 뜻은 아니며, 실제 읽은 범위는 각 문서에 기록했다.
 - 항목 수: 수정 필요 **60**, 정리 후보 **12**, 실행 검증 필요 **1**. 아래는 **스킬별 기록 수**이며 공유 원인·위치 중복을 포함한다. 독립 결함 수, 심각도 점수, 수정 우선순위 또는 모델 성능 수치로 사용하지 않는다.
 
 ## 먼저 볼 항목

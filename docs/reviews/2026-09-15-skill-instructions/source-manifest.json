@@ -82,7 +82,6 @@
     ]
   },
   "source_sha256": {
-    ".claude/skills/.DS_Store": "38aaee9101d5e0a93ea5222bf3953801766321a091d3d4f7323ca4f1c558d023",
     ".claude/skills/discussion/SKILL.md": "8c968af3c34bd76025d1165dce90c1e5add9b8acec1d016a616b6824dc4c0110",
     ".claude/skills/discussion/examples/sample-discussion-session.md": "523b2bcb18c7a2e6c69d96f4e16fcce607d260dce559cd0716ccfaa4f07b53bc",
     ".claude/skills/discussion/references/discussion-question-guide.md": "091874c2bb36286c0eff4d440f09f7495ded3c2c2b0c744b292028d1b821b4bd",

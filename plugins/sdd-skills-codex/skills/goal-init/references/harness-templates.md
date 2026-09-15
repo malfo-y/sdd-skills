@@ -39,7 +39,7 @@ STOP: after <N> turns without progress.
 사용자 확인이 필요해 보이는 행동은 이 섹션으로 판정한다.
 - 사전 승인 범위 안: 확인 없이 수행하고 결정·근거를 `journal.md`에 남긴다.
 - 범위 밖: 그 행동 없이 진척 가능한 일을 먼저 한다.
-- 범위 밖이고 그 행동 없이는 진척 불가: `report.md` Status를 `STUCK`으로 두고 사유를 적은 뒤 미완료로 종료한다. native goal lifecycle 처리는 활성 런타임 규범을 따른다.
+- 범위 밖이고 그 행동 없이는 진척 불가: `report.md` Status를 `STUCK`으로 두고 사유를 적은 뒤 미완료로 종료한다.
 
 <수준이 attended면 "사전 승인" 목록은 비운다.>
 - 수준: <unattended | attended>

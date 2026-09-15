@@ -14,7 +14,7 @@ argument-hint: "[--model <active-model>] [--effort <active-effort>]"
 
 ## Acceptance Criteria
 
-> 종료 전 선택한 경로에 적용되는 기준을 자체 검증하고 복구 가능한 보고 누락을 보완한다. dispatch blocker·반환 실패는 Error Handling의 제한 보고로 종료한다. 이미 발생한 순서·read-only 위반은 사실과 영향을 보고하고 해당 AC를 미충족으로 남기며, 사후 수행으로 소급 충족하거나 새 gate를 호출하지 않는다.
+> 종료 전 선택한 경로에 적용되는 기준을 자체 검증하고 복구 가능한 보고 누락을 보완한다. 이미 발생한 순서·read-only 위반은 사실과 영향을 보고하고 해당 AC를 미충족으로 남기며, 사후 수행으로 소급 충족하거나 새 gate를 호출하지 않는다.
 
 - [ ] AC1: 정상 dispatch 경로에서 실행 순서를 지켰다 — simplicity spawn을 먼저 띄우고(reference 계약 전문 verbatim 포함, Codex Runtime Adapter 준수), 그동안 correctness를 직접 수행했다.
 - [ ] AC2: correctness 판정 기준이 기준 문서 적응 규칙으로 정해졌고, 읽기 범위 3단 계단 밖 탐색적 읽기가 없다.
@@ -71,7 +71,7 @@ review
 
 ## 실행 순서
 
-dispatch 준비에서는 아래 기준 적응·읽기 범위 ①의 범위 확인만 수행해 현재 AC와 변경 집합을 정한다. 두 simplicity leaf에 같은 변경 범위를 전달하고, correctness 판정은 dispatch 뒤에 시작한다.
+dispatch 준비에서는 아래 기준 적응·읽기 범위 ①의 범위 확인만 수행해 현재 AC와 변경 집합을 정한다.
 
 1. **simplicity spawn을 먼저 띄운다** — 차원 **묶음마다 1회**(참조 ∥ 국소), 한 번에 동시 spawn. 각 spawn은 **전체 변경 대상**이다(묶음 정의·범위 불변 근거는 reference의 `호출자 차원 한정` 절이 단일 소스). Input Data에는 요청·경로와 **대화에만 있는 맥락 digest**를 담는다 — plan이 있으면 경로와 필요한 맥락만 짧게, 없으면 이번 세션에서 무엇을·왜 구현했는지와 리뷰 범위(agent는 이번 세션 대화를 직접 읽지 못한다).
 2. **agent가 도는 동안 메인 루프가 correctness 리뷰를 직접 수행한다** (아래 Correctness 리뷰).

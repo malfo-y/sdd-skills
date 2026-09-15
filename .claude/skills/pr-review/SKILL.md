@@ -237,7 +237,7 @@ MET: <통과 AC ID만 나열 또는 없음>
 
 | 상황 | 대응 |
 |------|------|
-| No spec in baseline SHA | 트리 조회 성공으로 `ABSENT`를 확인했을 때만 code-only mode |
+| No spec in baseline SHA | Step 2의 `ABSENT`/`UNREADABLE` 구분을 따른다 |
 | No PR / `gh` not authenticated | 설치/인증 안내 |
 | Multiple spec files in from-branch | canonical index와 링크된 하위 spec을 읽는다. 그래도 범위 선택이 모호하고 verdict에 영향을 주면 짧게 확인한다. 그 외에는 canonical index로 진행하고 가정을 기록한다 |
 | Existing review file | Step 1의 충돌 규칙으로 새 slug를 정한다. 명시적 갱신 요청 없이는 기존 파일 보존 |
@@ -251,7 +251,7 @@ MET: <통과 AC ID만 나열 또는 없음>
 | `gh` CLI not installed | `brew install gh` 안내 |
 | `gh auth` failure | `gh auth login` 안내 |
 | Wrong PR number | 에러 메시지, 올바른 번호 요청 |
-| baseline spec 읽기 실패 | `UNREADABLE`로 기록. 같은 SHA의 동등 읽기 경로도 실패하면 spec 판정 미검증·원인을 남기고 제한 리포트로 종료 |
+| baseline spec 읽기 실패 | Step 2 항목 4의 `UNREADABLE` 처리를 따른다 |
 | simplicity 확정 실패/dispatch blocker | correctness 결과를 보존한 제한 리포트에 누락 렌즈·미충족 skill AC·재개 조건을 기록하고 종료. inline 대체나 같은 blocker의 반복 dispatch 금지 |
 
 ## Additional Resources

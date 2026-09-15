@@ -338,6 +338,11 @@ if ! command -v codex >/dev/null 2>&1; then
   exit 1
 fi
 
+if ! command -v python3 >/dev/null 2>&1; then
+  echo "[ralph] ERROR: python3 not found. It runs the LLM step timeout wrapper each iteration." >&2
+  exit 1
+fi
+
 # Wall-clock budget for THIS run (resets on restart). Soft: enforced at the
 # iteration boundary only, so a running action.sh is never killed mid-flight.
 LOOP_START="$(date +%s)"
