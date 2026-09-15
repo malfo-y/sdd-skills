@@ -14,7 +14,7 @@ Planning, implementation, and spec synchronization repeat only inside the native
 ```text
 /sdd-autopilot <feature outcome>
   → goal-init(preset=sdd)
-  → Goal Intake → Divergence → Condition Crafting → Harness Setup → Handoff
+  → Establish outcome, authority, and verification → Write and verify harness → Handoff
   → condition string + four-file harness (still inactive)
 
 User reviews and activates the native /goal
@@ -22,7 +22,7 @@ User reviews and activates the native /goal
   → succeed after every DONE WHEN item and the final integration proof pass; STOP/STUCK ends incomplete
 ```
 
-The existing five `goal-init` stages, evaluator self-check (tool-free judgment, surfaced evidence, and at most 4,000 characters), and four-file format stay the same as the generic path. The SDD preset changes only the Loop Protocol payload in `goal.md`.
+The `goal-init` decision criteria, evaluator self-check (tool-free judgment, surfaced evidence, and at most 4,000 characters), and four-file format are shared with the generic path. Conversation order and hypothesis count are flexible; information already provided is reused. The SDD preset changes only the Loop Protocol payload in `goal.md`.
 
 ## 3. SDD Loop Protocol
 
@@ -66,7 +66,7 @@ A native goal is appropriate for a multi-turn task with a verifiable end state. 
 
 | Stage | What the user does |
 |-------|--------------------|
-| Goal Intake / Condition Crafting | Answer questions that define the outcome and DONE WHEN items; fix the autonomy level (`unattended`/`attended`) and the pre-approved / always-confirm scope of the Autonomy Grant |
+| Outcome / condition clarification | Answer questions that define the outcome and DONE WHEN items; fix the autonomy level (`unattended`/`attended`) and the pre-approved / always-confirm scope of the Autonomy Grant |
 | Handoff | Review the condition string and four-file harness |
 | Activation | Decide whether and when to activate the native `/goal` |
 | During execution | Use `/goal status`, `pause`, `resume`, or `clear` when needed |
@@ -88,7 +88,7 @@ The four files are created under `_sdd/goal/<YYYY-MM-DD>_<slug>/`. Setup does no
 
 ## 8. Related skills
 
-- `goal-init` — canonical owner of the five-stage condition/harness setup, including the SDD preset payload
+- `goal-init` — canonical owner of the outcome-based condition/harness setup, including the SDD preset payload
 - `feature-draft` — specifies the next feature and owns split rules inside the active goal
 - `implementation` — implements the draft RED→GREEN and runs its internal quality gate
 - `spec-sync` — synchronizes persistent changes into the global spec

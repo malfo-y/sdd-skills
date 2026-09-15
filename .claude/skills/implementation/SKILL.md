@@ -50,16 +50,12 @@ TDD 기반 구현 실행 스킬. 변경 task마다 test-first 순서를 지킨�
 
 모든 실행은 시작 시 `_sdd/implementation/<YYYY-MM-DD>_implementation_ledger_<slug>.md` 하나를 생성한다 — slug는 draft slug를 재사용하고, draft 없는 inline 실행이면 요청 요약 snake_case를 쓴다. 같은 slug의 기존 ledger가 있으면 새로 만들지 않고 그 파일을 이어쓴다(날짜가 바뀐 재개에서도 ledger를 분열시키지 않는다). 목적은 감사 로그가 아니라 **compact/세션 재개 후 다음 행동을 결정하는 resume pointer**다.
 
-- **기록 기준**: 재실행으로 복원할 수 없는 사실만 기록한다.
-  - 헤더: source(draft 경로 또는 inline 요청 요약)·시작 시점 dirty paths(`git status` 요약)·전체 status.
-  - task별 1행: 상태·triage 분류(또는 read-only 검증)와 근거 1줄·RED/GREEN 명령과 판정 신호 1줄·계약 오류 선언 횟수·계획 이탈·발견·대상 파일 밖 수정·커버리지 델타 항목 수와 처리.
-  - **계획 이탈·발견**
-    - 대상: source draft/inline task에서 달라진 판단 또는 새 edge case.
-    - 형식: `건수; 내용 → 이유 → 처리`.
-    - 없음: `0`.
-    - 제외: 테스트/check 가정 오류는 `계약 오류 선언 횟수`에 기록한다.
-  - 명령 출력 전문과 서술형 진행기는 기록하지 않는다 — 재실행으로 알 수 있는 것은 ledger의 몫이 아니다.
-- **상태**: task당 `READY → RED_CONFIRMED → GREEN_CONFIRMED → DELTA_CLOSED` 네 단계만 쓴다. (c) test-free task는 RED/GREEN 단계가 없으므로 커버리지 델타를 닫으면 `READY → DELTA_CLOSED`로 직행한다. read-only 검증 task도 fresh PASS 증거를 기록하면 `READY → DELTA_CLOSED`로 직행하며, FAIL·실행 불가면 READY에 판정과 사유를 남긴다. 각 단계 성공 직후 해당 task 행만 갱신한다.
+- **기록 기준**: 재실행으로 복원할 수 없는 사실과 마감 증거의 포인터를 남긴다.
+  - 헤더: source(draft 경로 또는 inline 요청 요약)·구현 시작점(base commit과 기존 dirty 범위)·전체 status.
+  - task별 필수 정보: 상태·triage(또는 read-only 검증)와 근거·RED/GREEN 명령과 판정 신호·계약 오류 선언 횟수·커버리지 델타 처리. 적용되지 않는 검증 단계는 N/A로 둔다.
+  - 계획 이탈·새 발견·대상 파일 밖 수정은 발생했을 때 task ID와 `내용 → 이유 → 처리`로 기록한다. 계약 가정 오류는 선언 횟수와 이유에 기록한다. 짧으면 task 행에, 길면 같은 task의 별도 블록에 둔다.
+  - 명령 출력 전문과 서술형 진행기는 복사하지 않는다.
+- **상태**: task당 `READY → RED_CONFIRMED → GREEN_CONFIRMED → DELTA_CLOSED` 네 단계만 쓴다. (c) test-free task는 RED/GREEN 단계가 없으므로 커버리지 델타를 닫으면 `READY → DELTA_CLOSED`로 직행한다. read-only 검증 task도 fresh PASS 증거를 기록하면 `READY → DELTA_CLOSED`로 직행하며, FAIL·실행 불가면 READY에 판정과 사유를 남긴다. 각 단계 성공 직후 해당 task 기록을 갱신한다.
 - **재개 규칙**: ledger로 상태를 복원할 때, 미완료(비 DELTA_CLOSED) task는 상태를 신뢰하지 않고 그 task의 테스트/check를 fresh 실행해 재판정한다. DELTA_CLOSED task는 ledger를 신뢰하되 현재 diff와 모순이 보이면 같은 방식으로 fresh 실행해 재확인한다.
 - **마감 통합**: 품질 게이트 fix가 있었으면 마지막에 `Review fix delta` 블록 하나로 기록한다 — AC→증거 테이블의 기록처 규칙은 마감 2가 소유한다.
 
@@ -114,7 +110,7 @@ GREEN 통과 직후, **이번 task에서 변경한 파일의 diff를 실제로 �
 - 삭제했으면 (a)/(b) task는 §3에서 통과시킨 그 task의 테스트/check를 다시 실행해 통과를 재확인하고 출력을 갱신 캡처한다 — 증거 테이블에 싣는 GREEN 증거는 삭제 이후 출력이다. 재확인이 실패하면 그 항목은 불필요분이 아니므로 삭제를 되돌리고 남기기 경로로 닫는다.
 - 남기기로 한 항목만 §1 Triage 기준을 그대로 적용해 닫는다 — (a)/(b)면 테스트/check를 추가하고, (c)면 근거를 1줄 남긴다.
 
-델타 테스트는 코드가 이미 있어 RED를 관찰할 수 없다. 대신 **변이 확인**으로 판별력을 증명한다: 대상 동작을 일시적으로 깨서 그 테스트의 실패를 관찰하고, 되돌린 뒤 다시 실행해 통과를 재확인한다. 변이 확인 없는 델타 테스트는 코드를 보고 짜맞춘 무조건 통과 테스트다. 델타 테스트에도 아래 §5 테스트 불변 규칙이 동일하게 적용되며, §5 2단계의 "RED 재관찰"은 변이 확인 재수행으로 대체한다.
+델타 테스트는 코드가 이미 있어 RED를 관찰할 수 없다. 대신 **변이 확인**으로 판별력을 증명한다: 대상 동작을 일시적으로 깨서 그 테스트의 실패를 관찰하고, 되돌린 뒤 다시 실행해 통과를 재확인한다. 델타 테스트는 이 변이 확인으로 판별력을 확인한 뒤 검증 증거로 인정한다. 델타 테스트에도 아래 §5 테스트 불변 규칙이 동일하게 적용되며, §5 2단계의 "RED 재관찰"은 변이 확인 재수행으로 대체한다.
 
 델타로 추가한 테스트는 마감 증거 테이블에 AC 유래 행과 같은 형식으로 싣는다. 델타가 없으면 아무것도 적지 않는다 — "델타 없음" 같은 통과 문구는 두지 않는다.
 
@@ -132,18 +128,17 @@ RED 관찰 후에는 테스트를 통과시키기 위해 테스트를 약화·�
 ## 마감
 
 1. **회귀 1회**: 이번 변경 관련 표적 test/check + fast 회귀(무거운 test 제외)만 실행한다. 이번 변경과 무관한 실패를 발견하면 사용자에게 보고한다 — 몰래 고치지 않는다.
-2. **AC→증거 테이블**을 ledger에 완성해 쓰고, 같은 표를 채팅에 노출한다. 증거는 외부에 남는 형태(명령 출력·diff·grep 결과)로 적는다. **증거를 못 대는 AC는 "충족"이라 적지 않는다** — 미충족/보류로 남기고 보고한다.
+2. **AC→증거 테이블**을 ledger에 완성해 쓴다. 증거는 명령 출력·diff·grep 결과를 확인할 수 있는 포인터와 판정 신호로 남긴다. 채팅에는 미충족·변경된 증거·ledger 링크를 기본으로 제시한다. 사용자나 활성 goal 평가 계약이 transcript의 표/실제 출력을 요구하면 그 요구 범위도 직접 표시한다. **증거를 못 대는 AC는 "충족"이라 적지 않는다** — 미충족/보류로 남기고 보고한다.
 
    | Task | AC | 판정 | 증거 |
    |------|----|------|------|
 
 3. **품질 게이트**: producer인 메인 루프가 `implementation-review`에 이번 source draft 경로 또는 inline task AC와 현재 변경 범위를 전달해 호출하고 finding을 직접 반영한다. 각 gate 호출 내부는 **단일 패스**이며 reviewer와 사용자는 gate 재호출이나 fix를 소유하지 않는다. 게이트 반환은 중간 산출물이며 사용자 입력 대기 지점이 아니다 — 반환 직후 같은 흐름에서 fix를 시작하고, 조건 판정과 gate 2 실행도 묻지 않고 이어서 수행한 뒤 마감 요약으로만 닫는다.
-    1. **gate 1 → fix 1**: 첫 gate를 항상 호출한다. 반환된 Critical/High/Medium을 직접 반영한다. Low는 렌즈별 기존 정책을 적용한다.
-        - **correctness 렌즈 Low**: **저비용 AND 명백히 이득 AND 현재 change scope 내** 세 조건을 모두 만족하는 것만 fix하고, 나머지는 마감 요약에 advisory로 남긴다. `현재 change scope 내`가 scope 확장을 막는 load-bearing 조건이다.
-        - **simplicity 렌즈 Low**(주관적 취향): fix 대상이 아니며 advisory로만 남긴다.
-    2. **조건 판정**: fix 전 gate 1의 raw 합산 finding(직접 correctness finding + simplicity 반환)을 dedup하지 않고, Low를 제외해 **Critical+High ≥ 3 또는 Medium ≥ 5**인지 판정한다.
-    3. **gate 2 → fix 2**: 임계값에 도달한 경우에만 같은 `implementation-review`를 두 번째 호출한다. Critical/High/Medium을 직접 반영하고 Low에는 gate 1과 동일한 렌즈별 정책을 적용한다.
-    4. **fix 검증 후 종료**: 각 fix는 **§4 커버리지 델타 → 이번 변경 관련 표적 test/check 재실행 → 변경된 AC 증거 갱신** 순서로 닫는다. fix 2 뒤에는 gate 2 finding별 표적 검증까지 수행하고, 해소되지 않은 finding을 남긴 채 종료한다. 세 번째 gate는 호출하지 않는다. gate 2의 fix 전 raw 합산 finding도 같은 임계값에 도달하면 마감 요약에서 후속 `implementation-review` 1회 수동 실행을 권고한다.
+   - **호출 조건**: gate 1은 항상 호출한다. fix 전 raw 합산 finding(직접 correctness + simplicity)을 dedup하지 않고 Low를 제외해 **Critical+High ≥ 3 또는 Medium ≥ 5**이면, fix 1 검증 후 gate 2를 호출한다. 세 번째 gate는 호출하지 않는다.
+   - **각 호출의 fix 정책**: Critical/High/Medium은 직접 반영한다. correctness Low는 **저비용 AND 명백히 이득 AND 현재 change scope 내**인 것만 반영한다. simplicity Low는 advisory로만 남긴다.
+   - **각 fix의 검증 순서**: §4 커버리지 델타 → 이번 변경 관련 표적 test/check 재실행 → 변경된 AC 증거 갱신. 문서·테스트만 고친 fix도 재검증한다. fix 2 뒤에는 gate 2 finding별 표적 검증까지 수행한다.
+   - **상한 도달**: gate 2의 fix 전 raw 수치도 같은 임계값이면 후속 implementation-review 1회 수동 실행을 권고한다.
+
 4. **마감 요약**: 계약 오류 선언·대상 파일 밖 수정이 있었으면 요약한다. gate 2를 실행했으면 호출 1/2의 severity·fix·검증과 해소되지 않은 finding을 구분하고, 실행하지 않았으면 gate 1 결과만 보고한다.
 
 ## Integration

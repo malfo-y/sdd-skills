@@ -901,3 +901,9 @@
 - 고정 coverage/phase·비판 질문 횟수·단일 서브프로젝트·미결 카테고리 중심 종료를 판단 기준으로 전환했다. 질문 가이드는 예시만 제공하고 요약의 전체 대화 로그는 조건부로 변경했다.
 - 양 runtime 본문·reference·예시와 supporting components/usage-guide를 동기화했다. main.md 몸통은 변경하지 않았으며 이 기록은 별도 spec version bump를 만들지 않는다. 실제 모델 효과는 미검증이다.
 - 검증·게이트·잔여 사항: [처리 내역](../../../docs/reviews/2026-09-15-skill-instructions/discussion-purpose-dispositions.md).
+
+
+## 2026-09-15 — v4.32.0
+
+- goal-init·pr-review·implementation·implementation-review의 승인된 목적 중심 개선을 양 runtime에 적용했다. goal 대화의 고정 단계/가설 수를 완화하고 PR leaf 입력·위험 기준·검사 출력, 구현 resume 기록·gate 표현, 리뷰 혼합 변경 범위를 정리했다. 연결된 template/example·sdd-autopilot·한/영 안내를 동기화했다.
+- 검증은 소스 계약·YAML·미러·경로·격리 git recipe에 한정한다. 실제 모델 행동 효과는 미검증이며 리뷰별 처리·게이트 결과는 `docs/reviews/2026-09-15-skill-instructions/four-skill-purpose-dispositions.md`에 기록한다.

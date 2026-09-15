@@ -1,7 +1,7 @@
 # Goal Harness Templates (4-File)
 
 goal-init이 `_sdd/goal/<YYYY-MM-DD>_<slug>/`에 생성하는 4파일 하네스의 단일 소스 템플릿이다.
-SKILL.md Process(Harness Setup 단계)가 이 템플릿을 참조해 슬롯을 채운다. Codex 미러 스킬도 동일 템플릿을 references로 복사 사용한다.
+SKILL.md의 Harness Setup가 이 템플릿을 참조해 슬롯을 채운다. Codex 미러 스킬도 동일 템플릿을 references로 복사 사용한다.
 
 `<...>` 는 생성 시 치환할 슬롯이다. 그 외 텍스트(헤딩·레이블·구조)는 그대로 유지한다. `<LOOP_PROTOCOL_PAYLOAD>`에는 아래 preset payload 중 정확히 하나를 삽입한다.
 
@@ -53,13 +53,13 @@ STOP: after <N> turns without progress.
 > Setup invariant: <비발동·상태 보존을 지켰으면 "goal을 활성화하지 않았으며 기존 goal 상태도 변경하지 않았다."를 기입. 위반이 있었다면 사실과 미충족 AC를 기록하고 setup 성공으로 표시하지 않는다.>
 
 ## 실행법
-<!-- SKILL.md Step 5의 실행법으로 자기 런타임 슬롯만 채운다. 다른 런타임 슬롯은 placeholder로 둔다. -->
+<!-- SKILL.md Handoff의 실행법으로 자기 런타임 슬롯만 채운다. 다른 런타임 슬롯은 placeholder로 둔다. -->
 
 ### Claude Code
-<Claude Code 스킬이면 SKILL.md Step 5의 Claude 실행법 4요소를 기입; 아니면 placeholder 유지>
+<Claude Code 스킬이면 SKILL.md Handoff의 Claude 실행법 4요소를 기입; 아니면 placeholder 유지>
 
 ### Codex
-<Codex 스킬이면 SKILL.md Step 5의 Codex 실행법 4요소를 기입; 아니면 placeholder 유지>
+<Codex 스킬이면 SKILL.md Handoff의 Codex 실행법 4요소를 기입; 아니면 placeholder 유지>
 ```
 
 ### Loop Protocol preset payloads
@@ -68,7 +68,7 @@ STOP: after <N> turns without progress.
 
 ```markdown
 매 턴 다음을 수행한다 (이 섹션은 메인 에이전트용 HOW이며 조건 문자열에 넣지 않는다):
-1. `experiments.md`의 pending 가설 하나를 골라 시도한다.
+1. `experiments.md`의 pending 접근/가설 하나를 골라 시도한다.
 2. `검증 레시피`의 실행 규칙에 따라 해당 가설의 evidence를 대화에 표시한다.
 3. 시도·검증 결과를 `journal.md`에 append한다.
 4. 모든 `DONE WHEN`의 검증을 통과하면 성공 종료한다. STOP 또는 위임 범위의 STUCK 경계에 도달하면 `report.md`에 사유를 기록하고 미완료로 종료한다. native goal lifecycle 처리는 활성 런타임 규범을 따른다.
@@ -91,14 +91,13 @@ STOP: after <N> turns without progress.
 
 ## 2. `experiments.md` 템플릿
 
-가설 큐. 자동 루프와 사용자 수동 추가가 공용으로 쓴다. 각 항목 = 가설 한 줄 + 검증 방법(명령/판정조건) + 상태.
+접근·가설 큐. 자동 루프와 사용자 수동 추가가 공용으로 쓴다. 각 항목 = 실행할 접근/가설 한 줄 + 검증 방법(명령/판정조건) + 상태. 선택된 접근만 있어도 되며 항목 수의 하한은 없다. 완료된 시도가 없으면 Done은 비운다.
 
 ```markdown
 # Experiments
 
 ## Pending
-- [ ] <가설 한 줄> | 검증: `<명령>` → <판정조건>
-- [ ] <가설 한 줄> | 검증: `<명령>` → <판정조건>
+- [ ] <선택한 접근 또는 가설> | 검증: `<명령>` → <판정조건>
 
 ## Done
 - [x] <시도한 가설> | 검증: `<명령>` → <판정조건> | 결과: <통과/실패/부분>

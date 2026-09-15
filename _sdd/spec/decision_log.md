@@ -3553,3 +3553,17 @@ sdd-autopilot의 review-fix 루프가 선택적으로 동작하여, 리뷰만 �
 - 양 runtime 본문·질문 가이드·요약 템플릿·세션 예시에 DP-01~06을 반영했다. 본문이 실행 판단을 소유하고 template이 결과 형식을 소유한다. 초기 배경·근거 유형·미결 카테고리·read-only·사용자 종료·부분 저장·Final Check를 보존했다.
 - YAML, 참조 파일 실재, template/example 구조, 두 reference의 byte parity, Runtime 외 본문의 동일성, 파일 권한과 diff 위생을 확인해 supporting spec을 소스 기준 current truth로 승격했다. usage-guide의 기존 최대 10라운드 표기도 교정했다.
 - 실제 모델의 질문 수·결정 품질·속도 개선은 미검증이다. 세부 검증과 implementation review 결과는 [처리 내역](../../docs/reviews/2026-09-15-skill-instructions/discussion-purpose-dispositions.md)이 소유한다.
+
+
+## 2026-09-15 - 네 스킬 목적 중심 개선 승인 (Planned)
+
+- **사용자 결정**: goal-init·pr-review·implementation·implementation-review의 purpose-review 권고를 모두 적용한다. goal-init의 고정 5단계/최소 가설 수를 결과 기준으로 전환하고, PR leaf 입력·큰 변경 검토·검사 결과 출력을 역할에 맞게 정리한다. implementation의 기록 형식·gate 표현을 정리하고 implementation-review의 혼합 변경 범위를 보완한다.
+- **🚧 Planned**: 양 runtime와 연결된 template/example/consumer를 갱신하고 검증 후 현재 truth로 반영한다. setup-only·권한·SHA·증거·test-first/델타·producer gate·두 simplicity 묶음의 경계는 보존한다.
+- **포인터**: docs/reviews/2026-09-15-skill-instructions/*-purpose-review.md, 로컬 ledger `_sdd/implementation/2026-09-15_implementation_ledger_four_skill_outcomes.md`.
+
+
+## 2026-09-15 - 네 스킬 목적 중심 개선 소스 반영 (v4.32.0)
+
+- **결정**: 승인된 purpose-review를 적용했다. goal-init은 결과 기준으로 대화하고 최소 가설 수를 요구하지 않는다. PR simplicity 입력은 변경 범위·baseline·관련 맥락에 한정하며 메인의 전체 검증 책임은 유지한다. PR 검토 깊이는 위험/AC로 판단하고 테스트 비율은 분모·범위가 명확할 때만 쓴다. implementation은 resume 필수 정보와 발생한 예외를 구분하고 채팅 증거는 소비 요구를 따른다. implementation-review는 커밋/미커밋 혼합 변경을 포함하며 읽기 승격 조건은 동등한 목록으로 유지한다.
+- **검증 범위**: 양 runtime 본문·연결 자산의 정적 계약 대조, YAML/경로/미러 확인, 실제 git 후보 수집 recipe의 격리 fixture 4경우 통과. 이는 소스 계약 및 git 명령 검증이며 실제 agent의 범위 귀속·goal/PR 실행·성능 개선은 미검증이다. 품질 게이트 마감은 별도 적용 기록에 남긴다.
+- **보존**: setup 권한, 조건 self-check, SHA/dirty 경계, test-first와 델타 변이 확인, fix 회귀, gate 임계/상한, 두 simplicity 묶음 및 fresh evidence. 상세 위치와 게이트 결과는 docs/reviews/2026-09-15-skill-instructions/four-skill-purpose-dispositions.md.

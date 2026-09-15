@@ -29,36 +29,20 @@ argument-hint: "[--model <active-model>] [--effort <active-effort>]"
 
 ## Codex Runtime Adapter (simplicity spawn 전용)
 
-런타임이 skill-internal agent dispatch를 허용하는 경우, 이 스킬의 직접 호출은 simplicity spawn 범위에 대한 사용자 요청으로 처리한다. 현재 런타임 정책이 명시적 sub-agent 허가를 추가로 요구하면, spawn 전에 사용자에게 위임 허가를 요청한다.
+스킬 내부 dispatch를 허용하는 런타임에서 이 호출은 simplicity 위임 요청으로 처리한다. 상위 정책이 별도 허가를 요구하면 먼저 확보한다.
 
-spawn 전에 **active tool schema를 직접 확인**하고 아래 두 lifecycle contract 중 정확히 하나만 선택한다. 없는 lifecycle tool을 찾으려고 `tool_search`하지 않으며, 두 contract의 필드나 lifecycle 호출을 섞지 않는다. `agent_type`은 lifecycle 필드가 아니라 **선택적 role selector**다 — active schema가 `"explorer"` 값을 지원할 때만 추가하고, 필드가 없거나 해당 값을 지원하지 않으면 생략한다. 생략해도 simplicity 역할·read-only 경계는 framed `message`의 계약 전문이 부여하므로 blocker가 아니다.
+active tool schema로 아래 중 **완전하게 지원되는 하나**를 선택한다. surface 이름으로 추정하거나 없는 lifecycle 도구를 검색하지 않는다.
 
-- **Mailbox contract (Desktop/current CLI)**: `spawn_agent`가 `task_name`/`fork_turns`를 요구하거나 `wait_agent`에 `targets`가 없다. invocation마다 짧은 lowercase `run_id`를 만들고, 같은 parent tree의 재실행까지 포함해 고유한 `task_name`에 그 값을 넣는다. spawn에 이 `task_name`, `fork_turns: "none"`, `message`를 전달하고, 지원되는 경우에만 `agent_type: "explorer"`를 추가한다. `wait_agent({timeout_ms: 600000})` mailbox를 반복 호출해 final을 수거한다. 완료 agent는 닫지 않는다. 통제된 중단이 필요할 때만 노출된 `interrupt_agent`를 사용한다.
-- **Target/close contract (legacy CLI schema)**: `wait_agent`가 `targets`를 지원하고 `close_agent`도 노출된다. `message`로 spawn하고, 지원되는 경우에만 `agent_type: "explorer"`를 추가한 뒤 target wait로 final을 수거하고 완료 handle을 닫는다.
-- 어느 lifecycle contract도 완전하지 않거나 둘 중 하나로 확정할 수 없으면 spawn하지 않고 **schema blocker**를 보고한 뒤, correctness 직접 리뷰만으로 제한 리포트를 작성하고 누락 렌즈·미충족 AC를 명시한 뒤 Final Check의 제한 종료를 따른다. `agent_type` 부재만으로는 이 분기를 타지 않는다.
+| Contract | 선택에 필요한 schema | 호출·완료 수거 |
+|---|---|---|
+| Mailbox | spawn의 task_name·fork_turns·message, target 없는 mailbox wait | invocation마다 parent tree에서 고유한 task_name과 fork_turns: "none"으로 spawn. mailbox wait로 모든 final을 수거하고 완료 agent는 닫지 않는다. 중단이 필요할 때만 노출된 interrupt_agent 사용 |
+| Target/close | message 기반 spawn, targets를 받는 wait, close_agent | spawn 후 target wait로 final을 수거하고 완료 handle을 닫는다 |
 
-실행 surface 이름이 아니라 schema가 contract를 결정한다.
+둘 중 하나로 확정할 수 없으면 schema blocker다. 두 contract의 필드를 섞지 않는다. `agent_type: "explorer"`는 schema가 지원할 때만 추가하며, 부재는 blocker가 아니다. 역할·read-only 경계는 아래 framed message로 전달한다.
 
-> **Subagent model override**
->
-> - `$ARGUMENTS`의 `--model <name>`은 contract 선택 후 active `spawn_agent` schema의 `model` enum으로, `--effort <level>`은 같은 schema의 `reasoning_effort` enum으로 검증한다. 값이 enum 밖이면 spawn하지 않고 허용값을 보고한다.
-> - 검증된 필드는 **simplicity spawn에만** 적용한다 — correctness는 메인 루프 직접 수행이라 override 대상이 아니다(그 사실을 안내). 미지정 필드는 생략해 세션/agent 기본값을 상속한다.
-> - model과 effort를 합친 값은 받지 않고 `--model <active-model> --effort <active-effort>` 분리 문법을 안내한다.
+`--model`과 `--effort`는 선택한 spawn schema의 model·reasoning_effort enum으로 각각 검증해 simplicity 호출에만 적용한다. 요청 필드가 없거나 값이 지원되지 않으면 spawn 전에 허용값과 blocker를 보고한다. 생략한 필드는 기본값을 상속한다. correctness는 메인 루프 직접 수행이므로 override가 적용되지 않음을 안내한다.
 
-Mailbox contract (아래 `r7f3a`는 예시 `run_id`):
-
-```text
-spawn_agent({task_name: "pr_review_r7f3a_simplicity", fork_turns: "none", message: "<framed payload: simplicity 계약 전문(verbatim) + Mode + Input Data>"})
-wait_agent({timeout_ms: 600000})  // final이 도착할 때까지 반복
-```
-
-Target/close contract:
-
-```text
-spawn_agent({message: "<framed payload: simplicity 계약 전문(verbatim) + Mode + Input Data>"})
-wait_agent({targets: ["<simplicity_id>"], timeout_ms: 600000})
-close_agent({target: "<simplicity_id>"})
-```
+schema blocker나 확정된 반환 실패는 Error Handling의 제한 보고로 닫는다. wait timeout을 완료로 간주하지 않으며, 모든 final이 올 때까지 기다리거나 통제된 중단과 미완료 상태를 보고한다.
 
 ### Agent Message Boundary
 
@@ -74,15 +58,12 @@ pr-review (simplicity)
 
 ## PR Review Input
 
-simplicity reviewer의 `## Input Data`에는 아래 필드를 이 순서로 전달한다 (correctness는 메인 루프가 같은 수집 결과를 직접 소비한다).
+simplicity reviewer에는 다음 4필드를 전달한다. 메인은 PR metadata·discussion·baseline spec·CI/local 검증 결과·리포트 slug를 계속 수집/관리하고 correctness와 리포트에 사용한다. leaf에는 아래 역할별 입력만 보낸다.
 
-- **Changed Files**: 비어 있지 않은 PR 변경 파일 목록
-- **PR Diff**: 비어 있지 않은 PR diff
-- **PR Metadata**: `title`, `body`, `commits`, `headRefOid`, `headRefName`, `baseRefName` key + baseline 코드·spec의 읽기 위치/방법 (현재 working tree 사용 가능 여부 포함)
-- **PR Discussion**: comment/review의 `author` + `body`만 담은 목록, 없으면 `NONE` (approval/verdict state 제외)
-- **Spec Context**: baseline SHA의 spec bundle (`FOUND`), `ABSENT (code-only)`, 또는 `UNREADABLE: <원인·읽은 범위>`
-- **Validation Evidence**: `CI: <실행 대상 SHA·output 또는 NONE>; Local: <대상 SHA·clean 상태·output 또는 NOT_RUN>` (status 요약만 있으면 실행 output과 구분)
-- **Report Slug**: 비어 있지 않은 소문자 snake_case
+- **Changed Files**: 비어 있지 않은 PR 변경 파일 목록.
+- **PR Diff**: 같은 baseline에서 수집한 비어 있지 않은 PR diff.
+- **Baseline**: `headRefOid`와 그 SHA의 코드·spec을 읽을 경로/방법, 현재 checkout 사용 가능 여부.
+- **Relevant Context**: 변경 목적과 동작 보존 판단에 필요한 제약·저자 설명·대화 맥락. 관련 spec은 핵심 내용과 같은 SHA의 경로를 전달하고, 추가 관련 맥락이 없으면 `NONE`으로 표시한다.
 
 ## Process
 
@@ -110,7 +91,7 @@ gh pr diff [PR] --name-only
 gh pr view [PR] --json headRefOid --jq '.headRefOid'
 ```
 
-수집 전후의 head SHA가 baseline과 일치하는지 확인한다. 달라졌으면 새 SHA를 기준으로 데이터 전체를 다시 수집하며, 일관된 snapshot을 확보하지 못하면 혼합 데이터로 판정하지 않고 blocker를 보고한다. 코드·spec 읽기 경로와 검증 대상 SHA를 `PR Review Input`에 함께 전달한다.
+수집 전후의 head SHA가 baseline과 일치하는지 확인한다. 달라졌으면 새 SHA를 기준으로 데이터 전체를 다시 수집하며, 일관된 snapshot을 확보하지 못하면 혼합 데이터로 판정하지 않고 blocker를 보고한다. 코드·spec 읽기 경로는 `PR Review Input`의 Baseline에 전달한다.
 
 `_sdd/pr/` 디렉토리가 없으면 생성한다. 통합 리포트의 `slug`는 소문자 snake_case(영문 소문자, 숫자, `_`)로 정한다. 같은 날짜·slug 파일이 이미 있으면 `_2`, `_3` 등 빈 suffix를 골라 이전 리포트를 보존한다. 기존 리포트 갱신을 사용자가 명시한 경우에만 그 파일을 갱신한다.
 
@@ -131,7 +112,7 @@ PR diff에 spec 변경이 없어도 baseline SHA의 `_sdd/spec/` 트리를 확�
 
 ## Correctness 리뷰 (메인 루프 직접 수행, 단일 패스)
 
-`Changed Files`로 리뷰 범위를 고정한다. discussion은 저자 해명·기지 이슈·리뷰어 우려의 컨텍스트로만 쓴다. 범위가 큰 PR(50+ files)이면 디렉토리/컴포넌트 수준으로 축약하고 spec 관련 파일에 집중하며 가정을 리포트에 적는다.
+`Changed Files`로 리뷰 범위를 고정한다. discussion은 저자 해명·기지 이슈·리뷰어 우려의 컨텍스트로만 쓴다. 반복적인 동등 변경은 묶어 분석·설명할 수 있다. 파일 수와 무관하게 실행 동작·권한·데이터 경계·통합 위험과 관련 AC는 필요한 깊이로 검토한다. 검토하지 못한 범위와 그로 인해 근거가 부족한 판정은 명시한다.
 
 **표적 경계**: 형태-중복(추출 가능한 동일 로직 반복) 등 동작-불변 형태 품질은 simplicity 소관이다. 단, 정확성-중복(중복된 보안 검증 누락·일관성 깨진 중복 분기 등 로직 버그성)은 correctness에 잔존한다.
 
@@ -219,7 +200,7 @@ PR review는 verdict 권고이지 자동 게이트가 아니다.
 **[APPROVE / REQUEST CHANGES / NEEDS DISCUSSION]**
 
 **Rationale**: <1-2 sentence rationale — 두 렌즈 신호 종합>
-**Signals**: correctness Crit N·High N·Med N·Low N / simplicity High N·Med N·Low N (또는 MISSING: <reason>) / test pass F% (또는 UNTESTED: <reason>) — 한 줄, 표 없음
+**Signals**: correctness Crit N·High N·Med N·Low N / simplicity High N·Med N·Low N (또는 MISSING: <reason>) / 검증: <실행한 검사와 PASS/FAIL/UNTESTED, 증거 위치> — 한 줄. 비율은 실행 output에 분모·범위가 명확하고 판정에 유용할 때만 표시한다
 
 ---
 
@@ -281,7 +262,6 @@ MET: <통과 AC ID만 나열 또는 없음>
 | Multiple spec files in from-branch | canonical index와 링크된 하위 spec을 읽는다. 그래도 범위 선택이 모호하고 verdict에 영향을 주면 짧게 확인한다. 그 외에는 canonical index로 진행하고 가정을 기록한다 |
 | Existing review file | Step 1의 충돌 규칙으로 새 slug를 정한다. 명시적 갱신 요청 없이는 기존 파일 보존 |
 | Already merged PR | 허용 (retroactive review). merge 상태 표기 |
-| Large PR (50+ files) | 디렉토리/컴포넌트 수준 요약으로 축약 (Correctness 리뷰 절·agent Scope) |
 
 ## Error Handling
 

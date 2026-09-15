@@ -60,7 +60,7 @@ severity는 `Critical / High / Medium / Low` 네 단계 표기를 쓰되, simpli
 
 ### Step 1: Scope
 
-`PR Review Input`(필드 정의: `pr-review` SKILL)이 있으면 `Changed Files`와 `PR Diff`로 리뷰 범위를 고정하고 나머지 필드는 PR 맥락으로만 사용한다. 그 외 호출은 기존 우선순위(호출자 지정 경로/범위 → 변경된 코드 파일; legacy fallback으로 `_sdd/implementation/*_implementation_plan_*.md` 구형 plan 산출물)를 따른다. 범위 불확정 시 최신 변경 범위로 진행하고 가정을 반환 Assumptions에 적는다.
+`PR Review Input`(필드 정의: `pr-review` SKILL)이 있으면 `Changed Files`와 `PR Diff`로 리뷰 범위를 고정하고 Baseline의 동일 SHA 읽기 경로를 사용하고 Relevant Context는 동작 보존 판단의 맥락으로만 사용한다. 그 외 호출은 기존 우선순위(호출자 지정 경로/범위 → 변경된 코드 파일; legacy fallback으로 `_sdd/implementation/*_implementation_plan_*.md` 구형 plan 산출물)를 따른다. 범위 불확정 시 최신 변경 범위로 진행하고 가정을 반환 Assumptions에 적는다.
 
 ### Step 2: Per-dimension Scan
 

@@ -6,6 +6,19 @@
 
 **후속 설계 리뷰:** [discussion — 목적·경계·결과물과 절차의 강제 수준](./discussion-purpose-review.md). 수정 후 `3d0d68e` 기준의 정합성 수정 권고 1건과 설계 변경 후보 5건이며, 아래 최초 리뷰 집계와 별개다. 사용자 승인 후의 [재설계 적용·검증 내역](./discussion-purpose-dispositions.md)을 별도 기록한다. 실제 행동 비교 실험은 미수행.
 
+**추가 목적 중심 리뷰 — `b34b2cb` 기준, 4/4 기록 완료:** 아래 문서는 현행 계약의 필요성과 강제 수준을 검토한 별도 제안이다. 최초 73개 항목 집계에 합산하지 않으며, 스킬 수정·실제 실행·성능 비교는 수행하지 않았다.
+
+| 스킬 | 핵심 판단 | 우선 검토할 항목 |
+|---|---|---|
+| [goal-init](./goal-init-purpose-review.md) | 대화 순서·최소 가설 수를 결과 중심 기준으로 전환할 후보 | GI-P01·02: 고정 5단계와 가설 2개 의무 |
+| [pr-review](./pr-review-purpose-review.md) | SHA·증거 계약은 유지하고 입력·범위·출력 정리 | PR-P01: leaf 입력, PR-P02: 50파일 기준, PR-P03: test pass 비율 |
+| [implementation](./implementation-purpose-review.md) | 검증 순서는 유지하고 설명·기록·마감 표현 정리 | IM-P01: 변이 미수행에 대한 과장된 설명, IM-P02: resume 기록 |
+| [implementation-review](./implementation-review-purpose-review.md) | 변경 집합 정합성을 먼저 보완하고 읽기·반환 표현 정리 | IR-P01: 커밋/미커밋 혼합 범위 누락 가능성 |
+
+**승인 후 적용 완료:** [네 스킬 적용·검증·게이트 결과](./four-skill-purpose-dispositions.md). 아래 리뷰 원문은 수정 전 snapshot으로 보존한다.
+
+각 문서는 위치·문제 상황·권고·유지할 계약·손실 위험·검증 시나리오를 담는다. PR-P04와 IR-P04의 runtime 표현 정리는 같은 원인이다. 정합성 보완·표현 정리와 기존 정책을 바꾸는 제안을 구분하며, 실제 개선 효과는 후속 관측이 필요하다.
+
 - 모델: gpt-6-astra. 기준 커밋: `be6c5a1f014b3e37d386127966b0bb6de3549587`.
 - 대상: Claude 20개 + Codex 18개 = SKILL.md 38개, 이름 기준 20종. `git`·`second-opinion`의 Codex 짝 부재는 정상 배포 범위다. 사용자의 전역 설치 스킬은 범위 밖이다.
 - 방법: 스킬별 runtime 짝을 묶은 병렬 리뷰 → 메인 작성자의 문서 검토·공유 계약 대조·중복 소유권 통합. 같은 모델의 병렬 리뷰이므로 모델 다양성 검증은 아니다.
