@@ -33,6 +33,7 @@
         "./.claude/skills/spec-sync",
         "./.claude/skills/spec-upgrade",
         "./.claude/skills/sdd-autopilot",
+        "./.claude/skills/sdd-orchestrator",
         "./.claude/skills/investigate",
         "./.claude/skills/second-opinion"
       ]
