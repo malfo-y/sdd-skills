@@ -2,6 +2,12 @@
 
 > 이 파일은 `_sdd/spec/main.md`의 **본문이 바뀐 버전만** 기록한다 — 본문 무변경 sync(헤더 날짜만 갱신)는 entry를 남기지 않으므로 버전 번호에 결번이 생길 수 있다.
 
+#### v4.34.0 (2026-10-05)
+
+- **`sdd-orchestrator`를 SDD 체인의 기본이자 유일 경로로 교체**: 구 직접 실행 단계 스킬 5종(`feature-draft`·`plan-review`·`implementation`·`implementation-review`·`spec-sync`, Claude·Codex)을 삭제했다. 단계 이름은 worker 계약 이름(`references/workers/<단계>.md`)으로 남고 구 트리거는 `sdd-orchestrator` description이 받는다. simplicity 계약은 `sdd-orchestrator/references/simplicity-contract.md`로 옮겼다(`pr-review`도 소비).
+- **Guardrails·결정 재작성**: 품질 게이트 소유자는 producer 스킬이 아니라 오케스트레이터, 코드·테스트 작성자는 메인 루프가 아니라 task worker, 계획·구현 리뷰는 메인 루프 직접 수행이 아니라 분리된 리뷰 worker, 재개 기록은 implementation ledger가 아니라 오케스트레이터 state다. 메인 루프 읽기 범위(handoff 템플릿·draft·env·digest·state), worker 공통 경계 단일 소스 `references/worker-boundary.md`, Claude worker foreground dispatch, 다 구현된 draft의 `_processed_` rename 입력을 현재 사실로 반영했다. 모델 override는 `pr-review`에만 남는다. implementation ledger 실사용 관측 Planned 항목은 대상이 사라져 삭제했다.
+- **검증 evidence**: goal R4 신·구 실측 PASS(메인 맥락 증가 0.37배, 메인 루프 대상 쓰기 0, cold start 중앙값 5.1s, 독립 리뷰 AC 전부 MET·Critical/High 0), Feature B structural check 9 task 전부 GREEN·census 리터럴 14개 0건·`claude plugin validate .` 통과.
+
 #### v4.33.0 (2026-10-04)
 
 - **오케스트레이터 경로 `sdd-orchestrator` 추가(실험, 기본 경로 옆)**: 메인 루프는 지휘만 하고 단계 작업은 `references/workers/<단계>.md` 계약을 읽는 범용 worker가 수행한다. 인계는 digest(모든 worker)+state(오케스트레이터 재개용, 리뷰 worker 미제공) 2파일, task별 worker는 Target Files 서로소·Contracts 미공유·의존 없음일 때만 병렬, 게이트 정책은 기본 경로와 같다. 기본 경로 교체·구 단계 스킬 삭제는 실측 합격 후(🚧 Planned).

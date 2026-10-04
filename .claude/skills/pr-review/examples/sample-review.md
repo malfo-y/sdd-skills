@@ -6,7 +6,7 @@
 - 트리 조회 성공 후 spec 부재를 확인했으면 `ABSENT`: code-only mode
 - 트리/spec 읽기가 실패했으면 `UNREADABLE`: 원인을 남긴 제한 리포트
 
-> `pr-review`는 `_sdd/spec/`를 수정하지 않는다. 스펙 반영이 필요하면 리포트에 기록하고 후속으로 `/spec-sync`를 사용한다.
+> `pr-review`는 `_sdd/spec/`를 수정하지 않는다. 스펙 반영이 필요하면 리포트에 기록하고 후속으로 `/sdd-skills:sdd-orchestrator`로 spec-sync 단계를 실행한다.
 
 ## Example A: from-branch spec 기반 리뷰
 
@@ -104,7 +104,7 @@ correctness 검증 중: Local abc1234, 관련 상태 clean, 40개 중 38개 통�
 - **문제**: spec AC #4의 구현은 있으나 테스트가 없어 회귀를 감지할 수 없다 (PARTIAL).
 - **수정**: 미들웨어 통과 후 request context에 user가 실리는지 검증하는 테스트를 추가한다.
 
-- `src/config/cors.py:12` — CORS Authorization 헤더 허용은 spec에 없는 변경이므로 머지 후 `/spec-sync`로 spec 반영을 검토한다.
+- `src/config/cors.py:12` — CORS Authorization 헤더 허용은 spec에 없는 변경이므로 머지 후 `/sdd-skills:sdd-orchestrator`의 spec-sync 단계로 spec 반영을 검토한다.
 
 ---
 

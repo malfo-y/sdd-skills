@@ -13,7 +13,7 @@ discussion
   -> global spec sync
 ```
 
-각 reviewer 호출은 단일 패스다. 첫 호출의 fix 전 finding이 `Critical+High ≥ 3` 또는 `Medium ≥ 5`이면 producer인 `feature-draft`나 `implementation`이 같은 gate를 두 번째 호출하고 직접 fix한 뒤 종료한다. 세 번째 호출은 없으며 사용자나 autopilot이 gate를 별도로 호출하거나 fix하지 않는다.
+discussion 뒤의 단계는 `sdd-orchestrator`가 실행하고, 게이트 순서와 fix도 `sdd-orchestrator`가 소유한다. 각 reviewer 호출은 단일 패스다. 첫 호출의 fix 전 finding이 `Critical+High ≥ 3` 또는 `Medium ≥ 5`이면 같은 gate를 두 번째 호출하고 fix한 뒤 종료한다. 세 번째 호출은 없으며 사용자나 autopilot이 gate를 별도로 호출하거나 fix하지 않는다.
 
 ## 2. Harness가 쓰이는 시점
 
@@ -90,7 +90,7 @@ global spec은 모든 단계의 출발점이지만, 모든 detail의 저장소�
 ## 8. Review와 Update의 역할
 
 - `spec-review`: 품질과 drift를 audit한다. 수정하지 않는다.
-- `spec-sync`: global spec에는 persistent repo-wide information만 올린다(구현 전 planned alignment / 구현 후 evidence sync를 evidence에 맞춰 처리).
+- `sdd-orchestrator`의 spec-sync 단계: global spec에는 persistent repo-wide information만 올린다(구현 전 planned alignment / 구현 후 evidence sync를 evidence에 맞춰 처리).
 - update 계열은 temporary execution detail을 global 본문으로 복사하지 않는다.
 
 ## 9. Verification 원칙

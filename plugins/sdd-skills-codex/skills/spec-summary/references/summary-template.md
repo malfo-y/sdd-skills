@@ -34,7 +34,7 @@ Copy only the fenced skeleton below. Preserve its hierarchy, heading order, and 
 - <global spec and supporting surface links>
 
 ## Appendix: Planned / Progress Snapshot
-<!-- Optional: keep only when relevant current draft/ledger evidence exists. -->
+<!-- Optional: keep only when relevant current draft/state evidence exists. -->
 - **Planned**: <current signal>
 - **In progress / blocked**: <current signal>
 - **Next**: <current signal>

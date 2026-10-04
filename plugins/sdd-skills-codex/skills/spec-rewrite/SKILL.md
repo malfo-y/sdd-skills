@@ -102,7 +102,7 @@ global portion을 여러 global 문서로 분할할 때 축 선택:
 
 ### Step 3: Rewrite the Spec
 
-> Asset load: global shape는 `references/template-compact.md`를 읽는다. temporary shape는 현재 runtime의 skill catalog가 제공하는 `feature-draft` 위치에서 `Required Output`과 연결된 조건부 block·분할 규칙을 읽는다. 저장소 source 경로를 설치 경로로 가정하지 않는다. 이는 형식 참조이며 `feature-draft`나 planning gate를 실행하지 않는다. 해당 계약을 읽을 수 없으면 temporary 원본을 보존하고 재작성 한계를 보고한다.
+> Asset load: global shape는 `references/template-compact.md`를 읽는다. temporary shape는 현재 runtime의 skill catalog가 제공하는 `sdd-orchestrator/references/workers/feature-draft.md`에서 `Required Output`과 연결된 조건부 block·분할 규칙을 읽는다. 저장소 source 경로를 설치 경로로 가정하지 않는다. 이는 형식 참조이며 `sdd-orchestrator`나 planning gate를 실행하지 않는다. 해당 계약을 읽을 수 없으면 temporary 원본을 보존하고 재작성 한계를 보고한다.
 
 읽은 canonical skeleton의 heading·marker·field order를 보존하고, placeholder 치환·필요한 row/task 반복·조건부 block 제거만 허용한다.
 

@@ -18,7 +18,7 @@
 
 ## Temporary Spec
 
-- Does the artifact follow same-runtime `feature-draft` Required Output and its conditional-block rules while preserving the source tasks, contracts, AC, Target Files, and evidence links?
+- Does the artifact follow same-runtime `sdd-orchestrator/references/workers/feature-draft.md` Required Output and its conditional-block rules while preserving the source tasks, contracts, AC, Target Files, and evidence links?
 - Does each acceptance criterion state reproducible evidence or a named review rubric?
 - Are execution details kept in the temporary artifact rather than lifted into the global spec?
 - If a rolling split is needed, does it follow the same canonical owner’s split rules without losing deferred scope?

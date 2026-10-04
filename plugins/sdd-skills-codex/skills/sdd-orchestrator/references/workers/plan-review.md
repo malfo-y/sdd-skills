@@ -20,7 +20,7 @@
 1. 사용자/호출자 지정 draft 경로
 2. 지정이 없으면 `_sdd/drafts/*_feature_draft_*.md` 최신 파일
 
-대상 draft가 없으면 검토를 만들어내지 않는다 — "리뷰 대상 없음 — `feature-draft`로 draft를 먼저 작성하라" 1줄만 반환한다.
+대상 draft가 없으면 검토를 만들어내지 않는다 — "리뷰 대상 없음 — `sdd-orchestrator`로 계획 단계를 먼저 실행하라" 1줄만 반환한다.
 
 ## 읽기 지침
 
@@ -51,7 +51,7 @@
   - 각 AC가 평가방법과 기대 evidence를 갖고 이진 판정으로 닫히는가? 그 evidence가 재현 가능한 출력 또는 content anchor(줄 번호가 아니라 파일·인용 문자열처럼 변경에 흔들리지 않는 앵커)로 적혔는가?
   - Target Files가 실측인가?
 
-> producer 계약의 상세(AC 등급 구분·작성 형식 등)는 재검사하지 않는다 — rubric은 판정 축만 보유하고 상세는 `feature-draft`가 단독 소유한다.
+> producer 계약의 상세(AC 등급 구분·작성 형식 등)는 재검사하지 않는다 — rubric은 판정 축만 보유하고 상세는 `workers/feature-draft.md`(같은 디렉터리의 계획 worker 계약)가 단독 소유한다.
 
 ## Severity
 

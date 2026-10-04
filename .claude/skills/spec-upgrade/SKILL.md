@@ -94,7 +94,7 @@ description: This skill should be used when the user asks to "upgrade spec", "mi
 
 #### Asset Load: Current Format
 
-exact current global shape와 비교할 때는 `references/spec-format.md`를, global에 섞인 temporary portion을 판정할 때는 current runtime의 `../feature-draft/SKILL.md` `Required Output`을 **Read**한다.
+exact current global shape와 비교할 때는 `references/spec-format.md`를, global에 섞인 temporary portion을 판정할 때는 current runtime의 `../sdd-orchestrator/references/workers/feature-draft.md` `Required Output`을 **Read**한다.
 
 ### Step 3: Evidence Collection
 

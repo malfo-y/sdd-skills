@@ -25,13 +25,15 @@ STOP: after 3 turns without progress.
 - `gh pr view refactor/orchestrator-harness --json url,headRefName,state` → `state: OPEN`, `headRefName: refactor/orchestrator-harness`
 
 ### R2. 구조 (DONE WHEN 1)
-- 새 오케스트레이터 스킬의 SKILL.md가 `.claude/skills/<이름>/`과 `plugins/sdd-skills-codex/skills/<이름>/` 두 곳에 있다. `<이름>`과 worker 계약 파일 목록은 첫 구조 feature의 draft가 정하고, 이 레시피에 동등 변경으로 기록한다.
-- 구 직접 실행 경로의 census 목록(삭제 대상 스킬·절·문장)은 교체 feature의 draft가 정하고 여기에 기록한다. 판정: 그 목록의 `grep -rn -F '<리터럴>' .claude plugins docs` 결과가 모두 0건.
+- 새 오케스트레이터 스킬의 SKILL.md가 `.claude/skills/sdd-orchestrator/`과 `plugins/sdd-skills-codex/skills/sdd-orchestrator/` 두 곳에 있다. worker 계약은 `references/workers/{feature-draft,plan-review,implementation,implementation-review,spec-sync}.md`, 인계 템플릿 `references/handoff-templates.md`, 공통 경계 `references/worker-boundary.md`, simplicity 계약 `references/simplicity-contract.md`(양 runtime 동일본). (Feature A draft가 정한 이름 — 동등 기록)
+- 구 직접 실행 경로 census(교체 feature draft `_processed_2026-10-04_feature_draft_orchestrator_default_switch.md` Task 9가 정한 목록 — 동등 기록, 검색 범위는 README.md·AGENTS.md를 더한 강화):
+  - 삭제 대상 스킬: `for s in feature-draft plan-review implementation implementation-review spec-sync; do test ! -e .claude/skills/$s && test ! -e plugins/sdd-skills-codex/skills/$s; done` 성공, marketplace `skills`에 다섯 경로 0건.
+  - 절·문장 리터럴 14개 각각 `/usr/bin/grep -rn -F '<리터럴>' .claude plugins docs README.md AGENTS.md` 0건: `동명의 SDD 스킬` / `$spec-sync` / `` `/spec-sync` `` / `producer인 메인 루프` / `자기 품질 게이트로 내부 수행` / `../implementation-review/references` / `implementation_ledger` / `` `implementation` 스킬 `` / `` `spec-sync` 스킬 `` / `` `implementation-review` 스킬 `` / `` `feature-draft` 스킬 `` / `` `spec-sync`의 호출 `` / ``same-runtime `feature-draft` `` / ``skill catalog가 제공하는 `feature-draft` ``. 이 리터럴들은 `docs/reviews/`(날짜가 붙은 과거 리뷰 기록, 보존)에도 0건이다.
 
 ### R3. 정적 검증 (DONE WHEN 1)
 - `git diff --check main...HEAD` → 출력 없음
-- `claude plugin validate <plugin 경로>` → PASS. 정확한 경로는 첫 턴에 확인해 기록한다.
-- Codex 미러: 짝마다 `/usr/bin/diff`(셸의 `diff`는 래퍼 함수라 쓰지 않는다)로 claude↔codex를 비교한다. hunk 수가 각 draft가 정한 기준선과 같고, 초과 hunk가 0이다.
+- `claude plugin validate /Users/hyunjoonlee/github/sdd_skills` → `Validation passed`(repo 루트 marketplace manifest).
+- Codex 미러: 짝마다 `/usr/bin/diff`(셸의 `diff`는 래퍼 함수라 쓰지 않는다)로 claude↔codex를 비교한다. hunk 수가 각 draft가 정한 기준선과 같고, 초과 hunk가 0이다. 기준선: `sdd-orchestrator/SKILL.md` 1(Runtime 절 안)·`sdd-orchestrator/references` 무출력, goal-init/SKILL.md 3, goal-init/references/harness-templates.md 0, sdd-autopilot/SKILL.md 3, spec-review·spec-rewrite(+references 2)·spec-upgrade·spec-summary SKILL 0, pr-review/SKILL.md 15, pr-review/examples/sample-review.md 10, 4개 AGENTS 하네스 템플릿 서로 무출력.
 
 ### R4. 실측 (DONE WHEN 2, Claude만)
 - 벤치마크 기능: PR #87 `review_evidence_floor`(base `97f3ea4^1`), PR #88 `goal_autonomy_grant`(base `d5c39b3^1`). 각 기능의 draft를 입력으로, base commit의 대상 worktree에서 구 경로와 신 경로를 각각 2회 실행한다. 두 회의 합격·불합격이 갈리면 1회 더 실행한다.

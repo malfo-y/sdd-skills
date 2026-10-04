@@ -55,7 +55,7 @@
 # Part 1: Spec Delta
 
 ## Change Summary
-[무엇이 왜 바뀌는가. **새 contract/invariant 약속이 생기면 여기 1줄씩 명시한다** — `spec-sync` 스킬이 이 마커 내부를 global spec 반영 입력으로 소비한다.]
+[무엇이 왜 바뀌는가. **새 contract/invariant 약속이 생기면 여기 1줄씩 명시한다** — `spec-sync` 단계가 이 마커 내부를 global spec 반영 입력으로 소비한다.]
 
 ## Scope
 - **In**: ...

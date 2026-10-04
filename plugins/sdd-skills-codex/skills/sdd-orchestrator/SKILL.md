@@ -1,6 +1,6 @@
 ---
 name: sdd-orchestrator
-description: "Use this skill to run the SDD chain (feature-draft → plan-review → implementation → implementation-review → spec-sync) with the main loop as orchestrator and stage work delegated to workers. Triggered by \"sdd-orchestrator\", \"오케스트레이터로 진행\", \"SDD로 계획부터 구현까지\", \"draft 구현부터 spec-sync까지\", \"worker로 구현\", or when the user wants a request or a feature draft carried through planning, implementation, review, and spec sync while keeping the main context small."
+description: "Use this skill to run the SDD chain (feature-draft → plan-review → implementation → implementation-review → spec-sync) with the main loop as orchestrator and stage work delegated to workers. Triggered by \"sdd-orchestrator\", \"오케스트레이터로 진행\", \"SDD로 계획부터 구현까지\", \"draft 구현부터 spec-sync까지\", \"worker로 구현\", \"feature draft\", \"기능 초안\", \"계획 잡아줘\", \"plan review\", \"계획 리뷰\", \"implement the plan\", \"구현해줘\", \"review implementation\", \"spec sync\", \"sync spec with implementation\", or when the user wants a request or a feature draft carried through planning, implementation, review, and spec sync while keeping the main context small."
 ---
 
 # SDD Orchestrator
@@ -24,7 +24,7 @@ description: "Use this skill to run the SDD chain (feature-draft → plan-review
 
 ## 실행 흐름
 
-이 순서가 이 스킬의 본체다. 단계 작업은 `Worker dispatch`로 띄운 worker만 한다. 단계와 이름이 같은 스킬(`feature-draft`·`plan-review`·`implementation`·`implementation-review`·`spec-sync`)은 메인 루프가 직접 실행하는 구 경로이므로 이 스킬 안에서 호출하지 않는다.
+이 순서가 이 스킬의 본체다. 단계 작업은 `Worker dispatch`로 띄운 worker만 한다.
 
 1. `단계와 진입`으로 시작 단계와 종점을 정한다.
 2. 인계 파일 디렉터리를 만들거나 이어 쓴다. state에 단계·종점을 적고 digest를 초기화한다(`인계 파일`).
@@ -66,10 +66,8 @@ description: "Use this skill to run the SDD chain (feature-draft → plan-review
 | feature-draft | `references/workers/feature-draft.md` | 요청·결정(digest), fix할 findings | `_sdd/drafts/` draft |
 | plan-review | `references/workers/plan-review.md` | draft 경로 | findings 반환 |
 | implementation | `references/workers/implementation.md` | draft 경로 + task ID 하나, 또는 fix할 findings | 대상 파일 변경 |
-| implementation-review | `references/workers/implementation-review.md` + simplicity 계약 | draft 경로, 구현 시작점(base) | AC verdict·findings 반환 |
+| implementation-review | `references/workers/implementation-review.md` + simplicity 계약 `references/simplicity-contract.md` | draft 경로, 구현 시작점(base) | AC verdict·findings 반환 |
 | spec-sync | `references/workers/spec-sync.md` | draft 경로, state 경로, draft 소비 여부 | `_sdd/spec/` 변경 |
-
-simplicity 계약은 `../implementation-review/references/simplicity-contract.md`(이 스킬 디렉터리 기준)다.
 
 draft의 Part 2 task가 모두 닫혔고 남은 분할 feature가 없으면, spec-sync 입력에 "draft 소비 완료 — `_processed_` rename 대상"을 넣는다.
 

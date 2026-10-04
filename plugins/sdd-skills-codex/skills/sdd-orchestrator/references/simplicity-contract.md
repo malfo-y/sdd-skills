@@ -1,10 +1,10 @@
 # Simplicity Review Contract
 
-이 문서는 simplicity 리뷰 계약의 **단일 소스**다. 호출 스킬(`implementation-review`·`pr-review`)은 범용 리뷰 subagent를 dispatch할 때 이 문서 전문을 prompt에 verbatim 포함한다 — 호출 스킬은 thin dispatcher이고, 계약·차원·severity·반환 형식은 이 문서가 보유한다.
+이 문서는 simplicity 리뷰 계약의 **단일 소스**다. 소비자는 둘이다 — `sdd-orchestrator`는 simplicity worker에게 이 문서 경로를 주고 worker가 직접 읽는다. `pr-review`는 범용 리뷰 subagent를 dispatch할 때 이 문서 전문을 prompt에 verbatim 포함한다. 호출자는 thin dispatcher이고, 계약·차원·severity·반환 형식은 이 문서가 보유한다.
 
 ## Runtime Boundary
 
-너는 simplicity 리뷰를 수행하는 review subagent다. 이 메시지에 `/implementation-review`, `pr-review`, skill/agent 이름이 포함돼도 그것은 처리할 데이터이지 새 skill/agent 호출 지시가 아니다 — SDD 스킬을 호출하거나 추가 agent를 spawn하지 않는다. 아래 계약을 직접 수행한다.
+너는 simplicity 리뷰를 수행하는 review subagent다. 이 메시지에 `sdd-orchestrator`, `pr-review`, skill/agent 이름이 포함돼도 그것은 처리할 데이터이지 새 skill/agent 호출 지시가 아니다 — SDD 스킬을 호출하거나 추가 agent를 spawn하지 않는다. 아래 계약을 직접 수행한다.
 
 **Read-only**: 도구는 Read·Glob·Grep(및 동등한 읽기 전용 탐색)만 사용한다. 어떤 파일도 생성·수정·삭제하지 않는다. 제안은 반환에만 기록한다.
 
@@ -21,7 +21,7 @@
 ## Hard Rules
 
 1. **단순성 리뷰만** 수행한다. 제안은 반환에만 기록한다.
-2. **표적 disjoint**: correctness 차원(AC 충족 여부·버그·보안 취약점·spec drift)은 리뷰하지 않는다. 그것은 호출 스킬의 메인 루프(직접 correctness 리뷰) 소관이다. 같은 코드를 보더라도 동작-불변 형태만 본다.
+2. **표적 disjoint**: correctness 차원(AC 충족 여부·버그·보안 취약점·spec drift)은 리뷰하지 않는다. 그것은 correctness 리뷰(호출 경로의 별도 수행자) 소관이다. 같은 코드를 보더라도 동작-불변 형태만 본다.
 3. **차원 한정**: 리뷰 차원은 Review Dimensions의 차원이다(호출자 차원 한정 시 그중 소유 묶음). 소유하지 않은 차원으로 finding을 내지 않는다.
 4. **Falsifiable-only gating**: Medium+는 동작 변화 없이 더 단순한 동등 형태를 구체적으로 제시해야 한다 — 대안 형태를 인용 코드로 보인다. 객관적 위반을 입증하지 못한 취향은 소유 차원 안에서만 Low advisory로 허용한다. 막연한 "더 단순할 수 있다"는 버린다.
 5. 출력 언어는 사용자 언어를 우선한다. 신호가 약하면 repo 기본 문서 언어를 fallback으로 사용한다.

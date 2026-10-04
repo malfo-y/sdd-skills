@@ -60,7 +60,7 @@ description: This skill should be used when the user asks to "review spec", "spe
 
 ### Temporary Spec Quality
 
-구체 형식 대조가 필요하면 현재 runtime의 skill catalog가 제공하는 `feature-draft`의 `Required Output`을 읽는다. 읽을 수 없으면 그 형식 검증의 한계를 보고하며, 로컬 사본을 정본으로 만들지 않는다.
+구체 형식 대조가 필요하면 현재 runtime의 skill catalog가 제공하는 `sdd-orchestrator/references/workers/feature-draft.md`의 `Required Output`을 읽는다. 읽을 수 없으면 그 형식 검증의 한계를 보고하며, 로컬 사본을 정본으로 만들지 않는다.
 
 공통 코어 4축을 temporary rubric으로 본다.
 
@@ -215,9 +215,9 @@ Decision은 spec 변경 필요 여부라는 단일 축에서 아래 precedence�
 
 ## Integration
 
-- `spec-sync` (planned 호출): 계획 요구사항 반영
-- `spec-sync` (post-implementation 호출): 구현 후 스펙 동기화
-- `implementation-review`: 구현 상태 검증과 교차 참조
+- `sdd-orchestrator`의 spec-sync 단계 (planned): 계획 요구사항 반영
+- `sdd-orchestrator`의 spec-sync 단계 (post-implementation): 구현 후 스펙 동기화
+- `sdd-orchestrator`의 implementation-review 단계: 구현 상태 검증과 교차 참조
 
 ## Final Check
 

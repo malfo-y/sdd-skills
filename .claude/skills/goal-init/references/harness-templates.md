@@ -43,7 +43,7 @@ STOP: after <N> turns without progress.
 
 <수준이 attended면 "사전 승인" 목록은 비운다.>
 - 수준: <unattended | attended>
-- 사전 승인: <unattended 기본 — 브랜치 생성·commit·feature 브랜치 push·PR 생성 / 테스트·빌드·스크립트 실행·의존성 설치 / repo 안 파일 생성·수정·삭제 / `spec-sync` 실행 / 검증 레시피의 동등·강화 변경 / BC 태스크 제출·인스턴스 생성>
+- 사전 승인: <unattended 기본 — 브랜치 생성·commit·feature 브랜치 push·PR 생성 / 테스트·빌드·스크립트 실행·의존성 설치 / repo 안 파일 생성·수정·삭제 / `sdd-orchestrator` 실행(spec-sync 단계 포함) / 검증 레시피의 동등·강화 변경 / BC 태스크 제출·인스턴스 생성>
 - BC 리소스 상한: <사용자 지정 — quota는 표시하되 대기 없음>
 - 항상 확인(제외, 수준 무관): main/protected 브랜치 직접 push·force-push·history rewrite / PR merge / 원격·공유 자원 삭제(브랜치·인스턴스·스토리지) / 리소스·비용 상한 초과 / 판정을 약화하는 레시피 변경 / 시크릿 취급 / repo 밖 외부 발신 <+ 사용자 추가>
 
@@ -80,9 +80,9 @@ STOP: after <N> turns without progress.
 ```markdown
 매 턴 다음을 순서대로 수행한다 (이 섹션은 메인 에이전트용 HOW이며 조건 문자열에 넣지 않는다):
 1. 아직 충족되지 않은 `DONE WHEN` 또는 실패한 final integration proof가 드러낸 gap에서 가장 작은 next feature를 고른다. `experiments.md`의 pending 가설은 접근 후보로만 참고한다.
-2. 그 feature의 reviewed draft가 없으면 `feature-draft`를 실행한다. draft가 분할되면 현재 native goal 안에서 가장 작은 next unit을 고르고 nested `goal-init`은 만들지 않는다.
-3. 선택한 draft를 `implementation`으로 구현하고 producer-owned 품질 게이트 결과까지 닫는다.
-4. persistent 변경이 있으면 `spec-sync`를 실행한다.
+2. 그 feature를 `sdd-orchestrator`로 진행한다 — reviewed draft가 없으면 계획 단계부터, 있으면 구현 단계부터 시작한다. draft가 분할되면 현재 native goal 안에서 가장 작은 next unit을 고르고 nested `goal-init`은 만들지 않는다.
+3. 같은 실행에서 게이트 결과까지 닫는다.
+4. persistent 변경이 있으면 spec-sync 단계까지 진행한다.
 5. `검증 레시피`의 실행 규칙에 따라 evidence를 대화에 표시하고 evidence·완료 feature·남은 gap·next action을 `journal.md`에 append한 뒤 `report.md`를 갱신한다.
 6. 모든 `DONE WHEN`과 final integration proof가 통과했을 때만 성공 종료한다. STOP 또는 위임 범위의 STUCK 경계에 도달하면 `report.md`에 사유를 기록하고 미완료로 종료한다. native goal lifecycle 처리는 활성 런타임 규범을 따른다. 그 외에는 1단계로 돌아간다.
 ```

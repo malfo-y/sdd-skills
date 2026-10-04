@@ -34,24 +34,26 @@
   - 스킬 최종 보고는 커밋되는 두 runtime 설정의 설치 사실과 Codex hook 지원·project trust 조건을 announce한다. Codex에서는 `/hooks`의 exact definition을 사용자가 검토·신뢰해야 하며, 스킬은 trust나 user-global config를 자동 변경하지 않는다
 - 사용자에게 요약 테이블 제시 후 전체 스펙 출력
 
-### Scenario 2: 기능 추가 (수동 SDD Workflow — SDD 체인)
+### Scenario 2: 기능 추가 (SDD 체인 — sdd-orchestrator)
 
 **Action:**
 ```bash
-/feature-draft           # planning entry — task + Target Files(실측) + AC 중심 draft (gate+fix 기본 1회, 임계값 시 최대 2회)
-/spec-sync               # (구현 전) 분할 draft planned todo 고정 또는 planned persistent truth가 실제로 필요할 때만
-/implementation          # 메인 루프 직접 RED→GREEN test-first 구현 (gate+fix 기본 1회, 임계값 시 최대 2회)
-/spec-sync               # (구현 후) 코드 변경사항을 스펙에 동기화
+# Claude Code (Codex는 같은 요청을 $sdd-orchestrator로 시작)
+/sdd-skills:sdd-orchestrator CSV 내보내기 기능을 계획부터 spec 반영까지 진행해줘
+/sdd-skills:sdd-orchestrator _sdd/drafts/<draft>.md를 구현 단계부터 진행해줘   # reviewed draft로 진입
+/sdd-skills:sdd-orchestrator spec-sync 단계만 실행해줘                          # 단계·종점 지정
 ```
 
-> 두 품질 게이트(`plan-review`·`implementation-review`)와 fix는 producer 스킬이 소유하므로 위 흐름에서 사용자가 따로 호출하거나 fix하지 않는다. 각 reviewer 호출은 단일 패스이며, producer는 gate 1+fix 1을 항상 수행하고 fix 전 raw finding이 `Critical+High ≥ 3` 또는 `Medium ≥ 5`일 때만 gate 2+fix 2까지 수행한다(Low 제외, implementation shard 합산 dedup 없음). gate 3은 없다. draft 없이 기존 계획만 점검하는 경우에만 `/plan-review`를 직접 호출한다.
+> 메인 루프는 단계 순서·게이트·인계 파일·사용자 질문만 맡고 단계 작업은 worker가 수행한다. 두 품질 게이트(plan-review·implementation-review 단계)와 fix는 오케스트레이터가 실행하므로 사용자가 따로 호출하거나 fix하지 않는다. gate 1+fix 1은 항상 수행하고, fix 전 raw finding을 그 게이트의 리뷰 worker 전부에 걸쳐 합산해 `Critical+High ≥ 3` 또는 `Medium ≥ 5`일 때만 gate 2+fix 2를 수행한다(Low 제외, dedup 없음). gate 3은 없다. 리뷰 단계만 지정하면 findings만 보고하고 fix하지 않는다.
 
 **Expected Result:**
-- `_sdd/drafts/<YYYY-MM-DD>_feature_draft_<slug>.md` — 스펙 패치 초안(Part 1 마커) + 구현 태스크 리스트(Part 2)
-- `_sdd/spec/<project>.md` 업데이트 — planned persistent truth 반영(조건부)
-- 구현 전 계획 리뷰(`plan-review`)는 `feature-draft`가 gate 1로 항상 수행하고(한 호출 = agent 1회 dispatch의 경량 반환), fix 전 raw finding이 임계값이면 gate 2를 한 번 더 수행한다. 각 반환은 리포트 파일 없는 경량 finding이며 fix와 평가조건 재확인은 draft 작성자가 맡는다
-- 구현은 메인 루프가 직접 작성하고 회귀 → AC→증거 테이블 → `implementation-review` gate 1+fix 1 → 임계값 경로에서만 gate 2+fix 2 → 마감 요약으로 닫는다. 각 fix 뒤 커버리지 델타·회귀 재실행·증거 갱신을 수행한다(별도 plan artifact 없음 — 재개용 resume pointer로 `_sdd/implementation/<YYYY-MM-DD>_implementation_ledger_<slug>.md`만 생성·이어쓰며 AC→증거 테이블의 기록처다, 표는 채팅에도 노출). 규모가 커지면 분할 규칙(롤링 draft + planned todo 고정 + feature별 순차 체인)으로 해소한다
-- gate 2 뒤에는 gate 3 없이 종료한다. gate 2의 fix 전 raw finding도 같은 임계값이면 수동 후속 review 1회를 권고하고, 마감 요약은 호출 1/2의 severity·fix·검증·잔존 finding을 구분한다. 이어서 spec sync까지 연결돼 스펙과 코드 간 드리프트가 설명 가능한 상태가 된다
+- `_sdd/drafts/<YYYY-MM-DD>_feature_draft_<slug>.md` — feature-draft worker가 작성한 스펙 패치 초안(Part 1 마커) + 구현 태스크 리스트(Part 2)
+- `_sdd/implementation/<YYYY-MM-DD>_<slug>/digest.md`·`state.md` — digest(결정·환경 함정·검증 레시피)는 모든 worker가 읽고, state(단계·task 상태·RED/GREEN 신호·게이트 결과·AC→증거)는 재개용이며 리뷰 worker에게 주지 않는다. 두 파일의 작성자는 메인 루프 하나다
+- 계획 게이트: plan-review worker가 경량 finding을 반환하고(리포트 파일 없음) fix는 feature-draft worker가 같은 draft에 반영한다
+- 구현: draft Part 2 task마다 worker 1개가 RED→GREEN test-first와 커버리지 델타로 닫는다. Target Files 서로소·`Contracts` 미공유·의존 없음인 task는 동시에 실행된다. 메인 루프는 대상 파일을 쓰지 않는다
+- 구현 게이트: 모든 task가 DELTA_CLOSED가 되면 correctness worker 1개(digest 검증 레시피 fresh 실행 = 전체 회귀)와 simplicity worker 2개(차원 묶음)가 동시에 돈다. fix는 해당 task worker가 커버리지 델타·표적 재실행까지 하고 반환한다
+- 마감: state의 AC→증거가 리뷰 worker의 fresh verdict 포인터로 채워지고, 채팅에는 실행 단계·게이트 호출별 severity·fix·검증·미충족 AC·Open Questions·state 경로만 보고된다
+- spec-sync 단계: 검증된 지속 정보만 `_sdd/spec/`에 반영되고, 다 구현된 draft는 `_processed_` prefix로 rename된다. 규모가 커지면 분할 규칙(롤링 draft + planned todo 고정 + feature별 순차 체인)으로 해소한다
 
 ### Scenario 2b: 여러 SDD 단위를 native goal로 수렴시키기 (sdd-autopilot setup)
 
@@ -65,10 +67,10 @@
 **Expected Result:**
 - `sdd-autopilot`이 사용자 목표와 관련 context를 `goal-init(preset=sdd)`에 전달하고, 목표·권한·접근의 판단 기준과 condition self-check에 따라 `_sdd/goal/<YYYY-MM-DD>_<slug>/` 아래 `goal.md`·`experiments.md`·`journal.md`·`report.md`를 생성한다
 - handoff에는 자족적 조건 문자열, runtime 실행법, 네 파일의 개별 경로와 “goal을 활성화하지 않았으며 기존 goal 상태도 변경하지 않았다”는 불변식이 표시된다. 사용자가 내용을 검토하고 native goal activation 여부와 시점을 결정한다
-- setup 중 initial `feature-draft`·`implementation`·`spec-sync`는 실행되지 않는다. current goal status를 조회하지 않고 existing goal을 변경하거나 active goal 때문에 setup을 차단하지도 않는다
-- activation 뒤 SDD Loop Protocol은 미충족 `DONE WHEN` 또는 실패한 final integration proof gap에서 가장 작은 next feature를 선택하고, 필요 시 reviewed `feature-draft`를 만든 뒤 `implementation` → persistent 변경 시 `spec-sync` → evidence·완료 feature·남은 gap·next action 기록을 반복한다
+- setup 중 `sdd-orchestrator`나 initial feature는 실행되지 않는다. current goal status를 조회하지 않고 existing goal을 변경하거나 active goal 때문에 setup을 차단하지도 않는다
+- activation 뒤 SDD Loop Protocol은 미충족 `DONE WHEN` 또는 실패한 final integration proof gap에서 가장 작은 next feature를 선택하고, 그 feature를 `sdd-orchestrator`로 진행(reviewed draft가 없으면 계획 단계부터, 있으면 구현 단계부터 게이트 결과까지, persistent 변경 시 spec-sync 단계까지)한 뒤 evidence·완료 feature·남은 gap·next action 기록을 반복한다
 - draft가 분할되면 같은 native goal 안에서 smallest next unit을 계속 선택하며 nested `goal-init`을 만들지 않는다. 모든 `DONE WHEN`과 final integration proof 통과는 성공 종료 조건이다. STOP/STUCK은 미완료 사유·다음 행동을 남기고 native lifecycle 규칙에 따라 종료한다
-- `feature-draft`와 `implementation`의 품질 게이트는 각 producer가 소유한다. 별도 Goal Contract, Initial Feature Queue, status manifest, goal-level reviewer는 생성하지 않는다
+- 품질 게이트는 `sdd-orchestrator`가 소유한다. 별도 Goal Contract, Initial Feature Queue, status manifest, goal-level reviewer는 생성하지 않는다
 
 ### Scenario 3: PR 기반 스펙 동기화
 

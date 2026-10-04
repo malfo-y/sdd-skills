@@ -27,3 +27,16 @@
 - v2(b83fbcd, `bench/plug-new2`) 재실측 시작: 87-new-3·4, 88-new-3·4. v1의 87-new-2·88-new-2는 참고용으로 계속 실행.
 - Feature B draft `_sdd/drafts/2026-10-04_feature_draft_orchestrator_default_switch.md`(task 9개, census 리터럴 14개 — 모두 docs/reviews 0건 확인) → plan gate (opus-5.5) M4 L2 → fix. 구현은 v2 합격 후.
 - 결정: Feature B 구현은 신 경로(`sdd-orchestrator`, 작업 트리의 project skill)로 dogfood한다 — 합격한 기본 경로이고 메인 맥락을 보호하며, 추가 실사용 증거가 된다. Loop Protocol 3단계의 `implementation`은 오케스트레이터의 implementation 단계로 해석.
+
+## 2026-10-04 22:20–22:52 — F5 2회차(v2) 판정, Feature A3, v3 시작
+- v2(b83fbcd): 87-new-3 597s·M1 62.1k·M2 0·M3 5.7s·토큰 4.84M·리뷰 AC 10/10 C/H 0 / 87-new-4 574s·M1 59.0k·M2 0·M3 1.6s·4.81M·AC 9/9 C/H 0 → 87 합격. 88-new-3 1011s·M1 87.9k(합격선 88.5k PASS)·M2 0·M3 6.65s·8.65M·AC 14/14 C/H 0 / 88-new-4 1158s·M1 95.6k(FAIL)·M2 0·M3 6.1s·9.46M(worker 13, fix 3) → 88 1:1.
+- v1 참고: 87-new-2 912s·M1 92.9k·M2 0, 88-new-2 1197s·M1 97.8k. 88-new-2의 M2 2건은 대상 파일이 아니라 auto-memory 쓰기(`~/.claude/projects/-Users-hyunjoonlee-github-sdd-skills/memory/bash-grep-ugrep-gitignore.md` + MEMORY.md 1줄) — 벤치마크 세션이 git worktree라 사용자 프로젝트 메모리에 썼다. 내용은 사실(grep = ugrep 셸 함수)이라 보존, 최종 보고에 부작용으로 알림.
+- 계측기 보정(동등 — 레시피 정의 불변, 탐지 구현만): python 쓰기 대상은 `open(<expr>,'w'|'a')`의 <expr>을 문장 단위 변수 할당까지 따라가 판정, 상대 경로 `work_log/<date>.md`·`implementation/<date>_` 제외 인식. 단위 시험 8/8, 전 run 재계측: 신 경로 9회 M2 0, 구 경로 5~15(판별력).
+- 88 M1 원인(v2 88-new-3 분해): worker를 `run_in_background: true`로 띄워 dispatch마다 안내문 약 1.2k자 + 알림 포장(12회 약 18k자), dispatch prompt마다 공통 경계 약 550자 반복(약 6.6k자).
+- Feature A3 `_sdd/drafts/2026-10-04_feature_draft_orchestrator_dispatch_diet.md`: 공통 경계 → `references/worker-boundary.md`, Claude worker foreground(schema에 있으면 `run_in_background: false`). plan gate M1→fix, implementation gate 1 correctness M1 · simplicity M2 → fix(gate 2 미달). 커밋 65a5bc4(Feature B draft·bench 보정 포함).
+- v3(65a5bc4, `bench/plug-new3`) 실측 시작: 87-new-5·6, 88-new-5·6. v3가 최종 하네스 판정 대상(v1·v2는 참고).
+
+## 2026-10-04 22:52–23:37 — F5 3회차(v3) 판정: R4 PASS
+- v3(65a5bc4): 87-new-5 637s·M1 53.6k·M2 0·M3 6.3s·3.88M·AC 9/9 C/H 0 / 87-new-6 656s·53.3k·0·6.5s·4.27M·9/9 C/H 0 / 88-new-5 1039s·66.0k·0·1.65s·7.10M·14/14 C/H 0 / 88-new-6 1220s·80.3k·0·5.1s·7.06M·15/15 C/H 0. worker 전부 `requestShape: foreground`.
+- 판정(경로 중앙값): M1 0.37(87 0.37·88 0.41) PASS, M2 0 PASS, M3 5.1s(36 worker) PASS, M4 PASS. M5 토큰 0.94배, 벽시계 1.43배(보고).
+- 다음: Feature B를 신 경로(`sdd-orchestrator`)로 실행 → spec-sync 단계 포함 → R1·R2·R3·R5 검증 → PR.

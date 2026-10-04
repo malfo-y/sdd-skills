@@ -3575,3 +3575,12 @@ sdd-autopilot의 review-fix 루프가 선택적으로 동작하여, 리뷰만 �
 - **근거**: 과거 agent 경로 폐지의 원인은 "메인 루프가 가진 맥락을 worker가 다시 파악하는 비용"이었다. 2026-10-04 실측에서 그 실체가 기동·재독이 아니라 방법을 다시 알아내는 턴이고, 검증 명령·기대값·환경 함정을 담은 레시피형 digest로 줄어든다는 것을 확인했다(AC 검사 13초, 위치표형 digest는 효과 없음). 리뷰 worker에게 state를 주지 않는 것은 fresh verification 원칙을 구조로 지키기 위해서다.
 - **기각**: 코드형 오케스트레이터(Claude Workflow 도구 — Codex 공통 계약 위반), 외부 스크립트 오케스트레이터(단계 중간 사용자 질문 불가), digest 1파일(리뷰어가 통과 주장을 볼 수 있음), 단계별 점진 교체(신·구 비교 불가).
 - **포인터**: `_sdd/discussion/2026-10-04_discussion_orchestrator_harness_redesign.md`, `_sdd/discussion/2026-10-04_discussion_subagent_cold_start.md`, `_sdd/drafts/2026-10-04_feature_draft_orchestrator_harness.md`, `_sdd/goal/2026-10-04_orchestrator_harness_redesign/`.
+
+
+## 2026-10-05 - 오케스트레이터 경로를 기본으로 교체하고 구 직접 실행 단계 스킬 삭제 (v4.34.0)
+
+- **결정**: goal R4 실측 합격에 따라 `sdd-orchestrator`를 SDD 체인의 기본이자 유일 경로로 삼고, 메인 루프가 단계 작업을 직접 하던 구 단계 스킬 5종(양 runtime)을 삭제했다. 별칭 스킬은 두지 않고 구 트리거는 `sdd-orchestrator` description이 받는다. 이로써 producer 게이트 소유, 메인 루프 직접 작성, `plan-review`·`implementation-review`의 메인 루프 직접 실행(2026-08-15 결정), implementation ledger(2026-08-05 결정)는 대체됐다 — 게이트는 오케스트레이터, 작성은 task worker, 리뷰는 분리된 리뷰 worker, 재개는 state가 맡는다. 2026-08-15의 "읽기 통제는 순종이 아니라 구조로"는 리뷰 worker에게 state를 주지 않는 입력 구조로 이어 가고, 계획 게이트 재분할·수집 전용 worker 재제안 금지는 유지한다. 같은 sync에서 A2(메인 루프 읽기 범위 축소·digest/state 부분 갱신·draft `_processed_` rename 입력·worker 시작 묶음 읽기와 짧은 반환)와 A3(worker 공통 경계 `references/worker-boundary.md` 단일 소스, Claude worker foreground)를 반영했다.
+- **근거**: 같은 기능 2개(PR #87·#88)를 신·구 경로로 `claude -p` 실행(구 4회, 최종 하네스 v3 2회씩). v3 기준 메인 맥락 증가 중앙값 구 159.9k → 신 59.8k(0.37배, 합격선 0.5배), 메인 루프 대상 파일 쓰기 0, worker cold start 중앙값 5.1s, 독립 리뷰 AC 전부 MET·Critical/High 0. 총 토큰은 0.94배, 체인 벽시계는 1.43배로 늘었다(단계 직렬 구간과 worker별 재확인 비용) — 메인 맥락 보호를 위해 감수한다. A2는 1회차 M1 근소 불합격의 원인(메인 루프의 worker 계약 직접 읽기·환경 탐색·긴 반환·digest/state 통째 재작성)을, A3는 2회차 잔여 포장 비용(백그라운드 안내문·완료 알림, dispatch마다 반복된 공통 경계 문단)을 줄였다.
+- **보존**: spec 중심 루프와 검증(falsifiable AC, fresh verification, test-first·커버리지 델타), Claude·Codex 공통 계약, 산출물 원칙, 게이트 정책(gate 1+fix 1, 임계 시 gate 2+fix 2, gate 3 없음).
+- **복구 경로**: 구 직접 실행 단계 스킬은 커밋 65a5bc4 트리에 있다.
+- **포인터**: `_sdd/goal/2026-10-04_orchestrator_harness_redesign/report.md`(측정 표), `_sdd/drafts/_processed_2026-10-04_feature_draft_orchestrator_{harness,context_diet,dispatch_diet,default_switch}.md`, `_sdd/implementation/2026-10-04_orchestrator_default_switch/state.md`.
