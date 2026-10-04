@@ -31,7 +31,11 @@ def _clean(cmd):
 
 def _py_write_targets(raw):
     """python 쓰기의 대상: open(<expr>, 'w'|'a')·<expr>.write_text( 의 <expr>을 변수 할당까지 따라가 따옴표 문자열을 모은다."""
-    assigns = dict(m.groups() for m in (re.match(r"\s*([A-Za-z_]\w*)\s*=\s*(.+)$", st) for st in re.split(r"[;\n]", raw)) if m)
+    assigns = {}
+    for st in re.split(r"[;\n]", raw):
+        m = re.match(r"\s*([A-Za-z_]\w*)\s*=\s*(.+)$", st)
+        if m:
+            assigns[m.group(1)] = m.group(2)
     exprs = re.findall(r"open\(\s*([^,]+?)\s*,\s*['\"][wa]", raw) + re.findall(r"([\w.'\"/+()\[\]-]+)\.write_text\(", raw)
     out, seen = [], set()
     while exprs:
@@ -49,7 +53,7 @@ def bash_writes(tool):
         return False
     raw = tool["input"].get("command", "")
     cmd = _clean(raw)
-    targets = [t for t in REDIRECT.findall(cmd) if t != "&1" and t != "&2"]
+    targets = REDIRECT.findall(cmd)
     for seg in re.split(r"&&|\|\||[;|\n]", cmd):
         if WRITE_OP.search(seg):
             targets += FILE_TOKEN.findall(seg)

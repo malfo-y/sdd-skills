@@ -3591,3 +3591,17 @@ sdd-autopilot의 review-fix 루프가 선택적으로 동작하여, 리뷰만 �
 - **결정**: 사용자 결정으로 `sdd-orchestrator` worker 모델은 기본으로 세션 모델을 상속하고, 호출할 때만 단계별로 지정한다(`--model <단계>=<모델>[,…]` 또는 자연어). 지정값은 digest 결정·제약에 기록해 재개 때도 유지한다. v4.34.0의 "worker는 model을 지정하지 않는다"를 대체한다.
 - **기각**: 단계별 기본값 고정(지정하지 않은 실행의 세션 모델 상속이 깨진다), repo 설정 파일(허용값이 runtime schema와 drift하는 저장소 allowlist가 된다).
 - **포인터**: `_sdd/implementation/2026-10-05_orchestrator_worker_model_select/`.
+
+
+## 2026-10-05 - `sdd-orchestrator` 비차단·의존성 기준 dispatch (v4.36.0)
+
+- **결정**: 사용자 요청으로 메인 루프는 worker 반환을 폴링(sleep·until 루프, 출력 파일 감시)으로 기다리지 않는다. 띄운 뒤에는 자기 일을 하고, 할 일이 없으면 runtime 수단(Claude 완료 알림, Codex wait)으로 반환을 하나씩 받는다. dispatch는 "띄운 worker가 모두 반환한 뒤" 묶음 장벽 대신, 시작할 때와 반환 하나마다 선행 task가 모두 닫히고 실행 중·함께 띄우는 worker와 Target Files 서로소·`Contracts` 미공유인 task를 바로 띄운다. 남는 장벽은 read-only 검증 task·구현 게이트·게이트 fix 판정(raw 합산) 셋이다. 이를 위해 Claude worker는 백그라운드로 띄운다 — v4.34.0 A3의 foreground 결정(dispatch마다 백그라운드 안내문 절약)을 대체한다.
+- **트레이드오프**: 백그라운드 dispatch는 안내문·완료 알림만큼 메인 맥락을 다시 늘린다. M1(메인 맥락 ≤ 구×0.5) 재확인은 goal 루프 재실측 소관이며 이 기록 시점에는 미실측이다.
+- **포인터**: `_sdd/drafts/_processed_2026-10-05_feature_draft_orchestrator_nonblocking_dispatch.md`, `_sdd/implementation/2026-10-05_orchestrator_nonblocking_dispatch/`.
+
+
+## 2026-10-05 - `sdd-orchestrator` 무인 실행의 허용값 밖 모델 대체 (v4.36.0)
+
+- **결정**: 사용자 결정으로 `sdd-orchestrator` 무인 실행에서 허용값 밖 단계 모델은 묻지 않고 세션 모델 상속으로 대체하고 마감 보고에 적는다. "요청한 model·reasoning override가 미지원이면 dispatch를 막는다" Guardrail의 유일한 예외다. 사람이 있는 실행은 허용값을 알리고 고쳐 받는다.
+- **근거**: 무인 실행은 질문에 답할 사람이 없어 dispatch 차단이 곧 체인 정지다. 단계 모델 지정은 품질 계약이 아니라 비용·속도 조절이라, 세션 모델로 진행하고 보고하는 쪽이 손실이 작다.
+- **포인터**: `_sdd/implementation/2026-10-05_orchestrator_nonblocking_dispatch/digest.md`(범위 A 결정 2).

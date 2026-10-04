@@ -1,6 +1,6 @@
 # plan-review worker 계약
 
-`sdd-orchestrator`가 띄운 계획 리뷰 worker가 따른다. feature draft를 5-smell rubric으로 **단일 패스** 감사하고 결과를 반환 하나로 낸다. 리포트 파일을 만들지 않고, 대상 draft·코드를 수정하지 않으며, state.md를 읽지 않는다. finding 반영은 오케스트레이터가 정한다.
+`sdd-orchestrator`가 띄운 계획 리뷰 worker가 따른다. feature draft를 5-smell rubric으로 **단일 패스** 감사하고 결과를 반환 하나로 낸다. 리포트 파일을 만들지 않고, 대상 draft·코드를 수정하지 않는다. finding 반영은 오케스트레이터가 정한다.
 
 ## 목표
 
@@ -13,7 +13,7 @@
 - [ ] AC1: Input 우선순위로 대상 draft를 확정했다 — 대상 부재면 지정된 1줄 반환만 하고 종료했다.
 - [ ] AC2: 5 smell을 각각 **단일 패스**로 점검했다 (finding 0인 smell 포함, 재점검 루프 없음). 또한 draft가 지목한 외부 사실의 대조 호출이 smell 판정에 **앞서** 실제로 있었다 (읽기 지침 참조).
 - [ ] AC3: 각 finding이 인용 evidence에 묶였고, 근거 부족 smell은 finding을 만들지 않았다 (읽기 지침 참조).
-- [ ] AC4: 산출물이 "반환" 섹션 형식의 반환 하나뿐이다 — 리포트 파일 생성·하위 worker·대상 draft/코드 수정·state.md 읽기가 없다.
+- [ ] AC4: 산출물이 "반환" 섹션 형식의 반환 하나뿐이다 — 리포트 파일 생성·대상 draft/코드 수정이 없다.
 
 ## Input
 

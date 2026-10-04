@@ -30,7 +30,7 @@ description: "Use this skill to run the SDD chain (feature-draft → plan-review
 2. 인계 파일 디렉터리를 만들거나 이어 쓴다. state에 단계·종점을 적고 digest를 초기화한다(`인계 파일`).
 3. 종점까지 단계마다 worker를 띄운다.
    - feature-draft·plan-review: 계획 게이트(`품질 게이트`)를 실행한다.
-   - implementation: draft Part 2 task를 `병렬 규칙`으로 묶어 task worker를 띄운다.
+   - implementation: draft Part 2 task를 `병렬 규칙`대로 task worker로 띄운다.
    - implementation-review: 구현 게이트(`품질 게이트`)를 실행한다.
    - spec-sync: spec-sync worker 1개를 띄운다.
    - 단계를 닫을 때마다 state의 단계를 갱신한다.
@@ -56,7 +56,7 @@ description: "Use this skill to run the SDD chain (feature-draft → plan-review
 
 - **digest.md**: 방법과 이유다. worker가 다시 알아내기 비싼 것 — 결정·제약, 환경 함정, 검증 레시피(AC → 명령 → 기대값) — 만 담는다. 모든 worker가 읽는다. 상태·통과 주장·이력·파일 내용 복사·위치 목록은 넣지 않고, 현재 유효한 내용만 남긴다(바뀐 결정은 고쳐 쓴다).
 - **state.md**: 재개용 상태다. 단계, task 상태, RED·GREEN 신호, 게이트 결과, 계획 이탈·발견, AC→증거를 담는다. 메인 루프만 읽는다. spec-sync worker는 구현 증거로 읽을 수 있다. 리뷰 worker에게는 주지 않는다. 명령 출력 전문과 진행 서술은 복사하지 않는다.
-- 두 파일의 작성자는 메인 루프 하나다. worker는 반환 끝의 `digest 변경분`으로만 digest를 바꾼다. 메인 루프는 반환을 받을 때마다 변경분을 digest에 반영하고 state를 갱신한다. 처음 만든 뒤에는 바뀐 행·항목만 고치고 파일 전체를 다시 쓰지 않는다. 동시에 받은 변경분이 서로 모순되면 둘 다 반영하지 않고 모순을 state에 적은 뒤 해당 task를 다시 계획한다.
+- 두 파일의 작성자는 메인 루프 하나다. worker는 반환 끝의 `digest 변경분`으로만 digest를 바꾼다. 메인 루프는 반환을 받을 때마다 변경분을 digest에 반영하고 state를 갱신한다. 처음 만든 뒤에는 바뀐 행·항목만 고치고 파일 전체를 다시 쓰지 않는다. 실행이 겹친 worker의 변경분이 이미 반영한 변경분과 모순되면 나중 변경분을 반영하지 않고 모순을 state에 적은 뒤 해당 task를 다시 계획한다.
 - **digest 초기화**: 계획 단계를 거치면 feature-draft worker 반환의 `digest 변경분`으로 만든다. draft로 진입하면 draft AC의 검증 명령, `_sdd/env.md`, 대화에서만 나온 결정으로 메인 루프가 만든다. 이때 대상 파일을 탐색하지 않는다.
 
 ## 단계와 진입
@@ -93,8 +93,12 @@ digest: <digest.md 절대 경로> — 결정·환경 함정·검증 레시피다
 - 동시에 실행 중인 다른 worker의 Target Files: <목록 또는 없음>
 ```
 
-- 띄운 worker가 모두 반환한 뒤 다음 행동을 정한다. 기다리는 동안 worker의 일을 대신하지 않는다.
-- worker 모델: 기본은 세션 모델을 상속한다(지정하지 않는다). 사용자가 단계별 모델을 지정하면(예: "계획은 fable, 구현·리뷰·spec-sync는 sonnet" 또는 `--model <단계>=<모델>[,<단계>=<모델>…]`) 그 단계의 worker에만 적용한다. 단계 이름은 `단계와 진입` 표의 다섯 단계이고, implementation-review 지정은 correctness·simplicity worker 모두에, 각 단계의 fix 재dispatch에도 같은 모델을 쓴다. 시작할 때 지정값을 Runtime 절의 허용값으로 확인하고, 단계별 모델을 digest의 결정·제약에 적어 재개 때도 같은 값을 쓴다. 허용값 밖이면 허용값을 알리고 고쳐 받는다. 무인 실행이면 묻지 않고 그 단계는 세션 모델을 상속하며 마감 보고에 적는다.
+- worker 결과를 기다리려고 sleep·until 루프나 출력 파일 감시(폴링)를 하지 않는다. 띄운 뒤에는 메인 루프 자신의 일(digest·state 갱신, 사용자 대화, 의존이 풀린 worker dispatch)을 하고, 할 일이 없으면 `Runtime: worker dispatch` 절의 방식으로 다음 반환을 받는다. worker의 일은 대신하지 않는다.
+- worker 모델: 기본은 세션 모델을 상속한다(지정하지 않는다).
+  - 지정: 사용자가 단계별 모델을 지정하면(예: "계획은 fable, 구현·리뷰·spec-sync는 sonnet" 또는 `--model <단계>=<모델>[,<단계>=<모델>…]`) 그 단계의 worker에만 적용한다.
+  - 범위: 단계 이름은 `단계와 진입` 표의 다섯 단계다. implementation-review 지정은 correctness·simplicity worker 모두에 적용한다. 각 단계의 fix 재dispatch에도 같은 모델을 쓴다.
+  - 확인·기록: 시작할 때 지정값을 Runtime 절의 허용값으로 확인하고, 단계별 모델을 digest의 결정·제약에 적어 재개 때도 같은 값을 쓴다.
+  - 허용값 밖: 허용값을 알리고 고쳐 받는다. 무인 실행이면 묻지 않고 그 단계는 세션 모델을 상속하며 마감 보고에 적는다.
 - fix를 맡길 때는 `품질 게이트`의 fix 정책으로 고른 findings만 입력으로 넘긴다. worker는 받은 findings를 모두 반영한다.
 - worker가 실패하거나 반환이 계약 형식을 벗어나면 같은 입력으로 1회 다시 띄운다. 또 실패하면 멈추고 사용자에게 보고한다.
 - task worker가 계약 오류 반복(implementation 계약의 `중단 규칙`)으로 BLOCKED를 반환하면, 그 task를 계획 단계로 되돌린다(feature-draft worker에 fix 입력으로 보낸다).
@@ -102,7 +106,10 @@ digest: <digest.md 절대 경로> — 결정·환경 함정·검증 레시피다
 ## 병렬 규칙
 
 - task worker는 task당 1개다.
-- Target Files가 서로소이고, `Contracts`를 공유하지 않고, 산출물 의존(선행 task)이 없는 task들만 한 번에 동시에 띄운다. 나머지는 의존 순서대로 띄운다.
+- 시작할 때, 그리고 worker가 반환할 때마다(반환은 먼저 `인계 파일`대로 반영한다) 아래 조건을 모두 만족하는 task를 바로 띄운다.
+  - 선행 task가 모두 DELTA_CLOSED다.
+  - Target Files가 실행 중인 worker 및 함께 띄우는 worker의 것과 서로소다.
+  - 그 worker들의 task와 `Contracts`를 공유하지 않는다.
 - read-only 검증 task(Target Files `없음`)는 다른 task의 결과를 검사하므로, 같은 draft의 변경 task가 모두 닫힌 뒤 띄운다. FAIL을 반환하면 원인 task의 worker를 그 판정과 함께 fix로 다시 띄운 뒤 검증 task를 다시 띄운다.
 - 동시 실행 수 상한은 두지 않고 런타임에 맡긴다.
 - 모든 worker는 같은 작업 트리를 쓴다.
@@ -126,7 +133,7 @@ digest: <digest.md 절대 경로> — 결정·환경 함정·검증 레시피다
   - 조건 충족이면 fix 1 뒤에 같은 게이트를 한 번 더 실행하고 같은 fix 정책으로 fix 2를 한다. gate 3은 없다.
   - gate 2의 raw 합산도 조건을 충족하면 마감에서 후속 리뷰 1회를 권고한다.
 - **미완료 게이트**: 리뷰 worker가 미완료를 반환하면 확보된 findings만 fix 정책으로 처리한다. 사유와 남은 작업을 보고한다. 그 호출은 횟수에 넣되 통과로 세지 않는다.
-- 게이트 반환은 사용자 입력 대기 지점이 아니다. 반환 직후 fix와 gate 2 판정을 이어서 한다.
+- 게이트 반환은 사용자 입력 대기 지점이 아니다. 그 게이트의 리뷰 worker가 모두 반환하면 바로 fix와 gate 2 판정을 한다(raw 합산이 필요해 먼저 온 반환만으로 판정하지 않는다).
 
 ## 재개
 
@@ -141,11 +148,11 @@ state.md를 읽어 다음 행동을 정한다. DELTA_CLOSED가 아닌 task는 st
 
 - 스킬 내부 dispatch를 허용하는 런타임에서 이 호출은 worker 위임 요청으로 처리한다. 상위 정책이 별도 허가를 요구하면 먼저 확보한다.
 - active tool schema로 아래 두 contract 중 **완전하게 지원되는 하나**를 선택한다. surface 이름으로 추정하거나 없는 lifecycle 도구를 검색하지 않는다. 두 contract의 필드를 섞지 않고, 하나로 확정할 수 없으면 schema blocker로 멈추고 보고한다.
-  - **Mailbox** (spawn의 task_name·fork_turns·message와 target 없는 mailbox wait가 있을 때): worker마다 parent tree에서 고유한 task_name과 `fork_turns: "none"`으로 spawn한다. mailbox wait로 모든 final을 수거하고 완료 agent는 닫지 않는다. 중단이 필요할 때만 노출된 interrupt_agent를 쓴다.
-  - **Target/close** (message 기반 spawn, targets를 받는 wait, close_agent가 있을 때): spawn 후 target wait로 final을 수거하고 완료 handle을 닫는다.
+  - **Mailbox** (spawn의 task_name·fork_turns·message와 target 없는 mailbox wait가 있을 때): worker마다 parent tree에서 고유한 task_name과 `fork_turns: "none"`으로 spawn한다. mailbox wait로 final이 올 때마다 그 반환을 처리하고 완료 agent는 닫지 않는다. 중단이 필요할 때만 노출된 interrupt_agent를 쓴다.
+  - **Target/close** (message 기반 spawn, targets를 받는 wait, close_agent가 있을 때): spawn 후 실행 중인 worker 전부를 targets로 wait하고, final이 올 때마다 그 반환을 처리하고 그 handle을 닫는다.
 - spawn message는 `Worker dispatch` 형식을 그대로 쓴다. worker 모델이 지정된 단계만 선택한 spawn schema의 `model` 필드에 그 값을 넣는다. 허용값은 그 schema의 `model` enum이고, 필드가 없거나 값이 enum 밖이면 허용값 밖으로 처리한다(`Worker dispatch`의 worker 모델 규칙). 지정하지 않은 단계의 model과 모든 단계의 reasoning_effort는 생략해 기본값을 상속한다.
-- 동시에 띄울 worker는 연달아 spawn한 뒤 함께 수거한다. 런타임의 동시 실행 상한 때문에 spawn이 거부되면, 실행 중인 worker의 final을 하나 수거한 뒤 이어서 spawn한다.
-- wait timeout을 완료로 간주하지 않는다. 모든 final이 올 때까지 기다리거나, 통제된 중단과 미완료 상태를 보고한다.
+- 동시에 띄울 worker는 연달아 spawn한다. 반환 하나를 처리하면 `병렬 규칙`대로 의존이 풀린 worker를 spawn한 뒤 다시 wait한다. spawn이 동시 실행 상한으로 거부되면 final을 하나 받은 뒤 spawn한다.
+- wait timeout을 완료로 간주하지 않는다. 실행 중인 worker의 final을 다시 기다리거나, 통제된 중단과 미완료 상태를 보고한다.
 
 ## Final Check
 

@@ -2,7 +2,7 @@
 
 `sdd-orchestrator`가 띄운 correctness 리뷰 worker가 따른다. AC 충족·로직 결함·spec 정합을 **단일 패스**로 본다. simplicity 렌즈는 오케스트레이터가 별도 worker로 띄운다. review-only다 — 어떤 파일도 수정하지 않으며, finding 반영은 오케스트레이터가 정한다.
 
-**fresh 원칙**: state.md와 구현 worker의 통과 주장(RED·GREEN 신호, 이전 리뷰 결과)을 읽지 않는다. 모든 판정은 이번에 직접 실행하거나 읽은 증거로 한다.
+**fresh 원칙**: 구현 worker의 통과 주장(RED·GREEN 신호, 이전 리뷰 결과)을 읽지 않는다. 모든 판정은 이번에 직접 실행하거나 읽은 증거로 한다.
 
 ## 목표
 
@@ -12,7 +12,7 @@
 
 - [ ] AC1: correctness 판정 기준이 기준 문서 적응 규칙으로 정해졌고, 읽기 범위 3단 계단 밖 탐색적 읽기가 없다.
 - [ ] AC2: digest 검증 레시피(회귀 행 포함)를 fresh 실행했고, 모든 AC verdict(MET/NOT MET/UNTESTED)가 fresh 증거(실행 출력 또는 `file:line`)에 묶였다 — 증거 없는 MET 없음이며, 그 증거는 반환의 AC당 포인터로 드러난다.
-- [ ] AC3: 산출물이 `반환` 절 형식의 보고 하나뿐이고, 어떤 파일도 수정하지 않았으며 state.md를 읽지 않았다.
+- [ ] AC3: 산출물이 `반환` 절 형식의 보고 하나뿐이고, 어떤 파일도 수정하지 않았다.
 
 ## Correctness 리뷰 (단일 패스)
 

@@ -2,6 +2,12 @@
 
 > 이 파일은 `_sdd/spec/main.md`의 **본문이 바뀐 버전만** 기록한다 — 본문 무변경 sync(헤더 날짜만 갱신)는 entry를 남기지 않으므로 버전 번호에 결번이 생길 수 있다.
 
+#### v4.36.0 (2026-10-05)
+
+- **`sdd-orchestrator` 비차단·의존성 기준 dispatch**: 메인 루프는 worker 반환을 폴링으로 기다리지 않고, 시작과 반환 하나마다 의존이 풀린 task를 바로 띄운다(실행 중·함께 띄우는 worker와 Target Files 서로소·`Contracts` 미공유). 남는 장벽은 read-only 검증 task·구현 게이트·게이트 fix 판정 셋이다. Claude worker는 백그라운드 dispatch와 완료 알림 단위 처리, Codex는 두 contract 모두 final 단위 처리로 바꿨다 — v4.34.0의 Claude worker foreground dispatch를 대체한다. 같은 변경에 fable 리뷰 Medium을 반영했다(worker 계약의 공통 경계 재진술 제거 — 리뷰 worker state 미열람은 `worker-boundary.md`가 명시, worker 모델 규칙 하위 bullet 분리, goal bench 스크립트 동작 불변 정리).
+- **모델 override Guardrail 예외**: `sdd-orchestrator` 무인 실행에서 허용값 밖 단계 모델은 세션 모델 상속으로 대체하고 마감 보고에 적는다(사용자 결정).
+- **검증 evidence**: structural check `nonblocking_dispatch.sh` T1 14·T2 6·T3 12·T4 8 PASS(각 RED FAIL→GREEN), `model_select.sh` 9/9, gate 1 fix check 10/10, 양 runtime 미러 차이 Runtime 절 hunk 1. 메인 맥락 효과 재측정은 미실행.
+
 #### v4.35.0 (2026-10-05)
 
 - **`sdd-orchestrator` worker 단계별 모델 선택**: 기본은 세션 모델 상속이고, 사용자가 호출할 때 단계별 worker 모델(`--model <단계>=<모델>[,…]` 또는 자연어)을 지정하면 그 단계 worker에만 적용한다. 허용값은 Claude `Agent`의 `model` 값, Codex는 선택한 spawn schema의 `model` enum(reasoning_effort는 상속). subagent 모델 override Guardrail과 §3 비교표 `subagent model override` 행을 갱신했다 — v4.34.0의 "모델 override는 `pr-review`에만 남는다"를 대체한다.

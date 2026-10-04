@@ -7,7 +7,40 @@ B=${BENCH_DIR:?BENCH_DIR required}
 WT=$B/t-$RUN
 LOG=$B/logs
 DRAFT=$(cd "$WT" && ls _sdd/drafts/*2026-08-26_feature_draft_*.md | head -1)
-SCHEMA='{"type":"object","required":["ac","findings"],"properties":{"ac":{"type":"array","items":{"type":"object","required":["task","ac","verdict","evidence"],"properties":{"task":{"type":"string"},"ac":{"type":"string"},"verdict":{"enum":["MET","NOT_MET","UNTESTED"]},"evidence":{"type":"string"}}}},"findings":{"type":"array","items":{"type":"object","required":["severity","location","summary"],"properties":{"severity":{"enum":["Critical","High","Medium","Low"]},"location":{"type":"string"},"summary":{"type":"string"}}}}}}'
+SCHEMA=$(cat <<'EOF'
+{
+  "type": "object",
+  "required": ["ac", "findings"],
+  "properties": {
+    "ac": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["task", "ac", "verdict", "evidence"],
+        "properties": {
+          "task": {"type": "string"},
+          "ac": {"type": "string"},
+          "verdict": {"enum": ["MET", "NOT_MET", "UNTESTED"]},
+          "evidence": {"type": "string"}
+        }
+      }
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["severity", "location", "summary"],
+        "properties": {
+          "severity": {"enum": ["Critical", "High", "Medium", "Low"]},
+          "location": {"type": "string"},
+          "summary": {"type": "string"}
+        }
+      }
+    }
+  }
+}
+EOF
+)
 PROMPT="너는 이 저장소의 변경을 처음 보는 독립 리뷰어다. 기준 문서는 \`$DRAFT\`(feature draft)이고, 리뷰 대상은 HEAD 대비 작업 트리 전체 변경이다(\`git status --short\`와 \`git diff HEAD\`로 확인한다. draft 파일 자체는 대상이 아니다).
 1. draft Part 2의 모든 task AC를 지금 작업 트리에서 직접 실행하거나 읽어서 판정한다(MET / NOT_MET / UNTESTED). evidence에는 실행한 명령과 결과 요지, 또는 file:line을 적는다.
 2. draft Part 1(spec delta)이 \`_sdd/spec/\`에 반영되었는지 확인한다. 반영되지 않았거나 틀리게 반영됐으면 finding으로 낸다.
