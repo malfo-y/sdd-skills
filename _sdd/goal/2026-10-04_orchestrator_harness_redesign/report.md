@@ -1,6 +1,6 @@
 # Report
 
-**Status**: 진행 중 — R4 실측 v3 판정 대기 (Feature B 교체·삭제·PR 전)
+**Status**: PASS
 
 ## Summary
 SDD 체인을 `sdd-orchestrator`(메인 루프 = 지휘, 단계 작업 = 계약을 읽는 범용 worker, digest·state 2파일 인계)로 실행하는 신 경로를 구 경로 옆에 만들고, 같은 기능 2개(PR #87 `review_evidence_floor`, PR #88 `goal_autonomy_grant`)를 base commit worktree에서 `claude -p`로 신·구 각각 실행해 비교했다. 신 경로는 3차례 다듬었다(v1 5853990 → v2 b83fbcd 맥락 다이어트 → v3 65a5bc4 dispatch 다이어트). 판정 대상은 최종 하네스 v3다.
@@ -47,6 +47,15 @@ SDD 체인을 `sdd-orchestrator`(메인 루프 = 지휘, 단계 작업 = 계약�
 - H3 레시피형 digest로 cold start ≤10s: v1부터 성립(중앙값 1.6~10.3s, v3 1.65~6.3s).
 - v1 M1 근소 불합격 원인: 메인 루프의 worker 계약 읽기·환경 탐색·긴 반환·state 통째 재작성 → A2. v2 88 불합격 원인: 백그라운드 dispatch 안내문·알림 포장, dispatch마다 공통 경계 반복 → A3.
 
-## 다음 단계
-1. v3 남은 2회와 독립 리뷰로 M1~M4 판정.
-2. 합격 시 Feature B(교체·구 경로 삭제)를 신 경로로 실행하고 spec-sync, R1·R2·R3·R5 검증, PR.
+## 근거 (검증 레시피)
+- R1: 브랜치 `refactor/orchestrator-harness`, PR https://github.daumkakao.com/vcga/malfo_sdd_skills/pull/96 (OPEN).
+- R2: `sdd-orchestrator` SKILL·references 9개 파일 양 runtime 존재, 구 단계 스킬 디렉터리 10개 부재, marketplace 구 항목 0, census 리터럴 14개 0건.
+- R3: `git diff --check main...HEAD` rc=0, `claude plugin validate` Validation passed, 미러 hunk 기준선 일치(orchestrator 1 = Runtime 절 141행, references 동일본, AGENTS 템플릿 4개 동일).
+- R4: 위 측정 표(v3 판정 PASS).
+- R5: Spec Version 4.32.0(main) → 4.34.0, 구 Guardrail 리터럴 4종 0건.
+
+## 남은 일·주의
+- 벽시계 1.43배 증가는 합격 기준 밖(보고만)이다. 작은 기능에서는 단계 직렬 구간 비용이 병렬 이득보다 크다. 개선 후보: 리뷰와 spec-sync 병행, fix 묶음 축소, 작은 draft는 리뷰 worker 수 축소.
+- 벤치마크 세션 하나(88-new-2)가 사용자 프로젝트 메모리에 `bash-grep-ugrep-gitignore.md`를 썼다(내용은 사실, 보존). 필요 없으면 지워도 된다.
+- Codex는 정적 검사만 했다(실측 안 함).
+- PR merge는 사용자 확인 사항이다.

@@ -40,3 +40,9 @@
 - v3(65a5bc4): 87-new-5 637s·M1 53.6k·M2 0·M3 6.3s·3.88M·AC 9/9 C/H 0 / 87-new-6 656s·53.3k·0·6.5s·4.27M·9/9 C/H 0 / 88-new-5 1039s·66.0k·0·1.65s·7.10M·14/14 C/H 0 / 88-new-6 1220s·80.3k·0·5.1s·7.06M·15/15 C/H 0. worker 전부 `requestShape: foreground`.
 - 판정(경로 중앙값): M1 0.37(87 0.37·88 0.41) PASS, M2 0 PASS, M3 5.1s(36 worker) PASS, M4 PASS. M5 토큰 0.94배, 벽시계 1.43배(보고).
 - 다음: Feature B를 신 경로(`sdd-orchestrator`)로 실행 → spec-sync 단계 포함 → R1·R2·R3·R5 검증 → PR.
+
+## 2026-10-04 23:37 – 10-05 00:40 — Feature B(신 경로 dogfood), spec-sync, PR
+- Feature B를 `sdd-orchestrator`(작업 트리 project skill)로 실행: task 9개(1차 6 동시 → 2차 2 → census), 구현 게이트 gate 1 C0/H0/M2/L4 → fix worker 3개, gate 2 미달. 대화형 환경에서는 `run_in_background: false`여도 Agent가 백그라운드로 돌아 Runtime 절의 fallback(모든 결과 수거 후 진행)대로 진행.
+- spec-sync 1차 worker가 Step 6 검증 Bash에서 22분 정지(프로세스 없음, tool 결과 미기록) → TaskStop 후 재개 정보와 함께 1회 재실행 → v4.34.0 완료(R5 census 0건).
+- 검증 레시피 변경(동등 기록 + 강화): R2에 스킬 이름·census 목록(삭제 디렉터리·리터럴 14개, 검색 범위에 README.md·AGENTS.md 추가), R3에 validate 경로·미러 기준선 기록. diff는 transcript에 표시.
+- R2·R3·R5 실행 결과 전부 PASS(transcript). 커밋 9fa9191, push, PR #96 생성.
