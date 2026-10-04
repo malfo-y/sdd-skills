@@ -2,8 +2,8 @@
 
 > Markdown 기반 skill bundle로 AI 에이전트의 Spec-Driven Development 워크플로우를 Claude Code와 Codex에서 공통 계약으로 실행한다.
 
-**Spec Version**: 4.32.0
-**Last Updated**: 2026-09-15
+**Spec Version**: 4.33.0
+**Last Updated**: 2026-10-04
 **Status**: Approved
 **Canonical Role**: current thin global spec
 
@@ -98,7 +98,11 @@ SDD Skills는 이 문제를 `SKILL.md = 실행 가능한 프롬프트`라는 관
   - 사용자가 native goal을 활성화한 뒤에는 미충족 `DONE WHEN` 또는 실패한 final integration proof gap에서 가장 작은 next feature를 골라 `feature-draft → implementation → (persistent 변경 시) spec-sync → evidence·gap 기록 → final integration proof`로 수렴한다. draft가 분할되면 current goal 안에서 smallest next unit을 계속 선택하며 nested `goal-init`은 만들지 않는다
   - formal Goal Contract·scope ID·Initial Feature Queue·status manifest·goal-level reviewer는 도입하지 않고, 조건·하네스 shape·loop payload의 단일 소스는 `goal-init`에 둔다
 - SDD 체인 진입은 **사용자 요청이 판정한다**(하네스 §3 canonical): SDD는 사용자의 직간접 요청 — 단계 스킬 호출(`discussion`·`feature-draft` 등) 또는 "SDD로 구현/작업하자" 류 지시 — 으로 적용된다. 요청이 없더라도 구현할 기능이 크거나 복잡하거나 스펙에 상당한 영향을 주는 작업이면 **SDD 적용 여부를 사용자에게 질문**하고, 그 외에는 비대상으로 보고 SDD 없이 바로 수행한다. 비적용 경로에서도 §2 작업 규약·검증 표준은 그대로 지키며, 스펙 변경이 생기면 `spec-sync` 호출 여부를 사용자에게 확인받는다. canonical은 하네스 §3이고 전파 표면은 `AGENTS.md` + `spec-create`·`spec-upgrade` 하네스 템플릿 4미러 = 5곳이라, 두 스킬이 초기화하는 모든 소비 repo의 하네스에 적용된다
-- SDD 체인은 `feature-draft`·`implementation`이 유일 경로다 — 일반 구현 요청 트리거는 `implementation` 스킬이 유일 수신 경로이고, draft 파일명 glob은 `*_feature_draft_*`다(lite 파일명은 substring 하위호환, full 레인 복구 보험은 git tag `full-lane-final`)
+- SDD 체인의 기본 경로는 `feature-draft`·`implementation`이다 — 일반 구현 요청 트리거는 `implementation` 스킬이 기본 수신 경로이고, draft 파일명 glob은 `*_feature_draft_*`다(lite 파일명은 substring 하위호환, full 레인 복구 보험은 git tag `full-lane-final`)
+- 오케스트레이터 경로 `sdd-orchestrator`(Claude·Codex)가 기본 경로 옆에 실험 경로로 있다. 메인 루프는 지휘만 한다 — 단계 순서·게이트 루프·병렬 판단·사용자 질문을 소유하고 대상 파일(코드·테스트·draft·spec)을 수정하지 않는다. 단계 작업은 범용 worker가 `sdd-orchestrator/references/workers/<단계>.md` 계약을 읽고 수행하며, worker는 사용자 질문·git 쓰기·하위 worker spawn을 하지 않는다
+  - 인계는 `_sdd/implementation/<YYYY-MM-DD>_<slug>/`의 2파일이다: digest(결정·환경 함정·검증 레시피 — 모든 worker가 읽음, 상태·통과 주장 없음) + state(task 상태·게이트 결과·AC→증거 — 오케스트레이터 재개용, 리뷰 worker에게 주지 않음). 작성자는 오케스트레이터 하나이고 worker는 반환의 `digest 변경분`으로만 바꾼다. 이 경로에서는 state가 implementation ledger를 대신한다
+  - 구현은 task당 worker 1개이고, Target Files 서로소·`Contracts` 미공유·산출물 의존 없음인 task만 같은 작업 트리에서 동시에 띄운다(동시 실행 상한은 런타임 위임, read-only 검증 task는 변경 task가 모두 닫힌 뒤). 리뷰 worker(correctness 1 + simplicity 2묶음)는 작성 worker와 다른 새 worker이고 correctness worker가 digest 검증 레시피를 fresh 실행해 전체 회귀를 대신한다. 게이트 정책(gate 1+fix 1, 임계 시 gate 2+fix 2, gate 3 없음)은 기본 경로와 같고 소유자만 오케스트레이터다
+  - 🚧 Planned: 실측 비교(신·구 경로, 같은 기능)에서 합격하면 `sdd-orchestrator`를 SDD 체인의 기본 진입점으로 교체하고, 구 직접 실행 단계 스킬(`feature-draft`·`plan-review`·`implementation`·`implementation-review`·`spec-sync`, 양 runtime)을 삭제하며, simplicity 계약 reference 이동·참조 sweep과 함께 이 절의 충돌 규칙(메인 루프 직접 작성·producer 게이트 소유·reviewer ledger 미소비 등)을 새 하네스 기준으로 다시 쓴다
 - subagent를 dispatch하는 review 계열 스킬(`plan-review`·`implementation-review`·`pr-review`)의 subagent 모델 override는 런타임별 explicit per-call option으로만 취급하고, 지정 시 그 스킬의 모든 dispatch에 균일 적용된다. 옵션을 생략하면 세션/agent 기본값을 상속한다. 구현·planning 스킬(`implementation`·`feature-draft`)은 메인 루프 직접 작성이라 override 비대상이다
   - Claude Code는 `--model <sonnet|opus|haiku|fable>`로 `Agent(...)` 호출의 model만 override한다
   - Codex는 `--model`과 `--effort`를 분리해 각각 선택된 active `spawn_agent` schema의 `model`·`reasoning_effort` enum으로 검증하고 해당 필드를 override한다. 세 review skill은 고정 allowlist를 소유하지 않으며, 요청 필드가 없거나 값이 enum 밖이면 dispatch 전에 schema가 노출한 허용값과 함께 blocker를 보고한다. 문서의 구체 모델·effort 값은 현재 예시일 뿐 persistent contract가 아니다

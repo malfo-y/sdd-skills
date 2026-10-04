@@ -2,6 +2,11 @@
 
 > 이 파일은 `_sdd/spec/main.md`의 **본문이 바뀐 버전만** 기록한다 — 본문 무변경 sync(헤더 날짜만 갱신)는 entry를 남기지 않으므로 버전 번호에 결번이 생길 수 있다.
 
+#### v4.33.0 (2026-10-04)
+
+- **오케스트레이터 경로 `sdd-orchestrator` 추가(실험, 기본 경로 옆)**: 메인 루프는 지휘만 하고 단계 작업은 `references/workers/<단계>.md` 계약을 읽는 범용 worker가 수행한다. 인계는 digest(모든 worker)+state(오케스트레이터 재개용, 리뷰 worker 미제공) 2파일, task별 worker는 Target Files 서로소·Contracts 미공유·의존 없음일 때만 병렬, 게이트 정책은 기본 경로와 같다. 기본 경로 교체·구 단계 스킬 삭제는 실측 합격 후(🚧 Planned).
+- **검증 evidence**: structural check 42/42(RED 39 FAIL→GREEN, 변이 확인 3회), headless smoke(task 1개 draft) digest·state 생성·worker 4·메인 루프 대상 쓰기 0·cold start 중앙값 5.45s, plan gate H2 M4→fix, implementation-review gate 1 H1 M7→fix·gate 2 M4→fix.
+
 #### v4.30.0 (2026-09-02)
 
 - **simplicity dispatch를 사용자 명시 요청으로 선언**: opus-5 시스템 프롬프트의 "Agent 도구는 사용자가 명시적으로 요청할 때만" 규범 때문에 `implementation-review`·`pr-review`의 simplicity subagent가 뜨지 않는 관측. 두 SKILL.md(claude)에 "스킬 호출 자체가 simplicity dispatch에 대한 사용자의 명시적 요청이며 생략·직접 수행 대체 불가" 한 문장을 추가했다 — codex 미러는 Runtime Adapter 첫 문장이 이미 같은 취지라 무변경. `context: fork` 스킬 승격(구조 해법)은 codex 플러그인 제약으로 보류.

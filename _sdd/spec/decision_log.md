@@ -3567,3 +3567,11 @@ sdd-autopilot의 review-fix 루프가 선택적으로 동작하여, 리뷰만 �
 - **결정**: 승인된 purpose-review를 적용했다. goal-init은 결과 기준으로 대화하고 최소 가설 수를 요구하지 않는다. PR simplicity 입력은 변경 범위·baseline·관련 맥락에 한정하며 메인의 전체 검증 책임은 유지한다. PR 검토 깊이는 위험/AC로 판단하고 테스트 비율은 분모·범위가 명확할 때만 쓴다. implementation은 resume 필수 정보와 발생한 예외를 구분하고 채팅 증거는 소비 요구를 따른다. implementation-review는 커밋/미커밋 혼합 변경을 포함하며 읽기 승격 조건은 동등한 목록으로 유지한다.
 - **검증 범위**: 양 runtime 본문·연결 자산의 정적 계약 대조, YAML/경로/미러 확인, 실제 git 후보 수집 recipe의 격리 fixture 4경우 통과. 이는 소스 계약 및 git 명령 검증이며 실제 agent의 범위 귀속·goal/PR 실행·성능 개선은 미검증이다. 품질 게이트 마감은 별도 적용 기록에 남긴다.
 - **보존**: setup 권한, 조건 self-check, SHA/dirty 경계, test-first와 델타 변이 확인, fix 회귀, gate 임계/상한, 두 simplicity 묶음 및 fresh evidence. 상세 위치와 게이트 결과는 docs/reviews/2026-09-15-skill-instructions/four-skill-purpose-dispositions.md.
+
+
+## 2026-10-04 - 오케스트레이터 기반 multi-agent 하네스 — 실험 경로 추가 (v4.33.0)
+
+- **결정**: 사용자가 하네스를 SDD 철학(spec 중심 루프와 검증, Claude·Codex 공통 계약, 산출물 원칙)만 남기고 오케스트레이터 기반 multi-agent로 재편하기로 했다. 전환은 새 경로를 기존 옆에 만들고 같은 기능으로 신·구를 실측 비교한 뒤 교체·삭제한다. 이번에는 `sdd-orchestrator`를 실험 경로로 추가했고 기존 단계 스킬은 바꾸지 않았다.
+- **근거**: 과거 agent 경로 폐지의 원인은 "메인 루프가 가진 맥락을 worker가 다시 파악하는 비용"이었다. 2026-10-04 실측에서 그 실체가 기동·재독이 아니라 방법을 다시 알아내는 턴이고, 검증 명령·기대값·환경 함정을 담은 레시피형 digest로 줄어든다는 것을 확인했다(AC 검사 13초, 위치표형 digest는 효과 없음). 리뷰 worker에게 state를 주지 않는 것은 fresh verification 원칙을 구조로 지키기 위해서다.
+- **기각**: 코드형 오케스트레이터(Claude Workflow 도구 — Codex 공통 계약 위반), 외부 스크립트 오케스트레이터(단계 중간 사용자 질문 불가), digest 1파일(리뷰어가 통과 주장을 볼 수 있음), 단계별 점진 교체(신·구 비교 불가).
+- **포인터**: `_sdd/discussion/2026-10-04_discussion_orchestrator_harness_redesign.md`, `_sdd/discussion/2026-10-04_discussion_subagent_cold_start.md`, `_sdd/drafts/2026-10-04_feature_draft_orchestrator_harness.md`, `_sdd/goal/2026-10-04_orchestrator_harness_redesign/`.
