@@ -11,3 +11,19 @@
 - implementation 진행: T1~T5·T7 structural 42/42 PASS. T6 smoke GREEN 1차 FAIL: 오케스트레이터가 worker 대신 동명 구 스킬 `sdd-skills:implementation`을 호출하고 메인 루프가 `printf >> notes.md`로 직접 수정 → SKILL.md에 `## 실행 흐름`(번호 절차 + 동명 구 스킬 호출 금지) 추가, smoke 재실행 중.
 - 검증 레시피 변경(강화): R4 M2가 Edit·Write에 더해 파일 쓰기 Bash 명령도 센다(`metrics.py` `bash_writes`, 단위 시험 9/9). 사유: 위 smoke에서 Bash 쓰기가 Edit·Write 계수에 안 잡힘. 제외 경로에 `_sdd/implementation/`·`_sdd/work_log/` 명시는 원문 "대상 파일" 한정의 풀어쓰기(동등).
 - 다음: smoke GREEN 확인 → implementation-review 게이트 → spec-sync → 신 경로 실측(F5).
+
+## 2026-10-04 21:40–21:55 — Feature A 마감, F5 실측 시작
+- H1 정정: `--plugin-dir <marketplace 루트>`는 설치된 sdd-skills(캐시 bee82a5)를 덮어쓰지 못한다(신 skill 미로드, base dir = 캐시). plugin.json + skills symlink 래퍼(`bench/mkplug.sh`)여야 로드된다(base dir = 래퍼 경로 확인). 구 경로 run 4회는 캐시 bee82a5 = main 하네스로 실행됐으므로 기준선 유효.
+- bench 결함 2건 수정: `run.sh` pathspec `:!_sdd…` → git이 magic으로 오해석해 patch·리뷰 누락 → `post.sh`로 분리(`:(exclude)`), 이미 끝난 run은 post.sh로 재처리. spec-sync가 draft를 `_processed_`로 rename → review/post의 draft glob을 `*2026-08-26_feature_draft_*`로.
+- Feature A 마감: implementation-review gate 1(H1 M7)→fix 1, gate 2(M4)→fix 2. 커밋 5853990. spec-sync v4.33.0 커밋 d4eb1a1(실험 경로 + Feature B 🚧 Planned; changelog에 v4.31·v4.32 항목이 원래 없는 기존 공백 발견 — 미수정).
+- 구 기준선(4/4 실행 완료): 87-old 528s/543s, M1 154k/139k, 토큰 5.63M/5.11M, 독립 리뷰 AC 9/9·C/H 0 ×2. 88-old 639s/738s, M1 166k/188k, 토큰 6.37M/7.39M, 독립 리뷰 88-old-1 AC 15/15·C/H 0(88-old-2 진행 중).
+- F5 시작: 스냅샷 `bench/src-new`(5853990) + `bench/plug-new` 래퍼로 87-new·88-new 각 2회(2 stream) + smoke 재확인.
+- 다음: F5 지표 판정 → 합격이면 Feature B draft(census는 Explore agent 진행 중).
+
+## 2026-10-04 21:55–22:20 — F5 1회차(v1) 판정, Feature A2(맥락 다이어트), Feature B draft
+- v1(5853990) 신 경로: 87-new-1 700s·M1 77.3k(합격선 73k FAIL)·M2 0·M3 7.7s·토큰 6.47M·독립 리뷰 AC 9/9 C/H 0(Medium: draft rename 누락). 88-new-1 1185s·M1 91.9k(합격선 88.5k FAIL)·M2 0·M3 7.8s·토큰 10.79M·리뷰 AC 9/9 C/H 0. smoke 최종(v1): worker 4·M2 0·M3 10.1s(동시 5세션 부하).
+- M1 원인 분해(transcript): 메인 루프가 worker 계약을 직접 읽음(87: 약 11.7k자, 88: cat/sed), 환경 탐색, worker 반환 평균 약 3k자(88: 12건 35.9k자), digest·state heredoc 통째 재작성(88: Bash 입력 18.5k자). worker 시작은 계약→digest→draft를 턴마다 따로 읽음.
+- Feature A2 `_sdd/drafts/2026-10-04_feature_draft_orchestrator_context_diet.md`: plan gate M1→fix, implementation gate 1 correctness M1 L1 · simplicity M2 L2 → 전부 반영(gate 2 미달). 커밋 b83fbcd. spec 수준 계약 변화 없음 → spec-sync 생략.
+- v2(b83fbcd, `bench/plug-new2`) 재실측 시작: 87-new-3·4, 88-new-3·4. v1의 87-new-2·88-new-2는 참고용으로 계속 실행.
+- Feature B draft `_sdd/drafts/2026-10-04_feature_draft_orchestrator_default_switch.md`(task 9개, census 리터럴 14개 — 모두 docs/reviews 0건 확인) → plan gate (opus-5.5) M4 L2 → fix. 구현은 v2 합격 후.
+- 결정: Feature B 구현은 신 경로(`sdd-orchestrator`, 작업 트리의 project skill)로 dogfood한다 — 합격한 기본 경로이고 메인 맥락을 보호하며, 추가 실사용 증거가 된다. Loop Protocol 3단계의 `implementation`은 오케스트레이터의 implementation 단계로 해석.

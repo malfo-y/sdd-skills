@@ -15,7 +15,7 @@ HANDOFF = re.compile(r"digest|state\.md|_feature_draft_|/references/|SKILL\.md|/
 READ_CMD = re.compile(r"^\s*(cat|sed|head|tail|less|wc)\b")
 EXEMPT_WRITE = re.compile(r"digest|state\.md|_sdd/goal/|_sdd/implementation/|_sdd/work_log/")
 # Bash로 대상 파일을 쓰는 명령 탐지: 단순 변수 치환 → heredoc 본문·따옴표 문자열 제거 → 쓰기 연산의 대상 중 제외 경로가 아닌 파일이 있으면 쓰기로 센다.
-EXEMPT_PATH = re.compile(r"digest|state\.md|_sdd/goal/|_sdd/implementation/|_sdd/work_log/|^/tmp/|^/private/tmp/|^/dev/")
+EXEMPT_PATH = re.compile(r"digest|state\.md|_sdd/goal/|_sdd/implementation/|_sdd/work_log/|(^|/)work_log/\d{4}-\d\d-\d\d\.md|(^|/)implementation/\d{4}-\d\d-\d\d_|^/tmp/|^/private/tmp/|^/dev/")
 WRITE_OP = re.compile(r"\bsed\s+-i|\bperl\s+-\w*i|\btee\b|\b(cp|mv|rm|install|touch)\s")
 REDIRECT = re.compile(r"(?<![0-9&<])>>?\s*([^\s;&|)]+)")
 FILE_TOKEN = re.compile(r"(?:^|\s)([\w./~-]*[\w-]\.[A-Za-z0-9]{1,5}|[\w.~-]*/[\w./-]+)(?=\s|$)")
@@ -29,6 +29,21 @@ def _clean(cmd):
     return re.sub(r"'[^']*'|\"[^\"]*\"", " ", cmd)
 
 
+def _py_write_targets(raw):
+    """python 쓰기의 대상: open(<expr>, 'w'|'a')·<expr>.write_text( 의 <expr>을 변수 할당까지 따라가 따옴표 문자열을 모은다."""
+    assigns = dict(m.groups() for m in (re.match(r"\s*([A-Za-z_]\w*)\s*=\s*(.+)$", st) for st in re.split(r"[;\n]", raw)) if m)
+    exprs = re.findall(r"open\(\s*([^,]+?)\s*,\s*['\"][wa]", raw) + re.findall(r"([\w.'\"/+()\[\]-]+)\.write_text\(", raw)
+    out, seen = [], set()
+    while exprs:
+        e = exprs.pop()
+        out += re.findall(r"['\"]([^'\"]+)['\"]", e)
+        for v in re.findall(r"\b([A-Za-z_]\w*)\b", re.sub(r"['\"][^'\"]*['\"]", "", e)):
+            if v in assigns and v not in seen:
+                seen.add(v)
+                exprs.append(assigns[v])
+    return out
+
+
 def bash_writes(tool):
     if tool["name"] != "Bash":
         return False
@@ -39,7 +54,7 @@ def bash_writes(tool):
         if WRITE_OP.search(seg):
             targets += FILE_TOKEN.findall(seg)
     if PY_WRITE.search(raw):
-        targets += re.findall(r"['\"]([^'\"\s]+\.[A-Za-z0-9]{1,5})['\"]", raw)
+        targets += _py_write_targets(raw)
     return any(not EXEMPT_PATH.search(t) for t in targets)
 
 

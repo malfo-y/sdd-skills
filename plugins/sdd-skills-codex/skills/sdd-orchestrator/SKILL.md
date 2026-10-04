@@ -82,23 +82,17 @@ draft의 Part 2 task가 모두 닫혔고 남은 분할 feature가 없으면, spe
 
 ## Worker dispatch
 
-모든 worker는 아래 형식의 prompt 하나로 띄운다. 이 형식이 단일 소스다. worker는 이번 대화를 읽지 못하므로 필요한 맥락은 digest와 입력에 담는다. 계약 파일 절대 경로는 이 스킬 디렉터리(스킬을 로드할 때 주어지는 base directory)에 `단계와 진입` 표의 상대 경로를 붙여 만든다.
+모든 worker는 아래 형식의 prompt 하나로 띄운다. 이 형식이 단일 소스다. 공통 경계와 반환 규칙은 `references/worker-boundary.md`가 단일 소스다. worker는 이번 대화를 읽지 못하므로 필요한 맥락은 digest와 입력에 담는다. 계약 파일 절대 경로는 이 스킬 디렉터리(스킬을 로드할 때 주어지는 base directory)에 `단계와 진입` 표의 상대 경로를 붙여 만든다.
 
 ```text
 너는 sdd-orchestrator가 띄운 <단계> worker다.
 계약: <계약 파일 절대 경로> — 그대로 따른다.
+공통 경계: <references/worker-boundary.md 절대 경로> — 그대로 따른다.
 digest: <digest.md 절대 경로> — 결정·환경 함정·검증 레시피다.
-시작: 계약·digest·입력 문서를 한 메시지에서 함께 읽는다.
+시작: 계약·공통 경계·digest·입력 문서를 한 메시지에서 함께 읽는다.
 입력:
 - <draft 경로 / task ID / 리뷰 범위와 base / fix할 findings / 차원 묶음 한정 등>
 - 동시에 실행 중인 다른 worker의 Target Files: <목록 또는 없음>
-공통 경계:
-- 사용자에게 질문하지 않는다. 필요한 결정은 합당한 해석으로 내리고 반환에 적는다. 진행할 수 없으면 BLOCKED와 사유를 반환한다.
-- git 쓰기(commit·add·stash·checkout·reset 등)를 하지 않는다.
-- 계약과 입력이 정한 대상 밖의 파일을 수정하지 않는다. 필요하면 수정하지 않고 반환에 적는다.
-- state.md와 digest를 쓰지 않는다. <리뷰 worker면: state.md를 읽지도 않는다.>
-- 다른 worker를 띄우지 않는다.
-반환: 계약의 `반환` 형식을 따르고, 끝에 `digest 변경분` 블록을 붙인다(없으면 "없음"). 계약이 요구하는 항목만 짧게 쓴다 — 진행 서술과 요약은 쓰지 않는다.
 ```
 
 - 띄운 worker가 모두 반환한 뒤 다음 행동을 정한다. 기다리는 동안 worker의 일을 대신하지 않는다.
