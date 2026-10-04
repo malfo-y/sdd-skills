@@ -160,7 +160,17 @@ pr-review 스킬을 --model gpt-5.6-sol --effort ultra로 실행해줘.
 
 Codex에서는 model과 effort를 분리해서 쓴다. `gpt-5.6-sol-high` 같은 결합형 값 대신 `--model gpt-5.6-sol --effort high`를 사용한다. 위 값은 호출 예시이며, 실제 허용값은 실행 시 `spawn_agent` 도구가 지원하는 모델·추론 강도를 따른다.
 
-`sdd-orchestrator`는 worker에 model을 지정하지 않고 세션 기본값을 상속하므로 모델 override 대상이 아니다.
+`sdd-orchestrator`는 기본으로 worker에 세션 모델을 상속하고, 호출할 때 단계별 worker 모델을 지정할 수 있다. 단계 이름은 `feature-draft`·`plan-review`·`implementation`·`implementation-review`·`spec-sync`이고, 지정하지 않은 단계는 세션 모델을 따른다.
+
+```text
+/sdd-skills:sdd-orchestrator _sdd/drafts/<draft>.md --model feature-draft=fable,implementation=sonnet,implementation-review=sonnet,spec-sync=sonnet
+```
+
+```text
+sdd-orchestrator로 계획은 fable, 구현·리뷰·spec-sync는 sonnet으로 진행해줘.
+```
+
+Codex에서는 지정값을 실행 시 `spawn_agent`가 허용하는 model 값으로 쓴다.
 
 ## Skills
 

@@ -2,6 +2,11 @@
 
 > 이 파일은 `_sdd/spec/main.md`의 **본문이 바뀐 버전만** 기록한다 — 본문 무변경 sync(헤더 날짜만 갱신)는 entry를 남기지 않으므로 버전 번호에 결번이 생길 수 있다.
 
+#### v4.35.0 (2026-10-05)
+
+- **`sdd-orchestrator` worker 단계별 모델 선택**: 기본은 세션 모델 상속이고, 사용자가 호출할 때 단계별 worker 모델(`--model <단계>=<모델>[,…]` 또는 자연어)을 지정하면 그 단계 worker에만 적용한다. 허용값은 Claude `Agent`의 `model` 값, Codex는 선택한 spawn schema의 `model` enum(reasoning_effort는 상속). subagent 모델 override Guardrail과 §3 비교표 `subagent model override` 행을 갱신했다 — v4.34.0의 "모델 override는 `pr-review`에만 남는다"를 대체한다.
+- **검증 evidence**: structural check 9/9(RED 6 FAIL→GREEN), headless smoke(`--model implementation=sonnet,implementation-review=haiku`)에서 worker transcript model이 implementation=sonnet, 리뷰 worker 3개=haiku, 메인=opus로 확인됐다.
+
 #### v4.34.0 (2026-10-05)
 
 - **`sdd-orchestrator`를 SDD 체인의 기본이자 유일 경로로 교체**: 구 직접 실행 단계 스킬 5종(`feature-draft`·`plan-review`·`implementation`·`implementation-review`·`spec-sync`, Claude·Codex)을 삭제했다. 단계 이름은 worker 계약 이름(`references/workers/<단계>.md`)으로 남고 구 트리거는 `sdd-orchestrator` description이 받는다. simplicity 계약은 `sdd-orchestrator/references/simplicity-contract.md`로 옮겼다(`pr-review`도 소비).

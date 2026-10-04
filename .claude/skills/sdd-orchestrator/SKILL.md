@@ -94,6 +94,7 @@ digest: <digest.md 절대 경로> — 결정·환경 함정·검증 레시피다
 ```
 
 - 띄운 worker가 모두 반환한 뒤 다음 행동을 정한다. 기다리는 동안 worker의 일을 대신하지 않는다.
+- worker 모델: 기본은 세션 모델을 상속한다(지정하지 않는다). 사용자가 단계별 모델을 지정하면(예: "계획은 fable, 구현·리뷰·spec-sync는 sonnet" 또는 `--model <단계>=<모델>[,<단계>=<모델>…]`) 그 단계의 worker에만 적용한다. 단계 이름은 `단계와 진입` 표의 다섯 단계이고, implementation-review 지정은 correctness·simplicity worker 모두에, 각 단계의 fix 재dispatch에도 같은 모델을 쓴다. 시작할 때 지정값을 Runtime 절의 허용값으로 확인하고, 단계별 모델을 digest의 결정·제약에 적어 재개 때도 같은 값을 쓴다. 허용값 밖이면 허용값을 알리고 고쳐 받는다. 무인 실행이면 묻지 않고 그 단계는 세션 모델을 상속하며 마감 보고에 적는다.
 - fix를 맡길 때는 `품질 게이트`의 fix 정책으로 고른 findings만 입력으로 넘긴다. worker는 받은 findings를 모두 반영한다.
 - worker가 실패하거나 반환이 계약 형식을 벗어나면 같은 입력으로 1회 다시 띄운다. 또 실패하면 멈추고 사용자에게 보고한다.
 - task worker가 계약 오류 반복(implementation 계약의 `중단 규칙`)으로 BLOCKED를 반환하면, 그 task를 계획 단계로 되돌린다(feature-draft worker에 fix 입력으로 보낸다).
@@ -138,7 +139,7 @@ state.md를 읽어 다음 행동을 정한다. DELTA_CLOSED가 아닌 task는 st
 
 ## Runtime: worker dispatch
 
-- worker는 `Agent` 도구로 `subagent_type: "general-purpose"`를 띄운다. 도구 schema에 `run_in_background`가 있으면 `run_in_background: false`로 둔다 — 백그라운드 실행은 dispatch마다 안내문과 결과 포장을 메인 맥락에 더한다. prompt는 `Worker dispatch` 형식이다. model은 지정하지 않고 세션 기본값을 따른다.
+- worker는 `Agent` 도구로 `subagent_type: "general-purpose"`를 띄운다. 도구 schema에 `run_in_background`가 있으면 `run_in_background: false`로 둔다 — 백그라운드 실행은 dispatch마다 안내문과 결과 포장을 메인 맥락에 더한다. prompt는 `Worker dispatch` 형식이다. worker 모델이 지정된 단계만 `model`에 그 값을 넣는다(허용값 `sonnet`·`opus`·`haiku`·`fable`). 지정하지 않은 단계는 `model`을 생략해 세션 기본값을 따른다.
 - 동시에 띄울 worker는 한 메시지에 여러 `Agent` 호출로 낸다. 함께 실행되고 결과가 한 번에 돌아온다. 백그라운드로만 실행되는 환경이면 모든 worker의 결과를 받은 뒤 다음 행동으로 간다.
 
 ## Final Check

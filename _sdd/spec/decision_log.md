@@ -3584,3 +3584,10 @@ sdd-autopilot의 review-fix 루프가 선택적으로 동작하여, 리뷰만 �
 - **보존**: spec 중심 루프와 검증(falsifiable AC, fresh verification, test-first·커버리지 델타), Claude·Codex 공통 계약, 산출물 원칙, 게이트 정책(gate 1+fix 1, 임계 시 gate 2+fix 2, gate 3 없음).
 - **복구 경로**: 구 직접 실행 단계 스킬은 커밋 65a5bc4 트리에 있다.
 - **포인터**: `_sdd/goal/2026-10-04_orchestrator_harness_redesign/report.md`(측정 표), `_sdd/drafts/_processed_2026-10-04_feature_draft_orchestrator_{harness,context_diet,dispatch_diet,default_switch}.md`, `_sdd/implementation/2026-10-04_orchestrator_default_switch/state.md`.
+
+
+## 2026-10-05 - `sdd-orchestrator` worker 단계별 모델 선택 (v4.35.0)
+
+- **결정**: 사용자 결정으로 `sdd-orchestrator` worker 모델은 기본으로 세션 모델을 상속하고, 호출할 때만 단계별로 지정한다(`--model <단계>=<모델>[,…]` 또는 자연어). 지정값은 digest 결정·제약에 기록해 재개 때도 유지한다. v4.34.0의 "worker는 model을 지정하지 않는다"를 대체한다.
+- **기각**: 단계별 기본값 고정(지정하지 않은 실행의 세션 모델 상속이 깨진다), repo 설정 파일(허용값이 runtime schema와 drift하는 저장소 allowlist가 된다).
+- **포인터**: `_sdd/implementation/2026-10-05_orchestrator_worker_model_select/`.
