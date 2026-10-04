@@ -46,7 +46,8 @@ description: "Use this skill to run the SDD chain (feature-draft → plan-review
 메인 루프가 하지 않는 일:
 - 대상 파일(코드·테스트·draft·spec) 수정. 작은 수정도 worker에게 맡긴다.
 - worker 일의 대리 수행. worker가 실패해도 대신 고치거나 대신 검증하지 않는다. 확인이 필요하면 worker를 띄운다.
-- 대상 파일·diff의 탐색적 읽기. 판단에 필요한 사실은 worker 반환으로 받는다. 읽어도 되는 것은 이 스킬의 reference, draft, `_sdd/env.md`, digest·state다.
+- 대상 파일·diff의 탐색적 읽기. 판단에 필요한 사실은 worker 반환으로 받는다. 읽어도 되는 것은 `references/handoff-templates.md`, draft, `_sdd/env.md`, digest·state뿐이다. `references/workers/`의 계약은 worker가 읽는 문서라 메인 루프는 읽지 않는다.
+- 환경(명령·도구·셸 동작)의 직접 탐색. 환경 함정은 `_sdd/env.md`와 worker 반환의 `digest 변경분`에서 받아 digest에 쌓는다.
 - git 쓰기. 사용자가 따로 요청할 때만 한다.
 
 ## 인계 파일
@@ -55,7 +56,7 @@ description: "Use this skill to run the SDD chain (feature-draft → plan-review
 
 - **digest.md**: 방법과 이유다. worker가 다시 알아내기 비싼 것 — 결정·제약, 환경 함정, 검증 레시피(AC → 명령 → 기대값) — 만 담는다. 모든 worker가 읽는다. 상태·통과 주장·이력·파일 내용 복사·위치 목록은 넣지 않고, 현재 유효한 내용만 남긴다(바뀐 결정은 고쳐 쓴다).
 - **state.md**: 재개용 상태다. 단계, task 상태, RED·GREEN 신호, 게이트 결과, 계획 이탈·발견, AC→증거를 담는다. 메인 루프만 읽는다. spec-sync worker는 구현 증거로 읽을 수 있다. 리뷰 worker에게는 주지 않는다. 명령 출력 전문과 진행 서술은 복사하지 않는다.
-- 두 파일의 작성자는 메인 루프 하나다. worker는 반환 끝의 `digest 변경분`으로만 digest를 바꾼다. 메인 루프는 반환을 받을 때마다 변경분을 digest에 반영하고 state를 갱신한다. 동시에 받은 변경분이 서로 모순되면 둘 다 반영하지 않고 모순을 state에 적은 뒤 해당 task를 다시 계획한다.
+- 두 파일의 작성자는 메인 루프 하나다. worker는 반환 끝의 `digest 변경분`으로만 digest를 바꾼다. 메인 루프는 반환을 받을 때마다 변경분을 digest에 반영하고 state를 갱신한다. 처음 만든 뒤에는 바뀐 행·항목만 고치고 파일 전체를 다시 쓰지 않는다. 동시에 받은 변경분이 서로 모순되면 둘 다 반영하지 않고 모순을 state에 적은 뒤 해당 task를 다시 계획한다.
 - **digest 초기화**: 계획 단계를 거치면 feature-draft worker 반환의 `digest 변경분`으로 만든다. draft로 진입하면 draft AC의 검증 명령, `_sdd/env.md`, 대화에서만 나온 결정으로 메인 루프가 만든다. 이때 대상 파일을 탐색하지 않는다.
 
 ## 단계와 진입
@@ -66,9 +67,11 @@ description: "Use this skill to run the SDD chain (feature-draft → plan-review
 | plan-review | `references/workers/plan-review.md` | draft 경로 | findings 반환 |
 | implementation | `references/workers/implementation.md` | draft 경로 + task ID 하나, 또는 fix할 findings | 대상 파일 변경 |
 | implementation-review | `references/workers/implementation-review.md` + simplicity 계약 | draft 경로, 구현 시작점(base) | AC verdict·findings 반환 |
-| spec-sync | `references/workers/spec-sync.md` | draft 경로, state 경로 | `_sdd/spec/` 변경 |
+| spec-sync | `references/workers/spec-sync.md` | draft 경로, state 경로, draft 소비 여부 | `_sdd/spec/` 변경 |
 
 simplicity 계약은 `../implementation-review/references/simplicity-contract.md`(이 스킬 디렉터리 기준)다.
+
+draft의 Part 2 task가 모두 닫혔고 남은 분할 feature가 없으면, spec-sync 입력에 "draft 소비 완료 — `_processed_` rename 대상"을 넣는다.
 
 진입 규칙:
 - 요청만 있으면 feature-draft부터 시작한다.
@@ -83,8 +86,9 @@ simplicity 계약은 `../implementation-review/references/simplicity-contract.md
 
 ```text
 너는 sdd-orchestrator가 띄운 <단계> worker다.
-계약: <계약 파일 절대 경로> — 읽고 그대로 따른다.
-digest: <digest.md 절대 경로> — 결정·환경 함정·검증 레시피다. 먼저 읽는다.
+계약: <계약 파일 절대 경로> — 그대로 따른다.
+digest: <digest.md 절대 경로> — 결정·환경 함정·검증 레시피다.
+시작: 계약·digest·입력 문서를 한 메시지에서 함께 읽는다.
 입력:
 - <draft 경로 / task ID / 리뷰 범위와 base / fix할 findings / 차원 묶음 한정 등>
 - 동시에 실행 중인 다른 worker의 Target Files: <목록 또는 없음>
@@ -94,7 +98,7 @@ digest: <digest.md 절대 경로> — 결정·환경 함정·검증 레시피다
 - 계약과 입력이 정한 대상 밖의 파일을 수정하지 않는다. 필요하면 수정하지 않고 반환에 적는다.
 - state.md와 digest를 쓰지 않는다. <리뷰 worker면: state.md를 읽지도 않는다.>
 - 다른 worker를 띄우지 않는다.
-반환: 계약의 `반환` 형식을 따르고, 끝에 `digest 변경분` 블록을 붙인다(없으면 "없음").
+반환: 계약의 `반환` 형식을 따르고, 끝에 `digest 변경분` 블록을 붙인다(없으면 "없음"). 계약이 요구하는 항목만 짧게 쓴다 — 진행 서술과 요약은 쓰지 않는다.
 ```
 
 - 띄운 worker가 모두 반환한 뒤 다음 행동을 정한다. 기다리는 동안 worker의 일을 대신하지 않는다.
