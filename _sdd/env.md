@@ -32,5 +32,9 @@
 - 조건: macOS 기본 도구.
   - `/bin/bash`는 3.2다.
   - BSD grep의 `--exclude-dir`는 경로 앞에 둔다.
-  - BSD awk는 한글 heading 매칭이 깨진다.
-  - 한국어 locale에서 `sort | uniq`가 다른 줄을 묶는다.
+  - BSD awk는 한글 heading 매칭이 깨진다. 한글 절 추출은 `/usr/bin/sed -n '/^## X$/,/^## /p'`로 한다.
+  - 한국어 locale에서 `sort | uniq`가 다른 줄을 묶는다. 개수는 `cut -d' ' -f1 | sort | uniq -c`로 센다.
+- 조건: zsh 셸(Claude Code의 Bash 도구가 zsh로 실행될 때).
+  - 따옴표 없는 `====`·`${x#](}` 같은 인자는 확장·패턴 오류를 낸다. 구분선 `echo ====`도 해당하며, `;`로 이은 명령 전체가 실패해 뒤 출력이 사라진다. 따옴표로 감싸거나 bash 스크립트로 실행한다.
+  - 따옴표 없는 glob 인자(예: `--include=*.md`)는 매치가 없으면 "no matches found"로 명령 전체가 실패한다. 따옴표로 감싼다.
+- grep으로 한 줄 안의 같은 문장만 판정할 때 `.*`는 뒤 문장까지 걸린다. `[^.]*`를 쓰고, 이때 패턴 끝의 `.`(예: `_sdd/env.md`)도 막히므로 그 앞(`_sdd/env`)까지만 쓴다.
