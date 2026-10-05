@@ -3646,3 +3646,9 @@ sdd-autopilot의 review-fix 루프가 선택적으로 동작하여, 리뷰만 �
 - **근거**: 메인 맥락 보호와 작성(메인 리포트)/리뷰(worker) 분리를 `sdd-orchestrator`와 같은 방식으로 얻고, diff·코드·spec 읽기를 worker에 둬 메인 맥락을 작게 유지한다. 저장소별 기본 모델을 매 호출 지정 없이 env.md에 둔다.
 - **검증 경계**: 문서 편집 변경이다. 계획 게이트 2회, 구현 게이트 2회(최종 AC 23개 MET, Critical/High 0), 미러·census·`claude plugin validate .` 통과를 확인했다. 새 구조의 실제 PR 리뷰 실행과 env.md `pr-review` 행을 적용한 dispatch는 미실행이다(반영 뒤 실행부터 적용). Task 3은 RED 선관찰 없이 진행돼 구현 게이트 fresh 판정에 의존했다.
 - **포인터**: [소비 완료 draft](../drafts/_processed_2026-10-05_feature_draft_pr_review_worker_correctness.md), [구현·리뷰 증거](../implementation/2026-10-05_pr_review_worker_correctness/state.md).
+
+## 2026-10-05 - digest에 `목표` 칸을 둔다 (v4.43.0)
+
+- **결정**: digest 내용 계약의 허용 항목에 목표(사용자가 원하는 것과 그 이유, 사용자가 말한 성공 기준은 기준당 체크리스트 항목 하나 — 체크하지 않고 충족 여부는 state가 가짐)를 더하고 템플릿에 `## 목표` 칸을 둔다. 메인 루프가 첫 worker 전에 대화에서 가져와 쓰며, draft에서 다시 요약하지 않는다. 배경 서술·이력은 넣지 않는다.
+- **근거**: 원래 요청은 feature-draft dispatch 입력(일회성)으로만 넘어가 어느 파일에도 남지 않았다. 그래서 plan-review의 Requirement Fit이 draft를 draft 자신과 결정 목록에만 대조했다. 독립 원본을 digest에 두면 feature-draft는 처음부터 목표를 받고, 리뷰 worker는 draft가 목표를 바르게 옮겼는지 대조할 수 있다(사용자 지적).
+- **포인터**: `.claude/skills/sdd-orchestrator/references/worker-boundary.md` `## digest 내용 계약`, `references/handoff-templates.md`.

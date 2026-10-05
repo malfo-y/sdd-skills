@@ -2,6 +2,11 @@
 
 > 이 파일은 `_sdd/spec/main.md`의 **본문이 바뀐 버전만** 기록한다 — 본문 무변경 sync(헤더 날짜만 갱신)는 entry를 남기지 않으므로 버전 번호에 결번이 생길 수 있다.
 
+#### v4.43.0 (2026-10-05)
+
+- **`sdd-orchestrator` digest에 `## 목표` 칸**: digest는 사용자가 원하는 것과 그 이유를 담고, 사용자가 말한 성공 기준은 기준당 체크리스트 항목 하나로 담는다(체크하지 않음 — 충족 여부는 state)(내용 계약 `worker-boundary.md`, 템플릿 `handoff-templates.md`). 메인 루프가 첫 worker 전에 대화에서 가져와 만든다. digest 초기화 시점도 "첫 worker를 띄우기 전, 계획 경로는 feature-draft 반환으로 채운다"로 정정했다.
+- **검증 evidence**: 양 runtime `references/` 동일·SKILL 미러 hunk 1·`git diff --check` 통과. 문서 계약 변경이며 실제 실행은 다음 orchestrator 실행부터다.
+
 #### v4.42.0 (2026-10-05)
 
 - **`pr-review` correctness를 worker dispatch로 전환**: correctness 리뷰를 메인 루프 직접 수행에서 계약 경로(`pr-review/references/correctness-contract.md`, 양 runtime 동일본)를 읽는 범용 worker로 옮겼다. 메인은 `PR Review Input` 5필드(`PR`·`Baseline`·`Changed Files`·`Spec Status`·`Relevant Context`; `PR Diff` 삭제)만 모아 correctness·simplicity worker 둘을 한 메시지로 띄우고 두 worker가 같은 `headRefOid`로 diff·코드·spec을 직접 읽는다(불일치 시 1회 재dispatch 뒤 제한 리포트). 메인은 verdict 합성·통합 리포트 1파일만 쓴다. 이전 결정 "correctness 메인 루프 직접 수행"을 대체한다.
