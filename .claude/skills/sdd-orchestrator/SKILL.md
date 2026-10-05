@@ -54,10 +54,10 @@ description: "Use this skill to run the SDD chain (feature-draft → plan-review
 
 위치는 `_sdd/implementation/<YYYY-MM-DD>_<slug>/`이다. slug는 draft slug를 쓰고, draft가 없으면 요청 요약을 snake_case로 쓴다. 같은 slug 디렉터리가 있으면 새로 만들지 않고 이어 쓴다. 처음 만들기 직전에 `references/worker-boundary.md`의 `digest 내용 계약`과 `references/handoff-templates.md`를 함께 읽고 그 템플릿을 출발 구조로 쓴다.
 
-- **digest.md**: 모든 worker가 읽는 방법과 이유다. 허용 내용과 제외 내용은 `references/worker-boundary.md`의 `digest 내용 계약`이 단독 소유한다. 같은 AC의 명령이 구체화되면 기존 레시피를 교체하고, 정정된 환경 사실은 해당 항목을 고친다. finding 하나만 검증하는 fix 전용 check 행은 메인 루프가 fix worker의 표적 재실행 통과를 state에 반영할 때 지운다(증거는 state가 가진다).
+- **digest.md**: 모든 worker가 읽는 목표·방법·이유다. 허용 내용과 제외 내용은 `references/worker-boundary.md`의 `digest 내용 계약`이 단독 소유한다. 같은 AC의 명령이 구체화되면 기존 레시피를 교체하고, 정정된 환경 사실은 해당 항목을 고친다. finding 하나만 검증하는 fix 전용 check 행은 메인 루프가 fix worker의 표적 재실행 통과를 state에 반영할 때 지운다(증거는 state가 가진다).
 - **state.md**: 재개용 상태다. 단계, task 상태, RED·GREEN 신호, 게이트 결과, 계획 이탈·발견, AC→증거를 담는다. 메인 루프만 읽는다. spec-sync worker는 구현 증거로 읽을 수 있다. 리뷰 worker에게는 주지 않는다. 명령 출력 전문과 진행 서술은 복사하지 않는다.
 - 두 파일의 작성자는 메인 루프 하나다. worker는 반환 끝의 `digest 변경분`으로만 digest를 바꾼다. 메인 루프는 반환의 `digest 변경분`을 공통 내용 계약으로 분류해 허용 변경분만 다음 dispatch 전에 digest에 반영한다. 완료·통과·다음 조치 등 상태 정보가 섞여 있으면 digest에서 제외하고 state 갱신 대상으로 분리한다. 일회성 입력은 `Worker dispatch` 입력으로만 넘긴다. state는 단계를 닫을 때 그 단계의 반환을 모아 한 번에 갱신한다(반환마다 고치지 않는다). 처음 만든 뒤에는 받은 변경분과 관련된 행·항목만 갱신하며, 매 반환마다 전체 digest를 재심사하거나 별도 게이트를 만들지 않는다. 실행이 겹친 worker의 변경분이 이미 반영한 변경분과 모순되면 나중 변경분을 반영하지 않고 모순을 state에 적은 뒤 해당 task를 다시 계획한다.
-- **digest 초기화**: 첫 worker를 띄우기 전에 메인 루프가 만든다. 재료는 대화에서 나온 결정·제약과 `_sdd/env.md`이고, draft로 진입하면 draft AC의 검증 명령을 더한다. 이때 대상 파일을 탐색하지 않는다. 계획 단계를 거치면 feature-draft worker 반환의 `digest 변경분`(검증 레시피 등)으로 채운다.
+- **digest 초기화**: 첫 worker를 띄우기 전에 메인 루프가 만든다. 재료는 대화에서 나온 목표·결정·제약과 `_sdd/env.md`이고, draft로 진입하면 draft AC의 검증 명령을 더한다. 이때 대상 파일을 탐색하지 않는다. 계획 단계를 거치면 feature-draft worker 반환의 `digest 변경분`(검증 레시피 등)으로 채운다.
 
 ## 단계와 진입
 
@@ -86,7 +86,7 @@ draft의 Part 2 task가 모두 닫혔고 남은 분할 feature가 없으면, spe
 너는 sdd-orchestrator가 띄운 <단계> worker다.
 계약: <계약 파일 절대 경로> — 그대로 따른다.
 공통 경계: <references/worker-boundary.md 절대 경로> — 그대로 따른다.
-digest: <digest.md 절대 경로> — 결정·환경 함정·검증 레시피다.
+digest: <digest.md 절대 경로> — 목표·결정·환경 함정·검증 레시피다.
 시작: 계약·공통 경계·digest·입력 문서를 한 메시지에서 함께 읽는다.
 입력:
 - <draft 경로 / task ID / 리뷰 범위와 base / fix할 findings / 차원 묶음 한정 등>
