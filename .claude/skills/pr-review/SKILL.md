@@ -25,7 +25,7 @@ argument-hint: ["[--model <sonnet|opus|haiku|fable>]"]
 - 리뷰 리포트 언어는 읽은 spec 언어를 따른다. 언어의 출처는 correctness 반환 Status의 spec 언어이며, 확인할 수 없으면 한국어.
 - PR title/description은 원문 유지.
 - **단일 작성자 불변식**: 두 worker는 경량 반환만 낸다. 파일 작성은 메인 루프의 통합 리포트(`_sdd/pr/..._pr_review_...`) 하나뿐이다. worker의 쓰기 경계·예외는 각 계약의 Runtime Boundary를 따른다.
-- **from-branch 기준**: 코드·spec·실행 증거는 Step 0의 baseline SHA에 결속한다. 두 worker도 전달받은 동일 SHA의 읽기 경로만 사용한다. to-branch(base) spec은 검증 기준이 아니며 변경 비교 참고용으로만 읽는다.
+- **from-branch 기준**: 코드·spec·실행 증거는 Step 0의 baseline SHA에 결속한다. 두 worker도 전달받은 동일 SHA의 읽기 경로만 사용한다.
 
 ## PR Review Input
 
@@ -213,7 +213,7 @@ MET: <통과 AC ID만 나열 또는 없음>
 | Wrong PR number | 에러 메시지, 올바른 번호 요청 |
 | spec `UNREADABLE` | correctness 반환의 읽은 spec 범위·원인·spec 판정 미검증을 남기고 제한 리포트로 종료한다 |
 | 렌즈(correctness 또는 simplicity) 확정 실패/dispatch blocker | 확보된 렌즈 결과를 보존한 제한 리포트에 누락 렌즈·미충족 skill AC·재개 조건을 기록하고 종료. inline 대체나 같은 blocker의 반복 dispatch 금지 |
-| `headRefOid` 불일치(correctness BLOCKED 또는 simplicity Assumptions의 baseline 불일치 blocker — 렌즈 실패가 아닌 이 행으로 처리) | 새 SHA로 Step 1·2를 다시 수행해 PR Review Input(Baseline·Changed Files·Spec Status)을 다시 만든 뒤 두 worker를 1회 다시 띄운다. 또 불일치하면 제한 리포트(NEEDS DISCUSSION, LIMITED)로 닫는다 |
+| `headRefOid` 불일치(correctness BLOCKED 또는 simplicity Assumptions의 baseline 불일치 blocker — 렌즈 실패가 아닌 이 행으로 처리) | 새 SHA로 Step 0~2를 다시 수행해 PR Review Input(Baseline·Changed Files·Spec Status)을 다시 만든 뒤 두 worker를 1회 다시 띄운다. 또 불일치하면 제한 리포트(NEEDS DISCUSSION, LIMITED)로 닫는다 |
 
 ## Additional Resources
 

@@ -45,8 +45,8 @@ Codex: PR 리뷰를 시작합니다.
 Codex:
 ## Worker Spawn (correctness + simplicity)
 
-Mailbox(Desktop/current CLI): invocation별 run_id가 들어간 parent-tree 고유 task_name + fork_turns: "none" + framed message로 correctness·simplicity spawn 2회 → target 없는 mailbox wait 반복 → close 없음. agent_type: "explorer"는 active schema가 지원할 때만 추가한다.
-Target/close(legacy CLI schema): 같은 framed message로 spawn 2회 → target wait → final 기록 → 완료 handle close. agent_type: "explorer"는 active schema가 지원할 때만 추가한다.
+Mailbox(Desktop/current CLI): invocation별 run_id가 들어간 parent-tree 고유 task_name + fork_turns: "none" + framed message로 correctness·simplicity spawn 2회 → target 없는 mailbox wait 반복 → close 없음. agent_type: "explorer"는 simplicity spawn에만, active schema가 지원할 때 추가한다(correctness는 생략).
+Target/close(legacy CLI schema): 같은 framed message로 spawn 2회 → target wait → final 기록 → 완료 handle close. agent_type: "explorer"는 simplicity spawn에만, active schema가 지원할 때 추가한다(correctness는 생략).
 framed message: correctness는 `## Mode: pr-review (correctness)` + 계약 경로(references/correctness-contract.md) 지시 + `## Input Data`의 PR Review Input, simplicity는 계약 전문 verbatim + PR Review Input.
 활성 schema가 어느 lifecycle contract인지 확정할 수 없으면 spawn하지 않고 schema blocker를 보고한다. agent_type 부재만으로는 blocker가 아니다.
 
@@ -210,4 +210,4 @@ MET: #1–#3
 - 로컬 HEAD가 baseline과 다르거나 dirty이면 현재 작업을 보존하고 baseline SHA를 직접 읽는다. 동일 SHA의 CI/격리 실행 evidence도 없으면 테스트 판정은 `UNTESTED`다.
 - spec 트리 또는 필요한 파일을 읽지 못하고 동등 SHA 읽기도 실패하면 `Spec: UNREADABLE`, `Review Status: LIMITED`와 원인·미충족 skill AC·재개 조건을 기록하고 `NEEDS DISCUSSION (제한된 권고)`으로 종료한다. code-only로 부재를 추정하지 않는다.
 - correctness 또는 simplicity dispatch가 blocker로 불가능하거나 확정 실패하면 확보된 렌즈 결과를 보존하고 누락 렌즈와 미충족 AC를 기록한다. `NEEDS DISCUSSION (제한된 권고)`으로 종료하며, 같은 blocker에서 반복 dispatch하거나 inline으로 대신하지 않는다.
-- worker의 `headRefOid` 불일치(correctness BLOCKED 또는 simplicity Assumptions blocker)는 렌즈 실패가 아니다. 새 SHA로 Step 1·2를 다시 수행해 PR Review Input(Baseline·Changed Files·Spec Status)을 다시 만든 뒤 두 worker를 1회 다시 띄우고, 또 불일치하면 `LIMITED`로 닫는다.
+- worker의 `headRefOid` 불일치(correctness BLOCKED 또는 simplicity Assumptions blocker)는 렌즈 실패가 아니다. 새 SHA로 Step 0~2를 다시 수행해 PR Review Input(Baseline·Changed Files·Spec Status)을 다시 만든 뒤 두 worker를 1회 다시 띄우고, 또 불일치하면 `LIMITED`로 닫는다.

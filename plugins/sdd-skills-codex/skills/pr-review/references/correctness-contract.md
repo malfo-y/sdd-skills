@@ -17,7 +17,7 @@
 - `gh pr diff <PR>`과 `gh pr view <PR> --json title,body,commits,comments,reviews,statusCheckRollup`을 직접 수집한다. title·body는 AC 추론의 원문이다.
 - 수집 전후로 `headRefOid`가 Baseline과 같음을 확인한다. 다르면 리뷰하지 않고 BLOCKED와 두 SHA를 반환한다.
 - 코드·spec은 Baseline이 정한 방법(`git show <sha>:<path>`·격리 checkout·API)으로 읽는다.
-- Spec Status가 `FOUND`면 Baseline 방법으로 canonical index(`main.md` 또는 명시적 index)와 링크된 하위 spec을 읽는다. spec 파일이 여럿이라 범위 선택이 모호해도 사용자에게 묻지 않고 canonical index로 진행하며 그 가정을 Assumptions에 기록한다.
+- Spec Status가 `FOUND`면 Baseline 방법으로 canonical index(`main.md` 또는 명시적 index)와 링크된 하위 spec을 읽는다. spec 파일이 여럿이라 범위 선택이 모호해도 사용자에게 묻지 않고 canonical index로 진행하며 그 가정을 Assumptions에 기록한다. 필요한 spec 읽기가 실패하면 동등한 SHA 읽기를 1회 시도하고, 그래도 실패하면 spec 모드를 `UNREADABLE`로 반환한다.
 - `ABSENT`면 code-only 모드로 진행한다. `UNREADABLE`이면 동등한 SHA 읽기를 1회 시도하고, 실패하면 검토 가능한 코드만 리뷰하며 spec 판정 미검증을 표기한다.
 - 서로 독립인 읽기·검색 호출은 한 번에 함께 낸다. 검색으로 좌표를 먼저 잡은 뒤 관련 구간만 읽는다.
 
