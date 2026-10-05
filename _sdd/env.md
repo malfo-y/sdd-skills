@@ -41,11 +41,11 @@
 
 | 단계 | model | effort |
 |------|-------|--------|
-| feature-draft | | |
-| plan-review | | |
-| implementation | | |
-| implementation-review | | |
-| spec-sync | | |
+| feature-draft | gpt-6-astra | high |
+| plan-review | gpt-6.1-sol | high |
+| implementation | gpt-6.1-sol | high |
+| implementation-review | gpt-6.1-sol | high |
+| spec-sync | gpt-6.1-sol | medium |
 
 ## Pitfalls
 
