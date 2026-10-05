@@ -3621,3 +3621,11 @@ sdd-autopilot의 review-fix 루프가 선택적으로 동작하여, 리뷰만 �
 - **근거**: 모델 선택과 추론 강도 선택은 독립적인 사용자 요구이고, 활성 도구는 enum 없이 지원 목록을 설명으로 제공할 수 있다. 고정 allowlist·별도 설정 파일 없이 런타임 계약을 소비한다. digest 내용 계약은 공통 경계가 소유해 메인과 leaf의 상태 혼입을 막고, 최초·fix draft에서 회수된 확인 사항은 의존 구현 전에 처리한다.
 - **검증 경계**: 정적 계약과 미러 검증만 완료했다. 실제 Codex 옵션 override dispatch는 미실행이다.
 - **포인터**: [소비 완료 draft](../drafts/_processed_2026-10-05_feature_draft_pr96_review_fixes.md), [구현·리뷰 증거](../implementation/2026-10-05_pr96_review_fixes/state.md).
+
+
+## 2026-10-05 - digest의 맥락 선택·검증 레시피·독립 리뷰 경계 (v4.40.0)
+
+- **결정**: 재조사·오판을 막는 내용과 실제 사용한 검증 명령을 기존 digest 계약에 남기고, 메인은 관련 변경분만 갱신한다. reviewer는 레시피를 최소 검증 목록으로 사용하며 기존 읽기·시간 제한 안의 독립 correctness 검토를 유지한다. 상세 기준은 공통 경계·SKILL 인계 흐름·implementation-review 계약이 각각 소유한다.
+- **근거**: 중복 요약과 실행 불가능한 레시피는 worker의 재조사 비용을 남긴다. 기존 구현·검증에서 얻은 명령을 재사용하고 소유 계약에 통합해 별도 조사·새 게이트·전체 digest 재심사를 일상 작성 비용으로 추가하지 않는다.
+- **검증 경계**: 계약·미러 검증과 기존 transcript를 쓰는 레시피 실행을 확인했다. 새 모델 실행이나 속도·품질 개선 효과는 검증하지 않았다.
+- **포인터**: [소비 완료 draft](../drafts/_processed_2026-10-05_feature_draft_digest_actionability.md), [구현·리뷰 증거](../implementation/2026-10-05_digest_actionability/state.md).

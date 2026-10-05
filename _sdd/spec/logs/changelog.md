@@ -947,3 +947,10 @@
 - v4.38.0 Planned 3건을 정적 계약 검증 범위에서 현재 사실로 반영했다: 최초·fix draft 확인 사항 회수, 공통 경계의 digest 내용 소유권, Codex 단계별 model·effort 독립 옵션. main/components/usage-guide를 동기화하고 unittest 표적은 pytest 없이 실행할 수 있음을 env에 반영했다.
 - **증거·한계**: [구현·리뷰 state](../../implementation/2026-10-05_pr96_review_fixes/state.md)의 fresh 계약·미러 검증과 fix 표적 증거를 소비했다. 실제 Codex override dispatch는 미실행이며, M2 재계측의 new 12개는 UNVERIFIED다. 과거 benchmark를 현재 head 성능이나 무쓰기 PASS로 승격하지 않는다.
 - **입력 처리**: v4.38.0 entry의 draft는 원문을 보존해 [소비 완료 draft](../../drafts/_processed_2026-10-05_feature_draft_pr96_review_fixes.md)로 rename했다. M2 상세는 해당 benchmark report에 유지한다.
+
+
+## v4.40.0 (2026-10-05)
+
+- digest 내용 선택·실제 검증 명령 재사용·조건부 환경 사실, 관련 변경분과 소비 출처 갱신, 최소 검증 목록과 독립 correctness 검토의 관계를 기존 소유 계약에 맞춰 main/components/usage-guide에 반영했다.
+- **증거·한계**: [구현·리뷰 state](../../implementation/2026-10-05_digest_actionability/state.md)의 8개 AC 충족과 미러 검증을 소비했다. 시범 레시피 실행은 기존 transcript 계측 명령의 유효성 검증이며 새 모델 실행·속도·품질 개선의 근거가 아니다.
+- **입력 처리**: [소비 완료 draft](../../drafts/_processed_2026-10-05_feature_draft_digest_actionability.md)로 원문 보존 rename했다. 시범 digest와 계측 세부는 temporary artifact에 유지하며 env 승격은 없다.

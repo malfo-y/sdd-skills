@@ -59,9 +59,9 @@ $sdd-orchestrator --model implementation=gpt-6.1-sol --effort implementation=hig
 - `_sdd/implementation/<YYYY-MM-DD>_<slug>/digest.md`·`state.md` — digest(결정·환경 함정·검증 레시피)는 모든 worker가 읽고, state(단계·task 상태·RED/GREEN 신호·게이트 결과·AC→증거)는 재개용이며 리뷰 worker에게 주지 않는다. 두 파일의 작성자는 메인 루프 하나다. digest 내용은 `worker-boundary.md`의 공통 계약으로 분류하고 완료·통과·다음 조치는 state로 보낸다
 - 계획 게이트: plan-review worker가 경량 finding을 반환하고(리포트 파일 없음) fix는 feature-draft worker가 같은 draft에 반영한다. 최초·fix draft의 새 미승인 결정은 의존 구현 전에 확인하며 기존 승인·routine 선택은 재질문하지 않는다. 무인 위임이면 합당한 결정을 기록하고 진행한다
 - 구현: draft Part 2 task마다 worker 1개가 RED→GREEN test-first와 커버리지 델타로 닫는다. Target Files 서로소·`Contracts` 미공유·의존 없음인 task는 동시에 실행된다. 메인 루프는 대상 파일을 쓰지 않는다
-- 구현 게이트: 모든 task가 DELTA_CLOSED가 되면 correctness worker 1개(digest 검증 레시피 fresh 실행 = 전체 회귀)와 simplicity worker 2개(차원 묶음)가 동시에 돈다. fix는 해당 task worker가 커버리지 델타·표적 재실행까지 하고 반환한다
+- 구현 게이트: 모든 task가 DELTA_CLOSED가 되면 correctness worker 1개(digest 레시피를 최소 목록으로 fresh 실행하고 관련 코드·경계를 독립 검토)와 simplicity worker 2개(차원 묶음)가 동시에 돈다. fix는 해당 task worker가 커버리지 델타·표적 재실행까지 하고 반환한다
 - 마감: state의 AC→증거가 리뷰 worker의 fresh verdict 포인터로 채워지고, 채팅에는 실행 단계·게이트 호출별 severity·fix·검증·미충족 AC·Open Questions·state 경로만 보고된다
-- spec-sync 단계: 검증된 지속 정보만 `_sdd/spec/`에 반영되고, digest 환경 함정 중 저장소 작업에 반복 적용되는 사실은 `_sdd/env.md`로 승격되어 다음 실행의 digest 초기화가 받는다. 다 구현된 draft는 `_processed_` prefix로 rename된다. 규모가 커지면 분할 규칙(롤링 draft + planned todo 고정 + feature별 순차 체인)으로 해소한다
+- spec-sync 단계: 검증된 지속 정보만 `_sdd/spec/`에 반영되고, digest 환경 함정 중 저장소 작업에 반복 적용되는 사실은 `_sdd/env.md`로 승격되어 다음 실행의 digest 초기화가 받는다. 다 구현된 draft는 `_processed_` prefix로 rename되고 digest 출처도 새 경로로 갱신된다. 규모가 커지면 분할 규칙(롤링 draft + planned todo 고정 + feature별 순차 체인)으로 해소한다
 
 ### Scenario 2b: 여러 SDD 단위를 native goal로 수렴시키기 (sdd-autopilot setup)
 

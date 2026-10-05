@@ -54,9 +54,9 @@ description: "Use this skill to run the SDD chain (feature-draft → plan-review
 
 위치는 `_sdd/implementation/<YYYY-MM-DD>_<slug>/`이다. slug는 draft slug를 쓰고, draft가 없으면 요청 요약을 snake_case로 쓴다. 같은 slug 디렉터리가 있으면 새로 만들지 않고 이어 쓴다. 처음 만들기 직전에 `references/worker-boundary.md`의 `digest 내용 계약`과 `references/handoff-templates.md`를 함께 읽고 그 템플릿을 출발 구조로 쓴다.
 
-- **digest.md**: 모든 worker가 읽는 방법과 이유다. 허용 내용과 제외 내용은 `references/worker-boundary.md`의 `digest 내용 계약`이 단독 소유한다. 검증 레시피에서 finding 하나만 검증하는 fix 전용 check 행은 메인 루프가 fix worker의 표적 재실행 통과를 state에 반영할 때 지운다(증거는 state가 가진다).
+- **digest.md**: 모든 worker가 읽는 방법과 이유다. 허용 내용과 제외 내용은 `references/worker-boundary.md`의 `digest 내용 계약`이 단독 소유한다. 같은 AC의 명령이 구체화되면 기존 레시피를 교체하고, 정정된 환경 사실은 해당 항목을 고친다. finding 하나만 검증하는 fix 전용 check 행은 메인 루프가 fix worker의 표적 재실행 통과를 state에 반영할 때 지운다(증거는 state가 가진다).
 - **state.md**: 재개용 상태다. 단계, task 상태, RED·GREEN 신호, 게이트 결과, 계획 이탈·발견, AC→증거를 담는다. 메인 루프만 읽는다. spec-sync worker는 구현 증거로 읽을 수 있다. 리뷰 worker에게는 주지 않는다. 명령 출력 전문과 진행 서술은 복사하지 않는다.
-- 두 파일의 작성자는 메인 루프 하나다. worker는 반환 끝의 `digest 변경분`으로만 digest를 바꾼다. 메인 루프는 반환의 `digest 변경분`을 공통 내용 계약으로 분류해 허용 변경분만 다음 dispatch 전에 digest에 반영한다. 완료·통과·다음 조치 등 상태 정보가 섞여 있으면 digest에서 제외하고 state 갱신 대상으로 분리한다. 일회성 입력은 `Worker dispatch` 입력으로만 넘긴다. state는 단계를 닫을 때 그 단계의 반환을 모아 한 번에 갱신한다(반환마다 고치지 않는다). 처음 만든 뒤에는 바뀐 행·항목만 고치고 파일 전체를 다시 쓰지 않는다. 실행이 겹친 worker의 변경분이 이미 반영한 변경분과 모순되면 나중 변경분을 반영하지 않고 모순을 state에 적은 뒤 해당 task를 다시 계획한다.
+- 두 파일의 작성자는 메인 루프 하나다. worker는 반환 끝의 `digest 변경분`으로만 digest를 바꾼다. 메인 루프는 반환의 `digest 변경분`을 공통 내용 계약으로 분류해 허용 변경분만 다음 dispatch 전에 digest에 반영한다. 완료·통과·다음 조치 등 상태 정보가 섞여 있으면 digest에서 제외하고 state 갱신 대상으로 분리한다. 일회성 입력은 `Worker dispatch` 입력으로만 넘긴다. state는 단계를 닫을 때 그 단계의 반환을 모아 한 번에 갱신한다(반환마다 고치지 않는다). 처음 만든 뒤에는 받은 변경분과 관련된 행·항목만 갱신하며, 매 반환마다 전체 digest를 재심사하거나 별도 게이트를 만들지 않는다. 실행이 겹친 worker의 변경분이 이미 반영한 변경분과 모순되면 나중 변경분을 반영하지 않고 모순을 state에 적은 뒤 해당 task를 다시 계획한다.
 - **digest 초기화**: 계획 단계를 거치면 feature-draft worker 반환의 `digest 변경분`과 `_sdd/env.md`로 만든다. draft로 진입하면 draft AC의 검증 명령, `_sdd/env.md`, 대화에서만 나온 결정으로 메인 루프가 만든다. 이때 대상 파일을 탐색하지 않는다.
 
 ## 단계와 진입
@@ -69,7 +69,7 @@ description: "Use this skill to run the SDD chain (feature-draft → plan-review
 | implementation-review | `references/workers/implementation-review.md` + simplicity 계약 `references/simplicity-contract.md` | draft 경로, 구현 시작점(base) | AC verdict·findings 반환 |
 | spec-sync | `references/workers/spec-sync.md` | draft 경로, state 경로, draft 소비 여부 | `_sdd/spec/` 변경, `_sdd/env.md` 승격 |
 
-draft의 Part 2 task가 모두 닫혔고 남은 분할 feature가 없으면, spec-sync 입력에 "draft 소비 완료 — `_processed_` rename 대상"을 넣는다.
+draft의 Part 2 task가 모두 닫혔고 남은 분할 feature가 없으면, spec-sync 입력에 "draft 소비 완료 — `_processed_` rename 대상"을 넣는다. 소비 rename이 반환되면 메인 루프는 digest의 draft 출처를 새 경로로 갱신한다.
 
 진입 규칙:
 - 요청만 있으면 feature-draft부터 시작한다.
