@@ -4,37 +4,38 @@ description: "Use this skill when the user asks to \"review PR\", \"PR review\",
 argument-hint: ["[--model <sonnet|opus|haiku|fable>]"]
 ---
 
-# PR Review (직접 correctness + simplicity dispatch + Verdict)
+# PR Review (correctness + simplicity worker dispatch + Verdict)
 
-이 스킬은 PR 데이터·spec을 수집한 뒤, **correctness 리뷰를 메인 루프가 직접 수행**하고 **clarity 렌즈만** 범용 subagent(`Agent(subagent_type="general-purpose")`)로 dispatch한다 (동작-불변 형태 품질 — 계약·차원·severity는 `sdd-orchestrator/references/simplicity-contract.md`가 단일 소스이며, dispatch prompt에 전문을 verbatim 포함한다). 두 렌즈 결과를 합쳐 **verdict**(APPROVE / REQUEST CHANGES / NEEDS DISCUSSION)를 합성해 통합 리뷰 리포트(`_sdd/pr/<YYYY-MM-DD>_pr_review_<slug>.md`) 하나를 작성한다.
+이 스킬은 PR 번호·baseline SHA·PR 메타데이터·변경 파일 목록·spec 존재 상태 같은 작은 입력만 모은 뒤, **correctness 렌즈**와 **clarity 렌즈**(동작-불변 형태 품질)를 각각 범용 subagent(`Agent(subagent_type="general-purpose")`)로 dispatch한다. correctness 계약은 `references/correctness-contract.md`다. simplicity 계약·차원·severity는 `sdd-orchestrator/references/simplicity-contract.md`가 단일 소스이며, dispatch prompt에 전문을 verbatim 포함한다. PR diff·코드·spec 읽기는 두 worker가 같은 baseline SHA로 직접 한다. 두 렌즈 반환을 합쳐 **verdict**(APPROVE / REQUEST CHANGES / NEEDS DISCUSSION)를 합성해 통합 리뷰 리포트(`_sdd/pr/<YYYY-MM-DD>_pr_review_<slug>.md`) 하나를 작성한다.
 
-> **경계**: 자동 게이트는 도입하지 않는다 — PR review는 인간 리뷰 보조다. verdict는 두 렌즈 신호를 모두 쥔 메인 루프가 합성한다.
+> **경계**: 자동 게이트는 도입하지 않는다 — PR review는 인간 리뷰 보조다. verdict는 두 렌즈 반환을 모두 받은 메인 루프가 합성한다.
 
 ## Acceptance Criteria
 
 - [ ] AC1: `_sdd/pr/<YYYY-MM-DD>_pr_review_<slug>.md` 통합 리뷰 리포트가 Output Format에 맞게 생성되었다
 - [ ] AC2: Verdict(APPROVE / REQUEST CHANGES / NEEDS DISCUSSION)가 두 렌즈 요약을 근거로 부여되었다
-- [ ] AC3: correctness 검증(코드 품질·에러 처리·테스트·보안, spec 존재 시 spec AC·compliance·gap)을 메인 루프가 Correctness 리뷰 절의 절차대로 직접 수행했다
-- [ ] AC4: simplicity 계약(reference 전문 verbatim)을 담은 범용 subagent를 PR 변경 파일 컨텍스트(PR Review Input)로 dispatch했다
+- [ ] AC3: correctness 계약 경로를 받은 범용 worker를 PR Review Input으로 dispatch하고 반환을 받았다
+- [ ] AC4: simplicity 계약(reference 전문 verbatim)을 담은 범용 subagent를 PR Review Input으로 dispatch했다(두 dispatch는 한 메시지)
 - [ ] AC5: 두 렌즈의 finding이 Step 4 합류 규칙대로 통합 리포트에 합류했다
-- [ ] AC6: `--model <name>` 인자가 있으면 simplicity dispatch에 model을 적용했다 (correctness는 메인 루프 직접 수행이라 적용 대상이 아니다 — 그 사실을 안내)
+- [ ] AC6: 적용 model(호출 `--model` > env.md `pr-review` 행 > 생략)을 두 dispatch에 같게 적용했다
 
 ## Hard Rules
 
 - `_sdd/spec/` 파일은 **읽기 전용**. 수정이 필요하면 리포트에 기록하고 `/sdd-skills:sdd-orchestrator`로 spec-sync 단계를 실행하도록 안내한다.
-- 리뷰 리포트 언어는 읽은 spec 언어를 따른다. Spec 언어를 확인할 수 없으면 한국어.
+- 리뷰 리포트 언어는 읽은 spec 언어를 따른다. 언어의 출처는 correctness 반환 Status의 spec 언어이며, 확인할 수 없으면 한국어.
 - PR title/description은 원문 유지.
-- **단일 작성자 불변식**: simplicity reviewer는 파일을 쓰지 않는다(경량 반환). 파일 작성은 메인 루프의 통합 리포트(`_sdd/pr/..._pr_review_...`) 하나뿐이다.
-- **from-branch 기준**: 코드·spec·실행 증거는 Step 0의 baseline SHA에 결속한다. simplicity leaf도 전달받은 동일 SHA의 읽기 경로만 사용한다. to-branch(base) spec은 검증 기준이 아니며 변경 비교 참고용으로만 읽는다.
+- **단일 작성자 불변식**: 두 worker는 경량 반환만 낸다. 파일 작성은 메인 루프의 통합 리포트(`_sdd/pr/..._pr_review_...`) 하나뿐이다. worker의 쓰기 경계·예외는 각 계약의 Runtime Boundary를 따른다.
+- **from-branch 기준**: 코드·spec·실행 증거는 Step 0의 baseline SHA에 결속한다. 두 worker도 전달받은 동일 SHA의 읽기 경로만 사용한다.
 
 ## PR Review Input
 
-simplicity reviewer에는 다음 4필드를 전달한다. 메인은 PR metadata·discussion·baseline spec·CI/local 검증 결과·리포트 slug를 계속 수집/관리하고 correctness와 리포트에 사용한다. leaf에는 아래 역할별 입력만 보낸다.
+두 worker에 같은 5필드를 전달한다. 메인은 아래 작은 입력과 리포트 slug만 모으고, diff 본문·spec 본문·comments·테스트 실행은 worker 소관이다.
 
-- **Changed Files**: 비어 있지 않은 PR 변경 파일 목록.
-- **PR Diff**: 같은 baseline에서 수집한 비어 있지 않은 PR diff.
-- **Baseline**: `headRefOid`와 그 SHA의 코드·spec을 읽을 경로/방법, 현재 checkout 사용 가능 여부.
-- **Relevant Context**: 변경 목적과 동작 보존 판단에 필요한 제약·저자 설명·대화 맥락. 관련 spec은 핵심 내용과 같은 SHA의 경로를 전달하고, 추가 관련 맥락이 없으면 `NONE`으로 표시한다.
+- **PR**: PR 번호와 URL.
+- **Baseline**: `headRefOid`와 그 SHA의 코드·spec을 읽을 경로/방법(`git show <sha>:<path>`·격리 checkout·API), 현재 checkout 사용 가능 여부.
+- **Changed Files**: `gh pr diff --name-only` 결과(비어 있지 않은 PR 변경 파일 목록).
+- **Spec Status**: `FOUND`(같은 SHA의 spec 경로 목록) / `ABSENT` / `UNREADABLE`(원인).
+- **Relevant Context**: title·body·저자 설명 요약. 없으면 `NONE`.
 
 ## Process
 
@@ -52,90 +53,54 @@ git status --porcelain
 
 수집한 `headRefOid`를 이번 리뷰의 baseline SHA로 고정한다. 브랜치 이름은 동일성 조건이 아니다. 코드·spec은 이 SHA의 `git show`/API 읽기 또는 해당 SHA의 격리 checkout에서 읽는다. 현재 checkout은 `HEAD == headRefOid`이고 관련 코드·spec·검증 의존 파일에 staged/unstaged/untracked 변경이 없음을 확인한 경우에만 사용한다. 상태 영향이 불명확하면 dirty로 취급한다. 기존 사용자 작업을 checkout·reset·stash로 바꾸지 않는다.
 
-### Step 1: Collect PR Data
+### Step 1: Collect PR Inputs
 
 ```bash
-gh pr view [PR] --json title,body,author,state,url,additions,deletions,changedFiles,headRefName,headRefOid,baseRefName,commits,statusCheckRollup
-gh pr view [PR] --json comments,reviews --jq '{comments: [.comments[] | {author: .author.login, body}], reviews: [.reviews[] | {author: .author.login, body}]}'
-gh pr diff [PR]
+gh pr view [PR] --json title,body,author,state,url,headRefOid
 gh pr diff [PR] --name-only
 gh pr view [PR] --json headRefOid --jq '.headRefOid'
 ```
 
-수집 전후의 head SHA가 baseline과 일치하는지 확인한다. 달라졌으면 새 SHA를 기준으로 데이터 전체를 다시 수집하며, 일관된 snapshot을 확보하지 못하면 혼합 데이터로 판정하지 않고 blocker를 보고한다. 코드·spec 읽기 경로는 `PR Review Input`의 Baseline에 전달한다.
+수집 전후의 head SHA가 baseline과 일치하는지 확인한다. 달라졌으면 새 SHA를 기준으로 다시 수집하며, 일관된 입력을 확보하지 못하면 혼합 데이터로 판정하지 않고 blocker를 보고한다. 코드·spec 읽기 경로는 `PR Review Input`의 Baseline에 전달한다.
 
 `_sdd/pr/` 디렉토리가 없으면 생성한다. 통합 리포트의 `slug`는 소문자 snake_case(영문 소문자, 숫자, `_`)로 정한다. 같은 날짜·slug 파일이 이미 있으면 `_2`, `_3` 등 빈 suffix를 골라 이전 리포트를 보존한다. 기존 리포트 갱신을 사용자가 명시한 경우에만 그 파일을 갱신한다.
 
-### Step 2: Load Spec (baseline SHA)
+### Step 2: Spec Status (baseline SHA)
 
-PR diff에 spec 변경이 없어도 baseline SHA의 `_sdd/spec/` 트리를 확인한다.
+PR diff에 spec 변경이 없어도 baseline SHA의 `_sdd/spec/` 트리 존재만 판정한다. 로컬 git object가 있으면 `git ls-tree -r --name-only [headRefOid] -- _sdd/spec/`를 쓰고, object가 없으면 현재 작업을 바꾸지 않는 fetch 또는 해당 SHA를 지정한 API 읽기를 쓴다.
 
-1. 로컬 git object가 있으면 `git ls-tree -r --name-only [headRefOid] -- _sdd/spec/`로 목록을 얻고, `git show [headRefOid]:_sdd/spec/main.md` 등으로 내용을 읽는다. object가 없으면 현재 작업을 바꾸지 않는 fetch 또는 해당 SHA를 지정한 API 읽기를 사용한다.
-2. spec이 있으면 `main.md` 또는 명시적 index를 먼저 읽고 링크된 하위 spec도 같은 SHA에서 로드한다. 다중 파일만으로 선택 질문을 하지 않는다(Edge Cases 참조).
-3. 결과를 구분한다: `FOUND`는 필요한 spec 읽기 성공, `ABSENT`는 트리 조회 성공 후 spec 파일 부재 확인, `UNREADABLE`은 트리 또는 필요한 spec 읽기 실패다.
-4. `ABSENT`일 때만 정상 **code-only 모드**로 진행한다. `UNREADABLE`이면 가능한 동등 SHA 읽기 경로를 시도하고, 계속 실패하면 검토 가능한 코드만 리뷰한다. 읽은 spec 범위·실패 원인과 spec 판정 미검증을 남기고 제한 리포트로 종료한다.
+- `FOUND`: spec 파일이 있다. 경로 목록을 `Spec Status`에 넣는다.
+- `ABSENT`: 트리 조회 성공 후 spec 파일 부재를 확인했다. 정상 **code-only 모드**다.
+- `UNREADABLE`: 트리 조회 실패다. 원인을 `Spec Status`에 넣는다.
 
-### Step 3: Simplicity Dispatch + 직접 Correctness
+spec 내용 읽기는 correctness worker가 한다. Step 4·리포트의 Spec 상태 최종값은 correctness 반환의 spec 모드이며, correctness 반환이 없으면 Step 2의 Spec Status다.
 
-**simplicity dispatch를 먼저 띄운다**. 이 스킬을 사용자가 호출한 것 자체가 simplicity 렌즈의 subagent dispatch에 대한 **사용자의 명시적 요청**이다 — 런타임 규범이 "Agent는 사용자가 명시적으로 요청할 때만"을 요구해도 이 dispatch는 그 요청에 해당하므로, 생략하거나 메인 루프 직접 수행으로 대체하지 않는다.
+### Step 3: Worker Dispatch (correctness + simplicity)
+
+**두 dispatch를 한 메시지에 낸다.** 이 스킬을 사용자가 호출한 것 자체가 두 dispatch에 대한 **사용자의 명시적 요청**이다 — 런타임 규범이 "Agent는 사용자가 명시적으로 요청할 때만"을 요구해도 이 dispatch들은 그 요청에 해당하므로, 생략하거나 메인 루프 수행으로 대체하지 않는다.
 
 ```
-Agent(subagent_type="general-purpose")
+Agent(subagent_type="general-purpose")   # correctness
+Agent(subagent_type="general-purpose")   # simplicity
 ```
 
-dispatch prompt는 `../sdd-orchestrator/references/simplicity-contract.md`(이 스킬 디렉토리 기준 상대 경로 — sibling 스킬의 reference)를 Read해 **계약 전문을 verbatim으로 앞에 싣고**(요약·재구성 금지, 차원 한정 없음 — 전체 4차원), 이어서 Step 1·2의 결과로 채운 `PR Review Input`을 전달한다. `--model <name>`이 있으면 이 dispatch에 적용한다 — `<name>`은 `sonnet`·`opus`·`haiku`·`fable` 중 하나여야 하며, 그 외 값이면 dispatch하지 않고 허용값을 안내한다.
+- correctness prompt:
 
-**agent가 도는 동안 메인 루프가 correctness 리뷰를 직접 수행한다** (아래 Correctness 리뷰). 반환을 수거하면 Step 4 verdict로 간다. 서로 독립인 Read/Grep은 한 메시지에 배칭하고, `Grep`으로 좌표를 먼저 잡은 뒤 관련 구간만 선택적으로 `Read`한다.
+```text
+너는 pr-review가 띄운 correctness worker다.
+계약: <이 스킬 base directory + references/correctness-contract.md 절대 경로> — 그대로 따른다.
+입력: <PR Review Input>
+```
 
-## Correctness 리뷰 (메인 루프 직접 수행, 단일 패스)
+- simplicity prompt: `../sdd-orchestrator/references/simplicity-contract.md`(이 스킬 디렉토리 기준 상대 경로 — sibling 스킬의 reference)를 Read해 **계약 전문을 verbatim으로 앞에 싣고**(요약·재구성 금지, 차원 한정 없음 — 전체 4차원), 이어서 `PR Review Input`을 전달한다.
+- schema에 `run_in_background`가 있으면 둘 다 `true`로 낸다. 결과 대기용 sleep·폴링은 쓰지 않는다 — 완료 알림으로 두 반환을 수거한다.
+- **모델 결정**: 호출 `--model <name>` > `_sdd/env.md` `## Worker Model Defaults`의 `### Claude Code` 표 `pr-review` 행 > 생략(런타임 기본). 적용값은 두 dispatch에 같게 쓴다. 적용값(호출 또는 env.md)은 `sonnet`·`opus`·`haiku`·`fable` 중 하나여야 하며, 그 외 값이면 dispatch하지 않고 허용값을 안내한다.
 
-`Changed Files`로 리뷰 범위를 고정한다. discussion은 저자 해명·기지 이슈·리뷰어 우려의 컨텍스트로만 쓴다. 반복적인 동등 변경은 묶어 분석·설명할 수 있다. 파일 수와 무관하게 실행 동작·권한·데이터 경계·통합 위험과 관련 AC는 필요한 깊이로 검토한다. 검토하지 못한 범위와 그로 인해 근거가 부족한 판정은 명시한다.
-
-**표적 경계**: 형태-중복(추출 가능한 동일 로직 반복) 등 동작-불변 형태 품질은 simplicity 소관이다. 단, 정확성-중복(중복된 보안 검증 누락·일관성 깨진 중복 분기 등 로직 버그성)은 correctness에 잔존한다.
-
-**Review Dimensions** — Code-only 항목은 항상, Spec-based 항목은 from-branch spec이 있을 때만.
-
-| Code-only (항상) | 내용 |
-|------|------|
-| AC 추론 | PR title, body, commit 메시지 + 기존 PR/review 코멘트에서 의도된 변경 사항·기지 이슈·저자 해명을 반영해 AC를 추론 |
-| 코드 품질 | 네이밍, 패턴, 프로젝트 컨벤션 (형태-중복은 simplicity 소관) |
-| 에러 처리 | 일관된 응답 형식, 로깅, graceful degradation |
-| 테스트 | 새 코드에 대한 테스트 존재 여부, 테스트 통과 여부 (CI 또는 로컬) |
-| 보안 | OWASP Top 10, hardcoded secrets, 인증/인가 |
-| 성능 | N+1 쿼리, 불필요 I/O, async 블로킹 |
-| 문서화 | 새 env vars, API 변경, breaking changes 문서화 여부 |
-
-| Spec-based (spec 존재 시 추가) | 내용 |
-|------|------|
-| Spec AC 검증 | spec의 각 Feature/Improvement/Bug Fix에 대해 구현 + 테스트 확인. MET(✓) / NOT MET(✗) / PARTIAL(△) |
-| Spec Compliance | 기존 spec 요구사항 위반 여부, breaking changes, API contract 변경 |
-| Gap Analysis | spec에 있으나 미구현 항목, PR에 있으나 spec에 없는 항목 |
-
-존재/범위 확인에 더해 구현된 코드의 correctness(경계·null·에러 경로·동시성 등 로직 결함)를 능동적으로 검토한다.
-
-**Fresh Verification + 증거 결속**:
-
-1. CI 실행 output은 실행 대상이 baseline SHA와 동일한 코드임을 확인한 경우에만 사용한다. 다른 SHA/merge commit의 결과나 status 요약만 있으면 참고로 구분하고 Test/MET 근거로 쓰지 않는다.
-2. 일치하는 CI output이 없으면 baseline의 `_sdd/env.md`가 가리키는 local validation을 시도한다. 실행 전 HEAD와 관련 dirty 상태를 재확인한다. 현재 작업이 baseline과 다르면 기존 작업을 보존하는 해당 SHA의 격리 checkout에서만 실행한다. 같은 버전의 실행 환경을 확보하지 못하면 이유를 기록한다.
-3. 두 경로 모두 실행 evidence가 없으면 test-dependent criterion과 correctness test signal을 사유 포함 `UNTESTED`로 둔다. Non-test-dependent criterion과 명시적 N/A는 제외한다.
-4. Code citation만으로 Test/MET를 만들지 않는다. 실패 output은 해당 finding의 severity와 ledger에 결속한다.
-- 표적 test/check는 30초가 지나면 중단한다. Timeout 후에는 test target, fixture, 또는 관련 구현이 바뀌기 전까지 같은 명령을 다시 실행하지 않는다.
-- 느리다고 알려진 test는 repo 또는 사용자가 명시한 checkpoint에서만 실행한다. checkpoint evidence가 없는 slow 의존 AC는 임의 실행하지 않고 `UNTESTED`(사유: slow — checkpoint 대기)로 보고한다.
-
-**Findings 분류**:
-
-- **Critical**: 핵심 기능 누락, 실패 테스트, 보안 취약점, 데이터 손실 위험, breaking change
-- **High**: 핵심 AC 일부 불충족, 주요 에러 처리 갭, 중요한 통합 깨짐, spec 위반
-- **Medium**: 비핵심 테스트 누락, 중간 수준 성능/유지보수성 우려, 후속 수정이 필요한 품질 문제
-- **Low**: 문서화, 선택적 엣지 케이스, 추후 개선 권고
-
-권고는 검출된 실제 결함 또는 측정된 위험에 직접 대응해야 한다 — "future-proof / extensible / configurable" 같은 사변적 권고 금지.
-
-**AC 검증 ledger**: 문제 있는 verdict(NOT MET·PARTIAL·UNTESTED·FAIL)만 리포트 §4에 행으로 낸다 — `| # | Criterion | Implementation | Test | Status | Evidence |` (Inferred AC는 항상, Spec AC는 spec-based 모드에서 추가 판정). 통과(MET) AC는 `MET: #1–#N` 꼴 축약 한 줄로 접는다 — 판정은 전 AC 증거 기반으로 수행하되(증거 없는 MET 금지), 통과 증거는 리포트에 전사하지 않는다.
+두 반환을 수거하면 Step 4 verdict로 간다. correctness가 `headRefOid` 불일치로 BLOCKED를 반환했거나 simplicity가 Assumptions에 baseline 불일치 blocker를 반환했으면 Error Handling의 불일치 행을 따른다.
 
 ### Step 4: Verdict
 
-두 렌즈 요약을 합쳐 verdict를 합성한다. spec `UNREADABLE` 또는 확정된 렌즈 누락이면 **NEEDS DISCUSSION (제한된 권고)**으로 닫고, 확인된 결함은 그대로 보존한다. 이 제한 분기를 먼저 적용하고 정상 리뷰에는 아래 표를 쓴다.
+두 렌즈 반환을 합쳐 verdict를 합성한다. correctness 반환의 spec 모드가 `UNREADABLE`이거나 확정된 렌즈 누락이면 **NEEDS DISCUSSION (제한된 권고)**으로 닫고, 확인된 결함은 그대로 보존한다. 이 제한 분기를 먼저 적용하고 정상 리뷰에는 아래 표를 쓴다.
 
 | Verdict | 조건 |
 |---------|------|
@@ -154,7 +119,7 @@ PR review는 verdict 권고이지 자동 게이트가 아니다.
 
 ### Step 5: Report Generation
 
-`_sdd/pr/<YYYY-MM-DD>_pr_review_<slug>.md`를 Output Format에 맞게 생성한다. 이 통합 리포트만으로 독자가 행동할 수 있어야 한다 — **행동 대상 finding은 Step 4 합류 규칙대로 전문 승격**한다. finding 개수·AC 충족률 통계 표는 만들지 않는다 (분포는 Verdict의 Signals 한 줄로 충분). 일반 확인 결과·차원 판정은 §3에 산문으로 요약하고, AC별 판정은 §4 ledger에만 둔다.
+`_sdd/pr/<YYYY-MM-DD>_pr_review_<slug>.md`를 Output Format에 맞게 생성한다. 이 통합 리포트만으로 독자가 행동할 수 있어야 한다 — **행동 대상 finding은 Step 4 합류 규칙대로 전문 승격**한다. finding 개수·AC 충족률 통계 표는 만들지 않는다 (분포는 Verdict의 Signals 한 줄로 충분). 확인 범위·검증 출처는 §3에 산문으로 요약하고, AC별 판정은 §4 ledger에만 둔다.
 
 현재 콘텍스트에서 skeleton을 먼저 기록한 뒤, 같은 흐름에서 Edit으로 내용을 채운다.
 
@@ -166,7 +131,7 @@ PR review는 verdict 권고이지 자동 게이트가 아니다.
 **PR**: #<number> - <title>
 **PR Author**: <author>
 **Review Date**: YYYY-MM-DD
-**Reviewer**: Claude (<model>)
+**Reviewer**: Claude (<메인 model> / workers <적용 model 또는 runtime default>)
 **Spec**: FOUND (baseline SHA) / ABSENT (code-only) / UNREADABLE: <원인>
 **Review Status**: COMPLETE / LIMITED: <미충족 skill AC·원인·재개 조건>
 
@@ -207,7 +172,7 @@ PR review는 verdict 권고이지 자동 게이트가 아니다.
 
 ## 3. 확인된 것
 
-<!-- 일반 확인 결과·차원 판정을 산문 2-3줄로. §4 AC 판정·증거를 반복하지 않음. 표·퍼센트 없음 -->
+<!-- 두 반환의 Status·MET 범위·Validation source·Assumptions를 산문 2-3줄로. §4 AC 판정·증거를 반복하지 않음. 표·퍼센트 없음 -->
 
 ---
 
@@ -225,8 +190,8 @@ MET: <통과 AC ID만 나열 또는 없음>
 ## Metadata
 
 **PR commit SHA**: <sha>
-**Spec source**: <baseline SHA·읽은 spec 경로 / ABSENT / UNREADABLE 사유>
-**Validation source**: <CI/local 실행 SHA·output 위치 / UNTESTED 사유>
+**Spec source**: <baseline SHA·correctness 반환의 읽은 spec 범위 / ABSENT / UNREADABLE 사유>
+**Validation source**: <correctness 반환의 CI/local 실행 SHA·output 위치 / UNTESTED 사유>
 **Generated at**: YYYY-MM-DD HH:MM:SS
 ```
 
@@ -236,7 +201,6 @@ MET: <통과 AC ID만 나열 또는 없음>
 |------|------|
 | No spec in baseline SHA | Step 2의 `ABSENT`/`UNREADABLE` 구분을 따른다 |
 | No PR / `gh` not authenticated | 설치/인증 안내 |
-| Multiple spec files in from-branch | canonical index와 링크된 하위 spec을 읽는다. 그래도 범위 선택이 모호하고 verdict에 영향을 주면 짧게 확인한다. 그 외에는 canonical index로 진행하고 가정을 기록한다 |
 | Existing review file | Step 1의 충돌 규칙으로 새 slug를 정한다. 명시적 갱신 요청 없이는 기존 파일 보존 |
 | Already merged PR | 허용 (retroactive review). merge 상태 표기 |
 
@@ -247,11 +211,13 @@ MET: <통과 AC ID만 나열 또는 없음>
 | `gh` CLI not installed | `brew install gh` 안내 |
 | `gh auth` failure | `gh auth login` 안내 |
 | Wrong PR number | 에러 메시지, 올바른 번호 요청 |
-| baseline spec 읽기 실패 | Step 2 항목 4의 `UNREADABLE` 처리를 따른다 |
-| simplicity 확정 실패/dispatch blocker | correctness 결과를 보존한 제한 리포트에 누락 렌즈·미충족 skill AC·재개 조건을 기록하고 종료. inline 대체나 같은 blocker의 반복 dispatch 금지 |
+| spec `UNREADABLE` | correctness 반환의 읽은 spec 범위·원인·spec 판정 미검증을 남기고 제한 리포트로 종료한다 |
+| 렌즈(correctness 또는 simplicity) 확정 실패/dispatch blocker | 확보된 렌즈 결과를 보존한 제한 리포트에 누락 렌즈·미충족 skill AC·재개 조건을 기록하고 종료. inline 대체나 같은 blocker의 반복 dispatch 금지 |
+| `headRefOid` 불일치(correctness BLOCKED 또는 simplicity Assumptions의 baseline 불일치 blocker — 렌즈 실패가 아닌 이 행으로 처리) | 새 SHA로 Step 0~2를 다시 수행해 PR Review Input(Baseline·Changed Files·Spec Status)을 다시 만든 뒤 두 worker를 1회 다시 띄운다. 또 불일치하면 제한 리포트(NEEDS DISCUSSION, LIMITED)로 닫는다 |
 
 ## Additional Resources
 
+- **`references/correctness-contract.md`** - correctness worker 계약 (worker가 읽음)
 - **`references/review-checklist.md`** - PR 리뷰 체크리스트 (human reference)
 - **`references/gh-commands.md`** - `gh` CLI 커맨드 레퍼런스
 - **`examples/sample-review.md`** - 통합 `pr-review` 예시 세션
@@ -260,4 +226,4 @@ MET: <통과 AC ID만 나열 또는 없음>
 
 선택한 경로에서 Acceptance Criteria와 Hard Rules를 점검한다. 수정 가능한 리포트 누락은 보완한다. spec 읽기 실패·외부 blocker·확정된 렌즈 실패로 충족할 수 없는 AC는 `Review Status: LIMITED`에 원인과 재개 조건을 기록하고 종료하며 정상 완료를 선언하지 않는다. 실패 dispatch를 소급 충족하거나 같은 blocker에서 반복하지 않는다.
 
-> **Source**: simplicity 계약·4개 차원·falsifiable severity는 `sdd-orchestrator/references/simplicity-contract.md`가 단일 소스로 보유한다. correctness 계약·verdict 합성·통합 리포트는 이 SKILL.md가 단일 소스다.
+> **Source**: correctness 계약은 `references/correctness-contract.md`, simplicity 계약·4개 차원·falsifiable severity는 `sdd-orchestrator/references/simplicity-contract.md`가 단일 소스로 보유한다. verdict 합성·통합 리포트는 이 SKILL.md가 단일 소스다.

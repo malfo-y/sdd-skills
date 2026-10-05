@@ -25,7 +25,7 @@
 
 ## Worker Model Defaults
 
-`sdd-orchestrator`가 읽는 단계별 worker 기본값이다. 빈 칸은 값 없음이다.
+`sdd-orchestrator`·`pr-review`가 읽는 worker 기본값이다. 빈 칸은 값 없음이다.
 
 ### Claude Code
 
@@ -36,6 +36,7 @@
 | implementation | sonnet |
 | implementation-review | opus |
 | spec-sync | sonnet |
+| pr-review | opus |
 
 ### Codex
 
@@ -46,16 +47,20 @@
 | implementation | gpt-6.1-sol | high |
 | implementation-review | gpt-6.1-sol | high |
 | spec-sync | gpt-6.1-sol | medium |
+| pr-review | gpt-6.1-sol | high |
 
 ## Pitfalls
 
 - git 제외 pathspec은 `':(exclude)_…'`로 쓴다. `':!_…'`는 "Unimplemented pathspec magic" 오류다(이 저장소는 `_sdd/`·`_COMMENTS.md`처럼 `_`로 시작하는 경로가 많다).
 - 이 저장소 하네스를 `claude -p --plugin-dir`로 시험할 때 marketplace 루트를 그대로 주면 설치된 `sdd-skills`를 덮어쓰지 못한다. plugin.json + skills symlink 래퍼가 필요하다(`_sdd/goal/2026-10-04_orchestrator_harness_redesign/bench/mkplug.sh`, git 추적 파일).
+- `git diff --check`는 untracked 새 파일을 검사하지 않는다. 새 파일은 `/usr/bin/grep -c '[[:space:]]$' <file>`이 `0`인지로 따로 본다.
 - claude↔codex 미러 비교는 `/usr/bin/diff`의 hunk 수로 판정한다.
 - census·0건 판정은 `/usr/bin/grep`으로 한다. 조건: Claude Code 셸에서는 `grep`·`diff`가 래퍼 함수일 수 있다(ugrep은 재귀 검색에서 gitignore 파일을 건너뛴다).
 - 조건: macOS 기본 도구.
   - `/bin/bash`는 3.2다.
   - BSD grep의 `--exclude-dir`는 경로 앞에 둔다.
+  - BSD `sed -i`는 백업 확장자 인자가 필요하다. `sed -i '' …`로 쓴다.
+  - `grep -F`는 `^`를 글자로 찾는다. 줄 시작 앵커 패턴은 `-F` 없이 쓴다.
   - BSD awk는 한글 heading 매칭이 깨진다. 한글 절 추출은 `/usr/bin/sed -n '/^## X$/,/^## /p'`로 한다.
   - 한국어 locale에서 `sort | uniq`가 다른 줄을 묶는다. 개수는 `cut -d' ' -f1 | sort | uniq -c`로 센다.
 - 조건: zsh 셸(Claude Code의 Bash 도구가 zsh로 실행될 때).

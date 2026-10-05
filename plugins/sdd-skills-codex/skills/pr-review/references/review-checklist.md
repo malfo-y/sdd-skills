@@ -65,4 +65,4 @@ Verification checklist used by the `pr-review` skill.
 
 ## Verdict Criteria
 
-Canonical verdict criteria live in `../SKILL.md` Step 4. Apply its normal or limited-result branch after direct correctness review and simplicity collection; do not maintain a second verdict list here. Spec `ABSENT` requires a successful tree lookup; `UNREADABLE` and missing lenses remain explicit limitations. Put problem AC rows and the folded MET line only in the report ledger slot.
+Canonical verdict criteria live in `../SKILL.md` Step 4. Apply its normal or limited-result branch after collecting the correctness and simplicity worker returns; do not maintain a second verdict list here. Spec `ABSENT` requires a successful tree lookup; `UNREADABLE` and missing lenses remain explicit limitations. Put problem AC rows and the folded MET line only in the report ledger slot.
