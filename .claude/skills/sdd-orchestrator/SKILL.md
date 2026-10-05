@@ -95,7 +95,7 @@ digest: <digest.md 절대 경로> — 결정·환경 함정·검증 레시피다
 
 - worker 결과를 기다리려고 sleep·until 루프나 출력 파일 감시(폴링)를 하지 않는다. 띄운 뒤에는 메인 루프 자신의 일(digest·state 갱신, 사용자 대화, 의존이 풀린 worker dispatch)을 하고, 할 일이 없으면 `Runtime: worker dispatch` 절의 방식으로 다음 반환을 받는다. worker의 일은 대신하지 않는다.
 - worker 옵션: 지정하지 않은 필드는 생략해 런타임 기본 동작을 따른다.
-  - 지정: `--model <단계>=<모델>[,<단계>=<모델>…]`, Codex에서는 독립적인 `--effort <단계>=<effort>[,<단계>=<effort>…]`도 받는다. 동등한 자연어 지정(예: "구현 모델은 gpt-6.1-sol, 리뷰 effort는 high")도 받으며 model만·effort만·둘 다 지정할 수 있다.
+  - 지정: `--model <단계>=<모델>[,<단계>=<모델>…]`, Codex에서는 독립적인 `--effort <단계>=<effort>[,<단계>=<effort>…]`도 받는다. 동등한 자연어 지정도 받는다(예: "계획은 <모델 A>, 구현·리뷰는 <모델 B>", Codex에서는 "리뷰 effort는 <effort>"). model만·effort만·둘 다 지정할 수 있다.
   - 범위: 단계 이름은 `단계와 진입` 표의 다섯 단계다. implementation-review 지정은 correctness 1개와 simplicity 2개 모두에 적용한다. 각 단계의 fix 재dispatch에도 같은 옵션을 쓴다.
   - 확인·기록: 시작할 때 지정 필드·지원값을 Runtime 절로 검증하고, effort 지정 시 모델별 조합도 확인한다. 이후 적용할 단계별 옵션을 digest의 결정·제약에 적어 재개 때도 같은 값을 쓴다. 미지정 모델을 임의로 고정하거나 별도 설정 파일을 만들지 않는다.
   - 필드 미지원·지원값 미확정·잘못된 값/조합은 원인과 확인 가능한 허용값을 구분해 알리고 고쳐 받는다. 해결 전에는 해당 단계 dispatch를 보류한다. 무인 실행이면 묻지 않고 그 단계의 override를 생략해 런타임 기본값으로 실행하며, fallback 결정은 digest에, 발생 사실은 state와 마감 보고에 적는다.

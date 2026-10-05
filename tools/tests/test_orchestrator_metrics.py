@@ -92,7 +92,7 @@ class MetricsTests(unittest.TestCase):
         for command in ['echo "unfinished', 'echo x >', 'cat <<EOF\n$(./helper.sh)\nEOF',
                         'cp -r source /tmp/scratch', 'git diff --output=notes.md',
                         "sed -i '' 'w notes.md' /tmp/scratch.md",
-                        "python3 -c 'bad syntax !'", "python3 -c \"open('notes.md')\"",
+                        "python3 -c 'bad syntax !'",
                         "python3 -c \"handle.write_text('x')\""]:
             with self.subTest(command=command):
                 self.assertEqual(self.measure(tool('Bash', command=command)).get('M2_status'), 'UNVERIFIED')
@@ -127,6 +127,60 @@ class MetricsTests(unittest.TestCase):
                 self.assertEqual(out['M2_main_edits'], 0)
                 self.assertEqual(out.get('M2_status'), 'UNVERIFIED')
                 self.assertEqual(out.get('M2_unknown'), 1)
+
+    def test_read_only_and_handoff_commands_pass(self):
+        for command in ['mkdir -p /tmp/scratch', "grep -n '^## X' notes.md", "grep 'a\\|b' notes.md",
+                        "/usr/bin/sed -n '/^## X$/,/^## /p' notes.md", 'grep "X$" notes.md',
+                        "find . -name '*.md'", 'sort notes.md | uniq -c',
+                        "python3 -c \"open('notes.md')\"",
+                        "python3 - <<'EOF'\np='_sdd/implementation/run/state.md'\ns=open(p).read()\nopen(p,'w').write(s.replace('a','b'))\nEOF",
+                        'D=_sdd/implementation/run; echo x > $D/state.md',
+                        f'cd {ROOT}/_sdd/implementation/run && echo x > notes.md']:
+            with self.subTest(command=command):
+                out = self.measure(tool('Bash', command=command))
+                self.assertEqual((out['M2_main_edits'], out.get('M2_status')), (0, 'PASS'))
+
+    def test_literal_assignments_and_cd_confirm_writes(self):
+        for command in ["python3 - <<'EOF'\np='notes.md'\nopen(p,'w').write('x')\nEOF",
+                        "python3 -c \"from pathlib import Path; q=Path('notes.md'); q.write_text('x')\"",
+                        'D=src; echo x > "$D/a.md"', f'cd {ROOT}/src && echo x > a.md']:
+            with self.subTest(command=command):
+                self.assertEqual(self.measure(tool('Bash', command=command))['M2_main_edits'], 1)
+
+    def test_side_effect_python_and_risky_options_stay_unknown(self):
+        for command in ["python3 -c \"import os; os.remove('x')\"",
+                        "python3 -c \"import shutil; shutil.copy('a', 'b')\"",
+                        "python3 -c \"from pathlib import Path; Path('a').unlink()\"",
+                        "python3 -c \"exec('x')\"", 'find . -delete', 'sort -o out.txt in.txt',
+                        'uniq in.txt out.txt', "sed 'w out.txt' in.txt", 'sed -i.bak s/a/b/ notes.md']:
+            with self.subTest(command=command):
+                out = self.measure(tool('Bash', command=command))
+                self.assertEqual((out['M2_main_edits'], out.get('M2_status')), (0, 'UNVERIFIED'))
+
+    def test_real_transcript_shapes(self):
+        handoff = '_sdd/implementation/run'
+        for command, expected in [
+                (f"sed -i '' -e 's/a/b/' -e 's/c/d/' {handoff}/state.md", 0),
+                ("sed -i '' -e 's/a/b/' notes.md", 1),
+                (f"cat > {handoff}/digest.md <<'EOF'\n# D\nx > notes.md\nEOF\ncat > {handoff}/state.md <<'EOF'\n# S\n| a | > b |\nEOF", 0),
+                (f'mkdir -p {handoff} && chmod 755 {handoff}', 0), ('chmod 644 notes.md', 1),
+                (f'git check-ignore -q {handoff}', 0)]:
+            with self.subTest(command=command):
+                out = self.measure(tool('Bash', command=command))
+                self.assertEqual((out['M2_main_edits'], out.get('M2_status')), (expected, 'FAIL' if expected else 'PASS'))
+
+    def test_concatenated_paths_globs_and_parameter_expansion(self):
+        handoff = '_sdd/implementation/run'
+        for command, expected in [
+                (f"python3 - <<'EOF'\nd='{handoff}/'\np=d+'digest.md'\nopen(p,'w').write('x')\nEOF", 'PASS'),
+                ("python3 -c \"d='src/'; open(f'{d}a.md', 'w')\"", 'FAIL'),
+                ('ls _sdd | grep x; echo "rc=$?"', 'PASS'),
+                (f'chmod 0644 {handoff}/*.md', 'PASS'), ('chmod 644 src/*.md', 'UNVERIFIED'),
+                ('command -v rtk; git branch --show-current', 'PASS'),
+                ("command grep -n x notes.md", 'PASS'),
+                ("cat >> _sdd/work_log/2026-10-04.md <<EOF\n## $T\nEOF", 'PASS')]:
+            with self.subTest(command=command):
+                self.assertEqual(self.measure(tool('Bash', command=command)).get('M2_status'), expected)
 
     def test_other_metrics_and_clean_pass(self):
         out = self.measure(tool('Bash', command='git diff -- notes.md'))
