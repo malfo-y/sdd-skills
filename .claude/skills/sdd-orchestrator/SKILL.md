@@ -94,10 +94,11 @@ digest: <digest.md 절대 경로> — 결정·환경 함정·검증 레시피다
 ```
 
 - worker 결과를 기다리려고 sleep·until 루프나 출력 파일 감시(폴링)를 하지 않는다. 띄운 뒤에는 메인 루프 자신의 일(digest·state 갱신, 사용자 대화, 의존이 풀린 worker dispatch)을 하고, 할 일이 없으면 `Runtime: worker dispatch` 절의 방식으로 다음 반환을 받는다. worker의 일은 대신하지 않는다.
-- worker 옵션: 지정하지 않은 필드는 생략해 런타임 기본 동작을 따른다.
+- worker 옵션: 단계·필드(model, Codex에서는 effort도)마다 호출 지정 > `_sdd/env.md` `## Worker Model Defaults` 절의 현재 runtime 하위 절 값 > 값 없음 순으로 적용값을 정한다. 값이 없는 필드는 생략해 런타임 기본 동작을 따른다.
   - 지정: `--model <단계>=<모델>[,<단계>=<모델>…]`, Codex에서는 독립적인 `--effort <단계>=<effort>[,<단계>=<effort>…]`도 받는다. 동등한 자연어 지정도 받는다(예: "계획은 <모델 A>, 구현·리뷰는 <모델 B>", Codex에서는 "리뷰 effort는 <effort>"). model만·effort만·둘 다 지정할 수 있다.
-  - 범위: 단계 이름은 `단계와 진입` 표의 다섯 단계다. implementation-review 지정은 correctness 1개와 simplicity 2개 모두에 적용한다. 각 단계의 fix 재dispatch에도 같은 옵션을 쓴다.
-  - 확인·기록: 시작할 때 지정 필드·지원값을 Runtime 절로 검증하고, effort 지정 시 모델별 조합도 확인한다. 이후 적용할 단계별 옵션을 digest의 결정·제약에 적어 재개 때도 같은 값을 쓴다. 미지정 모델을 임의로 고정하거나 별도 설정 파일을 만들지 않는다.
+  - env.md 기본값: `## Worker Model Defaults` 아래 `### Claude Code` 표(`단계 | model`)와 `### Codex` 표(`단계 | model | effort`)를 둔다. 행은 다섯 단계 이름이다. 빈 칸이거나 행·하위 절·절이 없으면 값 없음이다.
+  - 범위: 단계 이름은 `단계와 진입` 표의 다섯 단계다. implementation-review 적용값은 correctness 1개와 simplicity 2개 모두에 적용한다. 각 단계의 fix 재dispatch에도 같은 옵션을 쓴다.
+  - 확인·기록: 시작할 때 env.md 절을 읽고, 호출 지정과 합친 적용값의 필드·지원값을 Runtime 절로 검증한다(env.md 값도 같은 검증을 거친다). effort가 있으면 모델별 조합도 확인한다. 이후 적용할 단계별 옵션을 digest의 결정·제약에 적어 재개 때도 같은 값을 쓴다. 호출 지정과 env.md 어디에도 없는 값을 임의로 고정하거나 env.md 밖에 별도 설정 파일을 만들지 않는다.
   - 필드 미지원·지원값 미확정·잘못된 값/조합은 원인과 확인 가능한 허용값을 구분해 알리고 고쳐 받는다. 해결 전에는 해당 단계 dispatch를 보류한다. 무인 실행이면 묻지 않고 그 단계의 override를 생략해 런타임 기본값으로 실행하며, fallback 결정은 digest에, 발생 사실은 state와 마감 보고에 적는다.
 - fix를 맡길 때는 `품질 게이트`의 fix 정책으로 고른 findings만 입력으로 넘긴다. worker는 받은 findings를 모두 반영한다.
 - worker가 실패하거나 반환이 계약 형식을 벗어나면 같은 입력으로 1회 다시 띄운다. 또 실패하면 멈추고 사용자에게 보고한다.
@@ -146,7 +147,7 @@ state.md를 읽어 다음 행동을 정한다. DELTA_CLOSED가 아닌 task는 st
 
 ## Runtime: worker dispatch
 
-- worker는 `Agent` 도구로 `subagent_type: "general-purpose"`를 띄운다. 도구 schema에 `run_in_background`가 있으면 `run_in_background: true`로 둔다. prompt는 `Worker dispatch` 형식이다. worker 모델이 지정된 단계만 `model`에 그 값을 넣는다(허용값 `sonnet`·`opus`·`haiku`·`fable`). 지정하지 않은 단계는 `model`을 생략해 세션 기본값을 따른다. 이 runtime의 계약은 model만 지원하며 effort 지정은 `Worker dispatch`의 필드 미지원 정책으로 처리한다.
+- worker는 `Agent` 도구로 `subagent_type: "general-purpose"`를 띄운다. 도구 schema에 `run_in_background`가 있으면 `run_in_background: true`로 둔다. prompt는 `Worker dispatch` 형식이다. `Worker dispatch` 우선순위로 정한 model 적용값이 있는 단계만 `model`에 그 값을 넣는다(허용값 `sonnet`·`opus`·`haiku`·`fable`). 값이 없는 단계는 `model`을 생략해 세션 기본값을 따른다. 이 runtime의 계약은 model만 지원하며 effort 지정은 `Worker dispatch`의 필드 미지원 정책으로 처리한다.
 - 동시에 띄울 worker는 한 메시지에 여러 `Agent` 호출로 낸다. 완료 알림은 worker마다 따로 오고, 알림마다 그 반환을 처리한다. 할 일이 없으면 턴을 끝내고 알림을 받는다.
 
 ## Final Check

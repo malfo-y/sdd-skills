@@ -954,3 +954,10 @@
 - digest 내용 선택·실제 검증 명령 재사용·조건부 환경 사실, 관련 변경분과 소비 출처 갱신, 최소 검증 목록과 독립 correctness 검토의 관계를 기존 소유 계약에 맞춰 main/components/usage-guide에 반영했다.
 - **증거·한계**: [구현·리뷰 state](../../implementation/2026-10-05_digest_actionability/state.md)의 8개 AC 충족과 미러 검증을 소비했다. 시범 레시피 실행은 기존 transcript 계측 명령의 유효성 검증이며 새 모델 실행·속도·품질 개선의 근거가 아니다.
 - **입력 처리**: [소비 완료 draft](../../drafts/_processed_2026-10-05_feature_draft_digest_actionability.md)로 원문 보존 rename했다. 시범 digest와 계측 세부는 temporary artifact에 유지하며 env 승격은 없다.
+
+
+## v4.41.0 (2026-10-05)
+
+- `sdd-orchestrator` worker 모델에 `_sdd/env.md` `## Worker Model Defaults` 단계 기본값을 추가했다. 적용 순서는 단계·필드마다 호출 지정 > env.md 값 > 런타임 기본 동작이고, env.md 값도 같은 Runtime 검증을 거친다. main(§2 override 불릿·결정 표)·components·usage-guide를 동기화했다 — v4.35.0의 "단계별 기본값·repo 설정 파일은 두지 않는다"를 대체한다.
+- **증거·한계**: [구현·리뷰 state](../../implementation/2026-10-05_env_worker_model_defaults/state.md)의 8개 AC 충족과 미러·manifest 검증을 소비했다. 기본값을 적용한 실제 dispatch는 미실행이다.
+- **입력 처리**: [소비 완료 draft](../../drafts/_processed_2026-10-05_feature_draft_env_worker_model_defaults.md)로 원문 보존 rename했다. env 승격은 없다(digest 환경 함정 3건은 env.md에 이미 있음).

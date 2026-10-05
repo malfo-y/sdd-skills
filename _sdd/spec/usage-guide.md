@@ -52,7 +52,7 @@ Codex 단계별 옵션 예시(값·조합은 활성 도구 지원 목록으로 �
 $sdd-orchestrator --model implementation=gpt-6.1-sol --effort implementation=high
 ```
 
-미지정 필드는 생략한다. 모델만 바꾸면 그 모델 기본 effort가 적용될 수 있다. 옵션은 해당 단계 fix에도 유지되며 implementation-review 지정은 리뷰 worker 3개 모두에 적용된다.
+호출 지정이 없는 단계·필드는 사용 저장소 `_sdd/env.md` `## Worker Model Defaults` 절의 runtime별 값을 쓰고, 둘 다 없으면 생략한다(env.md 값도 같은 검증을 거친다). 모델만 바꾸면 그 모델 기본 effort가 적용될 수 있다. 적용값은 해당 단계 fix에도 유지되며 implementation-review 값은 리뷰 worker 3개 모두에 적용된다.
 
 **Expected Result:**
 - `_sdd/drafts/<YYYY-MM-DD>_feature_draft_<slug>.md` — feature-draft worker가 작성한 스펙 패치 초안(Part 1 마커) + 구현 태스크 리스트(Part 2)

@@ -23,6 +23,30 @@
 - 구조 확인: `find _sdd/spec -maxdepth 2 -type f | sort`
 - 플러그인 manifest 검증: `claude plugin validate .`
 
+## Worker Model Defaults
+
+`sdd-orchestrator`가 읽는 단계별 worker 기본값이다. 빈 칸은 값 없음이다.
+
+### Claude Code
+
+| 단계 | model |
+|------|-------|
+| feature-draft | fable |
+| plan-review | opus |
+| implementation | sonnet |
+| implementation-review | opus |
+| spec-sync | sonnet |
+
+### Codex
+
+| 단계 | model | effort |
+|------|-------|--------|
+| feature-draft | | |
+| plan-review | | |
+| implementation | | |
+| implementation-review | | |
+| spec-sync | | |
+
 ## Pitfalls
 
 - git 제외 pathspec은 `':(exclude)_…'`로 쓴다. `':!_…'`는 "Unimplemented pathspec magic" 오류다(이 저장소는 `_sdd/`·`_COMMENTS.md`처럼 `_`로 시작하는 경로가 많다).

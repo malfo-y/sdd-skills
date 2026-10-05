@@ -3629,3 +3629,12 @@ sdd-autopilot의 review-fix 루프가 선택적으로 동작하여, 리뷰만 �
 - **근거**: 중복 요약과 실행 불가능한 레시피는 worker의 재조사 비용을 남긴다. 기존 구현·검증에서 얻은 명령을 재사용하고 소유 계약에 통합해 별도 조사·새 게이트·전체 digest 재심사를 일상 작성 비용으로 추가하지 않는다.
 - **검증 경계**: 계약·미러 검증과 기존 transcript를 쓰는 레시피 실행을 확인했다. 새 모델 실행이나 속도·품질 개선 효과는 검증하지 않았다.
 - **포인터**: [소비 완료 draft](../drafts/_processed_2026-10-05_feature_draft_digest_actionability.md), [구현·리뷰 증거](../implementation/2026-10-05_digest_actionability/state.md).
+
+
+## 2026-10-05 - `sdd-orchestrator` worker 단계 기본값을 `_sdd/env.md`에 둔다 (v4.41.0)
+
+- **결정**: 사용자 요청으로 `sdd-orchestrator` worker 옵션 적용값을 단계·필드마다 호출 지정 > `_sdd/env.md` `## Worker Model Defaults` 절의 현재 runtime 하위 절 값(`### Claude Code` 표 `단계 | model`, `### Codex` 표 `단계 | model | effort`) > 값 없음(필드 생략, 런타임 기본 동작) 순으로 정한다. env.md 값도 호출 지정과 같은 Runtime 검증·미지원/잘못된 값 정책을 거치고, 시작 때 정한 적용값은 digest에 남긴다. v4.35.0 entry의 기각 2건(단계별 기본값 고정, repo 설정 파일)을 대체한다. 이 저장소 Claude 값은 env.md에 두고 Codex 값은 비운다.
+- **근거**: 사용자는 매 실행마다 단계별 모델을 지정하지 않아도 되는 기본값을 원했다. 메인 루프가 시작 때 이미 `_sdd/env.md`를 읽고 이 파일은 저장소마다 커밋되므로 별도 설정 파일이 필요 없다. v4.35.0의 기각 사유 중 세션 모델 상속은 env.md에 값이 없는 단계·필드에서 그대로 유지되고, 허용값은 계속 runtime 계약이 정해 env.md가 저장소 allowlist가 되지 않는다.
+- **기각**: env.md 밖 별도 설정 파일(메인 루프가 이미 읽는 파일로 충분), 기본값을 한 실행에서 끄는 문법(요청 밖 — 다른 값은 호출 지정으로 덮어쓴다).
+- **검증 경계**: 계약·미러·env.md 형식 검증만 했다. env.md 기본값을 실제로 적용한 dispatch는 미실행이다(이 변경이 반영된 뒤 실행부터 적용).
+- **포인터**: [소비 완료 draft](../drafts/_processed_2026-10-05_feature_draft_env_worker_model_defaults.md), [구현·리뷰 증거](../implementation/2026-10-05_env_worker_model_defaults/state.md).

@@ -160,7 +160,9 @@ pr-review 스킬을 --model gpt-5.6-sol --effort ultra로 실행해줘.
 
 Codex에서는 model과 effort를 분리해서 쓴다. `gpt-5.6-sol-high` 같은 결합형 값 대신 `--model gpt-5.6-sol --effort high`를 사용한다. 위 값은 호출 예시이며, 실제 허용값은 실행 시 `spawn_agent` 도구가 지원하는 모델·추론 강도를 따른다.
 
-`sdd-orchestrator`는 호출할 때 단계별 worker 모델을 지정할 수 있다. 단계 이름은 `feature-draft`·`plan-review`·`implementation`·`implementation-review`·`spec-sync`이고, 각 단계의 fix에도 같은 옵션을 쓴다. `implementation-review` 지정은 correctness 1개와 simplicity 2개 모두에 적용된다. Claude Code의 모델 지정 예시:
+`sdd-orchestrator`는 단계별 worker 모델을 호출할 때 지정하거나, 사용 저장소 `_sdd/env.md`의 `## Worker Model Defaults` 절에 기본값으로 둘 수 있다. 단계 이름은 `feature-draft`·`plan-review`·`implementation`·`implementation-review`·`spec-sync`이고, 각 단계의 fix에도 같은 값을 쓴다. `implementation-review` 값은 correctness 1개와 simplicity 2개 모두에 적용된다.
+
+적용값은 단계·필드(model, Codex에서는 effort도)마다 호출 지정 > env.md 기본값 > 런타임 기본 동작 순으로 정한다. env.md 기본값은 runtime별 표로 적는다: `### Claude Code` 표(`단계 | model`)와 `### Codex` 표(`단계 | model | effort`). 빈 칸이거나 행·하위 절·절이 없으면 값 없음이다. env.md 값도 호출 지정과 같은 검증을 거친다. Claude Code의 호출 지정 예시:
 
 ```text
 /sdd-skills:sdd-orchestrator _sdd/drafts/<draft>.md --model feature-draft=fable,implementation=sonnet,implementation-review=sonnet,spec-sync=sonnet
@@ -177,14 +179,14 @@ sdd-orchestrator로 --model implementation=gpt-6.1-sol,implementation-review=gpt
 sdd-orchestrator로 구현 모델은 gpt-6.1-sol, 리뷰 effort는 high로 진행해줘.
 ```
 
-| 단계의 지정 | Codex spawn 인자 |
+| 단계의 적용값 (호출 지정 > env.md) | Codex spawn 인자 |
 |-------------|-----------------|
-| 생략 | `model`·`reasoning_effort` 모두 생략 |
+| 생략 (호출 지정·env.md 모두 없음) | `model`·`reasoning_effort` 모두 생략 |
 | model만 | `model`만 전달 |
 | effort만 | `reasoning_effort`만 전달; 상속할 모델과의 조합 확인 |
-| 둘 다 | `model`·`reasoning_effort` 전달; 지정 모델과의 조합 확인 |
+| 둘 다 | `model`·`reasoning_effort` 전달; 그 모델과의 조합 확인 |
 
-미지정 필드는 런타임 기본 동작을 따른다. 모델만 바꾸면 그 모델의 기본 effort가 적용될 수 있어 부모 effort 상속을 보장하지 않는다. 필드 미지원·지원값 미확정·잘못된 값/조합은 구분해 알리고 수정받으며, 무인 실행에서는 해당 단계 override를 생략하고 보고한다. Claude Code의 단계별 effort 지원은 이 계약에 포함하지 않는다.
+호출 지정과 env.md 값이 모두 없는 필드는 런타임 기본 동작을 따른다. 모델만 바꾸면 그 모델의 기본 effort가 적용될 수 있어 부모 effort 상속을 보장하지 않는다. 필드 미지원·지원값 미확정·잘못된 값/조합은 구분해 알리고 수정받으며, 무인 실행에서는 해당 단계 override를 생략하고 보고한다. Claude Code의 단계별 effort 지원은 이 계약에 포함하지 않는다.
 
 ## Skills
 
