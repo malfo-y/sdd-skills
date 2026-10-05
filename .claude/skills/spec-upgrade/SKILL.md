@@ -27,6 +27,7 @@ description: This skill should be used when the user asks to "upgrade spec", "mi
 - [ ] `CLAUDE.md`가 `→ AGENTS.md 참조` 마커 포인터 블록을 가진다 (부재 시 생성, 기존 파일이면 prepend).
 - [ ] `AGENTS.md`·`CLAUDE.md`의 legacy 처리가 Step 6의 보존/흡수 규칙을 따른다.
 - [ ] `.gitignore`에 `SDD-WORKSPACE` 마커 블록이 존재한다 (부재/부분존재 시 process artifact ignore를 멱등 병합).
+- [ ] `_sdd/env.md`의 기본 모델 템플릿을 Step 6에 따라 보강하고 기존 값 보존·사용자 안내를 확인했다.
 - [ ] 하네스를 병합했으면 Step 6의 local hook installation contract를 적용하고 runtime별 등록·검증·acceptance 상태를 구분했다.
 
 ## SDD Lens
@@ -41,6 +42,7 @@ description: This skill should be used when the user asks to "upgrade spec", "mi
 ## Companion Assets
 
 - `references/agents-harness-template.md`
+- `references/worker-model-defaults.md`
 - `references/hook-installation.md`
 - `references/hooks/worklog-gate.sh`
 - `references/hooks/worklog-context.sh`
@@ -133,7 +135,7 @@ exact current global shape와 비교할 때는 `references/spec-format.md`를, g
 
 migration 작성 직전에 선택한 runtime-local asset만 **Read**한다. 선택한 파일의 fenced skeleton을 verbatim 복사해 heading·field order를 보존하고, source evidence로 placeholder를 치환하며 evidence가 없는 optional block은 제거한다. reference 내용을 기억이나 이 SKILL 본문으로 대체하지 않는다.
 
-### Step 6: Harness Merge (AGENTS.md / CLAUDE.md / .gitignore / 훅 자산)
+### Step 6: Harness Merge (AGENTS.md / CLAUDE.md / .gitignore / env.md / 훅 자산)
 
 작업 하네스(`AGENTS.md`)가 하네스 템플릿(`references/agents-harness-template.md`) 기준으로 존재하도록 SDD-HARNESS 마커 기반 멱등 병합을 적용한다. legacy `## SDD란` 블록은 새로 생성하지 않으며, 기존 블록에는 아래 보존/흡수 규칙을 적용한다.
 
@@ -164,7 +166,9 @@ _sdd/pr/
 # SDD-WORKSPACE:END
 ```
 
-env.md 비밀값 경고는 하네스 §2에 포함돼 있어 AGENTS.md 병합으로 함께 반영된다(별도 처리 불필요).
+#### env.md 기본 모델 템플릿
+
+호출 중인 skill package의 `references/worker-model-defaults.md`를 **Read**하고 적용·확인·보고 규칙에 따라 `_sdd/env.md`를 생성/보강한다. 이관/비대상 경로에서는 Step 1대로 수행하지 않는다.
 
 #### Hook Assets
 
@@ -187,6 +191,7 @@ upgrade가 소유하는 것은 부분 설치의 repair 판단이다. hook event�
 - Step 1 경계 판정을 어기고 rewrite 문제를 upgrade로 덮지 않았는가
 - `AGENTS.md`가 하네스(§0~§5) 마커 블록을 가지고, `CLAUDE.md`가 포인터 마커 블록을 가지며, Step 6의 보존/흡수 규칙을 따르는가
 - `.gitignore`가 `SDD-WORKSPACE` 마커 블록으로 process artifact를 ignore하는가
+- `_sdd/env.md`가 local `references/worker-model-defaults.md`의 확인·보고 조건을 충족하는가
 - 하네스를 병합했다면 local `references/hook-installation.md`의 `Verification and Report`에 따라 runtime별 등록·검증·acceptance 상태를 구분했는가
 
 ## Output Contract
@@ -199,6 +204,7 @@ upgrade가 소유하는 것은 부분 설치의 repair 판단이다. hook event�
 - global에 남긴 판단과 밖으로 내린 정보
 - 축약 또는 supporting surface 이동된 old inventory 항목
 - 하네스 병합 결과(AGENTS.md/CLAUDE.md/.gitignore 생성·prepend·마커 교체 여부, 흡수·제거된 legacy `## SDD란`/중복 항목)
+- env.md 보강 결과 — local `references/worker-model-defaults.md`의 `확인·보고` 규칙대로 설정표 위치와 나중에 채울 수 있는 항목을 알린다
 - 훅 설치 결과 — local `references/hook-installation.md`의 `Report` 계약대로 알린다
 - 남은 구조 문제와 후속 추천
 
