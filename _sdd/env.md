@@ -8,7 +8,7 @@
 
 - 기본 작업 대상: Markdown 문서, `SKILL.md`, 예시/참고 문서
 - 주요 디렉토리: `plugins/sdd-skills-codex/skills/`, `.claude/skills/`, `_sdd/`, 루트 문서
-- 조건: `tools/tests`는 pytest가 필요하다(기본 python3 3.14에는 없다).
+- 조건: `tools/tests`의 pytest 기반 테스트에는 pytest가 필요하다(기본 python3 3.14에는 없다). unittest 기반 표적 테스트는 표준 라이브러리로 직접 실행할 수 있으므로 pytest 설치를 일괄 전제로 삼지 않는다.
 
 ## Environment Variables
 

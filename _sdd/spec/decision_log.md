@@ -3613,3 +3613,11 @@ sdd-autopilot의 review-fix 루프가 선택적으로 동작하여, 리뷰만 �
 - **근거**: 실행 중 알아낸 환경 함정이 digest와 함께 사라져 다음 실행이 같은 시행착오를 반복했고, 모든 worker가 읽는 digest에 한 worker용 입력과 닫힌 fix check가 쌓였다. 승격 주체를 spec-sync worker로 둔 이유는 기본 종점의 마지막 단계이고, 이미 digest를 읽으며, "repo-wide 지속 정보만 가장 맞는 표면에 보수적으로 반영"하는 같은 원칙을 쓰기 때문이다 — 메인 루프는 대상 파일을 쓰지 않으므로 승격 주체가 될 수 없다.
 - **기각**: 새 worker·새 계약 파일(spec-sync 계약 항목 하나로 충분), env.md 절 이름 고정(task 간 상수 공유를 만든다).
 - **포인터**: `_sdd/drafts/_processed_2026-10-05_feature_draft_digest_ops_env_promotion.md`, `_sdd/implementation/2026-10-05_digest_ops_env_promotion/`.
+
+
+## 2026-10-05 - `sdd-orchestrator` Codex 단계별 model·effort 독립 지정 (v4.39.0)
+
+- **결정**: Codex worker의 model·effort를 독립적인 단계별 per-call 옵션으로 지원한다. v4.35.0의 모델만 지정·effort 상속 전제를 대체하며, schema enum뿐 아니라 활성 도구 설명의 명시 지원 목록으로 모델별 조합을 검증한다. 미지정 필드는 생략하고 모델만 변경한 경우 부모 effort 상속을 보장하지 않는다. 무인 실행의 override fallback은 두 옵션에 함께 적용한다.
+- **근거**: 모델 선택과 추론 강도 선택은 독립적인 사용자 요구이고, 활성 도구는 enum 없이 지원 목록을 설명으로 제공할 수 있다. 고정 allowlist·별도 설정 파일 없이 런타임 계약을 소비한다. digest 내용 계약은 공통 경계가 소유해 메인과 leaf의 상태 혼입을 막고, 최초·fix draft에서 회수된 확인 사항은 의존 구현 전에 처리한다.
+- **검증 경계**: 정적 계약과 미러 검증만 완료했다. 실제 Codex 옵션 override dispatch는 미실행이다.
+- **포인터**: [소비 완료 draft](../drafts/_processed_2026-10-05_feature_draft_pr96_review_fixes.md), [구현·리뷰 증거](../implementation/2026-10-05_pr96_review_fixes/state.md).

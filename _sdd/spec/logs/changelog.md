@@ -934,3 +934,16 @@
 
 - goal-init·pr-review·implementation·implementation-review의 승인된 목적 중심 개선을 양 runtime에 적용했다. goal 대화의 고정 단계/가설 수를 완화하고 PR leaf 입력·위험 기준·검사 출력, 구현 resume 기록·gate 표현, 리뷰 혼합 변경 범위를 정리했다. 연결된 template/example·sdd-autopilot·한/영 안내를 동기화했다.
 - 검증은 소스 계약·YAML·미러·경로·격리 git recipe에 한정한다. 실제 모델 행동 효과는 미검증이며 리뷰별 처리·게이트 결과는 `docs/reviews/2026-09-15-skill-instructions/four-skill-purpose-dispositions.md`에 기록한다.
+
+
+## v4.38.0 (2026-10-05)
+
+- 🚧 Planned: [PR96 후속 draft Part 1](../../drafts/2026-10-05_feature_draft_pr96_review_fixes.md)의 draft 확인 사항 회수, digest 공통 계약 소유권, Codex 단계별 독립 model·effort 옵션을 main.md에 계획으로 반영했다. 구현·검증 전이므로 기존 현재 동작은 유지하며 완료 승격은 하지 않았다.
+- M2 쓰기 분류와 과거 보고 정정은 기능별 계측·검증 사항으로 draft와 해당 benchmark 산출물에 남긴다.
+
+
+## v4.39.0 (2026-10-05)
+
+- v4.38.0 Planned 3건을 정적 계약 검증 범위에서 현재 사실로 반영했다: 최초·fix draft 확인 사항 회수, 공통 경계의 digest 내용 소유권, Codex 단계별 model·effort 독립 옵션. main/components/usage-guide를 동기화하고 unittest 표적은 pytest 없이 실행할 수 있음을 env에 반영했다.
+- **증거·한계**: [구현·리뷰 state](../../implementation/2026-10-05_pr96_review_fixes/state.md)의 fresh 계약·미러 검증과 fix 표적 증거를 소비했다. 실제 Codex override dispatch는 미실행이며, M2 재계측의 new 12개는 UNVERIFIED다. 과거 benchmark를 현재 head 성능이나 무쓰기 PASS로 승격하지 않는다.
+- **입력 처리**: v4.38.0 entry의 draft는 원문을 보존해 [소비 완료 draft](../../drafts/_processed_2026-10-05_feature_draft_pr96_review_fixes.md)로 rename했다. M2 상세는 해당 benchmark report에 유지한다.

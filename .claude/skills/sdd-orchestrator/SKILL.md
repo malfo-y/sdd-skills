@@ -39,24 +39,24 @@ description: "Use this skill to run the SDD chain (feature-draft → plan-review
 ## 역할 경계
 
 메인 루프가 직접 하는 일:
-- 사용자 질문. 계획 worker를 띄우기 전에, 아키텍처·범위·Target Files를 바꾸는 unknown만 한 번에 하나씩 묻는다. 사용자가 무인 실행을 맡겼으면 묻지 않고 합당한 해석을 digest의 결정에 적는다.
+- 사용자 질문. 계획 worker를 띄우기 전에, 아키텍처·범위·Target Files를 바꾸는 unknown만 한 번에 하나씩 묻는다. feature-draft worker의 최초 반환과 fix 반환에서도 Open Questions와 사용자 확인 사항을 회수한다. 새 미승인 구조 결정에 사용자 확인이 필요하면 사용자에게 확인하고, 그 결정에 의존하는 구현 dispatch를 확인 전까지 보류한다. 이미 승인된 결정과 routine 선택은 다시 묻지 않는다. 사용자가 무인 실행을 맡겼으면 묻지 않고 합당한 결정을 내린다. 결정·제약은 digest에 반영하고, 결정 때문에 draft를 바꿔야 하면 feature-draft worker에 fix로 맡긴 뒤 계획 게이트 규칙을 따른다.
 - digest·state 작성, 단계·게이트 순서와 병렬 판단, worker 반환 집계, 마감 보고.
 - 상위 하네스에 work log 규약이 있으면 단계를 닫을 때 그 규약대로 기록한다.
 
 메인 루프가 하지 않는 일:
 - 대상 파일(코드·테스트·draft·spec) 수정. 작은 수정도 worker에게 맡긴다.
 - worker 일의 대리 수행. worker가 실패해도 대신 고치거나 대신 검증하지 않는다. 확인이 필요하면 worker를 띄운다.
-- 대상 파일·diff의 탐색적 읽기. 판단에 필요한 사실은 worker 반환으로 받는다. 읽어도 되는 것은 `references/handoff-templates.md`, draft, `_sdd/env.md`, digest·state뿐이다. `references/workers/`의 계약은 worker가 읽는 문서라 메인 루프는 읽지 않는다.
+- 대상 파일·diff의 탐색적 읽기. 판단에 필요한 사실은 worker 반환으로 받는다. 읽어도 되는 것은 `references/handoff-templates.md`, `references/worker-boundary.md`, draft, `_sdd/env.md`, digest·state뿐이다. `references/workers/`의 계약은 worker가 읽는 문서라 메인 루프는 읽지 않는다.
 - 환경(명령·도구·셸 동작)의 직접 탐색. 환경 함정은 `_sdd/env.md`와 worker 반환의 `digest 변경분`에서 받아 digest에 쌓는다.
 - git 쓰기. 사용자가 따로 요청할 때만 한다.
 
 ## 인계 파일
 
-위치는 `_sdd/implementation/<YYYY-MM-DD>_<slug>/`이다. slug는 draft slug를 쓰고, draft가 없으면 요청 요약을 snake_case로 쓴다. 같은 slug 디렉터리가 있으면 새로 만들지 않고 이어 쓴다. 처음 만들기 직전에 `references/handoff-templates.md`를 읽고 그 템플릿을 출발 구조로 쓴다.
+위치는 `_sdd/implementation/<YYYY-MM-DD>_<slug>/`이다. slug는 draft slug를 쓰고, draft가 없으면 요청 요약을 snake_case로 쓴다. 같은 slug 디렉터리가 있으면 새로 만들지 않고 이어 쓴다. 처음 만들기 직전에 `references/worker-boundary.md`의 `digest 내용 계약`과 `references/handoff-templates.md`를 함께 읽고 그 템플릿을 출발 구조로 쓴다.
 
-- **digest.md**: 방법과 이유다. worker가 다시 알아내기 비싼 것 — 결정·제약, 환경 함정, 검증 레시피(AC → 명령 → 기대값) — 만 담는다. 모든 worker가 읽는다. 상태·통과 주장·이력·파일 내용 복사·위치 목록·일회성 입력(fix할 findings·task 한정 지시)은 넣지 않고, 현재 유효한 내용만 남긴다(바뀐 결정은 고쳐 쓴다). 일회성 입력은 `Worker dispatch` 입력으로만 넘긴다. 검증 레시피에서 finding 하나만 검증하는 fix 전용 check 행은 메인 루프가 fix worker의 표적 재실행 통과를 state에 반영할 때 지운다(증거는 state가 가진다).
+- **digest.md**: 모든 worker가 읽는 방법과 이유다. 허용 내용과 제외 내용은 `references/worker-boundary.md`의 `digest 내용 계약`이 단독 소유한다. 검증 레시피에서 finding 하나만 검증하는 fix 전용 check 행은 메인 루프가 fix worker의 표적 재실행 통과를 state에 반영할 때 지운다(증거는 state가 가진다).
 - **state.md**: 재개용 상태다. 단계, task 상태, RED·GREEN 신호, 게이트 결과, 계획 이탈·발견, AC→증거를 담는다. 메인 루프만 읽는다. spec-sync worker는 구현 증거로 읽을 수 있다. 리뷰 worker에게는 주지 않는다. 명령 출력 전문과 진행 서술은 복사하지 않는다.
-- 두 파일의 작성자는 메인 루프 하나다. worker는 반환 끝의 `digest 변경분`으로만 digest를 바꾼다. 메인 루프는 반환에 `digest 변경분`이 있으면 다음 dispatch 전에 digest에 반영한다. state는 단계를 닫을 때 그 단계의 반환을 모아 한 번에 갱신한다(반환마다 고치지 않는다). 처음 만든 뒤에는 바뀐 행·항목만 고치고 파일 전체를 다시 쓰지 않는다. 실행이 겹친 worker의 변경분이 이미 반영한 변경분과 모순되면 나중 변경분을 반영하지 않고 모순을 state에 적은 뒤 해당 task를 다시 계획한다.
+- 두 파일의 작성자는 메인 루프 하나다. worker는 반환 끝의 `digest 변경분`으로만 digest를 바꾼다. 메인 루프는 반환의 `digest 변경분`을 공통 내용 계약으로 분류해 허용 변경분만 다음 dispatch 전에 digest에 반영한다. 완료·통과·다음 조치 등 상태 정보가 섞여 있으면 digest에서 제외하고 state 갱신 대상으로 분리한다. 일회성 입력은 `Worker dispatch` 입력으로만 넘긴다. state는 단계를 닫을 때 그 단계의 반환을 모아 한 번에 갱신한다(반환마다 고치지 않는다). 처음 만든 뒤에는 바뀐 행·항목만 고치고 파일 전체를 다시 쓰지 않는다. 실행이 겹친 worker의 변경분이 이미 반영한 변경분과 모순되면 나중 변경분을 반영하지 않고 모순을 state에 적은 뒤 해당 task를 다시 계획한다.
 - **digest 초기화**: 계획 단계를 거치면 feature-draft worker 반환의 `digest 변경분`과 `_sdd/env.md`로 만든다. draft로 진입하면 draft AC의 검증 명령, `_sdd/env.md`, 대화에서만 나온 결정으로 메인 루프가 만든다. 이때 대상 파일을 탐색하지 않는다.
 
 ## 단계와 진입
@@ -94,11 +94,11 @@ digest: <digest.md 절대 경로> — 결정·환경 함정·검증 레시피다
 ```
 
 - worker 결과를 기다리려고 sleep·until 루프나 출력 파일 감시(폴링)를 하지 않는다. 띄운 뒤에는 메인 루프 자신의 일(digest·state 갱신, 사용자 대화, 의존이 풀린 worker dispatch)을 하고, 할 일이 없으면 `Runtime: worker dispatch` 절의 방식으로 다음 반환을 받는다. worker의 일은 대신하지 않는다.
-- worker 모델: 기본은 세션 모델을 상속한다(지정하지 않는다).
-  - 지정: 사용자가 단계별 모델을 지정하면(예: "계획은 fable, 구현·리뷰·spec-sync는 sonnet" 또는 `--model <단계>=<모델>[,<단계>=<모델>…]`) 그 단계의 worker에만 적용한다.
-  - 범위: 단계 이름은 `단계와 진입` 표의 다섯 단계다. implementation-review 지정은 correctness·simplicity worker 모두에 적용한다. 각 단계의 fix 재dispatch에도 같은 모델을 쓴다.
-  - 확인·기록: 시작할 때 지정값을 Runtime 절의 허용값으로 확인하고, 단계별 모델을 digest의 결정·제약에 적어 재개 때도 같은 값을 쓴다.
-  - 허용값 밖: 허용값을 알리고 고쳐 받는다. 무인 실행이면 묻지 않고 그 단계는 세션 모델을 상속하며 마감 보고에 적는다.
+- worker 옵션: 지정하지 않은 필드는 생략해 런타임 기본 동작을 따른다.
+  - 지정: `--model <단계>=<모델>[,<단계>=<모델>…]`, Codex에서는 독립적인 `--effort <단계>=<effort>[,<단계>=<effort>…]`도 받는다. 동등한 자연어 지정(예: "구현 모델은 gpt-6.1-sol, 리뷰 effort는 high")도 받으며 model만·effort만·둘 다 지정할 수 있다.
+  - 범위: 단계 이름은 `단계와 진입` 표의 다섯 단계다. implementation-review 지정은 correctness 1개와 simplicity 2개 모두에 적용한다. 각 단계의 fix 재dispatch에도 같은 옵션을 쓴다.
+  - 확인·기록: 시작할 때 지정 필드·지원값을 Runtime 절로 검증하고, effort 지정 시 모델별 조합도 확인한다. 이후 적용할 단계별 옵션을 digest의 결정·제약에 적어 재개 때도 같은 값을 쓴다. 미지정 모델을 임의로 고정하거나 별도 설정 파일을 만들지 않는다.
+  - 필드 미지원·지원값 미확정·잘못된 값/조합은 원인과 확인 가능한 허용값을 구분해 알리고 고쳐 받는다. 해결 전에는 해당 단계 dispatch를 보류한다. 무인 실행이면 묻지 않고 그 단계의 override를 생략해 런타임 기본값으로 실행하며, fallback 결정은 digest에, 발생 사실은 state와 마감 보고에 적는다.
 - fix를 맡길 때는 `품질 게이트`의 fix 정책으로 고른 findings만 입력으로 넘긴다. worker는 받은 findings를 모두 반영한다.
 - worker가 실패하거나 반환이 계약 형식을 벗어나면 같은 입력으로 1회 다시 띄운다. 또 실패하면 멈추고 사용자에게 보고한다.
 - task worker가 계약 오류 반복(implementation 계약의 `중단 규칙`)으로 BLOCKED를 반환하면, 그 task를 계획 단계로 되돌린다(feature-draft worker에 fix 입력으로 보낸다).
@@ -133,7 +133,7 @@ digest: <digest.md 절대 경로> — 결정·환경 함정·검증 레시피다
   - 조건 충족이면 fix 1 뒤에 같은 게이트를 한 번 더 실행하고 같은 fix 정책으로 fix 2를 한다. gate 3은 없다.
   - gate 2의 raw 합산도 조건을 충족하면 마감에서 후속 리뷰 1회를 권고한다.
 - **미완료 게이트**: 리뷰 worker가 미완료를 반환하면 확보된 findings만 fix 정책으로 처리한다. 사유와 남은 작업을 보고한다. 그 호출은 횟수에 넣되 통과로 세지 않는다.
-- 게이트 반환은 사용자 입력 대기 지점이 아니다. 그 게이트의 리뷰 worker가 모두 반환하면 바로 fix와 gate 2 판정을 한다(raw 합산이 필요해 먼저 온 반환만으로 판정하지 않는다).
+- 게이트 반환 자체는 사용자 입력 대기 지점이 아니다. 다만 `역할 경계`의 새 미승인 결정 확인은 최초/fix draft 모두에 적용하며 의존 구현 dispatch를 막는다. 그 외에는 그 게이트의 리뷰 worker가 모두 반환하면 바로 fix와 gate 2 판정을 한다(raw 합산이 필요해 먼저 온 반환만으로 판정하지 않는다).
 
 ## 재개
 
@@ -146,7 +146,7 @@ state.md를 읽어 다음 행동을 정한다. DELTA_CLOSED가 아닌 task는 st
 
 ## Runtime: worker dispatch
 
-- worker는 `Agent` 도구로 `subagent_type: "general-purpose"`를 띄운다. 도구 schema에 `run_in_background`가 있으면 `run_in_background: true`로 둔다. prompt는 `Worker dispatch` 형식이다. worker 모델이 지정된 단계만 `model`에 그 값을 넣는다(허용값 `sonnet`·`opus`·`haiku`·`fable`). 지정하지 않은 단계는 `model`을 생략해 세션 기본값을 따른다.
+- worker는 `Agent` 도구로 `subagent_type: "general-purpose"`를 띄운다. 도구 schema에 `run_in_background`가 있으면 `run_in_background: true`로 둔다. prompt는 `Worker dispatch` 형식이다. worker 모델이 지정된 단계만 `model`에 그 값을 넣는다(허용값 `sonnet`·`opus`·`haiku`·`fable`). 지정하지 않은 단계는 `model`을 생략해 세션 기본값을 따른다. 이 runtime의 계약은 model만 지원하며 effort 지정은 `Worker dispatch`의 필드 미지원 정책으로 처리한다.
 - 동시에 띄울 worker는 한 메시지에 여러 `Agent` 호출로 낸다. 완료 알림은 worker마다 따로 오고, 알림마다 그 반환을 처리한다. 할 일이 없으면 턴을 끝내고 알림을 받는다.
 
 ## Final Check

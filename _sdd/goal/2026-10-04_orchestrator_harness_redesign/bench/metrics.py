@@ -3,63 +3,144 @@
 
 usage: metrics.py <BENCH_DIR> [run id ...]   (run id 생략 시 runs.tsv 전체)
 """
+import ast
 import glob
 import json
 import os
 import re
+import shlex
 import statistics
 import sys
 from datetime import datetime
 
 HANDOFF = re.compile(r"digest|state\.md|_feature_draft_|/references/|SKILL\.md|/workers/")
 READ_CMD = re.compile(r"^\s*(cat|sed|head|tail|less|wc)\b")
-EXEMPT_WRITE = re.compile(r"digest|state\.md|_sdd/goal/|_sdd/implementation/|_sdd/work_log/")
-# Bash로 대상 파일을 쓰는 명령 탐지: 단순 변수 치환 → heredoc 본문·따옴표 문자열 제거 → 쓰기 연산의 대상 중 제외 경로가 아닌 파일이 있으면 쓰기로 센다.
-EXEMPT_PATH = re.compile(r"digest|state\.md|_sdd/goal/|_sdd/implementation/|_sdd/work_log/|(^|/)work_log/\d{4}-\d\d-\d\d\.md|(^|/)implementation/\d{4}-\d\d-\d\d_|^/tmp/|^/private/tmp/|^/dev/")
-WRITE_OP = re.compile(r"\bsed\s+-i|\bperl\s+-\w*i|\btee\b|\b(cp|mv|rm|install|touch)\s")
-REDIRECT = re.compile(r"(?<![0-9&<])>>?\s*([^\s;&|)]+)")
-FILE_TOKEN = re.compile(r"(?:^|\s)([\w./~-]*[\w-]\.[A-Za-z0-9]{1,5}|[\w.~-]*/[\w./-]+)(?=\s|$)")
-PY_WRITE = re.compile(r"open\([^)]*['\"][wa]|\.write_text\(|\.write\(")
+# Only literal targets are resolved; no shell execution or variable/dataflow evaluation.
+ALLOWED_DIRS = ("_sdd/goal/", "_sdd/implementation/", "_sdd/work_log/")
 
 
-def _clean(cmd):
-    for name, val in re.findall(r"\b([A-Za-z_]\w*)=(\S+)", cmd):
-        cmd = re.sub(r"\$\{?" + name + r"\}?", val, cmd)
-    cmd = re.sub(r"<<-?\s*['\"]?(\w+)['\"]?[^\n]*\n.*?\n\1\b", " ", cmd, flags=re.S)
-    return re.sub(r"'[^']*'|\"[^\"]*\"", " ", cmd)
-
-
-def _py_write_targets(raw):
-    """python 쓰기의 대상: open(<expr>, 'w'|'a')·<expr>.write_text( 의 <expr>을 변수 할당까지 따라가 따옴표 문자열을 모은다."""
-    assigns = {}
-    for st in re.split(r"[;\n]", raw):
-        m = re.match(r"\s*([A-Za-z_]\w*)\s*=\s*(.+)$", st)
-        if m:
-            assigns[m.group(1)] = m.group(2)
-    exprs = re.findall(r"open\(\s*([^,]+?)\s*,\s*['\"][wa]", raw) + re.findall(r"([\w.'\"/+()\[\]-]+)\.write_text\(", raw)
-    out, seen = [], set()
-    while exprs:
-        e = exprs.pop()
-        out += re.findall(r"['\"]([^'\"]+)['\"]", e)
-        for v in re.findall(r"\b([A-Za-z_]\w*)\b", re.sub(r"['\"][^'\"]*['\"]", "", e)):
-            if v in assigns and v not in seen:
-                seen.add(v)
-                exprs.append(assigns[v])
-    return out
-
-
-def bash_writes(tool):
-    if tool["name"] != "Bash":
+def target_write(target, root):
+    """True: target write, False: outside/allowed, None: unresolved literal path."""
+    if not target or re.search(r"[$`*?{}\[\]~]", target):
+        return None
+    def normalize(path):
+        path = os.path.normpath(path)
+        return path[8:] if path.startswith("/private/tmp/") else path
+    root = normalize(os.path.abspath(root))
+    path = normalize(os.path.join(root, target))
+    relative = os.path.relpath(path, root)
+    if relative == ".." or relative.startswith("../"):
         return False
+    return not (relative in ("digest.md", "state.md") or relative.startswith(ALLOWED_DIRS))
+
+
+def python_targets(source):
+    """Extract literal open/Path writes; arbitrary Python remains unverified."""
+    try:
+        tree = ast.parse(source)
+    except SyntaxError:
+        return []
+    targets = []
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+        if isinstance(node.func, ast.Name) and node.func.id == "open":
+            mode = node.args[1] if len(node.args) > 1 else next(
+                (k.value for k in node.keywords if k.arg == "mode"), None)
+            if not isinstance(mode, ast.Constant) or not isinstance(mode.value, str) or not any(c in mode.value for c in "wax+"):
+                continue
+            path = node.args[0] if node.args else None
+        elif isinstance(node.func, ast.Attribute) and node.func.attr in ("write_text", "write_bytes"):
+            receiver = node.func.value
+            if not (isinstance(receiver, ast.Call) and isinstance(receiver.func, ast.Name) and receiver.func.id == "Path"):
+                continue
+            path = receiver.args[0] if receiver.args else None
+        else:
+            continue
+        targets.append(path.value if isinstance(path, ast.Constant) and isinstance(path.value, str) else None)
+    return targets
+
+
+def bash_writes(tool, root):
+    """Return (confirmed write, unknown reasons) for one Bash tool call.
+
+    shlex only tokenizes. Unsupported execution/syntax is unknown, never a PASS.
+    """
     raw = tool["input"].get("command", "")
-    cmd = _clean(raw)
-    targets = REDIRECT.findall(cmd)
-    for seg in re.split(r"&&|\|\||[;|\n]", cmd):
-        if WRITE_OP.search(seg):
-            targets += FILE_TOKEN.findall(seg)
-    if PY_WRITE.search(raw):
-        targets += _py_write_targets(raw)
-    return any(not EXEMPT_PATH.search(t) for t in targets)
+    reasons, targets = [], []
+    # One simple heredoc: preserve its command header, remove only its body.
+    heredoc = re.search(r"<<(-?)\s*(['\"]?)(\w+)\2([^\n]*)\n(.*?)\n\3(?:\n|$)", raw, re.S)
+    body = None
+    if heredoc:
+        body = heredoc.group(5)
+        if not heredoc.group(2) and ("$" in body or "`" in body):
+            reasons.append("unquoted heredoc expansion")
+        raw = raw[:heredoc.start()] + heredoc.group(4) + "\n" + raw[heredoc.end():]
+    # shlex loses quoted-operator provenance and consumes comment newlines.
+    # Keep these forms unverified instead of attempting a shell grammar.
+    if "#" in raw:
+        return False, ["shell comment boundary is unverified"]
+    if re.search(r"(['\"])[;&|<>]+\1|\\[;&|<>]", raw):
+        return False, ["quoted or escaped shell operator is unverified"]
+    if "$" in raw or "`" in raw:
+        reasons.append("shell expansion or substitution")
+    try:
+        lexer = shlex.shlex(raw, posix=True, punctuation_chars=";&|<>\n")
+        lexer.whitespace = " \t\r"
+        lexer.whitespace_split = True
+        tokens = list(lexer)
+    except ValueError:
+        return False, ["unsupported shell quoting"]
+    segments, segment = [], []
+    for token in tokens + [";"]:
+        if token in (";", "&&", "||", "|", "\n"):
+            segments.append(segment)
+            segment = []
+        else:
+            segment.append(token)
+    cwd_unknown = any(seg and seg[0] == "cd" for seg in segments)
+    for segment in segments:
+        words, i = [], 0
+        while i < len(segment):
+            token = segment[i]
+            if token in (">", ">>", "<", ">&", "&>") and i + 1 < len(segment):
+                destination = segment[i + 1]
+                if token != "<" and not (token == ">&" and destination.isdigit()):
+                    targets.append(destination)
+                i += 2
+            else:
+                words.append(token)
+                i += 1
+        if not words:
+            continue
+        command, args = words[0], words[1:]
+        if command in ("python", "python3"):
+            reasons.append("Python execution beyond literal write targets")
+            source = args[1] if len(args) == 2 and args[0] == "-c" else body
+            if source is not None:
+                targets.extend(python_targets(source))
+        elif command in ("cp", "mv") and len(args) == 2 and not any(a.startswith("-") for a in args):
+            targets.extend(args if command == "mv" else args[-1:])
+        elif command in ("tee", "touch", "rm") and args and not any(a.startswith("-") for a in args):
+            targets.extend(args)
+        elif command == "sed" and len(args) == 4 and args[:2] == ["-i", ""]:
+            targets.append(args[-1])
+            reasons.append("sed script effects beyond literal target")
+        elif command == "git" and args and args[0] in ("diff", "status", "show", "log", "rev-parse") and not any(a.startswith(("--output", "--ext-diff", "--textconv")) for a in args):
+            pass
+        elif command in ("cat", "echo", "printf", "pwd", "head", "tail", "wc", "ls", "true", "false", "test", "["):
+            pass
+        else:
+            reasons.append("unsupported command or arguments")
+        if any(t and all(c in ";&|<>\n" for c in t) for t in words):
+            reasons.append("unsupported shell operator")
+    confirmed = False
+    for target in targets:
+        result = None if cwd_unknown and target and not os.path.isabs(target) else target_write(target, root)
+        if result is None:
+            reasons.append("unresolved write target or working directory")
+        confirmed |= result is True
+    return confirmed, sorted(set(reasons))
 
 
 def ts(s):
@@ -119,13 +200,24 @@ def measure(bench, run, sid, wall):
     msgs = messages(load(main_path))
     subs = sorted(glob.glob(os.path.join(main_path[:-6], "subagents", "agent-*.jsonl")))
     sub_recs = [load(p) for p in subs]
-    edits = [
-        t["input"].get("file_path", "")
-        for m in msgs
-        for t in m["tools"]
-        if t["name"] in ("Edit", "Write", "NotebookEdit") and not EXEMPT_WRITE.search(t["input"].get("file_path", ""))
-    ]
-    bash_w = [t["input"].get("command", "")[:160] for m in msgs for t in m["tools"] if bash_writes(t)]
+    root = os.path.join(bench, f"t-{run}")
+    edits, bash_w, unknown = [], [], []
+    for index, tool in enumerate((t for m in msgs for t in m["tools"]), 1):
+        name, inputs = tool["name"], tool["input"]
+        if name in ("Edit", "Write", "NotebookEdit"):
+            path = inputs.get("file_path", inputs.get("notebook_path", ""))
+            result = target_write(path, root)
+            if result is True:
+                edits.append(path)
+            elif result is None:
+                unknown.append({"tool_index": index, "tool": name, "reasons": ["unresolved write target"]})
+        elif name == "Bash":
+            written, reasons = bash_writes(tool, root)
+            # Transcript index locates evidence without copying command payloads/secrets.
+            if written:
+                bash_w.append({"tool_index": index})
+            if reasons:
+                unknown.append({"tool_index": index, "tool": name, "reasons": reasons})
     colds = [c for c in (cold_start(r) for r in sub_recs) if c is not None]
     tokens = total(msgs) + sum(total(messages(r)) for r in sub_recs)
     out = {
@@ -136,6 +228,9 @@ def measure(bench, run, sid, wall):
         "M1_growth": ctx(msgs[-1]["usage"]) - ctx(msgs[0]["usage"]),
         "M1_peak_growth": max(ctx(m["usage"]) for m in msgs) - ctx(msgs[0]["usage"]),
         "M2_main_edits": len(edits) + len(bash_w),
+        "M2_unknown": len(unknown),
+        "M2_unknown_commands": unknown,
+        "M2_status": "FAIL" if edits or bash_w else "UNVERIFIED" if unknown else "PASS",
         "M2_files": sorted(set(edits)),
         "M2_bash_writes": bash_w,
         "workers": len(sub_recs),

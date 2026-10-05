@@ -46,10 +46,18 @@
 
 > 메인 루프는 단계 순서·게이트·인계 파일·사용자 질문만 맡고 단계 작업은 worker가 수행한다. 두 품질 게이트(plan-review·implementation-review 단계)와 fix는 오케스트레이터가 실행하므로 사용자가 따로 호출하거나 fix하지 않는다. gate 1+fix 1은 항상 수행하고, fix 전 raw finding을 그 게이트의 리뷰 worker 전부에 걸쳐 합산해 `Critical+High ≥ 3` 또는 `Medium ≥ 5`일 때만 gate 2+fix 2를 수행한다(Low 제외, dedup 없음). gate 3은 없다. 리뷰 단계만 지정하면 findings만 보고하고 fix하지 않는다.
 
+Codex 단계별 옵션 예시(값·조합은 활성 도구 지원 목록으로 확인):
+
+```text
+$sdd-orchestrator --model implementation=gpt-6.1-sol --effort implementation=high
+```
+
+미지정 필드는 생략한다. 모델만 바꾸면 그 모델 기본 effort가 적용될 수 있다. 옵션은 해당 단계 fix에도 유지되며 implementation-review 지정은 리뷰 worker 3개 모두에 적용된다.
+
 **Expected Result:**
 - `_sdd/drafts/<YYYY-MM-DD>_feature_draft_<slug>.md` — feature-draft worker가 작성한 스펙 패치 초안(Part 1 마커) + 구현 태스크 리스트(Part 2)
-- `_sdd/implementation/<YYYY-MM-DD>_<slug>/digest.md`·`state.md` — digest(결정·환경 함정·검증 레시피)는 모든 worker가 읽고, state(단계·task 상태·RED/GREEN 신호·게이트 결과·AC→증거)는 재개용이며 리뷰 worker에게 주지 않는다. 두 파일의 작성자는 메인 루프 하나다
-- 계획 게이트: plan-review worker가 경량 finding을 반환하고(리포트 파일 없음) fix는 feature-draft worker가 같은 draft에 반영한다
+- `_sdd/implementation/<YYYY-MM-DD>_<slug>/digest.md`·`state.md` — digest(결정·환경 함정·검증 레시피)는 모든 worker가 읽고, state(단계·task 상태·RED/GREEN 신호·게이트 결과·AC→증거)는 재개용이며 리뷰 worker에게 주지 않는다. 두 파일의 작성자는 메인 루프 하나다. digest 내용은 `worker-boundary.md`의 공통 계약으로 분류하고 완료·통과·다음 조치는 state로 보낸다
+- 계획 게이트: plan-review worker가 경량 finding을 반환하고(리포트 파일 없음) fix는 feature-draft worker가 같은 draft에 반영한다. 최초·fix draft의 새 미승인 결정은 의존 구현 전에 확인하며 기존 승인·routine 선택은 재질문하지 않는다. 무인 위임이면 합당한 결정을 기록하고 진행한다
 - 구현: draft Part 2 task마다 worker 1개가 RED→GREEN test-first와 커버리지 델타로 닫는다. Target Files 서로소·`Contracts` 미공유·의존 없음인 task는 동시에 실행된다. 메인 루프는 대상 파일을 쓰지 않는다
 - 구현 게이트: 모든 task가 DELTA_CLOSED가 되면 correctness worker 1개(digest 검증 레시피 fresh 실행 = 전체 회귀)와 simplicity worker 2개(차원 묶음)가 동시에 돈다. fix는 해당 task worker가 커버리지 델타·표적 재실행까지 하고 반환한다
 - 마감: state의 AC→증거가 리뷰 worker의 fresh verdict 포인터로 채워지고, 채팅에는 실행 단계·게이트 호출별 severity·fix·검증·미충족 AC·Open Questions·state 경로만 보고된다
