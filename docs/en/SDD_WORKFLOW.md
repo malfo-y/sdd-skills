@@ -13,7 +13,7 @@ discussion
   -> global spec sync
 ```
 
-Each reviewer invocation is a single pass. When the first invocation's pre-fix findings reach `Critical+High >= 3` or `Medium >= 5`, the producer (`feature-draft` or `implementation`) invokes the same gate a second time, applies the fixes itself, and stops. There is no third invocation, and neither the user nor autopilot invokes or fixes the gate separately.
+`sdd-orchestrator` runs the stages after discussion and owns gate order and fixes. Each reviewer invocation is a single pass. When the first invocation's pre-fix findings reach `Critical+High >= 3` or `Medium >= 5`, the same gate is invoked a second time, the fixes are applied, and the gate stops. There is no third invocation, and neither the user nor autopilot invokes or fixes the gate separately.
 
 ## 2. When the harness is used
 
@@ -90,8 +90,8 @@ Relevant draft or implementation signals may be attached only as a short appendi
 ## 8. Role of review and update skills
 
 - `spec-review`: audits quality and drift. It does not edit.
-- `spec-sync`: it lifts only persistent repo-wide information into the global spec (handling pre-implementation planned alignment and post-implementation evidence sync, adapting to evidence).
-- the sync skill does not copy temporary execution detail into the global body.
+- the spec-sync stage of `sdd-orchestrator`: it lifts only persistent repo-wide information into the global spec (handling pre-implementation planned alignment and post-implementation evidence sync, adapting to evidence).
+- the sync stage does not copy temporary execution detail into the global body.
 
 ## 9. Verification rule
 

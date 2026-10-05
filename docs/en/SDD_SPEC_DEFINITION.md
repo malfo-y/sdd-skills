@@ -150,7 +150,7 @@ A temporary spec (= feature draft) is not a compressed copy of the global spec. 
 
 Feature-level contracts, ACs, and target files belong there.
 
-Canonical structure (the `feature-draft` skill's Required Output is the single source):
+Canonical structure (the Required Output of `sdd-orchestrator/references/workers/feature-draft.md` is the single source):
 
 1. A one-line `> 규모 판정:` (scale verdict) — includes the verdict rationale; value is "fit" or "split needed — split plan included"
 2. `Part 1: Spec Delta` — `Change Summary` and `Scope` (In/Out) inside the `spec-update-todo-input` marker. A split draft also lists the split features here; `spec-sync` consumes the marker contents.
@@ -159,11 +159,11 @@ Canonical structure (the `feature-draft` skill's Required Output is the single s
 
 Its purpose is to handle what changes now, what gets touched, and how the change will be verified.
 
-Verification is defined next to the execution unit — **each task's ACs** are the single definition point. This is where the rubric is anchored, and the planning/implementation/review skills implement it.
+Verification is defined next to the execution unit — **each task's ACs** are the single definition point. This is where the rubric is anchored, and the planning/implementation/review stages implement it.
 
 - **AC falsifiability**: every AC must close as met/unmet against evidence. Do not keep an AC for which no observation/evidence could ever say "unmet".
 - **Two evaluation tiers**: the bar is not "measurable" but "evidence-decidable". Allow Tier 1 (quantitative: reproducible test/check output) and Tier 2 (qualitative rubric judgment: stated criteria + reviewer verdict, cited grounds), but both must (a) close as a binary verdict, (b) bind to external evidence, and (c) be refutable by a third party. Quality/readability ACs are taken as Tier 2.
-- **Evidence-bound results**: after execution, every AC verdict is recorded bound to evidence (reproducible output or cited grounds) — the implementation's AC→evidence table (completed in the implementation ledger file under `_sdd/implementation/`) and the review's verification ledger are where that lives. A "met" without evidence is not accepted.
+- **Evidence-bound results**: after execution, every AC verdict is recorded bound to evidence (reproducible output or cited grounds) — the implementation's AC→evidence table (completed in the orchestrator state `_sdd/implementation/<YYYY-MM-DD>_<slug>/state.md`) and the review's verification ledger are where that lives. A "met" without evidence is not accepted.
 
 Information placement follows "details live in the task":
 

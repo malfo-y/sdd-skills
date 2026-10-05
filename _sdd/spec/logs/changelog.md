@@ -2,6 +2,33 @@
 
 > 이 파일은 `_sdd/spec/main.md`의 **본문이 바뀐 버전만** 기록한다 — 본문 무변경 sync(헤더 날짜만 갱신)는 entry를 남기지 않으므로 버전 번호에 결번이 생길 수 있다.
 
+#### v4.37.0 (2026-10-05)
+
+- **`sdd-orchestrator` digest 운영 개선**: 실행 끝에 spec-sync worker가 digest 환경 함정 중 저장소 작업에 반복 적용되는 사실을 `_sdd/env.md`로 승격하고(기준은 spec-sync worker 계약 Step 5 항목 4), digest 초기화는 계획 단계 경로에서도 `_sdd/env.md`를 받는다. digest에는 일회성 입력(fix할 findings·task 한정 지시)을 넣지 않고 dispatch 입력으로만 넘기며, fix 전용 check 행은 fix가 닫히면 지운다. 이 저장소 `_sdd/env.md`에 사용자 승인 환경 사실 7개를 시드했다.
+- **검증 evidence**: structural check T1(spec-sync 계약 4위치·digest 초기화 문장·단계 표 행)·T2(인계 파일 절 3어휘)·T3(env.md 15패턴, 기존 줄 삭제 0) RED→GREEN, 양 runtime `references/` 동일·`SKILL.md` 차이 Runtime 절 hunk 1, 구현 gate 1 C0/H0/M1/L4 → fix 1(env.md 줄 분리, SKILL·spec-sync 문구 범위) 표적 재실행 통과.
+
+#### v4.36.0 (2026-10-05)
+
+- **`sdd-orchestrator` 비차단·의존성 기준 dispatch**: 메인 루프는 worker 반환을 폴링으로 기다리지 않고, 시작과 반환 하나마다 의존이 풀린 task를 바로 띄운다(실행 중·함께 띄우는 worker와 Target Files 서로소·`Contracts` 미공유). 남는 장벽은 read-only 검증 task·구현 게이트·게이트 fix 판정 셋이다. Claude worker는 백그라운드 dispatch와 완료 알림 단위 처리, Codex는 두 contract 모두 final 단위 처리로 바꿨다 — v4.34.0의 Claude worker foreground dispatch를 대체한다. 같은 변경에 fable 리뷰 Medium을 반영했다(worker 계약의 공통 경계 재진술 제거 — 리뷰 worker state 미열람은 `worker-boundary.md`가 명시, worker 모델 규칙 하위 bullet 분리, goal bench 스크립트 동작 불변 정리).
+- **모델 override Guardrail 예외**: `sdd-orchestrator` 무인 실행에서 허용값 밖 단계 모델은 세션 모델 상속으로 대체하고 마감 보고에 적는다(사용자 결정).
+- **검증 evidence**: structural check `nonblocking_dispatch.sh` T1 14·T2 6·T3 12·T4 8 PASS(각 RED FAIL→GREEN), `model_select.sh` 9/9, gate 1 fix check 10/10, 양 runtime 미러 차이 Runtime 절 hunk 1. 메인 맥락 효과 재측정은 미실행.
+
+#### v4.35.0 (2026-10-05)
+
+- **`sdd-orchestrator` worker 단계별 모델 선택**: 기본은 세션 모델 상속이고, 사용자가 호출할 때 단계별 worker 모델(`--model <단계>=<모델>[,…]` 또는 자연어)을 지정하면 그 단계 worker에만 적용한다. 허용값은 Claude `Agent`의 `model` 값, Codex는 선택한 spawn schema의 `model` enum(reasoning_effort는 상속). subagent 모델 override Guardrail과 §3 비교표 `subagent model override` 행을 갱신했다 — v4.34.0의 "모델 override는 `pr-review`에만 남는다"를 대체한다.
+- **검증 evidence**: structural check 9/9(RED 6 FAIL→GREEN), headless smoke(`--model implementation=sonnet,implementation-review=haiku`)에서 worker transcript model이 implementation=sonnet, 리뷰 worker 3개=haiku, 메인=opus로 확인됐다.
+
+#### v4.34.0 (2026-10-05)
+
+- **`sdd-orchestrator`를 SDD 체인의 기본이자 유일 경로로 교체**: 구 직접 실행 단계 스킬 5종(`feature-draft`·`plan-review`·`implementation`·`implementation-review`·`spec-sync`, Claude·Codex)을 삭제했다. 단계 이름은 worker 계약 이름(`references/workers/<단계>.md`)으로 남고 구 트리거는 `sdd-orchestrator` description이 받는다. simplicity 계약은 `sdd-orchestrator/references/simplicity-contract.md`로 옮겼다(`pr-review`도 소비).
+- **Guardrails·결정 재작성**: 품질 게이트 소유자는 producer 스킬이 아니라 오케스트레이터, 코드·테스트 작성자는 메인 루프가 아니라 task worker, 계획·구현 리뷰는 메인 루프 직접 수행이 아니라 분리된 리뷰 worker, 재개 기록은 implementation ledger가 아니라 오케스트레이터 state다. 메인 루프 읽기 범위(handoff 템플릿·draft·env·digest·state), worker 공통 경계 단일 소스 `references/worker-boundary.md`, Claude worker foreground dispatch, 다 구현된 draft의 `_processed_` rename 입력을 현재 사실로 반영했다. 모델 override는 `pr-review`에만 남는다. implementation ledger 실사용 관측 Planned 항목은 대상이 사라져 삭제했다.
+- **검증 evidence**: goal R4 신·구 실측 PASS(메인 맥락 증가 0.37배, 메인 루프 대상 쓰기 0, cold start 중앙값 5.1s, 독립 리뷰 AC 전부 MET·Critical/High 0), Feature B structural check 9 task 전부 GREEN·census 리터럴 14개 0건·`claude plugin validate .` 통과.
+
+#### v4.33.0 (2026-10-04)
+
+- **오케스트레이터 경로 `sdd-orchestrator` 추가(실험, 기본 경로 옆)**: 메인 루프는 지휘만 하고 단계 작업은 `references/workers/<단계>.md` 계약을 읽는 범용 worker가 수행한다. 인계는 digest(모든 worker)+state(오케스트레이터 재개용, 리뷰 worker 미제공) 2파일, task별 worker는 Target Files 서로소·Contracts 미공유·의존 없음일 때만 병렬, 게이트 정책은 기본 경로와 같다. 기본 경로 교체·구 단계 스킬 삭제는 실측 합격 후(🚧 Planned).
+- **검증 evidence**: structural check 42/42(RED 39 FAIL→GREEN, 변이 확인 3회), headless smoke(task 1개 draft) digest·state 생성·worker 4·메인 루프 대상 쓰기 0·cold start 중앙값 5.45s, plan gate H2 M4→fix, implementation-review gate 1 H1 M7→fix·gate 2 M4→fix.
+
 #### v4.30.0 (2026-09-02)
 
 - **simplicity dispatch를 사용자 명시 요청으로 선언**: opus-5 시스템 프롬프트의 "Agent 도구는 사용자가 명시적으로 요청할 때만" 규범 때문에 `implementation-review`·`pr-review`의 simplicity subagent가 뜨지 않는 관측. 두 SKILL.md(claude)에 "스킬 호출 자체가 simplicity dispatch에 대한 사용자의 명시적 요청이며 생략·직접 수행 대체 불가" 한 문장을 추가했다 — codex 미러는 Runtime Adapter 첫 문장이 이미 같은 취지라 무변경. `context: fork` 스킬 승격(구조 해법)은 codex 플러그인 제약으로 보류.
@@ -907,3 +934,30 @@
 
 - goal-init·pr-review·implementation·implementation-review의 승인된 목적 중심 개선을 양 runtime에 적용했다. goal 대화의 고정 단계/가설 수를 완화하고 PR leaf 입력·위험 기준·검사 출력, 구현 resume 기록·gate 표현, 리뷰 혼합 변경 범위를 정리했다. 연결된 template/example·sdd-autopilot·한/영 안내를 동기화했다.
 - 검증은 소스 계약·YAML·미러·경로·격리 git recipe에 한정한다. 실제 모델 행동 효과는 미검증이며 리뷰별 처리·게이트 결과는 `docs/reviews/2026-09-15-skill-instructions/four-skill-purpose-dispositions.md`에 기록한다.
+
+
+## v4.38.0 (2026-10-05)
+
+- 🚧 Planned: [PR96 후속 draft Part 1](../../drafts/2026-10-05_feature_draft_pr96_review_fixes.md)의 draft 확인 사항 회수, digest 공통 계약 소유권, Codex 단계별 독립 model·effort 옵션을 main.md에 계획으로 반영했다. 구현·검증 전이므로 기존 현재 동작은 유지하며 완료 승격은 하지 않았다.
+- M2 쓰기 분류와 과거 보고 정정은 기능별 계측·검증 사항으로 draft와 해당 benchmark 산출물에 남긴다.
+
+
+## v4.39.0 (2026-10-05)
+
+- v4.38.0 Planned 3건을 정적 계약 검증 범위에서 현재 사실로 반영했다: 최초·fix draft 확인 사항 회수, 공통 경계의 digest 내용 소유권, Codex 단계별 model·effort 독립 옵션. main/components/usage-guide를 동기화하고 unittest 표적은 pytest 없이 실행할 수 있음을 env에 반영했다.
+- **증거·한계**: [구현·리뷰 state](../../implementation/2026-10-05_pr96_review_fixes/state.md)의 fresh 계약·미러 검증과 fix 표적 증거를 소비했다. 실제 Codex override dispatch는 미실행이며, M2 재계측의 new 12개는 UNVERIFIED다. 과거 benchmark를 현재 head 성능이나 무쓰기 PASS로 승격하지 않는다.
+- **입력 처리**: v4.38.0 entry의 draft는 원문을 보존해 [소비 완료 draft](../../drafts/_processed_2026-10-05_feature_draft_pr96_review_fixes.md)로 rename했다. M2 상세는 해당 benchmark report에 유지한다.
+
+
+## v4.40.0 (2026-10-05)
+
+- digest 내용 선택·실제 검증 명령 재사용·조건부 환경 사실, 관련 변경분과 소비 출처 갱신, 최소 검증 목록과 독립 correctness 검토의 관계를 기존 소유 계약에 맞춰 main/components/usage-guide에 반영했다.
+- **증거·한계**: [구현·리뷰 state](../../implementation/2026-10-05_digest_actionability/state.md)의 8개 AC 충족과 미러 검증을 소비했다. 시범 레시피 실행은 기존 transcript 계측 명령의 유효성 검증이며 새 모델 실행·속도·품질 개선의 근거가 아니다.
+- **입력 처리**: [소비 완료 draft](../../drafts/_processed_2026-10-05_feature_draft_digest_actionability.md)로 원문 보존 rename했다. 시범 digest와 계측 세부는 temporary artifact에 유지하며 env 승격은 없다.
+
+
+## v4.41.0 (2026-10-05)
+
+- `sdd-orchestrator` worker 모델에 `_sdd/env.md` `## Worker Model Defaults` 단계 기본값을 추가했다. 적용 순서는 단계·필드마다 호출 지정 > env.md 값 > 런타임 기본 동작이고, env.md 값도 같은 Runtime 검증을 거친다. main(§2 override 불릿·결정 표)·components·usage-guide를 동기화했다 — v4.35.0의 "단계별 기본값·repo 설정 파일은 두지 않는다"를 대체한다.
+- **증거·한계**: [구현·리뷰 state](../../implementation/2026-10-05_env_worker_model_defaults/state.md)의 8개 AC 충족과 미러·manifest 검증을 소비했다. 기본값을 적용한 실제 dispatch는 미실행이다.
+- **입력 처리**: [소비 완료 draft](../../drafts/_processed_2026-10-05_feature_draft_env_worker_model_defaults.md)로 원문 보존 rename했다. env 승격은 없다(digest 환경 함정 3건은 env.md에 이미 있음).

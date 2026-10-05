@@ -24,4 +24,4 @@ Global anti-patterns:
 
 ## Temporary Spec Reference
 
-Temporary spec은 change 실행 청사진이다. exact structure와 field order는 same-runtime `feature-draft`의 `Required Output`이 소유한다. temporary 또는 mixed 문서의 temporary portion을 비교할 때 해당 section과 연결된 조건부 block·분할 규칙을 읽는다. 위치 확인과 미가용 시 처리는 `SKILL.md` Step 3을 따른다.
+Temporary spec은 change 실행 청사진이다. exact structure와 field order는 same-runtime `sdd-orchestrator/references/workers/feature-draft.md`의 `Required Output`이 소유한다. temporary 또는 mixed 문서의 temporary portion을 비교할 때 해당 section과 연결된 조건부 block·분할 규칙을 읽는다. 위치 확인과 미가용 시 처리는 `SKILL.md` Step 3을 따른다.

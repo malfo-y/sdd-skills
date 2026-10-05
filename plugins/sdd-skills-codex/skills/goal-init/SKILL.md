@@ -12,7 +12,7 @@ description: This skill should be used when the user asks to set up a "/goal", "
 ## Boundaries
 
 - setup은 조건·하네스 준비와 Handoff까지다. `/goal` 활성화는 사용자가 한다. 기존 goal 상태를 조회·변경하거나 active goal 때문에 setup을 막지 않는다.
-- `preset=sdd`는 하네스의 Loop Protocol만 선택한다. setup 중 feature-draft·implementation·spec-sync나 initial feature를 실행하지 않는다.
+- `preset=sdd`는 하네스의 Loop Protocol만 선택한다. setup 중 `sdd-orchestrator`나 initial feature를 실행하지 않는다.
 - 산출물은 `_sdd/goal/<YYYY-MM-DD>_<slug>/`의 `goal.md`·`experiments.md`·`journal.md`·`report.md`다. 다른 경로의 산출물이나 ralph의 bash 루프·run.sh·컨테이너를 추가하지 않는다. 상위 하네스의 work log는 그 규약을 따른다.
 
 ## Decision Criteria

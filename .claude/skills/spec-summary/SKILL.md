@@ -16,7 +16,7 @@ description: This skill should be used when the user asks to "summarize spec", "
 - [ ] runtime-local output template의 required heading과 order를 유지했다.
 - [ ] 핵심 설명을 concrete path, symbol, command, 또는 source table과 연결했다.
 - [ ] 현재 기준의 설계와 기대 결과를 설명하고 change-history narration은 본문에서 제외했다.
-- [ ] Step 3에서 선택한 active draft/ledger가 있을 때만 optional appendix를 포함했다.
+- [ ] Step 3에서 선택한 active draft/state가 있을 때만 optional appendix를 포함했다.
 - [ ] README optional output은 Step 7 조건과 managed-block 경계를 준수했다.
 
 ## SDD Lens
@@ -40,7 +40,7 @@ description: This skill should be used when the user asks to "summarize spec", "
 3. 관련 supporting spec과 lowercase canonical `decision_log.md` (legacy uppercase `DECISION_LOG.md`는 read-only fallback)
 4. 설명에 필요한 concrete code/config/command surface
 5. basename이 `_processed_`로 시작하지 않는 관련 `_sdd/drafts/*_feature_draft_*.md`
-6. basename이 `_processed_`로 시작하지 않는 관련 `_sdd/implementation/*_implementation_ledger_*.md`
+6. 5의 active draft와 slug가 같은 오케스트레이터 state `_sdd/implementation/<YYYY-MM-DD>_<slug>/state.md`
 7. Step 7이 활성화한 경우의 `README.md`
 
 ## Process
@@ -55,7 +55,7 @@ main/index와 관련 supporting surface를 찾고 repo-level problem, boundary, 
 
 ### Step 3: Select Optional Appendix Inputs
 
-basename이 `_processed_`로 시작하지 않는 active draft/ledger 중 현재 계획/진행 이해에 직접 필요한 파일만 고른다. processed/history artifact는 current signal로 사용하지 않는다. 선택된 신호가 없으면 appendix를 생략한다.
+Input Sources 5·6의 active draft/state 중 현재 계획/진행 이해에 직접 필요한 파일만 고른다. processed/history artifact는 current signal로 사용하지 않는다. 선택된 신호가 없으면 appendix를 생략한다.
 
 ### Step 4: Extract Current Facts
 

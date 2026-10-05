@@ -6,26 +6,26 @@ Spec-Driven Development (SDD) workflow skills for Claude Code and Codex.
 
 | 런타임 | 스킬 수 | 소스 |
 |--------|---------|------|
-| Claude Code | 20 | [`.claude/skills/`](.claude/skills/) — 공통 스킬 + `git`, `second-opinion` |
-| Codex | 18 | [`plugins/sdd-skills-codex/skills/`](plugins/sdd-skills-codex/skills/) |
+| Claude Code | 16 | [`.claude/skills/`](.claude/skills/) — 공통 스킬 + `git`, `second-opinion` |
+| Codex | 14 | [`plugins/sdd-skills-codex/skills/`](plugins/sdd-skills-codex/skills/) |
 
 ## Quick Start
 
 1. 아래 [Installation](#installation)에서 사용하는 런타임의 플러그인을 설치한다.
 2. 작업할 저장소에서 `spec-create`를 호출해 스펙과 작업 하네스를 만든다. 기존 스펙의 구형 포맷을 옮길 때는 `spec-upgrade`를 쓴다.
-3. `feature-draft`로 변경을 계획하고, 생성된 draft를 지정해 `implementation`을 실행한다.
-4. 검증된 변경을 `spec-sync`로 스펙에 반영한다.
+3. `sdd-orchestrator`로 변경을 요청한다. 기본으로 계획부터 spec 반영까지 SDD 체인(feature-draft → plan-review → implementation → implementation-review → spec-sync)을 진행한다.
+4. draft가 이미 있으면 그 draft를 지정해 이어서 진행한다. 종점이나 단계 하나만 지정할 수도 있다(예: "구현까지만", "spec-sync만").
 
-스킬은 이름을 명시한 자연어로 요청할 수 있다. 각 단계가 끝난 뒤 다음 요청을 보낸다.
+스킬은 이름을 명시한 자연어로 요청할 수 있다. 명령으로 부를 때는 Claude Code에서 `/sdd-skills:sdd-orchestrator`, Codex에서 `$sdd-orchestrator`를 쓴다.
 
 ```text
 spec-create 스킬로 이 저장소의 스펙과 작업 하네스를 만들어줘.
-feature-draft 스킬로 CSV 내보내기 기능을 계획해줘.
-implementation 스킬로 방금 만든 draft를 구현해줘.
-spec-sync 스킬로 검증된 변경을 스펙에 반영해줘.
+sdd-orchestrator 스킬로 CSV 내보내기 기능을 계획부터 spec 반영까지 진행해줘.
+sdd-orchestrator 스킬로 _sdd/drafts/<draft>.md를 구현 단계부터 진행해줘.
+sdd-orchestrator 스킬로 spec-sync 단계만 실행해줘.
 ```
 
-`feature-draft`는 `plan-review`와 finding 수정을, `implementation`은 `implementation-review`와 finding 수정을 내부 품질 게이트로 수행한다. 이 흐름에서는 리뷰를 별도 단계로 다시 호출할 필요가 없다.
+`sdd-orchestrator`의 메인 루프는 단계 순서·게이트·인계 파일만 맡고, 단계 작업은 worker가 수행한다. plan-review와 implementation-review 단계는 오케스트레이터가 품질 게이트로 실행하므로 별도로 호출할 필요가 없다.
 
 목표나 범위가 불명확하면 `discussion`부터 시작한다. 여러 기능을 반복 구현할 목표는 `sdd-autopilot`으로 완료 조건·자율 수행 범위·4파일 goal harness를 준비한다. **실행은 사용자가 native goal을 활성화한 뒤 시작한다.** 자세한 절차는 [Autopilot Guide](docs/AUTOPILOT_GUIDE.md)를 따른다.
 
@@ -144,43 +144,64 @@ codex --enable default_mode_request_user_input
 
 ## Subagent Model Override
 
-리뷰 스킬의 내부 subagent 호출에 모델 override를 줄 수 있다. `implementation-review`·`pr-review`의 `--model`은 **simplicity dispatch에만** 적용된다 — correctness 리뷰는 메인 루프 직접 수행이라 override 대상이 아니다. 옵션을 생략하면 현재 세션/agent 기본값을 그대로 상속한다.
-
-적용 대상:
-
-- `implementation-review` (simplicity dispatch 한정)
-- `pr-review` (simplicity dispatch 한정)
+`pr-review`의 내부 subagent 호출에 모델 override를 줄 수 있다. `--model`은 **simplicity dispatch에만** 적용된다 — correctness 리뷰는 메인 루프 직접 수행이라 override 대상이 아니다. 옵션을 생략하면 현재 세션/agent 기본값을 그대로 상속한다.
 
 Claude Code:
 
 ```text
-/sdd-skills:implementation-review --model opus
+/sdd-skills:pr-review --model opus
 ```
 
 Codex:
 
 ```text
-implementation-review 스킬을 --model gpt-5.6-terra --effort max로 실행해줘.
 pr-review 스킬을 --model gpt-5.6-sol --effort ultra로 실행해줘.
 ```
 
 Codex에서는 model과 effort를 분리해서 쓴다. `gpt-5.6-sol-high` 같은 결합형 값 대신 `--model gpt-5.6-sol --effort high`를 사용한다. 위 값은 호출 예시이며, 실제 허용값은 실행 시 `spawn_agent` 도구가 지원하는 모델·추론 강도를 따른다.
 
-`plan-review`는 subagent 없이 메인 루프가 직접 수행하므로 모델 override 대상이 아니다. `feature-draft`와 `implementation`도 메인 루프가 직접 작성한다.
+`sdd-orchestrator`는 단계별 worker 모델을 호출할 때 지정하거나, 사용 저장소 `_sdd/env.md`의 `## Worker Model Defaults` 절에 기본값으로 둘 수 있다. 단계 이름은 `feature-draft`·`plan-review`·`implementation`·`implementation-review`·`spec-sync`이고, 각 단계의 fix에도 같은 값을 쓴다. `implementation-review` 값은 correctness 1개와 simplicity 2개 모두에 적용된다.
+
+적용값은 단계·필드(model, Codex에서는 effort도)마다 호출 지정 > env.md 기본값 > 런타임 기본 동작 순으로 정한다. env.md 기본값은 runtime별 표로 적는다: `### Claude Code` 표(`단계 | model`)와 `### Codex` 표(`단계 | model | effort`). 빈 칸이거나 행·하위 절·절이 없으면 값 없음이다. env.md 값도 호출 지정과 같은 검증을 거친다. Claude Code의 호출 지정 예시:
+
+```text
+/sdd-skills:sdd-orchestrator _sdd/drafts/<draft>.md --model feature-draft=fable,implementation=sonnet,implementation-review=sonnet,spec-sync=sonnet
+```
+
+```text
+sdd-orchestrator로 계획은 fable, 구현·리뷰·spec-sync는 sonnet으로 진행해줘.
+```
+
+Codex에서는 단계별 model과 effort를 독립적으로 지정한다. 아래 값은 예시이며 실제 모델·effort 및 모델별 조합은 활성 `spawn_agent`의 schema enum 또는 도구 설명의 명시 지원 목록으로 검증한다.
+
+```text
+sdd-orchestrator로 --model implementation=gpt-6.1-sol,implementation-review=gpt-6-astra --effort implementation=high,implementation-review=xhigh로 진행해줘.
+sdd-orchestrator로 구현 모델은 gpt-6.1-sol, 리뷰 effort는 high로 진행해줘.
+```
+
+| 단계의 적용값 (호출 지정 > env.md) | Codex spawn 인자 |
+|-------------|-----------------|
+| 생략 (호출 지정·env.md 모두 없음) | `model`·`reasoning_effort` 모두 생략 |
+| model만 | `model`만 전달 |
+| effort만 | `reasoning_effort`만 전달; 상속할 모델과의 조합 확인 |
+| 둘 다 | `model`·`reasoning_effort` 전달; 그 모델과의 조합 확인 |
+
+호출 지정과 env.md 값이 모두 없는 필드는 런타임 기본 동작을 따른다. 모델만 바꾸면 그 모델의 기본 effort가 적용될 수 있어 부모 effort 상속을 보장하지 않는다. 필드 미지원·지원값 미확정·잘못된 값/조합은 구분해 알리고 수정받으며, 무인 실행에서는 해당 단계 override를 생략하고 보고한다. Claude Code의 단계별 effort 지원은 이 계약에 포함하지 않는다.
 
 ## Skills
 
-공통 스킬 18개를 목적별로 묶었다. 세부 실행 계약은 각 번들의 `SKILL.md`가 소유한다.
+공통 스킬 14개를 목적별로 묶었다. 세부 실행 계약은 각 번들의 `SKILL.md`가 소유한다.
 
 | 목적 | 스킬 |
 |------|------|
-| 논의·계획 | `discussion`, `feature-draft`, `plan-review` |
-| 구현·리뷰·진단 | `implementation`, `implementation-review`, `pr-review`, `investigate` |
-| 스펙 생성·유지 | `spec-create`, `spec-sync`, `spec-review`, `spec-rewrite`, `spec-upgrade` |
+| 논의 | `discussion` |
+| 계획·구현·리뷰·spec 반영 | `sdd-orchestrator` |
+| PR 리뷰·진단 | `pr-review`, `investigate` |
+| 스펙 생성·유지 | `spec-create`, `spec-review`, `spec-rewrite`, `spec-upgrade` |
 | 설명·내보내기 | `spec-summary`, `spec-snapshot`, `guide-create` |
 | 반복 작업 준비 | `goal-init`, `sdd-autopilot`, `ralph-loop-init` |
 
-Claude Code에는 `git`과 `second-opinion`이 추가된다. 양 번들은 custom agent 없이 스킬로 배포한다. `implementation-review`·`pr-review`는 correctness를 메인 루프에서 검토하고, simplicity를 스킬의 계약을 전달받은 범용 subagent로 검토한다.
+Claude Code에는 `git`과 `second-opinion`이 추가된다. 양 번들은 custom agent 없이 스킬로 배포한다. `sdd-orchestrator`는 단계 작업을 단계별 worker 계약(`references/workers/<단계>.md`)을 받은 범용 subagent에 맡긴다. `pr-review`는 correctness를 메인 루프에서 검토하고, simplicity를 계약을 전달받은 범용 subagent로 검토한다.
 
 ## Documentation
 

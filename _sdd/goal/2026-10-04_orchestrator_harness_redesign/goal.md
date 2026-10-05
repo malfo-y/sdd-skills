@@ -1,0 +1,94 @@
+# Goal: 하네스를 오케스트레이터 기반 multi-agent로 전면 재편하고 실측으로 교체한다
+
+## 목표 서술
+SDD 하네스를 SDD 철학(spec 중심 루프와 검증, Claude·Codex 공통 계약, 산출물 원칙)만 남기고 오케스트레이터 기반 multi-agent 방식으로 재편한다. 오케스트레이터 스킬(메인 루프)이 단계별 worker를 띄우고, 인계는 digest(방법·이유)와 state(상태, 리뷰어에게 주지 않음) 2파일로 하며, 구현은 task별 worker로 조건부 병렬 실행한다. 새 경로를 기존 옆에 만들고, Claude 쪽에서 신·구를 실측 비교해 합격하면 기본 경로로 교체하고 구 경로를 삭제한다.
+
+왜 중요한가: 메인 맥락 보호와 병렬 벽시계 단축이 동기다. 과거 agent 기반 경로는 "메인 루프가 가진 맥락을 다시 파악하는 비용"으로 폐지됐으나, 2026-10-04 실측에서 그 비용의 실체(방법을 다시 알아내는 턴)와 해법(레시피형 digest로 cold start 약 4초)이 확인됐다. 설계 결정의 출처는 `_sdd/discussion/2026-10-04_discussion_orchestrator_harness_redesign.md`와 `_sdd/discussion/2026-10-04_discussion_subagent_cold_start.md`다.
+
+## `/goal` 조건 문자열
+> 아래 블록을 `/goal <조건>`에 그대로 넣는다. 평가자는 도구 없이 transcript만으로 판정하므로 자족적이어야 한다 — 단 자족의 단위는 outcome이다. 검증 명령·기대 출력·수치 등 브리틀 디테일은 여기 넣지 않고 아래 `검증 레시피` 섹션에 둔다.
+
+DONE WHEN: 오케스트레이터 기반 multi-agent 하네스(오케스트레이터 스킬, digest·state 2파일 인계, task별 조건부 병렬 구현 worker, 작성자와 분리된 리뷰 worker)가 Claude·Codex 두 런타임의 스킬로 존재하는 기본 경로이고, 구 직접 실행 경로는 삭제되었으며, 변경이 `refactor/orchestrator-harness` 브랜치에 push되고 PR이 생성되었다(anchor: `gh pr view` 출력의 PR URL과 head 브랜치명 `refactor/orchestrator-harness`, state OPEN). 증명: `goal.md` 검증 레시피의 명령 실제 출력이 transcript에 surface되고 전 항목 PASS다.
+DONE WHEN: Claude 쪽 신·구 경로 실측 비교가 끝나 검증 레시피의 합격 지표가 전부 PASS이고, 총 토큰과 체인 벽시계는 신·구 수치로 보고되었다(anchor: `/Users/hyunjoonlee/github/sdd_skills/_sdd/goal/2026-10-04_orchestrator_harness_redesign/report.md`의 Status가 PASS이고 측정 표가 있다). 증명: `goal.md` 검증 레시피의 명령 실제 출력이 transcript에 surface되고 전 항목 PASS다.
+DONE WHEN: global spec(`_sdd/spec/`)이 새 하네스를 현재 진실로 기술하도록 spec-sync가 완료되었고, 재편과 충돌하던 구 Guardrail 문장이 남아 있지 않다. 증명: `goal.md` 검증 레시피의 명령 실제 출력이 transcript에 surface되고 전 항목 PASS다.
+CONSTRAINTS: 검증 레시피 변경 시 변경 diff·사유를 transcript에 표시하며, 판정을 약화하는 변경은 사용자 승인이 필요하다. `goal.md` 자율 수행 위임의 사전 승인 범위에 있는 행동에 대해 사용자 확인을 요청하며 턴을 끝내지 않는다. SDD 철학 3종(spec 중심 루프와 검증, Claude·Codex 공통 계약, 산출물 원칙)을 어기지 않는다. 신 경로가 실측 합격하기 전에는 구 경로의 동작을 바꾸거나 삭제하지 않는다. Codex는 실측하지 않고 미러 정적 검사만 한다. PR merge와 main 브랜치 push는 하지 않는다.
+STOP: after 3 turns without progress.
+
+## 검증 레시피
+매 턴 이번 진척에 필요한 허용된 검증을 실행하고 실제 출력을 대화에 표시한다. 실행하지 않은 필수 검증은 기존 evidence와 그 유효성·미실행 사유를 표시한다. repo의 slow/checkpoint·timeout 재실행 제한을 따르며, 매 턴 전체 명령을 재실행하지 않는다. 최종 PASS에는 모든 필수 검증의 유효한 실행 증거가 필요하다.
+
+실행 checkpoint: R4(벤치마크 실측)는 10초를 넘는 느린 검증이다. 실측 feature를 닫을 때와 최종 PASS 직전에만 실행하고, 그 사이 턴에는 기존 evidence와 유효성을 표시한다. R1·R2·R3·R5는 수 초 이내라 해당 변경이 있는 턴에 실행한다.
+
+### R1. 브랜치와 PR (DONE WHEN 1)
+- `git -C /Users/hyunjoonlee/github/sdd_skills branch --show-current` → `refactor/orchestrator-harness`
+- `git -C /Users/hyunjoonlee/github/sdd_skills status --short` → 미커밋 변경 없음(목표 시작 전부터 있던 `_COMMENTS.md`·`_sdd/work_log/2026-09-11.md`·`_sdd/work_log/2026-09-15.md` 변경은 제외)
+- `gh pr view refactor/orchestrator-harness --json url,headRefName,state` → `state: OPEN`, `headRefName: refactor/orchestrator-harness`
+
+### R2. 구조 (DONE WHEN 1)
+- 새 오케스트레이터 스킬의 SKILL.md가 `.claude/skills/sdd-orchestrator/`과 `plugins/sdd-skills-codex/skills/sdd-orchestrator/` 두 곳에 있다. worker 계약은 `references/workers/{feature-draft,plan-review,implementation,implementation-review,spec-sync}.md`, 인계 템플릿 `references/handoff-templates.md`, 공통 경계 `references/worker-boundary.md`, simplicity 계약 `references/simplicity-contract.md`(양 runtime 동일본). (Feature A draft가 정한 이름 — 동등 기록)
+- 구 직접 실행 경로 census(교체 feature draft `_processed_2026-10-04_feature_draft_orchestrator_default_switch.md` Task 9가 정한 목록 — 동등 기록, 검색 범위는 README.md·AGENTS.md를 더한 강화):
+  - 삭제 대상 스킬: `for s in feature-draft plan-review implementation implementation-review spec-sync; do test ! -e .claude/skills/$s && test ! -e plugins/sdd-skills-codex/skills/$s; done` 성공, marketplace `skills`에 다섯 경로 0건.
+  - 절·문장 리터럴 14개 각각 `/usr/bin/grep -rn -F '<리터럴>' .claude plugins docs README.md AGENTS.md` 0건: `동명의 SDD 스킬` / `$spec-sync` / `` `/spec-sync` `` / `producer인 메인 루프` / `자기 품질 게이트로 내부 수행` / `../implementation-review/references` / `implementation_ledger` / `` `implementation` 스킬 `` / `` `spec-sync` 스킬 `` / `` `implementation-review` 스킬 `` / `` `feature-draft` 스킬 `` / `` `spec-sync`의 호출 `` / ``same-runtime `feature-draft` `` / ``skill catalog가 제공하는 `feature-draft` ``. 이 리터럴들은 `docs/reviews/`(날짜가 붙은 과거 리뷰 기록, 보존)에도 0건이다.
+
+### R3. 정적 검증 (DONE WHEN 1)
+- `git diff --check main...HEAD` → 출력 없음
+- `claude plugin validate /Users/hyunjoonlee/github/sdd_skills` → `Validation passed`(repo 루트 marketplace manifest).
+- Codex 미러: 짝마다 `/usr/bin/diff`(셸의 `diff`는 래퍼 함수라 쓰지 않는다)로 claude↔codex를 비교한다. hunk 수가 각 draft가 정한 기준선과 같고, 초과 hunk가 0이다. 기준선: `sdd-orchestrator/SKILL.md` 1(Runtime 절 안)·`sdd-orchestrator/references` 무출력, goal-init/SKILL.md 3, goal-init/references/harness-templates.md 0, sdd-autopilot/SKILL.md 3, spec-review·spec-rewrite(+references 2)·spec-upgrade·spec-summary SKILL 0, pr-review/SKILL.md 15, pr-review/examples/sample-review.md 10, 4개 AGENTS 하네스 템플릿 서로 무출력.
+
+### R4. 실측 (DONE WHEN 2, Claude만)
+- 벤치마크 기능: PR #87 `review_evidence_floor`(base `97f3ea4^1`), PR #88 `goal_autonomy_grant`(base `d5c39b3^1`). 각 기능의 draft를 입력으로, base commit의 대상 worktree에서 구 경로와 신 경로를 각각 2회 실행한다. 두 회의 합격·불합격이 갈리면 1회 더 실행한다.
+- 실행 방식: `claude -p`로 새 세션을 띄운다. harness는 `--plugin-dir`로 로드한다(구 = main, 신 = 브랜치 worktree). `--session-id`로 transcript 경로를 고정한다. 확정 명령: `bench/run.sh <87|88> <old|new> <rep> <plugin dir>`(대상 worktree의 bare 프로젝트 스킬은 `--disallowedTools`로 차단, 독립 리뷰는 `bench/review.sh`). 신 경로 plugin dir은 `bench/mkplug.sh <브랜치 worktree> <out>`으로 만든 래퍼다 — marketplace 루트를 그대로 주면 설치된 `sdd-skills`(main과 같은 커밋 `bee82a5` 캐시)가 로드되므로, 구 경로 run은 그 캐시가 곧 main 하네스다. 신 경로 run은 transcript의 `Base directory for this skill:`이 래퍼 경로인지 확인한다. headless(`-p`)에서 worker는 foreground로 실행되고 메인이 결과를 받은 뒤 진행한다(H2).
+- 지표: transcript를 jq로 계측하고 경로별 중앙값을 쓴다. 판정 표는 `report.md`에 남긴다.
+  - M1 메인 맥락 증가: 메인 세션의 (마지막 턴 input + cache_read + cache_creation) − (첫 턴 같은 합). 합격: 신 ≤ 구 × 0.5
+  - M2 오케스트레이터 일탈: `bench/metrics.py`의 `measure`가 `bench/run.sh`의 `WT=$B/t-$RUN`에 맞춰 대상 root를 전달한다. root는 존재 검사 없이 정규화하며 `/tmp`와 `/private/tmp`를 같은 경로로 취급한다. 메인 세션의 대상 내부 `Edit`·`Write`·`NotebookEdit` 수와 대상 파일 쓰기가 확인된 `Bash` 호출 수가 `M2_main_edits`다. 대상 밖 scratch 쓰기는 제외하지만 대상 worktree 자체가 `/tmp`에 있어도 제외하지 않는다. 허용 경로는 root 상대 `digest.md`·`state.md` 및 `_sdd/goal/`·`_sdd/implementation/`·`_sdd/work_log/` 하위다. basename 부분 일치로 `src/digest_helpers.py` 등을 면제하지 않는다.
+    - 지원 범위: literal 일반/quoted redirect와 heredoc 선언 뒤 redirect(여러 heredoc 포함), 옵션 없는 `cp`의 목적지·`mv`의 원본과 목적지·`tee`/`touch`/`rm`/`chmod` 대상, `sed -i ''`(`-e` 포함)의 파일 대상, Python `open(..., 쓰기 mode)`·`Path(...).write_text/write_bytes` 표적. 경로는 literal과 단순 리터럴 할당(셸 `NAME=값`, Python 문자열·`+` 연결·f-string)까지 실행 순서대로 따른다: 참조 시점의 가장 최근 할당이 리터럴일 때만 풀고, 작은따옴표 안은 치환하지 않으며, Python 복합문 안에서 바뀐 이름은 풀지 않는다. 절대 경로 `cd` 뒤 상대 경로는 그 디렉터리 기준으로 푼다. 한 명령의 여러 python heredoc은 각각 분석한다. Python 함수 본문 안의 쓰기는 호출 여부를 모르므로 확정 대신 unknown이다. 읽기 전용 명령(`grep`·`find`·`sed -n`·`sort`·`git diff/log` 등, 쓰기 옵션 제외)과 `mkdir`은 쓰기가 아니다. Python은 호출이 모두 작은 allowlist 안일 때만 추출한 표적 외 효과가 없다고 본다. 명령·프로세스 치환(`$(...)`·backtick·`<(...)`)·변수 쓰기 mode·import 별칭을 통한 `shutil`/`subprocess`/`os` 호출·해석하지 못한 대상·지원하지 않는 명령/옵션/문법·allowlist 밖 Python 호출은 unknown으로 남긴다. 따옴표 밖 주석(`#`)과 따옴표·escape된 shell 연산자가 있으면 명령 전체를 unknown으로 두며 확정 쓰기를 추측하지 않는다. 복합 명령에서 확정 쓰기와 unknown은 함께 남을 수 있다.
+    - `M2_unknown`은 미확정 동작이 남은 tool 호출 수다. `M2_unknown_commands`에는 원문 명령 대신 메인 세션 tool_use의 1-based `tool_index`와 고정 분류 사유를 남겨 원문 근거를 찾을 수 있게 한다. `M2_bash_writes`도 같은 index를 사용하며 명령 payload·시크릿을 복사하지 않는다. 판정(`M2_status`): 확정 쓰기 > 0이면 FAIL, 확정 0 + unknown > 0이면 UNVERIFIED, 둘 다 0일 때만 PASS. 합격은 PASS다.
+    - 빠른 반례 검증: `python3 -m unittest discover -s tools/tests -p 'test_orchestrator_metrics.py' -v` → 전체 통과. 과거 보고 정정은 기존 transcript를 재계측하며 새 모델 실행을 요구하지 않는다.
+  - M3 cold start: 각 worker를 띄운 뒤 첫 실질 작업(digest·draft 읽기를 제외한 첫 검사·편집 tool_use)까지의 시간. 합격: 중앙값 ≤ 10초
+  - M4 품질: 신 경로 결과물에서 draft의 AC가 전부 fresh 검증으로 MET이다. 그리고 별도로 띄운 새 agent 단독 독립 리뷰(지시문 고정, 맥락 미제공)에서 Critical·High가 0이다. 합격: 둘 다 충족
+  - M5 보고만(합격 기준 없음): 총 토큰(입력 + 출력 + cache read + cache creation)의 신/구 비율, 체인 벽시계의 신/구 비율
+
+### R5. spec (DONE WHEN 3)
+- `grep -n '^\*\*Spec Version' /Users/hyunjoonlee/github/sdd_skills/_sdd/spec/main.md` → main 대비 버전이 올라갔다.
+- 구 Guardrail census: 아래 리터럴이 `_sdd/spec/main.md`·`_sdd/spec/components.md`에서 0건이다. spec 갱신 feature가 목록을 확정·보강한다.
+  - `코드·테스트는 메인 루프가 직접 작성`
+  - `custom agent는 **0종**`
+  - `reviewer들은 ledger를 소비하지 않는다`
+  - `ledger MET 접기` — `main.md`에서만 센다(`:76`·`:82`의 stale 참조). `components.md`의 pr-review 행에 있는 같은 말은 현재 유효한 계약이라 제외한다.
+
+## 자율 수행 위임
+이 섹션은 루프 중 행동에 대한 사용자의 사전 승인이다. 하류 스킬·런타임 규범이 요구하는 '실행 전 확인'은 사전 승인 목록에 있는 행동에 한해 이 섹션으로 충족된다.
+
+사용자 확인이 필요해 보이는 행동은 이 섹션으로 판정한다.
+- 사전 승인 범위 안: 확인 없이 수행하고 결정·근거를 `journal.md`에 남긴다.
+- 범위 밖: 그 행동 없이 진척 가능한 일을 먼저 한다.
+- 범위 밖이고 그 행동 없이는 진척 불가: `report.md` Status를 `STUCK`으로 두고 사유를 적은 뒤 미완료로 종료한다.
+
+- 수준: unattended
+- 사전 승인: 브랜치 생성·commit·feature 브랜치 push·PR 생성 / 테스트·빌드·스크립트 실행(`claude -p` 벤치마크 세션 포함)·의존성 설치 / repo 안 파일 생성·수정·삭제(구 경로 삭제는 실측 합격 후) / scratchpad·git worktree 생성·삭제 / `spec-sync` 실행 / 검증 레시피의 동등·강화 변경
+- BC 리소스 상한: 해당 없음
+- 비용 상한: 없음. 총 토큰과 벽시계는 보고만 한다.
+- 항상 확인(제외, 수준 무관): main/protected 브랜치 직접 push·force-push·history rewrite / PR merge / 원격·공유 자원 삭제(브랜치·인스턴스·스토리지) / 리소스·비용 상한 초과 / 판정을 약화하는 레시피 변경 / 시크릿 취급 / repo 밖 외부 발신
+
+## Loop Protocol
+매 턴 다음을 순서대로 수행한다 (이 섹션은 메인 에이전트용 HOW이며 조건 문자열에 넣지 않는다):
+1. 아직 충족되지 않은 `DONE WHEN` 또는 실패한 final integration proof가 드러낸 gap에서 가장 작은 next feature를 고른다. `experiments.md`의 pending 가설은 접근 후보로만 참고한다.
+2. 그 feature의 reviewed draft가 없으면 `feature-draft`를 실행한다. draft가 분할되면 현재 native goal 안에서 가장 작은 next unit을 고르고 nested `goal-init`은 만들지 않는다.
+3. 선택한 draft를 `implementation`으로 구현하고 producer-owned 품질 게이트 결과까지 닫는다.
+4. persistent 변경이 있으면 `spec-sync`를 실행한다.
+5. `검증 레시피`의 실행 규칙에 따라 evidence를 대화에 표시하고 evidence·완료 feature·남은 gap·next action을 `journal.md`에 append한 뒤 `report.md`를 갱신한다.
+6. 모든 `DONE WHEN`과 final integration proof가 통과했을 때만 성공 종료한다. STOP 또는 위임 범위의 STUCK 경계에 도달하면 `report.md`에 사유를 기록하고 미완료로 종료한다. native goal lifecycle 처리는 활성 런타임 규범을 따른다. 그 외에는 1단계로 돌아간다.
+
+> Setup invariant: goal을 활성화하지 않았으며 기존 goal 상태도 변경하지 않았다.
+
+## 실행법
+<!-- SKILL.md Handoff의 실행법으로 자기 런타임 슬롯만 채운다. 다른 런타임 슬롯은 placeholder로 둔다. -->
+
+### Claude Code
+- (a) workspace trust + hooks가 활성화되어 있어야 `/goal` 루프가 동작한다.
+- (b) 라이프사이클은 `/goal set`(목표 설정)·`/goal status`(진행 확인)·`/goal clear`(종료)이며, `clear`는 별칭(`stop`·`off`·`reset` 등)으로도 호출할 수 있다.
+- (c) 세션을 멈췄다 `--resume`/`--continue`로 이어가면 active goal이 복원되며 턴·타이머·토큰 카운터가 리셋된다.
+- (d) 평가자는 조건 문자열을 4,000자 상한으로 읽으므로, 그 안에서 도구 없이 판정 가능한 evidence가 매 턴 surface되어야 한다.
+
+### Codex
+<Codex 스킬이면 SKILL.md Handoff의 Codex 실행법 4요소를 기입; 아니면 placeholder 유지>

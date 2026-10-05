@@ -15,13 +15,13 @@ description: "SDD goal harness 셋업 entrypoint. /sdd-autopilot으로 기능 �
 
 - [ ] AC1: 사용자 원문과 관련 context를 `goal-init(preset=sdd)`에 전달하고, `goal-init`의 판단 기준·condition self-check·4파일 setup을 완료했다.
 - [ ] AC2: 생성된 `goal.md`가 runtime-local `goal-init` template의 SDD Loop Protocol payload를 사용한다.
-- [ ] AC3: setup 중 initial `feature-draft`·`implementation`·`spec-sync` 실행, current native goal status 조회, native goal 상태 변경이 모두 0건이다.
+- [ ] AC3: setup 중 `sdd-orchestrator`나 initial feature 실행, current native goal status 조회, native goal 상태 변경이 모두 0건이다.
 - [ ] AC4: 조건 문자열·자율 수행 위임(수준·사전 승인 범위)·runtime 실행법·4파일의 개별 경로·setup 불변식을 relay했고, native goal 활성화 여부와 시점은 사용자가 결정한다.
 
 ## Hard Rules
 
 1. **Thin entrypoint**: goal intake·조건 self-check·harness shape·Loop Protocol payload의 단일 소스는 runtime-local `goal-init` package다. 이 스킬에 해당 본문을 복제하거나 변형하지 않는다.
-2. **Setup only**: initial `feature-draft`·`implementation`·`spec-sync`를 호출하거나 코드를 수정하지 않는다. producer chain은 사용자가 활성화한 native goal의 SDD Loop Protocol만 실행한다.
+2. **Setup only**: `sdd-orchestrator`나 initial feature를 실행하거나 코드를 수정하지 않는다. producer chain은 사용자가 활성화한 native goal의 SDD Loop Protocol만 실행한다.
 3. **Native goal 불간섭**: `/goal`을 발동하지 않고 current goal status도 조회하지 않는다. existing goal을 set·clear·pause·resume·replace·merge하지 않으며 active goal 때문에 setup을 차단하지 않는다.
 4. **원문 전달**: 사용자의 원래 요청과 관련 context 파일 경로를 `preset=sdd` 입력과 함께 `sdd-skills:goal-init`에 전달한다. 의미를 잃을 정도로 축약하지 않는다.
 5. **plugin prefix**: `goal-init` 호출은 bare name이 아니라 `sdd-skills:goal-init`을 사용한다.

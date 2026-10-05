@@ -9,7 +9,7 @@ description: This skill should be used when the user asks to "create a spec", "w
 
 프로젝트의 요구사항, 코드베이스, 기존 문서를 바탕으로 `_sdd/spec/` 아래에 현재 SDD global model에 맞는 글로벌 스펙을 만든다. 현재 모델에서 global spec은 `개념 + 경계 + 결정` 중심의 얇은 기준 문서다.
 
-필요하면 `AGENTS.md`, `CLAUDE.md`, `_sdd/env.md` 같은 최소 부트스트랩 파일도 함께 정리한다. feature-level execution detail은 temporary spec이나 guide에서 다룬다.
+`_sdd/env.md`에 사용자가 나중에 채울 worker 기본 모델 템플릿을 제공하고, 필요하면 `AGENTS.md`, `CLAUDE.md` 같은 최소 부트스트랩 파일도 함께 정리한다. feature-level execution detail은 temporary spec이나 guide에서 다룬다.
 
 ## Acceptance Criteria
 
@@ -22,6 +22,7 @@ description: This skill should be used when the user asks to "create a spec", "w
 - [ ] supporting information은 필요할 때만 appendix 또는 별도 supporting file로 분리했다.
 - [ ] 코드베이스가 있으면 스펙이 실제 코드 구조와 naming을 반영한다.
 - [ ] Step 3에서 선택한 부트스트랩 산출물만 해당 계약에 따라 생성/보강했고, 미선택 항목은 비대상으로 구분했다.
+- [ ] `_sdd/env.md`를 생성/보강했으면 Step 3f의 기본 모델 표·기존 값 보존·사용자 안내를 확인했다.
 - [ ] `AGENTS.md`·`CLAUDE.md` 생성/보강 시 Step 3c의 마커 병합·legacy 보존/흡수 규칙을 적용했다.
 - [ ] 하네스를 생성/병합했으면 Step 3e의 local hook installation contract를 적용했다.
 
@@ -56,6 +57,7 @@ Negative example:
 ## Companion Assets
 
 - `references/agents-harness-template.md`
+- `references/worker-model-defaults.md`
 - `references/hook-installation.md`
 - `references/hooks/worklog-gate.sh`
 - `references/hooks/worklog-context.sh`
@@ -148,11 +150,11 @@ global spec core는 항상 유지한다.
 
 ### Step 3: Bootstrap Workspace Guidance
 
-사용자 요청과 기존 작업 안내의 누락을 근거로 아래 파일 중 생성/보강 대상을 선택한다. 기존 안내로 충분하면 이 단계를 건너뛴다. 선택한 파일에만 3a–3e를 적용하되, `AGENTS.md` 하네스 생성/병합을 선택하면 `CLAUDE.md` 포인터·`.gitignore`와 양 runtime 훅 자산도 함께 적용한다. `_sdd/env.md`는 선택 시 없으면 생성하고, 있으면 필수 안내 누락만 최소 보강한다.
+사용자가 제외하지 않은 한 `_sdd/env.md`는 기본 생성/보강 대상으로 선택해 3f를 적용한다. 나머지 파일은 사용자 요청과 기존 작업 안내의 누락을 근거로 선택하며, 기존 안내로 충분하면 생략한다. 선택한 파일에만 3a–3f를 적용하되, `AGENTS.md` 하네스 생성/병합을 선택하면 `CLAUDE.md` 포인터·`.gitignore`와 양 runtime 훅 자산도 함께 적용한다.
 
 - `AGENTS.md` — SDD 작업 하네스 본체
 - `CLAUDE.md` — `→ AGENTS.md 참조` 포인터
-- `_sdd/env.md` — 생성 시 상단에 비밀값 금지 경고를 포함한다(커밋되는 파일이므로 API 키·토큰·비밀번호 금지)
+- `_sdd/env.md` — 비밀값 금지 경고와 기본 모델 템플릿·사용자 안내 (3f)
 - `.gitignore` — process artifact 디렉토리 ignore (3d)
 - `.claude/hooks/`·`.claude/settings.json`·`.codex/hooks.json` — 하네스 규약을 Claude Code/Codex 실행 층으로 옮기는 훅 자산 (3e)
 
@@ -220,6 +222,11 @@ _sdd/pr/
 3. reference의 검증 checklist로 재실행 멱등성을 확인하고 runtime별 결과를 그 report 필드로 알린다.
 
 hook event·matcher·settings merge·runtime definition·trust 계약을 기억이나 이 본문으로 재구성하지 않는다.
+
+#### 3f. env.md 기본 모델 템플릿
+
+호출 중인 skill package의 `references/worker-model-defaults.md`를 **Read**하고 적용·확인·보고 규칙을 따른다. 이 env.md 보강만으로 하네스·훅 설치를 선택하지 않는다.
+
 ### Step 4: Write the Spec
 
 글로벌 스펙 본문 필수 요소:
@@ -268,7 +275,8 @@ spec 작성 직전에 선택한 runtime-local asset만 **Read**한다. 선택한
 - `AGENTS.md`가 하네스 §0~§5 슬롯을 채워 생성/병합되었고, `CLAUDE.md`가 포인터인가
 - `AGENTS.md`·`CLAUDE.md`의 legacy 처리와 잔여 보고가 Step 3c의 보존/흡수 규칙을 따르는가
 - 마커 블록이 재실행 시 중복 누적 없이 블록만 교체되는가(멱등)
-- `.gitignore`가 `SDD-WORKSPACE` 마커 블록으로 process artifact를 ignore하고, `_sdd/env.md`에 비밀값 금지 경고가 있는가
+- `.gitignore`가 `SDD-WORKSPACE` 마커 블록으로 process artifact를 ignore하는가
+- `_sdd/env.md`를 보강했다면 local `references/worker-model-defaults.md`의 확인·보고 조건을 충족하는가
 - 하네스를 설치했다면 local `references/hook-installation.md`의 `Verification and Report`에 따라 runtime별 등록·검증·acceptance 상태를 구분했는가
 
 ## Output Contract
@@ -276,6 +284,7 @@ spec 작성 직전에 선택한 runtime-local asset만 **Read**한다. 선택한
 기본 산출물:
 
 - `_sdd/spec/main.md`
+- `_sdd/env.md` — 사용자가 제외하지 않았다면 Step 3f에 따라 생성/보강
 
 조건부 산출물:
 
@@ -286,13 +295,13 @@ spec 작성 직전에 선택한 runtime-local asset만 **Read**한다. 선택한
 - lowercase canonical `_sdd/spec/decision_log.md`
 - `AGENTS.md` — `references/agents-harness-template.md` 기반 §0~§5 하네스(SDD-HARNESS 마커 블록)
 - `CLAUDE.md` — `→ AGENTS.md 참조` 포인터(SDD-HARNESS 마커 블록)
-- `_sdd/env.md` — 상단에 비밀값 금지 경고 포함
 - `.gitignore` — `SDD-WORKSPACE` 마커 블록(process artifact ignore)
 - `.claude/hooks/worklog-gate.sh`·`.claude/hooks/worklog-context.sh`·`.claude/hooks/harness-context.sh`·`.claude/hooks/agent-watchdog.sh` — local hook installation contract의 script 산출물
 - `.claude/settings.json` — 같은 contract의 Claude Code 등록 산출물
 - `.codex/hooks.json` — 같은 contract의 Codex 등록 산출물
 
 하네스를 설치했다면 local `references/hook-installation.md`의 `Report` 계약대로 알린다.
+env.md를 보강했다면 local `references/worker-model-defaults.md`의 `확인·보고` 규칙대로 설정표 위치와 나중에 채울 수 있는 항목을 알린다.
 
 ## Error Handling
 
