@@ -53,7 +53,7 @@
 - 구현: draft Part 2 task마다 worker 1개가 RED→GREEN test-first와 커버리지 델타로 닫는다. Target Files 서로소·`Contracts` 미공유·의존 없음인 task는 동시에 실행된다. 메인 루프는 대상 파일을 쓰지 않는다
 - 구현 게이트: 모든 task가 DELTA_CLOSED가 되면 correctness worker 1개(digest 검증 레시피 fresh 실행 = 전체 회귀)와 simplicity worker 2개(차원 묶음)가 동시에 돈다. fix는 해당 task worker가 커버리지 델타·표적 재실행까지 하고 반환한다
 - 마감: state의 AC→증거가 리뷰 worker의 fresh verdict 포인터로 채워지고, 채팅에는 실행 단계·게이트 호출별 severity·fix·검증·미충족 AC·Open Questions·state 경로만 보고된다
-- spec-sync 단계: 검증된 지속 정보만 `_sdd/spec/`에 반영되고, 다 구현된 draft는 `_processed_` prefix로 rename된다. 규모가 커지면 분할 규칙(롤링 draft + planned todo 고정 + feature별 순차 체인)으로 해소한다
+- spec-sync 단계: 검증된 지속 정보만 `_sdd/spec/`에 반영되고, digest 환경 함정 중 저장소 작업에 반복 적용되는 사실은 `_sdd/env.md`로 승격되어 다음 실행의 digest 초기화가 받는다. 다 구현된 draft는 `_processed_` prefix로 rename된다. 규모가 커지면 분할 규칙(롤링 draft + planned todo 고정 + feature별 순차 체인)으로 해소한다
 
 ### Scenario 2b: 여러 SDD 단위를 native goal로 수렴시키기 (sdd-autopilot setup)
 

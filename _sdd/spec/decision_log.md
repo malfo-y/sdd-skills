@@ -3605,3 +3605,11 @@ sdd-autopilot의 review-fix 루프가 선택적으로 동작하여, 리뷰만 �
 - **결정**: 사용자 결정으로 `sdd-orchestrator` 무인 실행에서 허용값 밖 단계 모델은 묻지 않고 세션 모델 상속으로 대체하고 마감 보고에 적는다. "요청한 model·reasoning override가 미지원이면 dispatch를 막는다" Guardrail의 유일한 예외다. 사람이 있는 실행은 허용값을 알리고 고쳐 받는다.
 - **근거**: 무인 실행은 질문에 답할 사람이 없어 dispatch 차단이 곧 체인 정지다. 단계 모델 지정은 품질 계약이 아니라 비용·속도 조절이라, 세션 모델로 진행하고 보고하는 쪽이 손실이 작다.
 - **포인터**: `_sdd/implementation/2026-10-05_orchestrator_nonblocking_dispatch/digest.md`(범위 A 결정 2).
+
+
+## 2026-10-05 - `sdd-orchestrator` digest 운영 — 환경 함정의 `_sdd/env.md` 승격, 일회성 입력 금지 (v4.37.0)
+
+- **결정**: 사용자 승인으로 실행 끝에 spec-sync worker가 digest `환경 함정` 중 저장소 작업에 반복 적용되는 사실을 `_sdd/env.md`로 승격한다(승격 기준의 단일 소스는 spec-sync worker 계약 Step 5 항목 4). digest 초기화는 계획 단계 경로에서도 `_sdd/env.md`를 입력으로 받는다. digest에는 일회성 입력(fix할 findings·task 한정 지시)을 넣지 않고 `Worker dispatch` 입력으로만 넘기며, fix 전용 check 행은 fix가 닫히면(메인 루프가 fix worker의 표적 재실행 통과를 state에 반영할 때) 지운다. 이 저장소 `_sdd/env.md`에는 승인한 환경 사실 7개를 시드했다.
+- **근거**: 실행 중 알아낸 환경 함정이 digest와 함께 사라져 다음 실행이 같은 시행착오를 반복했고, 모든 worker가 읽는 digest에 한 worker용 입력과 닫힌 fix check가 쌓였다. 승격 주체를 spec-sync worker로 둔 이유는 기본 종점의 마지막 단계이고, 이미 digest를 읽으며, "repo-wide 지속 정보만 가장 맞는 표면에 보수적으로 반영"하는 같은 원칙을 쓰기 때문이다 — 메인 루프는 대상 파일을 쓰지 않으므로 승격 주체가 될 수 없다.
+- **기각**: 새 worker·새 계약 파일(spec-sync 계약 항목 하나로 충분), env.md 절 이름 고정(task 간 상수 공유를 만든다).
+- **포인터**: `_sdd/drafts/_processed_2026-10-05_feature_draft_digest_ops_env_promotion.md`, `_sdd/implementation/2026-10-05_digest_ops_env_promotion/`.

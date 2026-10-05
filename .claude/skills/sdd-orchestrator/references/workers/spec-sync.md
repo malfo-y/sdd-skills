@@ -19,8 +19,8 @@
 
 ## Hard Rules
 
-1. 코드와 구현 문서를 직접 수정하지 않는다. 이 worker가 쓰는 대상은 `_sdd/spec/`과 Step 5에서 정한 소비 완료 입력의 rename뿐이다.
-2. **evidence 없으면 승격 금지**: 승격 판단은 `Status 분류 (Routing)`을 따른다. 관측 실패: evidence 없는 planned truth가 current truth로 섞이는 drift.
+1. 코드와 구현 문서를 직접 수정하지 않는다. 이 worker가 쓰는 대상은 `_sdd/spec/`, Step 5에서 정한 `_sdd/env.md` 승격과 소비 완료 입력의 rename뿐이다.
+2. **evidence 없으면 승격 금지**: spec delta를 현재 truth로 승격할지는 `Status 분류 (Routing)`을 따른다. 관측 실패: evidence 없는 planned truth가 current truth로 섞이는 drift.
 3. **verified와 planned 분리**: 아직 구현되지 않은 새 heading, bullet, 문장에는 반드시 `🚧 Planned`를 붙여 현재 truth와 구분하고(`## 🚧 Planned ...`, `- 🚧 Planned: ...` 또는 이에 준하는 명시 표식), 검증된 current truth와 planned/미검증 truth를 같은 문단·불릿에 표식 없이 섞어 쓰지 않는다.
 4. global 반영 범위는 Step 4의 persistence mapping 기준을 따른다. 관측 실패: temporary task breakdown이 global core로 과복원되는 drift.
 5. repo-wide invariant는 아래 `Repo-wide Invariant Test`를 통과할 때만 guardrails 또는 key decisions에 반영한다.
@@ -60,7 +60,7 @@ Negative example:
    - 입력으로 받은 오케스트레이터 state.md (task 상태·AC→증거)
    - plan / progress / review / report: `*_implementation_plan_*.md`, `*_implementation_progress_*.md`, `*_implementation_review_*.md`, `*_implementation_report_*.md` (legacy fallback: `implementation_plan.md`, `implementation_progress.md`, `implementation_review.md`, `implementation_report*.md`)
 3. feature draft Part 1 마커 내부(Change Summary·invariant·분할 목록) + 각 task의 `Contracts`/AC (slug 기반 glob: `_sdd/drafts/*_feature_draft_*.md`; legacy full draft의 Part 2 coverage index `C*`/`I*`·`Persistent Spec Implications`는 기록물 fallback으로만 읽고, 새 planned input requirement로 승격하지 않는다)
-4. digest의 결정·제약과 오케스트레이터가 입력으로 넘긴 사용자 결정
+4. digest의 결정·제약·환경 함정과 오케스트레이터가 입력으로 넘긴 사용자 결정
 5. `_sdd/spec/user_spec.md`, `_sdd/spec/user_draft.md`
 6. lowercase canonical `_sdd/spec/decision_log.md`, legacy uppercase `_sdd/spec/DECISION_LOG.md` fallback
 
@@ -129,7 +129,7 @@ Negative example:
 
 ### Step 5: Apply Updates
 
-세 표면을 순서대로 쓴다.
+네 표면을 순서대로 쓴다.
 
 1. **live truth**: Step 4에서 선택한 `_sdd/spec/`의 live truth 파일을 수정한다(기록 파일과 사용자 입력 원문 제외). 각 delta는 Step 3 분류대로 반영하고 (승격분은 무표식, 잔여는 `🚧 Planned`, 보류는 `Open Questions`), outdated claim은 제거한다.
    - 기존 문체와 언어를 맞추고, 중복 서술을 만들지 않는다.
@@ -140,6 +140,12 @@ Negative example:
 3. **input file 처리**: 반영·제외·보류 결과와 위치 또는 사유를 남겨 소비를 마친 일회성 제출물(`user_spec.md`, `user_draft.md` 등), 또는 사용자가 소비 후 rename 대상으로 명시한 파일만 `_processed_` prefix로 rename한다. 원문 내용은 보존한다.
    - 코드, 진행 중 draft, 구현 evidence, canonical history는 읽었더라도 rename하지 않는다.
    - 이미 `_processed_` prefix가 있으면 재접두하지 않고, 목적지 파일이 있으면 원본과 목적지를 모두 보존한다. 두 경우 모두 rename을 건너뛴 사유를 보고한다.
+4. **환경 함정 승격**: digest `환경 함정` 중 이번 기능을 넘어 저장소 작업에 반복 적용되는 사실을 `_sdd/env.md`에 쓴다.
+   - `_sdd/env.md`에서 가장 맞는 기존 절에 둔다. 맞는 절이 없으면 새 절을 만든다.
+   - 이미 있는 사실은 다시 쓰지 않는다. 어긋나는 기존 항목은 고쳐 쓴다.
+   - 커밋되는 파일이다. 비밀값을 적지 않고, 환경마다 다를 수 있는 사실은 조건(셸·OS·도구 버전 등)과 함께 쓴다.
+   - 올리지 않는 것: 기능별 결정, 검증 레시피 행, 임시 경로(scratchpad 등), 파일별 수치(예: 미러 hunk 수), 조건 없이 어디서나 성립하는 셸 지식. 셸·OS·도구에 따라 달라지는 사실은 빼지 않고 조건과 함께 쓴다.
+   - 파일이 없으면 상단에 비밀값 금지 경고를 두고 만든다.
 
 ### Step 6: Validate and Self-check
 
@@ -178,4 +184,5 @@ Step 6에서 이번 실행에 해당하는 Acceptance Criteria와 Hard Rules를 
 - routing 요약: IMPLEMENTED 승격·PARTIAL·PLANNED·UNVERIFIED 보류 수
 - `Open Questions`에 남긴 항목
 - `_processed_` rename한 입력 파일, 또는 rename을 건너뛴 사유
+- `_sdd/env.md`에 승격한 항목(없으면 없음)
 - Step 6 검증에서 남은 제한

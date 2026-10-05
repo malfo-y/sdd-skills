@@ -54,10 +54,10 @@ description: "Use this skill to run the SDD chain (feature-draft → plan-review
 
 위치는 `_sdd/implementation/<YYYY-MM-DD>_<slug>/`이다. slug는 draft slug를 쓰고, draft가 없으면 요청 요약을 snake_case로 쓴다. 같은 slug 디렉터리가 있으면 새로 만들지 않고 이어 쓴다. 처음 만들기 직전에 `references/handoff-templates.md`를 읽고 그 템플릿을 출발 구조로 쓴다.
 
-- **digest.md**: 방법과 이유다. worker가 다시 알아내기 비싼 것 — 결정·제약, 환경 함정, 검증 레시피(AC → 명령 → 기대값) — 만 담는다. 모든 worker가 읽는다. 상태·통과 주장·이력·파일 내용 복사·위치 목록은 넣지 않고, 현재 유효한 내용만 남긴다(바뀐 결정은 고쳐 쓴다).
+- **digest.md**: 방법과 이유다. worker가 다시 알아내기 비싼 것 — 결정·제약, 환경 함정, 검증 레시피(AC → 명령 → 기대값) — 만 담는다. 모든 worker가 읽는다. 상태·통과 주장·이력·파일 내용 복사·위치 목록·일회성 입력(fix할 findings·task 한정 지시)은 넣지 않고, 현재 유효한 내용만 남긴다(바뀐 결정은 고쳐 쓴다). 일회성 입력은 `Worker dispatch` 입력으로만 넘긴다. 검증 레시피에서 finding 하나만 검증하는 fix 전용 check 행은 메인 루프가 fix worker의 표적 재실행 통과를 state에 반영할 때 지운다(증거는 state가 가진다).
 - **state.md**: 재개용 상태다. 단계, task 상태, RED·GREEN 신호, 게이트 결과, 계획 이탈·발견, AC→증거를 담는다. 메인 루프만 읽는다. spec-sync worker는 구현 증거로 읽을 수 있다. 리뷰 worker에게는 주지 않는다. 명령 출력 전문과 진행 서술은 복사하지 않는다.
 - 두 파일의 작성자는 메인 루프 하나다. worker는 반환 끝의 `digest 변경분`으로만 digest를 바꾼다. 메인 루프는 반환을 받을 때마다 변경분을 digest에 반영하고 state를 갱신한다. 처음 만든 뒤에는 바뀐 행·항목만 고치고 파일 전체를 다시 쓰지 않는다. 실행이 겹친 worker의 변경분이 이미 반영한 변경분과 모순되면 나중 변경분을 반영하지 않고 모순을 state에 적은 뒤 해당 task를 다시 계획한다.
-- **digest 초기화**: 계획 단계를 거치면 feature-draft worker 반환의 `digest 변경분`으로 만든다. draft로 진입하면 draft AC의 검증 명령, `_sdd/env.md`, 대화에서만 나온 결정으로 메인 루프가 만든다. 이때 대상 파일을 탐색하지 않는다.
+- **digest 초기화**: 계획 단계를 거치면 feature-draft worker 반환의 `digest 변경분`과 `_sdd/env.md`로 만든다. draft로 진입하면 draft AC의 검증 명령, `_sdd/env.md`, 대화에서만 나온 결정으로 메인 루프가 만든다. 이때 대상 파일을 탐색하지 않는다.
 
 ## 단계와 진입
 
@@ -67,7 +67,7 @@ description: "Use this skill to run the SDD chain (feature-draft → plan-review
 | plan-review | `references/workers/plan-review.md` | draft 경로 | findings 반환 |
 | implementation | `references/workers/implementation.md` | draft 경로 + task ID 하나, 또는 fix할 findings | 대상 파일 변경 |
 | implementation-review | `references/workers/implementation-review.md` + simplicity 계약 `references/simplicity-contract.md` | draft 경로, 구현 시작점(base) | AC verdict·findings 반환 |
-| spec-sync | `references/workers/spec-sync.md` | draft 경로, state 경로, draft 소비 여부 | `_sdd/spec/` 변경 |
+| spec-sync | `references/workers/spec-sync.md` | draft 경로, state 경로, draft 소비 여부 | `_sdd/spec/` 변경, `_sdd/env.md` 승격 |
 
 draft의 Part 2 task가 모두 닫혔고 남은 분할 feature가 없으면, spec-sync 입력에 "draft 소비 완료 — `_processed_` rename 대상"을 넣는다.
 
