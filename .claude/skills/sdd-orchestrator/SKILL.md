@@ -56,7 +56,7 @@ description: "Use this skill to run the SDD chain (feature-draft → plan-review
 
 - **digest.md**: 방법과 이유다. worker가 다시 알아내기 비싼 것 — 결정·제약, 환경 함정, 검증 레시피(AC → 명령 → 기대값) — 만 담는다. 모든 worker가 읽는다. 상태·통과 주장·이력·파일 내용 복사·위치 목록·일회성 입력(fix할 findings·task 한정 지시)은 넣지 않고, 현재 유효한 내용만 남긴다(바뀐 결정은 고쳐 쓴다). 일회성 입력은 `Worker dispatch` 입력으로만 넘긴다. 검증 레시피에서 finding 하나만 검증하는 fix 전용 check 행은 메인 루프가 fix worker의 표적 재실행 통과를 state에 반영할 때 지운다(증거는 state가 가진다).
 - **state.md**: 재개용 상태다. 단계, task 상태, RED·GREEN 신호, 게이트 결과, 계획 이탈·발견, AC→증거를 담는다. 메인 루프만 읽는다. spec-sync worker는 구현 증거로 읽을 수 있다. 리뷰 worker에게는 주지 않는다. 명령 출력 전문과 진행 서술은 복사하지 않는다.
-- 두 파일의 작성자는 메인 루프 하나다. worker는 반환 끝의 `digest 변경분`으로만 digest를 바꾼다. 메인 루프는 반환을 받을 때마다 변경분을 digest에 반영하고 state를 갱신한다. 처음 만든 뒤에는 바뀐 행·항목만 고치고 파일 전체를 다시 쓰지 않는다. 실행이 겹친 worker의 변경분이 이미 반영한 변경분과 모순되면 나중 변경분을 반영하지 않고 모순을 state에 적은 뒤 해당 task를 다시 계획한다.
+- 두 파일의 작성자는 메인 루프 하나다. worker는 반환 끝의 `digest 변경분`으로만 digest를 바꾼다. 메인 루프는 반환에 `digest 변경분`이 있으면 다음 dispatch 전에 digest에 반영한다. state는 단계를 닫을 때 그 단계의 반환을 모아 한 번에 갱신한다(반환마다 고치지 않는다). 처음 만든 뒤에는 바뀐 행·항목만 고치고 파일 전체를 다시 쓰지 않는다. 실행이 겹친 worker의 변경분이 이미 반영한 변경분과 모순되면 나중 변경분을 반영하지 않고 모순을 state에 적은 뒤 해당 task를 다시 계획한다.
 - **digest 초기화**: 계획 단계를 거치면 feature-draft worker 반환의 `digest 변경분`과 `_sdd/env.md`로 만든다. draft로 진입하면 draft AC의 검증 명령, `_sdd/env.md`, 대화에서만 나온 결정으로 메인 루프가 만든다. 이때 대상 파일을 탐색하지 않는다.
 
 ## 단계와 진입
@@ -106,7 +106,7 @@ digest: <digest.md 절대 경로> — 결정·환경 함정·검증 레시피다
 ## 병렬 규칙
 
 - task worker는 task당 1개다.
-- 시작할 때, 그리고 worker가 반환할 때마다(반환은 먼저 `인계 파일`대로 반영한다) 아래 조건을 모두 만족하는 task를 바로 띄운다.
+- 시작할 때, 그리고 worker가 반환할 때마다(반환의 `digest 변경분`은 먼저 digest에 반영한다) 아래 조건을 모두 만족하는 task를 바로 띄운다.
   - 선행 task가 모두 DELTA_CLOSED다.
   - Target Files가 실행 중인 worker 및 함께 띄우는 worker의 것과 서로소다.
   - 그 worker들의 task와 `Contracts`를 공유하지 않는다.
