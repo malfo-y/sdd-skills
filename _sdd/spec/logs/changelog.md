@@ -2,6 +2,12 @@
 
 > 이 파일은 `_sdd/spec/main.md`의 **본문이 바뀐 버전만** 기록한다 — 본문 무변경 sync(헤더 날짜만 갱신)는 entry를 남기지 않으므로 버전 번호에 결번이 생길 수 있다.
 
+#### v4.42.0 (2026-10-05)
+
+- **`pr-review` correctness를 worker dispatch로 전환**: correctness 리뷰를 메인 루프 직접 수행에서 계약 경로(`pr-review/references/correctness-contract.md`, 양 runtime 동일본)를 읽는 범용 worker로 옮겼다. 메인은 `PR Review Input` 5필드(`PR`·`Baseline`·`Changed Files`·`Spec Status`·`Relevant Context`; `PR Diff` 삭제)만 모아 correctness·simplicity worker 둘을 한 메시지로 띄우고 두 worker가 같은 `headRefOid`로 diff·코드·spec을 직접 읽는다(불일치 시 1회 재dispatch 뒤 제한 리포트). 메인은 verdict 합성·통합 리포트 1파일만 쓴다. 이전 결정 "correctness 메인 루프 직접 수행"을 대체한다.
+- **pr-review worker 모델 기본값**: `--model`(Codex `--effort`) > `_sdd/env.md` `## Worker Model Defaults`의 `pr-review` 행 > 런타임 기본을 두 worker에 같게 적용한다. 이전 결정 "pr-review는 호출 때 지정만"을 대체한다. `sdd-orchestrator`는 단계 행만 읽는다고 명시했고, spec-create·spec-upgrade 템플릿은 `pr-review` 행을 포함한다.
+- **검증 evidence**: 구현 gate 2회(최종 AC 23 MET, correctness 0/0/0/4), 양 runtime 미러·census 0건·`git diff --check`·`claude plugin validate .` 통과. 실제 PR 리뷰 실행은 미실행.
+
 #### v4.37.0 (2026-10-05)
 
 - **`sdd-orchestrator` digest 운영 개선**: 실행 끝에 spec-sync worker가 digest 환경 함정 중 저장소 작업에 반복 적용되는 사실을 `_sdd/env.md`로 승격하고(기준은 spec-sync worker 계약 Step 5 항목 4), digest 초기화는 계획 단계 경로에서도 `_sdd/env.md`를 받는다. digest에는 일회성 입력(fix할 findings·task 한정 지시)을 넣지 않고 dispatch 입력으로만 넘기며, fix 전용 check 행은 fix가 닫히면 지운다. 이 저장소 `_sdd/env.md`에 사용자 승인 환경 사실 7개를 시드했다.

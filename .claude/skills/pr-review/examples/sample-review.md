@@ -25,37 +25,33 @@ Claude: PR 리뷰를 시작합니다.
 ✓ 로컬 HEAD: abc1234, 관련 working tree clean (브랜치 이름은 판정 조건 아님)
 
 ## PR 데이터 수집
-- 변경 규모: +847 -123, 12개 파일
+- 변경 파일: 12개 (gh pr diff --name-only)
 - 상태: OPEN
-- 커밋: 2개
 - 수집 전후 headRefOid 일치: abc1234
 - 통합 리포트 slug: auth_system (같은 날짜의 기존 파일이 있으면 auth_system_2)
-- 검증 evidence: CI output 없음; Local NOT_RUN
 
-## from-branch spec 로드
-- PR diff에 spec 변경 없음; git ls-tree -r --name-only abc1234 -- _sdd/spec/로 기존 spec 확인
-- git show abc1234:_sdd/spec/main.md 로드
-- 같은 SHA의 linked sub-spec 로드: auth.md, security.md (FOUND)
+## Spec Status (Step 2)
+- git ls-tree -r --name-only abc1234 -- _sdd/spec/로 spec 존재만 판정
+- Spec Status: FOUND (_sdd/spec/main.md, auth.md, security.md) — 내용 읽기는 correctness worker 소관
 ```
 
-### leaf 입력의 범위
+### worker 입력의 범위
 
-메인은 위 PR metadata·spec·검증 상태·slug를 관리한다. simplicity에는 Changed Files, PR Diff, Baseline(abc1234와 같은 SHA 읽기 경로), Relevant Context(인증 경계와 동작 보존에 필요한 저자 설명)만 전달한다.
+메인은 PR 번호·Baseline(abc1234와 같은 SHA 읽기 경로)·Changed Files·Spec Status·Relevant Context(인증 경계와 동작 보존에 필요한 저자 설명)·slug만 관리한다. 두 worker에 같은 PR Review Input을 전달하며, diff·spec 본문·comments·테스트 실행은 worker가 직접 한다.
 
-### simplicity dispatch + 직접 correctness와 verdict 합성
+### correctness·simplicity worker dispatch와 verdict 합성
 
 ```text
 Claude:
-## Simplicity Dispatch + 직접 Correctness
+## Worker Dispatch (correctness + simplicity)
 
-Agent(subagent_type="general-purpose") → simplicity 계약(reference 전문 verbatim) + PR Review Input을 prompt로 전달해 clarity 렌즈 dispatch
-(agent가 도는 동안 메인 루프가 correctness 리뷰를 직접 수행)
-
-correctness 검증 중: Local abc1234, 관련 상태 clean, 40개 중 38개 통과 output 확보.
+Agent(subagent_type="general-purpose") → correctness: 계약 경로(references/correctness-contract.md) + "그대로 따른다" + PR Review Input
+Agent(subagent_type="general-purpose") → simplicity: 계약(reference 전문 verbatim) + PR Review Input
+(두 Agent를 한 메시지에 dispatch하고 완료 알림으로 두 반환을 수거)
 
 두 렌즈 결과 요약:
-- correctness (메인 루프 직접): AC MET 2 / NOT MET 1 / PARTIAL 1, 검증 FAIL: tests/test_auth.py (38/40 통과, Local abc1234 output), High 1·Med 1·Low 1 (finding당 위치·문제·수정 포함)
-- simplicity (agent 반환): Medium 1 (위치·현재 형태·제안 형태 포함)
+- correctness (worker 반환): spec FOUND (main.md, auth.md, security.md), AC MET 2 / NOT MET 1 / PARTIAL 1, 검증 FAIL: tests/test_auth.py (38/40 통과, Local abc1234 output), High 1·Med 1·Low 1 (finding당 위치·문제·수정 포함)
+- simplicity (worker 반환): Medium 1 (위치·현재 형태·제안 형태 포함)
 
 → Verdict: REQUEST CHANGES (correctness High 1 + simplicity Medium 1이 rationale에 기여)
 ```
@@ -68,7 +64,7 @@ correctness 검증 중: Local abc1234, 관련 상태 clean, 40개 중 38개 통�
 **PR**: #42 - 사용자 인증 시스템 구현 및 세션 관리 버그 수정
 **PR Author**: developer-kim
 **Review Date**: 2026-04-02
-**Reviewer**: Claude (Opus 4.6)
+**Reviewer**: Claude (Opus 4.6 / workers opus)
 **Spec**: FOUND (abc1234)
 **Review Status**: COMPLETE
 
@@ -141,15 +137,14 @@ baseline SHA의 트리 조회가 성공하고 `_sdd/spec/`가 없음을 확인�
 User: 이 PR 승인해도 되는지 봐 줘
 
 Claude:
-## from-branch spec 탐색
+## Spec Status (Step 2)
 - headRefName: fix/password-reset-expiry
 - baseline headRefOid: def5678
 - git ls-tree -r --name-only def5678 -- _sdd/spec/ 성공, spec 파일 없음 (ABSENT)
-- 검증 evidence: CI output 없음; Local NOT_RUN
 
 → code-only mode로 진행 (spec 컨텍스트 없이)
-- simplicity 렌즈를 시작한 뒤 메인 루프가 PR title/body/코멘트에서 AC를 추론해 correctness 검증
-- Local def5678, 관련 상태 clean 확인 후 tests/test_token_expiry.py 전체 통과 output 확보
+- correctness·simplicity worker를 한 메시지로 dispatch (같은 PR Review Input)
+- correctness worker 반환: PR title/body/코멘트에서 추론한 AC 검증, spec ABSENT, Validation source는 Local def5678 clean의 tests/test_token_expiry.py 전체 통과 output
 ```
 
 ### code-only 리포트 예시
@@ -160,7 +155,7 @@ Claude:
 **PR**: #51 - fix: 비밀번호 재설정 토큰 만료 검증 누락
 **PR Author**: developer-lee
 **Review Date**: 2026-04-02
-**Reviewer**: Claude (Opus 4.6)
+**Reviewer**: Claude (Opus 4.6 / workers opus)
 **Spec**: ABSENT (code-only)
 **Review Status**: COMPLETE
 
@@ -213,4 +208,5 @@ MET: #1–#3
 
 - 로컬 HEAD가 baseline과 다르거나 dirty이면 현재 작업을 보존하고 baseline SHA를 직접 읽는다. 동일 SHA의 CI/격리 실행 evidence도 없으면 테스트 판정은 `UNTESTED`다.
 - spec 트리 또는 필요한 파일을 읽지 못하고 동등 SHA 읽기도 실패하면 `Spec: UNREADABLE`, `Review Status: LIMITED`와 원인·미충족 skill AC·재개 조건을 기록하고 `NEEDS DISCUSSION (제한된 권고)`으로 종료한다. code-only로 부재를 추정하지 않는다.
-- simplicity dispatch가 blocker로 불가능하거나 확정 실패하면 correctness 결과를 보존하고 누락 렌즈와 미충족 AC를 기록한다. `NEEDS DISCUSSION (제한된 권고)`으로 종료하며, 같은 blocker에서 반복 dispatch하거나 inline으로 대신하지 않는다.
+- correctness 또는 simplicity dispatch가 blocker로 불가능하거나 확정 실패하면 확보된 렌즈 결과를 보존하고 누락 렌즈와 미충족 AC를 기록한다. `NEEDS DISCUSSION (제한된 권고)`으로 종료하며, 같은 blocker에서 반복 dispatch하거나 inline으로 대신하지 않는다.
+- worker의 `headRefOid` 불일치(correctness BLOCKED 또는 simplicity Assumptions blocker)는 렌즈 실패가 아니다. 새 SHA로 Step 1·2를 다시 수행해 PR Review Input(Baseline·Changed Files·Spec Status)을 다시 만든 뒤 두 worker를 1회 다시 띄우고, 또 불일치하면 `LIMITED`로 닫는다.

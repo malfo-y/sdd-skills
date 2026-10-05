@@ -144,7 +144,7 @@ codex --enable default_mode_request_user_input
 
 ## Subagent Model Override
 
-`pr-review`의 내부 subagent 호출에 모델 override를 줄 수 있다. `--model`은 **simplicity dispatch에만** 적용된다 — correctness 리뷰는 메인 루프 직접 수행이라 override 대상이 아니다. 옵션을 생략하면 현재 세션/agent 기본값을 그대로 상속한다.
+`pr-review`의 correctness·simplicity worker 두 개에 모델 override를 줄 수 있다. `--model`(Codex는 `--effort`도)은 두 worker에 같게 적용된다. 옵션을 생략하면 `_sdd/env.md`의 `## Worker Model Defaults` `pr-review` 행이 기본값이고, 행이 없으면 현재 세션/agent 기본값을 그대로 상속한다. 결정 순서는 호출 옵션 > env.md > 런타임 기본이다.
 
 Claude Code:
 
@@ -201,7 +201,7 @@ sdd-orchestrator로 구현 모델은 gpt-6.1-sol, 리뷰 effort는 high로 진�
 | 설명·내보내기 | `spec-summary`, `spec-snapshot`, `guide-create` |
 | 반복 작업 준비 | `goal-init`, `sdd-autopilot`, `ralph-loop-init` |
 
-Claude Code에는 `git`과 `second-opinion`이 추가된다. 양 번들은 custom agent 없이 스킬로 배포한다. `sdd-orchestrator`는 단계 작업을 단계별 worker 계약(`references/workers/<단계>.md`)을 받은 범용 subagent에 맡긴다. `pr-review`는 correctness를 메인 루프에서 검토하고, simplicity를 계약을 전달받은 범용 subagent로 검토한다.
+Claude Code에는 `git`과 `second-opinion`이 추가된다. 양 번들은 custom agent 없이 스킬로 배포한다. `sdd-orchestrator`는 단계 작업을 단계별 worker 계약(`references/workers/<단계>.md`)을 받은 범용 subagent에 맡긴다. `pr-review`는 correctness·simplicity 두 렌즈를 계약을 전달받은 범용 subagent로 검토하고, 메인 루프는 입력 수집·verdict 합성·리포트 작성만 맡는다.
 
 ## Documentation
 

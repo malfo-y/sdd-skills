@@ -3638,3 +3638,11 @@ sdd-autopilot의 review-fix 루프가 선택적으로 동작하여, 리뷰만 �
 - **기각**: env.md 밖 별도 설정 파일(메인 루프가 이미 읽는 파일로 충분), 기본값을 한 실행에서 끄는 문법(요청 밖 — 다른 값은 호출 지정으로 덮어쓴다).
 - **검증 경계**: 계약·미러·env.md 형식 검증만 했다. env.md 기본값을 실제로 적용한 dispatch는 미실행이다(이 변경이 반영된 뒤 실행부터 적용).
 - **포인터**: [소비 완료 draft](../drafts/_processed_2026-10-05_feature_draft_env_worker_model_defaults.md), [구현·리뷰 증거](../implementation/2026-10-05_env_worker_model_defaults/state.md).
+
+## 2026-10-05 - `pr-review`를 orchestrator 방식으로 바꾼다: correctness도 worker, 모델은 env.md `pr-review` 행 (v4.42.0)
+
+- **결정**: 사용자 요청으로 `pr-review`의 correctness 리뷰를 메인 루프 직접 수행에서 범용 worker dispatch로 옮긴다. correctness 계약은 `pr-review/references/correctness-contract.md`(claude/codex 동일본)가 단일 소스이고 worker가 경로를 Read한다. simplicity는 기존 계약 전문 verbatim·4차원 worker 1개를 유지한다. 메인은 `PR Review Input` 5필드(`PR`·`Baseline`·`Changed Files`·`Spec Status`·`Relevant Context`, `PR Diff` 필드 삭제)만 모아 두 worker를 한 메시지로 띄우고, 두 worker가 같은 `headRefOid`로 diff·코드·spec을 직접 읽는다(불일치면 BLOCKED/Assumptions blocker, 메인이 새 SHA로 1회 재dispatch, 또 불일치면 제한 리포트). 메인은 반환으로 verdict를 합성해 통합 리포트 1파일을 쓴다(단일 작성자 유지). worker 모델은 호출 `--model`(Codex `--effort`) > `_sdd/env.md` `## Worker Model Defaults`의 `pr-review` 행 > 런타임 기본 순으로 두 worker에 같게 적용한다(이 저장소 값: Claude `opus`, Codex `gpt-6.1-sol`/`high`). `sdd-orchestrator`는 다섯 단계 행만 읽고 `pr-review` 행은 읽지 않는다. spec-create·spec-upgrade 템플릿은 `pr-review` 빈 행을 포함한다.
+- **대체**: "pr-review correctness는 메인 루프 직접 수행"(2026-08-15, 셀프 리뷰 편향 감수)과 "pr-review는 호출 때 지정만"(모델 override는 simplicity dispatch의 호출 단위 option)을 이 결정이 대체한다.
+- **근거**: 메인 맥락 보호와 작성(메인 리포트)/리뷰(worker) 분리를 `sdd-orchestrator`와 같은 방식으로 얻고, diff·코드·spec 읽기를 worker에 둬 메인 맥락을 작게 유지한다. 저장소별 기본 모델을 매 호출 지정 없이 env.md에 둔다.
+- **검증 경계**: 문서 편집 변경이다. 계획 게이트 2회, 구현 게이트 2회(최종 AC 23개 MET, Critical/High 0), 미러·census·`claude plugin validate .` 통과를 확인했다. 새 구조의 실제 PR 리뷰 실행과 env.md `pr-review` 행을 적용한 dispatch는 미실행이다(반영 뒤 실행부터 적용). Task 3은 RED 선관찰 없이 진행돼 구현 게이트 fresh 판정에 의존했다.
+- **포인터**: [소비 완료 draft](../drafts/_processed_2026-10-05_feature_draft_pr_review_worker_correctness.md), [구현·리뷰 증거](../implementation/2026-10-05_pr_review_worker_correctness/state.md).

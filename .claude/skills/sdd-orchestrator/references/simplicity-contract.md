@@ -60,7 +60,7 @@ severity는 `Critical / High / Medium / Low` 네 단계 표기를 쓰되, simpli
 
 ### Step 1: Scope
 
-`PR Review Input`(필드 정의: `pr-review` SKILL)이 있으면 `Changed Files`와 `PR Diff`로 리뷰 범위를 고정하고 Baseline의 동일 SHA 읽기 경로를 사용하고 Relevant Context는 동작 보존 판단의 맥락으로만 사용한다. 그 외 호출은 기존 우선순위(호출자 지정 경로/범위 → 변경된 코드 파일; legacy fallback으로 `_sdd/implementation/*_implementation_plan_*.md` 구형 plan 산출물)를 따른다. 범위 불확정 시 최신 변경 범위로 진행하고 가정을 반환 Assumptions에 적는다.
+`PR Review Input`(필드 정의: `pr-review` SKILL)이 있으면 `Changed Files`로 리뷰 범위를 고정한다. PR diff는 `gh pr diff <PR>`로 직접 수집하고, 수집 뒤 `headRefOid`가 Baseline SHA와 같은지 다시 확인한다. 다르면 리뷰하지 않고 Assumptions에 baseline 불일치 blocker로 반환한다. `gh pr diff`·`gh pr view` 같은 읽기 전용 `gh` 조회는 Runtime Boundary의 동등한 읽기 전용 탐색으로 허용한다. Baseline의 동일 SHA 읽기 경로를 사용하고 Relevant Context는 동작 보존 판단의 맥락으로만 사용한다. 그 외 호출은 기존 우선순위(호출자 지정 경로/범위 → 변경된 코드 파일; legacy fallback으로 `_sdd/implementation/*_implementation_plan_*.md` 구형 plan 산출물)를 따른다. 범위 불확정 시 최신 변경 범위로 진행하고 가정을 반환 Assumptions에 적는다.
 
 ### Step 2: Per-dimension Scan
 
