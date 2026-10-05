@@ -135,7 +135,8 @@ class MetricsTests(unittest.TestCase):
                         "python3 -c \"open('notes.md')\"",
                         "python3 - <<'EOF'\np='_sdd/implementation/run/state.md'\ns=open(p).read()\nopen(p,'w').write(s.replace('a','b'))\nEOF",
                         'D=_sdd/implementation/run; echo x > $D/state.md',
-                        f'cd {ROOT}/_sdd/implementation/run && echo x > notes.md']:
+                        f'cd {ROOT}/_sdd/implementation/run && echo x > notes.md',
+                        'A=_sdd; B=$A/implementation; C=$B/run; D=$C/state.md; echo x > $D']:
             with self.subTest(command=command):
                 out = self.measure(tool('Bash', command=command))
                 self.assertEqual((out['M2_main_edits'], out.get('M2_status')), (0, 'PASS'))
@@ -179,6 +180,25 @@ class MetricsTests(unittest.TestCase):
                 ('command -v rtk; git branch --show-current', 'PASS'),
                 ("command grep -n x notes.md", 'PASS'),
                 ("cat >> _sdd/work_log/2026-10-04.md <<EOF\n## $T\nEOF", 'PASS')]:
+            with self.subTest(command=command):
+                self.assertEqual(self.measure(tool('Bash', command=command)).get('M2_status'), expected)
+
+    def test_issue_97_no_false_pass(self):
+        for command, expected in [
+                ("python3 -c \"mode='w'; open('notes.md', mode).write('x')\"", 'FAIL'),
+                ("python3 -c \"p='notes.md'; open(p,'w').write('x'); p='/tmp/scratch.md'\"", 'FAIL'),
+                ("python3 -c \"p='/tmp/scratch.md'; open(p,'w').write('x'); p='notes.md'\"", 'PASS'),
+                ("python3 -c \"for p in ['notes.md']: open(p,'w')\"", 'UNVERIFIED'),
+                ('P=/tmp/scratch.md; P=notes.md; echo x > "$P"', 'FAIL'),
+                ('P=notes.md; P=/tmp/scratch.md; echo x > "$P"', 'PASS'),
+                ('P=/tmp/scratch.md; P=$(./x); echo x > "$P"', 'UNVERIFIED'),
+                ("P=/tmp/scratch.md; echo x > '$P'", 'UNVERIFIED'),
+                ("python3 <<'ONE'\nprint('safe')\nONE\npython3 <<'TWO'\nopen('notes.md','w').write('x')\nTWO\n", 'FAIL'),
+                ("sed '1w notes.md' /tmp/input.txt", 'UNVERIFIED'),
+                ("python3 -c \"import shutil as s; s.copy('/tmp/input','notes.md')\"", 'UNVERIFIED'),
+                ('echo <(touch notes.md)', 'UNVERIFIED'),
+                ("python3 -c \"def unused(): open('notes.md','w')\"", 'UNVERIFIED'),
+                ('echo x > "$P"; P=/tmp/scratch.md', 'UNVERIFIED')]:
             with self.subTest(command=command):
                 self.assertEqual(self.measure(tool('Bash', command=command)).get('M2_status'), expected)
 

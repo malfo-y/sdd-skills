@@ -22,7 +22,7 @@ READ_ONLY = {"cat", "echo", "printf", "pwd", "head", "tail", "wc", "ls", "true",
              "grep", "rg", "jq", "cut", "tr", "diff", "cmp", "date", "basename", "dirname", "stat",
              "file", "du", "mkdir", "type", "which", "uuidgen", "nl", "comm", "sort", "uniq", "find", "sed"}
 FIND_ACTIONS = ("-exec", "-execdir", "-ok", "-okdir", "-delete", "-fprint", "-fprint0", "-fprintf", "-fls")
-SED_WRITE = re.compile(r"\b[we](\s|$)")
+SED_WRITE = re.compile(r"(?<![A-Za-z])[we](\s|$)")
 SAFE_PY_CALLS = {"open", "print", "len", "str", "int", "list", "dict", "set", "tuple", "sorted", "enumerate",
                  "range", "min", "max", "sum", "any", "all", "zip", "isinstance", "repr", "Path"}
 SAFE_PY_METHODS = {"read", "write", "readlines", "splitlines", "split", "rsplit", "join", "strip", "rstrip",
@@ -34,6 +34,8 @@ SAFE_PY_METHODS = {"read", "write", "readlines", "splitlines", "split", "rsplit"
                    "dirname", "abspath"}
 PATH_METHODS = {"read_text", "read_bytes", "write_text", "write_bytes", "exists", "is_file"}
 HEREDOC = re.compile(r"<<(-?)\s*(['\"]?)(\w+)\2([^\n]*)\n(.*?)\n\3(?:\n|$)", re.S)
+ANY_ASSIGN = re.compile(r"(?:^|[;&|\s])([A-Za-z_]\w*)=")
+REF = re.compile(r"\$(?:\{([A-Za-z_]\w*)\}|([A-Za-z_]\w*))")
 ASSIGN = re.compile(r"(?:^|[;&|\s])([A-Za-z_]\w*)=(?:'([^']*)'|\"([^\"$`]*)\"|([^\s;&|$`'\"()]+))")
 
 
@@ -58,15 +60,21 @@ def target_write(target, root):
 
 
 def python_targets(source):
-    """Return (write targets, statically safe). A target is None when unresolved.
+    """Return (write targets, statically safe) for a Python source.
 
+    Each target is (path, definite); path is None when unresolved, and a write inside a function body is
+    not definite (the function may never be called). Top-level statements are followed in order, so a name
+    resolves to its latest literal assignment; names stored inside compound statements become unresolved.
     Safe means every call is on a small allowlist, so the only file writes are the extracted ones.
     """
     try:
         tree = ast.parse(source)
     except SyntaxError:
         return [], False
-    strings, paths = {}, {}
+    strings, paths, targets, safe = {}, {}, [], True
+    aliases = {a.asname: a.name for n in ast.walk(tree) if isinstance(n, ast.Import) for a in n.names if a.asname}
+    deferred = {id(c) for d in ast.walk(tree) if isinstance(d, (ast.FunctionDef, ast.AsyncFunctionDef, ast.Lambda))
+                for c in ast.walk(d)}
 
     def literal(node):
         if isinstance(node, ast.Constant) and isinstance(node.value, str):
@@ -82,61 +90,67 @@ def python_targets(source):
             return None if None in parts else "".join(parts)
         return None
 
-    # Single-name assignments in source order: string literals (incl. concatenation) and Path(...) objects.
-    for node in sorted((n for n in ast.walk(tree) if isinstance(n, ast.Assign)), key=lambda n: (n.lineno, n.col_offset)):
-        if len(node.targets) == 1 and isinstance(node.targets[0], ast.Name):
-            value, name = node.value, node.targets[0].id
-            strings.pop(name, None)
-            if literal(value) is not None:
-                strings[name] = literal(value)
-            elif isinstance(value, ast.Call) and isinstance(value.func, ast.Name) and value.func.id == "Path":
-                paths[name] = value
-
-    def path_call(receiver):
-        if isinstance(receiver, ast.Name):
-            receiver = paths.get(receiver.id)
-        return receiver if isinstance(receiver, ast.Call) and isinstance(receiver.func, ast.Name) and receiver.func.id == "Path" else None
+    def is_path(node):
+        return isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == "Path"
 
     def chain_root(node):
         names = []
         while isinstance(node, ast.Attribute):
             names.append(node.attr)
             node = node.value
-        return (node.id if isinstance(node, ast.Name) else None), names[::-1]
+        return (aliases.get(node.id, node.id) if isinstance(node, ast.Name) else None), names[::-1]
 
-    targets, safe = [], True
-    for node in ast.walk(tree):
-        if not isinstance(node, ast.Call):
-            continue
+    def classify(node):
+        nonlocal safe
         func = node.func
         if isinstance(func, ast.Name):
             safe &= func.id in SAFE_PY_CALLS
             if func.id == "open":
                 mode = node.args[1] if len(node.args) > 1 else next(
                     (k.value for k in node.keywords if k.arg == "mode"), None)
-                if isinstance(mode, ast.Constant) and isinstance(mode.value, str) and any(c in mode.value for c in "wax+"):
-                    targets.append(literal(node.args[0]) if node.args else None)
+                mode = "r" if mode is None else literal(mode)
+                if mode is None or any(c in mode for c in "wax+"):
+                    targets.append((literal(node.args[0]) if node.args and mode else None, id(node) not in deferred))
         elif isinstance(func, ast.Attribute):
-            receiver = path_call(func.value)
+            receiver = paths.get(func.value.id) if isinstance(func.value, ast.Name) else func.value
+            receiver = receiver if is_path(receiver) else None
             if receiver is not None or func.attr in ("write_text", "write_bytes"):
                 safe &= func.attr in PATH_METHODS
                 if func.attr in ("write_text", "write_bytes"):
-                    targets.append(literal(receiver.args[0]) if receiver is not None and receiver.args else None)
-                continue
+                    path = literal(receiver.args[0]) if receiver is not None and receiver.args else None
+                    targets.append((path, id(node) not in deferred))
+                return
             root, names = chain_root(func.value)
-            safe &= func.attr in SAFE_PY_METHODS and root not in ("shutil", "subprocess") and \
-                (root != "os" or names[:1] == ["path"])
+            module = root.split(".") if root else [None]
+            safe &= func.attr in SAFE_PY_METHODS and module[0] not in ("shutil", "subprocess") and \
+                (module[0] != "os" or (module[1:] + names)[:1] == ["path"])
         else:
             safe = False
+
+    for stmt in tree.body:
+        for node in ast.walk(stmt):
+            if isinstance(node, ast.Call):
+                classify(node)
+        value = stmt.value if isinstance(stmt, ast.Assign) and len(stmt.targets) == 1 and isinstance(stmt.targets[0], ast.Name) else None
+        resolved = literal(value) if value is not None else None
+        for name in {n.id for n in ast.walk(stmt) if isinstance(n, ast.Name) and isinstance(n.ctx, ast.Store)}:
+            strings.pop(name, None)
+            paths.pop(name, None)
+        if resolved is not None:
+            strings[stmt.targets[0].id] = resolved
+        elif is_path(value):
+            paths[stmt.targets[0].id] = value
     return targets, safe
 
 
 def _scan(raw):
-    """Quote-aware shell flags that shlex cannot report: comment start, escaped operator, expansion."""
-    flags, quote, prev, i = set(), None, " ", 0
+    """Quote-aware shell flags that shlex cannot report (comment start, escaped operator, expansion)
+    and a mask of characters inside single quotes."""
+    flags, quote, prev, i, single = set(), None, " ", 0, [False] * len(raw)
     while i < len(raw):
         c, nxt = raw[i], raw[i + 1:i + 2]
         if quote == "'":
+            single[i] = True
             quote = None if c == "'" else quote
         elif c == "\\":
             if quote is None and nxt and nxt in ";&|<>":
@@ -146,14 +160,14 @@ def _scan(raw):
         elif c == '"':
             quote = None if quote else '"'
         elif c == "'" and quote is None:
-            quote = "'"
-        elif c == "`" or (c == "$" and nxt == "("):
+            quote, single[i] = "'", True
+        elif c == "`" or (c in "$<>" and nxt == "(" and (c == "$" or quote is None)):
             # Parameter expansion only matters in a command word or write target, which stay unresolved.
             flags.add("shell expansion or substitution")
         elif c == "#" and quote is None and prev in " \t\n;&|(":
             flags.add("shell comment boundary is unverified")
         prev, i = c, i + 1
-    return flags
+    return flags, single
 
 
 def bash_writes(tool, root):
@@ -172,13 +186,26 @@ def bash_writes(tool, root):
         if not heredoc.group(2) and ("$(" in body or "`" in body):
             reasons.append("unquoted heredoc expansion")
         raw = raw[:heredoc.start()] + heredoc.group(4) + "\n" + raw[heredoc.end():]
-    body = next((b for h, b in bodies if "python" in h), bodies[0][1] if bodies else None)
-    # Simple literal assignments (NAME=value) are substituted; anything still expanding stays unknown.
-    for _ in range(3):
-        for m in ASSIGN.finditer(raw):
-            value = next(g for g in m.groups()[1:] if g is not None)
-            raw = re.sub(r"\$(?:\{" + m.group(1) + r"\}|" + m.group(1) + r"\b)", lambda _m: value, raw)
-    flags = _scan(raw)
+    python_bodies = [b for h, b in bodies if "python" in h]
+    # $NAME outside single quotes takes the value of the latest earlier assignment when that assignment
+    # is a literal (NAME=value); anything still expanding stays unresolved.
+    for _ in range(10):
+        single = _scan(raw)[1]
+        literals = {m.start(1): next(g for g in m.groups()[1:] if g is not None) for m in ASSIGN.finditer(raw)}
+        assigns = [(m.start(1), m.group(1)) for m in ANY_ASSIGN.finditer(raw) if not single[m.start(1)]]
+
+        def substitute(ref):
+            name = ref.group(1) or ref.group(2)
+            prior = [start for start, n in assigns if n == name and start < ref.start()]
+            if single[ref.start()] or not prior or prior[-1] not in literals:
+                return ref.group(0)
+            return literals[prior[-1]]
+
+        new = REF.sub(substitute, raw)
+        if new == raw:
+            break
+        raw = new
+    flags = _scan(raw)[0]
     # shlex loses quoted-operator provenance and comment boundaries: keep these forms unverified.
     for flag in ("shell comment boundary is unverified", "quoted or escaped shell operator is unverified"):
         if flag in flags:
@@ -227,9 +254,10 @@ def bash_writes(tool, root):
         if command == "cd":
             cwd = args[0] if len(args) == 1 and os.path.isabs(args[0]) else None
         elif command in ("python", "python3"):
-            source = args[1] if len(args) == 2 and args[0] == "-c" else body if args in ([], ["-"]) else None
+            source = args[1] if len(args) == 2 and args[0] == "-c" else \
+                python_bodies.pop(0) if args in ([], ["-"]) and python_bodies else None
             found, safe = python_targets(source) if source is not None else ([], False)
-            targets += [(cwd, t) for t in found]
+            targets += [(cwd, t, definite) for t, definite in found]
             if not safe:
                 reasons.append("Python execution beyond literal write targets")
         elif command in ("cp", "mv") and len(args) == 2 and not options:
@@ -267,10 +295,12 @@ def bash_writes(tool, root):
         if any(t and all(c in ";&|<>\n" for c in t) for t in words):
             reasons.append("unsupported shell operator")
     confirmed = False
-    for base, target in targets:
+    for base, target, *definite in targets:
         if target and not os.path.isabs(target):
             target = None if base is None else os.path.join(base, target)
         result = target_write(target, root)
+        if result is True and definite == [False]:
+            result = None
         if result is None:
             reasons.append("unresolved write target or working directory")
         confirmed |= result is True

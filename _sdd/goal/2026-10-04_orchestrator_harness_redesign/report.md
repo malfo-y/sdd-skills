@@ -57,7 +57,7 @@ SDD 체인을 `sdd-orchestrator`(메인 루프 = 지휘, 단계 작업 = 계약�
 ### M2 재계측 입력·실행 근거 (2026-10-05)
 
 - 입력: 벤치마크 scratch 디렉터리(`BENCH_DIR`, 세션 로컬)의 `logs/runs.tsv`와 각 sid의 transcript `~/.claude/projects/*/<sid>.jsonl`. 삭제된 worktree도 `BENCH_DIR/t-<run>` 경로를 기준으로 판별했다.
-- 실행 명령(repo 루트): `python3 _sdd/goal/2026-10-04_orchestrator_harness_redesign/bench/metrics.py <BENCH_DIR> 87-old-1 87-old-2 88-old-1 88-old-2 87-new-1 87-new-2 88-new-1 88-new-2 87-new-3 87-new-4 88-new-3 88-new-4 87-new-5 87-new-6 88-new-5 88-new-6` → exit 0, 0.27초, 16개 결과. 계측기는 이 보고를 커밋한 시점의 `bench/metrics.py`다.
+- 실행 명령(repo 루트): `python3 _sdd/goal/2026-10-04_orchestrator_harness_redesign/bench/metrics.py <BENCH_DIR> 87-old-1 87-old-2 88-old-1 88-old-2 87-new-1 87-new-2 88-new-1 88-new-2 87-new-3 87-new-4 88-new-3 88-new-4 87-new-5 87-new-6 88-new-5 88-new-6` → exit 0, 0.42초, 16개 결과. 계측기는 이 보고를 커밋한 시점의 `bench/metrics.py`다. 허위 PASS 반례(#97)를 막은 뒤에도 16개 결과는 바뀌지 않았다.
 - 남은 unknown의 `tool_index`(메인 tool_use 1-based): 87-new-1 `6,7,13,29`; 87-new-2 `42`; 88-new-1 `4,5`. 신 경로 v2·v3는 unknown 0이다. 지원하지 않는 shell 문법·명령 치환·동적 경로·allowlist 밖 Python 호출은 unknown으로 남는다.
 - stderr에는 transcript의 Python 분석 중 `SyntaxWarning: invalid escape sequence` 1건이 있었다. 실행은 정상 종료했다.
 
