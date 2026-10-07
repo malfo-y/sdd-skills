@@ -54,6 +54,8 @@
 - git 제외 pathspec은 `':(exclude)_…'`로 쓴다. `':!_…'`는 "Unimplemented pathspec magic" 오류다(이 저장소는 `_sdd/`·`_COMMENTS.md`처럼 `_`로 시작하는 경로가 많다).
 - 이 저장소 하네스를 `claude -p --plugin-dir`로 시험할 때 marketplace 루트를 그대로 주면 설치된 `sdd-skills`를 덮어쓰지 못한다. plugin.json + skills symlink 래퍼가 필요하다(`_sdd/goal/2026-10-04_orchestrator_harness_redesign/bench/mkplug.sh`, git 추적 파일).
 - `git diff --check`는 untracked 새 파일을 검사하지 않는다. 새 파일은 `/usr/bin/grep -c '[[:space:]]$' <file>`이 `0`인지로 따로 본다.
+- `git status --porcelain`은 새 디렉터리를 한 줄로 접는다. 새 파일 개수 census는 `-uall`을 붙인다.
+- `claude plugin validate .`는 marketplace manifest만 검증한다. Codex `plugin.json`은 이 명령의 검증 대상이 아니다.
 - claude↔codex 미러 비교는 `/usr/bin/diff`의 hunk 수로 판정한다.
 - census·0건 판정은 `/usr/bin/grep`으로 한다. 조건: Claude Code 셸에서는 `grep`·`diff`가 래퍼 함수일 수 있다(ugrep은 재귀 검색에서 gitignore 파일을 건너뛴다).
 - 조건: macOS 기본 도구.

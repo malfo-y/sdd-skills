@@ -30,7 +30,12 @@
         "./.claude/skills/sdd-autopilot",
         "./.claude/skills/sdd-orchestrator",
         "./.claude/skills/investigate",
-        "./.claude/skills/second-opinion"
+        "./.claude/skills/second-opinion",
+        "./.claude/skills/feature-draft",
+        "./.claude/skills/plan-review",
+        "./.claude/skills/implementation",
+        "./.claude/skills/implementation-review",
+        "./.claude/skills/spec-sync"
       ]
     }
   ]

@@ -42,6 +42,7 @@
 /sdd-skills:sdd-orchestrator CSV 내보내기 기능을 계획부터 spec 반영까지 진행해줘
 /sdd-skills:sdd-orchestrator _sdd/drafts/<draft>.md를 구현 단계부터 진행해줘   # reviewed draft로 진입
 /sdd-skills:sdd-orchestrator spec-sync 단계만 실행해줘                          # 단계·종점 지정
+/sdd-skills:spec-sync                                                           # 예전 단계 스킬 이름(호환 별칭) — spec-sync만 실행
 ```
 
 > 메인 루프는 단계 순서·게이트·인계 파일·사용자 질문만 맡고 단계 작업은 worker가 수행한다. 두 품질 게이트(plan-review·implementation-review 단계)와 fix는 오케스트레이터가 실행하므로 사용자가 따로 호출하거나 fix하지 않는다. gate 1+fix 1은 항상 수행하고, fix 전 raw finding을 그 게이트의 리뷰 worker 전부에 걸쳐 합산해 `Critical+High ≥ 3` 또는 `Medium ≥ 5`일 때만 gate 2+fix 2를 수행한다(Low 제외, dedup 없음). gate 3은 없다. 리뷰 단계만 지정하면 findings만 보고하고 fix하지 않는다.

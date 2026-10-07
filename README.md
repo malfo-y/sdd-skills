@@ -6,8 +6,8 @@ Spec-Driven Development (SDD) workflow skills for Claude Code and Codex.
 
 | 런타임 | 스킬 수 | 소스 |
 |--------|---------|------|
-| Claude Code | 16 | [`.claude/skills/`](.claude/skills/) — 공통 스킬 + `git`, `second-opinion` |
-| Codex | 14 | [`plugins/sdd-skills-codex/skills/`](plugins/sdd-skills-codex/skills/) |
+| Claude Code | 16 + 호환 별칭 5 | [`.claude/skills/`](.claude/skills/) — 공통 스킬 + `git`, `second-opinion` |
+| Codex | 14 + 호환 별칭 5 | [`plugins/sdd-skills-codex/skills/`](plugins/sdd-skills-codex/skills/) |
 
 ## Quick Start
 
@@ -25,7 +25,7 @@ sdd-orchestrator 스킬로 _sdd/drafts/<draft>.md를 구현 단계부터 진행�
 sdd-orchestrator 스킬로 spec-sync 단계만 실행해줘.
 ```
 
-`sdd-orchestrator`의 메인 루프는 단계 순서·게이트·인계 파일만 맡고, 단계 작업은 worker가 수행한다. plan-review와 implementation-review 단계는 오케스트레이터가 품질 게이트로 실행하므로 별도로 호출할 필요가 없다.
+`sdd-orchestrator`의 메인 루프는 단계 순서·게이트·인계 파일만 맡고, 단계 작업은 worker가 수행한다. plan-review와 implementation-review 단계는 체인 안에서 오케스트레이터가 품질 게이트로 실행한다. 예전 단계 스킬 이름 5개는 호환 별칭으로 남아 있다([Skills](#skills) 절 표).
 
 목표나 범위가 불명확하면 `discussion`부터 시작한다. 여러 기능을 반복 구현할 목표는 `sdd-autopilot`으로 완료 조건·자율 수행 범위·4파일 goal harness를 준비한다. **실행은 사용자가 native goal을 활성화한 뒤 시작한다.** 자세한 절차는 [Autopilot Guide](docs/AUTOPILOT_GUIDE.md)를 따른다.
 
@@ -200,6 +200,16 @@ sdd-orchestrator로 구현 모델은 gpt-6.1-sol, 리뷰 effort는 high로 진�
 | 스펙 생성·유지 | `spec-create`, `spec-review`, `spec-rewrite`, `spec-upgrade` |
 | 설명·내보내기 | `spec-summary`, `spec-snapshot`, `guide-create` |
 | 반복 작업 준비 | `goal-init`, `sdd-autopilot`, `ralph-loop-init` |
+
+예전 단계 스킬 이름 5개는 `sdd-orchestrator`의 호환 별칭이다. 별칭은 로직 없이 `sdd-orchestrator`를 그 호출 이름 범위로 실행하며, 범위의 단일 소스는 `sdd-orchestrator` SKILL.md `단계와 진입`의 호출 이름 표다.
+
+| 별칭 | Claude Code | Codex | 실행 범위 |
+|------|-------------|-------|-----------|
+| `feature-draft` | `/sdd-skills:feature-draft` | `$feature-draft` | draft 작성 + 계획 게이트까지 |
+| `plan-review` | `/sdd-skills:plan-review` | `$plan-review` | 계획 리뷰만(fix 없음) |
+| `implementation` | `/sdd-skills:implementation` | `$implementation` | 구현 + 구현 게이트까지 |
+| `implementation-review` | `/sdd-skills:implementation-review` | `$implementation-review` | 구현 리뷰만(fix 없음) |
+| `spec-sync` | `/sdd-skills:spec-sync` | `$spec-sync` | spec-sync만 |
 
 Claude Code에는 `git`과 `second-opinion`이 추가된다. 양 번들은 custom agent 없이 스킬로 배포한다. `sdd-orchestrator`는 단계 작업을 단계별 worker 계약(`references/workers/<단계>.md`)을 받은 범용 subagent에 맡긴다. `pr-review`는 correctness·simplicity 두 렌즈를 계약을 전달받은 범용 subagent로 검토하고, 메인 루프는 입력 수집·verdict 합성·리포트 작성만 맡는다.
 
