@@ -2,6 +2,13 @@
 
 > 이 파일은 `_sdd/spec/main.md`의 **본문이 바뀐 버전만** 기록한다 — 본문 무변경 sync(헤더 날짜만 갱신)는 entry를 남기지 않으므로 버전 번호에 결번이 생길 수 있다.
 
+#### v4.44.0 (2026-10-07)
+
+- **예전 단계 스킬 이름 5개를 호환 별칭으로 유지**: `feature-draft`·`plan-review`·`implementation`·`implementation-review`·`spec-sync`를 Claude·Codex 별칭 스킬(10파일, 양 runtime 동일본)로 되살렸다. 별칭 본문은 로직 없이 `../sdd-orchestrator/SKILL.md`를 읽어 호출 이름으로 따르고, 범위는 `sdd-orchestrator` `단계와 진입`의 호출 이름 표(단일 소스)가 정한다. 별칭 스킬이 넘긴 호출 이름이나 예전 스킬 이름으로 직접 호출했을 때만 표가 진입 규칙·실행 흐름·품질 게이트보다 우선한다. v4.34.0의 "별칭 스킬 없음"을 대체한다.
+- **등록·문서**: Claude `marketplace.json` skills에 5경로를 추가했다(Codex는 `skills/` 자동 발견이라 변경 없음). `sdd-orchestrator` description에 하이픈 이름 5개를 더했고 README에 별칭 표를 뒀다.
+- **검증 evidence**: 구현 AC 13개·성공 기준 3개 MET, 구현 게이트 1회(C0/H0/M2/L5 → fix 1 반영), 표·description·미러 hunk 1·별칭 동일본·`claude plugin validate .`·`git diff --check` 통과. 실제 `/plan-review`·`/spec-sync` 호출 확인은 미실행이다.
+- **포인터**: [소비 완료 draft](../../drafts/_processed_2026-10-07_feature_draft_legacy_stage_aliases.md), [구현·리뷰 증거](../../implementation/2026-10-07_legacy_stage_aliases/state.md).
+
 #### v4.43.0 (2026-10-05)
 
 - **`sdd-orchestrator` digest에 `## 목표` 칸**: digest는 사용자가 원하는 것과 그 이유를 담고, 사용자가 말한 성공 기준은 기준당 체크리스트 항목 하나로 담는다(체크하지 않음 — 충족 여부는 state)(내용 계약 `worker-boundary.md`, 템플릿 `handoff-templates.md`). 메인 루프가 첫 worker 전에 대화에서 가져와 만든다. digest 초기화 시점도 "첫 worker를 띄우기 전, 계획 경로는 feature-draft 반환으로 채운다"로 정정했다.

@@ -3652,3 +3652,12 @@ sdd-autopilot의 review-fix 루프가 선택적으로 동작하여, 리뷰만 �
 - **결정**: digest 내용 계약의 허용 항목에 목표(사용자가 원하는 것과 그 이유, 사용자가 말한 성공 기준은 기준당 체크리스트 항목 하나 — 체크하지 않고 충족 여부는 state가 가짐)를 더하고 템플릿에 `## 목표` 칸을 둔다. 메인 루프가 첫 worker 전에 대화에서 가져와 쓰며, draft에서 다시 요약하지 않는다. 배경 서술·이력은 넣지 않는다.
 - **근거**: 원래 요청은 feature-draft dispatch 입력(일회성)으로만 넘어가 어느 파일에도 남지 않았다. 그래서 plan-review의 Requirement Fit이 draft를 draft 자신과 결정 목록에만 대조했다. 독립 원본을 digest에 두면 feature-draft는 처음부터 목표를 받고, 리뷰 worker는 draft가 목표를 바르게 옮겼는지 대조할 수 있다(사용자 지적).
 - **포인터**: `.claude/skills/sdd-orchestrator/references/worker-boundary.md` `## digest 내용 계약`, `references/handoff-templates.md`.
+
+## 2026-10-07 - 구 단계 스킬 5종 삭제를 "삭제하되 호환 별칭 유지"로 바꾼다 (v4.44.0)
+
+- **결정**: `sdd-orchestrator`로 통합하며 삭제한 `feature-draft`·`plan-review`·`implementation`·`implementation-review`·`spec-sync`를 Claude·Codex 호환 별칭 스킬로 유지한다. 별칭 본문은 다른 스킬을 호출하지 않고 형제 경로 `../sdd-orchestrator/SKILL.md`를 읽어 호출 이름으로 따르는 얇은 지시이고, 로직은 `sdd-orchestrator` `단계와 진입`의 호출 이름 표 한 곳에만 둔다. 표는 예전 스킬 동작을 재현한다 — `implementation`은 예전처럼 계획 리뷰 없이 구현 게이트까지 가고(요청만 있으면 draft만 쓰고 구현), `feature-draft`는 계획 게이트까지, `plan-review`·`implementation-review`는 fix 없는 리뷰만, `spec-sync`는 spec-sync만 실행한다. 표 적용 조건은 별칭 스킬이 넘긴 호출 이름이나 예전 스킬 이름으로 직접 호출한 경우로 한정한다(구현 게이트 fix).
+- **대체**: 2026-10-05 결정(v4.34.0)의 "별칭 스킬은 두지 않고 구 트리거는 description이 받는다"를 이 결정이 대체한다.
+- **근거**: 기존 사용자가 예전 이름을 그대로 부르면 "스킬 없음"이 나와 헷갈린다(사용자 지적). 로직을 표 한 곳에 두면 별칭이 얇아 두 곳의 규칙이 어긋나지 않고, 스킬 안 스킬 호출은 runtime마다 동작이 달라 pr-review가 양 runtime에서 이미 쓰는 형제 경로 읽기를 택했다.
+- **보존**: 자연어 트리거는 `sdd-orchestrator` description이 소유하고 별칭 description은 하이픈 이름만 가져 두 스킬이 같은 요청을 다투지 않는다. AGENTS.md·하네스 템플릿의 "게이트 단계는 별도로 호출하지 않는다"는 체인 안 지침으로 유지한다.
+- **검증 경계**: 문서·구조 변경이다. 구현 AC 13개 MET, 구현 게이트 1회, 구조 검사·`claude plugin validate .` 통과. 실제 `/plan-review`·`/spec-sync` 호출 확인은 미실행이다. `tools/uninstall-codex-skill-bundle.py`의 `LEGACY_SKILL_NAMES`와 현재 번들 불일치(`test_legacy_names_match_current_plugin_bundle` 실패)는 기존 문제로 범위 밖이다.
+- **포인터**: [소비 완료 draft](../drafts/_processed_2026-10-07_feature_draft_legacy_stage_aliases.md), [구현·리뷰 증거](../implementation/2026-10-07_legacy_stage_aliases/state.md).

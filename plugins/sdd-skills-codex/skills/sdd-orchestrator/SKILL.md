@@ -1,6 +1,6 @@
 ---
 name: sdd-orchestrator
-description: "Use this skill to run the SDD chain (feature-draft → plan-review → implementation → implementation-review → spec-sync) with the main loop as orchestrator and stage work delegated to workers. Triggered by \"sdd-orchestrator\", \"오케스트레이터로 진행\", \"SDD로 계획부터 구현까지\", \"draft 구현부터 spec-sync까지\", \"worker로 구현\", \"feature draft\", \"기능 초안\", \"계획 잡아줘\", \"plan review\", \"계획 리뷰\", \"implement the plan\", \"구현해줘\", \"review implementation\", \"spec sync\", \"sync spec with implementation\", or when the user wants a request or a feature draft carried through planning, implementation, review, and spec sync while keeping the main context small."
+description: "Use this skill to run the SDD chain (feature-draft → plan-review → implementation → implementation-review → spec-sync) with the main loop as orchestrator and stage work delegated to workers. Triggered by \"sdd-orchestrator\", \"feature-draft\", \"plan-review\", \"implementation\", \"implementation-review\", \"spec-sync\", \"오케스트레이터로 진행\", \"SDD로 계획부터 구현까지\", \"draft 구현부터 spec-sync까지\", \"worker로 구현\", \"feature draft\", \"기능 초안\", \"계획 잡아줘\", \"plan review\", \"계획 리뷰\", \"implement the plan\", \"구현해줘\", \"review implementation\", \"spec sync\", \"sync spec with implementation\", or when the user wants a request or a feature draft carried through planning, implementation, review, and spec sync while keeping the main context small."
 ---
 
 # SDD Orchestrator
@@ -77,6 +77,18 @@ draft의 Part 2 task가 모두 닫혔고 남은 분할 feature가 없으면, spe
 - 사용자가 단계만 지정하면(예: "spec-sync만", "리뷰만", "계획 리뷰만") 그 단계만 실행한다. 리뷰만 실행하면 findings를 보고하고 fix는 하지 않는다.
 - 기본 종점은 spec-sync 완료다. 사용자가 종점을 지정하면 그 단계에서 멈춘다.
 - discussion은 이 스킬 밖이다. discussion 요약 파일은 입력 포인터로만 쓴다.
+
+### 호출 이름
+
+예전 단계 스킬 이름으로 호출되면(별칭 스킬이 넘긴 호출 이름, 또는 `/plan-review`처럼 예전 스킬 이름 자체로 호출한 경우) 아래 표의 행이 시작 단계·종점·게이트·fix 범위를 정하고, 이 스킬의 진입 규칙·실행 흐름·품질 게이트보다 우선한다. 표의 범위 밖 단계는 실행하지 않는다.
+
+| 호출 이름 | 시작 | 범위·종점 |
+|-----------|------|-----------|
+| feature-draft | feature-draft worker | 계획 게이트(gate 1 + fix 1, 조건부 gate 2)까지 실행하고 멈춘다. spec-sync 없음. |
+| plan-review | plan-review worker. draft 경로가 없으면 최신 draft(`_sdd/drafts/`에서 `_processed_` 접두가 없는 `*_feature_draft_*` 중 가장 최근 파일) | 계획 리뷰만. findings를 보고하고 fix 없음. |
+| implementation | draft 경로가 있으면 plan-review 완료로 보고 implementation부터. 요청만 있으면 feature-draft worker로 draft만 쓰고(계획 게이트 없음) implementation | 구현 게이트(리뷰 worker 3개 + fix 1, 조건부 gate 2)까지 실행하고 멈춘다. spec-sync 없음. |
+| implementation-review | 리뷰 worker 3개. draft 경로가 없으면 worker 계약의 기준 문서 적응으로 판정하고 base는 git 기록으로 식별한다 | 구현 리뷰만. findings를 보고하고 fix 없음. |
+| spec-sync | spec-sync worker. draft 경로가 없으면 최신 draft, state가 없으면 코드 증거 | spec-sync만. |
 
 ## Worker dispatch
 
