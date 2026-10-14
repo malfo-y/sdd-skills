@@ -29,7 +29,7 @@ description: "Use this skill to run the SDD chain (feature-draft → plan-review
 1. `단계와 진입`으로 시작 단계와 종점을 정한다.
 2. 인계 파일 디렉터리를 만들거나 이어 쓴다. state에 단계·종점을 적고 digest를 초기화한다(`인계 파일`).
 3. 종점까지 단계마다 worker를 띄운다.
-   - feature-draft·plan-review: 계획 게이트(`품질 게이트`)를 실행한다.
+   - feature-draft·plan-review: 계획 게이트(`품질 게이트`)를 실행한다. feature-draft worker의 규모 판정이 "분할 필요"면 draft Part 2(첫 feature)만 정한 종점까지 진행하고 멈춘다. 남은 분할 feature는 자동으로 이어가지 않는다.
    - implementation: draft Part 2 task를 `병렬 규칙`대로 task worker로 띄운다.
    - implementation-review: 구현 게이트(`품질 게이트`)를 실행한다.
    - spec-sync: spec-sync worker 1개를 띄운다.
@@ -155,7 +155,7 @@ state.md를 읽어 다음 행동을 정한다. DELTA_CLOSED가 아닌 task는 st
 ## 마감
 
 1. state의 AC→증거 표를 리뷰 worker의 fresh verdict 포인터로 채운다. fix 뒤 바뀐 AC는 fix worker의 표적 재실행 증거로 갱신한다. 증거가 없는 AC는 충족으로 적지 않는다.
-2. 채팅에는 다음만 보고한다: 실행한 단계, 게이트 호출별 severity·fix·검증, 미충족·보류 AC, 사용자 확인이 필요한 Open Questions, state 경로.
+2. 채팅에는 다음만 보고한다: 실행한 단계, 게이트 호출별 severity·fix·검증, 미충족·보류 AC, 사용자 확인이 필요한 Open Questions, state 경로, 남은 분할 feature 목록(규모 판정이 "분할 필요"일 때 — draft Part 1 마커 내부의 분할 feature 목록에서 첫 feature를 뺀 나머지). 남은 분할 feature가 있으면 "남은 feature를 무인으로 이어 구현하려면 `sdd-autopilot`을 쓴다" 안내 1줄을 붙인다.
 
 ## Runtime: worker dispatch
 
