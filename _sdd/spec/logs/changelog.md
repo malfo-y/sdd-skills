@@ -2,6 +2,12 @@
 
 > 이 파일은 `_sdd/spec/main.md`의 **본문이 바뀐 버전만** 기록한다 — 본문 무변경 sync(헤더 날짜만 갱신)는 entry를 남기지 않으므로 버전 번호에 결번이 생길 수 있다.
 
+#### v4.45.0 (2026-10-14)
+
+- **"분할 필요" 처리 규칙을 메인 루프에 추가**: `sdd-orchestrator` SKILL(Claude·Codex 미러)의 실행 흐름에 "규모 판정이 `분할 필요`면 첫 feature만 정한 종점까지 진행하고 멈춘다(남은 feature 자동 연속 없음)"를, 마감 보고에 남은 분할 feature 목록과 `sdd-autopilot` 안내 1줄을 넣었다. 분할 규칙이 worker 계약에만 있어 첫 feature 뒤 체인이 닫히고 남은 feature가 보고에서 빠지던 틈을 메운다. main §마감 불릿과 usage-guide 마감 줄을 동기화했다.
+- **증거·한계**: [구현·리뷰 state](../../implementation/2026-10-14_orchestrator_split_report/state.md)의 AC 5개 MET, 계획 게이트 fix 1, 구현 게이트 1회(C0/H0/M0/L3, fix 없음). 분할 draft로 실제 체인을 돌린 확인은 미실행이다. 후속 후보: 분할 feature 3개 이상일 때 2번째 feature draft에 분할 목록이 없어 3번째 이후가 마감 보고에서 빠질 수 있다(범위 밖).
+- **입력 처리**: [소비 완료 draft](../../drafts/_processed_2026-10-14_feature_draft_orchestrator_split_report.md)로 원문 보존 rename했다. env 승격은 없다.
+
 #### v4.44.0 (2026-10-07)
 
 - **예전 단계 스킬 이름 5개를 호환 별칭으로 유지**: `feature-draft`·`plan-review`·`implementation`·`implementation-review`·`spec-sync`를 Claude·Codex 별칭 스킬(10파일, 양 runtime 동일본)로 되살렸다. 별칭 본문은 로직 없이 `../sdd-orchestrator/SKILL.md`를 읽어 호출 이름으로 따르고, 범위는 `sdd-orchestrator` `단계와 진입`의 호출 이름 표(단일 소스)가 정한다. 별칭 스킬이 넘긴 호출 이름이나 예전 스킬 이름으로 직접 호출했을 때만 표가 진입 규칙·실행 흐름·품질 게이트보다 우선한다. v4.34.0의 "별칭 스킬 없음"을 대체한다.

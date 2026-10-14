@@ -3661,3 +3661,9 @@ sdd-autopilot의 review-fix 루프가 선택적으로 동작하여, 리뷰만 �
 - **보존**: 자연어 트리거는 `sdd-orchestrator` description이 소유하고 별칭 description은 하이픈 이름만 가져 두 스킬이 같은 요청을 다투지 않는다. AGENTS.md·하네스 템플릿의 "게이트 단계는 별도로 호출하지 않는다"는 체인 안 지침으로 유지한다.
 - **검증 경계**: 문서·구조 변경이다. 구현 AC 13개 MET, 구현 게이트 1회, 구조 검사·`claude plugin validate .` 통과. 실제 `/plan-review`·`/spec-sync` 호출 확인은 미실행이다. `tools/uninstall-codex-skill-bundle.py`의 `LEGACY_SKILL_NAMES`와 현재 번들 불일치(`test_legacy_names_match_current_plugin_bundle` 실패)는 기존 문제로 범위 밖이다.
 - **포인터**: [소비 완료 draft](../drafts/_processed_2026-10-07_feature_draft_legacy_stage_aliases.md), [구현·리뷰 증거](../implementation/2026-10-07_legacy_stage_aliases/state.md).
+
+## 2026-10-14 - 분할 draft는 첫 feature까지만 진행하고 보고한다 (v4.45.0)
+
+- **결정**: feature-draft 규모 판정이 "분할 필요"면 `sdd-orchestrator` 메인 루프는 첫 feature만 정한 종점까지 진행하고 멈춘다. 마감 보고에 남은 분할 feature 목록과 `sdd-autopilot` 안내 1줄을 붙인다. 규칙은 SKILL.md 실행 흐름·마감에 문장으로만 둔다(새 절·state 필드 없음).
+- **근거**: 분할 규칙이 worker 계약에만 있고 메인 루프는 읽지 않아 첫 feature 뒤 체인이 닫히고 남은 feature가 사라졌다. 다음 feature 자동 연속(옵션 B)은 상태 관리·맥락 누적·실패 범위 부담 때문에 사용자가 택하지 않았고, 여러 feature 무인 구현은 이미 목표 루프를 가진 `sdd-autopilot`의 몫이다.
+- **포인터**: [소비 완료 draft](../drafts/_processed_2026-10-14_feature_draft_orchestrator_split_report.md), [구현·리뷰 증거](../implementation/2026-10-14_orchestrator_split_report/state.md).
