@@ -148,29 +148,25 @@ Use this rule.
 
 A temporary spec (= feature draft) is not a compressed copy of the global spec. It is the execution blueprint for a change.
 
-Feature-level contracts, ACs, and target files belong there.
+Feature-level promises, end conditions, and places to change belong there.
 
-Canonical structure (the Required Output of `sdd-orchestrator/references/workers/feature-draft.md` is the single source):
+Canonical structure (the `계획 파일` (plan file) section of the `sdd-orchestrator` SKILL.md is the single source):
 
-1. A one-line `> 규모 판정:` (scale verdict) — includes the verdict rationale; value is "fit" or "split needed — split plan included"
-2. `Part 1: Spec Delta` — `Change Summary` and `Scope` (In/Out) inside the `spec-update-todo-input` marker. A split draft also lists the split features here; `spec-sync` consumes the marker contents.
-3. `Part 2: Tasks` — per task: a one-line intent, `Contracts` (only when a new promise is made), falsifiable ACs, measured Target Files. Census-style sweeps end with a read-only verification task.
-4. `Open Questions`
+1. `Spec Delta` — inside the `spec-update-todo-input` marker pair. What changes and why, the promises other code, docs, and later work will newly rely on, and scope (In/Out). A split plan also lists the remaining features here; the spec-sync stage consumes the marker contents.
+2. `계획` (plan) — places to change, end conditions and how each is judged, and the external facts the plan relies on.
+3. `진행` (progress) — current stage, per-condition verdicts and evidence, decisions that departed from the plan, and what was not confirmed by execution.
+
+Only the marker pair and the three section headings are fixed; format and length inside each section fit the work.
 
 Its purpose is to handle what changes now, what gets touched, and how the change will be verified.
 
-Verification is defined next to the execution unit — **each task's ACs** are the single definition point. This is where the rubric is anchored, and the planning/implementation/review stages implement it.
+The single definition point of verification is **the end conditions (ACs) in the `계획` section**. This is where the rubric is anchored, and the planning/implementation/review stages implement it.
 
 - **AC falsifiability**: every AC must close as met/unmet against evidence. Do not keep an AC for which no observation/evidence could ever say "unmet".
 - **Two evaluation tiers**: the bar is not "measurable" but "evidence-decidable". Allow Tier 1 (quantitative: reproducible test/check output) and Tier 2 (qualitative rubric judgment: stated criteria + reviewer verdict, cited grounds), but both must (a) close as a binary verdict, (b) bind to external evidence, and (c) be refutable by a third party. Quality/readability ACs are taken as Tier 2.
-- **Evidence-bound results**: after execution, every AC verdict is recorded bound to evidence (reproducible output or cited grounds) — the implementation's AC→evidence table (completed in the orchestrator state `_sdd/implementation/<YYYY-MM-DD>_<slug>/state.md`) and the review's verification ledger are where that lives. A "met" without evidence is not accepted.
+- **Evidence-bound results**: after execution, every AC verdict is recorded bound to evidence (reproducible output or cited grounds) — the `진행` section of the plan file is where that lives (for `pr-review`, the report's verification ledger). A "met" without evidence is not accepted.
 
-Information placement follows "details live in the task":
-
-- The precise statement of a contract (interface/invariant substance) is owned solely by each task's **`Contracts` field** — the anchor downstream implementation executes "without invention".
-- Task-local exploration grounds are owned by that task's Target Files annotations.
-- **Sweep-style verification** spanning multiple tasks (one global run after all tasks — census-like) is not split across tasks; it is promoted to a final read-only verification task (Target Files `없음 (read-only 검증)`).
-- (Legacy) The old full-draft shape — canonical 7 sections, coverage index, `V*` mapping, `Touchpoints` census — is an archival format. New drafts are not required to follow it; apply its rules only when reading archived documents.
+(Legacy) The `Part 1: Spec Delta` / `Part 2: Tasks` shape (per-task `Contracts`, ACs, Target Files) and, before it, the old full-draft shape — canonical 7 sections, coverage index, `V*` mapping, `Touchpoints` census — is an archival format. New drafts are not required to follow it; apply its rules only when reading archived documents.
 
 ## 7. Information placement rules
 
@@ -230,21 +226,15 @@ Current primary extra axes:
 ### Temporary Spec (Feature Draft)
 
 ```markdown
-# Feature Draft: [title]
-
-> 규모 판정: [one-line verdict rationale — fit | split needed — split plan included]
+# [title]
 
 <!-- spec-update-todo-input-start -->
-# Part 1: Spec Delta
-## Change Summary
-## Scope (In / Out)
+## Spec Delta
 <!-- spec-update-todo-input-end -->
 
-# Part 2: Tasks
-### Task N: [title]
-Contracts (only when present) / Acceptance Criteria / Target Files
+## 계획
 
-# Open Questions
+## 진행
 ```
 
 ## 10. What this means for skills

@@ -21,11 +21,11 @@ Spec-Driven Development (SDD) workflow skills for Claude Code and Codex.
 ```text
 spec-create 스킬로 이 저장소의 스펙과 작업 하네스를 만들어줘.
 sdd-orchestrator 스킬로 CSV 내보내기 기능을 계획부터 spec 반영까지 진행해줘.
-sdd-orchestrator 스킬로 _sdd/drafts/<draft>.md를 구현 단계부터 진행해줘.
+sdd-orchestrator 스킬로 _sdd/drafts/<계획 파일>.md를 구현 단계부터 진행해줘.
 sdd-orchestrator 스킬로 spec-sync 단계만 실행해줘.
 ```
 
-`sdd-orchestrator`의 메인 루프는 단계 순서·게이트·인계 파일만 맡고, 단계 작업은 worker가 수행한다. plan-review와 implementation-review 단계는 체인 안에서 오케스트레이터가 품질 게이트로 실행한다. 예전 단계 스킬 이름 5개는 호환 별칭으로 남아 있다([Skills](#skills) 절 표).
+`sdd-orchestrator`는 계획 → 계획 리뷰 → 실패하는 검사 먼저 구현 → 구현 리뷰 → spec 반영을 메인 세션에서 직접 수행하고, 단계 작업을 다른 agent에 넘기지 않는다. 스킬은 단계 순서와 저장소 규약만 정하고, 각 단계의 방법과 깊이는 모델이 작업 크기와 위험에 맞게 정한다. 독립 리뷰가 필요하면 PR 시점에 `pr-review`를 쓴다. 예전 단계 스킬 이름 5개는 호환 별칭으로 남아 있다([Skills](#skills) 절 표).
 
 목표나 범위가 불명확하면 `discussion`부터 시작한다. 여러 기능을 반복 구현할 목표는 `sdd-autopilot`으로 완료 조건·자율 수행 범위·4파일 goal harness를 준비한다. **실행은 사용자가 native goal을 활성화한 뒤 시작한다.** 자세한 절차는 [Autopilot Guide](docs/AUTOPILOT_GUIDE.md)를 따른다.
 
@@ -160,34 +160,6 @@ pr-review 스킬을 --model gpt-5.6-sol --effort ultra로 실행해줘.
 
 Codex에서는 model과 effort를 분리해서 쓴다. `gpt-5.6-sol-high` 같은 결합형 값 대신 `--model gpt-5.6-sol --effort high`를 사용한다. 위 값은 호출 예시이며, 실제 허용값은 실행 시 `spawn_agent` 도구가 지원하는 모델·추론 강도를 따른다.
 
-`sdd-orchestrator`는 단계별 worker 모델을 호출할 때 지정하거나, 사용 저장소 `_sdd/env.md`의 `## Worker Model Defaults` 절에 기본값으로 둘 수 있다. 단계 이름은 `feature-draft`·`plan-review`·`implementation`·`implementation-review`·`spec-sync`이고, 각 단계의 fix에도 같은 값을 쓴다. `implementation-review` 값은 correctness 1개와 simplicity 2개 모두에 적용된다.
-
-적용값은 단계·필드(model, Codex에서는 effort도)마다 호출 지정 > env.md 기본값 > 런타임 기본 동작 순으로 정한다. env.md 기본값은 runtime별 표로 적는다: `### Claude Code` 표(`단계 | model`)와 `### Codex` 표(`단계 | model | effort`). 빈 칸이거나 행·하위 절·절이 없으면 값 없음이다. env.md 값도 호출 지정과 같은 검증을 거친다. Claude Code의 호출 지정 예시:
-
-```text
-/sdd-skills:sdd-orchestrator _sdd/drafts/<draft>.md --model feature-draft=fable,implementation=sonnet,implementation-review=sonnet,spec-sync=sonnet
-```
-
-```text
-sdd-orchestrator로 계획은 fable, 구현·리뷰·spec-sync는 sonnet으로 진행해줘.
-```
-
-Codex에서는 단계별 model과 effort를 독립적으로 지정한다. 아래 값은 예시이며 실제 모델·effort 및 모델별 조합은 활성 `spawn_agent`의 schema enum 또는 도구 설명의 명시 지원 목록으로 검증한다.
-
-```text
-sdd-orchestrator로 --model implementation=gpt-6.1-sol,implementation-review=gpt-6-astra --effort implementation=high,implementation-review=xhigh로 진행해줘.
-sdd-orchestrator로 구현 모델은 gpt-6.1-sol, 리뷰 effort는 high로 진행해줘.
-```
-
-| 단계의 적용값 (호출 지정 > env.md) | Codex spawn 인자 |
-|-------------|-----------------|
-| 생략 (호출 지정·env.md 모두 없음) | `model`·`reasoning_effort` 모두 생략 |
-| model만 | `model`만 전달 |
-| effort만 | `reasoning_effort`만 전달; 상속할 모델과의 조합 확인 |
-| 둘 다 | `model`·`reasoning_effort` 전달; 그 모델과의 조합 확인 |
-
-호출 지정과 env.md 값이 모두 없는 필드는 런타임 기본 동작을 따른다. 모델만 바꾸면 그 모델의 기본 effort가 적용될 수 있어 부모 effort 상속을 보장하지 않는다. 필드 미지원·지원값 미확정·잘못된 값/조합은 구분해 알리고 수정받으며, 무인 실행에서는 해당 단계 override를 생략하고 보고한다. Claude Code의 단계별 effort 지원은 이 계약에 포함하지 않는다.
-
 ## Skills
 
 공통 스킬 14개를 목적별로 묶었다. 세부 실행 계약은 각 번들의 `SKILL.md`가 소유한다.
@@ -205,13 +177,13 @@ sdd-orchestrator로 구현 모델은 gpt-6.1-sol, 리뷰 effort는 high로 진�
 
 | 별칭 | Claude Code | Codex | 실행 범위 |
 |------|-------------|-------|-----------|
-| `feature-draft` | `/sdd-skills:feature-draft` | `$feature-draft` | draft 작성 + 계획 게이트까지 |
-| `plan-review` | `/sdd-skills:plan-review` | `$plan-review` | 계획 리뷰만(fix 없음) |
-| `implementation` | `/sdd-skills:implementation` | `$implementation` | 구현 + 구현 게이트까지 |
-| `implementation-review` | `/sdd-skills:implementation-review` | `$implementation-review` | 구현 리뷰만(fix 없음) |
+| `feature-draft` | `/sdd-skills:feature-draft` | `$feature-draft` | 계획 + 계획 리뷰까지 |
+| `plan-review` | `/sdd-skills:plan-review` | `$plan-review` | 계획 리뷰만(수정 없음) |
+| `implementation` | `/sdd-skills:implementation` | `$implementation` | 구현 + 구현 리뷰까지 |
+| `implementation-review` | `/sdd-skills:implementation-review` | `$implementation-review` | 구현 리뷰만(수정 없음) |
 | `spec-sync` | `/sdd-skills:spec-sync` | `$spec-sync` | spec-sync만 |
 
-Claude Code에는 `git`과 `second-opinion`이 추가된다. 양 번들은 custom agent 없이 스킬로 배포한다. `sdd-orchestrator`는 단계 작업을 단계별 worker 계약(`references/workers/<단계>.md`)을 받은 범용 subagent에 맡긴다. `pr-review`는 correctness·simplicity 두 렌즈를 계약을 전달받은 범용 subagent로 검토하고, 메인 루프는 입력 수집·verdict 합성·리포트 작성만 맡는다.
+Claude Code에는 `git`과 `second-opinion`이 추가된다. 양 번들은 custom agent 없이 스킬로 배포한다. `sdd-orchestrator`는 단계 작업을 메인 세션에서 직접 수행하고 subagent를 띄우지 않는다. `pr-review`는 correctness·simplicity 두 렌즈를 계약을 전달받은 범용 subagent로 검토하고, 메인 루프는 입력 수집·verdict 합성·리포트 작성만 맡는다.
 
 ## Documentation
 

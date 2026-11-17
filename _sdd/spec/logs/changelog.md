@@ -2,6 +2,15 @@
 
 > 이 파일은 `_sdd/spec/main.md`의 **본문이 바뀐 버전만** 기록한다 — 본문 무변경 sync(헤더 날짜만 갱신)는 entry를 남기지 않으므로 버전 번호에 결번이 생길 수 있다.
 
+#### v5.0.0 (2026-11-17)
+
+- **SDD 체인을 메인 세션 직접 실행으로 전환**: `sdd-orchestrator`가 계획 → 계획 리뷰 → 실패하는 검사 먼저 구현 → 구현 리뷰 → spec 반영을 직접 수행한다. `SKILL.md`를 단계 순서와 저장소 규약만 남겨 다시 썼고(약 20KB → 8KB), `references/`는 spec 반영 규약 `spec-sync.md` 하나만 둔다(스킬 전체 약 82KB → 14KB, 양 runtime 동일본). `references/workers/` 5종·`worker-boundary.md`·`handoff-templates.md`를 삭제했다. main §2에서 worker·게이트·digest·state·단계별 모델 옵션을 전제한 규칙을 지우고 새 규칙(직접 수행, 계획 파일 하나, 자기 리뷰 1회, 실행 미확인 목록 보고)으로 바꿨으며, §3 `실행 분리`·`implementation test-first`·`spec sync 진입점` 행을 고치고 `품질 게이트 소유권` 행을 `리뷰 수행 주체`로 바꿨다.
+- **계획 파일 형식**: 고정 구조는 `spec-update-todo-input` 마커 쌍으로 감싼 `Spec Delta`와 `계획`·`진행` 세 절 제목뿐이다. `Part 1`/`Part 2` task 형식은 입력 호환으로만 남는다. `spec-review`·`spec-rewrite`·`spec-upgrade`의 temporary 형식 참조와 rubric 문구, `docs/SDD_SPEC_DEFINITION.md` §6·§9(ko·en)를 맞췄다.
+- **`pr-review` 쪽 이동**: simplicity 계약을 `pr-review/references/simplicity-contract.md`로 옮기고 호출자 차원 한정 절을 지웠다(한정하던 호출자가 없어졌다). `_sdd/env.md` `Worker Model Defaults`와 `spec-create`·`spec-upgrade` 부트스트랩 표는 `pr-review` 행만 남긴다.
+- **문서·하네스**: README(단계별 모델 옵션 절 삭제, 별칭 범위 문구), `docs/SDD_WORKFLOW.md`·`docs/AUTOPILOT_GUIDE.md`(ko·en), 하네스 §3의 "게이트로 수행" 문구와 §5 work log의 "게이트를 다른 모델로" 문구(각 `AGENTS.md` + 템플릿 4미러), `docs/SKILL_AUTHORING_NORMS.md` §3·§4의 예전 단계 이름, `goal-init` Loop Protocol 3번(게이트 결과 → 구현 리뷰), components·usage-guide를 맞췄다. worker 구조 계측 도구의 live 테스트 `tools/tests/test_orchestrator_metrics.py`를 삭제했다(계측 스크립트는 2026-10-04 goal 기록에 그대로 둔다).
+- **증거·한계**: 근거 실측과 버린 대안은 [decision_log 2026-11-17](../decision_log.md). 삭제 경로·폐지 용어 전수 검색 0건, 양 runtime 미러 hunk 0, `claude plugin validate .` 통과. 설치본에서의 실제 `/sdd-orchestrator` 호출 확인은 플러그인 갱신 뒤로 남는다. `🚧 Planned` 2건(reviewer 반환 다이어트 효과 판정, 게이트 2 임계 비례화)은 관측 표면이 없어져 닫았다.
+- **입력 처리**: [소비 완료 계획 파일](../../drafts/_processed_2026-11-17_feature_draft_sdd_main_session_direct.md)로 원문 보존 rename했다. env 승격은 없다.
+
 #### v4.45.0 (2026-10-14)
 
 - **"분할 필요" 처리 규칙을 메인 루프에 추가**: `sdd-orchestrator` SKILL(Claude·Codex 미러)의 실행 흐름에 "규모 판정이 `분할 필요`면 첫 feature만 정한 종점까지 진행하고 멈춘다(남은 feature 자동 연속 없음)"를, 마감 보고에 남은 분할 feature 목록과 `sdd-autopilot` 안내 1줄을 넣었다. 분할 규칙이 worker 계약에만 있어 첫 feature 뒤 체인이 닫히고 남은 feature가 보고에서 빠지던 틈을 메운다. main §마감 불릿과 usage-guide 마감 줄을 동기화했다.

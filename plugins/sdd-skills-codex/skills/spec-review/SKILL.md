@@ -60,22 +60,21 @@ description: This skill should be used when the user asks to "review spec", "spe
 
 ### Temporary Spec Quality
 
-구체 형식 대조가 필요하면 현재 runtime의 skill catalog가 제공하는 `sdd-orchestrator/references/workers/feature-draft.md`의 `Required Output`을 읽는다. 읽을 수 없으면 그 형식 검증의 한계를 보고하며, 로컬 사본을 정본으로 만들지 않는다.
+구체 형식 대조가 필요하면 현재 runtime의 skill catalog가 제공하는 `sdd-orchestrator/SKILL.md`의 `계획 파일` 절을 읽는다. 읽을 수 없으면 그 형식 검증의 한계를 보고하며, 로컬 사본을 정본으로 만들지 않는다.
 
 공통 코어 4축을 temporary rubric으로 본다.
 
 - `Thinness`: delta 실행에 필요한 정보만 남기고 있는가
-- `Decision-bearing truth`: task의 `Contracts`/AC가 실제 판단과 검증을 바꾸는가
+- `Decision-bearing truth`: 새 약속과 끝나는 조건이 실제 판단과 검증을 바꾸는가
 - `Anti-duplication`: global spec이나 code를 형식적으로 중복하지 않는가
-- `Navigation + surface fit`: task·Target Files·AC가 실행 surface에 잘 배치되었는가
+- `Navigation + surface fit`: 바꿀 자리·끝나는 조건·진행 기록이 실행 surface에 잘 배치되었는가
 
 추가 체크:
 
-- `Change Summary`가 변경 목적과 범위를 요약하는가
-- `Scope`가 In/Out 경계를 분명히 하는가
-- 각 task가 단일 의도와 falsifiable AC, 실측 Target Files를 갖는가 (`Contracts`는 새 약속이 있을 때만)
-- `Open Questions`가 미해결 가정과 위험을 숨기지 않는가
-- (legacy full draft 기록물을 감사할 때만) coverage index 고아 delta·`Touchpoints` census·AC↔`Validation` 1:1 같은 구형 구조 규칙을 그 형식 기준으로 적용한다
+- `Spec Delta`가 변경 목적을 요약하고 범위의 In/Out 경계를 분명히 하는가
+- 끝나는 조건마다 판정 방법이 있고 falsifiable한가, 바꿀 자리가 현재 코드 실측인가
+- 계획이 기대는 외부 사실과 미해결 가정·위험을 숨기지 않는가
+- (예전 형식 기록물을 감사할 때만) `Part 1`/`Part 2` task 구조(task별 AC·Target Files·`Contracts`)나 coverage index 고아 delta·`Touchpoints` census·AC↔`Validation` 1:1 같은 구형 구조 규칙을 그 형식 기준으로 적용한다
 
 ### Code-Linked Drift
 
@@ -100,7 +99,7 @@ description: This skill should be used when the user asks to "review spec", "spe
 spec type 판별 규칙:
 
 - global spec: `배경/개념`, `Scope / Non-goals / Guardrails`, `핵심 설계와 주요 결정`이 중심
-- temporary spec: Part 1 Spec Delta 마커 + Part 2 Tasks가 중심 (legacy 7섹션 형식은 기록물)
+- temporary spec: `Spec Delta` 마커 구간 + `계획`·`진행` 절이 중심 (`Part 1`/`Part 2`·legacy 7섹션 형식은 기록물)
 - 혼합/애매한 문서는 가장 지배적인 구조로 판정하고 근거를 리포트에 적는다
 
 ### Step 2: Spec Quality Audit
@@ -118,7 +117,7 @@ spec type 판별 규칙:
 
 - 실제 구현된 기능과 spec 주장 비교
 - implementation 문서와의 정합성 비교
-- 현행 draft는 task/AC와 validation evidence의 연결을 확인한다. delta ID가 있는 legacy 기록물은 해당 ID의 연결을 확인하며, 현행 draft에 delta ID를 요구하지 않는다.
+- 현행 계획 파일은 끝나는 조건과 validation evidence의 연결을 확인한다. delta ID가 있는 legacy 기록물은 해당 ID의 연결을 확인하며, 현행 draft에 delta ID를 요구하지 않는다.
 - path/reference가 실제 코드와 맞는지 확인
 - `Strategic Code Map`이 있다면 현재 코드의 entrypoint / hotspot / validation surface와 맞는지 확인
 

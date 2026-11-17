@@ -6,7 +6,7 @@ argument-hint: ["[--model <sonnet|opus|haiku|fable>]"]
 
 # PR Review (correctness + simplicity worker dispatch + Verdict)
 
-이 스킬은 PR 번호·baseline SHA·PR 메타데이터·변경 파일 목록·spec 존재 상태 같은 작은 입력만 모은 뒤, **correctness 렌즈**와 **clarity 렌즈**(동작-불변 형태 품질)를 각각 범용 subagent(`Agent(subagent_type="general-purpose")`)로 dispatch한다. correctness 계약은 `references/correctness-contract.md`다. simplicity 계약·차원·severity는 `sdd-orchestrator/references/simplicity-contract.md`가 단일 소스이며, dispatch prompt에 전문을 verbatim 포함한다. PR diff·코드·spec 읽기는 두 worker가 같은 baseline SHA로 직접 한다. 두 렌즈 반환을 합쳐 **verdict**(APPROVE / REQUEST CHANGES / NEEDS DISCUSSION)를 합성해 통합 리뷰 리포트(`_sdd/pr/<YYYY-MM-DD>_pr_review_<slug>.md`) 하나를 작성한다.
+이 스킬은 PR 번호·baseline SHA·PR 메타데이터·변경 파일 목록·spec 존재 상태 같은 작은 입력만 모은 뒤, **correctness 렌즈**와 **clarity 렌즈**(동작-불변 형태 품질)를 각각 범용 subagent(`Agent(subagent_type="general-purpose")`)로 dispatch한다. correctness 계약은 `references/correctness-contract.md`다. simplicity 계약·차원·severity는 `references/simplicity-contract.md`가 단일 소스이며, dispatch prompt에 전문을 verbatim 포함한다. PR diff·코드·spec 읽기는 두 worker가 같은 baseline SHA로 직접 한다. 두 렌즈 반환을 합쳐 **verdict**(APPROVE / REQUEST CHANGES / NEEDS DISCUSSION)를 합성해 통합 리뷰 리포트(`_sdd/pr/<YYYY-MM-DD>_pr_review_<slug>.md`) 하나를 작성한다.
 
 > **경계**: 자동 게이트는 도입하지 않는다 — PR review는 인간 리뷰 보조다. verdict는 두 렌즈 반환을 모두 받은 메인 루프가 합성한다.
 
@@ -92,7 +92,7 @@ Agent(subagent_type="general-purpose")   # simplicity
 입력: <PR Review Input>
 ```
 
-- simplicity prompt: `../sdd-orchestrator/references/simplicity-contract.md`(이 스킬 디렉토리 기준 상대 경로 — sibling 스킬의 reference)를 Read해 **계약 전문을 verbatim으로 앞에 싣고**(요약·재구성 금지, 차원 한정 없음 — 전체 4차원), 이어서 `PR Review Input`을 전달한다.
+- simplicity prompt: `references/simplicity-contract.md`를 Read해 **계약 전문을 verbatim으로 앞에 싣고**(요약·재구성 금지), 이어서 `PR Review Input`을 전달한다.
 - schema에 `run_in_background`가 있으면 둘 다 `true`로 낸다. 결과 대기용 sleep·폴링은 쓰지 않는다 — 완료 알림으로 두 반환을 수거한다.
 - **모델 결정**: 호출 `--model <name>` > `_sdd/env.md` `## Worker Model Defaults`의 `### Claude Code` 표 `pr-review` 행 > 생략(런타임 기본). 적용값은 두 dispatch에 같게 쓴다. 적용값(호출 또는 env.md)은 `sonnet`·`opus`·`haiku`·`fable` 중 하나여야 하며, 그 외 값이면 dispatch하지 않고 허용값을 안내한다.
 
@@ -218,6 +218,7 @@ MET: <통과 AC ID만 나열 또는 없음>
 ## Additional Resources
 
 - **`references/correctness-contract.md`** - correctness worker 계약 (worker가 읽음)
+- **`references/simplicity-contract.md`** - simplicity worker 계약 (prompt에 전문 포함)
 - **`references/review-checklist.md`** - PR 리뷰 체크리스트 (human reference)
 - **`references/gh-commands.md`** - `gh` CLI 커맨드 레퍼런스
 - **`examples/sample-review.md`** - 통합 `pr-review` 예시 세션
@@ -226,4 +227,4 @@ MET: <통과 AC ID만 나열 또는 없음>
 
 선택한 경로에서 Acceptance Criteria와 Hard Rules를 점검한다. 수정 가능한 리포트 누락은 보완한다. spec 읽기 실패·외부 blocker·확정된 렌즈 실패로 충족할 수 없는 AC는 `Review Status: LIMITED`에 원인과 재개 조건을 기록하고 종료하며 정상 완료를 선언하지 않는다. 실패 dispatch를 소급 충족하거나 같은 blocker에서 반복하지 않는다.
 
-> **Source**: correctness 계약은 `references/correctness-contract.md`, simplicity 계약·4개 차원·falsifiable severity는 `sdd-orchestrator/references/simplicity-contract.md`가 단일 소스로 보유한다. verdict 합성·통합 리포트는 이 SKILL.md가 단일 소스다.
+> **Source**: correctness 계약은 `references/correctness-contract.md`, simplicity 계약·4개 차원·falsifiable severity는 `references/simplicity-contract.md`가 단일 소스로 보유한다. verdict 합성·통합 리포트는 이 SKILL.md가 단일 소스다.

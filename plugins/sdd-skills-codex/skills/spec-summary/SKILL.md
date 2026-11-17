@@ -40,7 +40,7 @@ description: This skill should be used when the user asks to "summarize spec", "
 3. 관련 supporting spec과 lowercase canonical `decision_log.md` (legacy uppercase `DECISION_LOG.md`는 read-only fallback)
 4. 설명에 필요한 concrete code/config/command surface
 5. basename이 `_processed_`로 시작하지 않는 관련 `_sdd/drafts/*_feature_draft_*.md`
-6. 5의 active draft와 slug가 같은 오케스트레이터 state `_sdd/implementation/<YYYY-MM-DD>_<slug>/state.md`
+6. 5의 active draft와 slug가 같은 예전 형식 진행 기록 `_sdd/implementation/<YYYY-MM-DD>_<slug>/state.md`
 7. Step 7이 활성화한 경우의 `README.md`
 
 ## Process

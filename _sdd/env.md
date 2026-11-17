@@ -25,28 +25,18 @@
 
 ## Worker Model Defaults
 
-`sdd-orchestrator`·`pr-review`가 읽는 worker 기본값이다. 빈 칸은 값 없음이다.
+`pr-review`가 읽는 리뷰 worker 기본값이다. 빈 칸은 값 없음이다.
 
 ### Claude Code
 
 | 단계 | model |
 |------|-------|
-| feature-draft | fable |
-| plan-review | opus |
-| implementation | sonnet |
-| implementation-review | opus |
-| spec-sync | sonnet |
 | pr-review | opus |
 
 ### Codex
 
 | 단계 | model | effort |
 |------|-------|--------|
-| feature-draft | gpt-6-astra | high |
-| plan-review | gpt-6.1-sol | high |
-| implementation | gpt-6.1-sol | high |
-| implementation-review | gpt-6.1-sol | high |
-| spec-sync | gpt-6.1-sol | medium |
 | pr-review | gpt-6.1-sol | high |
 
 ## Pitfalls
