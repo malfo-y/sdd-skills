@@ -33,7 +33,7 @@ SDD 적용 단계 순서: discussion → feature-draft → plan-review → imple
 
 - 각 단계의 구체 스킬은 **설치된 SDD 스킬**을 사용한다.
 - ⚠️ discussion은 `discussion` 스킬, 나머지 단계는 `sdd-orchestrator` 스킬이 실행한다. 단계에 진입하면 그 스킬을 **호출**하고, 로직을 직접 재구현하지 않는다 — 스킬이 단일 소스다.
-- `plan-review`·`implementation-review` 단계는 `sdd-orchestrator`가 게이트로 수행하므로 별도로 호출하지 않는다.
+- `plan-review`·`implementation-review` 단계는 `sdd-orchestrator`가 순서 안에서 직접 수행하므로 별도로 호출하지 않는다.
 - 스킬 미설치 환경에서만 SDD 개념으로 수동 수행한다. (스킬 카탈로그를 여기 복사하지 않는다 — 최신 스킬셋이 단일 소스이고, 복사본은 스킬 추가·개명을 따라가지 못해 낡은 목록이 실행을 오도한다.)
 
 SDD 파이프라인을 사용하지 않는 경우에도 섹션 2의 작업 규약과 검증 표준을 준수하며, 스펙에 변경이 있으면 `sdd-orchestrator`의 spec-sync 단계 실행 여부를 사용자에게 확인받는다.
@@ -48,7 +48,7 @@ SDD 파이프라인을 사용하지 않는 경우에도 섹션 2의 작업 규�
 
 - 각 작업 단위 종료 시 예외 없이 `_sdd/work_log/<yyyy-mm-dd>.md`에 항목을 append 한다(그날 파일이 없으면 생성). 작업 단위 = SDD 단계(논의·계획·구현·리뷰) 종료, 또는 그 밖의 독립 커밋. *작성*은 항상, 과거 로그 *읽기*만 on-demand(포렌식, §1 읽기 대상 아님).
 - 항목: `## <순번/HH:MM> <제목> (<실행 모델명>)` 아래 `무엇/왜` · `결과` · `포인터`(관련 커밋·문서·decision log 링크) · `요약`(따로 남은 게 없을 때만 인라인).
-- 모델명은 모든 항목 제목에 병기하고, 게이트를 다른 모델로 돌렸으면 그 수치 옆에도 적는다(예: `plan-review (opus-5): H2 M2`) — 모델별 finding 밀도 비교용.
+- 모델명은 모든 항목 제목에 병기하고, 리뷰를 다른 모델로 돌렸으면 그 수치 옆에도 적는다(예: `pr-review (opus-5): H2 M2`) — 모델별 finding 밀도 비교용.
 - 포인터로 충분하면 `요약` 생략(중복 금지). 수동 작업도 포함.
 - 이 규약은 커밋 게이트(`.claude/hooks/worklog-gate.sh`, PreToolUse 훅)로 강제된다 — 오늘 로그에 미커밋 변경이 없으면 **세션의 첫 `git commit`이 거부**된다(이후 분할 커밋은 통과). 로그가 불필요한 커밋은 `SDD_SKIP_WORKLOG=1 git commit ...` 로 우회한다.
 <!-- SDD-HARNESS:END -->

@@ -40,29 +40,20 @@
 ```bash
 # Claude Code (Codex는 같은 요청을 $sdd-orchestrator로 시작)
 /sdd-skills:sdd-orchestrator CSV 내보내기 기능을 계획부터 spec 반영까지 진행해줘
-/sdd-skills:sdd-orchestrator _sdd/drafts/<draft>.md를 구현 단계부터 진행해줘   # reviewed draft로 진입
+/sdd-skills:sdd-orchestrator _sdd/drafts/<계획 파일>.md를 구현 단계부터 진행해줘   # 계획 파일로 진입
 /sdd-skills:sdd-orchestrator spec-sync 단계만 실행해줘                          # 단계·종점 지정
 /sdd-skills:spec-sync                                                           # 예전 단계 스킬 이름(호환 별칭) — spec-sync만 실행
 ```
 
-> 메인 루프는 단계 순서·게이트·인계 파일·사용자 질문만 맡고 단계 작업은 worker가 수행한다. 두 품질 게이트(plan-review·implementation-review 단계)와 fix는 오케스트레이터가 실행하므로 사용자가 따로 호출하거나 fix하지 않는다. gate 1+fix 1은 항상 수행하고, fix 전 raw finding을 그 게이트의 리뷰 worker 전부에 걸쳐 합산해 `Critical+High ≥ 3` 또는 `Medium ≥ 5`일 때만 gate 2+fix 2를 수행한다(Low 제외, dedup 없음). gate 3은 없다. 리뷰 단계만 지정하면 findings만 보고하고 fix하지 않는다.
-
-Codex 단계별 옵션 예시(값·조합은 활성 도구 지원 목록으로 확인):
-
-```text
-$sdd-orchestrator --model implementation=gpt-6.1-sol --effort implementation=high
-```
-
-호출 지정이 없는 단계·필드는 사용 저장소 `_sdd/env.md` `## Worker Model Defaults` 절의 runtime별 값을 쓰고, 둘 다 없으면 생략한다(env.md 값도 같은 검증을 거친다). 모델만 바꾸면 그 모델 기본 effort가 적용될 수 있다. 적용값은 해당 단계 fix에도 유지되며 implementation-review 값은 리뷰 worker 3개 모두에 적용된다.
+> 메인 세션이 계획 → 계획 리뷰 → 실패하는 검사 먼저 구현 → 구현 리뷰 → spec 반영을 직접 수행하고, 단계 작업을 다른 agent에 넘기지 않는다. 두 리뷰는 같은 세션이 한 번씩 하고 찾은 것을 그 자리에서 고치므로 사용자가 따로 호출하지 않는다. 리뷰 단계만 지정하면 찾은 것만 보고하고 고치지 않는다. 독립 리뷰가 필요하면 PR 시점에 `pr-review`를 쓴다.
 
 **Expected Result:**
-- `_sdd/drafts/<YYYY-MM-DD>_feature_draft_<slug>.md` — feature-draft worker가 작성한 스펙 패치 초안(Part 1 마커) + 구현 태스크 리스트(Part 2)
-- `_sdd/implementation/<YYYY-MM-DD>_<slug>/digest.md`·`state.md` — digest(목표·결정·환경 함정·검증 레시피)는 모든 worker가 읽고, state(단계·task 상태·RED/GREEN 신호·게이트 결과·AC→증거)는 재개용이며 리뷰 worker에게 주지 않는다. 두 파일의 작성자는 메인 루프 하나다. digest 내용은 `worker-boundary.md`의 공통 계약으로 분류하고 완료·통과·다음 조치는 state로 보낸다
-- 계획 게이트: plan-review worker가 경량 finding을 반환하고(리포트 파일 없음) fix는 feature-draft worker가 같은 draft에 반영한다. 최초·fix draft의 새 미승인 결정은 의존 구현 전에 확인하며 기존 승인·routine 선택은 재질문하지 않는다. 무인 위임이면 합당한 결정을 기록하고 진행한다
-- 구현: draft Part 2 task마다 worker 1개가 RED→GREEN test-first와 커버리지 델타로 닫는다. Target Files 서로소·`Contracts` 미공유·의존 없음인 task는 동시에 실행된다. 메인 루프는 대상 파일을 쓰지 않는다
-- 구현 게이트: 모든 task가 DELTA_CLOSED가 되면 correctness worker 1개(digest 레시피를 최소 목록으로 fresh 실행하고 관련 코드·경계를 독립 검토)와 simplicity worker 2개(차원 묶음)가 동시에 돈다. fix는 해당 task worker가 커버리지 델타·표적 재실행까지 하고 반환한다
-- 마감: state의 AC→증거가 리뷰 worker의 fresh verdict 포인터로 채워지고, 채팅에는 실행 단계·게이트 호출별 severity·fix·검증·미충족 AC·Open Questions·state 경로만 보고된다. 규모 판정이 "분할 필요"면 첫 feature까지만 진행하고, 보고에 남은 분할 feature 목록과 무인 이어 구현용 `sdd-autopilot` 안내가 붙는다
-- spec-sync 단계: 검증된 지속 정보만 `_sdd/spec/`에 반영되고, digest 환경 함정 중 저장소 작업에 반복 적용되는 사실은 `_sdd/env.md`로 승격되어 다음 실행의 digest 초기화가 받는다. 다 구현된 draft는 `_processed_` prefix로 rename되고 digest 출처도 새 경로로 갱신된다. 규모가 커지면 분할 규칙(롤링 draft + planned todo 고정 + feature별 순차 체인)으로 해소한다
+- `_sdd/drafts/<YYYY-MM-DD>_feature_draft_<slug>.md` — 계획 파일 하나. `spec-update-todo-input` 마커 쌍으로 감싼 `Spec Delta`(spec 반영의 입력), `계획`(바꿀 자리·끝나는 조건과 판정 방법·계획이 기대는 외부 사실), `진행`(조건별 판정과 증거 — 재개 지점)을 가진다. 별도 인계 파일은 만들지 않는다
+- 계획 리뷰: 코드를 고치기 전에 계획이 기대는 외부 사실을 실제와 대조하고, 빠진 수정 지점과 통과해도 결함이 남는 조건을 찾아 계획 파일에 반영한다. 답에 따라 구조·범위·바꿀 자리가 달라지는 결정만 사용자에게 묻고, 무인 위임이면 합당한 안으로 진행해 마감 보고에 적는다
+- 구현: 끝나는 조건마다 실패하는 검사를 먼저 만들어 실패를 확인한 뒤 가장 작은 변경으로 통과시킨다. 검사의 종류와 강도는 모델이 위험에 맞게 정한다
+- 구현 리뷰: 검사가 통과하면 전체 diff를 다시 읽어 요구사항 미구현, 검사가 통과해도 틀리게 동작할 수 있는 곳, 실행해 보지 못한 조건, 요청에 없는 코드와 중복을 찾아 고치고 관련 검사만 다시 돌린다
+- 마감: 계획 파일 `진행`에 조건별 판정과 증거가 남고, 채팅에는 수행한 단계·조건별 결과·두 리뷰에서 찾아 고친 것·실행으로 확인하지 못한 것·사용자 결정 지점·남은 분할 기능이 보고된다. 계획이 기능을 나누면 첫 기능까지만 진행한다
+- spec 반영 단계: 검증된 지속 정보만 `_sdd/spec/`에 반영되고, 저장소 작업에 반복 적용되는 환경 사실은 `_sdd/env.md`로 올라간다. 모든 조건이 닫히고 남은 분할 기능이 없는 계획 파일은 `_processed_` prefix로 rename된다. 규모가 커지면 기능 단위 분할(남은 기능은 `🚧 Planned` 항목으로 고정 + 기능별 순차 실행)로 해소한다
 
 ### Scenario 2b: 여러 SDD 단위를 native goal로 수렴시키기 (sdd-autopilot setup)
 
@@ -77,9 +68,9 @@ $sdd-orchestrator --model implementation=gpt-6.1-sol --effort implementation=hig
 - `sdd-autopilot`이 사용자 목표와 관련 context를 `goal-init(preset=sdd)`에 전달하고, 목표·권한·접근의 판단 기준과 condition self-check에 따라 `_sdd/goal/<YYYY-MM-DD>_<slug>/` 아래 `goal.md`·`experiments.md`·`journal.md`·`report.md`를 생성한다
 - handoff에는 자족적 조건 문자열, runtime 실행법, 네 파일의 개별 경로와 “goal을 활성화하지 않았으며 기존 goal 상태도 변경하지 않았다”는 불변식이 표시된다. 사용자가 내용을 검토하고 native goal activation 여부와 시점을 결정한다
 - setup 중 `sdd-orchestrator`나 initial feature는 실행되지 않는다. current goal status를 조회하지 않고 existing goal을 변경하거나 active goal 때문에 setup을 차단하지도 않는다
-- activation 뒤 SDD Loop Protocol은 미충족 `DONE WHEN` 또는 실패한 final integration proof gap에서 가장 작은 next feature를 선택하고, 그 feature를 `sdd-orchestrator`로 진행(reviewed draft가 없으면 계획 단계부터, 있으면 구현 단계부터 게이트 결과까지, persistent 변경 시 spec-sync 단계까지)한 뒤 evidence·완료 feature·남은 gap·next action 기록을 반복한다
+- activation 뒤 SDD Loop Protocol은 미충족 `DONE WHEN` 또는 실패한 final integration proof gap에서 가장 작은 next feature를 선택하고, 그 feature를 `sdd-orchestrator`로 진행(reviewed draft가 없으면 계획 단계부터, 있으면 구현 단계부터 구현 리뷰까지, persistent 변경 시 spec-sync 단계까지)한 뒤 evidence·완료 feature·남은 gap·next action 기록을 반복한다
 - draft가 분할되면 같은 native goal 안에서 smallest next unit을 계속 선택하며 nested `goal-init`을 만들지 않는다. 모든 `DONE WHEN`과 final integration proof 통과는 성공 종료 조건이다. STOP/STUCK은 미완료 사유·다음 행동을 남기고 native lifecycle 규칙에 따라 종료한다
-- 품질 게이트는 `sdd-orchestrator`가 소유한다. 별도 Goal Contract, Initial Feature Queue, status manifest, goal-level reviewer는 생성하지 않는다
+- 계획 리뷰와 구현 리뷰는 `sdd-orchestrator`가 순서 안에서 직접 수행한다. 별도 Goal Contract, Initial Feature Queue, status manifest, goal-level reviewer는 생성하지 않는다
 
 ### Scenario 3: PR 기반 스펙 동기화
 

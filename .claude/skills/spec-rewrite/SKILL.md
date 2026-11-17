@@ -70,7 +70,7 @@ rewrite 고유 진단 축:
 - global spec인지 temporary spec인지 문서 목적이 선명한가
 - global spec이면 `배경/개념`, `경계`, `결정`이 선명한가
 - feature-level usage/contract/reference/inventory가 global 본문을 오염시키는가
-- temporary spec이면 task·AC·Target Files와 검증 증거의 연결이 보이는가 (legacy 기록물의 기존 delta ID와 연결도 보존한다)
+- temporary spec이면 끝나는 조건·바꿀 자리와 검증 증거의 연결이 보이는가 (legacy 기록물의 기존 delta ID와 연결도 보존한다)
 - appendix/reference가 본문을 대체하지 않는가
 - code map이 exhaustive inventory인지, 아니면 entrypoint / invariant hotspot / extension point / validation surface 중심의 strategic hint인지
 
@@ -98,13 +98,13 @@ global portion을 여러 global 문서로 분할할 때 축 선택:
 | 독립적인 사용자 기능/endpoint가 여러 개 | domain | `auth.md`, `payments.md` |
 | 기능은 단일에 가까우나 repo가 큼 | topic | `architecture.md`, `data-conventions.md` |
 
-이 global 분할 파일에는 global-level 결정만 담는다. temporary portion의 task·AC·Target Files와 실행 상세는 temporary surface에 보존한다.
+이 global 분할 파일에는 global-level 결정만 담는다. temporary portion의 계획·끝나는 조건과 실행 상세는 temporary surface에 보존한다.
 
 ### Step 3: Rewrite the Spec
 
-> Asset load: global shape는 `references/template-compact.md`를 읽는다. temporary shape는 현재 runtime의 skill catalog가 제공하는 `sdd-orchestrator/references/workers/feature-draft.md`에서 `Required Output`과 연결된 조건부 block·분할 규칙을 읽는다. 저장소 source 경로를 설치 경로로 가정하지 않는다. 이는 형식 참조이며 `sdd-orchestrator`나 planning gate를 실행하지 않는다. 해당 계약을 읽을 수 없으면 temporary 원본을 보존하고 재작성 한계를 보고한다.
+> Asset load: global shape는 `references/template-compact.md`를 읽는다. temporary shape는 현재 runtime의 skill catalog가 제공하는 `sdd-orchestrator/SKILL.md`의 `계획 파일` 절을 읽는다. 저장소 source 경로를 설치 경로로 가정하지 않는다. 이는 형식 참조이며 `sdd-orchestrator`를 실행하지 않는다. 그 절을 읽을 수 없으면 temporary 원본을 보존하고 재작성 한계를 보고한다.
 
-읽은 canonical skeleton의 heading·marker·field order를 보존하고, placeholder 치환·필요한 row/task 반복·조건부 block 제거만 허용한다.
+읽은 canonical skeleton의 heading·marker·field order를 보존하고, placeholder 치환·필요한 row 반복·조건부 block 제거만 허용한다. temporary shape는 마커 쌍과 세 절 제목만 고정이고 절 안의 내용은 원문 의미를 유지해 옮긴다.
 
 원칙:
 

@@ -6,7 +6,7 @@ argument-hint: "[--model <active-model>] [--effort <active-effort>]"
 
 # PR Review (correctness + simplicity worker spawn + Verdict)
 
-이 스킬은 PR 번호·baseline SHA·PR 메타데이터·변경 파일 목록·spec 존재 상태 같은 작은 입력만 모은 뒤, **correctness 렌즈**와 **clarity 렌즈**(동작-불변 형태 품질)를 각각 범용 sub-agent로 spawn한다. correctness 계약은 `references/correctness-contract.md`다. simplicity 계약·차원·severity는 `sdd-orchestrator/references/simplicity-contract.md`가 단일 소스이며, spawn message에 전문을 verbatim 포함한다. PR diff·코드·spec 읽기는 두 worker가 같은 baseline SHA로 직접 한다. 두 렌즈 반환을 합쳐 **verdict**(APPROVE / REQUEST CHANGES / NEEDS DISCUSSION)를 합성해 통합 리뷰 리포트(`_sdd/pr/<YYYY-MM-DD>_pr_review_<slug>.md`) 하나를 작성한다.
+이 스킬은 PR 번호·baseline SHA·PR 메타데이터·변경 파일 목록·spec 존재 상태 같은 작은 입력만 모은 뒤, **correctness 렌즈**와 **clarity 렌즈**(동작-불변 형태 품질)를 각각 범용 sub-agent로 spawn한다. correctness 계약은 `references/correctness-contract.md`다. simplicity 계약·차원·severity는 `references/simplicity-contract.md`가 단일 소스이며, spawn message에 전문을 verbatim 포함한다. PR diff·코드·spec 읽기는 두 worker가 같은 baseline SHA로 직접 한다. 두 렌즈 반환을 합쳐 **verdict**(APPROVE / REQUEST CHANGES / NEEDS DISCUSSION)를 합성해 통합 리뷰 리포트(`_sdd/pr/<YYYY-MM-DD>_pr_review_<slug>.md`) 하나를 작성한다.
 
 > **경계**: 자동 게이트는 도입하지 않는다 — PR review는 인간 리뷰 보조다. verdict는 두 렌즈 반환을 모두 받은 메인 루프가 합성한다.
 
@@ -61,7 +61,7 @@ pr-review (correctness)
 simplicity spawn:
 
 ```text
-<../sdd-orchestrator/references/simplicity-contract.md 전문 (verbatim — 그 문서의 Runtime Boundary 절이 재호출 금지·read-only 규칙을 보유)>
+<references/simplicity-contract.md 전문 (verbatim — 그 문서의 Runtime Boundary 절이 재호출 금지·read-only 규칙을 보유)>
 ## Mode
 pr-review (simplicity)
 ## Input Data
@@ -242,6 +242,7 @@ MET: <통과 AC ID만 나열 또는 없음>
 ## Additional Resources
 
 - **`references/correctness-contract.md`** - correctness worker 계약 (worker가 읽음)
+- **`references/simplicity-contract.md`** - simplicity worker 계약 (prompt에 전문 포함)
 - **`references/review-checklist.md`** - PR 리뷰 체크리스트 (human reference)
 - **`examples/sample-review.md`** - 통합 `pr-review` 예시 세션
 
@@ -249,4 +250,4 @@ MET: <통과 AC ID만 나열 또는 없음>
 
 선택한 경로에서 Acceptance Criteria와 Hard Rules를 점검한다. 수정 가능한 리포트 누락은 보완한다. spec 읽기 실패·외부 blocker·확정된 렌즈 실패로 충족할 수 없는 AC는 `Review Status: LIMITED`에 원인과 재개 조건을 기록하고 종료하며 정상 완료를 선언하지 않는다. 실패 dispatch를 소급 충족하거나 같은 blocker에서 반복하지 않는다.
 
-> **Source**: correctness 계약은 `references/correctness-contract.md`, simplicity 계약·4개 차원·falsifiable severity는 `sdd-orchestrator/references/simplicity-contract.md`가 단일 소스로 보유한다. verdict 합성·통합 리포트는 이 SKILL.md가 단일 소스다.
+> **Source**: correctness 계약은 `references/correctness-contract.md`, simplicity 계약·4개 차원·falsifiable severity는 `references/simplicity-contract.md`가 단일 소스로 보유한다. verdict 합성·통합 리포트는 이 SKILL.md가 단일 소스다.

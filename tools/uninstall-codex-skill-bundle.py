@@ -25,6 +25,7 @@ LEGACY_SKILL_NAMES = (
     "pr-review",
     "ralph-loop-init",
     "sdd-autopilot",
+    "sdd-orchestrator",
     "spec-create",
     "spec-review",
     "spec-rewrite",

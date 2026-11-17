@@ -81,7 +81,7 @@ STOP: after <N> turns without progress.
 매 턴 다음을 순서대로 수행한다 (이 섹션은 메인 에이전트용 HOW이며 조건 문자열에 넣지 않는다):
 1. 아직 충족되지 않은 `DONE WHEN` 또는 실패한 final integration proof가 드러낸 gap에서 가장 작은 next feature를 고른다. `experiments.md`의 pending 가설은 접근 후보로만 참고한다.
 2. 그 feature를 `sdd-orchestrator`로 진행한다 — reviewed draft가 없으면 계획 단계부터, 있으면 구현 단계부터 시작한다. draft가 분할되면 현재 native goal 안에서 가장 작은 next unit을 고르고 nested `goal-init`은 만들지 않는다.
-3. 같은 실행에서 게이트 결과까지 닫는다.
+3. 같은 실행에서 구현 리뷰까지 닫는다.
 4. persistent 변경이 있으면 spec-sync 단계까지 진행한다.
 5. `검증 레시피`의 실행 규칙에 따라 evidence를 대화에 표시하고 evidence·완료 feature·남은 gap·next action을 `journal.md`에 append한 뒤 `report.md`를 갱신한다.
 6. 모든 `DONE WHEN`과 final integration proof가 통과했을 때만 성공 종료한다. STOP 또는 위임 범위의 STUCK 경계에 도달하면 `report.md`에 사유를 기록하고 미완료로 종료한다. native goal lifecycle 처리는 활성 런타임 규범을 따른다. 그 외에는 1단계로 돌아간다.

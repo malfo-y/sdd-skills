@@ -7,13 +7,13 @@ This document explains the default SDD workflow and where each document layer is
 ```text
 discussion
   -> align global direction
-  -> feature draft (plan-review + fix: one pass by default, at most two at the threshold)
-  -> implementation (implementation-review + fix: one pass by default, at most two at the threshold)
+  -> plan (write the plan file + plan review)
+  -> implementation (failing check first + implementation review)
   -> verification
   -> global spec sync
 ```
 
-`sdd-orchestrator` runs the stages after discussion and owns gate order and fixes. Each reviewer invocation is a single pass. When the first invocation's pre-fix findings reach `Critical+High >= 3` or `Medium >= 5`, the same gate is invoked a second time, the fixes are applied, and the gate stops. There is no third invocation, and neither the user nor autopilot invokes or fixes the gate separately.
+`sdd-orchestrator` runs the stages after discussion directly in the main session. The same session does the plan review and the implementation review once each and fixes what it finds in place. When an independent review is needed, use `pr-review` at PR time.
 
 ## 2. When the harness is used
 
@@ -45,7 +45,7 @@ It handles:
 
 - change summary
 - scope (In/Out)
-- per-task contracts / AC / target files
+- places to change / end conditions and how each is judged / progress record
 
 Questions close to implementation are answered there.
 

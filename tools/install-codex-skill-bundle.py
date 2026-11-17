@@ -582,7 +582,7 @@ def _print_prune_result(prune_result: dict[str, object]) -> None:
 
 def _parse_args(argv: list[str]) -> Args:
     parser = argparse.ArgumentParser(
-        description="Install the Codex skill bundle (skills + agents) into CODEX_HOME."
+        description="Install the Codex skill bundle (skills-only) into CODEX_HOME."
     )
     parser.add_argument(
         "--repo",

@@ -7,13 +7,13 @@
 ```text
 discussion
   -> global direction 정리
-  -> feature draft (plan-review + fix: 기본 1회, 임계값 도달 시 최대 2회)
-  -> implementation (implementation-review + fix: 기본 1회, 임계값 도달 시 최대 2회)
+  -> 계획 (계획 파일 작성 + 계획 리뷰)
+  -> 구현 (실패하는 검사 먼저 + 구현 리뷰)
   -> verification
   -> global spec sync
 ```
 
-discussion 뒤의 단계는 `sdd-orchestrator`가 실행하고, 게이트 순서와 fix도 `sdd-orchestrator`가 소유한다. 각 reviewer 호출은 단일 패스다. 첫 호출의 fix 전 finding이 `Critical+High ≥ 3` 또는 `Medium ≥ 5`이면 같은 gate를 두 번째 호출하고 fix한 뒤 종료한다. 세 번째 호출은 없으며 사용자나 autopilot이 gate를 별도로 호출하거나 fix하지 않는다.
+discussion 뒤의 단계는 `sdd-orchestrator`가 메인 세션에서 직접 실행한다. 계획 리뷰와 구현 리뷰는 같은 세션이 한 번씩 하고, 찾은 것을 그 자리에서 고친다. 독립 리뷰가 필요하면 PR 시점에 `pr-review`를 쓴다.
 
 ## 2. Harness가 쓰이는 시점
 
@@ -45,7 +45,7 @@ global spec은 모든 단계의 출발점이지만, 모든 detail의 저장소�
 
 - change summary
 - scope (In/Out)
-- task별 contracts / AC / target files
+- 바꿀 자리 / 끝나는 조건과 판정 방법 / 진행 기록
 
 즉 구현에 가까운 질문은 temporary surface에서 해결한다.
 

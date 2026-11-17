@@ -128,7 +128,7 @@ spec lifecycle 스킬은 모두 아래 4축을 공통 코어 checklist로 공유
 
 primary navigation axis는 하나만 선택한다. app/service/product repo는 feature/domain/change-path 중심, library/framework/compiler repo는 module/layer 중심, workflow/tooling repo는 entrypoint/workflow 중심이 기본값이다. secondary axis는 별도 동등 문서 체계로 만들지 않고 cross-reference로만 둔다.
 
-`Strategic Code Map`은 stale 가능성이 있는 힌트다. feature planning과 implementation은 반드시 현재 코드를 재확인한 뒤 `Target Files`를 확정한다.
+`Strategic Code Map`은 stale 가능성이 있는 힌트다. feature planning과 implementation은 반드시 현재 코드를 재확인한 뒤 바꿀 자리를 확정한다.
 
 ## 5. Repo-wide invariant를 다루는 방식
 
@@ -148,29 +148,25 @@ repo-wide invariant가 정말 필요하면 global spec에 남긴다. 다만 별�
 
 temporary spec(= feature draft)은 global spec의 축약본이 아니라 변경 실행 청사진이다.
 
-feature-level contract, AC, target files는 여기에 둔다.
+feature-level 약속, 끝나는 조건, 바꿀 자리는 여기에 둔다.
 
-canonical 구조 (`sdd-orchestrator/references/workers/feature-draft.md`의 Required Output이 단일 소스):
+canonical 구조 (`sdd-orchestrator` SKILL.md의 `계획 파일` 절이 단일 소스):
 
-1. `> 규모 판정:` 1줄 — 판정 근거 포함, 값은 "적격" 또는 "분할 필요 — 분할 계획 포함"
-2. `Part 1: Spec Delta` — `spec-update-todo-input` 마커 내부의 `Change Summary`·`Scope`(In/Out). 분할 draft면 분할 feature 목록을 포함하며, `spec-sync`가 이 마커 내부를 소비한다.
-3. `Part 2: Tasks` — task마다 의도 1줄, `Contracts`(새 약속이 있을 때만), falsifiable AC, 실측 Target Files. census형 sweep이면 마지막에 read-only 검증 task.
-4. `Open Questions`
+1. `Spec Delta` — `spec-update-todo-input` 마커 쌍 내부. 무엇이 왜 바뀌는지, 다른 코드·문서·이후 작업이 새로 의지하게 될 약속, 범위(In/Out). 기능을 나눴으면 남은 기능 목록을 포함하며, spec 반영 단계가 이 마커 내부를 소비한다.
+2. `계획` — 바꿀 자리, 끝나는 조건과 조건마다의 판정 방법, 계획이 기대는 외부 사실.
+3. `진행` — 현재 단계, 조건별 판정과 증거, 계획과 달라진 결정, 실행으로 확인하지 못한 것.
+
+마커 쌍과 세 절의 제목만 고정이고, 절 안의 형식과 분량은 작업에 맞게 정한다.
 
 temporary spec의 목적은 이번 변경이 무엇을 바꾸고, 어디를 건드리며, 무엇으로 검증할지를 직접 다루는 것이다.
 
-검증의 단일 정의 지점은 실행 단위에 병치된다 — **각 task의 AC**가 그 지점이다. 다음 rubric의 닻은 여기이며, planning/implementation/review 단계가 이를 구현한다.
+검증의 단일 정의 지점은 **`계획` 절의 끝나는 조건(AC)**이다. 다음 rubric의 닻은 여기이며, 계획·구현·리뷰 단계가 이를 구현한다.
 
 - **AC falsifiability**: 모든 AC는 충족/미충족이 증거로 닫혀야 한다. "미충족"을 말할 관찰/증거가 없는 AC는 두지 않는다.
 - **평가방법 2등급**: 기준은 "측정 가능"이 아니라 "증거 기반 판정 가능"이다. 1등급(정량 측정형: test/check의 재현 가능한 출력)과 2등급(정성 rubric 판정형: 명시 기준+리뷰어 판정, 인용 근거)을 허용하되, 두 등급 모두 (a) 이진 판정으로 닫히고 (b) 외부 증거에 묶이고 (c) 제3자가 반박 가능해야 한다. 품질·가독성은 2등급으로 받는다.
-- **증거 기반 결과**: 실행 후 모든 AC의 verdict는 증거(재현 가능한 출력 또는 인용 근거)에 묶여 기록된다 — 구현의 AC→증거 테이블(오케스트레이터 state `_sdd/implementation/<YYYY-MM-DD>_<slug>/state.md`에 완성)과 리뷰의 verification ledger가 그 기록처다. 증거 없는 "충족"은 인정하지 않는다.
+- **증거 기반 결과**: 실행 후 모든 AC의 verdict는 증거(재현 가능한 출력 또는 인용 근거)에 묶여 기록된다 — 계획 파일의 `진행` 절이 그 기록처다(`pr-review`는 리포트의 verification ledger). 증거 없는 "충족"은 인정하지 않는다.
 
-정보 배치는 "상세는 task"를 따른다:
-
-- 계약의 정밀 서술(인터페이스/불변식 실체)은 각 task의 **`Contracts` 필드**가 단일 소유한다 — downstream 구현이 "발명 없이 실행"할 계약의 앵커.
-- task-국소 탐색 근거는 해당 task의 Target Files 주석이 소유한다.
-- 여러 task에 걸친 **sweep형 검증**(전 task 완료 후 전역 1회 실행 — census류)은 개별 task에 쪼개지 않고 마지막 read-only 검증 task(Target Files `없음 (read-only 검증)`)로 승격한다.
-- (legacy) 구형 full draft의 7섹션 구조·coverage index·`V*` 매핑·`Touchpoints` census는 기록물 형식이다 — 새 draft에 요구하지 않으며, 기록물을 읽을 때만 그 형식 기준을 적용한다.
+(legacy) `Part 1: Spec Delta`·`Part 2: Tasks` 구조(task별 `Contracts`·AC·Target Files)와 그 이전 full draft의 7섹션 구조·coverage index·`V*` 매핑·`Touchpoints` census는 기록물 형식이다 — 새 draft에 요구하지 않으며, 기록물을 읽을 때만 그 형식 기준을 적용한다.
 
 ## 7. 정보 배치 원칙
 
@@ -230,21 +226,15 @@ temporary spec의 목적은 이번 변경이 무엇을 바꾸고, 어디를 건�
 ### Temporary Spec (Feature Draft)
 
 ```markdown
-# Feature Draft: [title]
-
-> 규모 판정: [판정 근거 1줄 — 적격 | 분할 필요 — 분할 계획 포함]
+# [title]
 
 <!-- spec-update-todo-input-start -->
-# Part 1: Spec Delta
-## Change Summary
-## Scope (In / Out)
+## Spec Delta
 <!-- spec-update-todo-input-end -->
 
-# Part 2: Tasks
-### Task N: [title]
-Contracts (있을 때만) / Acceptance Criteria / Target Files
+## 계획
 
-# Open Questions
+## 진행
 ```
 
 ## 10. Skill에 주는 의미
