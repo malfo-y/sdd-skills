@@ -6,8 +6,8 @@ Spec-Driven Development (SDD) workflow skills for Claude Code and Codex.
 
 | 런타임 | 스킬 수 | 소스 |
 |--------|---------|------|
-| Claude Code | 16 + 호환 별칭 5 | [`.claude/skills/`](.claude/skills/) — 공통 스킬 + `git`, `second-opinion` |
-| Codex | 14 + 호환 별칭 5 | [`plugins/sdd-skills-codex/skills/`](plugins/sdd-skills-codex/skills/) |
+| Claude Code | 11 + 호환 별칭 5 | [`.claude/skills/`](.claude/skills/) — 공통 스킬 + `git` |
+| Codex | 10 + 호환 별칭 5 | [`plugins/sdd-skills-codex/skills/`](plugins/sdd-skills-codex/skills/) |
 
 ## Quick Start
 
@@ -60,7 +60,7 @@ codex plugin marketplace list
 codex plugin list
 ```
 
-이 플러그인은 skills-only다. 설치만으로 lifecycle 훅이 활성화되지 않으며, 훅은 `spec-create`·`spec-upgrade` 실행 시 대상 저장소에 project-local로 설치한다. 설치 후에는 Codex를 재시작하거나 새 task를 열어 스킬을 로드한다. 하네스 설치 후 Codex의 `/hooks`에서 project hook을 검토·신뢰해야 훅 활성화 검증을 마칠 수 있다.
+이 플러그인은 skills-only다. 설치만으로 lifecycle 훅이 활성화되지 않으며, 훅은 `spec-create`가 하네스를 설치할 때와 `spec-upgrade`의 정리·형식 이행 또는 하네스 갱신 호출에서 대상 저장소에 project-local로 설치한다(`spec-upgrade`의 점검만 하는 호출은 설치하지 않는다). 설치 후에는 Codex를 재시작하거나 새 task를 열어 스킬을 로드한다. 하네스 설치 후 Codex의 `/hooks`에서 project hook을 검토·신뢰해야 훅 활성화 검증을 마칠 수 있다.
 
 <details>
 <summary>기존 설치 정리 — 번들·수동 설치에서 플러그인으로 전환</summary>
@@ -162,15 +162,15 @@ Codex에서는 model과 effort를 분리해서 쓴다. `gpt-5.6-sol-high` 같은
 
 ## Skills
 
-공통 스킬 14개를 목적별로 묶었다. 세부 실행 계약은 각 번들의 `SKILL.md`가 소유한다.
+공통 스킬 10개를 목적별로 묶었다. 세부 실행 계약은 각 번들의 `SKILL.md`가 소유한다.
 
 | 목적 | 스킬 |
 |------|------|
 | 논의 | `discussion` |
 | 계획·구현·리뷰·spec 반영 | `sdd-orchestrator` |
 | PR 리뷰·진단 | `pr-review`, `investigate` |
-| 스펙 생성·유지 | `spec-create`, `spec-review`, `spec-rewrite`, `spec-upgrade` |
-| 설명·내보내기 | `spec-summary`, `spec-snapshot`, `guide-create` |
+| 스펙 생성·점검·정리 | `spec-create`, `spec-upgrade` |
+| 기능 가이드 | `guide-create` |
 | 반복 작업 준비 | `goal-init`, `sdd-autopilot`, `ralph-loop-init` |
 
 예전 단계 스킬 이름 5개는 `sdd-orchestrator`의 호환 별칭이다. 별칭은 로직 없이 `sdd-orchestrator`를 그 호출 이름 범위로 실행하며, 범위의 단일 소스는 `sdd-orchestrator` SKILL.md `단계와 진입`의 호출 이름 표다.
@@ -183,7 +183,7 @@ Codex에서는 model과 effort를 분리해서 쓴다. `gpt-5.6-sol-high` 같은
 | `implementation-review` | `/sdd-skills:implementation-review` | `$implementation-review` | 구현 리뷰만(수정 없음) |
 | `spec-sync` | `/sdd-skills:spec-sync` | `$spec-sync` | spec-sync만 |
 
-Claude Code에는 `git`과 `second-opinion`이 추가된다. 양 번들은 custom agent 없이 스킬로 배포한다. `sdd-orchestrator`는 단계 작업을 메인 세션에서 직접 수행하고 subagent를 띄우지 않는다. `pr-review`는 correctness·simplicity 두 렌즈를 계약을 전달받은 범용 subagent로 검토하고, 메인 루프는 입력 수집·verdict 합성·리포트 작성만 맡는다.
+Claude Code에는 `git`이 추가된다. 양 번들은 custom agent 없이 스킬로 배포한다. `sdd-orchestrator`는 단계 작업을 메인 세션에서 직접 수행하고 subagent를 띄우지 않는다. `pr-review`는 correctness·simplicity 두 렌즈를 계약을 전달받은 범용 subagent로 검토하고, 메인 루프는 입력 수집·verdict 합성·리포트 작성만 맡는다.
 
 ## Documentation
 

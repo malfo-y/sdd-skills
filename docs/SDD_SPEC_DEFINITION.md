@@ -175,7 +175,6 @@ temporary spec의 목적은 이번 변경이 무엇을 바꾸고, 어디를 건�
 | 프로젝트 문제와 framing | global spec | repo-wide 판단 기준 |
 | scope / non-goals / guardrails | global spec | 공통 경계 고정 |
 | 핵심 설계와 주요 결정 | global spec | 장기 의도 보존 |
-| reader-facing 문제/동기/설계/사용 서사 | `spec-summary`가 만드는 `_sdd/spec/summary.md` | global spec과 코드를 바탕으로 사람이 읽는 whitepaper surface |
 | feature-level contract / validation | temporary spec | 변경 청사진 |
 | 사용 예시 / 기대 결과 | guide, README, temporary spec | feature 또는 user-facing 문맥 |
 | 데이터 모델 / API / 환경 상세 | README 또는 참조 docs | 지원 정보 |
@@ -202,9 +201,7 @@ temporary spec의 목적은 이번 변경이 무엇을 바꾸고, 어디를 건�
 현재 1차 추가 축:
 
 - `spec-create`: structure rationale + `single-file default`
-- `spec-review`: rubric separation + evidence strictness
-- `spec-rewrite`: rationale preservation + body/log placement
-- `spec-upgrade`: rewrite boundary judgment
+- `spec-upgrade`: evidence strictness + rationale preservation + body/log placement
 
 ## 9. 권장 구조
 
@@ -240,10 +237,7 @@ temporary spec의 목적은 이번 변경이 무엇을 바꾸고, 어디를 건�
 ## 10. Skill에 주는 의미
 
 - `spec-create`: 공통 코어 4축을 만족하는 얇은 global spec을 만든다. 기본값은 `_sdd/spec/main.md` 단일 파일이고, 분할은 navigation + surface fit 근거가 있을 때만 허용한다. 코드베이스가 있으면 primary navigation axis를 하나 선택하고, 유용할 때만 compact Strategic Code Map을 appendix 또는 supporting surface에 둔다.
-- `spec-review`: spec type에 맞는 rubric을 구분 적용한다. global spec의 feature-level 오염은 기본적으로 `Quality`이며, 문서 타입 혼동이나 잘못된 repo-wide truth처럼 판단을 직접 오도할 때만 `Critical`로 올린다. 모든 finding은 spec/code/doc evidence를 가져야 하고, 근거가 약하면 `UNTESTED`로 남긴다. Strategic Code Map 부재는 기본 defect가 아니지만, non-trivial repo에서 다음 탐색 surface가 없으면 improvement로 제안할 수 있다.
-- `spec-summary`: `_sdd/spec/summary.md`를 reader-facing whitepaper로 작성한다. 문제, 배경/동기, 대안 대비 선택 이유, 핵심 설계, 코드 근거, 사용/기대 결과, 추가 읽을 surface를 함께 설명하며, status memo가 아니라 기술 whitepaper처럼 읽혀야 한다. Strategic Code Map은 code grounding 입력으로 사용할 수 있지만 summary가 map을 대체하지 않는다.
-- `spec-rewrite`: 공통 코어 4축을 더 잘 드러내도록 구조를 재정리한다. pruning 과정에서 rationale, citation, code excerpt header를 잃지 않고, migration history나 실행 로그성 설명은 body 대신 `decision_log` 또는 rewrite report로 내린다. navigation-critical hint는 삭제하지 말고 compact Strategic Code Map 또는 supporting surface로 보존한다.
-- `spec-upgrade`: legacy spec을 current model로 마이그레이션한다. 다만 구조 재설계, 대규모 재분할, 역할 재배치가 핵심이면 upgrade로 덮지 않고 `spec-rewrite`로 분기한다. legacy inventory는 decision-bearing truth, navigation-critical hint, stale/exhaustive detail로 분류한다.
+- `spec-upgrade`: 기존 spec을 공통 코어 4축으로 점검하고 current model에 맞게 고친다. 점검만 요청받으면 spec과 하네스를 수정하지 않는다. global spec의 feature-level 오염은 기본적으로 `Quality`이며, 잘못된 repo-wide truth처럼 판단을 직접 오도할 때만 `Critical`로 올린다. 모든 finding은 spec/code/doc evidence를 가져야 하고, 근거가 약하면 `UNTESTED`로 남긴다. Strategic Code Map 부재는 기본 defect가 아니지만, non-trivial repo에서 다음 탐색 surface가 없으면 improvement로 제안할 수 있다. 고칠 때는 legacy spec을 current model로 옮기고 4축이 더 잘 드러나도록 구조를 재정리한다. rationale, citation, code excerpt header를 잃지 않고, migration history나 실행 로그성 설명은 body 대신 `decision_log`로 내린다. legacy inventory는 decision-bearing truth, navigation-critical hint, stale/exhaustive detail로 분류하고, navigation-critical hint는 compact Strategic Code Map 또는 supporting surface로 보존한다.
 - generator/planner/update 계열은 global spec을 더 두껍게 복구하지 않는다.
 - guide는 authoritative spec이 아니라 필요 시 만드는 companion surface다.
 

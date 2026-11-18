@@ -56,44 +56,21 @@ Questions close to implementation are answered there.
 In practice:
 
 - create: keep the global spec thin and retain only truth that changes judgment
-- review: judge violations of the four axes with the rubric that matches the spec type
-- rewrite: rearrange structure so the four axes become clearer
-- upgrade: reduce a legacy spec toward the four axes, but hand off to rewrite when the scope exceeds migration
+- upgrade (audit): judge violations of the four axes and drift from the code, with evidence
+- upgrade (fix): reduce a legacy spec toward the four axes and rearrange structure so the four axes become clearer
 
-## 6. When `spec-summary` is used
-
-`spec-summary` is used when a human needs the repo to make sense as one document.
-
-What it should cover:
-
-- what the repo solves
-- why this approach was chosen
-- what the core design is
-- where the concrete code grounding lives
-- how to read or use it and what to expect
-
-What should not dominate the body:
-
-- migration memo narration
-- changelog prose
-- long plan or progress logs
-
-Relevant draft or implementation signals may be attached only as a short appendix.
-
-## 7. Role differences across the four lifecycle skills
+## 6. Role differences across the two lifecycle skills
 
 - `spec-create`: creates the first thin global spec. The default shape is a single `main.md`, and splitting is allowed only when a structure rationale justifies it.
-- `spec-review`: audits with separate global and temporary rubrics. Feature-level contamination in a global spec is `Quality` by default, and becomes `Critical` only when it creates document-type confusion or wrong repo-wide truth. Every finding must carry evidence.
-- `spec-rewrite`: reorganizes an existing spec into a better structure. It preserves rationale, citations, and code excerpt headers while moving migration history or execution-log style explanation out of the body and into `decision_log` or the rewrite report.
-- `spec-upgrade`: migrates an old format into the current model. If the real issue is large-scale structural redesign, it should branch to `spec-rewrite` instead of stretching upgrade.
+- `spec-upgrade`: audits an existing spec and brings it up to the current model. When only an audit is requested, it does not edit the spec or the harness and reports findings with evidence. Feature-level contamination in a global spec is `Quality` by default, and becomes `Critical` only when it misleads judgment, as wrong repo-wide truth does. When fixing, it migrates an old format into the current model and reorganizes structure while preserving rationale, citations, and code excerpt headers, and moves migration history or execution-log style explanation out of the body and into `decision_log`. After fixing, it refreshes the harness (`AGENTS.md` and hooks).
 
-## 8. Role of review and update skills
+## 7. Role of review and update skills
 
-- `spec-review`: audits quality and drift. It does not edit.
+- the audit of `spec-upgrade`: audits quality and drift. It does not edit.
 - the spec-sync stage of `sdd-orchestrator`: it lifts only persistent repo-wide information into the global spec (handling pre-implementation planned alignment and post-implementation evidence sync, adapting to evidence).
 - the sync stage does not copy temporary execution detail into the global body.
 
-## 9. Verification rule
+## 8. Verification rule
 
 In SDD, execution and verification are not separate concerns.
 
@@ -103,7 +80,7 @@ Rules:
 - choose the verification method that fits the task
 - for document and skill refactors, diff, grep, and review evidence can be valid verification
 
-## 10. Drift control
+## 9. Drift control
 
 - do not copy temporary execution detail into the global spec
 - move supporting information to README or separate docs
