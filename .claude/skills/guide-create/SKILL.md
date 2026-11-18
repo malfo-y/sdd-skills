@@ -5,87 +5,24 @@ description: This skill should be used when the user asks to "guide create", "cr
 
 # guide-create
 
-## Goal
-
-spec과 code evidence를 바탕으로 특정 feature의 deep-dive 기술 가이드를 `_sdd/guides/<YYYY-MM-DD>_guide_<slug>.md`에 만든다. guide는 global spec을 대체하지 않고 사용 시나리오, interface, 구현·리뷰 판단을 기능 단위로 구체화한다.
+기능 하나를 깊이 설명하는 기술 가이드를 spec과 코드 근거로 써서 `_sdd/guides/<YYYY-MM-DD>_guide_<slug>.md`에 저장한다. guide는 global spec을 대신하지 않는 보조 문서다. 사용 시나리오, 인터페이스, 구현·리뷰 판단을 기능 단위로 구체화한다.
 
 ## Acceptance Criteria
 
-- [ ] target feature, scope, output slug를 결정했다.
-- [ ] 관련 spec context와 code/test/interface evidence를 수집했다.
-- [ ] 확인된 claim을 source citation과 연결하고 unknown/assumption을 구분했다.
-- [ ] runtime-local output interface의 fenced skeleton과 rubric을 적용했다.
-- [ ] feature마다 별도 guide를 생성했다.
-- [ ] `_sdd/spec/`, code, config, test를 수정하지 않았다.
+- [ ] 대상 기능과 범위를 정했고, 기능마다 파일 하나를 만들었다.
+- [ ] 본문의 주장마다 source citation이 있고, 확인하지 못한 것은 가정이나 미확인으로 구분했다.
+- [ ] 문서가 `references/output-format.md`의 구조와 규칙을 따른다.
+- [ ] `_sdd/spec/`, 코드, 설정, 테스트를 고치지 않았다.
 
-## SDD Lens
+## 규칙
 
-- guide는 feature-specific companion document이며 global spec의 새 source of truth가 아니다.
-- spec은 purpose/boundary/decision의 primary source이고 code는 concrete behavior의 근거다.
-- 확인되지 않은 behavior는 사실처럼 채우지 않는다.
-
-## Hard Rules
-
-1. 이 스킬의 기능 가이드 산출물은 `_sdd/guides/<YYYY-MM-DD>_guide_<slug>.md`로 한정하며 `_sdd/spec/`, application code, config, test는 수정하지 않는다. 상위 하네스의 작업 기록 의무는 별도로 따른다.
-2. 문서 언어는 사용자 지정을 우선하고, 없으면 existing spec/docs를 따른다.
-
-## Input Sources
-
-1. 사용자 요청
-2. `_sdd/spec/main.md` 또는 project index
-3. target feature에 연결된 split/supporting spec
-4. 관련 code, test, interface, type, schema, config
-5. 실행·검증 맥락이 실제로 필요할 때만 `_sdd/env.md`
-
-## Process
-
-### Step 1: Identify Feature and Output
-
-- target feature와 boundary를 고른다.
-- slug는 lowercase snake_case로 만든다.
-- 여러 feature면 output path를 feature별로 열거하고 첫 파일부터 순서대로 완료한다.
-- feature 또는 scope를 바꾸는 ambiguity가 남으면 질문 한 번으로 닫는다.
-
-### Step 2: Gather Spec Context
-
-feature의 problem, value, scope, guardrail, decision을 관련 spec에서 수집한다. usable spec가 없으면 근거 한계를 알리고 spec 생성 권장 또는 assumption을 명시한 진행 중 현재 요청에 맞는 쪽을 고른다.
-
-### Step 3: Gather Code Evidence
-
-관련 implementation, test, interface, type/schema를 찾아 exact path와 symbol 중심의 evidence index를 만든다. 구현 상태는 confirmed, partial, spec-only로 구분한다.
-
-### Step 4: Resolve Evidence Gaps
-
-- name/value gap은 user phrase와 spec에서 해결한다.
-- implementation detail gap은 repository convention과 확인된 code를 우선한다.
-- 근거가 없는 API, error, scenario, invariant는 만들지 않고 unknown/assumption으로 표시한다.
-
-### Step 5: Load the Output Interface and Write
-
-작성 직전에 runtime-local `references/output-format.md`를 **Read**한다. 그 reference의 fenced required skeleton을 복사하고, reference가 허용한 표시 문구 번역 외에는 heading·field order를 유지하며 source evidence로 slot을 채운다. 근거 없는 optional appendix는 제거하고, schema·citation·confidence 판단은 reference rubric을 적용한다. reference 내용을 기억이나 이 본문으로 재구성하지 않는다.
-
-장문이면 main loop가 skeleton을 먼저 저장하고 section slot을 순서대로 채운 뒤 placeholder를 제거해 finalize한다. 여러 feature면 현재 파일의 검증까지 끝낸 후 다음 파일로 간다.
-
-### Step 6: Verify and Save
-
-- output directory를 준비한다.
-- `<YYYY-MM-DD>_guide_<slug>.md`에 저장한다.
-- output interface와 Acceptance Criteria를 대조한다.
-- 생성 경로와 evidence 한계를 보고한다.
-
-## Output Contract
-
-- `_sdd/guides/<YYYY-MM-DD>_guide_<slug>.md`
-- 여러 feature면 feature당 한 파일
-
-## Error Handling
-
-| 상황 | 대응 |
-|---|---|
-| usable spec 없음 | spec 생성 권장 또는 명시적 assumption을 둔 제한적 guide |
-| code evidence 부족 | unsupported claim을 쓰지 않고 한계를 표시 |
-| 기존 같은 날짜/slug 파일 존재 | overwrite하지 않고 더 구체적인 slug 사용 |
+1. **대상**: 요청에서 기능과 경계를 정한다. 기능이나 범위가 달라지는 모호함이 남으면 한 번 물어 닫는다. 기능이 여럿이면 기능별 출력 경로를 먼저 나열하고, 한 파일을 확인까지 끝낸 뒤 다음 파일로 간다.
+2. **근거**: spec은 목적·경계·결정의 출처이고, 코드·테스트·인터페이스·타입은 실제 동작의 출처다. 쓸 만한 spec이 없으면 그 한계를 알리고, 가정을 명시해 진행하거나 spec 작성을 권한다. 실행·검증 맥락이 필요할 때만 `_sdd/env.md`를 읽는다.
+3. **확인되지 않은 것**: 근거가 없는 API, 에러, 시나리오, 불변 규칙은 쓰지 않는다. 필요한 빈 곳은 가정이나 미확인으로 표시한다.
+4. **형식**: 쓰기 직전에 `references/output-format.md`를 **Read**하고, 그 fenced skeleton을 복사해 채운다. 그 파일이 허용한 번역과 생략 밖에서는 제목과 순서를 바꾸지 않는다. 형식을 기억이나 이 본문으로 재구성하지 않는다.
+5. **저장**: 같은 날짜·slug의 파일이 있으면 덮어쓰지 않고 더 구체적인 slug를 쓴다. 문서 언어는 사용자 지정이 우선이고, 없으면 기존 spec·문서의 언어를 따른다.
+6. **범위**: 이 스킬이 만드는 것은 guide 파일뿐이다. 상위 하네스의 작업 기록 의무는 따로 따른다.
 
 ## Final Check
 
-선택한 경로의 Acceptance Criteria를 대조하고 이 스킬의 변경이 가이드 산출물 범위 안인지 확인한다. 복구 가능한 누락은 수정하고, 근거 부족으로 제한한 내용이나 미완료 항목은 보고한다.
+Acceptance Criteria를 한 번 대조한다. 보완할 수 있는 누락은 고치고, 근거가 부족해 제한한 내용과 끝내지 못한 항목은 만든 경로와 함께 보고한다.

@@ -3685,3 +3685,20 @@ sdd-autopilot의 review-fix 루프가 선택적으로 동작하여, 리뷰만 �
 - **감수한 위험**: 작성자가 자기 맹점을 리뷰에서도 놓칠 수 있다(독립 사실 대조가 작성자 자기 확인 뒤에 High 2건을 더 찾은 사례 1회). 보완은 마감 보고의 "실행으로 확인하지 못한 것" 필수 항목과 PR 시점의 `pr-review`(선택)다. 메인 맥락 사용량은 worker 구조보다 늘어난다.
 - **검증 경계**: 실측은 기능 1개이고 세 실행 모두 실제 클러스터 실행은 없다(CPU 계약과 지적 자리 수정 여부만 확인). 이 개편 자체를 새 순서로 수행했다 — 삭제 경로·폐지 용어 전수 검색 0건, 양 runtime 미러 동일, `claude plugin validate .` 통과. 설치본으로 `/sdd-orchestrator`를 실제 호출한 확인은 플러그인 갱신 뒤로 남는다. 누적 관측 중이던 "reviewer 반환 다이어트 효과 판정"과 "게이트 2 임계 비례화" planned 항목은 관측 표면(구현 게이트)이 없어져 닫는다.
 - **포인터**: [계획 파일](../drafts/_processed_2026-11-17_feature_draft_sdd_main_session_direct.md).
+
+## 2026-11-18 - spec 스킬 3개를 `spec-upgrade`로 합치고, 스킬 3개를 지우고, 3개를 줄인다 (v6.0.0)
+
+- **결정**: ① `spec-review`·`spec-rewrite`를 `spec-upgrade`로 합친다. 이름은 `spec-upgrade`를 유지하고 예전 이름의 별칭 스킬은 두지 않는다. ② `spec-summary`·`spec-snapshot`·`second-opinion`을 지운다. ③ `guide-create`·`investigate`·`git`의 지시문을 줄인다. `investigate`는 탐색 agent 병렬 실행을 지시하지 않는다.
+- **근거**: 2026-11-17 결정(스킬은 순서와 모델이 추론할 수 없는 규약만 정한다)을 나머지 스킬에 적용했다.
+  - 합치기: 세 스킬은 같은 판단 기준 4개와 같은 첫 단계(점검)를 썼다. 예전 `spec-upgrade`에는 upgrade와 rewrite 중 어느 쪽인지 가르는 단계가 따로 있었고, `spec-format.md`·`template-compact.md`가 두 스킬에 조금씩 다른 사본으로 있었다.
+  - 삭제: 이 저장소에는 `spec-summary`·`spec-snapshot`의 산출물(`_sdd/spec/summary.md`, `_sdd/snapshots/`)이 없다. `second-opinion`은 번들에 없는 외부 adapter가 있어야 동작하고, 2026-11-17 Codex 점검은 이 스킬 없이 CLI로 했다.
+  - 축소: 세 스킬의 분량 대부분이 모델이 기본으로 하는 일의 설명과 출력 예시였다. 남긴 것은 저장소 규약과 승인·안전 규칙이다.
+- **버린 대안**:
+  - 합친 이름 `spec-update`: "스펙 업데이트"는 구현 결과를 spec에 반영하라는 뜻으로 읽혀 spec-sync와 겹친다. spec-sync의 예전 이름도 `spec-update-todo`·`spec-update-done`이었다.
+  - 합친 이름 `spec-review`: 하네스 설치가 review 이름 아래 들어간다.
+  - `git`도 삭제: 사용자가 축소를 골랐다. goal 하네스의 `자율 수행 위임`을 행동별로 적용하는 승인 규칙과 보호 브랜치 규칙은 남길 가치가 있다.
+  - 예전 이름 별칭 스킬: 스킬 수를 줄이는 것이 목적이고, `spec-upgrade` description의 trigger 문구가 예전 이름을 받는다.
+- **범위에서 뺀 것**: `spec-upgrade`는 `_sdd/spec/`만 다룬다. 예전 `spec-review`·`spec-rewrite`가 하던 계획 파일 점검·재작성은 `sdd-orchestrator`의 계획 리뷰가 맡는다. drift status·decision 토큰(`SPEC_OK` 등), rewrite 진단 축 4개, `rewrite_report.md`는 읽는 쪽이 없어 지웠다. 큰 구조 변경 전에 계획을 `_sdd/spec/logs/spec-rewrite-plan.md`에 먼저 쓰는 규칙은 남겼다.
+- **감수한 위험**: 예전 이름으로 슬래시 명령을 치면(`/spec-review`) 스킬을 찾지 못한다. 자연어 요청은 `spec-upgrade` description이 받는다. 소비 repo에 이미 만든 `_sdd/spec/summary.md`와 README의 summary 블록, `_sdd/snapshots/`는 갱신하는 스킬이 없어진다(파일은 그대로 남는다).
+- **검증 경계**: 삭제한 이름·산출물 이름 전수 검색 0건, 양 runtime 동일본 대조, 하네스 자산 무변경, `claude plugin validate .`·`tools/tests` 통과로 확인했다. 새 스킬 4개를 설치본에서 실제로 호출한 확인은 없다. 예전 형식 spec을 새 `spec-upgrade`로 옮겨 본 실행도 없다.
+- **포인터**: [계획 파일](../drafts/_processed_2026-11-18_feature_draft_skill_diet.md).

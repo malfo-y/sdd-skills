@@ -1,161 +1,80 @@
 ---
 name: spec-upgrade
-description: This skill should be used when the user asks to "upgrade spec", "migrate spec format", "modernize spec structure", "spec upgrade", "스펙 업그레이드", "스펙 변환", "스펙 마이그레이션", or wants to convert old-format spec documents to the current canonical SDD spec model defined in SDD_SPEC_DEFINITION.md.
+description: "Use this skill to review an existing SDD spec and bring it up to the current spec model: audit spec quality and code-to-spec drift (review only, no edits), rewrite or split an overlong spec, migrate an old-format spec, and refresh the AGENTS.md harness and hooks. Triggered by \"spec-upgrade\", \"upgrade spec\", \"migrate spec format\", \"modernize spec structure\", \"spec-review\", \"review spec\", \"spec drift check\", \"verify spec accuracy\", \"audit spec quality\", \"spec-rewrite\", \"rewrite spec\", \"refactor spec\", \"simplify spec\", \"split spec into files\", \"clean up spec\", \"스펙 업그레이드\", \"스펙 변환\", \"스펙 마이그레이션\", \"스펙 리뷰\", \"스펙 검토\", \"스펙 드리프트 점검\", \"스펙 정리\", \"하네스 갱신\". Not for reflecting a code change in the spec (that is sdd-orchestrator's spec-sync) and not for writing the first spec (that is spec-create)."
 ---
 
 # spec-upgrade
 
-## Goal
-
-기존 구형 스펙을 현재 thinner SDD global spec model로 마이그레이션한다. 목표는 old inventory-heavy 또는 section-heavy structure를 `개념 + 경계 + 결정` 중심 구조로 줄이는 것이다.
-
-유효한 내용은 최대한 보존하되, feature-level usage, validation, exhaustive reference, current-form CIV는 global 기본 본문에서 내린다.
+이미 있는 `_sdd/spec/`을 점검하고, 현재 SDD spec 모델에 맞게 고친다. 점검만 요청받으면 파일을 고치지 않는다. 이 스킬이 정하는 것은 판단 기준과 저장소 규약이다. 어디까지 읽고 얼마나 고칠지는 spec의 상태에 맞게 스스로 정한다.
 
 ## Acceptance Criteria
 
-아래는 Step 1에서 upgrade로 판정해 migration을 수행하는 경로에 적용한다. 이관/비대상 종료에는 Step 1의 보고만 적용한다.
+> 종료 전 `Final Check`대로 점검한다.
 
-- [ ] canonical spec과 업그레이드 대상 파일 집합을 확정했다.
-- [ ] 공통 코어 4축(`Thinness`, `Decision-bearing truth`, `Anti-duplication`, `Navigation + surface fit`) 기준으로 현재 문서를 읽었다.
-- [ ] migration 시작 전에 이 작업이 upgrade인지 rewrite인지 경계를 판정하고 결과를 먼저 보고했다.
-- [ ] 현재 문서를 새 model 기준으로 gap 분석하고 결과를 먼저 보고했다.
-- [ ] 기존 내용을 보존 가능한 범위에서 새 global structure로 재배치했다.
-- [ ] old feature-level usage/validation/reference/CIV 의존성을 적절한 surface로 내렸다.
-- [ ] 단순 implementation inventory는 줄이고, 필요한 supporting note만 남겼다.
-- [ ] 멀티파일 spec이면 index와 supporting file의 역할이 더 명확해졌다.
-- [ ] `AGENTS.md`가 하네스 템플릿(§0~§5) 기준으로 존재한다 (부재/부분존재 시 SDD-HARNESS 마커 멱등 병합으로 생성/보강).
-- [ ] `CLAUDE.md`가 `→ AGENTS.md 참조` 마커 포인터 블록을 가진다 (부재 시 생성, 기존 파일이면 prepend).
-- [ ] `AGENTS.md`·`CLAUDE.md`의 legacy 처리가 Step 6의 보존/흡수 규칙을 따른다.
-- [ ] `.gitignore`에 `SDD-WORKSPACE` 마커 블록이 존재한다 (부재/부분존재 시 process artifact ignore를 멱등 병합).
-- [ ] `_sdd/env.md`의 기본 모델 템플릿을 Step 6에 따라 보강하고 기존 값 보존·사용자 안내를 확인했다.
-- [ ] 하네스를 병합했으면 Step 6의 local hook installation contract를 적용하고 runtime별 등록·검증·acceptance 상태를 구분했다.
+- [ ] AC1: 요청 범위를 `호출 범위`로 정했고, 점검만 하는 호출이면 spec과 하네스를 고치지 않았다.
+- [ ] AC2: spec을 `판단 기준`의 4개 기준(`Thinness`, `Decision-bearing truth`, `Anti-duplication`, `Navigation + surface fit`)으로 읽었고, 발견마다 근거(`file:line`)가 있다. 근거가 약한 발견은 `UNTESTED`로 적었다.
+- [ ] AC3: 고쳤다면 판단 근거가 되는 내용을 잃지 않았고, 없는 내용을 지어내지 않았고, 지우거나 줄인 것과 그 이유를 보고했다.
+- [ ] AC4: 점검만 하는 호출이 아니면 `하네스 갱신`을 수행하고 runtime별 결과를 보고했다.
 
-## SDD Lens
+## 판단 기준
 
-- global spec은 얇은 기준 문서다.
-- temporary spec은 별도의 실행 청사진이다.
-- repo-wide invariant가 진짜 필요하면 guardrails 또는 key decisions로 남긴다.
-- feature-level usage, validation, current-form CIV는 기본 global core가 아니다.
-- legacy inventory는 decision-bearing truth, navigation-critical hint, stale/exhaustive detail로 먼저 분류한다.
-- 구조 재편이 더 큰 문제라면 Step 1 경계 판정에 따라 `spec-rewrite`로 분기한다.
+global spec은 저장소 전체의 판단 기준을 고정하는 얇은 문서다. 본문은 세 절이 중심이다: `배경 및 high-level concept`, `Scope / Non-goals / Guardrails`, `핵심 설계와 주요 결정`.
 
-## Companion Assets
+| 기준 | 묻는 것 |
+|---|---|
+| `Thinness` | 본문이 개념·경계·결정만 담는가 |
+| `Decision-bearing truth` | 저장소 수준의 판단을 바꾸는 진술만 남아 있는가 |
+| `Anti-duplication` | guide, README, 계획 파일, 코드에서 바로 보이는 내용을 복제하지 않는가 |
+| `Navigation + surface fit` | 보조 정보가 더 맞는 자리에 있고, 독자가 다음에 볼 곳을 찾을 수 있는가 |
 
-- `references/agents-harness-template.md`
-- `references/worker-model-defaults.md`
-- `references/hook-installation.md`
-- `references/hooks/worklog-gate.sh`
-- `references/hooks/worklog-context.sh`
-- `references/hooks/harness-context.sh`
-- `references/hooks/agent-watchdog.sh`
-- `examples/after-upgrade.md`
-- SDD 정의 문서: https://github.com/malfo-y/sdd-skills/tree/main/docs
+- **결함으로 보는 것**: 기능 단위의 사용법·계약·검증 상세가 본문에 있다. 전체 파일 목록이나 컴포넌트 카탈로그가 본문을 채운다. 낡은 경로나 깨진 참조가 독자를 잘못된 곳으로 보낸다. 저장소 전체 사실을 틀리게 적었다. 코드와 spec이 어긋난다.
+- **결함으로 보지 않는 것**: 사용법·기대 결과 절이 없다. 참조 정보 절이 없다. code map이 없다. 독립된 계약·불변식·검증 표가 없다. 예전 형식의 절이 없다.
+- **code map**: 진입점, 계약의 출처, 불변식이 모이는 곳, 확장 지점, 검증 지점만 `Strategic Code Map`으로 짧게 둔다. 길어지면 보조 문서로 뺀다.
+- **대상**: `_sdd/spec/`이다. 계획 파일(`_sdd/drafts/`)의 검토는 `sdd-orchestrator`의 계획 리뷰가 한다. spec 본문에 섞인 실행 상세는 위 기준으로 걸러 계획 파일이나 guide로 내린다.
 
-## Hard Rules
+## 단계
 
-1. 구현 코드 파일은 수정하지 않는다.
-2. 기존 스펙 언어를 따른다.
-3. 기존 내용을 최대한 보존하고, 삭제 또는 축약이 필요하면 이유를 명시한다.
-4. 결과는 기존 파일 경로에 in-place로 반영한다. 구조 재편이 핵심이면 Step 1 판정에 따라 `spec-rewrite`로 분기한다.
-5. global spec을 old canonical 섹션으로 다시 두껍게 복구하지 않는다.
-6. `decision_log.md`가 있으면 보존하고, 주요 업그레이드 판단을 추가 기록할 수 있다.
-7. Step 1 경계 판정에서 rewrite 성격이 우세하면 upgrade로 밀어붙이지 말고 `spec-rewrite`로 분기한다.
+### 1. 점검
 
-## Process
+`main.md`와 그것이 가리키는 보조 문서 전부, 그리고 코드와의 어긋남을 판정하는 데 필요한 만큼의 코드·테스트·README를 읽는다. `logs/`·`prev/` 같은 과거 기록은 현재 사실로 읽지 않는다. spec이 없으면 `spec-create`를 권하고 끝낸다.
 
-### Step 1: Rewrite Boundary Judgment
+- 발견마다 spec·코드·문서의 `file:line` 근거를 붙인다. 근거가 약하거나 추정이면 `UNTESTED`로 적고 심각도를 올리지 않는다.
+- 접근하지 못했거나 끝까지 찾지 못한 것을 "없다"로 적지 않는다. 필요한 범위를 다 찾았고 한쪽에만 없을 때 누락으로 적는다.
+- 심각도는 셋이다. `Critical`은 저장소 수준의 판단을 직접 틀리게 만드는 것(틀린 저장소 전체 사실, 핵심 동작의 어긋남), `Quality`는 4개 기준 위반과 중간 수준의 어긋남, `Improvements`는 가독성과 정리다.
+- 결론은 하나로 적는다: spec을 고쳐야 한다, 고칠 것이 없다, 논의가 필요하다. 코드가 spec과 다르고 spec이 옳으면 spec을 고칠 일이 아니다. 구현 쪽 조치로 보고한다.
 
-먼저 업그레이드할 기존 spec이 있는지 확인한다. 없으면 `spec-create`를 권장하고 **비대상으로 종료**한다. spec이 있으면 아래를 본다.
+점검만 하는 호출이면 발견을 심각도 순으로 채팅에 보고하고 끝낸다. 사용자가 보고서 파일을 요청했을 때만 `_sdd/spec/logs/spec_review_report.md`에 쓴다. 점검만 하는 호출이 쓰는 파일은 이것뿐이다.
 
-- 현재 작업의 핵심이 legacy-to-canonical migration인가
-- 아니면 구조 재설계, 대규모 분할, 역할 재정의, log/history 분리 같은 rewrite 성격이 더 강한가
+### 2. 고치기
 
-판정 규칙:
+고치기 직전에 `references/spec-format.md`를 읽는다. 목표 구조, compact와 full 중 고르는 기준, 예전 내용을 어디로 내리는지가 거기 있다. 결과 예시는 `examples/after-upgrade.md`다.
 
-- section-heavy 또는 inventory-heavy 문서를 current model로 줄이는 것이 주된 작업이면 `spec-upgrade`
-- domain/topic 재분할, 문서군 재배치, rationale rescue 중심 pruning이면 `spec-rewrite`
+- 기존 파일 경로에서 고치고, 기존 spec의 언어를 따른다. 구현 코드는 고치지 않는다.
+- 판단 근거(`Why`, `Source`, 인라인 citation, 코드 발췌의 출처 줄)는 남긴다. 지우거나 줄이는 내용은 이유와 함께 보고한다.
+- 없는 내용을 지어내지 않는다. 비어 있는 중심 절은 코드·README·git history에 근거가 있을 때만 채우고, 근거가 없으면 비어 있다고 보고한다.
+- 이력, 형식 이행 메모, 정리한 이유는 본문에 쓰지 않는다. `decision_log.md`에 새 entry로 덧붙이고 기존 entry는 고치지 않는다.
+- 파일을 나누거나 문서 사이로 큰 덩어리를 옮기는 변경은, 고치기 전에 무엇을 어디로 옮기는지 `_sdd/spec/logs/spec-rewrite-plan.md`에 쓰고 사용자 확인을 받는다. 무인 실행이면 확인 없이 진행하고 그 사실을 보고한다.
+- 여러 파일로 나눌 때의 축: 독립된 기능이나 endpoint가 여럿이면 domain(`auth.md`, `payments.md`), 기능은 하나에 가깝고 저장소가 크면 topic(`architecture.md`, `data-conventions.md`). 새 파일은 `main.md` 인덱스에 링크한다.
 
-`spec-rewrite` 판정이면 대상·근거·후속 스킬을 보고하고 **이관으로 종료**한다. 이관/비대상 경로에서는 Step 2–7의 migration·하네스·훅을 실행하지 않는다. 사용자 요청에 후속 스킬 실행까지 포함돼 있으면 이 결과를 넘겨 해당 스킬로 계속한다.
+### 3. 하네스 갱신
 
-#### Asset Load: Upgrade Mapping
+점검만 하는 호출이 아니면, spec에 고칠 내용이 없었더라도 이 절을 수행한다. 병합은 멱등이다. 점검만 하는 호출이면 수행하지 않고, 하네스가 없거나 낡았으면 그 사실만 보고한다.
 
-위 기준만으로 upgrade↔rewrite boundary 또는 legacy section의 current destination이 닫히지 않을 때만 `references/upgrade-mapping.md`를 **Read**한다.
+작업 하네스(`AGENTS.md`)가 하네스 템플릿(`references/agents-harness-template.md`) 기준으로 존재하도록 SDD-HARNESS 마커 기반 멱등 병합을 적용한다.
 
-### Step 2: Legacy-to-Canonical Gap Analysis
+> **하네스 블록은 항상 verbatim 복사다.** 아래 병합 규칙의 '마커 블록'은 매번 `references/agents-harness-template.md`를 **Read**해 `SDD-HARNESS:START`~`SDD-HARNESS:END`를 **글자 그대로 복사**한 것이다(상단 관리용 주석만 제외). repo 변수 슬롯만 치환하고, reference가 명시한 test/lint 부재 시 조건부 삭제만 허용한다. §5의 날짜·제목·모델명 등 향후 work-log 작성용 슬롯은 그대로 둔다. 그 외 어떤 줄도 추가·삭제·재배열·요약하지 않는다. 기억이나 이 SKILL 본문으로 **재구성하지 않는다**. 재구성하면 템플릿 변경(새 §·경고 줄 등)이 산출물에서 빠진다.
 
-진단 대상:
+`AGENTS.md`:
 
-- canonical spec 후보
-- split spec 여부
-- 새 global core 존재/부족 상태
-- feature-level usage/validation/reference/CIV 오염 여부
-- implementation inventory 과잉 여부
-- legacy code map이나 architecture inventory 중 `Strategic Code Map`으로 보존할 navigation-critical hint가 있는지
-- supporting surface로 내릴 수 있는 정보
-- temporary spec 성격의 내용이 글로벌 스펙에 섞였는지 여부
+- **없음** → 위 복사·치환 규칙으로 새로 쓴다.
+- **있음(마커 없음)** → 마커 블록을 파일 **맨 위에 prepend**한다.
+- **마커 블록 있음** → **그 마커 블록만 교체**한다. 다시 실행해도 블록이 겹쳐 쌓이지 않는다.
 
-#### Asset Load: Current Format
+`CLAUDE.md`: 없으면 아래 한 줄 포인터를 SDD-HARNESS 마커 블록으로 감싸 만든다. 있으면 그 마커 포인터 블록을 맨 위에 prepend하고, 마커 블록이 이미 있으면 그 블록만 교체한다. 포인터 본문은 `> 이 repo의 작업 하네스는 \`AGENTS.md\` 단일 소스다. 작업 전 \`AGENTS.md\`를 먼저 읽는다.`이며 `spec-create`와 같다.
 
-exact current global shape와 비교할 때는 `references/spec-format.md`를, global에 섞인 temporary portion을 판정할 때는 current runtime의 `../sdd-orchestrator/SKILL.md` `계획 파일` 절을 **Read**한다.
+**보존/흡수 규칙** (`AGENTS.md`·`CLAUDE.md` 공통): 마커 밖 원문은 보존한다. 유일한 제거 예외는 **과거 SDD 부트스트랩 생성물로 식별되고 내용이 하네스에 전부 흡수된 중복 블록**이다. `## SDD란`이라는 제목이나 테스트/커밋 규칙의 중복만으로는 지우지 않는다. 출처·경계가 불명확하거나 사용자 고유 수정이 섞였으면 원문을 보존하고 남은 중복을 보고한다. 사용자 내용 삭제가 이미 승인된 범위에 없으면 승인을 받는다. legacy `## SDD란` 블록은 새로 만들지 않는다.
 
-### Step 3: Evidence Collection
-
-코드베이스가 있으면 아래 근거를 수집한다.
-
-- README / docs / git history -> background / concept / scope
-- 핵심 엔트리포인트 / 주요 로직 -> core design, key decisions
-- usage docs / examples -> guide 또는 support doc 후보
-- validation notes / temp artifacts -> temporary spec 후보
-- entrypoint / contract source / invariant hotspot / extension point / validation surface -> `Strategic Code Map` 후보
-
-### Step 4: Migration Checkpoint
-
-정리 항목:
-
-- 기존 스펙 현황
-- rewrite boundary judgment 결과
-- 새 thin global model gap 분석
-- 어떤 정보를 global에 남기고 무엇을 내릴지
-- 구조 재편 필요 여부
-
-### Step 5: Migrate
-
-- 기존 내용을 새 global structure로 재배치
-- repo-wide invariant가 진짜 필요한 경우만 guardrails 또는 decisions로 반영
-- feature-level usage / validation / detail inventory는 supporting surface 또는 temp artifact로 재배치
-- truly useful guide/reference/Strategic Code Map만 조건부로 남김
-- stale하거나 exhaustive한 file tree / component catalog는 global 본문으로 보존하지 않음
-
-#### Template Selection and Load
-
-| Selection | Closed criterion | Read exactly this asset |
-|---|---|---|
-| Compact | 기본값 | `references/template-compact.md` |
-| Full | source input에 project motivation 또는 evaluated-alternative rationale가 명시돼 있고, compact의 existing named slot에 그 고유한 rationale 역할을 보존할 수 없을 때만 선택한다. | `references/template-full.md` |
-
-migration 작성 직전에 선택한 runtime-local asset만 **Read**한다. 선택한 파일의 fenced skeleton을 verbatim 복사해 heading·field order를 보존하고, source evidence로 placeholder를 치환하며 evidence가 없는 optional block은 제거한다. reference 내용을 기억이나 이 SKILL 본문으로 대체하지 않는다.
-
-### Step 6: Harness Merge (AGENTS.md / CLAUDE.md / .gitignore / env.md / 훅 자산)
-
-작업 하네스(`AGENTS.md`)가 하네스 템플릿(`references/agents-harness-template.md`) 기준으로 존재하도록 SDD-HARNESS 마커 기반 멱등 병합을 적용한다. legacy `## SDD란` 블록은 새로 생성하지 않으며, 기존 블록에는 아래 보존/흡수 규칙을 적용한다.
-
-> **하네스 블록은 항상 verbatim 복사다.** 아래 병합 규칙에서 쓰는 '마커 블록'은 매번 `references/agents-harness-template.md`를 **Read**해 `SDD-HARNESS:START`~`SDD-HARNESS:END`를 **글자 그대로 복사**한 것이다(상단 관리용 주석만 제외). repo 변수 슬롯만 치환하고, reference가 명시한 test/lint 부재 시 조건부 삭제만 허용한다. §5의 날짜·제목·모델명 등 향후 work-log 작성용 슬롯은 그대로 둔다. 그 외 어떤 줄도 추가·삭제·재배열·요약하지 않는다. 기억이나 이 SKILL 본문으로 **재구성하지 않는다** — 재구성하면 템플릿 변경(새 §·경고 줄 등)이 산출물에 누락된다.
-
-`AGENTS.md` 병합 규칙:
-
-- **부재** → 위 복사·치환 규칙으로 새 `AGENTS.md`를 쓴다.
-- **존재(마커 없음)** → 마커 블록을 파일 **맨 위에 prepend**한다.
-- **마커 블록 존재** → **그 마커 블록만 교체**한다. 재실행해도 블록이 중복 적층되지 않는다(멱등).
-
-`CLAUDE.md` 병합 규칙:
-
-- 부재면 아래 한 줄 포인터를 SDD-HARNESS 마커 블록으로 감싸 생성하고, 존재하면 그 마커 포인터 블록을 맨 위 prepend한다(마커 블록이 이미 있으면 그 블록만 교체). 포인터 본문은 `> 이 repo의 작업 하네스는 \`AGENTS.md\` 단일 소스다. 작업 전 \`AGENTS.md\`를 먼저 읽는다.`로 spec-create와 동일하게 한다.
-
-**보존/흡수 규칙** (`AGENTS.md`·`CLAUDE.md` 공통): 마커 밖 원문을 보존한다. 유일한 제거 예외는 **과거 SDD 부트스트랩 생성물로 식별되고 내용이 하네스에 전부 흡수된 중복 블록**이다. `## SDD란`이라는 제목이나 테스트/커밋 규칙의 중복만으로는 제거하지 않는다. 출처·경계가 불명확하거나 사용자 고유 수정이 섞였으면 원문을 보존하고 잔여 중복을 보고한다. 사용자 내용 삭제가 기존 승인 범위에 없으면 승인을 받는다.
-
-`.gitignore` 병합 규칙:
-
-커밋되는 `_sdd`는 `spec/`·`guides/`·`env.md`·`drafts/`·`work_log/`다(`drafts/`·`work_log/`는 구현 로그 자산). 나머지 process artifact 디렉토리는 커밋하지 않으므로 `.gitignore`에 아래 `SDD-WORKSPACE` 마커 블록을 멱등 병합한다 — 부재면 생성, 마커 없으면 파일 끝에 append(기존 규칙 보존), 마커 블록 존재면 그 블록만 교체(멱등). 마커 밖 사용자 규칙은 건드리지 않는다.
+`.gitignore`: 커밋되는 `_sdd`는 `spec/`·`guides/`·`env.md`·`drafts/`·`work_log/`다. 나머지 process artifact 디렉터리는 커밋하지 않으므로 아래 `SDD-WORKSPACE` 마커 블록을 멱등 병합한다. 파일이 없으면 만들고, 마커가 없으면 파일 끝에 덧붙이고, 마커 블록이 있으면 그 블록만 교체한다. 마커 밖 사용자 규칙은 건드리지 않는다.
 
 ```gitignore
 # SDD-WORKSPACE:START — process artifact는 로컬 전용(커밋 제외)
@@ -166,58 +85,36 @@ _sdd/pr/
 # SDD-WORKSPACE:END
 ```
 
-#### env.md 기본 모델 템플릿
+`_sdd/env.md`: 이 skill package의 `references/worker-model-defaults.md`를 **Read**하고 그 적용·확인·보고 규칙대로 만들거나 보강한다.
 
-호출 중인 skill package의 `references/worker-model-defaults.md`를 **Read**하고 적용·확인·보고 규칙에 따라 `_sdd/env.md`를 생성/보강한다. 이관/비대상 경로에서는 Step 1대로 수행하지 않는다.
+훅: 하네스를 병합하면 Claude Code와 Codex 등록을 함께 설치한다. 별도 opt-in이 아니다.
 
-#### Hook Assets
-
-훅 설치는 `AGENTS.md` 하네스 병합과 동일 조건이다. 하네스를 병합하면 Claude Code와 Codex 등록을 함께 설치하며 별도 opt-in으로 다루지 않는다.
-
-1. 호출 중인 skill package의 `references/hook-installation.md`를 **Read**하고 전부 적용한다.
-2. Claude-only·Codex-only·과거 command/matcher 같은 partial 또는 legacy 설치를 reference의 current 두 runtime 정의로 보완한다. malformed 설정의 skip과 보존은 reference를 따른다.
+1. 이 skill package의 `references/hook-installation.md`를 **Read**하고 전부 적용한다.
+2. Claude-only·Codex-only·예전 command/matcher 같은 부분 설치나 legacy 설치는 reference의 현재 두 runtime 정의로 보완한다. malformed 설정의 skip과 보존은 reference를 따른다.
 3. reference의 `Verification and Report`로 멱등성을 검증하고 runtime별 결과를 알린다.
 
-upgrade가 소유하는 것은 부분 설치의 repair 판단이다. hook event·matcher·settings merge·runtime definition·trust 계약은 local reference를 따르며 `spec-create`의 존재에 의존하거나 이 본문에서 fallback을 재구성하지 않는다.
+hook event·matcher·settings merge·runtime definition·trust 계약은 이 package의 reference를 따른다. `spec-create`가 설치돼 있다고 가정하거나 이 본문으로 fallback을 재구성하지 않는다.
 
-### Step 7: Validate
+### 4. 확인과 보고
 
-아래를 확인한다.
+- 링크와 파일 경로가 유효한가. `Strategic Code Map`의 경로가 현재 코드와 맞는가.
+- 판단 근거가 사라지지 않았는가. 본문이 다시 두꺼워지지 않았는가.
+- `AGENTS.md`의 하네스 마커 블록(§0~§5), `CLAUDE.md`의 포인터 마커 블록, `.gitignore`의 `SDD-WORKSPACE` 블록이 있는가.
+- `_sdd/env.md`가 `references/worker-model-defaults.md`의 확인·보고 조건을 채우는가.
+- 훅은 `references/hook-installation.md`의 `Verification and Report`대로 runtime별 등록·검증·acceptance 상태를 구분했는가.
 
-- global spec core가 유지되는가
-- 기존 정보가 불필요하게 소실되지 않았는가
-- feature-level detail을 global 본문에서 걷어냈는가
-- implementation inventory를 그대로 옮겨 적지 않았는가
-- Step 1 경계 판정을 어기고 rewrite 문제를 upgrade로 덮지 않았는가
-- `AGENTS.md`가 하네스(§0~§5) 마커 블록을 가지고, `CLAUDE.md`가 포인터 마커 블록을 가지며, Step 6의 보존/흡수 규칙을 따르는가
-- `.gitignore`가 `SDD-WORKSPACE` 마커 블록으로 process artifact를 ignore하는가
-- `_sdd/env.md`가 local `references/worker-model-defaults.md`의 확인·보고 조건을 충족하는가
-- 하네스를 병합했다면 local `references/hook-installation.md`의 `Verification and Report`에 따라 runtime별 등록·검증·acceptance 상태를 구분했는가
+보고에는 점검 결론과 발견, 고친 파일, global에 남긴 것과 밖으로 내린 것, 지우거나 줄인 것과 이유, 채우지 못한 절, 하네스 병합 결과(`AGENTS.md`·`CLAUDE.md`·`.gitignore`의 생성·prepend·교체 여부와 흡수한 legacy 블록), `env.md` 결과(`references/worker-model-defaults.md`의 `확인·보고` 규칙), 훅 설치 결과(`references/hook-installation.md`의 `Report` 계약)를 담는다.
 
-## Output Contract
+## 호출 범위
 
-이관/비대상 보고는 Step 1을 따른다. migration을 수행했다면 최종 보고에 아래를 포함한다.
+| 요청 | 범위 |
+|---|---|
+| 점검·리뷰·drift 확인 ("review spec", "스펙 리뷰") | 1단계만 한다. spec과 하네스를 고치지 않는다. |
+| 정리·재작성·분할·형식 이행 ("rewrite spec", "upgrade spec", "스펙 정리") | 1~4단계를 한다. |
+| 하네스 갱신 ("하네스 갱신", "훅 다시 설치") | 3단계와 그 확인만 한다. spec 본문은 고치지 않는다. |
 
-- 업그레이드 대상 파일
-- rewrite boundary judgment와 근거
-- thin global model gap과 조치
-- global에 남긴 판단과 밖으로 내린 정보
-- 축약 또는 supporting surface 이동된 old inventory 항목
-- 하네스 병합 결과(AGENTS.md/CLAUDE.md/.gitignore 생성·prepend·마커 교체 여부, 흡수·제거된 legacy `## SDD란`/중복 항목)
-- env.md 보강 결과 — local `references/worker-model-defaults.md`의 `확인·보고` 규칙대로 설정표 위치와 나중에 채울 수 있는 항목을 알린다
-- 훅 설치 결과 — local `references/hook-installation.md`의 `Report` 계약대로 알린다
-- 남은 구조 문제와 후속 추천
-
-## Error Handling
-
-| 상황 | 대응 |
-|------|------|
-| spec 없음 | Step 1의 비대상 종료 |
-| 이미 thin model에 가까움 | 부족한 항목만 보강 |
-| canonical 후보 다수 | migration checkpoint에서 확인 |
-| 코드베이스 없음 | 문서 기반 업그레이드로 진행하고 근거 수준을 명시 |
-| 구조 재편이 핵심 문제 | Step 1의 이관 종료 |
+요청이 어느 쪽인지 분명하지 않으면 점검만 하고, 고칠지는 보고 끝에서 묻는다. 인자 없이 스킬 이름만 부른 호출도 여기에 든다.
 
 ## Final Check
 
-선택한 경로의 Acceptance Criteria를 검증하고, 현재 입력과 권한으로 보완할 수 있는 누락은 해당 단계에서 수정한다. hook의 skipped/partial 또는 trust 대기는 local `references/hook-installation.md`의 종료·보고 규칙을 따른다. 그 밖에 외부 입력이 필요한 잔여 항목도 원문을 보존하고 제한 결과로 종료하며, 완전 완료로 보고하지 않는다.
+수행한 범위에 해당하는 Acceptance Criteria를 한 번 점검한다. 보완할 수 있는 누락은 고친다. 훅의 skipped·partial 상태나 trust 대기는 `references/hook-installation.md`의 종료·보고 규칙을 따른다. 외부 입력이 필요한 나머지는 원문을 보존한 채 제한된 결과로 보고하고, 완료로 적지 않는다.

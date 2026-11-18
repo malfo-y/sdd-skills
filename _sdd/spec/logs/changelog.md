@@ -2,6 +2,15 @@
 
 > 이 파일은 `_sdd/spec/main.md`의 **본문이 바뀐 버전만** 기록한다 — 본문 무변경 sync(헤더 날짜만 갱신)는 entry를 남기지 않으므로 버전 번호에 결번이 생길 수 있다.
 
+#### v6.0.0 (2026-11-18)
+
+- **spec 스킬 3개를 `spec-upgrade` 하나로 합침**: `spec-review`·`spec-rewrite`를 지우고 `spec-upgrade`가 이미 있는 spec의 점검(수정 없음), 정리·재작성·분할·형식 이행, 하네스 갱신을 맡는다. 세 `SKILL.md` 합계 약 35KB를 12KB로 줄였고 양 runtime 동일본이다. `references/`의 `spec-format.md`·`template-compact.md`·`template-full.md`·`upgrade-mapping.md`와 `spec-rewrite`의 `rewrite-checklist.md`는 `spec-format.md` 하나로 합쳤다. 하네스 자산 4종(하네스 템플릿, 훅 설치 규약, 훅 스크립트, 모델 기본값 표)은 바이트 그대로다. main §3에 `spec lifecycle 진입점` 행을 더하고 `spec review 판정 인터페이스` 행을 `spec 점검 판정 인터페이스`로 다시 썼다.
+- **스킬 3개 삭제**: `spec-summary`, `spec-snapshot`, `second-opinion`. main §2의 `second-opinion` 외부 adapter 예외와 §3 `document producer output interface`의 summary·snapshot 계약을 지웠다.
+- **스킬 3개 축소**: `guide-create`(스킬 폴더 11.7KB → 6.8KB, fenced skeleton은 그대로), `investigate`(Claude 6.3KB → 2.9KB, Codex 11.2KB → 4.6KB), `git`(참조 3개와 예시 3개를 지우고 `SKILL.md` 하나, 21.1KB → 8.3KB). `investigate`는 탐색 agent 병렬 실행 지시와 Codex Runtime Adapter를 지웠다. main §3 `실행 분리` 행은 번들에서 agent를 띄우는 스킬이 `pr-review`뿐이라고 적는다.
+- **문서·배포**: README 스킬 수(Claude 11 + 별칭 5, Codex 10 + 별칭 5)와 Skills 표, `docs/SDD_WORKFLOW.md`(`spec-summary` 절 삭제로 §7~§10이 §6~§9가 됨)·`docs/SDD_SPEC_DEFINITION.md`(ko·en), `.claude-plugin/marketplace.json`, components·usage-guide를 맞췄다. `tools/uninstall-codex-skill-bundle.py`의 legacy 이름 목록은 삭제한 스킬을 지우는 데 쓰이므로 그대로 둔다.
+- **증거·한계**: 근거와 버린 대안은 [decision_log 2026-11-18](../decision_log.md). 삭제한 이름·산출물 이름 전수 검색 0건(기록 파일과 허용 목록 제외), 양 runtime `spec-upgrade`·`guide-create` 동일, `claude plugin validate .`·`tools/tests` 통과. 새 `spec-upgrade`·`investigate`·`guide-create`·`git`를 설치본에서 실제로 호출한 확인은 플러그인 갱신 뒤로 남는다.
+- **입력 처리**: [소비 완료 계획 파일](../../drafts/_processed_2026-11-18_feature_draft_skill_diet.md)로 원문 보존 rename했다. env 승격 1건(macOS bash에서 변수 뒤 한글).
+
 #### v5.0.0 (2026-11-17)
 
 - **SDD 체인을 메인 세션 직접 실행으로 전환**: `sdd-orchestrator`가 계획 → 계획 리뷰 → 실패하는 검사 먼저 구현 → 구현 리뷰 → spec 반영을 직접 수행한다. `SKILL.md`를 단계 순서와 저장소 규약만 남겨 다시 썼고(약 20KB → 8KB), `references/`는 spec 반영 규약 `spec-sync.md` 하나만 둔다(스킬 전체 약 82KB → 14KB, 양 runtime 동일본). `references/workers/` 5종·`worker-boundary.md`·`handoff-templates.md`를 삭제했다. main §2에서 worker·게이트·digest·state·단계별 모델 옵션을 전제한 규칙을 지우고 새 규칙(직접 수행, 계획 파일 하나, 자기 리뷰 1회, 실행 미확인 목록 보고)으로 바꿨으며, §3 `실행 분리`·`implementation test-first`·`spec sync 진입점` 행을 고치고 `품질 게이트 소유권` 행을 `리뷰 수행 주체`로 바꿨다.

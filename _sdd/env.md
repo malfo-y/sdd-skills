@@ -50,6 +50,7 @@
 - census·0건 판정은 `/usr/bin/grep`으로 한다. 조건: Claude Code 셸에서는 `grep`·`diff`가 래퍼 함수일 수 있다(ugrep은 재귀 검색에서 gitignore 파일을 건너뛴다).
 - 조건: macOS 기본 도구.
   - `/bin/bash`는 3.2다.
+  - bash 스크립트에서 변수 바로 뒤에 한글을 붙이면(`$n개`) 값이 깨져 출력된다. `${n}개`로 쓴다.
   - BSD grep의 `--exclude-dir`는 경로 앞에 둔다.
   - BSD `sed -i`는 백업 확장자 인자가 필요하다. `sed -i '' …`로 쓴다.
   - `grep -F`는 `^`를 글자로 찾는다. 줄 시작 앵커 패턴은 `-F` 없이 쓴다.

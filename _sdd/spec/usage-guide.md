@@ -82,14 +82,14 @@
 **Expected Result:**
 - `_sdd/pr/<YYYY-MM-DD>_pr_review_<slug>.md` — findings-first 코드 품질 검증 + spec 존재 시 spec 준수 여부 판정 + 구체적 피드백
 
-### Scenario 3b: 스펙 현황 파악 및 의사결정
+### Scenario 3b: 스펙 점검 및 의사결정
 
 **Action:**
 ```bash
-/spec-summary            # 현재 repo/spec를 설명하는 reader-facing whitepaper
+/spec-upgrade 스펙 리뷰  # spec 품질과 코드와의 어긋남을 점검만 한다(수정 없음)
 /discussion              # 기술 선택, 아키텍처 결정 등 구조화된 토론
 ```
 
 **Expected Result:**
-- `_sdd/spec/summary.md` — Executive Summary, Background / Motivation, Core Design, Code Grounding, Usage / Expected Results, Further Reading / References, 그리고 필요한 경우 appendix 형태의 Planned / Progress Snapshot
+- 채팅 보고 — 판단 기준 4개 위반과 코드와의 어긋남을 심각도 순(`Critical`·`Quality`·`Improvements`)으로, 발견마다 `file:line` 근거와 함께 보고하고 결론(spec 수정 필요 / 수정 불필요 / 논의 필요)을 하나 적는다. 파일을 요청하면 `_sdd/spec/logs/spec_review_report.md`에 쓴다. 고치려면 `/spec-upgrade`를 정리·형식 이행 요청으로 다시 부른다
 - `_sdd/discussion/<YYYY-MM-DD>_discussion_<slug>.md` — 토론 배경·결정과 근거·미결·다음 행동을 정리한다. 질문 순서와 라운드 수는 고정하지 않으며, 외부 데이터 대기는 미결로 기록한 뒤 사용자의 선택에 따라 종료할 수 있다. 상세 라운드 로그는 요청 또는 감사 요구가 있을 때만 포함한다.
