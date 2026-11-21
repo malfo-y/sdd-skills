@@ -44,11 +44,23 @@ description: This skill should be used when the user asks to set up a "/goal", "
 - `journal.md`: append-only 기록의 초기 구조.
 - `report.md`: 아직 목표 달성을 검증하지 않았음을 표시하는 초기 보고 구조.
 
+## Harness Review
+
+4파일을 쓴 뒤 Handoff 전에 한 번 검토한다. 메인 루프가 직접 하며, 쓴 내용을 기억으로 판단하지 않고 파일을 다시 읽는다.
+
+- **외부 사실 대조**: 검증 레시피와 `experiments.md`가 기대는 경로·명령·스크립트·테스트 이름·실행 환경을 저장소와 `_sdd/env.md`에서 확인한다. 부작용이 없고 짧게 끝나는 검증 명령은 실행해 명령이 동작하는지 본다. 레시피 전 항목이 지금 이미 PASS로 나오면 레시피가 목표 달성을 가리지 못하거나 목표가 이미 달성된 것이다. 판정조건을 고치거나 사용자에게 확인한다.
+- **조건과 레시피의 대응**: `DONE WHEN` 줄마다 레시피 항목이 있는지, 레시피가 전 항목 PASS인데 outcome은 달성되지 않은 경우가 남는지 본다.
+- **위임과 루프의 대응**: Loop Protocol과 레시피를 수행하는 데 필요한 행동이 사전 승인 범위에 있는지 본다. 범위 밖 행동 없이는 진척할 수 없으면 루프가 첫 턴에 `STUCK`으로 끝난다.
+- **파일 상태**: template이 placeholder로 두라고 한 다른 런타임 실행법 외에 채우지 않은 `<...>` 슬롯이 없고, Loop Protocol payload가 정확히 하나이며, `goal.md`의 조건 문자열이 Condition Self-check를 통과한 문자열과 같다.
+
+찾은 것은 파일을 고친다. 조건 문자열을 고쳤으면 Condition Self-check를 다시 한다. 목표·위임 범위가 달라지거나 판정이 약해지는 수정은 사용자에게 확인한 뒤 한다.
+
 ## Handoff
 
 조건 문자열 전문을 생략·요약 없이 별도 코드 블록으로 화면에 출력하고, 아래 실행법과 생성한 4파일의 개별 경로를 제시한다. `goal.md` 경로만으로 조건 문자열을 대신하지 않는다.
 
 - **Codex 실행법**: (a) `codex features enable goals`(또는 config의 `features.goals`)로 goals 기능을 활성화한다. (b) 라이프사이클은 `set`(목표 설정)·`status`(진행 확인)·`clear`(종료)이며, 중간에 멈췄다 이어가려면 `pause`·`resume`를 쓴다. (c) continuation은 thread-scoped state로 유지되며, 안전 경계(turn 종료·idle·no queued input) 안에서만 다음 턴으로 이어진다. (d) 진행은 evidence-based다 — 매 턴 검증 레시피의 실행 경계에 따라 evidence를 대화에 surface하고, 평가자는 그 증거로 완료를 판정한다.
+- Harness Review에서 찾아 고친 것과 실행으로 확인하지 못한 검증을 적는다.
 - setup 경계를 실제로 지켰으면 “goal을 활성화하지 않았으며 기존 goal 상태도 변경하지 않았다”를 명시한다. 위반이 있었다면 사실과 미충족 기준을 보고하며 성공으로 표시하지 않는다.
 
 ## Acceptance Criteria
@@ -56,7 +68,8 @@ description: This skill should be used when the user asks to set up a "/goal", "
 - [ ] 목표·권한·접근·검증 선택이 Decision Criteria에 부합하고 사용자 선호를 임의로 만들지 않았다.
 - [ ] 조건 문자열이 Condition Self-check를 통과했다.
 - [ ] 4파일이 Harness Setup 계약대로 생성됐고 선택한 preset과 자율 수행 위임이 반영됐다.
-- [ ] Handoff의 조건 전문·런타임 실행법·개별 경로·실제 setup 상태를 전달했다.
+- [ ] Harness Review를 수행했고, 찾은 것을 고쳤거나 사용자 확인 대상으로 남겼다.
+- [ ] Handoff의 조건 전문·런타임 실행법·개별 경로·리뷰 결과·실제 setup 상태를 전달했다.
 - [ ] Boundaries를 지켰다.
 
 ## Final Check
