@@ -2,8 +2,8 @@
 
 > Markdown 기반 skill bundle로 AI 에이전트의 Spec-Driven Development 워크플로우를 Claude Code와 Codex에서 공통 계약으로 실행한다.
 
-**Spec Version**: 6.0.0
-**Last Updated**: 2026-11-18
+**Spec Version**: 6.1.0
+**Last Updated**: 2026-11-21
 **Status**: Approved
 **Canonical Role**: current thin global spec
 
@@ -86,7 +86,7 @@ SDD Skills는 이 문제를 `SKILL.md = 실행 가능한 프롬프트`라는 관
 - goal setup은 목표·권한·검증 기준·하네스 완성을 고정하고 대화 순서는 상황에 맡긴다. 이미 확정한 정보를 재수집하거나 최소 가설 수를 채우지 않는다.
 - `sdd-autopilot`은 existing `goal-init(preset=sdd)`를 호출하는 setup-only thin entrypoint다. 사용자 목표와 관련 context를 runtime별 canonical 방식(Claude plugin-prefixed invocation / Codex active installed skill catalog)으로 전달하고, `goal-init`이 만든 자족적 조건 문자열·runtime 실행법·4파일 경로를 relay한 뒤 사용자 activation 경계에서 종료한다
   - setup에서는 `sdd-orchestrator`나 initial feature를 실행하지 않고 native goal을 활성화하지 않는다. current goal status도 조회하지 않으며 existing goal을 set·clear·pause·resume·replace·merge하거나 active goal 때문에 setup을 차단하지 않는다
-  - SDD preset은 generic `goal-init`의 결과 중심 판단 기준, condition self-check, `goal.md`·`experiments.md`·`journal.md`·`report.md` 4파일 계약을 그대로 재사용하고 `goal.md`의 `Loop Protocol` payload만 바꾼다. `goal.md`는 조건 문자열(outcome 수준 DONE WHEN + 위조 어려운 anchor + 표준 레시피 참조 문구 + drift 가드·위임 CONSTRAINT) / 검증 레시피(브리틀 검증 디테일 — goal 재설정 없이 수정 가능) / 자율 수행 위임(루프 중 행동에 대한 사용자의 durable authorization — 수준 `unattended`|`attended`, 사전 승인·항상 확인 목록, 질문 대체 규칙; 하류 스킬·런타임 규범의 "실행 전 확인"은 사전 승인 범위에서 이 섹션으로 충족되며 `git` 스킬의 `승인` 규칙이 이를 인정한다) / Loop Protocol(HOW)의 4분할 계약이다. 자율 수준은 setup의 Decision Criteria에 따라 확정한다 — 이미 정한 수준·범위는 재사용하고, 수준이 미정이면 원문의 "알아서/무인" 신호로 `unattended`, 수준·신호 모두 없으면 1회 질문. 루프 중 확인 요청은 사용자가 답할 수 없어 무진척과 같다는 것이 근거다
+  - SDD preset은 generic `goal-init`의 결과 중심 판단 기준, condition self-check, `goal.md`·`experiments.md`·`journal.md`·`report.md` 4파일 계약, 작성 뒤 하네스 리뷰를 그대로 재사용하고 `goal.md`의 `Loop Protocol` payload만 바꾼다. `goal.md`는 조건 문자열(outcome 수준 DONE WHEN + 위조 어려운 anchor + 표준 레시피 참조 문구 + drift 가드·위임 CONSTRAINT) / 검증 레시피(브리틀 검증 디테일 — goal 재설정 없이 수정 가능) / 자율 수행 위임(루프 중 행동에 대한 사용자의 durable authorization — 수준 `unattended`|`attended`, 사전 승인·항상 확인 목록, 질문 대체 규칙; 하류 스킬·런타임 규범의 "실행 전 확인"은 사전 승인 범위에서 이 섹션으로 충족되며 `git` 스킬의 `승인` 규칙이 이를 인정한다) / Loop Protocol(HOW)의 4분할 계약이다. 자율 수준은 setup의 Decision Criteria에 따라 확정한다 — 이미 정한 수준·범위는 재사용하고, 수준이 미정이면 원문의 "알아서/무인" 신호로 `unattended`, 수준·신호 모두 없으면 1회 질문. 루프 중 확인 요청은 사용자가 답할 수 없어 무진척과 같다는 것이 근거다
   - 사용자가 native goal을 활성화한 뒤에는 미충족 `DONE WHEN` 또는 실패한 final integration proof gap에서 가장 작은 next feature를 골라 `sdd-orchestrator`로 진행(reviewed draft가 없으면 계획 단계부터, 있으면 구현 단계부터 구현 리뷰까지, persistent 변경이 있으면 spec-sync 단계까지) → evidence·gap 기록 → final integration proof로 수렴한다. draft가 분할되면 current goal 안에서 smallest next unit을 계속 선택하며 nested `goal-init`은 만들지 않는다
   - formal Goal Contract·scope ID·Initial Feature Queue·status manifest·goal-level reviewer는 도입하지 않고, 조건·하네스 shape·loop payload의 단일 소스는 `goal-init`에 둔다
 - SDD 체인 진입은 **사용자 요청이 판정한다**(하네스 §3 canonical): SDD는 사용자의 직간접 요청 — 스킬 호출(`discussion`·`sdd-orchestrator` 등) 또는 "SDD로 구현/작업하자" 류 지시 — 으로 적용된다. 요청이 없더라도 구현할 기능이 크거나 복잡하거나 스펙에 상당한 영향을 주는 작업이면 **SDD 적용 여부를 사용자에게 질문**하고, 그 외에는 비대상으로 보고 SDD 없이 바로 수행한다. 비적용 경로에서도 §2 작업 규약·검증 표준은 그대로 지키며, 스펙 변경이 생기면 `sdd-orchestrator`의 spec-sync 단계 실행 여부를 사용자에게 확인받는다. canonical은 하네스 §3이고 전파 표면은 `AGENTS.md` + `spec-create`·`spec-upgrade` 하네스 템플릿 4미러 = 5곳이라, 두 스킬이 초기화하는 모든 소비 repo의 하네스에 적용된다

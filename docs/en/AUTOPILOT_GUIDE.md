@@ -22,7 +22,7 @@ User reviews and activates the native /goal
   → succeed after every DONE WHEN item and the final integration proof pass; STOP/STUCK ends incomplete
 ```
 
-The `goal-init` decision criteria, evaluator self-check (tool-free judgment, surfaced evidence, and at most 4,000 characters), and four-file format are shared with the generic path. Conversation order and hypothesis count are flexible; information already provided is reused. The SDD preset changes only the Loop Protocol payload in `goal.md`.
+The `goal-init` decision criteria, evaluator self-check (tool-free judgment, surfaced evidence, and at most 4,000 characters), four-file format, and post-write harness review are shared with the generic path. Conversation order and hypothesis count are flexible; information already provided is reused. The SDD preset changes only the Loop Protocol payload in `goal.md`.
 
 ## 3. SDD Loop Protocol
 

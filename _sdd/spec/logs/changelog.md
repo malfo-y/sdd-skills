@@ -2,6 +2,11 @@
 
 > 이 파일은 `_sdd/spec/main.md`의 **본문이 바뀐 버전만** 기록한다 — 본문 무변경 sync(헤더 날짜만 갱신)는 entry를 남기지 않으므로 버전 번호에 결번이 생길 수 있다.
 
+#### v6.1.0 (2026-11-21)
+
+- **`goal-init`에 하네스 리뷰 추가**: 4파일을 쓴 뒤 Handoff 전에 메인 루프가 생성한 파일을 다시 읽어 한 번 검토한다. 보는 것은 레시피가 기대는 외부 사실, `DONE WHEN`과 레시피의 대응, 위임 범위와 루프에 필요한 행동의 대응, 파일 상태다. 찾은 것은 고치고 Handoff에 적는다. 양 runtime `goal-init/SKILL.md`·예제, `sdd-autopilot` AC1, main §2의 SDD preset 재사용 목록, components·usage-guide, `docs/AUTOPILOT_GUIDE.md`(ko·en)를 맞췄다.
+- **증거·한계**: 근거는 [decision_log 2026-11-21](../decision_log.md). `claude plugin validate .`·`tools/tests` 통과, 양 runtime 사본의 차이는 기존 runtime 문구뿐. 리뷰 항목을 기존 하네스 1개에 적용해 따라갈 수 있음을 확인했다. 설치본에서 `goal-init`을 실제로 호출한 확인은 플러그인 갱신 뒤로 남는다.
+
 #### v6.0.0 (2026-11-18)
 
 - **spec 스킬 3개를 `spec-upgrade` 하나로 합침**: `spec-review`·`spec-rewrite`를 지우고 `spec-upgrade`가 이미 있는 spec의 점검(수정 없음), 정리·재작성·분할·형식 이행, 하네스 갱신을 맡는다. 세 `SKILL.md` 합계 약 35KB를 12KB로 줄였고 양 runtime 동일본이다. `references/`의 `spec-format.md`·`template-compact.md`·`template-full.md`·`upgrade-mapping.md`와 `spec-rewrite`의 `rewrite-checklist.md`는 `spec-format.md` 하나로 합쳤다. 하네스 자산 4종(하네스 템플릿, 훅 설치 규약, 훅 스크립트, 모델 기본값 표)은 바이트 그대로다. main §3에 `spec lifecycle 진입점` 행을 더하고 `spec review 판정 인터페이스` 행을 `spec 점검 판정 인터페이스`로 다시 썼다.

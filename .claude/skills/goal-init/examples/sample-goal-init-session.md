@@ -145,7 +145,22 @@ STOP: after 6 turns without progress.
 ```
 
 
-### 5. Handoff — 조건 문자열 + Claude 실행법 제시 (스킬은 /goal 비발동)
+### 5. Harness Review — 생성한 4파일 검토
+
+Handoff 전에 생성한 파일을 다시 읽고 한 번 검토합니다. 찾은 것은 파일을 고칩니다.
+
+```
+Claude: 생성한 하네스를 검토합니다.
+- 외부 사실: `tests/integration` 경로 있음. `pip show pytest-repeat`로 설치 확인 → `--count` 옵션 사용 가능.
+  `pytest tests/integration -q` 1회 실행(40초) → 2 failed. 지금은 미충족이므로 레시피가 달성 여부를 가린다.
+- 조건↔레시피: DONE WHEN 1줄 ↔ 안정성 판정 1항목. "passed 수 = 테스트 수 × 20" 조건이 있어 일부만 실행한 통과는 PASS가 되지 않는다.
+- 위임↔루프: 루프에 필요한 pytest 실행·repo 파일 수정·commit이 사전 승인 범위에 있다.
+- 파일 상태: `report.md`의 `다음 단계`에 빈 슬롯 2개가 남아 있었다 → 초기 값으로 채웠다. 그 밖에 남은 슬롯 없음(Codex 실행법 placeholder 제외), Loop Protocol payload 1개, `goal.md` 조건 문자열은 3단계에서 확정한 문자열과 같다.
+- 실행으로 확인하지 못한 것: 20회 연속 실행(실행 checkpoint 규칙에 따라 지금 실행하지 않음).
+```
+
+
+### 6. Handoff — 조건 문자열 + Claude 실행법 제시 (스킬은 /goal 비발동)
 
 ```
 Claude: 셋업 완료. 아래를 검토 후 직접 /goal에 거세요. (스킬은 /goal을 직접 발동하지 않습니다.)
@@ -165,6 +180,7 @@ STOP: after 6 turns without progress.
 - _sdd/goal/2026-06-22_stabilize-flaky-integration-tests/experiments.md
 - _sdd/goal/2026-06-22_stabilize-flaky-integration-tests/journal.md
 - _sdd/goal/2026-06-22_stabilize-flaky-integration-tests/report.md
+리뷰: `report.md`의 빈 슬롯 2개를 채웠다. 20회 연속 실행은 지금 실행하지 않았다(1회 실행은 2 failed로 미충족 확인).
 goal을 활성화하지 않았으며 기존 goal 상태도 변경하지 않았다.
 검토 후 발동 여부는 형님이 결정하세요.
 ```
@@ -175,6 +191,7 @@ goal을 활성화하지 않았으며 기존 goal 상태도 변경하지 않았�
 - **상황에 맞는 진행**: 위 대화는 한 예다. 접근과 검증이 이미 정해져 있으면 재수집·대안 개수 채우기 없이 조건을 점검하고 하네스를 완성한다.
 - **3분법 조건 문자열**: `DONE WHEN`은 outcome + anchor + "검증 레시피 출력 surface·전 항목 PASS" 표준 문구, 브리틀 검증 디테일(pytest 명령·기대 문자열)은 `goal.md`의 `검증 레시피`로, 루프 HOW는 `Loop Protocol`로 분리. `CONSTRAINTS`에 drift 가드(레시피 변경 diff 표시·약화는 사용자 승인) 기본 포함.
 - **평가자 적합성 3항목**: 도구 없이 판정 · evidence 매 턴 surface · 4,000자 이하 — 모두 통과해야 Handoff.
+- **하네스 리뷰**: 4파일을 쓴 뒤 파일을 다시 읽어 외부 사실·조건↔레시피·위임↔루프·파일 상태를 한 번 검토하고, 찾은 것을 고친 뒤 Handoff에 결과를 적는다.
 - **4파일 산출 경로**: `_sdd/goal/<YYYY-MM-DD>_<slug>/`의 `goal.md`/`experiments.md`/`journal.md`/`report.md`.
 - **자율 수행 위임**: 원문의 "알아서" 신호로 `unattended` 확정 → `goal.md`에 사전 승인/제외 목록 기입. 루프 중 commit·push는 이 위임으로 확인 없이 진행되고, 제외 목록만 사용자 승인 대상.
 
